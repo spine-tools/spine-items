@@ -1,0 +1,11 @@
+.idea
+*.pyc
+*.sqlite
+*.egg-info
+.eggs/
+.spyderproject
+build/
+dist/
+docs/source/autoapi/
+pip-wheel-metadata/
+__pycache__/
