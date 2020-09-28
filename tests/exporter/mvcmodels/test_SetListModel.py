@@ -20,7 +20,7 @@ import unittest
 from PySide2.QtCore import QModelIndex, Qt
 from PySide2.QtGui import QColor
 from spine_items.exporter.mvcmodels.set_list_model import SetListModel
-from spinetoolbox.spine_io.exporters.gdx import ExportFlag, SetMetadata, SetSettings
+from spine_items.spine_io.exporters.gdx import ExportFlag, SetMetadata, SetSettings
 
 
 class TestSetListModel(unittest.TestCase):

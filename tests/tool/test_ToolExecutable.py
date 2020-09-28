@@ -26,9 +26,8 @@ from spine_engine import ExecutionDirection
 from spine_items.project_item_resource import ProjectItemResource
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
-from spinetoolbox.config import DEFAULT_WORK_DIR
 from spine_items.tool.utils import _LatestOutputFile
-from spinetoolbox.execution_managers import ConsoleExecutionManager
+from spine_items.execution_managers import ConsoleExecutionManager
 
 
 class TestToolExecutable(unittest.TestCase):
@@ -87,19 +86,16 @@ class TestToolExecutable(unittest.TestCase):
                 self.assertTrue(item._tool_specification.name, "Python Tool")
                 self.assertEqual("some_work_dir", item._work_dir)
                 self.assertEqual(["a", "b"], item._cmd_line_args)
-                # Test that DEFAULT_WORK_DIR is used if "appSettings/workDir" key is missing from qsettings
-                item = ExecutableItem.from_dict(
-                    item_dict,
-                    name="T",
-                    project_dir=temp_project_dir,
-                    app_settings=_EmptyMockSettings(),
-                    specifications=specs_in_project,
-                    logger=mock.MagicMock(),
-                )
-                self.assertIsInstance(item, ExecutableItem)
-                self.assertEqual("Tool", item.item_type())
-                self.assertEqual(DEFAULT_WORK_DIR, item._work_dir)
-                self.assertEqual(["a", "b"], item._cmd_line_args)
+                # Test that item is not create if "appSettings/workDir" key is missing from qsettings
+                with self.assertRaises(ValueError):
+                    item = ExecutableItem.from_dict(
+                        item_dict,
+                        name="T",
+                        project_dir=temp_project_dir,
+                        app_settings=_EmptyMockSettings(),
+                        specifications=specs_in_project,
+                        logger=mock.MagicMock(),
+                    )
                 # This time the project dict does not have any specifications
                 item = ExecutableItem.from_dict(
                     item_dict,

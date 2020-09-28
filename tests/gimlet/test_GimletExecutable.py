@@ -25,7 +25,7 @@ from PySide2.QtCore import QCoreApplication
 from spine_engine import ExecutionDirection
 from spine_items.gimlet.executable_item import ExecutableItem
 from spine_items.project_item_resource import ProjectItemResource
-from spinetoolbox.execution_managers import QProcessExecutionManager
+from spine_items.execution_managers import QProcessExecutionManager
 
 
 class TestGimletExecutable(unittest.TestCase):

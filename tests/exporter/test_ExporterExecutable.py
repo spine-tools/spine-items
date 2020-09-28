@@ -27,8 +27,8 @@ from spine_items.project_item_resource import ProjectItemResource
 from spine_items.exporter.exporter import SettingsPack
 from spine_items.exporter.executable_item import ExecutableItem
 from spine_items.exporter.settings_state import SettingsState
-from spinetoolbox.spine_io import gdx_utils
-from spinetoolbox.spine_io.exporters import gdx
+from spine_items.spine_io import gdx_utils
+from spine_items.spine_io.exporters import gdx
 
 
 class TestExporterExecutable(unittest.TestCase):

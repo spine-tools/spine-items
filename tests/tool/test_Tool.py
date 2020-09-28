@@ -28,7 +28,7 @@ from spine_items.tool.item_info import ItemInfo
 from spine_items.tool.tool_specifications import ExecutableTool
 from spine_items.tool.tool import Tool
 from spine_items.tool.executable_item import ExecutableItem
-from spinetoolbox.config import TOOL_OUTPUT_DIR
+from spine_items.config import TOOL_OUTPUT_DIR
 from ..mock_helpers import (
     clean_up_toolboxui_with_project,
     create_toolboxui_with_project,
