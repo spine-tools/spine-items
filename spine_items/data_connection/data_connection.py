@@ -31,7 +31,7 @@ from PySide2.QtWidgets import (
 )
 from ..project_item import ProjectItem
 from ..project_item_resource import ProjectItemResource
-from ..helpers import busy_effect, deserialize_path, serialize_path, open_url
+from spinetoolbox.helpers import busy_effect, deserialize_path, serialize_path, open_url
 from ..config import INVALID_FILENAME_CHARS
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
 from .executable_item import ExecutableItem

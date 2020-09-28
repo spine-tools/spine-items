@@ -20,8 +20,8 @@ import os
 import uuid
 from collections import Counter
 from PySide2.QtCore import Slot, Qt
-from ..project_item import ProjectItem
 from spinetoolbox.config import DEFAULT_WORK_DIR, GIMLET_WORK_DIR_NAME
+from ..project_item import ProjectItem
 from ..helpers import shorten
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
@@ -32,9 +32,9 @@ from .commands import (
     UpdatecmdCommand,
     UpdateWorkDirModeCommand,
 )
-from ..shared.commands import ChangeItemSelectionCommand
-from ..shared.models import FileListModel
-from ..shared.helpers import (
+from ..commands import ChangeItemSelectionCommand
+from ..models import FileListModel
+from ..helpers import (
     deserialize_checked_states,
     serialize_checked_states,
     split_cmdline_args,

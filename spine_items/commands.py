@@ -10,39 +10,53 @@
 ######################################################################################################################
 
 """
-QUndoCommand subclasses for modifying the project.
+Undo/redo commands that can be used by multiple project items.
 
-:authors: M. Marin (KTH)
-:date:   12.2.2020
+:authors: M. Marin (KTH), P. Savolainen (VTT)
+:date:   5.5.2020
 """
-
-from PySide2.QtWidgets import QUndoCommand
-
-
-class SpineToolboxCommand(QUndoCommand):
-    @staticmethod
-    def is_critical():
-        """Returns True if this command needs to be undone before
-        closing the project without saving changes.
-        """
-        return False
+from spinetoolbox.project_commands import SpineToolboxCommand
 
 
-class SetItemSpecificationCommand(SpineToolboxCommand):
-    def __init__(self, item, specification):
-        """Command to set the specification for a Tool.
+class UpdateCancelOnErrorCommand(SpineToolboxCommand):
+    def __init__(self, project_item, cancel_on_error):
+        """Command to update Importer, Exporter, and Combiner cancel on error setting.
 
         Args:
-            item (ProjectItem): the Item
-            specification (ProjectItemSpecification): the new spec
+            project_item (ProjectItem): Item
+            cancel_on_error (bool): New setting
         """
         super().__init__()
-        self.item = item
-        self.redo_specification = specification
-        self.setText(f"set specification of {item.name}")
+        self._project_item = project_item
+        self._redo_cancel_on_error = cancel_on_error
+        self._undo_cancel_on_error = not cancel_on_error
+        self.setText(f"change {project_item.name} cancel on error setting")
 
     def redo(self):
-        self.item.do_set_specification(self.redo_specification)
+        self._project_item.set_cancel_on_error(self._redo_cancel_on_error)
 
     def undo(self):
-        self.item.undo_set_specification()
+        self._project_item.set_cancel_on_error(self._undo_cancel_on_error)
+
+
+class ChangeItemSelectionCommand(SpineToolboxCommand):
+    def __init__(self, project_item, selected, label):
+        """Command to change file item's selection status.
+        Used by Importers and Gimlets.
+
+        Args:
+            project_item (ProjectItem): Item
+            selected (bool): True if the item is selected, False otherwise
+            label (str): File label
+        """
+        super().__init__()
+        self._item = project_item
+        self._selected = selected
+        self._label = label
+        self.setText(f"change {project_item.name} file selection")
+
+    def redo(self):
+        self._item.set_file_selected(self._label, self._selected)
+
+    def undo(self):
+        self._item.set_file_selected(self._label, not self._selected)

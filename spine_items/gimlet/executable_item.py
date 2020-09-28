@@ -19,13 +19,11 @@ Contains Gimlet ExecutableItem class.
 import os
 import sys
 import shutil
-import pathlib
 import uuid
 from PySide2.QtCore import Signal, Slot, QObject, QEventLoop
 from ..executable_item_base import ExecutableItemBase
 from spinetoolbox.execution_managers import QProcessExecutionManager
-from ..shared import helpers
-from ..helpers import shorten
+import spine_items.helpers as helpers
 from spinetoolbox.config import DEFAULT_WORK_DIR, GIMLET_WORK_DIR_NAME
 from .item_info import ItemInfo
 from .utils import SHELLS
@@ -79,7 +77,9 @@ class ExecutableItem(ExecutableItemBase, QObject):
                 )
                 return None
         cmd_list = helpers.split_cmdline_args(item_dict["cmd"])
-        data_dir = os.path.join(project_dir, ".spinetoolbox", "items", shorten(name))
+        data_dir = os.path.join(
+            project_dir, ".spinetoolbox", "items", helpers.shorten(name)
+        )
         if item_dict["work_dir_mode"]:  # Use 'default' work dir. i.e. data_dir/work
             work_dir = os.path.join(data_dir, GIMLET_WORK_DIR_NAME)
         else:  # Make unique work dir
@@ -88,7 +88,9 @@ class ExecutableItem(ExecutableItemBase, QObject):
             )
             if not app_work_dir:
                 app_work_dir = DEFAULT_WORK_DIR
-            unique_dir_name = shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
+            unique_dir_name = (
+                helpers.shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
+            )
             work_dir = os.path.join(app_work_dir, unique_dir_name)
         selected_files = helpers.deserialize_checked_states(
             item_dict.get("selections", list()), project_dir

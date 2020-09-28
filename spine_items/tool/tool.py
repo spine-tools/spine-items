@@ -23,8 +23,8 @@ from PySide2.QtWidgets import QFileIconProvider
 from ..project_item import ProjectItem
 from ..project_item_resource import ProjectItemResource
 from spinetoolbox.config import TOOL_OUTPUT_DIR
-from ..helpers import open_url
-from ..shared.helpers import split_cmdline_args
+from spinetoolbox.helpers import open_url
+from ..helpers import split_cmdline_args
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu

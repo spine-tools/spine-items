@@ -31,14 +31,14 @@ from PySide2.QtWidgets import (
 )
 from PySide2.QtCore import Slot, Qt, QFileInfo
 from spinetoolbox.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
-from ...helpers import busy_effect, open_url
+from spinetoolbox.helpers import busy_effect, open_url
 from ..item_info import ItemInfo
-from ...shared.helpers import (
+from ...helpers import (
     CmdlineTag,
     CMDLINE_TAG_EDGE,
     split_cmdline_args,
 )
-from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS, ToolSpecification
+from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS
 from .custom_menus import AddIncludesPopupMenu, CreateMainProgramPopupMenu
 
 

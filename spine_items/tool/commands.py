@@ -15,7 +15,7 @@ Undo/redo commands for the Tool project item.
 :authors: M. Marin (KTH)
 :date:   5.5.2020
 """
-from ..commands import SpineToolboxCommand
+from spinetoolbox.project_commands import SpineToolboxCommand
 
 
 class UpdateToolExecuteInWorkCommand(SpineToolboxCommand):

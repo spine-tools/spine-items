@@ -15,7 +15,7 @@ Contains Importer's utility functions.
 :authors: A. Soininen (VTT)
 :date:    6.5.2020
 """
-from ..helpers import deserialize_path
+from spinetoolbox.helpers import deserialize_path
 
 
 def deserialize_mappings(mappings, project_path):

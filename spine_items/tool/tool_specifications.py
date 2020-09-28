@@ -21,8 +21,8 @@ import logging
 import os
 import json
 from ..project_item_specification import ProjectItemSpecification
-from ..helpers import open_url
-from ..shared.helpers import split_cmdline_args, expand_tags
+from spinetoolbox.helpers import open_url
+from ..helpers import split_cmdline_args, expand_tags
 from .item_info import ItemInfo
 from .tool_instance import (
     GAMSToolInstance,

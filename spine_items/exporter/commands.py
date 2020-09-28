@@ -15,7 +15,7 @@ Undo/redo commands for the Exporter project item.
 :authors: A. Soininen (VTT)
 :date:   30.4.2020
 """
-from ..commands import SpineToolboxCommand
+from spinetoolbox.project_commands import SpineToolboxCommand
 
 
 class UpdateExporterOutFileName(SpineToolboxCommand):

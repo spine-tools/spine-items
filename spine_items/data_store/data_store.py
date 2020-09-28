@@ -21,7 +21,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFileDialog, QApplication
 from ..project_item import ProjectItem
 from ..project_item_resource import ProjectItemResource
-from ..helpers import busy_effect, serialize_path, deserialize_path
+from spinetoolbox.helpers import busy_effect, serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
