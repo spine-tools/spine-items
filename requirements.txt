@@ -1,11 +1,2 @@
 git+https://github.com/Spine-project/Spine-Database-API.git#egg=spinedb_api
-# cchardet used to be a dependency of datapackage and version 2.1.6 requires users to install Visual C++
-# NOTE: Commented on purpose. datapackage 1.15.0 does not require cchardet anymore. If we ever decide to
-# use cchardet in addition to chardet, we should remember this constraint.
-# cchardet!=2.1.6
-# jsonschema is a requirement of datapackage (TODO: why do we only allow v2.6 here?)
-jsonschema == 2.6
-# pyrsistent is a requirement of tableschema which is a requirement of datapackage.
-# tableschema 1.19.4 requires pyrsistent < 0.17
-pyrsistent < 0.17
 -e .
