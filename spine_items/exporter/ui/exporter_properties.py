@@ -25,7 +25,7 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
-from spinetoolbox import resources_icons_rc
+from spine_items import resources_icons_rc
 
 class Ui_Form(object):
     def setupUi(self, Form):

@@ -29,7 +29,7 @@ from spine_items.widgets.custom_qlineedits import CustomQLineEdit
 from spine_items.widgets.custom_qtreeview import SourcesTreeView
 from spine_items.widgets.custom_qtreeview import CustomTreeView
 
-from spinetoolbox import resources_icons_rc
+from spine_items import resources_icons_rc
 
 class Ui_Form(object):
     def setupUi(self, Form):
