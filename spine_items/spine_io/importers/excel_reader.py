@@ -48,11 +48,19 @@ class ExcelConnector(SourceConnection):
 
     # dict with option specification for source.
     OPTIONS = {
-        "header": {'type': bool, 'label': 'Has header', 'default': False},
-        "row": {'type': int, 'label': 'Skip rows', 'Minimum': 0, 'default': 0},
-        "column": {'type': int, 'label': 'Skip columns', 'Minimum': 0, 'default': 0},
-        "read_until_col": {'type': bool, 'label': 'Read until empty column on first row', 'default': False},
-        "read_until_row": {'type': bool, 'label': 'Read until empty row on first column', 'default': False},
+        "header": {"type": bool, "label": "Has header", "default": False},
+        "row": {"type": int, "label": "Skip rows", "Minimum": 0, "default": 0},
+        "column": {"type": int, "label": "Skip columns", "Minimum": 0, "default": 0},
+        "read_until_col": {
+            "type": bool,
+            "label": "Read until empty column on first row",
+            "default": False,
+        },
+        "read_until_row": {
+            "type": bool,
+            "label": "Read until empty row on first column",
+            "default": False,
+        },
     }
 
     # Modal widget that that returns source object and action (OK, CANCEL)
@@ -158,13 +166,18 @@ class ExcelConnector(SourceConnection):
         # find header if it has one
         if has_header:
             try:
-                header = [c.value for c in islice(next(rows), skip_columns, read_to_col)]
+                header = [
+                    c.value for c in islice(next(rows), skip_columns, read_to_col)
+                ]
             except StopIteration:
                 # no data
                 return iter([]), [], 0
 
         # iterator for selected columns and and skipped rows
-        data_iterator = (list(cell.value for cell in islice(row, skip_columns, read_to_col)) for row in rows)
+        data_iterator = (
+            list(cell.value for cell in islice(row, skip_columns, read_to_col))
+            for row in rows
+        )
         if stop_at_empty_row:
             # add condition to iterator
             condition = lambda row: row[0] is not None
@@ -172,11 +185,15 @@ class ExcelConnector(SourceConnection):
 
         return data_iterator, header, num_cols
 
-    def get_mapped_data(self, tables_mappings, options, table_types, table_row_types, max_rows=-1):
+    def get_mapped_data(
+        self, tables_mappings, options, table_types, table_row_types, max_rows=-1
+    ):
         """
         Overrides io_api method to check for some parameter_value types.
         """
-        mapped_data, errors = super().get_mapped_data(tables_mappings, options, table_types, table_row_types, max_rows)
+        mapped_data, errors = super().get_mapped_data(
+            tables_mappings, options, table_types, table_row_types, max_rows
+        )
         for key in ("object_parameter_values", "relationship_parameter_values"):
             for index, value in enumerate(mapped_data[key]):
                 val = value[-1]
@@ -208,7 +225,9 @@ def get_mapped_data_from_xlsx(filepath):
         if options is not None:
             options_per_sheet[sheet] = options
     types = row_types = dict.fromkeys(mappings_per_sheet, {})
-    mapped_data, errors = connector.get_mapped_data(mappings_per_sheet, options_per_sheet, types, row_types)
+    mapped_data, errors = connector.get_mapped_data(
+        mappings_per_sheet, options_per_sheet, types, row_types
+    )
     connector.disconnect()
     return mapped_data, errors
 
@@ -219,7 +238,13 @@ def create_mapping_from_sheet(worksheet):
     mapping object for each sheet.
     """
 
-    options = {"header": False, "row": 0, "column": 0, "read_until_col": False, "read_until_row": False}
+    options = {
+        "header": False,
+        "row": 0,
+        "column": 0,
+        "read_until_col": False,
+        "read_until_row": False,
+    }
     mapping = ObjectClassMapping()
     sheet_type = worksheet["A2"].value
     sheet_data = worksheet["B2"].value
@@ -236,7 +261,14 @@ def create_mapping_from_sheet(worksheet):
         "scenario alternative",
     ]:
         return None, None
-    if sheet_data.lower() not in ["parameter", "time series", "time pattern", "map", "array", "no data"]:
+    if sheet_data.lower() not in [
+        "parameter",
+        "time series",
+        "time pattern",
+        "map",
+        "array",
+        "no data",
+    ]:
         return None, None
     if sheet_type.lower() == "relationship":
         mapping = RelationshipClassMapping()
@@ -248,7 +280,7 @@ def create_mapping_from_sheet(worksheet):
             return None, None
         if not isinstance(rel_dimension, int):
             return None, None
-        if not rel_dimension >= 1:
+        if rel_dimension < 1:
             return None, None
         if sheet_data.lower() == "parameter":
             obj_classes = next(islice(worksheet.iter_rows(), 3, 4))
@@ -256,11 +288,22 @@ def create_mapping_from_sheet(worksheet):
         else:
             obj_classes = islice(worksheet.iter_rows(), 3, 3 + rel_dimension)
             obj_classes = [r[0].value for r in obj_classes]
-        if not all(isinstance(r, str) for r in obj_classes) or any(r is None or r.isspace() for r in obj_classes):
+        if not all(isinstance(r, str) for r in obj_classes) or any(
+            r is None or r.isspace() for r in obj_classes
+        ):
             return None, None
         if sheet_data.lower() == "parameter":
-            has_parameters = worksheet.cell(row=4, column=rel_dimension + 1).value is not None
-            options.update({"header": True, "row": 3, "read_until_col": True, "read_until_row": True})
+            has_parameters = (
+                worksheet.cell(row=4, column=rel_dimension + 1).value is not None
+            )
+            options.update(
+                {
+                    "header": True,
+                    "row": 3,
+                    "read_until_col": True,
+                    "read_until_row": True,
+                }
+            )
             map_dict = {
                 "map_type": "RelationshipClass",
                 "name": rel_cls_name,
@@ -275,13 +318,24 @@ def create_mapping_from_sheet(worksheet):
                 }
             mapping = RelationshipClassMapping.from_dict(map_dict)
         elif sheet_data.lower() == "array":
-            options.update({"header": False, "row": 3, "read_until_col": True, "read_until_row": False})
+            options.update(
+                {
+                    "header": False,
+                    "row": 3,
+                    "read_until_col": True,
+                    "read_until_row": False,
+                }
+            )
             mapping = RelationshipClassMapping.from_dict(
                 {
                     "map_type": "RelationshipClass",
                     "name": rel_cls_name,
+                    "skip_columns": [0],
                     "object_classes": obj_classes,
-                    "objects": [{"map_type": "row", "value_reference": i} for i in range(rel_dimension)],
+                    "objects": [
+                        {"map_type": "row", "value_reference": i}
+                        for i in range(rel_dimension)
+                    ],
                     "parameters": {
                         "map_type": "parameter",
                         "name": {"map_type": "row", "value_reference": rel_dimension},
@@ -291,13 +345,23 @@ def create_mapping_from_sheet(worksheet):
                 }
             )
         elif sheet_data.lower() in ("time series", "time pattern"):
-            options.update({"header": False, "row": 3, "read_until_col": True, "read_until_row": True})
+            options.update(
+                {
+                    "header": False,
+                    "row": 3,
+                    "read_until_col": True,
+                    "read_until_row": True,
+                }
+            )
             mapping = RelationshipClassMapping.from_dict(
                 {
                     "map_type": "RelationshipClass",
                     "name": rel_cls_name,
                     "object_classes": obj_classes,
-                    "objects": [{"map_type": "row", "value_reference": i} for i in range(rel_dimension)],
+                    "objects": [
+                        {"map_type": "row", "value_reference": i}
+                        for i in range(rel_dimension)
+                    ],
                     "parameters": {
                         "map_type": "parameter",
                         "name": {"map_type": "row", "value_reference": rel_dimension},
@@ -315,7 +379,14 @@ def create_mapping_from_sheet(worksheet):
             return None, None
         if sheet_data.lower() == "parameter":
             has_parameters = worksheet["B4"].value is not None
-            options.update({"header": True, "row": 3, "read_until_col": True, "read_until_row": True})
+            options.update(
+                {
+                    "header": True,
+                    "row": 3,
+                    "read_until_col": True,
+                    "read_until_row": True,
+                }
+            )
             map_dict = {
                 "map_type": "ObjectClass",
                 "name": obj_cls_name,
@@ -329,12 +400,20 @@ def create_mapping_from_sheet(worksheet):
                 }
             mapping = ObjectClassMapping.from_dict(map_dict)
         elif sheet_data.lower() == "array":
-            options.update({"header": False, "row": 3, "read_until_col": True, "read_until_row": False})
+            options.update(
+                {
+                    "header": False,
+                    "row": 3,
+                    "read_until_col": True,
+                    "read_until_row": False,
+                }
+            )
             mapping = ObjectClassMapping.from_dict(
                 {
                     "map_type": "ObjectClass",
                     "name": obj_cls_name,
                     "objects": {"map_type": "row", "value_reference": 0},
+                    "skip_columns": [0],
                     "parameters": {
                         "map_type": "parameter",
                         "name": {"map_type": "row", "value_reference": 1},
@@ -344,7 +423,14 @@ def create_mapping_from_sheet(worksheet):
                 }
             )
         elif sheet_data.lower() in ("time series", "time pattern"):
-            options.update({"header": False, "row": 3, "read_until_col": True, "read_until_row": True})
+            options.update(
+                {
+                    "header": False,
+                    "row": 3,
+                    "read_until_col": True,
+                    "read_until_row": True,
+                }
+            )
             mapping = ObjectClassMapping.from_dict(
                 {
                     "map_type": "ObjectClass",
@@ -365,20 +451,35 @@ def create_mapping_from_sheet(worksheet):
             return None, None
         if not obj_cls_name:
             return None, None
-        options.update({"header": True, "row": 3, "read_until_col": True, "read_until_row": True})
+        options.update(
+            {"header": True, "row": 3, "read_until_col": True, "read_until_row": True}
+        )
         mapping = ObjectGroupMapping.from_dict(
             {"map_type": "ObjectGroup", "name": obj_cls_name, "groups": 0, "members": 1}
         )
     elif sheet_type.lower() == "alternative":
-        options.update({"header": True, "row": 3, "read_until_col": True, "read_until_row": True})
+        options.update(
+            {"header": True, "row": 3, "read_until_col": True, "read_until_row": True}
+        )
         mapping = AlternativeMapping.from_dict({"map_type": "Alternative", "name": 0})
     elif sheet_type.lower() == "scenario":
-        options.update({"header": True, "row": 3, "read_until_col": True, "read_until_row": True})
-        mapping = ScenarioMapping.from_dict({"map_type": "Scenario", "name": 0, "active": 1})
+        options.update(
+            {"header": True, "row": 3, "read_until_col": True, "read_until_row": True}
+        )
+        mapping = ScenarioMapping.from_dict(
+            {"map_type": "Scenario", "name": 0, "active": 1}
+        )
     elif sheet_type.lower() == "scenario alternative":
-        options.update({"header": True, "row": 3, "read_until_col": True, "read_until_row": True})
+        options.update(
+            {"header": True, "row": 3, "read_until_col": True, "read_until_row": True}
+        )
         mapping = ScenarioAlternativeMapping.from_dict(
-            {"map_type": "ScenarioAlternative", "scenario_name": 0, "alternative_name": 1, "before_alternative_name": 2}
+            {
+                "map_type": "ScenarioAlternative",
+                "scenario_name": 0,
+                "alternative_name": 1,
+                "before_alternative_name": 2,
+            }
         )
     else:
         return None, None
