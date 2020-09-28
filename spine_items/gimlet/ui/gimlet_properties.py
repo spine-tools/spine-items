@@ -139,7 +139,7 @@ class Ui_Form(object):
         self.toolButton_gimlet_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_gimlet_open_dir.setMaximumSize(QSize(22, 22))
         icon = QIcon()
-        icon.addFile(u":/icons/menu_icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_gimlet_open_dir.setIcon(icon)
 
         self.horizontalLayout_16.addWidget(self.toolButton_gimlet_open_dir)

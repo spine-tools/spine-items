@@ -205,7 +205,7 @@ class Ui_Form(object):
         self.toolButton_minus_source_files.setMaximumSize(QSize(22, 22))
         self.toolButton_minus_source_files.setFont(font1)
         icon4 = QIcon()
-        icon4.addFile(u":/icons/menu_icons/trash-alt.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon4.addFile(u":/icons/trash-alt.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_minus_source_files.setIcon(icon4)
 
         self.horizontalLayout_2.addWidget(self.toolButton_minus_source_files)

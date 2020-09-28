@@ -146,7 +146,7 @@ class Ui_Form(object):
         self.toolButton_open_sqlite_file.setMinimumSize(QSize(22, 22))
         self.toolButton_open_sqlite_file.setMaximumSize(QSize(22, 22))
         icon = QIcon()
-        icon.addFile(u":/icons/menu_icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_open_sqlite_file.setIcon(icon)
 
         self.horizontalLayout_24.addWidget(self.toolButton_open_sqlite_file)
@@ -318,7 +318,7 @@ class Ui_Form(object):
         self.toolButton_copy_url.setMinimumSize(QSize(22, 22))
         self.toolButton_copy_url.setMaximumSize(QSize(22, 22))
         icon2 = QIcon()
-        icon2.addFile(u":/icons/menu_icons/copy.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon2.addFile(u":/icons/copy.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_copy_url.setIcon(icon2)
 
         self.horizontalLayout_27.addWidget(self.toolButton_copy_url)
@@ -334,7 +334,7 @@ class Ui_Form(object):
         self.toolButton_ds_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_ds_open_dir.setMaximumSize(QSize(22, 22))
         icon3 = QIcon()
-        icon3.addFile(u":/icons/menu_icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon3.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_ds_open_dir.setIcon(icon3)
 
         self.horizontalLayout_27.addWidget(self.toolButton_ds_open_dir)

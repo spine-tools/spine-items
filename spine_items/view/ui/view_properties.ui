@@ -216,7 +216,7 @@
            </property>
            <property name="icon">
             <iconset resource="../../../ui/resources/resources_icons.qrc">
-             <normaloff>:/icons/menu_icons/folder-open-solid.svg</normaloff>:/icons/menu_icons/folder-open-solid.svg</iconset>
+             <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
            </property>
           </widget>
          </item>

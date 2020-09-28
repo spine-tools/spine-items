@@ -405,7 +405,7 @@
              </property>
              <property name="icon">
               <iconset resource="../../../ui/resources/resources_icons.qrc">
-               <normaloff>:/icons/menu_icons/trash-alt.svg</normaloff>:/icons/menu_icons/trash-alt.svg</iconset>
+               <normaloff>:/icons/trash-alt.svg</normaloff>:/icons/trash-alt.svg</iconset>
              </property>
             </widget>
            </item>
@@ -549,7 +549,7 @@
              </property>
              <property name="icon">
               <iconset resource="../../../ui/resources/resources_icons.qrc">
-               <normaloff>:/icons/menu_icons/trash-alt.svg</normaloff>:/icons/menu_icons/trash-alt.svg</iconset>
+               <normaloff>:/icons/trash-alt.svg</normaloff>:/icons/trash-alt.svg</iconset>
              </property>
             </widget>
            </item>
@@ -681,7 +681,7 @@
              </property>
              <property name="icon">
               <iconset resource="../../../ui/resources/resources_icons.qrc">
-               <normaloff>:/icons/menu_icons/trash-alt.svg</normaloff>:/icons/menu_icons/trash-alt.svg</iconset>
+               <normaloff>:/icons/trash-alt.svg</normaloff>:/icons/trash-alt.svg</iconset>
              </property>
             </widget>
            </item>
@@ -813,7 +813,7 @@
              </property>
              <property name="icon">
               <iconset resource="../../../ui/resources/resources_icons.qrc">
-               <normaloff>:/icons/menu_icons/trash-alt.svg</normaloff>:/icons/menu_icons/trash-alt.svg</iconset>
+               <normaloff>:/icons/trash-alt.svg</normaloff>:/icons/trash-alt.svg</iconset>
              </property>
             </widget>
            </item>
