@@ -24,7 +24,7 @@ import pathlib
 import shutil
 import time
 import uuid
-from PySide2.QtCore import QEventLoop, Slot
+from PySide2.QtCore import QEventLoop, Slot  # FIXME
 from spine_items.config import TOOL_OUTPUT_DIR
 from ..executable_item_base import ExecutableItemBase
 from ..project_item_resource import ProjectItemResource

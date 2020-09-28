@@ -18,12 +18,11 @@ Contains Exporter's executable item as well as support utilities.
 import os.path
 import pathlib
 from spinedb_api import SpineDBAPIError
-from spine_items.helpers import deserialize_path
-from ..executable_item_base import ExecutableItemBase
-from ..helpers import shorten
-from ..project_item_resource import ProjectItemResource
 from spine_items.spine_io import gdx_utils
 from spine_items.spine_io.exporters import gdx
+from ..executable_item_base import ExecutableItemBase
+from ..helpers import shorten, deserialize_path
+from ..project_item_resource import ProjectItemResource
 from .db_utils import scenario_filtered_database_map
 from .item_info import ItemInfo
 from .settings_pack import SettingsPack
