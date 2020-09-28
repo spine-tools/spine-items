@@ -18,9 +18,9 @@ Contains Exporter's executable item as well as support utilities.
 import os.path
 import pathlib
 from spinedb_api import SpineDBAPIError
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from ..executable_item_base import ExecutableItemBase
 from ..helpers import deserialize_path, shorten
-from spinetoolbox.project_item_resource import ProjectItemResource
+from ..project_item_resource import ProjectItemResource
 from spinetoolbox.spine_io import gdx_utils
 from spinetoolbox.spine_io.exporters import gdx
 from .db_utils import scenario_filtered_database_map

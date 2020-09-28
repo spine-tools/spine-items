@@ -15,7 +15,7 @@ Contains View's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:   2.4.2020
 """
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from ..executable_item_base import ExecutableItemBase
 from .item_info import ItemInfo
 
 
@@ -26,6 +26,8 @@ class ExecutableItem(ExecutableItemBase):
         return ItemInfo.item_type()
 
     @classmethod
-    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
+    def from_dict(
+        cls, item_dict, name, project_dir, app_settings, specifications, logger
+    ):
         """See base class."""
         return cls(name, logger)

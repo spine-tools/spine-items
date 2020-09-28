@@ -21,7 +21,7 @@ from PySide2.QtCore import Slot, Qt, QFileInfo, QTimeLine
 from PySide2.QtGui import QStandardItemModel, QStandardItem
 from PySide2.QtWidgets import QFileIconProvider
 from ..project_item import ProjectItem
-from spinetoolbox.project_item_resource import ProjectItemResource
+from ..project_item_resource import ProjectItemResource
 from spinetoolbox.config import TOOL_OUTPUT_DIR
 from ..helpers import open_url
 from ..shared.helpers import split_cmdline_args

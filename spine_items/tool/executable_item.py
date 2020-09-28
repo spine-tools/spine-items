@@ -26,8 +26,8 @@ import time
 import uuid
 from PySide2.QtCore import QEventLoop, Slot
 from spinetoolbox.config import DEFAULT_WORK_DIR, TOOL_OUTPUT_DIR
-from spinetoolbox.executable_item_base import ExecutableItemBase
-from spinetoolbox.project_item_resource import ProjectItemResource
+from ..executable_item_base import ExecutableItemBase
+from ..project_item_resource import ProjectItemResource
 from ..helpers import shorten
 from .item_info import ItemInfo
 from .utils import (

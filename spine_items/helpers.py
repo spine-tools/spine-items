@@ -19,6 +19,7 @@ import os
 import logging
 import shutil
 import sys
+import urllib
 from PySide2.QtWidgets import QApplication
 from PySide2.QtGui import QCursor, QDesktopServices
 from PySide2.QtCore import Qt, QUrl
@@ -244,5 +245,6 @@ def python_interpreter(app_settings):
                 sys.executable
             )  # If not frozen, return the one that is currently used.
         else:
+            # FIXME
             path = PYTHON_EXECUTABLE  # If frozen, return the one in path
     return path

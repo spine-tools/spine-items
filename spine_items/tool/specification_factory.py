@@ -15,7 +15,7 @@ Tool's specification factory.
 :authors: A. Soininen (VTT)
 :date:   6.5.2020
 """
-from spinetoolbox.project_item_specification_factory import ProjectItemSpecificationFactory
+from ..project_item_specification_factory import ProjectItemSpecificationFactory
 from .item_info import ItemInfo
 from .tool_specifications import ToolSpecification
 
@@ -30,9 +30,19 @@ class SpecificationFactory(ProjectItemSpecificationFactory):
 
     @staticmethod
     def make_specification(
-        definition, definition_path, app_settings, logger, embedded_julia_console, embedded_python_console
+        definition,
+        definition_path,
+        app_settings,
+        logger,
+        embedded_julia_console,
+        embedded_python_console,
     ):
         """Returns a tool specifications."""
         return ToolSpecification.toolbox_load(
-            definition, definition_path, app_settings, logger, embedded_julia_console, embedded_python_console
+            definition,
+            definition_path,
+            app_settings,
+            logger,
+            embedded_julia_console,
+            embedded_python_console,
         )

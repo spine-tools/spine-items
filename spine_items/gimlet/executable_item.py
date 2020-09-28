@@ -22,7 +22,7 @@ import shutil
 import pathlib
 import uuid
 from PySide2.QtCore import Signal, Slot, QObject, QEventLoop
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from ..executable_item_base import ExecutableItemBase
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from ..shared import helpers
 from ..helpers import shorten

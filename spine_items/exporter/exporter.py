@@ -22,7 +22,7 @@ import os.path
 from PySide2.QtCore import Qt, Slot
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from ..project_item import ProjectItem
-from spinetoolbox.project_item_resource import ProjectItemResource
+from ..project_item_resource import ProjectItemResource
 from ..helpers import deserialize_path, serialize_url
 from spinetoolbox.spine_io.exporters import gdx
 from .commands import UpdateExporterOutFileName, UpdateExporterSettings, UpdateScenario
