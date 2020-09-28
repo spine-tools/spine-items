@@ -20,7 +20,7 @@ import os
 import uuid
 from collections import Counter
 from PySide2.QtCore import Slot, Qt
-from spinetoolbox.config import DEFAULT_WORK_DIR, GIMLET_WORK_DIR_NAME
+from spine_items.config import GIMLET_WORK_DIR_NAME
 from ..project_item import ProjectItem
 from ..helpers import shorten
 from .item_info import ItemInfo
@@ -118,11 +118,9 @@ class Gimlet(ProjectItem):
         if self._work_dir_mode:
             work_dir = self.default_gimlet_work_dir
         else:
-            app_work_dir = self._toolbox.qsettings().value(
-                "appSettings/workDir", defaultValue=DEFAULT_WORK_DIR
-            )
+            app_work_dir = self._toolbox.qsettings().value("appSettings/workDir")
             if not app_work_dir:
-                app_work_dir = DEFAULT_WORK_DIR
+                raise ValueError("Work directory not set, unable to create item")
             unique_dir_name = shorten(self.name) + "__" + uuid.uuid4().hex + "__toolbox"
             work_dir = os.path.join(app_work_dir, unique_dir_name)
         # Only selected files in properties are sent to the executable item

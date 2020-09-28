@@ -18,7 +18,7 @@ Contains Data Connection's executable item as well as support utilities.
 import os
 import pathlib
 from ..executable_item_base import ExecutableItemBase
-from spinetoolbox.helpers import deserialize_path
+from spine_items.helpers import deserialize_path
 from ..helpers import shorten
 from ..project_item_resource import ProjectItemResource
 from .item_info import ItemInfo

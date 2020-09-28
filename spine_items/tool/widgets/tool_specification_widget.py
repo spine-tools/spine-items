@@ -30,8 +30,8 @@ from PySide2.QtWidgets import (
     QMenu,
 )
 from PySide2.QtCore import Slot, Qt, QFileInfo
-from spinetoolbox.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
-from spinetoolbox.helpers import busy_effect, open_url
+from spine_items.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
+from spine_items.helpers import busy_effect, open_url
 from ..item_info import ItemInfo
 from ...helpers import (
     CmdlineTag,

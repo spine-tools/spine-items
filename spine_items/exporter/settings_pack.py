@@ -18,7 +18,7 @@ Contains the SettingsPack class.
 import dateutil.parser
 from PySide2.QtCore import QObject, Signal, Slot
 from spinedb_api import SpineDBAPIError
-from spinetoolbox.spine_io.exporters import gdx
+from spine_items.spine_io.exporters import gdx
 from .db_utils import scenario_filtered_database_map
 from .notifications import Notifications
 from .settings_state import SettingsState
@@ -83,13 +83,16 @@ class SettingsPack(QObject):
         d["settings"] = self.settings.to_dict()
         d["indexing_settings"] = gdx.indexing_settings_to_dict(self.indexing_settings)
         d["merging_settings"] = {
-            parameter_name: setting.to_dict() for parameter_name, setting in self.merging_settings.items()
+            parameter_name: setting.to_dict()
+            for parameter_name, setting in self.merging_settings.items()
         }
         d["none_fallback"] = self.none_fallback.value
         d["none_export"] = self.none_export.value
         d["scenario"] = self.scenario
         d["latest_database_commit"] = (
-            self.last_database_commit.isoformat() if self.last_database_commit is not None else None
+            self.last_database_commit.isoformat()
+            if self.last_database_commit is not None
+            else None
         )
         return d
 
@@ -115,10 +118,14 @@ class SettingsPack(QObject):
         try:
             db_map = scenario_filtered_database_map(database_url, pack.scenario)
             value_type_logger = _UnsupportedValueTypeLogger(
-                f"Exporter settings ignoring some parameters from database '{database_url}':", logger
+                f"Exporter settings ignoring some parameters from database '{database_url}':",
+                logger,
             )
             pack.indexing_settings = gdx.indexing_settings_from_dict(
-                pack_dict["indexing_settings"], db_map, pack.none_fallback, value_type_logger
+                pack_dict["indexing_settings"],
+                db_map,
+                pack.none_fallback,
+                value_type_logger,
             )
         except SpineDBAPIError as error:
             logger.msg_error.emit(

@@ -22,13 +22,12 @@ from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QListWidget, QDialog, QVBoxLayout, QDialogButtonBox
 from spine_engine import ExecutionDirection
 from ..project_item import ProjectItem
-from spinetoolbox.helpers import create_dir, serialize_path
-from spinetoolbox.spine_io.gdx_utils import find_gams_directory
-from spinetoolbox.spine_io.importers.csv_reader import CSVConnector
-from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
-from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
-from spinetoolbox.spine_io.importers.json_reader import JSONConnector
-from spinetoolbox.import_editor.widgets.import_editor_window import ImportEditorWindow
+from spine_items.helpers import create_dir, serialize_path
+from spine_items.spine_io.gdx_utils import find_gams_directory
+from spine_items.spine_io.importers.csv_reader import CSVConnector
+from spine_items.spine_io.importers.excel_reader import ExcelConnector
+from spine_items.spine_io.importers.gdx_connector import GdxConnector
+from spine_items.spine_io.importers.json_reader import JSONConnector
 from .commands import UpdateSettingsCommand
 from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand
 from ..models import FileListModel
@@ -262,8 +261,10 @@ class Importer(ProjectItem):
                 return
         self._logger.msg.emit(f"Opening Import editor for file: {file_path}")
         connector_settings = {"gams_directory": self._gams_system_directory()}
-        preview_widget = self._preview_widget[label] = ImportEditorWindow(
-            self, file_path, connector, connector_settings, settings, self._toolbox
+        preview_widget = self._preview_widget[
+            label
+        ] = self._toolbox.create_import_editor_window(
+            self, file_path, connector, connector_settings, settings
         )
         preview_widget.settings_updated.connect(
             lambda s, importee=label: self.save_settings(s, importee)

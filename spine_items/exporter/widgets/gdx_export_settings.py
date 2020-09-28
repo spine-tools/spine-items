@@ -21,7 +21,7 @@ import enum
 from PySide2.QtCore import QItemSelection, QModelIndex, Qt, Signal, Slot
 from PySide2.QtWidgets import QAbstractButton, QDialogButtonBox, QMessageBox, QWidget
 from spinedb_api import SpineDBAPIError
-import spinetoolbox.spine_io.exporters.gdx as gdx
+import spine_items.spine_io.exporters.gdx as gdx
 from ..db_utils import scenario_filtered_database_map
 from ..list_utils import move_selected_elements_by
 from ..mvcmodels.record_list_model import RecordListModel
@@ -72,7 +72,9 @@ class GdxExportSettings(QWidget):
             database_url (str): database URL
             parent (QWidget): a parent widget
         """
-        from ..ui.gdx_export_settings import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.gdx_export_settings import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent=parent, f=Qt.Window)
         self._ui = Ui_Form()
@@ -90,19 +92,31 @@ class GdxExportSettings(QWidget):
         self._ui.set_move_up_button.clicked.connect(self._move_sets_up)
         self._ui.set_move_down_button.clicked.connect(self._move_sets_down)
         self._populate_global_parameters_combo_box(set_settings)
-        self._ui.global_parameters_combo_box.currentIndexChanged[str].connect(self._update_global_parameters_domain)
-        self._ui.record_sort_alphabetic.clicked.connect(self._sort_records_alphabetically)
+        self._ui.global_parameters_combo_box.currentIndexChanged[str].connect(
+            self._update_global_parameters_domain
+        )
+        self._ui.record_sort_alphabetic.clicked.connect(
+            self._sort_records_alphabetically
+        )
         self._ui.record_move_up_button.clicked.connect(self._move_records_up)
         self._ui.record_move_down_button.clicked.connect(self._move_records_down)
         self._set_settings = set_settings
         self._set_list_model = SetListModel(set_settings)
-        self._set_list_model.dataChanged.connect(self._domains_sets_exportable_state_changed)
+        self._set_list_model.dataChanged.connect(
+            self._domains_sets_exportable_state_changed
+        )
         self._ui.set_list_view.setModel(self._set_list_model)
         record_list_model = RecordListModel()
         self._ui.record_list_view.setModel(record_list_model)
-        self._ui.set_list_view.selectionModel().selectionChanged.connect(self._populate_set_contents)
-        self._ui.open_indexed_parameter_settings_button.clicked.connect(self._show_indexed_parameter_settings)
-        self._ui.open_parameter_merging_settings_button.clicked.connect(self._show_parameter_merging_settings)
+        self._ui.set_list_view.selectionModel().selectionChanged.connect(
+            self._populate_set_contents
+        )
+        self._ui.open_indexed_parameter_settings_button.clicked.connect(
+            self._show_indexed_parameter_settings
+        )
+        self._ui.open_parameter_merging_settings_button.clicked.connect(
+            self._show_parameter_merging_settings
+        )
         self._indexing_settings = indexing_settings
         self._indexed_parameter_settings_window = None
         self._merging_settings = merging_settings
@@ -111,7 +125,9 @@ class GdxExportSettings(QWidget):
         self._none_export = none_export
         self._init_none_fallback_combo_box(none_fallback)
         self._init_none_export_combo_box(none_export)
-        self._ui.none_fallback_combo_box.currentTextChanged.connect(self._set_none_fallback)
+        self._ui.none_fallback_combo_box.currentTextChanged.connect(
+            self._set_none_fallback
+        )
         self._ui.none_export_combo_box.currentTextChanged.connect(self._set_none_export)
         self._state = State.OK
         self._check_state()
@@ -151,9 +167,13 @@ class GdxExportSettings(QWidget):
         self._populate_global_parameters_combo_box(set_settings)
         self._set_settings = set_settings
         self._set_list_model = SetListModel(set_settings)
-        self._set_list_model.dataChanged.connect(self._domains_sets_exportable_state_changed)
+        self._set_list_model.dataChanged.connect(
+            self._domains_sets_exportable_state_changed
+        )
         self._ui.set_list_view.setModel(self._set_list_model)
-        self._ui.set_list_view.selectionModel().selectionChanged.connect(self._populate_set_contents)
+        self._ui.set_list_view.selectionModel().selectionChanged.connect(
+            self._populate_set_contents
+        )
         self._ui.record_list_view.setModel(RecordListModel())
         self._indexing_settings = indexing_settings
         self._merging_settings = merging_settings
@@ -162,7 +182,10 @@ class GdxExportSettings(QWidget):
     def _check_state(self):
         """Checks if there are parameters in need for indexing."""
         for setting in self.indexing_settings.values():
-            if setting.indexing_domain_name is None and self._set_settings.is_exportable(setting.set_name):
+            if (
+                setting.indexing_domain_name is None
+                and self._set_settings.is_exportable(setting.set_name)
+            ):
                 self._ui.indexing_status_label.setText(
                     "<span style='color:#ff3333;white-space: pre-wrap;'>Not all parameters correctly indexed.</span>"
                 )
@@ -184,15 +207,23 @@ class GdxExportSettings(QWidget):
         else:
             self._none_fallback = gdx.NoneFallback.USE_DEFAULT_VALUE
         try:
-            database_map = scenario_filtered_database_map(self._database_url, self._scenario)
+            database_map = scenario_filtered_database_map(
+                self._database_url, self._scenario
+            )
         except SpineDBAPIError as error:
-            QMessageBox.warning(self, f"Error", f"Could not open database '{self._database_url}'.")
+            QMessageBox.warning(
+                self, f"Error", f"Could not open database '{self._database_url}'."
+            )
             return
         try:
-            indexing_settings = gdx.make_indexing_settings(database_map, self._none_fallback, logger=None)
+            indexing_settings = gdx.make_indexing_settings(
+                database_map, self._none_fallback, logger=None
+            )
         except gdx.GdxExportException as error:
             QMessageBox.warning(
-                self, "Error", f"Failed to read indexing settings from database '{self._database_url}':\n{error}"
+                self,
+                "Error",
+                f"Failed to read indexing settings from database '{self._database_url}':\n{error}",
             )
             return
         finally:
@@ -244,10 +275,16 @@ class GdxExportSettings(QWidget):
     def _populate_global_parameters_combo_box(self, settings):
         """(Re)populates the global parameters combo box."""
         self._ui.global_parameters_combo_box.addItem("Nothing selected")
-        usable_domains = [name for name in settings.domain_names if not settings.metadata(name).is_additional()]
+        usable_domains = [
+            name
+            for name in settings.domain_names
+            if not settings.metadata(name).is_additional()
+        ]
         self._ui.global_parameters_combo_box.addItems(usable_domains)
         if settings.global_parameters_domain_name:
-            self._ui.global_parameters_combo_box.setCurrentText(settings.global_parameters_domain_name)
+            self._ui.global_parameters_combo_box.setCurrentText(
+                settings.global_parameters_domain_name
+            )
 
     def _set_records_ordering_controls_enabled(self, enabled):
         """
@@ -314,7 +351,10 @@ class GdxExportSettings(QWidget):
     @Slot(QAbstractButton)
     def _reset_settings(self, button):
         """Requests for fresh settings to be read from the database."""
-        if self._ui.button_box.standardButton(button) != QDialogButtonBox.RestoreDefaults:
+        if (
+            self._ui.button_box.standardButton(button)
+            != QDialogButtonBox.RestoreDefaults
+        ):
             return
         self.reset_requested.emit(self._database_url)
 
@@ -349,9 +389,15 @@ class GdxExportSettings(QWidget):
         if self._indexed_parameter_settings_window is None:
             indexing_settings = deepcopy(self._indexing_settings)
             self._indexed_parameter_settings_window = ParameterIndexSettingsWindow(
-                indexing_settings, self._set_settings, self._database_url, self._scenario, self
+                indexing_settings,
+                self._set_settings,
+                self._database_url,
+                self._scenario,
+                self,
             )
-            self._indexed_parameter_settings_window.settings_approved.connect(self._gather_parameter_indexing_settings)
+            self._indexed_parameter_settings_window.settings_approved.connect(
+                self._gather_parameter_indexing_settings
+            )
             self._indexed_parameter_settings_window.settings_rejected.connect(
                 self._dispose_parameter_indexing_settings_window
             )
@@ -364,15 +410,23 @@ class GdxExportSettings(QWidget):
             self._parameter_merging_settings_window = ParameterMergingSettingsWindow(
                 self._merging_settings, self._database_url, self
             )
-            self._parameter_merging_settings_window.settings_approved.connect(self._parameter_merging_approved)
-            self._parameter_merging_settings_window.settings_rejected.connect(self._dispose_parameter_merging_window)
+            self._parameter_merging_settings_window.settings_approved.connect(
+                self._parameter_merging_approved
+            )
+            self._parameter_merging_settings_window.settings_rejected.connect(
+                self._dispose_parameter_merging_window
+            )
         self._parameter_merging_settings_window.show()
 
     @Slot()
     def _gather_parameter_indexing_settings(self):
         """Gathers settings from the indexed parameters settings window."""
-        self._indexing_settings = self._indexed_parameter_settings_window.indexing_settings
-        indexing_domains = self._indexed_parameter_settings_window.additional_indexing_domains()
+        self._indexing_settings = (
+            self._indexed_parameter_settings_window.indexing_settings
+        )
+        indexing_domains = (
+            self._indexed_parameter_settings_window.additional_indexing_domains()
+        )
         self._set_list_model.update_indexing_domains(indexing_domains)
         self._state = State.OK
         self._ui.indexing_status_label.setText("")
@@ -390,14 +444,20 @@ class GdxExportSettings(QWidget):
             if records is None:
                 new_records[setting.new_domain_name] = merge_records
             else:
-                combined_records = gdx.LiteralRecords(records.records + merge_records.records)
+                combined_records = gdx.LiteralRecords(
+                    records.records + merge_records.records
+                )
                 new_records[setting.new_domain_name] = combined_records
         for domain_to_drop in old_domain_names - new_domain_names:
             self._set_list_model.drop_domain(domain_to_drop)
         for domain_to_update in old_domain_names & new_domain_names:
-            self._set_list_model.update_domain(domain_to_update, new_records[domain_to_update])
+            self._set_list_model.update_domain(
+                domain_to_update, new_records[domain_to_update]
+            )
         for domain_to_add in new_domain_names - old_domain_names:
-            self._set_list_model.add_domain(domain_to_add, new_records[domain_to_add], gdx.Origin.MERGING)
+            self._set_list_model.add_domain(
+                domain_to_add, new_records[domain_to_add], gdx.Origin.MERGING
+            )
         self._merging_settings = new_merging_settings
 
     @Slot()

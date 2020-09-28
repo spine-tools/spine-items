@@ -25,8 +25,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
-from spinetoolbox.widgets.custom_qtreeview import ReferencesTreeView
-from spinetoolbox.widgets.custom_qtreeview import DataTreeView
+from spine_items.widgets.custom_qtreeview import ReferencesTreeView
+from spine_items.widgets.custom_qtreeview import DataTreeView
 
 from spinetoolbox import resources_icons_rc
 

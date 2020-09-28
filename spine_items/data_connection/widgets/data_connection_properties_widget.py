@@ -19,7 +19,7 @@ Data connection properties widget.
 import os
 from PySide2.QtWidgets import QWidget
 from PySide2.QtCore import Qt, Slot, QUrl
-from spinetoolbox.config import TREEVIEW_HEADER_SS
+from spine_items.config import TREEVIEW_HEADER_SS
 from .custom_menus import DcRefContextMenu, DcDataContextMenu
 
 
@@ -32,7 +32,9 @@ class DataConnectionPropertiesWidget(QWidget):
         Args:
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
-        from ..ui.data_connection_properties import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.data_connection_properties import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
         super().__init__()
         self._toolbox = toolbox
@@ -48,8 +50,12 @@ class DataConnectionPropertiesWidget(QWidget):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.treeView_dc_references.customContextMenuRequested.connect(self.show_references_context_menu)
-        self.ui.treeView_dc_data.customContextMenuRequested.connect(self.show_data_context_menu)
+        self.ui.treeView_dc_references.customContextMenuRequested.connect(
+            self.show_references_context_menu
+        )
+        self.ui.treeView_dc_data.customContextMenuRequested.connect(
+            self.show_data_context_menu
+        )
 
     @Slot("QPoint", name="show_references_context_menu")
     def show_references_context_menu(self, pos):
@@ -67,11 +73,19 @@ class DataConnectionPropertiesWidget(QWidget):
         curr_index = self._toolbox.ui.treeView_project.currentIndex()
         leaf_item = self._toolbox.project_item_model.item(curr_index)
         if not leaf_item:
-            self._toolbox.msg_error.emit("FIXME: Data Connection {0} not found in project item tree".format(curr_index))
+            self._toolbox.msg_error.emit(
+                "FIXME: Data Connection {0} not found in project item tree".format(
+                    curr_index
+                )
+            )
             return
         dc = leaf_item.project_item
         if option == "Open containing directory...":
-            ref_path = self.ui.treeView_dc_references.model().itemFromIndex(ind).data(Qt.DisplayRole)
+            ref_path = (
+                self.ui.treeView_dc_references.model()
+                .itemFromIndex(ind)
+                .data(Qt.DisplayRole)
+            )
             ref_dir = os.path.split(ref_path)[0]
             file_url = "file:///" + ref_dir
             self._toolbox.open_anchor(QUrl(file_url, QUrl.TolerantMode))
@@ -100,7 +114,11 @@ class DataConnectionPropertiesWidget(QWidget):
         curr_index = self._toolbox.ui.treeView_project.currentIndex()
         leaf_item = self._toolbox.project_item_model.item(curr_index)
         if not leaf_item:
-            self._toolbox.msg_error.emit("FIXME: Data Connection {0} not found in project items".format(curr_index))
+            self._toolbox.msg_error.emit(
+                "FIXME: Data Connection {0} not found in project items".format(
+                    curr_index
+                )
+            )
             return
         dc = leaf_item.project_item
         if option == "New file...":

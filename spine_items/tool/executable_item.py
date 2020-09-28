@@ -25,7 +25,7 @@ import shutil
 import time
 import uuid
 from PySide2.QtCore import QEventLoop, Slot
-from spinetoolbox.config import DEFAULT_WORK_DIR, TOOL_OUTPUT_DIR
+from spine_items.config import TOOL_OUTPUT_DIR
 from ..executable_item_base import ExecutableItemBase
 from ..project_item_resource import ProjectItemResource
 from ..helpers import shorten
@@ -690,11 +690,9 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         execute_in_work = item_dict["execute_in_work"]
         if execute_in_work:
-            work_dir = app_settings.value(
-                "appSettings/workDir", defaultValue=DEFAULT_WORK_DIR
-            )
+            work_dir = app_settings.value("appSettings/workDir")
             if not work_dir:
-                work_dir = DEFAULT_WORK_DIR
+                raise ValueError("Work directory not set, unable to create item")
         else:
             work_dir = None
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))

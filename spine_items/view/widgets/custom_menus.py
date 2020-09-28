@@ -16,7 +16,7 @@ Classes for custom context menus and pop-up menus.
 :date:   9.1.2018
 """
 
-from spinetoolbox.widgets.custom_menus import CustomContextMenu
+from spine_items.widgets.custom_menus import CustomContextMenu
 
 
 class ViewPropertiesContextMenu(CustomContextMenu):

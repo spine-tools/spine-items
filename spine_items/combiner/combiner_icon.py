@@ -19,7 +19,7 @@ Module for view icon class.
 import random
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QTimeLine, QPointF, Slot
-from spinetoolbox.graphics_items import ProjectItemIcon
+from spine_items.graphics_items import ProjectItemIcon
 
 
 class CombinerIcon(ProjectItemIcon):
@@ -36,7 +36,13 @@ class CombinerIcon(ProjectItemIcon):
             icon (str): icon resource path
         """
         super().__init__(
-            toolbox, x, y, project_item, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc")
+            toolbox,
+            x,
+            y,
+            project_item,
+            icon,
+            icon_color=QColor("#990000"),
+            background_color=QColor("#ffcccc"),
         )
         self.time_line = QTimeLine()
         self.time_line.setLoopCount(0)  # loop forever

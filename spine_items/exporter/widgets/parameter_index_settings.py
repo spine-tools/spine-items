@@ -19,7 +19,7 @@ from contextlib import contextmanager
 import enum
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QWidget
-from spinetoolbox.spine_io.exporters import gdx
+from spine_items.spine_io.exporters import gdx
 from ..mvcmodels.indexing_table_model import IndexingTableModel
 
 
@@ -41,7 +41,9 @@ class ParameterIndexSettings(QWidget):
             available_domains (dict): a dict from existing domain name to :class:`Records`
             parent (QWidget, optional): a parent widget
         """
-        from ..ui.parameter_index_settings import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.parameter_index_settings import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
         self._indexing_setting = indexing_setting
@@ -56,9 +58,15 @@ class ParameterIndexSettings(QWidget):
         self._available_domains = available_domains
         self._ui.domains_combo.addItems(sorted(available_domains.keys()))
         self._ui.domains_combo.currentTextChanged.connect(self._change_domain)
-        self._ui.pick_expression_edit.textChanged.connect(self._update_index_list_selection)
-        self._ui.move_domain_left_button.clicked.connect(self._move_indexing_domain_left)
-        self._ui.move_domain_right_button.clicked.connect(self._move_indexing_domain_right)
+        self._ui.pick_expression_edit.textChanged.connect(
+            self._update_index_list_selection
+        )
+        self._ui.move_domain_left_button.clicked.connect(
+            self._move_indexing_domain_left
+        )
+        self._ui.move_domain_right_button.clicked.connect(
+            self._move_indexing_domain_right
+        )
         indexing_domain_name = indexing_setting.indexing_domain_name
         if indexing_domain_name is None and available_domains:
             indexing_domain_name = next(iter(available_domains))
@@ -74,7 +82,9 @@ class ParameterIndexSettings(QWidget):
                 self._indexing_table_model.set_picking(picking)
         self._check_state()
         self._indexing_table_model.selection_changed.connect(self._check_state)
-        self._indexing_table_model.manual_selection.connect(self._clear_pick_expression_silently)
+        self._indexing_table_model.manual_selection.connect(
+            self._clear_pick_expression_silently
+        )
 
     @property
     def state(self):
@@ -163,12 +173,16 @@ class ParameterIndexSettings(QWidget):
 
     def warning_message(self, message):
         """Shows a warning message on the widget."""
-        yellow_message = "<span style='color:#b89e00;white-space: pre-wrap;'>" + message + "</span>"
+        yellow_message = (
+            "<span style='color:#b89e00;white-space: pre-wrap;'>" + message + "</span>"
+        )
         self._ui.message_label.setText(yellow_message)
 
     def error_message(self, message):
         """Shows an error message on the widget."""
-        red_message = "<span style='color:#ff3333;white-space: pre-wrap;'>" + message + "</span>"
+        red_message = (
+            "<span style='color:#ff3333;white-space: pre-wrap;'>" + message + "</span>"
+        )
         self._ui.message_label.setText(red_message)
 
     @Slot()
@@ -192,7 +206,9 @@ class ParameterIndexSettings(QWidget):
         """Checks if there are non-fatal issues with parameter indexing."""
         if mapped_values_balance > 0:
             self._state = IndexSettingsState.OK
-            self.warning_message("Too many indexes selected. The excess indexes will not be used.")
+            self.warning_message(
+                "Too many indexes selected. The excess indexes will not be used."
+            )
             return True
         return False
 
@@ -205,7 +221,11 @@ class ParameterIndexSettings(QWidget):
         name = "<b>{}</b>".format(domain_name if domain_name else "unnamed")
         label = (
             "("
-            + ", ".join(parameter.domain_names[:index_position] + [name] + parameter.domain_names[index_position:])
+            + ", ".join(
+                parameter.domain_names[:index_position]
+                + [name]
+                + parameter.domain_names[index_position:]
+            )
             + ")"
         )
         self._ui.indexing_domains_label.setText(label)
@@ -213,10 +233,14 @@ class ParameterIndexSettings(QWidget):
     @Slot()
     def _clear_pick_expression_silently(self):
         """Clears the pick expression line edit."""
-        self._ui.pick_expression_edit.textChanged.disconnect(self._update_index_list_selection)
+        self._ui.pick_expression_edit.textChanged.disconnect(
+            self._update_index_list_selection
+        )
         self._ui.pick_expression_edit.clear()
         self._using_pick_expression = False
-        self._ui.pick_expression_edit.textChanged.connect(self._update_index_list_selection)
+        self._ui.pick_expression_edit.textChanged.connect(
+            self._update_index_list_selection
+        )
 
     @Slot(str)
     def _change_domain(self, domain_name):
@@ -249,7 +273,9 @@ class ParameterIndexSettings(QWidget):
     @Slot(bool)
     def _move_indexing_domain_right(self, _):
         """Moves the indexing domain name right on the indexing label."""
-        if self._indexing_setting.index_position < len(self._indexing_setting.parameter.domain_names):
+        if self._indexing_setting.index_position < len(
+            self._indexing_setting.parameter.domain_names
+        ):
             self._indexing_setting.index_position += 1
             self._update_indexing_domains_name()
 

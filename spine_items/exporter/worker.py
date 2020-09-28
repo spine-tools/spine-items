@@ -24,7 +24,7 @@ from spinedb_api import (
     DatabaseMapping,
     SpineDBAPIError,
 )
-from spinetoolbox.spine_io.exporters import gdx
+from spine_items.spine_io.exporters import gdx
 from .db_utils import latest_database_commit_time_stamp
 
 
@@ -74,7 +74,9 @@ class Worker(QObject):
         if self._previous_settings is not None:
             updated_settings = deepcopy(self._previous_settings)
             updated_settings.update(result.set_settings)
-            updated_indexing_settings = self._update_indexing_settings(updated_settings, result.indexing_settings)
+            updated_indexing_settings = self._update_indexing_settings(
+                updated_settings, result.indexing_settings
+            )
             if updated_indexing_settings is None:
                 return
             updated_merging_settings = self._update_merging_settings(updated_settings)
@@ -86,7 +88,9 @@ class Worker(QObject):
         self.finished.emit(self._database_url, result)
         self.thread.quit()
 
-    def set_previous_settings(self, previous_settings, previous_indexing_settings, previous_merging_settings):
+    def set_previous_settings(
+        self, previous_settings, previous_indexing_settings, previous_merging_settings
+    ):
         """
         Makes worker update existing settings instead of just making new ones.
 
@@ -115,12 +119,16 @@ class Worker(QObject):
         try:
             scenarios = self._read_scenarios(database_map)
             if self._scenario is not None and self._scenario not in scenarios:
-                self.errored.emit(self._database_url, f"Scenario {self._scenario} not found.")
+                self.errored.emit(
+                    self._database_url, f"Scenario {self._scenario} not found."
+                )
                 return None, None, None, None
             if self._scenario is None:
                 apply_alternative_filter_to_parameter_value_sq(database_map, ["Base"])
             else:
-                apply_scenario_filter_to_parameter_value_sq(database_map, self._scenario)
+                apply_scenario_filter_to_parameter_value_sq(
+                    database_map, self._scenario
+                )
         except SpineDBAPIError as error:
             self.errored.emit(self._database_url, error)
             return None, None, None, None
@@ -128,7 +136,9 @@ class Worker(QObject):
             time_stamp = latest_database_commit_time_stamp(database_map)
             settings = gdx.make_set_settings(database_map)
             logger = _Logger(self._database_url, self)
-            indexing_settings = gdx.make_indexing_settings(database_map, self._none_fallback, logger)
+            indexing_settings = gdx.make_indexing_settings(
+                database_map, self._none_fallback, logger
+            )
         except gdx.GdxExportException as error:
             self.errored.emit(self._database_url, error)
             return None, None, None, None

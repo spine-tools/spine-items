@@ -17,7 +17,7 @@ Module for Importer icon class.
 """
 
 from PySide2.QtGui import QColor
-from spinetoolbox.graphics_items import ProjectItemIcon
+from spine_items.graphics_items import ProjectItemIcon
 from ..animations import ImporterAnimation
 
 

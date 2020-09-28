@@ -69,7 +69,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 script_dir = os.path.dirname(os.path.realpath(__file__))
-project_source_dir = os.path.join(script_dir, os.path.pardir, "spinetoolbox")
+project_source_dir = os.path.join(script_dir, os.path.pardir, "spine_items")
 ui_dirs = find_ui_dirs(project_source_dir)
 for ui_dir in ui_dirs:
     print(f"--- Entering {os.path.abspath(ui_dir)} ---")

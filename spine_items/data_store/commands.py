@@ -15,7 +15,7 @@ Undo/redo commands for the DataStore project item.
 :authors: M. Marin (KTH)
 :date:   5.5.2020
 """
-from spinetoolbox.project_commands import SpineToolboxCommand
+from spine_items.commands import SpineToolboxCommand
 
 
 class UpdateDSURLCommand(SpineToolboxCommand):

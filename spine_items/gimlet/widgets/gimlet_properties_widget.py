@@ -17,7 +17,7 @@ Gimlet properties widget.
 """
 
 from PySide2.QtWidgets import QWidget
-from spinetoolbox.config import TREEVIEW_HEADER_SS
+from spine_items.config import TREEVIEW_HEADER_SS
 from ..utils import SHELLS
 
 

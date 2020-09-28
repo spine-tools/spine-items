@@ -16,7 +16,7 @@ Undo/redo commands for the Importer project item.
 :date:   5.5.2020
 """
 import copy
-from spinetoolbox.project_commands import SpineToolboxCommand
+from spine_items.commands import SpineToolboxCommand
 
 
 class UpdateSettingsCommand(SpineToolboxCommand):

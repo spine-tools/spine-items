@@ -18,9 +18,9 @@ Contains base classes for project items and item factories.
 import os
 import logging
 from PySide2.QtCore import Signal
-from spinetoolbox.helpers import create_dir, rename_dir, open_url
-from spinetoolbox.project_commands import SetItemSpecificationCommand
-from spinetoolbox.metaobject import MetaObject
+from spine_items.helpers import create_dir, rename_dir, open_url
+from .metaobject import MetaObject
+from .commands import SetItemSpecificationCommand
 from .helpers import shorten
 
 

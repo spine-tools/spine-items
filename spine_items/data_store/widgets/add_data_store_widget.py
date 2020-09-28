@@ -16,7 +16,7 @@ Widget shown to user when a new Data Store is created.
 :date:   19.1.2017
 """
 
-from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
+from spine_items.widgets.add_project_item_widget import AddProjectItemWidget
 from ..data_store import DataStore
 from ..item_info import ItemInfo
 

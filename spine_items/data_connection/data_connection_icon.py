@@ -19,7 +19,7 @@ Module for data connection icon class.
 import os
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QObject, Qt, QTimer, Signal
-from spinetoolbox.graphics_items import ProjectItemIcon
+from spine_items.graphics_items import ProjectItemIcon
 
 
 class DataConnectionIcon(ProjectItemIcon):
@@ -38,7 +38,13 @@ class DataConnectionIcon(ProjectItemIcon):
             icon (str): icon resource path
         """
         super().__init__(
-            toolbox, x, y, project_item, icon, icon_color=QColor(0, 0, 255), background_color=QColor("#e6e6ff")
+            toolbox,
+            x,
+            y,
+            project_item,
+            icon,
+            icon_color=QColor(0, 0, 255),
+            background_color=QColor("#e6e6ff"),
         )
         self.setAcceptDrops(True)
         self._drag_over = False
@@ -83,7 +89,9 @@ class DataConnectionIcon(ProjectItemIcon):
     def dropEvent(self, event):
         """Emit files_dropped_on_dc signal from scene,
         with this instance, and a list of files for each dropped url."""
-        self.files_dropped_on_icon.emit(self, [url.toLocalFile() for url in event.mimeData().urls()])
+        self.files_dropped_on_icon.emit(
+            self, [url.toLocalFile() for url in event.mimeData().urls()]
+        )
 
     def select_on_drag_over(self):
         """Called when the timer started in drag_enter_event is elapsed.

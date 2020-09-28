@@ -15,7 +15,7 @@ Undo/redo commands for the Gimlet project item.
 :authors: P. Savolainen (VTT)
 :date:   30.4.2020
 """
-from spinetoolbox.project_commands import SpineToolboxCommand
+from spine_items.commands import SpineToolboxCommand
 
 
 class UpdateShellCheckBoxCommand(SpineToolboxCommand):

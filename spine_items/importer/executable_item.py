@@ -18,7 +18,7 @@ Contains Importer's executable item as well as support utilities.
 import os
 import pathlib
 from PySide2.QtCore import QObject, QEventLoop, Signal, Slot, QThread
-from spinetoolbox.spine_io.gdx_utils import find_gams_directory
+from spine_items.spine_io.gdx_utils import find_gams_directory
 from ..executable_item_base import ExecutableItemBase
 from ..helpers import shorten
 from .importer_worker import ImporterWorker

@@ -18,7 +18,7 @@ Parameter merging settings widget.
 
 from PySide2.QtCore import QItemSelection, QItemSelectionModel, Signal, Slot
 from PySide2.QtWidgets import QWidget
-from spinetoolbox.spine_io.exporters.gdx import MergingSetting
+from spine_items.spine_io.exporters.gdx import MergingSetting
 from .merging_error_flag import MergingErrorFlag
 from ..mvcmodels.domain_name_list_model import DomainNameListModel
 from ..mvcmodels.parameter_name_list_model import ParameterNameListModel
@@ -32,7 +32,9 @@ class ParameterMergingSettings(QWidget):
     removal_requested = Signal("QVariant")
     """Emitted when the settings widget wants to get removed from the parent window."""
 
-    def __init__(self, entity_class_infos, parent, parameter_name=None, merging_setting=None):
+    def __init__(
+        self, entity_class_infos, parent, parameter_name=None, merging_setting=None
+    ):
         """
         Args:
             entity_class_infos (list): list of EntityClassInfo objects
@@ -40,7 +42,9 @@ class ParameterMergingSettings(QWidget):
             parameter_name (str): merged parameter name of None for widget
             merging_setting (MergingSetting): merging settings or None for empty widget
         """
-        from ..ui.parameter_merging_settings import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.parameter_merging_settings import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
         self._error_flags = (
@@ -57,7 +61,9 @@ class ParameterMergingSettings(QWidget):
         self._ui.remove_button.clicked.connect(self._remove_self)
         self._domain_names_model = DomainNameListModel(entity_class_infos)
         self._ui.domains_list_view.setModel(self._domain_names_model)
-        self._ui.domains_list_view.selectionModel().selectionChanged.connect(self._handle_domain_selection_change)
+        self._ui.domains_list_view.selectionModel().selectionChanged.connect(
+            self._handle_domain_selection_change
+        )
         self._parameter_name_list_model = ParameterNameListModel([])
         self._ui.parameter_name_list_view.setModel(self._parameter_name_list_model)
         self._ui.domain_name_edit.textChanged.connect(self._update_indexing_domain_name)
@@ -67,10 +73,16 @@ class ParameterMergingSettings(QWidget):
         if parameter_name is not None:
             self._ui.parameter_name_edit.setText(parameter_name)
         if merging_setting is not None:
-            domain_index = self._domain_names_model.index_for(merging_setting.previous_set)
-            self._ui.domains_list_view.selectionModel().select(domain_index, QItemSelectionModel.Select)
+            domain_index = self._domain_names_model.index_for(
+                merging_setting.previous_set
+            )
+            self._ui.domains_list_view.selectionModel().select(
+                domain_index, QItemSelectionModel.Select
+            )
             self._ui.domain_name_edit.setText(merging_setting.new_domain_name)
-            self._ui.domain_description_edit.setText(merging_setting.new_domain_description)
+            self._ui.domain_description_edit.setText(
+                merging_setting.new_domain_description
+            )
             self._index_position = merging_setting.index_position
             self._reset_indexing_domains_label()
         self._check_state()
@@ -92,16 +104,26 @@ class ParameterMergingSettings(QWidget):
         entity_class_info = self._domain_names_model.item_at(self._selected_domain_row)
         previous_set = entity_class_info.name
         previous_domain_names = entity_class_info.domain_names
-        setting = MergingSetting(parameter_names, domain_name, domain_description, previous_set, previous_domain_names)
+        setting = MergingSetting(
+            parameter_names,
+            domain_name,
+            domain_description,
+            previous_set,
+            previous_domain_names,
+        )
         setting.index_position = self._index_position
         return setting
 
     def _check_state(self):
         """Updates the message label according to widget's error state."""
         if self._error_flags & MergingErrorFlag.PARAMETER_NAME_MISSING:
-            self._ui.message_label.setText(_ERROR_MESSAGE.format("Parameter name missing."))
+            self._ui.message_label.setText(
+                _ERROR_MESSAGE.format("Parameter name missing.")
+            )
         elif self._error_flags & MergingErrorFlag.DOMAIN_NAME_MISSING:
-            self._ui.message_label.setText(_ERROR_MESSAGE.format("Domain name missing."))
+            self._ui.message_label.setText(
+                _ERROR_MESSAGE.format("Domain name missing.")
+            )
         elif self._error_flags & MergingErrorFlag.NO_PARAMETER_SELECTED:
             self._ui.message_label.setText(_ERROR_MESSAGE.format("No domain selected."))
         else:
@@ -126,12 +148,18 @@ class ParameterMergingSettings(QWidget):
         bold_name = "<b>{}</b>".format(domain_name if domain_name else "unnamed")
         if domain_names is None:
             if self._selected_domain_row is not None:
-                domain_names = self._domain_names_model.item_at(self._selected_domain_row).domain_names
+                domain_names = self._domain_names_model.item_at(
+                    self._selected_domain_row
+                ).domain_names
             else:
                 domain_names = list()
         label = (
             "("
-            + ", ".join(domain_names[: self._index_position] + [bold_name] + domain_names[self._index_position :])
+            + ", ".join(
+                domain_names[: self._index_position]
+                + [bold_name]
+                + domain_names[self._index_position :]
+            )
             + ")"
         )
         self._ui.indexing_domains_label.setText(label)
@@ -182,7 +210,9 @@ class ParameterMergingSettings(QWidget):
         """Moves the new indexing domain left in indexing_domains_label."""
         if self._selected_domain_row is None:
             return
-        domain_names = self._domain_names_model.item_at(self._selected_domain_row).domain_names
+        domain_names = self._domain_names_model.item_at(
+            self._selected_domain_row
+        ).domain_names
         if domain_names and self._index_position < len(domain_names):
             self._index_position += 1
             self._reset_indexing_domains_label()

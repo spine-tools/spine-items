@@ -16,7 +16,7 @@ Contains :class:`RecordListModel`
 :date:   25.8.2020
 """
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
-from spinetoolbox.spine_io.exporters import gdx
+from spine_items.spine_io.exporters import gdx
 from ..list_utils import move_list_elements
 
 
@@ -45,10 +45,12 @@ class RecordListModel(QAbstractListModel):
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         """Returns row and column header data."""
         if orientation == Qt.Horizontal:
-            return ''
+            return ""
         return section + 1
 
-    def moveRows(self, sourceParent, sourceRow, count, destinationParent, destinationChild):
+    def moveRows(
+        self, sourceParent, sourceRow, count, destinationParent, destinationChild
+    ):
         """
         Moves the records around.
 
@@ -68,9 +70,17 @@ class RecordListModel(QAbstractListModel):
         if destinationChild < 0 or destinationChild >= row_count:
             return False
         last_source_row = sourceRow + count - 1
-        row_after = destinationChild if sourceRow > destinationChild else destinationChild + 1
-        self.beginMoveRows(sourceParent, sourceRow, last_source_row, destinationParent, row_after)
-        self._records.shuffle(move_list_elements(self._records.records, sourceRow, last_source_row, destinationChild))
+        row_after = (
+            destinationChild if sourceRow > destinationChild else destinationChild + 1
+        )
+        self.beginMoveRows(
+            sourceParent, sourceRow, last_source_row, destinationParent, row_after
+        )
+        self._records.shuffle(
+            move_list_elements(
+                self._records.records, sourceRow, last_source_row, destinationChild
+            )
+        )
         self.endMoveRows()
         return True
 

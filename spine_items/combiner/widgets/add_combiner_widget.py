@@ -16,7 +16,7 @@ Widget shown to user when a new Combiner is created.
 :date:   19.1.2017
 """
 
-from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
+from spine_items.widgets.add_project_item_widget import AddProjectItemWidget
 from ..item_info import ItemInfo
 from ..combiner import Combiner
 
@@ -36,5 +36,12 @@ class AddCombinerWidget(AddProjectItemWidget):
 
     def call_add_item(self):
         """Creates new Item according to user's selections."""
-        item = {self.name: {"type": ItemInfo.item_type(), "description": self.description, "x": self._x, "y": self._y}}
+        item = {
+            self.name: {
+                "type": ItemInfo.item_type(),
+                "description": self.description,
+                "x": self._x,
+                "y": self._y,
+            }
+        }
         self._project.add_project_items(item, set_selected=True)

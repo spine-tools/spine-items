@@ -18,7 +18,7 @@ View properties widget.
 
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QWidget
-from spinetoolbox.config import TREEVIEW_HEADER_SS
+from spine_items.config import TREEVIEW_HEADER_SS
 from .custom_menus import ViewPropertiesContextMenu
 
 
@@ -31,7 +31,9 @@ class ViewPropertiesWidget(QWidget):
 
     def __init__(self, toolbox):
         """Init class."""
-        from ..ui.view_properties import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.view_properties import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
         super().__init__()
         self._toolbox = toolbox
@@ -45,7 +47,9 @@ class ViewPropertiesWidget(QWidget):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.treeView_view.customContextMenuRequested.connect(self.show_view_properties_context_menu)
+        self.ui.treeView_view.customContextMenuRequested.connect(
+            self.show_view_properties_context_menu
+        )
 
     @Slot("QPoint")
     def show_view_properties_context_menu(self, pos):
@@ -54,8 +58,12 @@ class ViewPropertiesWidget(QWidget):
         Args:
             pos (QPoint): Mouse position
         """
-        ind = self.ui.treeView_view.indexAt(pos)  # Index of selected item in View references tree view.
-        curr_index = self._toolbox.ui.treeView_project.currentIndex()  # Get selected View
+        ind = self.ui.treeView_view.indexAt(
+            pos
+        )  # Index of selected item in View references tree view.
+        curr_index = (
+            self._toolbox.ui.treeView_project.currentIndex()
+        )  # Get selected View
         view = self._toolbox.project_item_model.item(curr_index).project_item
         global_pos = self.ui.treeView_view.viewport().mapToGlobal(pos)
         self.view_prop_context_menu = ViewPropertiesContextMenu(self, global_pos, ind)

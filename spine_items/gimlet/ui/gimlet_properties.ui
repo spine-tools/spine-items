@@ -240,7 +240,7 @@
   <customwidget>
    <class>PropertyQLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>spinetoolbox/widgets/custom_qlineedits.h</header>
+   <header>spine_items/widgets/custom_qlineedits.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

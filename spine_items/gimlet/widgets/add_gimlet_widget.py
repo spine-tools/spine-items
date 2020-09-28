@@ -16,7 +16,7 @@ Widget shown to user when a new Gimlet is created.
 :date:   15.4.2020
 """
 
-from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
+from spine_items.widgets.add_project_item_widget import AddProjectItemWidget
 from ..gimlet import Gimlet
 from ..item_info import ItemInfo
 

@@ -22,9 +22,9 @@ import shutil
 import uuid
 from PySide2.QtCore import Signal, Slot, QObject, QEventLoop
 from ..executable_item_base import ExecutableItemBase
-from spinetoolbox.execution_managers import QProcessExecutionManager
-import spine_items.helpers as helpers
-from spinetoolbox.config import DEFAULT_WORK_DIR, GIMLET_WORK_DIR_NAME
+from spine_items.execution_managers import QProcessExecutionManager
+from spine_items import helpers
+from spine_items.config import GIMLET_WORK_DIR_NAME
 from .item_info import ItemInfo
 from .utils import SHELLS
 
@@ -83,11 +83,9 @@ class ExecutableItem(ExecutableItemBase, QObject):
         if item_dict["work_dir_mode"]:  # Use 'default' work dir. i.e. data_dir/work
             work_dir = os.path.join(data_dir, GIMLET_WORK_DIR_NAME)
         else:  # Make unique work dir
-            app_work_dir = app_settings.value(
-                "appSettings/workDir", defaultValue=DEFAULT_WORK_DIR
-            )
+            app_work_dir = app_settings.value("appSettings/workDir")
             if not app_work_dir:
-                app_work_dir = DEFAULT_WORK_DIR
+                raise ValueError("Work directory not set, unable to create item")
             unique_dir_name = (
                 helpers.shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
             )

@@ -31,7 +31,7 @@ from PySide2.QtWidgets import (
 )
 from ..project_item import ProjectItem
 from ..project_item_resource import ProjectItemResource
-from spinetoolbox.helpers import busy_effect, deserialize_path, serialize_path, open_url
+from spine_items.helpers import busy_effect, deserialize_path, serialize_path, open_url
 from ..config import INVALID_FILENAME_CHARS
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
 from .executable_item import ExecutableItem
@@ -286,7 +286,20 @@ class DataConnection(ProjectItem):
     @busy_effect
     def show_spine_datapackage_form(self):
         """Show spine_datapackage_form widget."""
-        self._toolbox.show_spine_datapackage_form(self)
+        if self.spine_datapackage_form:
+            if self.spine_datapackage_form.windowState() & Qt.WindowMinimized:
+                # Remove minimized status and restore window with the previous state (maximized/normal state)
+                self.spine_datapackage_form.setWindowState(
+                    self.spine_datapackage_form.windowState() & ~Qt.WindowMinimized
+                    | Qt.WindowActive
+                )
+                self.spine_datapackage_form.activateWindow()
+            else:
+                self.spine_datapackage_form.raise_()
+            return
+        self.spine_datapackage_form = self._toolbox.create_spine_datapackage_form(self)
+        self.spine_datapackage_form.destroyed.connect(self.datapackage_form_destroyed)
+        self.spine_datapackage_form.show()
 
     @Slot()
     def datapackage_form_destroyed(self):
