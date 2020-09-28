@@ -25,7 +25,7 @@ class UpdateShellCheckBoxCommand(SpineToolboxCommand):
         """
 
         Args:
-            gimlet (spinetoolbox.project_items.gimlet.gimlet.Gimlet): The Gimlet issuing the command
+            gimlet (spine_items.gimlet.gimlet.Gimlet): The Gimlet issuing the command
             use_shell (bool): New check box state
         """
         super().__init__()
@@ -48,7 +48,7 @@ class UpdateShellComboboxCommand(SpineToolboxCommand):
         """
 
         Args:
-            gimlet (spinetoolbox.project_items.gimlet.gimlet.Gimlet): The Gimlet issuing the command
+            gimlet (spine_items.gimlet.gimlet.Gimlet): The Gimlet issuing the command
             new_index (int): New combobox index
         """
         super().__init__()
@@ -71,7 +71,7 @@ class UpdatecmdCommand(SpineToolboxCommand):
         """
 
         Args:
-            gimlet (spinetoolbox.project_items.gimlet.gimlet.Gimlet): The Gimlet issuing the command
+            gimlet (spine_items.gimlet.gimlet.Gimlet): The Gimlet issuing the command
             txt (str): New text in command line edit after editing is finished
         """
         super().__init__()
