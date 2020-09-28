@@ -30,7 +30,7 @@ class CombinerFactory(ProjectItemFactory):
 
     @staticmethod
     def icon():
-        return ":/icons/project_item_icons/blender.svg"
+        return ":/icons/item_icons/blender.svg"
 
     @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):

@@ -30,7 +30,7 @@ class ImporterFactory(ProjectItemFactory):
 
     @staticmethod
     def icon():
-        return ":/icons/project_item_icons/database-import.svg"
+        return ":/icons/item_icons/database-import.svg"
 
     @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):

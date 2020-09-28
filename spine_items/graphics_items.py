@@ -449,9 +449,7 @@ class ExclamationIcon(QGraphicsSvgItem):
         self.colorizer = QGraphicsColorizeEffect()
         self.colorizer.setColor(QColor("red"))
         # Load SVG
-        loading_ok = self.renderer.load(
-            ":/icons/project_item_icons/exclamation-circle.svg"
-        )
+        loading_ok = self.renderer.load(":/icons/item_icons/exclamation-circle.svg")
         if not loading_ok:
             return
         size = self.renderer.defaultSize()

@@ -32,7 +32,7 @@ class ToolFactory(ProjectItemFactory):
 
     @staticmethod
     def icon():
-        return ":/icons/project_item_icons/hammer.svg"
+        return ":/icons/item_icons/hammer.svg"
 
     @staticmethod
     def supports_specifications():
