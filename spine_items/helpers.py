@@ -24,6 +24,7 @@ import datetime
 import time
 import re
 import shutil
+from enum import auto, Enum
 from collections import ChainMap
 from PySide2.QtCore import Qt, QUrl
 from PySide2.QtWidgets import QApplication
@@ -38,6 +39,11 @@ class CmdlineTag:
     URL_INPUTS = CMDLINE_TAG_EDGE + "url_inputs" + CMDLINE_TAG_EDGE
     URL_OUTPUTS = CMDLINE_TAG_EDGE + "url_outputs" + CMDLINE_TAG_EDGE
     OPTIONAL_INPUTS = CMDLINE_TAG_EDGE + "optional_inputs" + CMDLINE_TAG_EDGE
+
+
+class ExecutionDirection(Enum):
+    FORWARD = auto()
+    BACKWARD = auto()
 
 
 def busy_effect(func):

@@ -16,7 +16,7 @@ Contains ExecutableItem, a project item's counterpart in execution as well as su
 :date:   30.3.2020
 """
 
-from spine_engine import ExecutionDirection
+from spine_items.helpers import ExecutionDirection
 
 
 class ExecutableItemBase:
@@ -142,7 +142,9 @@ class ExecutableItemBase:
         return list()
 
     @classmethod
-    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
+    def from_dict(
+        cls, item_dict, name, project_dir, app_settings, specifications, logger
+    ):
         """
         Deserializes an executable item from item dictionary.
 
