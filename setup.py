@@ -28,21 +28,13 @@ with open("spine_items/version.py") as fp:
 
 requirements = [
     "pyside2 >=5.14, <5.15",
-    "datapackage >= 1.15",
-    "jupyter-client < 5.3.2",
-    "qtconsole >= 4.3.1",
     "sqlalchemy >= 1.3",
     "spinedb_api >= {}".format(REQUIRED_SPINEDB_API_VERSION),
     "openpyxl > 3.0",
     "numpy >= 1.15.1",
-    "matplotlib >= 3.0",
-    "scipy >= 1.1.0",
-    "networkx > 2.2",
     "pymysql >= 0.9.2",
     "pyodbc >= 4.0.23",
     "psycopg2 >= 2.7.4",
-    "cx_Oracle >= 6.3.1",
-    "pandas >= 0.24.0",
     "gdx2py >= 2.0.4",
     "ijson >= 2.6.1",
 ]
