@@ -32,9 +32,7 @@ class TestExecutableItem(unittest.TestCase):
         item.item_type = mock.MagicMock(return_value="Executable item")
         item._execute_backward = mock.MagicMock(return_value="return value")
         item._execute_forward = mock.MagicMock()
-        self.assertEqual(
-            item.execute(resources, ExecutionDirection.BACKWARD), "return value"
-        )
+        self.assertEqual(item.execute(resources, ExecutionDirection.BACKWARD), "return value")
         item._execute_backward.assert_called_once_with(resources)
         item._execute_forward.assert_not_called()
 
@@ -44,9 +42,7 @@ class TestExecutableItem(unittest.TestCase):
         item.item_type = mock.MagicMock(return_value="Executable item")
         item._execute_backward = mock.MagicMock()
         item._execute_forward = mock.MagicMock(return_value="return value")
-        self.assertEqual(
-            item.execute(resources, ExecutionDirection.FORWARD), "return value"
-        )
+        self.assertEqual(item.execute(resources, ExecutionDirection.FORWARD), "return value")
         item._execute_backward.assert_not_called()
         item._execute_forward.assert_called_once_with(resources)
 

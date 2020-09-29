@@ -36,13 +36,7 @@ class CombinerIcon(ProjectItemIcon):
             icon (str): icon resource path
         """
         super().__init__(
-            toolbox,
-            x,
-            y,
-            project_item,
-            icon,
-            icon_color=QColor("#990000"),
-            background_color=QColor("#ffcccc"),
+            toolbox, x, y, project_item, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc")
         )
         self.time_line = QTimeLine()
         self.time_line.setLoopCount(0)  # loop forever

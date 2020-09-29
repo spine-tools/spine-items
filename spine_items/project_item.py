@@ -55,9 +55,7 @@ class ProjectItem(MetaObject):
         self._icon = None
         self._sigs = None
         self._active = False
-        self.item_changed.connect(
-            lambda: self._project.notify_changes_in_containing_dag(self.name)
-        )
+        self.item_changed.connect(lambda: self._project.notify_changes_in_containing_dag(self.name))
         # Make project directory for this Item
         self.data_dir = os.path.join(self._project.items_dir, self.short_name)
         self._specification = None
@@ -67,9 +65,7 @@ class ProjectItem(MetaObject):
         try:
             create_dir(self.data_dir)
         except OSError:
-            self._logger.msg_error.emit(
-                f"[OSError] Creating directory {self.data_dir} failed. Check permissions."
-            )
+            self._logger.msg_error.emit(f"[OSError] Creating directory {self.data_dir} failed. Check permissions.")
 
     @staticmethod
     def item_type():
@@ -121,22 +117,12 @@ class ProjectItem(MetaObject):
             try:
                 ret = signal.disconnect(handler)
             except RuntimeError:
-                self._logger.msg_error.emit(
-                    f"RuntimeError in disconnecting <b>{self.name}</b> signals"
-                )
-                logging.error(
-                    "RuntimeError in disconnecting signal %s from handler %s",
-                    signal,
-                    handler,
-                )
+                self._logger.msg_error.emit(f"RuntimeError in disconnecting <b>{self.name}</b> signals")
+                logging.error("RuntimeError in disconnecting signal %s from handler %s", signal, handler)
                 return False
             if not ret:
-                self._logger.msg_error.emit(
-                    f"Disconnecting signal in <b>{self.name}</b> failed"
-                )
-                logging.error(
-                    "Disconnecting signal %s from handler %s failed", signal, handler
-                )
+                self._logger.msg_error.emit(f"Disconnecting signal in <b>{self.name}</b> failed")
+                logging.error("Disconnecting signal %s from handler %s failed", signal, handler)
                 return False
         return True
 

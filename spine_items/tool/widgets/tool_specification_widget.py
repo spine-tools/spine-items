@@ -20,24 +20,12 @@ is filled with all the information from the specification being edited.
 
 import os
 from PySide2.QtGui import QStandardItemModel, QStandardItem
-from PySide2.QtWidgets import (
-    QWidget,
-    QStatusBar,
-    QInputDialog,
-    QFileDialog,
-    QFileIconProvider,
-    QMessageBox,
-    QMenu,
-)
+from PySide2.QtWidgets import QWidget, QStatusBar, QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QMenu
 from PySide2.QtCore import Slot, Qt, QFileInfo
 from spine_items.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
 from spine_items.helpers import busy_effect, open_url
 from ..item_info import ItemInfo
-from ...helpers import (
-    CmdlineTag,
-    CMDLINE_TAG_EDGE,
-    split_cmdline_args,
-)
+from ...helpers import CmdlineTag, CMDLINE_TAG_EDGE, split_cmdline_args
 from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS
 from .custom_menus import AddIncludesPopupMenu, CreateMainProgramPopupMenu
 
@@ -50,13 +38,9 @@ class ToolSpecificationWidget(QWidget):
             toolbox (ToolboxUI): QMainWindow instance
             specification (ToolSpecification): If given, the form is pre-filled with this specification
         """
-        from ..ui.tool_specification_form import (
-            Ui_Form,
-        )  # pylint: disable=import-outside-toplevel
+        from ..ui.tool_specification_form import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__(
-            parent=toolbox, f=Qt.Window
-        )  # Inherit stylesheet from ToolboxUI
+        super().__init__(parent=toolbox, f=Qt.Window)  # Inherit stylesheet from ToolboxUI
         # Setup UI from Qt Designer file
         self.ui = Ui_Form()
         self.ui.setupUi(self)
@@ -99,21 +83,15 @@ class ToolSpecificationWidget(QWidget):
         self.main_program_file = ""
         self.sourcefiles = list(specification.includes) if specification else list()
         self.inputfiles = list(specification.inputfiles) if specification else list()
-        self.inputfiles_opt = (
-            list(specification.inputfiles_opt) if specification else list()
-        )
+        self.inputfiles_opt = list(specification.inputfiles_opt) if specification else list()
         self.outputfiles = list(specification.outputfiles) if specification else list()
-        self.def_file_path = (
-            specification.definition_file_path if specification else None
-        )
+        self.def_file_path = specification.definition_file_path if specification else None
         self.program_path = specification.path if specification else None
         self.definition = dict(item_type=ItemInfo.item_type())
         # Get first item from sourcefiles list as the main program file
         try:
             self.main_program_file = self.sourcefiles.pop(0)
-            self.ui.lineEdit_main_program.setText(
-                os.path.join(self.program_path, self.main_program_file)
-            )
+            self.ui.lineEdit_main_program.setText(os.path.join(self.program_path, self.main_program_file))
         except IndexError:
             pass  # sourcefiles list is empty
         # Populate lists (this will also create headers)
@@ -126,26 +104,18 @@ class ToolSpecificationWidget(QWidget):
         # Add includes popup menu
         self.add_source_files_popup_menu = AddIncludesPopupMenu(self)
         self.ui.toolButton_add_source_files.setMenu(self.add_source_files_popup_menu)
-        self.ui.toolButton_add_source_files.setStyleSheet(
-            "QToolButton::menu-indicator { image: none; }"
-        )
+        self.ui.toolButton_add_source_files.setStyleSheet("QToolButton::menu-indicator { image: none; }")
         # Add create new or add existing main program popup menu
         self.add_main_prgm_popup_menu = CreateMainProgramPopupMenu(self)
         self.ui.toolButton_add_main_program.setMenu(self.add_main_prgm_popup_menu)
-        self.ui.toolButton_add_source_files.setStyleSheet(
-            "QToolButton::menu-indicator { image: none; }"
-        )
+        self.ui.toolButton_add_source_files.setStyleSheet("QToolButton::menu-indicator { image: none; }")
         self.ui.toolButton_add_cmdline_tag.setMenu(self._make_add_cmdline_tag_menu())
         self.connect_signals()
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.toolButton_add_source_files.clicked.connect(
-            self.show_add_source_files_dialog
-        )
-        self.ui.toolButton_add_source_dirs.clicked.connect(
-            self.show_add_source_dirs_dialog
-        )
+        self.ui.toolButton_add_source_files.clicked.connect(self.show_add_source_files_dialog)
+        self.ui.toolButton_add_source_dirs.clicked.connect(self.show_add_source_dirs_dialog)
         self.ui.lineEdit_main_program.file_dropped.connect(self.set_main_program_path)
         self.ui.treeView_sourcefiles.files_dropped.connect(self.add_dropped_includes)
         self.ui.treeView_sourcefiles.doubleClicked.connect(self.open_includes_file)
@@ -153,42 +123,28 @@ class ToolSpecificationWidget(QWidget):
         self.ui.toolButton_plus_inputfiles.clicked.connect(self.add_inputfiles)
         self.ui.toolButton_minus_inputfiles.clicked.connect(self.remove_inputfiles)
         self.ui.toolButton_plus_inputfiles_opt.clicked.connect(self.add_inputfiles_opt)
-        self.ui.toolButton_minus_inputfiles_opt.clicked.connect(
-            self.remove_inputfiles_opt
-        )
+        self.ui.toolButton_minus_inputfiles_opt.clicked.connect(self.remove_inputfiles_opt)
         self.ui.toolButton_plus_outputfiles.clicked.connect(self.add_outputfiles)
         self.ui.toolButton_minus_outputfiles.clicked.connect(self.remove_outputfiles)
         self.ui.pushButton_ok.clicked.connect(self.handle_ok_clicked)
         self.ui.pushButton_cancel.clicked.connect(self.close)
         # Enable removing items from QTreeViews by pressing the Delete key
-        self.ui.treeView_sourcefiles.del_key_pressed.connect(
-            self.remove_source_files_with_del
-        )
-        self.ui.treeView_inputfiles.del_key_pressed.connect(
-            self.remove_inputfiles_with_del
-        )
-        self.ui.treeView_inputfiles_opt.del_key_pressed.connect(
-            self.remove_inputfiles_opt_with_del
-        )
-        self.ui.treeView_outputfiles.del_key_pressed.connect(
-            self.remove_outputfiles_with_del
-        )
+        self.ui.treeView_sourcefiles.del_key_pressed.connect(self.remove_source_files_with_del)
+        self.ui.treeView_inputfiles.del_key_pressed.connect(self.remove_inputfiles_with_del)
+        self.ui.treeView_inputfiles_opt.del_key_pressed.connect(self.remove_inputfiles_opt_with_del)
+        self.ui.treeView_outputfiles.del_key_pressed.connect(self.remove_outputfiles_with_del)
 
     def populate_sourcefile_list(self, items):
         """List source files in QTreeView.
         If items is None or empty list, model is cleared.
         """
         self.sourcefiles_model.clear()
-        self.sourcefiles_model.setHorizontalHeaderItem(
-            0, QStandardItem("Additional source files")
-        )  # Add header
+        self.sourcefiles_model.setHorizontalHeaderItem(0, QStandardItem("Additional source files"))  # Add header
         if items is not None:
             for item in items:
                 qitem = QStandardItem(item)
                 qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(
-                    QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole
-                )
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.sourcefiles_model.appendRow(qitem)
 
     def populate_inputfiles_list(self, items):
@@ -196,15 +152,11 @@ class ToolSpecificationWidget(QWidget):
         If items is None or empty list, model is cleared.
         """
         self.inputfiles_model.clear()
-        self.inputfiles_model.setHorizontalHeaderItem(
-            0, QStandardItem("Input files")
-        )  # Add header
+        self.inputfiles_model.setHorizontalHeaderItem(0, QStandardItem("Input files"))  # Add header
         if items is not None:
             for item in items:
                 qitem = QStandardItem(item)
-                qitem.setData(
-                    QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole
-                )
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.inputfiles_model.appendRow(qitem)
 
     def populate_inputfiles_opt_list(self, items):
@@ -212,15 +164,11 @@ class ToolSpecificationWidget(QWidget):
         If items is None or empty list, model is cleared.
         """
         self.inputfiles_opt_model.clear()
-        self.inputfiles_opt_model.setHorizontalHeaderItem(
-            0, QStandardItem("Optional input files")
-        )  # Add header
+        self.inputfiles_opt_model.setHorizontalHeaderItem(0, QStandardItem("Optional input files"))  # Add header
         if items is not None:
             for item in items:
                 qitem = QStandardItem(item)
-                qitem.setData(
-                    QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole
-                )
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.inputfiles_opt_model.appendRow(qitem)
 
     def populate_outputfiles_list(self, items):
@@ -228,24 +176,18 @@ class ToolSpecificationWidget(QWidget):
         If items is None or empty list, model is cleared.
         """
         self.outputfiles_model.clear()
-        self.outputfiles_model.setHorizontalHeaderItem(
-            0, QStandardItem("Output files")
-        )  # Add header
+        self.outputfiles_model.setHorizontalHeaderItem(0, QStandardItem("Output files"))  # Add header
         if items is not None:
             for item in items:
                 qitem = QStandardItem(item)
-                qitem.setData(
-                    QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole
-                )
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.outputfiles_model.appendRow(qitem)
 
     @Slot(bool)
     def browse_main_program(self, checked=False):
         """Open file browser where user can select the path of the main program file."""
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileName(
-            self, "Add existing main program file", self._project.project_dir, "*.*"
-        )
+        answer = QFileDialog.getOpenFileName(self, "Add existing main program file", self._project.project_dir, "*.*")
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
             return
@@ -266,9 +208,7 @@ class ToolSpecificationWidget(QWidget):
          Alternative version using only one getSaveFileName dialog.
          """
         # noinspection PyCallByClass
-        answer = QFileDialog.getSaveFileName(
-            self, "Create new main program", self._project.project_dir
-        )
+        answer = QFileDialog.getSaveFileName(self, "Create new main program", self._project.project_dir)
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
             return
@@ -324,9 +264,7 @@ class ToolSpecificationWidget(QWidget):
         """
         path = self.program_path if self.program_path else self._project.project_dir
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getExistingDirectory(
-            self, "Select a directory to add to source files", path
-        )
+        answer = QFileDialog.getExistingDirectory(self, "Select a directory to add to source files", path)
         file_paths = list()
         for root, _, files in os.walk(answer):
             for file in files:
@@ -353,28 +291,20 @@ class ToolSpecificationWidget(QWidget):
             path_to_add = file_pattern
         else:
             # check if path is a descendant of main dir.
-            common_prefix = os.path.commonprefix(
-                [os.path.abspath(self.program_path), os.path.abspath(path)]
-            )
+            common_prefix = os.path.commonprefix([os.path.abspath(self.program_path), os.path.abspath(path)])
             # logging.debug("common_prefix:{0}".format(common_prefix))
             if common_prefix != self.program_path:
                 self.statusbar.showMessage(
-                    "Source file {0}'s location is invalid "
-                    "(should be in main directory)".format(file_pattern),
-                    5000,
+                    "Source file {0}'s location is invalid " "(should be in main directory)".format(file_pattern), 5000
                 )
                 return False
             path_to_add = os.path.relpath(path, self.program_path)
         if self.sourcefiles_model.findItems(path_to_add):
-            self.statusbar.showMessage(
-                "Source file {0} already included".format(path_to_add), 5000
-            )
+            self.statusbar.showMessage("Source file {0} already included".format(path_to_add), 5000)
             return False
         qitem = QStandardItem(path_to_add)
         qitem.setFlags(~Qt.ItemIsEditable)
-        qitem.setData(
-            QFileIconProvider().icon(QFileInfo(path_to_add)), Qt.DecorationRole
-        )
+        qitem.setData(QFileIconProvider().icon(QFileInfo(path_to_add)), Qt.DecorationRole)
         self.sourcefiles_model.appendRow(qitem)
         return True
 
@@ -399,9 +329,7 @@ class ToolSpecificationWidget(QWidget):
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         res = open_url(url)
         if not res:
-            self._toolbox.msg_error.emit(
-                "Failed to open file: <b>{0}</b>".format(includes_file)
-            )
+            self._toolbox.msg_error.emit("Failed to open file: <b>{0}</b>".format(includes_file))
 
     @Slot()
     def remove_source_files_with_del(self):
@@ -440,12 +368,7 @@ class ToolSpecificationWidget(QWidget):
             "<b>output/</b> -> Creates an empty directory into the work directory.<br/><br/>"
         )
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QInputDialog.getText(
-            self,
-            "Add input item",
-            msg,
-            flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint,
-        )
+        answer = QInputDialog.getText(self, "Add input item", msg, flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
         file_name = answer[0]
         if not file_name:  # Cancel button clicked
             return
@@ -487,10 +410,7 @@ class ToolSpecificationWidget(QWidget):
         )
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QInputDialog.getText(
-            self,
-            "Add optional input item",
-            msg,
-            flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint,
+            self, "Add optional input item", msg, flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint
         )
         file_name = answer[0]
         if not file_name:  # Cancel button clicked
@@ -511,9 +431,7 @@ class ToolSpecificationWidget(QWidget):
         """
         indexes = self.ui.treeView_inputfiles_opt.selectedIndexes()
         if not indexes:  # Nothing selected
-            self.statusbar.showMessage(
-                "Please select the optional input files to remove", 3000
-            )
+            self.statusbar.showMessage("Please select the optional input files to remove", 3000)
         else:
             rows = [ind.row() for ind in indexes]
             rows.sort(reverse=True)
@@ -534,12 +452,7 @@ class ToolSpecificationWidget(QWidget):
             "results /output subdirectory.<br/><br/>"
         )
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QInputDialog.getText(
-            self,
-            "Add output item",
-            msg,
-            flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint,
-        )
+        answer = QInputDialog.getText(self, "Add output item", msg, flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
         file_name = answer[0]
         if not file_name:  # Cancel button clicked
             return
@@ -587,26 +500,14 @@ class ToolSpecificationWidget(QWidget):
         folder_path, file_path = os.path.split(main_program)
         self.program_path = os.path.abspath(folder_path)
         self.ui.label_mainpath.setText(self.program_path)
-        self.definition[
-            "execute_in_work"
-        ] = self.ui.checkBox_execute_in_work.isChecked()
+        self.definition["execute_in_work"] = self.ui.checkBox_execute_in_work.isChecked()
         self.definition["includes"] = [file_path]
-        self.definition["includes"] += [
-            i.text() for i in self.sourcefiles_model.findItems("", flags)
-        ]
-        self.definition["inputfiles"] = [
-            i.text() for i in self.inputfiles_model.findItems("", flags)
-        ]
-        self.definition["inputfiles_opt"] = [
-            i.text() for i in self.inputfiles_opt_model.findItems("", flags)
-        ]
-        self.definition["outputfiles"] = [
-            i.text() for i in self.outputfiles_model.findItems("", flags)
-        ]
+        self.definition["includes"] += [i.text() for i in self.sourcefiles_model.findItems("", flags)]
+        self.definition["inputfiles"] = [i.text() for i in self.inputfiles_model.findItems("", flags)]
+        self.definition["inputfiles_opt"] = [i.text() for i in self.inputfiles_opt_model.findItems("", flags)]
+        self.definition["outputfiles"] = [i.text() for i in self.outputfiles_model.findItems("", flags)]
         # Strip whitespace from args before saving it to JSON
-        self.definition["cmdline_args"] = split_cmdline_args(
-            self.ui.lineEdit_args.text()
-        )
+        self.definition["cmdline_args"] = split_cmdline_args(self.ui.lineEdit_args.text())
         for k in REQUIRED_KEYS:
             if not self.definition[k]:
                 self.statusbar.showMessage("{} missing".format(k), 3000)
@@ -626,9 +527,9 @@ class ToolSpecificationWidget(QWidget):
         Returns:
             ToolSpecification
         """
-        self.definition["includes_main_path"] = os.path.relpath(
-            self.program_path, os.path.dirname(def_path)
-        ).replace(os.sep, "/")
+        self.definition["includes_main_path"] = os.path.relpath(self.program_path, os.path.dirname(def_path)).replace(
+            os.sep, "/"
+        )
         tool = self._toolbox.load_specification(self.definition, def_path)
         if not tool:
             self.statusbar.showMessage("Adding Tool specification failed", 3000)
@@ -643,9 +544,7 @@ class ToolSpecificationWidget(QWidget):
         creating a new tool specification from scratch or spawning from an existing one).
         """
         # Check if a tool specification with this name already exists
-        row = self._toolbox.specification_model.specification_row(
-            self.definition["name"]
-        )
+        row = self._toolbox.specification_model.specification_row(self.definition["name"])
         if row >= 0:
             old_tool = self._toolbox.specification_model.specification(row)
             if old_tool.is_equivalent(self.definition):
@@ -658,9 +557,7 @@ class ToolSpecificationWidget(QWidget):
             self._toolbox.update_specification(row, tool)
             return True
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getSaveFileName(
-            self, "Save Tool specification file", self.def_file_path, "JSON (*.json)"
-        )
+        answer = QFileDialog.getSaveFileName(self, "Save Tool specification file", self.def_file_path, "JSON (*.json)")
         if answer[0] == "":  # Cancel button clicked
             return False
         def_path = os.path.abspath(answer[0])
@@ -699,19 +596,13 @@ class ToolSpecificationWidget(QWidget):
         action.setToolTip("Insert a tag that is replaced be all output database URLs.")
         action = menu.addAction(str(CmdlineTag.URL))
         action.triggered.connect(self._add_cmdline_tag_data_store_url)
-        action.setToolTip(
-            "Insert a tag that is replaced by the URL provided by Data Store '<data-store-name>'."
-        )
+        action.setToolTip("Insert a tag that is replaced by the URL provided by Data Store '<data-store-name>'.")
         action = menu.addAction(str(CmdlineTag.OPTIONAL_INPUTS))
         action.triggered.connect(self._add_cmdline_tag_optional_inputs)
-        action.setToolTip(
-            "Insert a tag that is replaced by a list of optional input files."
-        )
+        action.setToolTip("Insert a tag that is replaced by a list of optional input files.")
         return menu
 
-    def _insert_spaces_around_tag_in_args_edit(
-        self, tag_length, restore_cursor_to_tag_end=False
-    ):
+    def _insert_spaces_around_tag_in_args_edit(self, tag_length, restore_cursor_to_tag_end=False):
         """
         Inserts spaces before/after @@ around cursor position/selection
 
@@ -720,9 +611,7 @@ class ToolSpecificationWidget(QWidget):
         args_edit = self.ui.lineEdit_args
         text = args_edit.text()
         cursor_position = args_edit.cursorPosition()
-        if cursor_position == len(text) or (
-            cursor_position < len(text) - 1 and not text[cursor_position].isspace()
-        ):
+        if cursor_position == len(text) or (cursor_position < len(text) - 1 and not text[cursor_position].isspace()):
             args_edit.insert(" ")
             appended_spaces = 1
             text = args_edit.text()
@@ -738,9 +627,7 @@ class ToolSpecificationWidget(QWidget):
         if restore_cursor_to_tag_end:
             args_edit.setCursorPosition(cursor_position + prepended_spaces)
         else:
-            args_edit.setCursorPosition(
-                cursor_position + appended_spaces + prepended_spaces
-            )
+            args_edit.setCursorPosition(cursor_position + appended_spaces + prepended_spaces)
 
     @Slot("QAction")
     def _add_cmdline_tag_url_inputs(self, _):
@@ -762,14 +649,9 @@ class ToolSpecificationWidget(QWidget):
         args_edit = self.ui.lineEdit_args
         tag = CmdlineTag.URL
         args_edit.insert(tag)
-        self._insert_spaces_around_tag_in_args_edit(
-            len(tag), restore_cursor_to_tag_end=True
-        )
+        self._insert_spaces_around_tag_in_args_edit(len(tag), restore_cursor_to_tag_end=True)
         cursor_position = args_edit.cursorPosition()
-        args_edit.setSelection(
-            cursor_position - len(CMDLINE_TAG_EDGE + "<data-store_name>"),
-            len("<data-store_name>"),
-        )
+        args_edit.setSelection(cursor_position - len(CMDLINE_TAG_EDGE + "<data-store_name>"), len("<data-store_name>"))
 
     @Slot("QAction")
     def _add_cmdline_tag_optional_inputs(self, _):

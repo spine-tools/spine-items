@@ -135,17 +135,10 @@ class TestToolExecutable(unittest.TestCase):
     def test_execute_forward_without_specification_fails(self):
         logger = mock.MagicMock()
         executable = ExecutableItem(
-            "executable name",
-            work_dir="",
-            output_dir="",
-            tool_specification=None,
-            cmd_line_args=[],
-            logger=logger,
+            "executable name", work_dir="", output_dir="", tool_specification=None, cmd_line_args=[], logger=logger
         )
         self.assertFalse(executable.execute([], ExecutionDirection.FORWARD))
-        logger.msg_warning.emit.assert_called_with(
-            "Tool <b>executable name</b> has no Tool specification to execute"
-        )
+        logger.msg_warning.emit.assert_called_with("Tool <b>executable name</b> has no Tool specification to execute")
 
     def test_execute_forward_archives_output_files(self):
         with TemporaryDirectory() as temp_dir:
@@ -170,14 +163,7 @@ class TestToolExecutable(unittest.TestCase):
             work_dir.mkdir()
             archive_dir = pathlib.Path(temp_dir, "archive")
             archive_dir.mkdir()
-            executable = ExecutableItem(
-                "Create files",
-                str(work_dir),
-                str(archive_dir),
-                tool_specification,
-                [],
-                logger,
-            )
+            executable = ExecutableItem("Create files", str(work_dir), str(archive_dir), tool_specification, [], logger)
             executable.execute([], ExecutionDirection.FORWARD)
             while executable._tool_instance is not None:
                 QCoreApplication.processEvents()
@@ -195,13 +181,7 @@ class TestToolExecutable(unittest.TestCase):
             logger = mock.MagicMock()
             optional_input_files = ["1.txt", "does_not_exist.dat"]
             tool_specification = ToolSpecification(
-                "spec name",
-                "Python",
-                temp_dir,
-                [],
-                None,
-                logger,
-                inputfiles_opt=optional_input_files,
+                "spec name", "Python", temp_dir, [], None, logger, inputfiles_opt=optional_input_files
             )
             executable = ExecutableItem(
                 "executable name",
@@ -225,13 +205,7 @@ class TestToolExecutable(unittest.TestCase):
             logger = mock.MagicMock()
             optional_input_files = ["*.txt"]
             tool_specification = ToolSpecification(
-                "spec name",
-                "Python",
-                temp_dir,
-                [],
-                None,
-                logger,
-                inputfiles_opt=optional_input_files,
+                "spec name", "Python", temp_dir, [], None, logger, inputfiles_opt=optional_input_files
             )
             executable = ExecutableItem(
                 "executable name",
@@ -246,9 +220,7 @@ class TestToolExecutable(unittest.TestCase):
                 ProjectItemResource(None, "file", optional_file2.as_uri()),
             ]
             file_paths = executable._find_optional_input_files(resources)
-            self.assertEqual(
-                file_paths, {"*.txt": [str(optional_file1), str(optional_file2)]}
-            )
+            self.assertEqual(file_paths, {"*.txt": [str(optional_file1), str(optional_file2)]})
 
     def test_find_optional_input_files_in_sub_directory(self):
         with TemporaryDirectory() as temp_dir:
@@ -261,13 +233,7 @@ class TestToolExecutable(unittest.TestCase):
             logger = mock.MagicMock()
             optional_input_files = ["subdir/*.txt", "subdir/data.dat"]
             tool_specification = ToolSpecification(
-                "spec name",
-                "Python",
-                temp_dir,
-                [],
-                None,
-                logger,
-                inputfiles_opt=optional_input_files,
+                "spec name", "Python", temp_dir, [], None, logger, inputfiles_opt=optional_input_files
             )
             executable = ExecutableItem(
                 "executable name",
@@ -283,11 +249,7 @@ class TestToolExecutable(unittest.TestCase):
             ]
             file_paths = executable._find_optional_input_files(resources)
             self.assertEqual(
-                file_paths,
-                {
-                    "subdir/*.txt": [str(optional_file1)],
-                    "subdir/data.dat": [str(optional_file2)],
-                },
+                file_paths, {"subdir/*.txt": [str(optional_file1)], "subdir/data.dat": [str(optional_file2)]}
             )
 
     def test_output_resources_forward(self):
@@ -304,23 +266,11 @@ class TestToolExecutable(unittest.TestCase):
                 outputfiles=["results.gdx", "report.txt"],
             )
             output_dir = "tool/output_dir/"  # Latest output dir
-            executable = ExecutableItem(
-                "name", temp_dir, output_dir, tool_specification, [], logger
-            )
-            with mock.patch(
-                "spine_items.tool.executable_item.find_last_output_files"
-            ) as mock_find_last_output_files:
+            executable = ExecutableItem("name", temp_dir, output_dir, tool_specification, [], logger)
+            with mock.patch("spine_items.tool.executable_item.find_last_output_files") as mock_find_last_output_files:
                 mock_find_last_output_files.return_value = {
-                    "results.gdx": [
-                        _LatestOutputFile(
-                            "label", os.path.join(temp_dir, "output_dir/results.gdx")
-                        )
-                    ],
-                    "report.txt": [
-                        _LatestOutputFile(
-                            "label2", os.path.join(temp_dir, "output_dir/report.txt")
-                        )
-                    ],
+                    "results.gdx": [_LatestOutputFile("label", os.path.join(temp_dir, "output_dir/results.gdx"))],
+                    "report.txt": [_LatestOutputFile("label2", os.path.join(temp_dir, "output_dir/report.txt"))],
                 }
                 resources = executable._output_resources_forward()
                 mock_find_last_output_files.assert_called_once()
@@ -344,27 +294,15 @@ class TestToolExecutable(unittest.TestCase):
                 logger=mock.MagicMock(),
                 outputfiles=["results.gdx", "report.txt"],
             )
-            executable = ExecutableItem(
-                "name", temp_dir, "", tool_specification, [], logger
-            )
-            executable._tool_instance = executable._tool_specification.create_tool_instance(
-                temp_dir
-            )
-            executable._tool_instance.exec_mngr = ConsoleExecutionManager(
-                mock.MagicMock(), [], logger
-            )
+            executable = ExecutableItem("name", temp_dir, "", tool_specification, [], logger)
+            executable._tool_instance = executable._tool_specification.create_tool_instance(temp_dir)
+            executable._tool_instance.exec_mngr = ConsoleExecutionManager(mock.MagicMock(), [], logger)
             executable.stop_execution()
             self.assertIsNone(executable._tool_instance)
 
     def test_count_files_and_dirs(self):
         """Tests protected function in tool/executable_item.py."""
-        paths = [
-            "data/a.txt",
-            "data/output",
-            "data/input_dir/",
-            "inc/b.txt",
-            "directory/",
-        ]  # 3 files, 2 dirs
+        paths = ["data/a.txt", "data/output", "data/input_dir/", "inc/b.txt", "directory/"]  # 3 files, 2 dirs
         n_dir, n_files = _count_files_and_dirs(paths)
         self.assertEqual(2, n_dir)
         self.assertEqual(3, n_files)

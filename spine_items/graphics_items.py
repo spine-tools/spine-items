@@ -27,15 +27,7 @@ from PySide2.QtWidgets import (
     QApplication,
     QToolTip,
 )
-from PySide2.QtGui import (
-    QColor,
-    QPen,
-    QBrush,
-    QTextCursor,
-    QTransform,
-    QPalette,
-    QTextBlockFormat,
-)
+from PySide2.QtGui import QColor, QPen, QBrush, QTextCursor, QTransform, QPalette, QTextBlockFormat
 from PySide2.QtSvg import QGraphicsSvgItem, QSvgRenderer
 from spine_items.commands import MoveIconCommand
 
@@ -44,9 +36,7 @@ class ProjectItemIcon(QGraphicsRectItem):
 
     ITEM_EXTENT = 64
 
-    def __init__(
-        self, toolbox, x, y, project_item, icon_file, icon_color, background_color
-    ):
+    def __init__(self, toolbox, x, y, project_item, icon_file, icon_color, background_color):
         """Base class for project item icons drawn in Design View.
 
         Args:
@@ -69,14 +59,7 @@ class ProjectItemIcon(QGraphicsRectItem):
         self.renderer = QSvgRenderer()
         self.svg_item = QGraphicsSvgItem(self)
         self.colorizer = QGraphicsColorizeEffect()
-        self.setRect(
-            QRectF(
-                x - self.ITEM_EXTENT / 2,
-                y - self.ITEM_EXTENT / 2,
-                self.ITEM_EXTENT,
-                self.ITEM_EXTENT,
-            )
-        )
+        self.setRect(QRectF(x - self.ITEM_EXTENT / 2, y - self.ITEM_EXTENT / 2, self.ITEM_EXTENT, self.ITEM_EXTENT))
         self.text_font_size = 10  # point size
         # Make item name graphics item.
         name = project_item.name if project_item else ""
@@ -120,9 +103,7 @@ class ProjectItemIcon(QGraphicsRectItem):
         # Load SVG
         loading_ok = self.renderer.load(svg)
         if not loading_ok:
-            self._toolbox.msg_error.emit(
-                "Loading SVG icon from resource:{0} failed".format(svg)
-            )
+            self._toolbox.msg_error.emit("Loading SVG icon from resource:{0} failed".format(svg))
             return
         size = self.renderer.defaultSize()
         self.svg_item.setSharedRenderer(self.renderer)
@@ -142,10 +123,7 @@ class ProjectItemIcon(QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
         self.setCursor(Qt.PointingHandCursor)
         # Set exclamation and rank icons position
-        self.exclamation_icon.setPos(
-            self.rect().topRight()
-            - self.exclamation_icon.sceneBoundingRect().topRight()
-        )
+        self.exclamation_icon.setPos(self.rect().topRight() - self.exclamation_icon.sceneBoundingRect().topRight())
         self.rank_icon.setPos(self.rect().topLeft())
 
     def name(self):
@@ -168,8 +146,7 @@ class ProjectItemIcon(QGraphicsRectItem):
         name_width = self.name_item.boundingRect().width()
         name_height = self.name_item.boundingRect().height()
         self.name_item.setPos(
-            self.rect().x() + self.rect().width() / 2 - name_width / 2,
-            self.rect().y() - name_height - 4,
+            self.rect().x() + self.rect().width() / 2 - name_width / 2, self.rect().y() - name_height - 4
         )
 
     def conn_button(self, position="left"):
@@ -204,9 +181,7 @@ class ProjectItemIcon(QGraphicsRectItem):
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
-        self.icon_group = set(
-            x for x in self.scene().selectedItems() if isinstance(x, ProjectItemIcon)
-        ) | {self}
+        self.icon_group = set(x for x in self.scene().selectedItems() if isinstance(x, ProjectItemIcon)) | {self}
         for icon in self.icon_group:
             icon._previous_pos = icon.scenePos()
 
@@ -226,12 +201,7 @@ class ProjectItemIcon(QGraphicsRectItem):
 
     def update_links_geometry(self):
         """Updates geometry of connected links to reflect this item's most recent position."""
-        links = set(
-            link
-            for icon in self.icon_group
-            for conn in icon.connectors.values()
-            for link in conn.links
-        )
+        links = set(link for icon in self.icon_group for conn in icon.connectors.values() for link in conn.links)
         for link in links:
             link.update_geometry()
 
@@ -239,9 +209,7 @@ class ProjectItemIcon(QGraphicsRectItem):
         for icon in self.icon_group:
             icon._current_pos = icon.scenePos()
         # pylint: disable=undefined-variable
-        if (
-            self._current_pos - self._previous_pos
-        ).manhattanLength() > qApp.startDragDistance():
+        if (self._current_pos - self._previous_pos).manhattanLength() > qApp.startDragDistance():
             self._toolbox.undo_stack.push(MoveIconCommand(self))
         super().mouseReleaseEvent(event)
 
@@ -306,9 +274,7 @@ class ProjectItemIcon(QGraphicsRectItem):
         """
         if change == QGraphicsItem.ItemScenePositionHasChanged:
             self._moved_on_scene = True
-        elif (
-            change == QGraphicsItem.GraphicsItemChange.ItemSceneChange and value is None
-        ):
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSceneChange and value is None:
             self.prepareGeometryChange()
             self.setGraphicsEffect(None)
         return super().itemChange(change, value)
@@ -323,9 +289,7 @@ class ConnectorButton(QGraphicsRectItem):
 
     # Regular and hover brushes
     brush = QBrush(QColor(255, 255, 255))  # Used in filling the item
-    hover_brush = QBrush(
-        QColor(50, 0, 50, 128)
-    )  # Used in filling the item while hovering
+    hover_brush = QBrush(QColor(50, 0, 50, 128))  # Used in filling the item while hovering
 
     def __init__(self, parent, toolbox, position="left"):
         """Connector button graphics item. Used for Link drawing between project items.
@@ -347,21 +311,13 @@ class ConnectorButton(QGraphicsRectItem):
         extent = 0.2 * parent_rect.width()
         rect = QRectF(0, 0, extent, extent)
         if position == "top":
-            rect.moveCenter(
-                QPointF(parent_rect.center().x(), parent_rect.top() + extent / 2)
-            )
+            rect.moveCenter(QPointF(parent_rect.center().x(), parent_rect.top() + extent / 2))
         elif position == "left":
-            rect.moveCenter(
-                QPointF(parent_rect.left() + extent / 2, parent_rect.center().y())
-            )
+            rect.moveCenter(QPointF(parent_rect.left() + extent / 2, parent_rect.center().y()))
         elif position == "bottom":
-            rect.moveCenter(
-                QPointF(parent_rect.center().x(), parent_rect.bottom() - extent / 2)
-            )
+            rect.moveCenter(QPointF(parent_rect.center().x(), parent_rect.bottom() - extent / 2))
         elif position == "right":
-            rect.moveCenter(
-                QPointF(parent_rect.right() - extent / 2, parent_rect.center().y())
-            )
+            rect.moveCenter(QPointF(parent_rect.right() - extent / 2, parent_rect.center().y()))
         self.setRect(rect)
         self.setAcceptHoverEvents(True)
         self.setCursor(Qt.PointingHandCursor)
@@ -397,9 +353,7 @@ class ConnectorButton(QGraphicsRectItem):
         while drawing and reenabling them back when done."""
         for conn in self._parent.connectors.values():
             conn.setEnabled(enabled)
-            conn.setBrush(
-                conn.brush
-            )  # Remove hover brush from src connector that was clicked
+            conn.setBrush(conn.brush)  # Remove hover brush from src connector that was clicked
 
     def mouseDoubleClickEvent(self, event):
         """Connector button mouse double click event. Makes sure the LinkDrawer is hidden.

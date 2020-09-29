@@ -88,9 +88,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             absolute_path = absolute_paths.get(label)
             if absolute_path is not None:
                 absolute_path_settings[absolute_path] = self._settings[label]
-        source_settings = {
-            "GdxConnector": {"gams_directory": self._gams_system_directory()}
-        }
+        source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
         self._destroy_current_worker()
         self._loop = QEventLoop()
         self._worker = ImporterWorker(
@@ -151,9 +149,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         return path
 
     @classmethod
-    def from_dict(
-        cls, item_dict, name, project_dir, app_settings, specifications, logger
-    ):
+    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         settings = deserialize_mappings(item_dict["mappings"], project_dir)
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))

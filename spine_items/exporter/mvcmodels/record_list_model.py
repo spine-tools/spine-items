@@ -48,9 +48,7 @@ class RecordListModel(QAbstractListModel):
             return ""
         return section + 1
 
-    def moveRows(
-        self, sourceParent, sourceRow, count, destinationParent, destinationChild
-    ):
+    def moveRows(self, sourceParent, sourceRow, count, destinationParent, destinationChild):
         """
         Moves the records around.
 
@@ -70,17 +68,9 @@ class RecordListModel(QAbstractListModel):
         if destinationChild < 0 or destinationChild >= row_count:
             return False
         last_source_row = sourceRow + count - 1
-        row_after = (
-            destinationChild if sourceRow > destinationChild else destinationChild + 1
-        )
-        self.beginMoveRows(
-            sourceParent, sourceRow, last_source_row, destinationParent, row_after
-        )
-        self._records.shuffle(
-            move_list_elements(
-                self._records.records, sourceRow, last_source_row, destinationChild
-            )
-        )
+        row_after = destinationChild if sourceRow > destinationChild else destinationChild + 1
+        self.beginMoveRows(sourceParent, sourceRow, last_source_row, destinationParent, row_after)
+        self._records.shuffle(move_list_elements(self._records.records, sourceRow, last_source_row, destinationChild))
         self.endMoveRows()
         return True
 

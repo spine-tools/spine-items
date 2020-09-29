@@ -30,9 +30,7 @@ class UpdateExporterOutFileName(SpineToolboxCommand):
         super().__init__()
         self.exporter = exporter
         self.redo_file_name = file_name
-        self.undo_file_name = self.exporter._settings_packs[
-            database_path
-        ].output_file_name
+        self.undo_file_name = self.exporter._settings_packs[database_path].output_file_name
         self.database_path = database_path
         self.setText(f"change output file in {exporter.name}")
 
@@ -67,14 +65,7 @@ class UpdateScenario(SpineToolboxCommand):
 
 class UpdateExporterSettings(SpineToolboxCommand):
     def __init__(
-        self,
-        exporter,
-        settings,
-        indexing_settings,
-        merging_settings,
-        none_fallback,
-        none_export,
-        database_path,
+        self, exporter, settings, indexing_settings, merging_settings, none_fallback, none_export, database_path
     ):
         """Command to update Exporter settings.
 
@@ -90,27 +81,13 @@ class UpdateExporterSettings(SpineToolboxCommand):
         super().__init__()
         self._exporter = exporter
         self._database_path = database_path
-        self._redo_settings_tuple = (
-            settings,
-            indexing_settings,
-            merging_settings,
-            none_fallback,
-            none_export,
-        )
+        self._redo_settings_tuple = (settings, indexing_settings, merging_settings, none_fallback, none_export)
         p = exporter.settings_pack(database_path)
-        self._undo_settings_tuple = (
-            p.settings,
-            p.indexing_settings,
-            p.merging_settings,
-        )
+        self._undo_settings_tuple = (p.settings, p.indexing_settings, p.merging_settings)
         self.setText(f"change settings of {exporter.name}")
 
     def redo(self):
-        self._exporter.undo_or_redo_settings(
-            *self._redo_settings_tuple, self._database_path
-        )
+        self._exporter.undo_or_redo_settings(*self._redo_settings_tuple, self._database_path)
 
     def undo(self):
-        self._exporter.undo_or_redo_settings(
-            *self._undo_settings_tuple, self._database_path
-        )
+        self._exporter.undo_or_redo_settings(*self._undo_settings_tuple, self._database_path)

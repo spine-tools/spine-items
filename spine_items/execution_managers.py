@@ -74,9 +74,7 @@ class ConsoleExecutionManager(ExecutionManager):
     @Slot()
     def _start_execution(self):
         """Starts execution."""
-        self._logger.msg_warning.emit(
-            f"\tExecution started. See <b>{self._console.name}</b> for messages."
-        )
+        self._logger.msg_warning.emit(f"\tExecution started. See <b>{self._console.name}</b> for messages.")
         self._console.ready_to_execute.disconnect(self._start_execution)
         self._console.ready_to_execute.connect(self._execute_next_command)
         self._execute_next_command()
@@ -115,9 +113,7 @@ class QProcessExecutionManager(ExecutionManager):
         self._program = program
         self._args = args
         self._silent = silent  # Do not show Event Log nor Process Log messages
-        self._semisilent = (
-            semisilent  # Do not show Event Log messages but show Process Log messages
-        )
+        self._semisilent = semisilent  # Do not show Event Log messages but show Process Log messages
         self.process_failed = False
         self.process_failed_to_start = False
         self._user_stopped = False
@@ -154,9 +150,7 @@ class QProcessExecutionManager(ExecutionManager):
             self._process.readyReadStandardOutput.connect(self.on_ready_stdout)
             self._process.readyReadStandardError.connect(self.on_ready_stderr)
         self._process.start(self._program, self._args)
-        if not self._process.waitForStarted(
-            msecs=10000
-        ):  # This blocks until process starts or timeout happens
+        if not self._process.waitForStarted(msecs=10000):  # This blocks until process starts or timeout happens
             self.process_failed = True
             self.process_failed_to_start = True
             self._process.deleteLater()
@@ -205,10 +199,7 @@ class QProcessExecutionManager(ExecutionManager):
             arg_str = " ".join(self._args)
             self._logger.msg.emit("\tArguments: <b>{0}</b>".format(arg_str))
         elif new_state == QProcess.Running:
-            self._logger.msg_warning.emit(
-                "\tExecution is in progress. See Process Log for messages "
-                "(stdout&stderr)"
-            )
+            self._logger.msg_warning.emit("\tExecution is in progress. See Process Log for messages " "(stdout&stderr)")
         elif new_state == QProcess.NotRunning:
             # logging.debug("Process is not running")
             pass
@@ -241,9 +232,7 @@ class QProcessExecutionManager(ExecutionManager):
         elif process_error == QProcess.UnknownError:
             self._logger.msg_error.emit("Unknown error in process")
         else:
-            self._logger.msg_error.emit(
-                "Unspecified error in process: {0}".format(process_error)
-            )
+            self._logger.msg_error.emit("Unspecified error in process: {0}".format(process_error))
         self.teardown_process()
 
     def teardown_process(self):
@@ -253,12 +242,8 @@ class QProcessExecutionManager(ExecutionManager):
         if not self._process:
             pass
         else:
-            out = str(
-                self._process.readAllStandardOutput().data(), "utf-8", errors="replace"
-            )
-            errout = str(
-                self._process.readAllStandardError().data(), "utf-8", errors="replace"
-            )
+            out = str(self._process.readAllStandardOutput().data(), "utf-8", errors="replace")
+            errout = str(self._process.readAllStandardError().data(), "utf-8", errors="replace")
             if out is not None:
                 self._logger.msg_proc.emit(out.strip())
             if errout is not None:
@@ -278,9 +263,7 @@ class QProcessExecutionManager(ExecutionManager):
         try:
             self._process.terminate()
         except Exception as ex:  # pylint: disable=broad-except
-            self._logger.msg_error.emit(
-                "[{0}] exception when terminating process".format(ex)
-            )
+            self._logger.msg_error.emit("[{0}] exception when terminating process".format(ex))
             logging.exception("Exception in closing QProcess: %s", ex)
         finally:
             self._process.deleteLater()
@@ -306,19 +289,13 @@ class QProcessExecutionManager(ExecutionManager):
             pass
         else:
             if not self._silent:
-                self._logger.msg_error.emit(
-                    "Unknown QProcess exit status [{0}]".format(exit_status)
-                )
+                self._logger.msg_error.emit("Unknown QProcess exit status [{0}]".format(exit_status))
             exit_code = -1
         if not exit_code == 0:
             self.process_failed = True
         if not self._user_stopped:
-            out = str(
-                self._process.readAllStandardOutput().data(), "utf-8", errors="replace"
-            )
-            errout = str(
-                self._process.readAllStandardError().data(), "utf-8", errors="replace"
-            )
+            out = str(self._process.readAllStandardOutput().data(), "utf-8", errors="replace")
+            errout = str(self._process.readAllStandardError().data(), "utf-8", errors="replace")
             if out is not None:
                 if not self._silent:
                     self._logger.msg_proc.emit(out.strip())
@@ -338,9 +315,7 @@ class QProcessExecutionManager(ExecutionManager):
         """Emit data from stdout."""
         if not self._process:
             return
-        out = str(
-            self._process.readAllStandardOutput().data(), "utf-8", errors="replace"
-        )
+        out = str(self._process.readAllStandardOutput().data(), "utf-8", errors="replace")
         self._logger.msg_proc.emit(out.strip())
 
     @Slot()
@@ -348,7 +323,5 @@ class QProcessExecutionManager(ExecutionManager):
         """Emit data from stderr."""
         if not self._process:
             return
-        err = str(
-            self._process.readAllStandardError().data(), "utf-8", errors="replace"
-        )
+        err = str(self._process.readAllStandardError().data(), "utf-8", errors="replace")
         self._logger.msg_proc_error.emit(err.strip())

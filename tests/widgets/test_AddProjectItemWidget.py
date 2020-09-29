@@ -21,10 +21,7 @@ from unittest.mock import MagicMock
 from PySide2.QtWidgets import QApplication, QWidget
 from PySide2.QtGui import QStandardItemModel
 from spine_items.widgets.add_project_item_widget import AddProjectItemWidget
-from ..mock_helpers import (
-    clean_up_toolboxui_with_project,
-    create_toolboxui_with_project,
-)
+from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
 
 
 class TestAddProjectItemWidget(unittest.TestCase):
@@ -49,9 +46,7 @@ class TestAddProjectItemWidget(unittest.TestCase):
         widget = AddProjectItemWidget(self.toolbox, 0.0, 0.0, class_=class_)
         self.assertEqual(widget.ui.lineEdit_name.selectedText(), prefix + " 1")
 
-    def test_specifications_combo_box_disabled_if_item_does_not_support_specifications(
-        self,
-    ):
+    def test_specifications_combo_box_disabled_if_item_does_not_support_specifications(self,):
         prefix = "project_item"
         class_ = MagicMock()
         class_.default_name_prefix.return_value = prefix

@@ -91,9 +91,7 @@ def serialize_path(path, project_dir):
     serialized = {
         "type": "path",
         "relative": is_relative,
-        "path": os.path.relpath(path, project_dir).replace(os.sep, "/")
-        if is_relative
-        else path.replace(os.sep, "/"),
+        "path": os.path.relpath(path, project_dir).replace(os.sep, "/") if is_relative else path.replace(os.sep, "/"),
     }
     return serialized
 
@@ -147,9 +145,7 @@ def deserialize_path(serialized, project_dir):
         path_type = serialized["type"]
         if path_type == "path":
             path = serialized["path"]
-            return os.path.normpath(
-                os.path.join(project_dir, path) if serialized["relative"] else path
-            )
+            return os.path.normpath(os.path.join(project_dir, path) if serialized["relative"] else path)
         if path_type == "file_url":
             path = serialized["path"]
             if serialized["relative"]:
@@ -368,17 +364,13 @@ def expand_tags(args, optional_input_files, input_urls, output_urls):
         return False
 
     expanded_args = list()
-    named_data_store_tag_fingerprint = re.compile(
-        CMDLINE_TAG_EDGE + "url:.+" + CMDLINE_TAG_EDGE
-    )
+    named_data_store_tag_fingerprint = re.compile(CMDLINE_TAG_EDGE + "url:.+" + CMDLINE_TAG_EDGE)
     all_urls = ChainMap(input_urls, output_urls)
     input_url_list = list(input_urls.values())
     output_url_list = list(output_urls.values())
     did_expand = False
     for arg in args:
-        if expand_list(
-            arg, CmdlineTag.OPTIONAL_INPUTS, optional_input_files, expanded_args
-        ):
+        if expand_list(arg, CmdlineTag.OPTIONAL_INPUTS, optional_input_files, expanded_args):
             did_expand = True
             continue
         if expand_list(arg, CmdlineTag.URL_INPUTS, input_url_list, expanded_args):
@@ -396,9 +388,7 @@ def expand_tags(args, optional_input_files, input_urls, output_urls):
             try:
                 url = all_urls[data_store_name]
             except KeyError:
-                raise RuntimeError(
-                    f"Cannot replace tag '{tag}' since '{data_store_name}' was not found."
-                )
+                raise RuntimeError(f"Cannot replace tag '{tag}' since '{data_store_name}' was not found.")
             expanded_args.append(preface + url + postscript)
             did_expand = True
             continue
@@ -426,9 +416,7 @@ def python_interpreter(app_settings):
         path = python_path
     else:
         if not getattr(sys, "frozen", False):
-            path = (
-                sys.executable
-            )  # If not frozen, return the one that is currently used.
+            path = sys.executable  # If not frozen, return the one that is currently used.
         else:
             path = PYTHON_EXECUTABLE  # If frozen, return the one in path
     return path

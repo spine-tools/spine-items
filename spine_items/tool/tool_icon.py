@@ -33,13 +33,7 @@ class ToolIcon(ProjectItemIcon):
             icon (str): icon resource path
         """
         super().__init__(
-            toolbox,
-            x,
-            y,
-            project_item,
-            icon,
-            icon_color=QColor("red"),
-            background_color=QColor("#ffe6e6"),
+            toolbox, x, y, project_item, icon, icon_color=QColor("red"), background_color=QColor("#ffe6e6")
         )
         self.time_line = QTimeLine()
         self.time_line.setLoopCount(0)  # loop forever
@@ -64,9 +58,7 @@ class ToolIcon(ProjectItemIcon):
     @Slot("QTimeLine::State")
     def _handle_time_line_state_changed(self, new_state):
         if new_state == QTimeLine.Running:
-            self.svg_item.setTransformOriginPoint(
-                0, self._anim_transformation_origin_point_y
-            )
+            self.svg_item.setTransformOriginPoint(0, self._anim_transformation_origin_point_y)
         elif new_state == QTimeLine.NotRunning:
             self.svg_item.setTransformOriginPoint(0, 0)
             self.svg_item.setPos(self._svg_item_pos)

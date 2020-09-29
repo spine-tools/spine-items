@@ -28,10 +28,7 @@ from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
 from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.executable_item import ExecutableItem
 from spine_items.data_store.item_info import ItemInfo
-from ..mock_helpers import (
-    clean_up_toolboxui_with_project,
-    create_toolboxui_with_project,
-)
+from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
 
 
 # noinspection PyUnusedLocal
@@ -58,9 +55,7 @@ class TestDataStore(unittest.TestCase):
         self.toolbox = create_toolboxui_with_project()
         self.ds_properties_ui = self.toolbox.project_item_properties_ui("Data Store")
         # Let's add a Data Store to the project here since all tests in this class need it
-        item_dict = {
-            "DS": {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
-        }
+        item_dict = {"DS": {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}}
         self.toolbox.project().add_project_items(item_dict)
         self.ds_index = self.toolbox.project_item_model.find_item("DS")
         self.ds = self.toolbox.project_item_model.item(self.ds_index).project_item
@@ -114,9 +109,7 @@ class TestDataStore(unittest.TestCase):
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
             if k == "url":
                 for url_key in url_keys:
-                    self.assertTrue(
-                        url_key in d[k], f"Key '{url_key}' not in dict {d[k]}"
-                    )
+                    self.assertTrue(url_key in d[k], f"Key '{url_key}' not in dict {d[k]}")
 
     def test_create_new_empty_spine_database(self):
         """Test that a new Spine database is created when clicking on 'New Spine db tool button'
@@ -148,13 +141,9 @@ class TestDataStore(unittest.TestCase):
         # DS should now have "sqlite" selected in the combobox
         self.assertEqual("sqlite", cb_dialect.currentText())
         self.assertEqual(temp_path, le_db.text())
-        self.assertTrue(
-            os.path.exists(le_db.text())
-        )  # temp_db.sqlite should exist in DS data_dir at this point
+        self.assertTrue(os.path.exists(le_db.text()))  # temp_db.sqlite should exist in DS data_dir at this point
         # Click New Spine db button. This overwrites the existing sqlite file!
-        with mock.patch(
-            "spinetoolbox.spine_db_manager.QMessageBox"
-        ) as mock_qmessagebox:
+        with mock.patch("spinetoolbox.spine_db_manager.QMessageBox") as mock_qmessagebox:
             mock_qmessagebox.exec_().return_value = QMessageBox.AcceptRole
             self.ds_properties_ui.pushButton_create_new_spine_db.click()
             mock_qmessagebox.assert_called_once()
@@ -215,16 +204,12 @@ class TestDataStore(unittest.TestCase):
         # Select the sqlite dialect
         self.ds_properties_ui.comboBox_dialect.activated[str].emit("sqlite")
         # Browse to an existing db file
-        with mock.patch(
-            "spine_items.data_store.data_store.QFileDialog"
-        ) as mock_qfile_dialog:
+        with mock.patch("spine_items.data_store.data_store.QFileDialog") as mock_qfile_dialog:
             mock_qfile_dialog.getOpenFileName.side_effect = lambda *args: [temp_db_path]
             self.ds_properties_ui.toolButton_open_sqlite_file.click()
             mock_qfile_dialog.getOpenFileName.assert_called_once()
         # Open form
-        with mock.patch(
-            "spinetoolbox.spine_db_editor.widgets.spine_db_editor.SpineDBEditor.show"
-        ):
+        with mock.patch("spinetoolbox.spine_db_editor.widgets.spine_db_editor.SpineDBEditor.show"):
             self.ds_properties_ui.pushButton_ds_open_editor.click()
         ds_form = self.ds._project.db_mngr._db_editors[(self.ds._sa_url,)]
         self.assertIsInstance(ds_form, SpineDBEditor)
@@ -245,9 +230,7 @@ class TestDataStore(unittest.TestCase):
         self.ds_properties_ui.lineEdit_database.setText(temp_db_path)
         self.ds_properties_ui.lineEdit_database.editingFinished.emit()
         # Open form
-        with mock.patch(
-            "spinetoolbox.spine_db_editor.widgets.spine_db_editor.SpineDBEditor.show"
-        ):
+        with mock.patch("spinetoolbox.spine_db_editor.widgets.spine_db_editor.SpineDBEditor.show"):
             self.ds_properties_ui.pushButton_ds_open_editor.click()
         ds_form = self.ds._project.db_mngr._db_editors[(self.ds._sa_url,)]
         self.assertIsInstance(ds_form, SpineDBEditor)
@@ -299,9 +282,7 @@ class TestDataStore(unittest.TestCase):
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
         # Check that DS is connected to an existing DS.sqlite file that is in data_dir
         self.assertEqual("sqlite", cb_dialect.currentText())
-        self.assertEqual(
-            os.path.join(self.ds.data_dir, "DS.sqlite"), le_db.text()
-        )  # data_dir before rename
+        self.assertEqual(os.path.join(self.ds.data_dir, "DS.sqlite"), le_db.text())  # data_dir before rename
         self.assertTrue(os.path.exists(le_db.text()))
         expected_name = "ABC"
         expected_short_name = "abc"
@@ -309,16 +290,10 @@ class TestDataStore(unittest.TestCase):
         self.assertTrue(ret_val)
         # Check name
         self.assertEqual(expected_name, self.ds.name)  # item name
-        self.assertEqual(
-            expected_name, self.ds_properties_ui.label_ds_name.text()
-        )  # name label in props
-        self.assertEqual(
-            expected_name, self.ds.get_icon().name_item.text()
-        )  # name item on Design View
+        self.assertEqual(expected_name, self.ds_properties_ui.label_ds_name.text())  # name label in props
+        self.assertEqual(expected_name, self.ds.get_icon().name_item.text())  # name item on Design View
         # Check data_dir and logs_dir
-        expected_data_dir = os.path.join(
-            self.toolbox.project().items_dir, expected_short_name
-        )
+        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
         # Check that the database path in properties has been updated
         expected_db_path = os.path.join(expected_data_dir, "DS.sqlite")

@@ -33,9 +33,7 @@ class TestProjectItem(unittest.TestCase):
     def setUp(self):
         """Set up toolbox."""
         self.toolbox = create_toolboxui_with_project()
-        item_dict = {
-            "DC": {"type": "Data Connection", "description": "", "x": 0, "y": 0}
-        }
+        item_dict = {"DC": {"type": "Data Connection", "description": "", "x": 0, "y": 0}}
         self.toolbox.project().add_project_items(item_dict)
         index = self.toolbox.project_item_model.find_item("DC")
         self.data_connection = self.toolbox.project_item_model.item(index).project_item
@@ -48,9 +46,7 @@ class TestProjectItem(unittest.TestCase):
     def test_notify_destination(self):
         self.toolbox.msg_warning = NonCallableMagicMock()
         self.toolbox.msg_warning.attach_mock(MagicMock(), "emit")
-        item = ProjectItem(
-            "name", "description", 0.0, 0.0, self.toolbox.project(), self.toolbox
-        )
+        item = ProjectItem("name", "description", 0.0, 0.0, self.toolbox.project(), self.toolbox)
         item.item_type = MagicMock(return_value="item_type")
         item.notify_destination(item)
         self.toolbox.msg_warning.emit.assert_called_with(
@@ -72,12 +68,7 @@ class TestProjectItem(unittest.TestCase):
         icon.sceneBoundingRect = MagicMock(return_value=sceneBoundingRect)
         item.get_icon = MagicMock(return_value=icon)
         item_dict = item.item_dict()
-        expected = {
-            "type": "item type",
-            "description": "Item's description.",
-            "x": -2.3,
-            "y": 5.5,
-        }
+        expected = {"type": "item type", "description": "Item's description.", "x": -2.3, "y": 5.5}
         self.assertEqual(item_dict, expected)
 
 

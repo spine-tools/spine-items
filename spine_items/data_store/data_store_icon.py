@@ -32,13 +32,7 @@ class DataStoreIcon(ProjectItemIcon):
             icon (str): icon resource path
         """
         super().__init__(
-            toolbox,
-            x,
-            y,
-            project_item,
-            icon,
-            icon_color=QColor("#cc33ff"),
-            background_color=QColor("#f9e6ff"),
+            toolbox, x, y, project_item, icon, icon_color=QColor("#cc33ff"), background_color=QColor("#f9e6ff")
         )
 
     def mouseDoubleClickEvent(self, e):

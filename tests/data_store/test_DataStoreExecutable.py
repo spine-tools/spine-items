@@ -48,13 +48,9 @@ class TestDataStoreExecutable(unittest.TestCase):
         }
         logger = mock.MagicMock()
         with tempfile.TemporaryDirectory() as temp_dir:
-            with mock.patch(
-                "spine_items.data_store.executable_item.convert_to_sqlalchemy_url"
-            ) as mock_convert_url:
+            with mock.patch("spine_items.data_store.executable_item.convert_to_sqlalchemy_url") as mock_convert_url:
                 mock_convert_url.return_value = "database.sqlite"
-                item = ExecutableItem.from_dict(
-                    item_dict, name, temp_dir, None, dict(), logger
-                )
+                item = ExecutableItem.from_dict(item_dict, name, temp_dir, None, dict(), logger)
                 mock_convert_url.assert_called_once()
                 self.assertIsInstance(item, ExecutableItem)
                 self.assertEqual("Data Store", item.item_type())
@@ -62,9 +58,7 @@ class TestDataStoreExecutable(unittest.TestCase):
 
     def test_stop_execution(self):
         executable = ExecutableItem("name", "", mock.MagicMock())
-        with mock.patch(
-            "spine_items.executable_item_base.ExecutableItemBase.stop_execution"
-        ) as mock_stop_execution:
+        with mock.patch("spine_items.executable_item_base.ExecutableItemBase.stop_execution") as mock_stop_execution:
             executable.stop_execution()
             mock_stop_execution.assert_called_once()
 
@@ -77,9 +71,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
 
     def test_output_resources_backward(self):
-        executable = ExecutableItem(
-            "name", "sqlite:///database.sqlite", mock.MagicMock()
-        )
+        executable = ExecutableItem("name", "sqlite:///database.sqlite", mock.MagicMock())
         resources = executable.output_resources(ExecutionDirection.BACKWARD)
         self.assertEqual(len(resources), 1)
         resource = resources[0]
@@ -88,9 +80,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         self.assertEqual(resource.metadata, {})
 
     def test_output_resources_forward(self):
-        executable = ExecutableItem(
-            "name", "sqlite:///database.sqlite", mock.MagicMock()
-        )
+        executable = ExecutableItem("name", "sqlite:///database.sqlite", mock.MagicMock())
         resources = executable.output_resources(ExecutionDirection.FORWARD)
         self.assertEqual(len(resources), 1)
         resource = resources[0]

@@ -30,9 +30,7 @@ from .settings_state import SettingsState
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(
-        self, name, settings_packs, cancel_on_error, data_dir, gams_path, logger
-    ):
+    def __init__(self, name, settings_packs, cancel_on_error, data_dir, gams_path, logger):
         """
         Args:
             name (str): item's name
@@ -58,26 +56,18 @@ class ExecutableItem(ExecutableItemBase):
         database_urls = [r.url for r in resources if r.type_ == "database"]
         gams_system_directory = self._resolve_gams_system_directory()
         if gams_system_directory is None:
-            self._logger.msg_error.emit(
-                f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found."
-            )
+            self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")
             return False
         for url in database_urls:
             settings_pack = self._settings_packs.get(url, None)
             if settings_pack is None:
-                self._logger.msg_error.emit(
-                    f"<b>{self.name}</b>: No export settings defined for database {url}."
-                )
+                self._logger.msg_error.emit(f"<b>{self.name}</b>: No export settings defined for database {url}.")
                 return False
             if not settings_pack.output_file_name:
-                self._logger.msg_error.emit(
-                    f"<b>{self.name}</b>: No file name given to export database {url}."
-                )
+                self._logger.msg_error.emit(f"<b>{self.name}</b>: No file name given to export database {url}.")
                 return False
             if settings_pack.state == SettingsState.FETCHING:
-                self._logger.msg_error.emit(
-                    f"<b>{self.name}</b>: Settings not ready for database {url}."
-                )
+                self._logger.msg_error.emit(f"<b>{self.name}</b>: Settings not ready for database {url}.")
                 return False
             if settings_pack.state == SettingsState.INDEXING_PROBLEM:
                 self._logger.msg_error.emit(
@@ -85,19 +75,13 @@ class ExecutableItem(ExecutableItemBase):
                 )
                 return False
             if settings_pack.state == SettingsState.ERROR:
-                self._logger.msg_error.emit(
-                    f"<b>{self.name}</b>: Ill formed database {url}."
-                )
+                self._logger.msg_error.emit(f"<b>{self.name}</b>: Ill formed database {url}.")
                 return False
             out_path = os.path.join(self._data_dir, settings_pack.output_file_name)
             try:
-                database_map = scenario_filtered_database_map(
-                    url, settings_pack.scenario
-                )
+                database_map = scenario_filtered_database_map(url, settings_pack.scenario)
             except SpineDBAPIError as error:
-                self._logger.msg_error.emit(
-                    f"Failed to export <b>{url}</b> to .gdx: {error}"
-                )
+                self._logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
                 return
             export_logger = self._logger if not self._cancel_on_error else None
             try:
@@ -113,9 +97,7 @@ class ExecutableItem(ExecutableItemBase):
                     export_logger,
                 )
             except gdx.GdxExportException as error:
-                self._logger.msg_error.emit(
-                    f"Failed to export <b>{url}</b> to .gdx: {error}"
-                )
+                self._logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
                 return False
             finally:
                 database_map.connection.close()
@@ -145,9 +127,7 @@ class ExecutableItem(ExecutableItemBase):
         return path
 
     @classmethod
-    def from_dict(
-        cls, item_dict, name, project_dir, app_settings, specifications, logger
-    ):
+    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         settings_packs = dict()
         for pack_dict in item_dict["settings_packs"]:
@@ -156,9 +136,7 @@ class ExecutableItem(ExecutableItemBase):
             try:
                 settings_pack = SettingsPack.from_dict(pack_dict, url, logger)
             except gdx.GdxExportException as error:
-                logger.msg_error.emit(
-                    f"Failed to fully restore Exporter settings: {error}"
-                )
+                logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
                 settings_pack = SettingsPack("")
             settings_packs[url] = settings_pack
         cancel_on_error = item_dict.get("cancel_on_error")

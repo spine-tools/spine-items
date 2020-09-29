@@ -24,10 +24,7 @@ import spinetoolbox.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.view.item_info import ItemInfo
 from spine_items.view.view import View
 from spine_items.view.executable_item import ExecutableItem
-from ..mock_helpers import (
-    clean_up_toolboxui_with_project,
-    create_toolboxui_with_project,
-)
+from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
 
 
 class TestView(unittest.TestCase):
@@ -112,16 +109,10 @@ class TestView(unittest.TestCase):
         self.assertTrue(ret_val)
         # Check name
         self.assertEqual(expected_name, self.view.name)  # item name
-        self.assertEqual(
-            expected_name, self.view._properties_ui.label_view_name.text()
-        )  # name label in props
-        self.assertEqual(
-            expected_name, self.view.get_icon().name_item.text()
-        )  # name item on Design View
+        self.assertEqual(expected_name, self.view._properties_ui.label_view_name.text())  # name label in props
+        self.assertEqual(expected_name, self.view.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(
-            self.toolbox.project().items_dir, expected_short_name
-        )
+        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.view.data_dir)  # Check data dir
 
 

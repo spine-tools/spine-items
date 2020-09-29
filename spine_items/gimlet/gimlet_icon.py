@@ -32,11 +32,5 @@ class GimletIcon(ProjectItemIcon):
             icon (str): Icon resource path
         """
         super().__init__(
-            toolbox,
-            x,
-            y,
-            project_item,
-            icon,
-            icon_color=QColor("#ffd045"),
-            background_color=QColor("#fff2cc"),
+            toolbox, x, y, project_item, icon, icon_color=QColor("#ffd045"), background_color=QColor("#fff2cc")
         )

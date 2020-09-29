@@ -20,10 +20,7 @@ import unittest
 from PySide2.QtWidgets import QApplication
 from spinedb_api.parameter_value import Map
 import spine_items.spine_io.exporters.gdx as gdx
-from spine_items.exporter.widgets.parameter_index_settings import (
-    IndexSettingsState,
-    ParameterIndexSettings,
-)
+from spine_items.exporter.widgets.parameter_index_settings import IndexSettingsState, ParameterIndexSettings
 
 
 _ERROR_PREFIX = "<span style='color:#ff3333;white-space: pre-wrap;'>"
@@ -41,12 +38,8 @@ class TestParameterIndexSettings(unittest.TestCase):
         parameter = gdx.Parameter(["domain name"], [("key_1",)], [value])
         indexing_setting = gdx.IndexingSetting(parameter, "set name")
         existing_domains = {"domain name": [("key_1",)]}
-        settings_widget = ParameterIndexSettings(
-            "parameter name", indexing_setting, existing_domains, None
-        )
-        self.assertEqual(
-            settings_widget.state, IndexSettingsState.DOMAIN_MISSING_INDEXES
-        )
+        settings_widget = ParameterIndexSettings("parameter name", indexing_setting, existing_domains, None)
+        self.assertEqual(settings_widget.state, IndexSettingsState.DOMAIN_MISSING_INDEXES)
 
 
 if __name__ == "__main__":

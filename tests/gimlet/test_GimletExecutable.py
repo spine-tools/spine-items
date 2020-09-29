@@ -44,22 +44,8 @@ class TestGimletExecutable(unittest.TestCase):
 
     def test_from_dict(self):
         selections = [
-            [
-                {
-                    "type": "path",
-                    "relative": True,
-                    "path": ".spinetoolbox/items/input_files/a.txt",
-                },
-                True,
-            ],
-            [
-                {
-                    "type": "path",
-                    "relative": True,
-                    "path": ".spinetoolbox/items/input_files/b.txt",
-                },
-                False,
-            ],
+            [{"type": "path", "relative": True, "path": ".spinetoolbox/items/input_files/a.txt"}, True],
+            [{"type": "path", "relative": True, "path": ".spinetoolbox/items/input_files/b.txt"}, False],
         ]
         item_dict = {
             "type": "Gimlet",
@@ -104,19 +90,10 @@ class TestGimletExecutable(unittest.TestCase):
             self.assertEqual("", item.shell_name)
             prefix, work_dir_name = os.path.split(item._work_dir)
             self.assertEqual("some_path", prefix)
+            self.assertEqual("g__", work_dir_name[0:3])  # work dir name must start with 'g__'
+            self.assertEqual("__toolbox", work_dir_name[-9:])  # work dir name must end with '__toolbox'
             self.assertEqual(
-                "g__", work_dir_name[0:3]
-            )  # work dir name must start with 'g__'
-            self.assertEqual(
-                "__toolbox", work_dir_name[-9:]
-            )  # work dir name must end with '__toolbox'
-            self.assertEqual(
-                [
-                    os.path.abspath(
-                        os.path.join(temp_dir, ".spinetoolbox/items/input_files/a.txt")
-                    )
-                ],
-                item._selected_files,
+                [os.path.abspath(os.path.join(temp_dir, ".spinetoolbox/items/input_files/a.txt"))], item._selected_files
             )
             # Modify item_dict
             item_dict["use_shell"] = True
@@ -133,46 +110,32 @@ class TestGimletExecutable(unittest.TestCase):
 
     @unittest.skipIf(sys.platform != "win32", "Windows test")
     def test_execute_backward(self):
-        executable = ExecutableItem(
-            "name", mock.MagicMock(), "cmd.exe", ["cd"], "", selected_files=[]
-        )
+        executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], "", selected_files=[])
         self.assertTrue(executable.execute([], ExecutionDirection.BACKWARD))
 
     @unittest.skipIf(sys.platform != "win32", "Windows test")
     def test_execute_forward(self):
         with TemporaryDirectory() as temp_dir:
             # Test executing command 'cd' in cmd.exe.
-            executable = ExecutableItem(
-                "name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[]
-            )
+            executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[])
             self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
             # Test that bash shell execution fails on Windows.
-            executable = ExecutableItem(
-                "name", mock.MagicMock(), "bash", ["ls"], temp_dir, selected_files=[]
-            )
+            executable = ExecutableItem("name", mock.MagicMock(), "bash", ["ls"], temp_dir, selected_files=[])
             self.assertFalse(executable.execute([], ExecutionDirection.FORWARD))
 
     def test_output_resources_backward(self):
-        executable = ExecutableItem(
-            "name", mock.MagicMock(), "cmd.exe", ["cd"], "", selected_files=[]
-        )
+        executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], "", selected_files=[])
         self.assertEqual(executable.output_resources(ExecutionDirection.BACKWARD), [])
 
     def test_output_resources_forward(self):
         with TemporaryDirectory() as temp_dir:
-            executable = ExecutableItem(
-                "name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[]
-            )
-            self.assertEqual(
-                executable.output_resources(ExecutionDirection.FORWARD), []
-            )
+            executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[])
+            self.assertEqual(executable.output_resources(ExecutionDirection.FORWARD), [])
 
     def test_expand_gimlet_tags(self):
 
         with TemporaryDirectory() as temp_dir:
-            executable = ExecutableItem(
-                "name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[]
-            )
+            executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[])
             expanded = executable._expand_gimlet_tags(["a"], [])
             self.assertEqual(["a"], expanded)
             expanded = executable._expand_gimlet_tags(["a", "b"], [])
@@ -190,40 +153,26 @@ class TestGimletExecutable(unittest.TestCase):
                 ProjectItemResource(FakeProvider("DATA STORE 2"), "database", db2_url),
             ]
             # Add a resource for the executable that comes from a successor Data Store
-            executable._successor_resources = [
-                ProjectItemResource(FakeProvider("DATA STORE 3"), "database", db3_url)
-            ]
+            executable._successor_resources = [ProjectItemResource(FakeProvider("DATA STORE 3"), "database", db3_url)]
             expanded = executable._expand_gimlet_tags(["@@url_inputs@@"], resources)
             self.assertEqual([db1_url, db2_url], expanded)
-            expanded = executable._expand_gimlet_tags(
-                ["@@url_inputs@@", "@@url_outputs@@"], resources
-            )
+            expanded = executable._expand_gimlet_tags(["@@url_inputs@@", "@@url_outputs@@"], resources)
             self.assertEqual([db1_url, db2_url, db3_url], expanded)
 
-            expanded = executable._expand_gimlet_tags(
-                ["@@url:DATA STORE 1@@"], resources
-            )
+            expanded = executable._expand_gimlet_tags(["@@url:DATA STORE 1@@"], resources)
             self.assertEqual([db1_url], expanded)
-            expanded = executable._expand_gimlet_tags(
-                ["@@url:DATA STORE 1@@", "@@url:DATA STORE 3@@"], resources
-            )
+            expanded = executable._expand_gimlet_tags(["@@url:DATA STORE 1@@", "@@url:DATA STORE 3@@"], resources)
             self.assertEqual([db1_url, db3_url], expanded)
-            expanded = executable._expand_gimlet_tags(
-                ["@@url_inputs@@", "@@url:DATA STORE 2@@"], resources
-            )
+            expanded = executable._expand_gimlet_tags(["@@url_inputs@@", "@@url:DATA STORE 2@@"], resources)
             self.assertEqual([db1_url, db2_url, db2_url], expanded)
-            expanded = executable._expand_gimlet_tags(
-                ["a", "-z", "@@url:DATA STORE 3@@", "--output"], resources
-            )
+            expanded = executable._expand_gimlet_tags(["a", "-z", "@@url:DATA STORE 3@@", "--output"], resources)
             self.assertEqual(["a", "-z", db3_url, "--output"], expanded)
 
     def test_stop_execution(self):
         logger = mock.MagicMock()
         prgm = "cmd.exe"
         cmd_list = ["dir"]
-        executable = ExecutableItem(
-            "name", logger, prgm, cmd_list, "", selected_files=[]
-        )
+        executable = ExecutableItem("name", logger, prgm, cmd_list, "", selected_files=[])
         executable._gimlet_process = QProcessExecutionManager(logger, prgm, cmd_list)
         executable.stop_execution()
         self.assertIsNone(executable._gimlet_process)

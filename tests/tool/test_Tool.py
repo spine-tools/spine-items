@@ -29,10 +29,7 @@ from spine_items.tool.tool_specifications import ExecutableTool
 from spine_items.tool.tool import Tool
 from spine_items.tool.executable_item import ExecutableItem
 from spine_items.config import TOOL_OUTPUT_DIR
-from ..mock_helpers import (
-    clean_up_toolboxui_with_project,
-    create_toolboxui_with_project,
-)
+from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
 
 
 class TestTool(unittest.TestCase):
@@ -41,9 +38,7 @@ class TestTool(unittest.TestCase):
         self.basedir = mkdtemp()
         self.toolbox = create_toolboxui_with_project()
         model = _MockToolSpecModel(self.toolbox, self.basedir)
-        self.toolbox.specification_model = self.toolbox.filtered_spec_factory_models[
-            "Tool"
-        ] = model
+        self.toolbox.specification_model = self.toolbox.filtered_spec_factory_models["Tool"] = model
         self.toolbox.specification_model_changed.emit()
 
     def tearDown(self):
@@ -72,15 +67,7 @@ class TestTool(unittest.TestCase):
         """Tests Item dictionary creation."""
         tool = self._add_tool()
         d = tool.item_dict()
-        a = [
-            "type",
-            "description",
-            "x",
-            "y",
-            "specification",
-            "execute_in_work",
-            "cmd_line_args",
-        ]
+        a = ["type", "description", "x", "y", "specification", "execute_in_work", "cmd_line_args"]
         for k in a:
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
@@ -101,14 +88,12 @@ class TestTool(unittest.TestCase):
         source_item.item_type = mock.MagicMock(return_value="Importer")
         tool.notify_destination(source_item)
         self.toolbox.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a "
-            "<b>Importer</b> and a <b>Tool</b> has not been implemented yet."
+            "Link established. Interaction between a " "<b>Importer</b> and a <b>Tool</b> has not been implemented yet."
         )
         source_item.item_type = mock.MagicMock(return_value="Data Store")
         tool.notify_destination(source_item)
         self.toolbox.msg.emit.assert_called_with(
-            "Link established. Data Store <b>source name</b> url will "
-            "be passed to Tool <b>T</b> when executing."
+            "Link established. Data Store <b>source name</b> url will " "be passed to Tool <b>T</b> when executing."
         )
         source_item.item_type = mock.MagicMock(return_value="Exporter")
         tool.notify_destination(source_item)
@@ -122,8 +107,7 @@ class TestTool(unittest.TestCase):
         source_item.item_type = mock.MagicMock(return_value="View")
         tool.notify_destination(source_item)
         self.toolbox.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a "
-            "<b>View</b> and a <b>Tool</b> has not been implemented yet."
+            "Link established. Interaction between a " "<b>View</b> and a <b>Tool</b> has not been implemented yet."
         )
 
     def test_default_name_prefix(self):
@@ -139,16 +123,10 @@ class TestTool(unittest.TestCase):
         self.assertTrue(ret_val)
         # Check name
         self.assertEqual(expected_name, tool.name)  # item name
-        self.assertEqual(
-            expected_name, tool._properties_ui.label_tool_name.text()
-        )  # name label in props
-        self.assertEqual(
-            expected_name, tool.get_icon().name_item.text()
-        )  # name item on Design View
+        self.assertEqual(expected_name, tool._properties_ui.label_tool_name.text())  # name label in props
+        self.assertEqual(expected_name, tool.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(
-            self.toolbox.project().items_dir, expected_short_name
-        )
+        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, tool.data_dir)  # Check data dir
         # Check that output_dir has been updated
         expected_output_dir = os.path.join(tool.data_dir, TOOL_OUTPUT_DIR)
@@ -177,23 +155,13 @@ class TestTool(unittest.TestCase):
     def test_save_and_restore_selections(self):
         """Test that selections are saved and restored when deactivating a Tool and activating it again.
         """
-        item = {
-            "Tool": {
-                "type": "Tool",
-                "description": "",
-                "x": 0,
-                "y": 0,
-                "specification": "",
-            }
-        }
+        item = {"Tool": {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": ""}}
         self.toolbox.project().add_project_items(item)
         ind = self.toolbox.project_item_model.find_item("Tool")
         tool = self.toolbox.project_item_model.item(ind).project_item
         tool.activate()
         self._assert_is_no_tool(tool)
-        tool._properties_ui.comboBox_tool.textActivated.emit(
-            "simple_exec"
-        )  # Set the simple_exec tool specification
+        tool._properties_ui.comboBox_tool.textActivated.emit("simple_exec")  # Set the simple_exec tool specification
         self._assert_is_simple_exec_tool(tool)
         tool.deactivate()
         tool.activate()
@@ -208,18 +176,10 @@ class TestTool(unittest.TestCase):
     def _assert_is_simple_exec_tool(self, tool):
         """Assert that the given tool has the simple_exec specification."""
         # Check internal models
-        source_files = [
-            x.text() for x in tool.source_file_model.findItems("*", Qt.MatchWildcard)
-        ]
-        input_files = [
-            x.text() for x in tool.input_file_model.findItems("*", Qt.MatchWildcard)
-        ]
-        opt_input_files = [
-            x.text() for x in tool.opt_input_file_model.findItems("*", Qt.MatchWildcard)
-        ]
-        output_files = [
-            x.text() for x in tool.output_file_model.findItems("*", Qt.MatchWildcard)
-        ]
+        source_files = [x.text() for x in tool.source_file_model.findItems("*", Qt.MatchWildcard)]
+        input_files = [x.text() for x in tool.input_file_model.findItems("*", Qt.MatchWildcard)]
+        opt_input_files = [x.text() for x in tool.opt_input_file_model.findItems("*", Qt.MatchWildcard)]
+        output_files = [x.text() for x in tool.output_file_model.findItems("*", Qt.MatchWildcard)]
         self.assertEqual(source_files, ["main.sh"])
         self.assertIn("input1.csv", input_files)
         self.assertIn("input2.csv", input_files)
@@ -236,23 +196,12 @@ class TestTool(unittest.TestCase):
         self.assertIn("Output files", categories)
         source_files_cat = model.findItems("Source files", Qt.MatchExactly)[0]
         input_files_cat = model.findItems("Input files", Qt.MatchExactly)[0]
-        opt_input_files_cat = model.findItems("Optional input files", Qt.MatchExactly)[
-            0
-        ]
+        opt_input_files_cat = model.findItems("Optional input files", Qt.MatchExactly)[0]
         output_files_cat = model.findItems("Output files", Qt.MatchExactly)[0]
-        source_files = [
-            source_files_cat.child(i).text() for i in range(source_files_cat.rowCount())
-        ]
-        input_files = [
-            input_files_cat.child(i).text() for i in range(input_files_cat.rowCount())
-        ]
-        opt_input_files = [
-            opt_input_files_cat.child(i).text()
-            for i in range(opt_input_files_cat.rowCount())
-        ]
-        output_files = [
-            output_files_cat.child(i).text() for i in range(output_files_cat.rowCount())
-        ]
+        source_files = [source_files_cat.child(i).text() for i in range(source_files_cat.rowCount())]
+        input_files = [input_files_cat.child(i).text() for i in range(input_files_cat.rowCount())]
+        opt_input_files = [opt_input_files_cat.child(i).text() for i in range(opt_input_files_cat.rowCount())]
+        output_files = [output_files_cat.child(i).text() for i in range(output_files_cat.rowCount())]
         self.assertEqual(source_files, ["main.sh"])
         self.assertIn("input1.csv", input_files)
         self.assertIn("input2.csv", input_files)
@@ -272,18 +221,10 @@ class TestTool(unittest.TestCase):
     def _assert_is_no_tool(self, tool):
         """Assert that the given tool has no tool specification."""
         # Check internal models
-        source_files = [
-            x.text() for x in tool.source_file_model.findItems("*", Qt.MatchWildcard)
-        ]
-        input_files = [
-            x.text() for x in tool.input_file_model.findItems("*", Qt.MatchWildcard)
-        ]
-        opt_input_files = [
-            x.text() for x in tool.opt_input_file_model.findItems("*", Qt.MatchWildcard)
-        ]
-        output_files = [
-            x.text() for x in tool.output_file_model.findItems("*", Qt.MatchWildcard)
-        ]
+        source_files = [x.text() for x in tool.source_file_model.findItems("*", Qt.MatchWildcard)]
+        input_files = [x.text() for x in tool.input_file_model.findItems("*", Qt.MatchWildcard)]
+        opt_input_files = [x.text() for x in tool.opt_input_file_model.findItems("*", Qt.MatchWildcard)]
+        output_files = [x.text() for x in tool.output_file_model.findItems("*", Qt.MatchWildcard)]
         self.assertEqual(source_files, [])
         self.assertEqual(input_files, [])
         self.assertEqual(opt_input_files, [])
@@ -298,23 +239,12 @@ class TestTool(unittest.TestCase):
         self.assertIn("Output files", categories)
         source_files_cat = model.findItems("Source files", Qt.MatchExactly)[0]
         input_files_cat = model.findItems("Input files", Qt.MatchExactly)[0]
-        opt_input_files_cat = model.findItems("Optional input files", Qt.MatchExactly)[
-            0
-        ]
+        opt_input_files_cat = model.findItems("Optional input files", Qt.MatchExactly)[0]
         output_files_cat = model.findItems("Output files", Qt.MatchExactly)[0]
-        source_files = [
-            source_files_cat.child(i).text() for i in range(source_files_cat.rowCount())
-        ]
-        input_files = [
-            input_files_cat.child(i).text() for i in range(input_files_cat.rowCount())
-        ]
-        opt_input_files = [
-            opt_input_files_cat.child(i).text()
-            for i in range(opt_input_files_cat.rowCount())
-        ]
-        output_files = [
-            output_files_cat.child(i).text() for i in range(output_files_cat.rowCount())
-        ]
+        source_files = [source_files_cat.child(i).text() for i in range(source_files_cat.rowCount())]
+        input_files = [input_files_cat.child(i).text() for i in range(input_files_cat.rowCount())]
+        opt_input_files = [opt_input_files_cat.child(i).text() for i in range(opt_input_files_cat.rowCount())]
+        output_files = [output_files_cat.child(i).text() for i in range(output_files_cat.rowCount())]
         self.assertEqual(source_files, [])
         self.assertEqual(input_files, [])
         self.assertEqual(opt_input_files, [])
@@ -353,13 +283,7 @@ class _MockToolSpecModel(QStandardItemModel):
                 name="complex_exec",
                 tooltype="executable",
                 path=path,
-                includes=[
-                    "MakeFile",
-                    "src/a.c",
-                    "src/a.h",
-                    "src/subunit/x.c",
-                    "src/subunit/x.h",
-                ],
+                includes=["MakeFile", "src/a.c", "src/a.h", "src/subunit/x.c", "src/subunit/x.h"],
                 settings=toolbox.qsettings(),
                 logger=toolbox,
                 description="A more complex executable tool.",
@@ -375,9 +299,7 @@ class _MockToolSpecModel(QStandardItemModel):
         self.find_specification = specification_dict.get
         self.specification = specifications.__getitem__
         self.specification_row = specification_names.index
-        self.invisibleRootItem().appendRows(
-            [QStandardItem(x) for x in specification_dict]
-        )
+        self.invisibleRootItem().appendRows([QStandardItem(x) for x in specification_dict])
 
     def specification_index(self, spec_name):
         row = self.specification_row(spec_name)

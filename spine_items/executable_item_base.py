@@ -142,9 +142,7 @@ class ExecutableItemBase:
         return list()
 
     @classmethod
-    def from_dict(
-        cls, item_dict, name, project_dir, app_settings, specifications, logger
-    ):
+    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """
         Deserializes an executable item from item dictionary.
 

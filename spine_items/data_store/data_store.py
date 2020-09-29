@@ -67,16 +67,12 @@ class DataStore(ProjectItem):
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
-        base_url = dict(
-            dialect="", username="", password="", host="", port="", database=""
-        )
+        base_url = dict(dialect="", username="", password="", host="", port="", database="")
         if isinstance(url, dict):
             if "database" in url and url["database"] is not None:
                 if url["database"].lower().endswith(".sqlite"):
                     # Convert relative database path back to absolute
-                    abs_path = os.path.abspath(
-                        os.path.join(self._project.project_dir, url["database"])
-                    )
+                    abs_path = os.path.abspath(os.path.join(self._project.project_dir, url["database"]))
                     url["database"] = abs_path
             for key, value in url.items():
                 if value is not None:
@@ -87,21 +83,13 @@ class DataStore(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[
-            self._properties_ui.toolButton_ds_open_dir.clicked
-        ] = lambda checked=False: self.open_directory()
+        s[self._properties_ui.toolButton_ds_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_ds_form
-        s[
-            self._properties_ui.toolButton_open_sqlite_file.clicked
-        ] = self.open_sqlite_file
-        s[
-            self._properties_ui.pushButton_create_new_spine_db.clicked
-        ] = self.create_new_spine_database
+        s[self._properties_ui.toolButton_open_sqlite_file.clicked] = self.open_sqlite_file
+        s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
         s[self._properties_ui.toolButton_copy_url.clicked] = self.copy_url
         s[self._properties_ui.comboBox_dialect.activated[str]] = self.refresh_dialect
-        s[
-            self._properties_ui.lineEdit_database.file_dropped
-        ] = self.set_path_to_sqlite_file
+        s[self._properties_ui.lineEdit_database.file_dropped] = self.set_path_to_sqlite_file
         s[self._properties_ui.lineEdit_username.editingFinished] = self.refresh_username
         s[self._properties_ui.lineEdit_password.editingFinished] = self.refresh_password
         s[self._properties_ui.lineEdit_host.editingFinished] = self.refresh_host
@@ -125,9 +113,7 @@ class DataStore(ProjectItem):
 
     @busy_effect
     def _update_sa_url(self, log_errors=True):
-        self._sa_url = convert_to_sqlalchemy_url(
-            self._url, self.name, self._logger, log_errors
-        )
+        self._sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger, log_errors)
 
     def project(self):
         """Returns current project or None if no project open."""
@@ -144,9 +130,7 @@ class DataStore(ProjectItem):
         """Open file browser where user can select the path to an SQLite
         file that they want to use."""
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileName(
-            self._toolbox, "Select SQLite file", self.data_dir
-        )
+        answer = QFileDialog.getOpenFileName(self._toolbox, "Select SQLite file", self.data_dir)
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
             return
@@ -312,9 +296,7 @@ class DataStore(ProjectItem):
     def open_ds_form(self, checked=False):
         """Opens current url in the Spine database editor."""
         self._update_sa_url()
-        self._project.db_mngr.show_data_store_form(
-            {self._sa_url: self.name}, self._logger
-        )
+        self._project.db_mngr.show_data_store_form({self._sa_url: self.name}, self._logger)
 
     def data_files(self):
         """Return a list of files that are in this items data directory."""
@@ -342,9 +324,7 @@ class DataStore(ProjectItem):
                 f"Unable to generate URL from <b>{self.name}</b> selections. Defaults will be used..."
             )
             dialect = "sqlite"
-            database = os.path.abspath(
-                os.path.join(self.data_dir, self.name + ".sqlite")
-            )
+            database = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
             self.update_url(dialect=dialect, database=database)
         self._project.db_mngr.create_new_spine_database(self._sa_url)
 
@@ -366,9 +346,7 @@ class DataStore(ProjectItem):
         d["url"] = dict(self.url())
         # If database key is a file, change the path to relative
         if d["url"]["dialect"] == "sqlite" and d["url"]["database"]:
-            d["url"]["database"] = serialize_path(
-                d["url"]["database"], self._project.project_dir
-            )
+            d["url"]["database"] = serialize_path(d["url"]["database"], self._project.project_dir)
         return d
 
     @staticmethod
@@ -395,9 +373,7 @@ class DataStore(ProjectItem):
         else:
             serialized_url_path = serialize_path(url_path, old_project_dir)
             if serialized_url_path["relative"]:
-                serialized_url_path["path"] = os.path.join(
-                    ".spinetoolbox", "items", serialized_url_path["path"]
-                )
+                serialized_url_path["path"] = os.path.join(".spinetoolbox", "items", serialized_url_path["path"])
             url["database"] = serialized_url_path
         new_data_store["url"] = url
         return new_data_store
@@ -436,13 +412,9 @@ class DataStore(ProjectItem):
             return False
         # If dialect is sqlite and db line edit refers to a file in the old data_dir, db line edit needs updating
         if self._url["dialect"] == "sqlite":
-            db_dir, db_filename = os.path.split(
-                os.path.abspath(self._url["database"].strip())
-            )
+            db_dir, db_filename = os.path.split(os.path.abspath(self._url["database"].strip()))
             if db_dir == old_data_dir:
-                database = os.path.join(
-                    self.data_dir, db_filename
-                )  # NOTE: data_dir has been updated at this point
+                database = os.path.join(self.data_dir, db_filename)  # NOTE: data_dir has been updated at this point
                 # Check that the db was moved successfully to the new data_dir
                 if os.path.exists(database):
                     self.do_update_url(database=database)

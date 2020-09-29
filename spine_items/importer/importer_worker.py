@@ -70,9 +70,7 @@ class ImporterWorker(QObject):
             if settings == "deselected":
                 continue
             if settings is None or not settings:
-                self._logger.msg_warning.emit(
-                    f"There are no mappings defined for {source}, moving on..."
-                )
+                self._logger.msg_warning.emit(f"There are no mappings defined for {source}, moving on...")
                 continue
             source_type = settings["source_type"]
             source_settings = self._all_source_settings.get(source_type)
@@ -99,41 +97,27 @@ class ImporterWorker(QObject):
             }
 
             table_types = {
-                tn: {
-                    int(col): value_to_convert_spec(spec) for col, spec in cols.items()
-                }
+                tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
                 for tn, cols in settings.get("table_types", {}).items()
             }
             table_row_types = {
-                tn: {
-                    int(col): value_to_convert_spec(spec) for col, spec in cols.items()
-                }
+                tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
                 for tn, cols in settings.get("table_row_types", {}).items()
             }
             try:
                 data, errors = connector.get_mapped_data(
-                    table_mappings,
-                    table_options,
-                    table_types,
-                    table_row_types,
-                    max_rows=-1,
+                    table_mappings, table_options, table_types, table_row_types, max_rows=-1
                 )
             except spinedb_api.InvalidMapping as error:
                 self._logger.msg_error.emit(f"Failed to import '{source}': {error}")
                 if self._cancel_on_error:
-                    self._logger.msg_error.emit(
-                        "Cancel import on error has been set. Bailing out."
-                    )
+                    self._logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
                     self.import_finished.emit(-1)
                     return
-                self._logger.msg_warning.emit(
-                    "Ignoring errors. Set Cancel import on error to bail out instead."
-                )
+                self._logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
                 continue
             if not errors:
-                self._logger.msg.emit(
-                    f"Successfully read {sum(len(d) for d in data.values())} data from {source}"
-                )
+                self._logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data from {source}")
             else:
                 self._logger.msg_warning.emit(
                     f"Read {sum(len(d) for d in data.values())} data from {source} with {len(errors)} errors."
@@ -143,31 +127,21 @@ class ImporterWorker(QObject):
         if all_errors:
             # Log errors in a time stamped file into the logs directory
             timestamp = create_log_file_timestamp()
-            logfilepath = os.path.abspath(
-                os.path.join(self._logs_dir, timestamp + "_read_error.log")
-            )
+            logfilepath = os.path.abspath(os.path.join(self._logs_dir, timestamp + "_read_error.log"))
             with open(logfilepath, "w") as f:
                 for err in all_errors:
                     f.write(f"{err}\n")
             # Make error log file anchor with path as tooltip
             logfile_anchor = (
-                "<a style='color:#BB99FF;' title='"
-                + logfilepath
-                + "' href='file:///"
-                + logfilepath
-                + "'>Error log</a>"
+                "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
             )
 
             self._logger.msg_error.emit(logfile_anchor)
             if self._cancel_on_error:
-                self._logger.msg_error.emit(
-                    "Cancel import on error has been set. Bailing out."
-                )
+                self._logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
                 self.import_finished.emit(-1)
                 return
-            self._logger.msg_warning.emit(
-                "Ignoring errors. Set Cancel import on error to bail out instead."
-            )
+            self._logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
         if all_data:
             for url in self._urls_downstream:
                 success = self._import(all_data, url)
@@ -178,9 +152,7 @@ class ImporterWorker(QObject):
 
     def _import(self, all_data, url):
         try:
-            db_map = spinedb_api.DiffDatabaseMapping(
-                url, upgrade=False, username="Mapper"
-            )
+            db_map = spinedb_api.DiffDatabaseMapping(url, upgrade=False, username="Mapper")
         except (spinedb_api.SpineDBAPIError, spinedb_api.SpineDBVersionError) as err:
             self._logger.msg_error.emit(
                 f"Unable to create database mapping, all import operations will be omitted: {err}"
@@ -193,40 +165,28 @@ class ImporterWorker(QObject):
             if import_errors:
                 self._logger.msg_error.emit("Errors while importing a table.")
                 if self._cancel_on_error:
-                    self._logger.msg_error.emit(
-                        "Cancel import on error is set. Bailing out."
-                    )
+                    self._logger.msg_error.emit("Cancel import on error is set. Bailing out.")
                     if db_map.has_pending_changes():
                         self._logger.msg_error.emit("Rolling back changes.")
                         db_map.rollback_session()
                     break
-                self._logger.msg_warning.emit(
-                    "Ignoring errors. Set Cancel import on error to bail out instead."
-                )
+                self._logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
             if import_num:
                 db_map.commit_session("Import data by Spine Toolbox Importer")
-                self._logger.msg_success.emit(
-                    f"Inserted {import_num} data with {len(import_errors)} errors into {url}"
-                )
+                self._logger.msg_success.emit(f"Inserted {import_num} data with {len(import_errors)} errors into {url}")
             elif import_num == 0:
                 self._logger.msg_warning.emit("No new data imported")
         db_map.connection.close()
         if all_import_errors:
             # Log errors in a time stamped file into the logs directory
             timestamp = create_log_file_timestamp()
-            logfilepath = os.path.abspath(
-                os.path.join(self._logs_dir, timestamp + "_import_error.log")
-            )
+            logfilepath = os.path.abspath(os.path.join(self._logs_dir, timestamp + "_import_error.log"))
             with open(logfilepath, "w") as f:
                 for err in all_import_errors:
                     f.write(str(err) + "\n")
             # Make error log file anchor with path as tooltip
             logfile_anchor = (
-                "<a style='color:#BB99FF;' title='"
-                + logfilepath
-                + "' href='file:///"
-                + logfilepath
-                + "'>Error log</a>"
+                "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
             )
             self._logger.msg_error.emit(logfile_anchor)
             return False

@@ -35,9 +35,7 @@ class TestDataConnectionExecutable(unittest.TestCase):
             "description": "",
             "x": 0,
             "y": 0,
-            "references": [
-                {"type": "path", "relative": True, "path": "/temp/temp1.txt"}
-            ],
+            "references": [{"type": "path", "relative": True, "path": "/temp/temp1.txt"}],
         }
         with tempfile.TemporaryDirectory() as temp_dir:
             dc_data_dir = pathlib.Path(temp_dir, ".spinetoolbox", "items", "dc")
@@ -45,18 +43,14 @@ class TestDataConnectionExecutable(unittest.TestCase):
             temp_file_path = pathlib.Path(dc_data_dir, "file.txt")
             with open(temp_file_path, "w") as file:
                 file.write("abc.txt")
-            item = ExecutableItem.from_dict(
-                item_dict, "DC", temp_dir, None, dict(), logger
-            )
+            item = ExecutableItem.from_dict(item_dict, "DC", temp_dir, None, dict(), logger)
             self.assertIsInstance(item, ExecutableItem)
             self.assertEqual("Data Connection", item.item_type())
             self.assertEqual(2, len(item._files))
 
     def test_stop_execution(self):
         executable = ExecutableItem("name", [], [], mock.MagicMock())
-        with mock.patch(
-            "spine_items.executable_item_base.ExecutableItemBase.stop_execution"
-        ) as mock_stop_execution:
+        with mock.patch("spine_items.executable_item_base.ExecutableItemBase.stop_execution") as mock_stop_execution:
             executable.stop_execution()
             mock_stop_execution.assert_called_once()
 
@@ -69,17 +63,13 @@ class TestDataConnectionExecutable(unittest.TestCase):
         self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
 
     def test_output_resources_backward(self):
-        executable = ExecutableItem(
-            "name", ["file_reference"], ["data_file"], mock.MagicMock()
-        )
+        executable = ExecutableItem("name", ["file_reference"], ["data_file"], mock.MagicMock())
         self.assertEqual(executable.output_resources(ExecutionDirection.BACKWARD), [])
 
     def test_output_resources_forward(self):
         file_reference = os.path.join(tempfile.gettempdir(), "file_reference")
         data_file = os.path.join(tempfile.gettempdir(), "data_file")
-        executable = ExecutableItem(
-            "name", [file_reference], [data_file], mock.MagicMock()
-        )
+        executable = ExecutableItem("name", [file_reference], [data_file], mock.MagicMock())
         output_resources = executable.output_resources(ExecutionDirection.FORWARD)
         self.assertEqual(len(output_resources), 2)
         resource = output_resources[0]

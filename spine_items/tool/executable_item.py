@@ -42,9 +42,7 @@ from .utils import (
 class ExecutableItem(ExecutableItemBase):
     """Tool project item's executable parts."""
 
-    def __init__(
-        self, name, work_dir, output_dir, tool_specification, cmd_line_args, logger
-    ):
+    def __init__(self, name, work_dir, output_dir, tool_specification, cmd_line_args, logger):
         """
         Args:
             name (str): item's name
@@ -73,13 +71,9 @@ class ExecutableItem(ExecutableItemBase):
         """Handles things after execution has finished."""
         self._last_return_code = return_code
         # Disconnect instance finished signal
-        self._tool_instance.instance_finished.disconnect(
-            execution_token.handle_execution_finished
-        )
+        self._tool_instance.instance_finished.disconnect(execution_token.handle_execution_finished)
         if return_code == 0:
-            self._logger.msg_success.emit(
-                f"Tool <b>{self._name}</b> execution finished"
-            )
+            self._logger.msg_success.emit(f"Tool <b>{self._name}</b> execution finished")
         else:
             self._logger.msg_error.emit(f"Tool <b>{self._name}</b> execution failed")
         self._handle_output_files(return_code, execution_dir)
@@ -118,27 +112,19 @@ class ExecutableItem(ExecutableItemBase):
                 self._logger.msg.emit(f"\tCopying <b>{src_path}</b>")
             else:
                 # Create subdirectory structure to work or source directory
-                work_subdir_path = os.path.abspath(
-                    os.path.join(execution_dir, dst_subdir)
-                )
+                work_subdir_path = os.path.abspath(os.path.join(execution_dir, dst_subdir))
                 if not os.path.exists(work_subdir_path):
                     try:
                         os.makedirs(work_subdir_path, exist_ok=True)
                     except OSError:
-                        self._logger.msg_error.emit(
-                            f"[OSError] Creating directory <b>{work_subdir_path}</b> failed."
-                        )
+                        self._logger.msg_error.emit(f"[OSError] Creating directory <b>{work_subdir_path}</b> failed.")
                         return False
-                self._logger.msg.emit(
-                    f"\tCopying <b>{src_path}</b> into subdirectory <b>{os.path.sep}{dst_subdir}</b>"
-                )
+                self._logger.msg.emit(f"\tCopying <b>{src_path}</b> into subdirectory <b>{os.path.sep}{dst_subdir}</b>")
             try:
                 shutil.copyfile(src_path, dst_path)
                 n_copied_files += 1
             except OSError as e:
-                self._logger.msg_error.emit(
-                    f"Copying file <b>{src_path}</b> to <b>{dst_path}</b> failed"
-                )
+                self._logger.msg_error.emit(f"Copying file <b>{src_path}</b> to <b>{dst_path}</b> failed")
                 self._logger.msg_error.emit(f"{e}")
                 if e.errno == 22:
                     msg = (
@@ -171,9 +157,7 @@ class ExecutableItem(ExecutableItemBase):
                 shutil.copyfile(src_path, dst_path)
                 n_copied_files += 1
             except OSError as e:
-                self._logger.msg_error.emit(
-                    f"Copying optional file <b>{src_path}</b> to <b>{dst_path}</b> failed"
-                )
+                self._logger.msg_error.emit(f"Copying optional file <b>{src_path}</b> to <b>{dst_path}</b> failed")
                 self._logger.msg_error.emit(f"{e}")
                 if e.errno == 22:
                     msg = (
@@ -188,9 +172,7 @@ class ExecutableItem(ExecutableItemBase):
                         "And try again.\n"
                     )
                     self._logger.msg_warning.emit(msg)
-        self._logger.msg.emit(
-            f"\tCopied <b>{n_copied_files}</b> optional input file(s)"
-        )
+        self._logger.msg.emit(f"\tCopied <b>{n_copied_files}</b> optional input file(s)")
 
     def _copy_output_files(self, target_dir, execution_dir):
         """Copies Tool specification output files from work directory to given target directory.
@@ -217,18 +199,12 @@ class ExecutableItem(ExecutableItemBase):
                 try:
                     os.makedirs(target, exist_ok=True)
                 except OSError:
-                    self._logger.msg_error.emit(
-                        f"[OSError] Creating directory <b>{target}</b> failed."
-                    )
+                    self._logger.msg_error.emit(f"[OSError] Creating directory <b>{target}</b> failed.")
                     continue
-                self._logger.msg.emit(
-                    f"\tCreated result subdirectory <b>{os.path.sep}{dst_subdir}</b>"
-                )
+                self._logger.msg.emit(f"\tCreated result subdirectory <b>{os.path.sep}{dst_subdir}</b>")
             # Check for wildcards in pattern
             if is_pattern(pattern):
-                for fname_path in glob.glob(
-                    os.path.abspath(os.path.join(execution_dir, pattern))
-                ):
+                for fname_path in glob.glob(os.path.abspath(os.path.join(execution_dir, pattern))):
                     # fname_path is a full path
                     fname = os.path.split(fname_path)[1]  # File name (no path)
                     dst = os.path.abspath(os.path.join(target, fname))
@@ -237,9 +213,7 @@ class ExecutableItem(ExecutableItemBase):
                         shutil.copyfile(fname_path, dst)
                         saved_files.append((full_fname, dst))
                     except OSError:
-                        self._logger.msg_error.emit(
-                            f"[OSError] Copying pattern {fname_path} to {dst} failed"
-                        )
+                        self._logger.msg_error.emit(f"[OSError] Copying pattern {fname_path} to {dst} failed")
                         failed_files.append(full_fname)
             else:
                 output_file = os.path.abspath(os.path.join(execution_dir, pattern))
@@ -251,9 +225,7 @@ class ExecutableItem(ExecutableItemBase):
                     shutil.copyfile(output_file, dst)
                     saved_files.append((pattern, dst))
                 except OSError:
-                    self._logger.msg_error.emit(
-                        f"[OSError] Copying output file {output_file} to {dst} failed"
-                    )
+                    self._logger.msg_error.emit(f"[OSError] Copying output file {output_file} to {dst} failed")
                     failed_files.append(pattern)
         return saved_files, failed_files
 
@@ -275,25 +247,17 @@ class ExecutableItem(ExecutableItemBase):
             try:
                 os.makedirs(dst_dir, exist_ok=True)
             except OSError:
-                self._logger.msg_error.emit(
-                    f"Creating directory <b>{dst_dir}</b> failed"
-                )
+                self._logger.msg_error.emit(f"Creating directory <b>{dst_dir}</b> failed")
                 return False
             # Copy file if necessary
             if file_pattern:
-                for src_file in glob.glob(
-                    os.path.abspath(os.path.join(src_dir, file_pattern))
-                ):
-                    dst_file = os.path.abspath(
-                        os.path.join(dst_dir, os.path.basename(src_file))
-                    )
+                for src_file in glob.glob(os.path.abspath(os.path.join(src_dir, file_pattern))):
+                    dst_file = os.path.abspath(os.path.join(dst_dir, os.path.basename(src_file)))
                     try:
                         shutil.copyfile(src_file, dst_file)
                         n_copied_files += 1
                     except OSError:
-                        self._logger.msg_error.emit(
-                            f"\tCopying file <b>{src_file}</b> to <b>{dst_file}</b> failed"
-                        )
+                        self._logger.msg_error.emit(f"\tCopying file <b>{src_file}</b> to <b>{dst_file}</b> failed")
                         return False
         if n_copied_files == 0:
             self._logger.msg_warning.emit("Warning: No files copied")
@@ -320,9 +284,7 @@ class ExecutableItem(ExecutableItemBase):
             try:
                 os.makedirs(path_to_create, exist_ok=True)
             except OSError:
-                self._logger.msg_error.emit(
-                    f"[OSError] Creating directory {path_to_create} failed. Check permissions."
-                )
+                self._logger.msg_error.emit(f"[OSError] Creating directory {path_to_create} failed. Check permissions.")
                 return False
             self._logger.msg.emit(f"\tDirectory <b>{os.path.sep}{path}</b> created")
         return True
@@ -349,9 +311,7 @@ class ExecutableItem(ExecutableItemBase):
             try:
                 os.makedirs(dst_dir, exist_ok=True)
             except OSError:
-                self._logger.msg_error.emit(
-                    f"Creating work output directory '{dst_dir}' failed"
-                )
+                self._logger.msg_error.emit(f"Creating work output directory '{dst_dir}' failed")
                 return False
         return True
 
@@ -376,9 +336,7 @@ class ExecutableItem(ExecutableItemBase):
             True if execution succeeded, False otherwise
         """
         if self._tool_specification is None:
-            self._logger.msg_warning.emit(
-                f"Tool <b>{self.name}</b> has no Tool specification to execute"
-            )
+            self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no Tool specification to execute")
             return False
         execution_dir = _execution_directory(self._work_dir, self._tool_specification)
         if execution_dir is None:
@@ -398,9 +356,7 @@ class ExecutableItem(ExecutableItemBase):
                 f"</b> source files to {work_anchor} ***"
             )
             if not self._copy_program_files(execution_dir):
-                self._logger.msg_error.emit(
-                    "Copying program files to work directory failed."
-                )
+                self._logger.msg_error.emit("Copying program files to work directory failed.")
                 return False
         else:
             work_or_source = "source"
@@ -423,69 +379,44 @@ class ExecutableItem(ExecutableItemBase):
                 )
                 not_found = [k for k, v in file_paths.items() if v is None]
                 if not_found:
-                    self._logger.msg_error.emit(
-                        f"Required file(s) <b>{', '.join(not_found)}</b> not found"
-                    )
+                    self._logger.msg_error.emit(f"Required file(s) <b>{', '.join(not_found)}</b> not found")
                     return False
-                self._logger.msg.emit(
-                    f"*** Copying input files to {work_or_source} directory ***"
-                )
+                self._logger.msg.emit(f"*** Copying input files to {work_or_source} directory ***")
                 # Copy input files to ToolInstance work or source directory
                 if not self._copy_input_files(file_paths, execution_dir):
-                    self._logger.msg_error.emit(
-                        "Copying input files failed. Tool execution aborted."
-                    )
+                    self._logger.msg_error.emit("Copying input files failed. Tool execution aborted.")
                     return False
             if n_dirs > 0:
-                self._logger.msg.emit(
-                    f"*** Creating input subdirectories to {work_or_source} directory ***"
-                )
+                self._logger.msg.emit(f"*** Creating input subdirectories to {work_or_source} directory ***")
                 if not self._create_input_dirs(execution_dir):
                     # Creating directories failed -> abort
-                    self._logger.msg_error.emit(
-                        "Creating input subdirectories failed. Tool execution aborted."
-                    )
+                    self._logger.msg_error.emit("Creating input subdirectories failed. Tool execution aborted.")
                     return False
         optional_file_copy_paths = dict()
         if self._tool_specification.inputfiles_opt:
             self._logger.msg.emit("*** Searching for optional input files ***")
             optional_file_paths = self._find_optional_input_files(resources)
             for k, v in optional_file_paths.items():
-                self._logger.msg.emit(
-                    f"\tFound <b>{len(v)}</b> files matching pattern <b>{k}</b>"
-                )
-            optional_file_copy_paths = self._optional_output_destination_paths(
-                optional_file_paths, execution_dir
-            )
+                self._logger.msg.emit(f"\tFound <b>{len(v)}</b> files matching pattern <b>{k}</b>")
+            optional_file_copy_paths = self._optional_output_destination_paths(optional_file_paths, execution_dir)
             self._copy_optional_input_files(optional_file_copy_paths)
         if not self._create_output_dirs(execution_dir):
-            self._logger.msg_error.emit(
-                "Creating output subdirectories failed. Tool execution aborted."
-            )
+            self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
             return False
         input_database_urls = _database_urls_from_resources(resources)
         output_database_urls = _database_urls_from_resources(self._downstream_resources)
-        self._tool_instance = self._tool_specification.create_tool_instance(
-            execution_dir
-        )
+        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir)
 
         try:
             self._tool_instance.prepare(
-                list(optional_file_copy_paths.values()),
-                input_database_urls,
-                output_database_urls,
-                self._cmd_line_args,
+                list(optional_file_copy_paths.values()), input_database_urls, output_database_urls, self._cmd_line_args
             )
         except RuntimeError as error:
             self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
             return False
         execution_token = _ExecutionToken(self, execution_dir)
-        self._tool_instance.instance_finished.connect(
-            execution_token.handle_execution_finished
-        )
-        self._logger.msg.emit(
-            f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***"
-        )
+        self._tool_instance.instance_finished.connect(execution_token.handle_execution_finished)
+        self._logger.msg.emit(f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***")
         # Wait for finished right here
         loop = QEventLoop()
         self._tool_instance.instance_finished.connect(loop.quit)
@@ -533,9 +464,7 @@ class ExecutableItem(ExecutableItemBase):
                 continue
             found_files = _find_files_in_pattern(pattern, paths_in_resources)
             if not found_files:
-                self._logger.msg_warning.emit(
-                    f"\tNo files matching pattern <b>{pattern}</b> found"
-                )
+                self._logger.msg_warning.emit(f"\tNo files matching pattern <b>{pattern}</b> found")
             else:
                 file_paths[file_path] = found_files
         return file_paths
@@ -547,18 +476,12 @@ class ExecutableItem(ExecutableItemBase):
             return_code (int): Tool specification process return value
             execution_dir (str): path to the execution directory
         """
-        output_dir_timestamp = (
-            _create_output_dir_timestamp()
-        )  # Get timestamp when tool finished
+        output_dir_timestamp = _create_output_dir_timestamp()  # Get timestamp when tool finished
         # Create an output folder with timestamp and copy output directly there
         if return_code != 0:
-            result_path = os.path.abspath(
-                os.path.join(self._output_dir, "failed", output_dir_timestamp)
-            )
+            result_path = os.path.abspath(os.path.join(self._output_dir, "failed", output_dir_timestamp))
         else:
-            result_path = os.path.abspath(
-                os.path.join(self._output_dir, output_dir_timestamp)
-            )
+            result_path = os.path.abspath(os.path.join(self._output_dir, output_dir_timestamp))
         try:
             os.makedirs(result_path, exist_ok=True)
         except OSError:
@@ -569,14 +492,11 @@ class ExecutableItem(ExecutableItemBase):
             return
         # Make link to output folder
         result_anchor = (
-            f"<a style='color:#BB99FF;' title='{result_path}'"
-            f"href='file:///{result_path}'>results directory</a>"
+            f"<a style='color:#BB99FF;' title='{result_path}'" f"href='file:///{result_path}'>results directory</a>"
         )
         self._logger.msg.emit(f"*** Archiving output files to {result_anchor} ***")
         if self._tool_specification.outputfiles:
-            saved_files, failed_files = self._copy_output_files(
-                result_path, execution_dir
-            )
+            saved_files, failed_files = self._copy_output_files(result_path, execution_dir)
             if not saved_files:
                 # If no files were saved
                 self._logger.msg_error.emit("\tNo files saved")
@@ -584,16 +504,12 @@ class ExecutableItem(ExecutableItemBase):
                 # If there are saved files
                 # Split list into filenames and their paths
                 filenames, _ = zip(*saved_files)
-                self._logger.msg.emit(
-                    "\tThe following output files were saved to results directory"
-                )
+                self._logger.msg.emit("\tThe following output files were saved to results directory")
                 for filename in filenames:
                     self._logger.msg.emit(f"\t\t<b>{filename}</b>")
             if failed_files:
                 # If saving some or all files failed
-                self._logger.msg_warning.emit(
-                    "\tThe following output files were not found"
-                )
+                self._logger.msg_warning.emit("\tThe following output files were not found")
                 for failed_file in failed_files:
                     failed_fname = os.path.split(failed_file)[1]
                     self._logger.msg_warning.emit(f"\t\t<b>{failed_fname}</b>")
@@ -603,9 +519,7 @@ class ExecutableItem(ExecutableItemBase):
                 "they will be archived into results directory. Also, output files are passed to\n "
                 "subsequent project items.' href='#'>Tip</a>"
             )
-            self._logger.msg_warning.emit(
-                f"\tNo output files defined for this Tool specification. {tip_anchor}"
-            )
+            self._logger.msg_warning.emit(f"\tNo output files defined for this Tool specification. {tip_anchor}")
 
     def _optional_output_destination_paths(self, paths, execution_dir):
         """
@@ -622,9 +536,7 @@ class ExecutableItem(ExecutableItemBase):
         for dst, src_paths in paths.items():
             for src_path in src_paths:
                 if not os.path.exists(src_path):
-                    self._logger.msg_error.emit(
-                        f"\tFile <b>{src_path}</b> does not exist"
-                    )
+                    self._logger.msg_error.emit(f"\tFile <b>{src_path}</b> does not exist")
                     continue
                 # Get file name that matched the search pattern
                 _, dst_fname = os.path.split(src_path)
@@ -638,9 +550,7 @@ class ExecutableItem(ExecutableItemBase):
                     dst_path = os.path.abspath(os.path.join(execution_dir, dst_fname))
                 else:
                     # Create subdirectory structure to work or source directory
-                    work_subdir_path = os.path.abspath(
-                        os.path.join(execution_dir, dst_subdir)
-                    )
+                    work_subdir_path = os.path.abspath(os.path.join(execution_dir, dst_subdir))
                     if not os.path.exists(work_subdir_path):
                         try:
                             os.makedirs(work_subdir_path, exist_ok=True)
@@ -652,9 +562,7 @@ class ExecutableItem(ExecutableItemBase):
                     self._logger.msg.emit(
                         f"\tCopying optional file <b>{dst_fname}</b> into subdirectory <b>{os.path.sep}{dst_subdir}</b>"
                     )
-                    dst_path = os.path.abspath(
-                        os.path.join(work_subdir_path, dst_fname)
-                    )
+                    dst_path = os.path.abspath(os.path.join(work_subdir_path, dst_fname))
                 destination_paths[src_path] = dst_path
         return destination_paths
 
@@ -669,24 +577,18 @@ class ExecutableItem(ExecutableItemBase):
             list: a list of Tool's output resources
         """
         resources = list()
-        last_output_files = find_last_output_files(
-            self._tool_specification.outputfiles, self._output_dir
-        )
+        last_output_files = find_last_output_files(self._tool_specification.outputfiles, self._output_dir)
         for out_file_label in self._tool_specification.outputfiles:
             latest_files = last_output_files.get(out_file_label, list())
             for out_file in latest_files:
                 file_url = pathlib.Path(out_file.path).as_uri()
                 metadata = {"label": out_file.label}
-                resource = ProjectItemResource(
-                    self, "transient_file", url=file_url, metadata=metadata
-                )
+                resource = ProjectItemResource(self, "transient_file", url=file_url, metadata=metadata)
                 resources.append(resource)
         return resources
 
     @classmethod
-    def from_dict(
-        cls, item_dict, name, project_dir, app_settings, specifications, logger
-    ):
+    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         execute_in_work = item_dict["execute_in_work"]
         if execute_in_work:
@@ -699,17 +601,13 @@ class ExecutableItem(ExecutableItemBase):
         output_dir = pathlib.Path(data_dir, TOOL_OUTPUT_DIR)
         specification_name = item_dict["specification"]
         if not specification_name:
-            logger.msg_error.emit(
-                f"<b>{name}<b>: No tool specification defined. Unable to execute."
-            )
+            logger.msg_error.emit(f"<b>{name}<b>: No tool specification defined. Unable to execute.")
             return None
         try:
             specification = specifications[ItemInfo.item_type()][specification_name]
         except KeyError as missing:
             if missing == ItemInfo.item_type():
-                logger.msg_error.emit(
-                    f"No specifications defined for item type '{ItemInfo.item_type()}'."
-                )
+                logger.msg_error.emit(f"No specifications defined for item type '{ItemInfo.item_type()}'.")
                 return None
             logger.msg_error.emit(f"Cannot find tool specification '{missing}'.")
             return None

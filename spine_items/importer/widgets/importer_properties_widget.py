@@ -31,9 +31,7 @@ class ImporterPropertiesWidget(QWidget):
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
         super().__init__()
-        from ..ui.importer_properties import (
-            Ui_Form,
-        )  # pylint: disable=import-outside-toplevel
+        from ..ui.importer_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
         self._toolbox = toolbox
         self.ui = Ui_Form()
@@ -46,9 +44,7 @@ class ImporterPropertiesWidget(QWidget):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.treeView_files.customContextMenuRequested.connect(
-            self.show_files_context_menu
-        )
+        self.ui.treeView_files.customContextMenuRequested.connect(self.show_files_context_menu)
 
     @Slot("QPoint", name="show_di_files_context_menu")
     def show_files_context_menu(self, pos):
@@ -57,12 +53,8 @@ class ImporterPropertiesWidget(QWidget):
         Args:
             pos (QPoint): Mouse position
         """
-        ind = self.ui.treeView_files.indexAt(
-            pos
-        )  # Index of selected item in references tree view.
-        cur_index = (
-            self._toolbox.ui.treeView_project.currentIndex()
-        )  # Get selected Importer item
+        ind = self.ui.treeView_files.indexAt(pos)  # Index of selected item in references tree view.
+        cur_index = self._toolbox.ui.treeView_project.currentIndex()  # Get selected Importer item
         importer = self._toolbox.project_item_model.item(cur_index).project_item
         global_pos = self.ui.treeView_files.viewport().mapToGlobal(pos)
         self.files_context_menu = FilesContextMenu(self, global_pos, ind)

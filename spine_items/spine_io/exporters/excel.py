@@ -60,10 +60,7 @@ def _get_objects_and_parameters(db):
 
     # make all in same format
     par = [(p.object_class_name, None, p.parameter_name, None) for p in par]
-    pval = [
-        (p.object_class_name, p.object_name, p.parameter_name, from_database(p.value))
-        for p in pval
-    ]
+    pval = [(p.object_class_name, p.object_name, p.parameter_name, from_database(p.value)) for p in pval]
     obj = [(obj_class_id_2_name[p.class_id], p.name, None, None) for p in obj]
     obj_class = [(p.name, None, None, None) for p in obj_class]
 
@@ -86,9 +83,7 @@ def _get_objects_and_parameters(db):
             object_timepattern.append(d)
             object_par.append(d[:-1] + (None,))
         else:
-            warnings.warn(
-                f"Skipping export of unsuported parameter type: {type(d[-1])}"
-            )
+            warnings.warn(f"Skipping export of unsuported parameter type: {type(d[-1])}")
 
     return object_par, object_json, object_ts, object_timepattern
 
@@ -111,13 +106,7 @@ def _get_relationships_and_parameters(db):
     rel_class_id_2_name = {rc.id: rc.name for rc in rel_class}
 
     out_data = [
-        [
-            r.relationship_class_name,
-            r.object_name_list,
-            r.parameter_name,
-            from_database(r.value),
-        ]
-        for r in rel_par_value
+        [r.relationship_class_name, r.object_name_list, r.parameter_name, from_database(r.value)] for r in rel_par_value
     ]
 
     rel_with_par = set(r.object_name_list for r in rel_par_value)
@@ -127,16 +116,10 @@ def _get_relationships_and_parameters(db):
         if r.object_name_list not in rel_with_par
     ]
 
-    rel_class_par = [
-        [r.relationship_class_name, None, r.parameter_name, None] for r in rel_par
-    ]
+    rel_class_par = [[r.relationship_class_name, None, r.parameter_name, None] for r in rel_par]
 
     rel_class_with_par = set(r.relationship_class_name for r in rel_par)
-    rel_class_without_par = [
-        [r.name, None, None, None]
-        for r in rel_class
-        if r.name not in rel_class_with_par
-    ]
+    rel_class_without_par = [[r.name, None, None, None] for r in rel_class if r.name not in rel_class_with_par]
 
     rel_data = out_data + rel_without_par + rel_class_par + rel_class_without_par
 
@@ -157,9 +140,7 @@ def _get_relationships_and_parameters(db):
             rel_timepattern.append(d)
             rel_par.append(d[:-1] + [None])
         else:
-            warnings.warn(
-                f"Skipping export of unsupported parameter type: {type(d[3]).__name__}"
-            )
+            warnings.warn(f"Skipping export of unsupported parameter type: {type(d[3]).__name__}")
 
     return rel_par, rel_json, rel_class, rel_ts, rel_timepattern
 
@@ -183,19 +164,13 @@ def _unstack_list_of_tuples(data, headers, key_cols, value_name_col, value_col):
     if isinstance(value_name_col, list) and len(value_name_col) > 1:
         value_name_getter = itemgetter(*value_name_col)
         value_names = sorted(
-            set(
-                value_name_getter(x)
-                for x in data
-                if not any(i is None for i in value_name_getter(x))
-            )
+            set(value_name_getter(x) for x in data if not any(i is None for i in value_name_getter(x)))
         )
     else:
         if isinstance(value_name_col, list):
             value_name_col = value_name_col[0]
         value_name_getter = itemgetter(value_name_col)
-        value_names = sorted(
-            set(x[value_name_col] for x in data if x[value_name_col] is not None)
-        )
+        value_names = sorted(set(x[value_name_col] for x in data if x[value_name_col] is not None))
 
     key_names = [headers[n] for n in key_cols]
     # value_names = sorted(set(x[value_name_col] for x in data if x[value_name_col] is not None))
@@ -229,17 +204,9 @@ def _get_unstacked_relationships(db):
     Returns:
         (list, list, list, list): stacked relationships, stacked JSON, stacked time series and stacked time patterns
     """
-    (
-        data,
-        data_json,
-        rel_class,
-        data_ts,
-        data_timepattern,
-    ) = _get_relationships_and_parameters(db)
+    (data, data_json, rel_class, data_ts, data_timepattern) = _get_relationships_and_parameters(db)
 
-    class_2_obj_list = {
-        rc.name: rc.object_class_name_list.split(",") for rc in rel_class
-    }
+    class_2_obj_list = {rc.name: rc.object_class_name_list.split(",") for rc in rel_class}
 
     keyfunc = lambda x: x[0]
     data_json = sorted(data_json, key=keyfunc)
@@ -290,11 +257,7 @@ def _get_unstacked_relationships(db):
     for k, v in groupby(data, key=keyfunc):
         values = list(v)
         rel, par_names = _unstack_list_of_tuples(
-            values,
-            ["relationship_class", "relationship", "parameter", "value"],
-            [0, 1],
-            2,
-            3,
+            values, ["relationship_class", "relationship", "parameter", "value"], [0, 1], 2, 3
         )
         if rel:
             parameters = par_names[2:]
@@ -360,9 +323,7 @@ def _get_unstacked_objects(db):
     data = sorted(data, key=keyfunc)
     for k, v in groupby(data, key=keyfunc):
         values = list(v)
-        obj, par_names = _unstack_list_of_tuples(
-            values, ["object_class", "object", "parameter", "value"], [0, 1], 2, 3
-        )
+        obj, par_names = _unstack_list_of_tuples(values, ["object_class", "object", "parameter", "value"], [0, 1], 2, 3)
         if obj:
             parameters = par_names[2:]
         else:
@@ -433,9 +394,7 @@ def _write_json_array_to_xlsx(wb, data, sheet_type):
         elif sheet_type == "object":
             sheet_title = "json_"
         else:
-            raise ValueError(
-                "sheet_type must be a str with value 'relationship' or 'object'"
-            )
+            raise ValueError("sheet_type must be a str with value 'relationship' or 'object'")
 
         ws = wb.create_sheet()
         # sheet name can only be 31 chars log
@@ -485,18 +444,14 @@ def _write_TimeSeries_to_xlsx(wb, data, sheet_type, data_type):
         elif sheet_type == "object":
             sheet_title = "ts_"
         else:
-            raise ValueError(
-                "sheet_type must be a str with value 'relationship' or 'object'"
-            )
+            raise ValueError("sheet_type must be a str with value 'relationship' or 'object'")
 
         if data_type.lower() == "time series":
             index_name = "timestamp"
         elif data_type.lower() == "time pattern":
             index_name = "pattern"
         else:
-            raise ValueError(
-                "data_type must be a str with value 'time series' or 'time pattern'"
-            )
+            raise ValueError("data_type must be a str with value 'time series' or 'time pattern'")
 
         ws = wb.create_sheet()
         # sheet name can only be 31 chars log
@@ -533,9 +488,7 @@ def _write_TimeSeries_to_xlsx(wb, data, sheet_type, data_type):
         # write timestamps
         if data_type.lower() == "time series":
             for row_iter, time in enumerate(unique_timestamps):
-                ws.cell(row=start_row + row_iter, column=1).value = str(
-                    np.datetime_as_string(time)
-                )
+                ws.cell(row=start_row + row_iter, column=1).value = str(np.datetime_as_string(time))
         else:
             for row_iter, time in enumerate(unique_timestamps):
                 ws.cell(row=start_row + row_iter, column=1).value = str(time)
@@ -543,8 +496,7 @@ def _write_TimeSeries_to_xlsx(wb, data, sheet_type, data_type):
         # write values
         for col, obj_list in enumerate(d[2]):
             for row_index, value in zip(
-                np.where(np.isin(unique_timestamps, obj_list[1].indexes))[0],
-                obj_list[1].values,
+                np.where(np.isin(unique_timestamps, obj_list[1].indexes))[0], obj_list[1].values
             ):
                 ws.cell(row=start_row + row_index, column=2 + col).value = value
 
