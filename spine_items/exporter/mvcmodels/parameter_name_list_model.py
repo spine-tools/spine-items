@@ -28,6 +28,8 @@ class ParameterNameListModel(QAbstractListModel):
         super().__init__()
         self._names = names
         self._selected = len(names) * [True]
+        self._selected_cache = dict()
+        self._current_entity_class = None
 
     def data(self, index, role=Qt.DisplayRole):
         """Returns the model's data."""
@@ -49,11 +51,39 @@ class ParameterNameListModel(QAbstractListModel):
         """Returns None."""
         return None
 
-    def reset(self, names):
-        """Resets the model's contents when a new index is selected in domains_list_view."""
+    def known_selections(self, entity_class_name, selected):
+        """
+        Stores known selected parameter names for later use.
+
+        Args:
+            entity_class_name (str): domain names that identify the selected parameter names
+            selected (list of str): list of selected parameter names
+        """
+        self._selected_cache[entity_class_name] = selected
+
+    def reset_names(self, names, entity_class_name):
+        """
+        Resets the model's parameter names when a new index is selected in domains_list_view.
+
+        Args:
+            names (list of str): new parameter names
+            entity_class_name (str): parameters'
+        """
         self.beginResetModel()
+        if self._current_entity_class is not None:
+            self._selected_cache[self._current_entity_class] = [
+                name for name, selected in zip(self._names, self._selected) if selected
+            ]
         self._names = names
-        self._selected = len(names) * [True]
+        selected = self._selected_cache.get(entity_class_name)
+        if selected is not None:
+            self._selected = len(names) * [False]
+            name_indexes = {name: i for i, name in enumerate(self._names)}
+            for name in selected:
+                self._selected[name_indexes[name]] = True
+        else:
+            self._selected = len(names) * [True]
+        self._current_entity_class = entity_class_name
         self.endResetModel()
 
     def rowCount(self, parent=QModelIndex()):

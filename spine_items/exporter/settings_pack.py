@@ -83,7 +83,8 @@ class SettingsPack(QObject):
         d["settings"] = self.settings.to_dict()
         d["indexing_settings"] = gdx.indexing_settings_to_dict(self.indexing_settings)
         d["merging_settings"] = {
-            parameter_name: setting.to_dict() for parameter_name, setting in self.merging_settings.items()
+            parameter_name: [s.to_dict() for s in setting_list]
+            for parameter_name, setting_list in self.merging_settings.items()
         }
         d["none_fallback"] = self.none_fallback.value
         d["none_export"] = self.none_export.value
@@ -129,8 +130,15 @@ class SettingsPack(QObject):
         else:
             db_map.connection.close()
         pack.merging_settings = {
-            parameter_name: gdx.MergingSetting.from_dict(setting_dict)
-            for parameter_name, setting_dict in pack_dict["merging_settings"].items()
+            parameter_name: setting_list for parameter_name, setting_list in pack_dict["merging_settings"].items()
+        }
+        for name, setting_list in pack.merging_settings.items():
+            # For 0.5 compatibility
+            if not isinstance(setting_list, list):
+                pack.merging_settings[name] = [setting_list]
+        pack.merging_settings = {
+            parameter_name: [gdx.MergingSetting.from_dict(setting_dict) for setting_dict in setting_list]
+            for parameter_name, setting_list in pack.merging_settings.items()
         }
         latest_commit = pack_dict.get("latest_database_commit")
         if latest_commit is not None:

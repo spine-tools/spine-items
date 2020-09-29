@@ -20,7 +20,7 @@ import unittest
 from PySide2.QtCore import QModelIndex, Qt
 from PySide2.QtGui import QColor
 from spine_items.exporter.mvcmodels.set_list_model import SetListModel
-from spine_items.spine_io.exporters.gdx import ExportFlag, SetMetadata, SetSettings
+from spine_items.spine_io.exporters.gdx import ExportFlag, Origin, SetMetadata, SetSettings
 
 
 class TestSetListModel(unittest.TestCase):
@@ -35,11 +35,17 @@ class TestSetListModel(unittest.TestCase):
         self.assertEqual(index.data(), "set1")
 
     def test_data_BackgroundRole(self):
-        set_settings = SetSettings({"domain1"}, {"set1"}, {})
+        set_settings = SetSettings({"domain1", "extra_domain1", "extra_domain2"}, {"set1"}, {})
+        set_settings.metadata("extra_domain1").origin = Origin.INDEXING
+        set_settings.metadata("extra_domain2").origin = Origin.MERGING
         model = SetListModel(set_settings)
         index = model.index(0, 0)
-        self.assertEqual(index.data(Qt.BackgroundRole), QColor(Qt.lightGray))
+        self.assertEqual(index.data(Qt.BackgroundRole), QColor(245, 245, 120))
         index = model.index(1, 0)
+        self.assertEqual(index.data(Qt.BackgroundRole), QColor(235, 235, 110))
+        index = model.index(2, 0)
+        self.assertEqual(index.data(Qt.BackgroundRole), QColor(235, 235, 110))
+        index = model.index(3, 0)
         self.assertEqual(index.data(Qt.BackgroundRole), None)
 
     def test_data_CheckStateRole(self):

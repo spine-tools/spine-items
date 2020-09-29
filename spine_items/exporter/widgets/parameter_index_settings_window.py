@@ -31,9 +31,7 @@ class ParameterIndexSettingsWindow(QWidget):
     settings_rejected = Signal()
     """Emitted when the settings have been rejected."""
 
-    def __init__(
-        self, indexing_settings, set_settings, database_path, scenario, parent
-    ):
+    def __init__(self, indexing_settings, set_settings, database_path, scenario, parent):
         """
         Args:
             indexing_settings (dict): a map from parameter name to :class:`IndexingSetting`
@@ -42,9 +40,7 @@ class ParameterIndexSettingsWindow(QWidget):
             scenario (str): scenario name
             parent (QWidget): a parent widget
         """
-        from ..ui.parameter_index_settings_window import (
-            Ui_Form,
-        )  # pylint: disable=import-outside-toplevel
+        from ..ui.parameter_index_settings_window import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent, f=Qt.Window)
         self._indexing_settings = indexing_settings
@@ -59,19 +55,11 @@ class ParameterIndexSettingsWindow(QWidget):
         self._ui.button_box.accepted.connect(self._collect_and_hide)
         self._ui.button_box.rejected.connect(self._reject_and_close)
         self._additional_domains_model = IndexingDomainListModel(set_settings)
-        self._additional_domains_model.domain_renamed.connect(
-            self._update_after_domain_rename
-        )
-        self._additional_domains_model.rowsInserted.connect(
-            self._send_domains_to_indexing_widgets
-        )
-        self._additional_domains_model.rowsRemoved.connect(
-            self._send_domains_to_indexing_widgets
-        )
+        self._additional_domains_model.domain_renamed.connect(self._update_after_domain_rename)
+        self._additional_domains_model.domains_added.connect(self._add_available_domains)
+        self._additional_domains_model.domains_removed.connect(self._remove_available_domains)
         self._ui.additional_domains_list_view.setModel(self._additional_domains_model)
-        self._ui.additional_domains_list_view.selectionModel().currentChanged.connect(
-            self._load_additional_domain
-        )
+        self._ui.additional_domains_list_view.selectionModel().currentChanged.connect(self._load_additional_domain)
         self._ui.add_domain_button.clicked.connect(self._add_domain)
         self._ui.remove_domain_button.clicked.connect(self._remove_selected_domains)
         self._ui.use_expression_radio_button.clicked.connect(self._use_expression)
@@ -80,19 +68,12 @@ class ParameterIndexSettingsWindow(QWidget):
         self._ui.extract_from_radio_button.clicked.connect(self._use_extraction)
         self._set_additional_domain_widgets_enabled(False)
         self._ui.extract_from_combo_box.addItems(sorted(indexing_settings.keys()))
-        self._ui.extract_from_combo_box.currentTextChanged.connect(
-            self._set_extraction_domain
-        )
+        self._ui.extract_from_combo_box.currentTextChanged.connect(self._set_extraction_domain)
         self._settings_widgets = dict()
-        self._available_domains = {
-            name: set_settings.records(name) for name in set_settings.domain_names
-        }
+        self._available_domains = {name: set_settings.records(name) for name in set_settings.domain_names}
         for parameter_name, indexing_setting in indexing_settings.items():
             settings_widget = ParameterIndexSettings(
-                parameter_name,
-                indexing_setting,
-                self._available_domains,
-                self._ui.settings_area_contents,
+                parameter_name, indexing_setting, self._available_domains, self._ui.settings_area_contents
             )
             self._ui.settings_area_layout.insertWidget(0, settings_widget)
             self._settings_widgets[parameter_name] = settings_widget
@@ -141,9 +122,7 @@ class ParameterIndexSettingsWindow(QWidget):
     def _add_domain(self, _):
         """Creates a new additional domain."""
         self._additional_domains_model.create_new_domain()
-        new_current = self._additional_domains_model.index(
-            self._additional_domains_model.rowCount() - 1, 0
-        )
+        new_current = self._additional_domains_model.index(self._additional_domains_model.rowCount() - 1, 0)
         self._ui.additional_domains_list_view.selectionModel().setCurrentIndex(
             new_current, QItemSelectionModel.ClearAndSelect
         )
@@ -183,9 +162,7 @@ class ParameterIndexSettingsWindow(QWidget):
             else:
                 self._ui.extract_from_radio_button.setChecked(True)
                 if domain_proto.extract_from:
-                    self._ui.extract_from_combo_box.setCurrentText(
-                        domain_proto.extract_from
-                    )
+                    self._ui.extract_from_combo_box.setCurrentText(domain_proto.extract_from)
                 else:
                     self._ui.extract_from_combo_box.setCurrentIndex(-1)
                 self._ui.expression_edit.clear()
@@ -206,19 +183,31 @@ class ParameterIndexSettingsWindow(QWidget):
         if current.isValid():
             selection_model.select(current, QItemSelectionModel.ClearAndSelect)
 
-    @Slot(QModelIndex, int, int)
-    def _send_domains_to_indexing_widgets(self, parent, first, last):
-        """Updates the available domains combo boxes in indexing widgets."""
-        domains = {
-            name: self._set_settings.records(name)
-            for name in self._set_settings.domain_names
-            if not self._set_settings.metadata(name).is_additional()
-        }
-        domains.update(
-            self._additional_domains_model.gather_domains(self._database_mapping)
-        )
+    @Slot(list)
+    def _remove_available_domains(self, removed_domains):
+        """
+        Updates available domains.
+
+        Args:
+            removed_domains (list of str): domains that were removed
+        """
+        map(self._available_domains.pop, removed_domains)
         for widget in self._settings_widgets.values():
-            widget.set_domains(domains)
+            for domain in removed_domains:
+                widget.remove_domain(domain)
+
+    @Slot(list)
+    def _add_available_domains(self, new_domains):
+        """
+        Updates available domains.
+
+        Args:
+            new_domains (list of str): a list of new domain names
+        """
+        self._available_domains.update(self._additional_domains_model.gather_domains(self._database_mapping))
+        for widget in self._settings_widgets.values():
+            for domain in new_domains:
+                widget.add_domain(domain)
 
     @Slot(str, str)
     def _update_after_domain_rename(self, old_name, new_name):
@@ -298,6 +287,8 @@ class ParameterIndexSettingsWindow(QWidget):
         Args:
             domain_name (str): domain name
         """
+        if not self._enable_domain_updates:
+            return
         list_index = self._ui.additional_domains_list_view.currentIndex()
         if not domain_name or not list_index.isValid():
             return

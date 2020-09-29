@@ -35,7 +35,7 @@ class TestParameterIndexSettings(unittest.TestCase):
 
     def test_construction(self):
         value = Map(["s1", "s2"], [-1.1, -2.2])
-        parameter = gdx.Parameter(["domain name"], [("key_1",)], [value])
+        parameter = gdx.Parameter(("domain name",), [("key_1",)], [value])
         indexing_setting = gdx.IndexingSetting(parameter, "set name")
         existing_domains = {"domain name": [("key_1",)]}
         settings_widget = ParameterIndexSettings("parameter name", indexing_setting, existing_domains, None)

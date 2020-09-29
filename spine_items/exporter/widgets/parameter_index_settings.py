@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Parameter indexing settings window for .gdx export.
+Parameter indexing settings widget for .gdx export.
 
 :author: A. Soininen (VTT)
 :date:   26.11.2019
@@ -110,23 +110,6 @@ class ParameterIndexSettings(QWidget):
             return gdx.GeneratedPicking(self._ui.pick_expression_edit.text())
         return self._indexing_table_model.get_picking()
 
-    def set_domains(self, domains):
-        """
-        Sets new domains and record keys.
-
-        Args:
-            domains (dict): mapping from domain name to records
-        """
-        self._available_domains = domains
-        current = self._ui.domains_combo.currentText()
-        with _freely_update_domains_combo(self):
-            self._ui.domains_combo.clear()
-            self._ui.domains_combo.addItems(sorted(domains.keys()))
-        if current in domains:
-            self._ui.domains_combo.setCurrentText(current)
-        else:
-            self._ui.domains_combo.setCurrentIndex(-1)
-
     def set_domains_combo_monitoring_enabled(self, enabled):
         """
         Enables or disables monitoring of current text in domains combo box.
@@ -135,6 +118,25 @@ class ParameterIndexSettings(QWidget):
             enabled (bool): True enables monitoring, False disables
         """
         self._monitor_domains_combo_box = enabled
+
+    def add_domain(self, domain_name):
+        """
+        Adds a domain to the domains combo box.
+
+        Args:
+            domain_name (str) new domain name
+        """
+        self._ui.domains_combo.addItem(domain_name)
+
+    def remove_domain(self, domain_name):
+        """
+        Removes a domain from the domains combo box.
+
+        Args:
+            domain_name (str): domain to remove
+        """
+        index = self._ui.domains_combo.findText(domain_name)
+        self._ui.domains_combo.removeItem(index)
 
     def update_domain_name(self, old_name, new_name):
         """
@@ -205,7 +207,7 @@ class ParameterIndexSettings(QWidget):
         name = "<b>{}</b>".format(domain_name if domain_name else "unnamed")
         label = (
             "("
-            + ", ".join(parameter.domain_names[:index_position] + [name] + parameter.domain_names[index_position:])
+            + ", ".join(parameter.domain_names[:index_position] + (name,) + parameter.domain_names[index_position:])
             + ")"
         )
         self._ui.indexing_domains_label.setText(label)

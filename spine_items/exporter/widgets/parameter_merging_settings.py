@@ -67,6 +67,9 @@ class ParameterMergingSettings(QWidget):
         if parameter_name is not None:
             self._ui.parameter_name_edit.setText(parameter_name)
         if merging_setting is not None:
+            self._parameter_name_list_model.known_selections(
+                merging_setting.previous_set, merging_setting.parameter_names
+            )
             domain_index = self._domain_names_model.index_for(merging_setting.previous_set)
             self._ui.domains_list_view.selectionModel().select(domain_index, QItemSelectionModel.Select)
             self._ui.domain_name_edit.setText(merging_setting.new_domain_name)
@@ -128,10 +131,10 @@ class ParameterMergingSettings(QWidget):
             if self._selected_domain_row is not None:
                 domain_names = self._domain_names_model.item_at(self._selected_domain_row).domain_names
             else:
-                domain_names = list()
+                domain_names = tuple()
         label = (
             "("
-            + ", ".join(domain_names[: self._index_position] + [bold_name] + domain_names[self._index_position :])
+            + ", ".join(domain_names[: self._index_position] + (bold_name,) + domain_names[self._index_position :])
             + ")"
         )
         self._ui.indexing_domains_label.setText(label)
@@ -157,7 +160,7 @@ class ParameterMergingSettings(QWidget):
         entity_class_info = self._domain_names_model.item_at(self._selected_domain_row)
         domain_names = entity_class_info.domain_names
         self._index_position = len(domain_names)
-        self._parameter_name_list_model.reset(entity_class_info.parameter_names)
+        self._parameter_name_list_model.reset_names(entity_class_info.parameter_names, entity_class_info.name)
         self._reset_indexing_domains_label(domain_names=domain_names)
         self._clear_flag(MergingErrorFlag.NO_PARAMETER_SELECTED)
 

@@ -50,7 +50,8 @@ class SetListModel(QAbstractListModel):
             records (gdx.Records): domain's sorted records
             origin (gdx.Origin): domain's origin
         """
-        metadata = gdx.SetMetadata(gdx.ExportFlag.EXPORTABLE, origin)
+        exportable = gdx.ExportFlag.EXPORTABLE if origin == gdx.Origin.DATABASE else gdx.ExportFlag.NON_EXPORTABLE
+        metadata = gdx.SetMetadata(exportable, origin)
         if not self._set_settings.add_or_replace_domain(domain_name, records, metadata):
             first = len(self._set_settings.domain_names)
             last = first
@@ -130,17 +131,25 @@ class SetListModel(QAbstractListModel):
             return self._sorted_sets[row - domain_count]
         if role == Qt.BackgroundRole:
             if row < domain_count:
-                return QColor(Qt.lightGray)
+                if self._set_settings.is_additional(self._sorted_domains[row]):
+                    return QColor(235, 235, 110)
+                return QColor(245, 245, 120)
             return None
         if role == Qt.CheckStateRole:
             if row < domain_count:
-                checked = self._set_settings.metadata(self._sorted_domains[row]).is_exportable()
+                checked = self._set_settings.is_exportable(self._sorted_domains[row])
             else:
-                checked = self._set_settings.metadata(self._sorted_sets[row - domain_count]).is_exportable()
+                checked = self._set_settings.is_exportable(self._sorted_sets[row - domain_count])
             return Qt.Checked if checked else Qt.Unchecked
         if role == Qt.ToolTipRole:
-            if row < domain_count and self._sorted_domains[row] == self._set_settings.global_parameters_domain_name:
-                return "This domain has been set as the global\nparameters domain."
+            if row < domain_count:
+                domain_name = self._sorted_domains[row]
+                if domain_name == self._set_settings.global_parameters_domain_name:
+                    return "This domain has been set as the global\nparameters domain."
+                if self._set_settings.metadata(domain_name).origin == gdx.Origin.INDEXING:
+                    return "An additional domain for parameter index expansion."
+                if self._set_settings.metadata(domain_name).origin == gdx.Origin.MERGING:
+                    return "An additional domain for parameter merging."
         return None
 
     def flags(self, index):

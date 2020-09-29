@@ -62,6 +62,10 @@ class IndexingDomainListItem:
 class IndexingDomainListModel(QAbstractListModel):
     """A model to manage additional domains needed for indexed parameter expansion."""
 
+    domains_added = Signal(list)
+    """Emitted after new domains have been added to the model."""
+    domains_removed = Signal(list)
+    """Emitted after domains have been removed from this model"""
     domain_renamed = Signal(str, str)
     """Emitted after a domain has been renamed."""
     indexes_changed = Signal(str, object)
@@ -165,6 +169,7 @@ class IndexingDomainListModel(QAbstractListModel):
         new_domains = [IndexingDomainListItem(name) for name in names]
         self._domains = self._domains[:row] + new_domains + self._domains[row:]
         self.endInsertRows()
+        self.domains_added.emit(names)
         return True
 
     def removeRows(self, row, count, parent=QModelIndex()):
@@ -180,8 +185,10 @@ class IndexingDomainListModel(QAbstractListModel):
             bool: True if the operations was successful
         """
         self.beginRemoveRows(parent, row, row + count - 1)
+        removed = self._domains[row : row + count]
         self._domains = self._domains[:row] + self._domains[row + count :]
         self.endRemoveRows()
+        self.domains_removed.emit([item.name for item in removed])
         return True
 
     def remove_rows(self, rows):
@@ -198,8 +205,10 @@ class IndexingDomainListModel(QAbstractListModel):
             self.removeRows(rows[0], len(rows))
             return
         self.beginResetModel()
+        removed = [d for i, d in enumerate(self._domains) if i in rows]
         self._domains = [d for i, d in enumerate(self._domains) if i not in rows]
         self.endResetModel()
+        self.domains_removed.emit([item.name for item in removed])
 
     def rowCount(self, parent=QModelIndex()):
         """
