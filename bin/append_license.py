@@ -4,16 +4,16 @@ import os.path
 import sys
 
 license_text = [
-"######################################################################################################################\n",
-"# Copyright (C) 2017-2020 Spine project consortium\n",
-"# This file is part of Spine Toolbox.\n",
-"# Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General\n",
-"# Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)\n",
-"# any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;\n",
-"# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General\n",
-"# Public License for more details. You should have received a copy of the GNU Lesser General Public License along with\n",
-"# this program. If not, see <http://www.gnu.org/licenses/>.\n",
-"######################################################################################################################\n"
+    "######################################################################################################################\n",
+    "# Copyright (C) 2017-2020 Spine project consortium\n",
+    "# This file is part of Spine Items.\n",
+    "# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General\n",
+    "# Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)\n",
+    "# any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;\n",
+    "# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General\n",
+    "# Public License for more details. You should have received a copy of the GNU Lesser General Public License along with\n",
+    "# this program. If not, see <http://www.gnu.org/licenses/>.\n",
+    "######################################################################################################################\n",
 ]
 
 

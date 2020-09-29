@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2020 Spine project consortium
-# This file is part of Spine Toolbox.
-# Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# This file is part of Spine Items.
+# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
 # any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
@@ -18,11 +18,34 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    QTime,
+    QUrl,
+    Qt,
+)
+from PySide2.QtGui import (
+    QBrush,
+    QColor,
+    QConicalGradient,
+    QCursor,
+    QFont,
+    QFontDatabase,
+    QIcon,
+    QKeySequence,
+    QLinearGradient,
+    QPalette,
+    QPainter,
+    QPixmap,
+    QRadialGradient,
+)
 from PySide2.QtWidgets import *
 
 
@@ -75,7 +98,6 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer)
 
-
         self.verticalLayout_3.addLayout(self.horizontalLayout_2)
 
         self.splitter = QSplitter(self.box)
@@ -95,7 +117,6 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.domains_combo)
 
-
         self.verticalLayout_6.addLayout(self.horizontalLayout)
 
         self.formLayout_3 = QFormLayout()
@@ -110,9 +131,7 @@ class Ui_Form(object):
 
         self.formLayout_3.setWidget(0, QFormLayout.FieldRole, self.pick_expression_edit)
 
-
         self.verticalLayout_6.addLayout(self.formLayout_3)
-
 
         self.verticalLayout_4.addLayout(self.verticalLayout_6)
 
@@ -128,13 +147,12 @@ class Ui_Form(object):
 
         self.verticalLayout_3.addWidget(self.splitter)
 
-
         self.verticalLayout_5.addWidget(self.box)
-
 
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
+
     # setupUi
 
     def retranslateUi(self, Form):
@@ -145,10 +163,16 @@ class Ui_Form(object):
         self.indexing_domains_label.setText(QCoreApplication.translate("Form", u"(<b>unnamed</b>)", None))
         self.move_domain_left_button.setText(QCoreApplication.translate("Form", u"Move Left", None))
         self.move_domain_right_button.setText(QCoreApplication.translate("Form", u"Move Right", None))
-#if QT_CONFIG(tooltip)
-        self.pick_expression_label.setToolTip(QCoreApplication.translate("Form", u"Select rows for which this Python expression evaluates to True. Use <i>i</i> as the row index.", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.pick_expression_label.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"Select rows for which this Python expression evaluates to True. Use <i>i</i> as the row index.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.pick_expression_label.setText(QCoreApplication.translate("Form", u"Index selection:", None))
         self.pick_expression_edit.setPlaceholderText("")
-    # retranslateUi
 
+    # retranslateUi

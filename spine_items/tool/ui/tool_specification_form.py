@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2020 Spine project consortium
-# This file is part of Spine Toolbox.
-# Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# This file is part of Spine Items.
+# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
 # any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
@@ -18,11 +18,34 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    QTime,
+    QUrl,
+    Qt,
+)
+from PySide2.QtGui import (
+    QBrush,
+    QColor,
+    QConicalGradient,
+    QCursor,
+    QFont,
+    QFontDatabase,
+    QIcon,
+    QKeySequence,
+    QLinearGradient,
+    QPalette,
+    QPainter,
+    QPixmap,
+    QRadialGradient,
+)
 from PySide2.QtWidgets import *
 
 from spine_items.widgets.custom_qlineedits import CustomQLineEdit
@@ -30,6 +53,7 @@ from spine_items.widgets.custom_qtreeview import SourcesTreeView
 from spine_items.widgets.custom_qtreeview import CustomTreeView
 
 from spine_items import resources_icons_rc
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -77,7 +101,6 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.comboBox_tooltype)
 
-
         self.verticalLayout_5.addLayout(self.horizontalLayout)
 
         self.checkBox_execute_in_work = QCheckBox(Form)
@@ -112,7 +135,6 @@ class Ui_Form(object):
 
         self.horizontalLayout_6.addWidget(self.toolButton_add_main_program)
 
-
         self.verticalLayout_5.addLayout(self.horizontalLayout_6)
 
         self.horizontalLayout_9 = QHBoxLayout()
@@ -136,7 +158,6 @@ class Ui_Form(object):
         self.toolButton_add_cmdline_tag.setPopupMode(QToolButton.InstantPopup)
 
         self.horizontalLayout_9.addWidget(self.toolButton_add_cmdline_tag)
-
 
         self.verticalLayout_5.addLayout(self.horizontalLayout_9)
 
@@ -214,9 +235,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_15)
 
-
         self.verticalLayout.addLayout(self.horizontalLayout_2)
-
 
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
@@ -266,9 +285,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_8)
 
-
         self.verticalLayout_3.addLayout(self.horizontalLayout_4)
-
 
         self.gridLayout.addLayout(self.verticalLayout_3, 0, 1, 1, 1)
 
@@ -314,9 +331,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_5.addItem(self.horizontalSpacer_10)
 
-
         self.verticalLayout_4.addLayout(self.horizontalLayout_5)
-
 
         self.gridLayout.addLayout(self.verticalLayout_4, 1, 0, 1, 1)
 
@@ -362,12 +377,9 @@ class Ui_Form(object):
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_13)
 
-
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
 
-
         self.gridLayout.addLayout(self.verticalLayout_2, 1, 1, 1, 1)
-
 
         self.verticalLayout_5.addLayout(self.gridLayout)
 
@@ -393,7 +405,6 @@ class Ui_Form(object):
         self.label_mainpath.setFont(font3)
 
         self.horizontalLayout_7.addWidget(self.label_mainpath)
-
 
         self.verticalLayout_5.addLayout(self.horizontalLayout_7)
 
@@ -422,9 +433,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer_3)
 
-
         self.verticalLayout_5.addLayout(self.horizontalLayout_8)
-
 
         self.verticalLayout_6.addLayout(self.verticalLayout_5)
 
@@ -434,7 +443,6 @@ class Ui_Form(object):
         self.widget_invisible_dummy.setObjectName(u"widget_invisible_dummy")
 
         self.horizontalLayout_statusbar_placeholder.addWidget(self.widget_invisible_dummy)
-
 
         self.verticalLayout_6.addLayout(self.horizontalLayout_statusbar_placeholder)
 
@@ -466,92 +474,200 @@ class Ui_Form(object):
         self.pushButton_ok.setDefault(True)
         self.pushButton_cancel.setDefault(True)
 
-
         QMetaObject.connectSlotsByName(Form)
+
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Edit Tool Specification", None))
-#if QT_CONFIG(tooltip)
-        self.lineEdit_name.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification name (required)</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.lineEdit_name.setToolTip(
+            QCoreApplication.translate(
+                "Form", u"<html><head/><body><p>Tool specification name (required)</p></body></html>", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.lineEdit_name.setPlaceholderText(QCoreApplication.translate("Form", u"Type name here...", None))
-#if QT_CONFIG(tooltip)
-        self.comboBox_tooltype.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification type</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.comboBox_tooltype.setToolTip(
+            QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification type</p></body></html>", None)
+        )
+        # endif // QT_CONFIG(tooltip)
         self.comboBox_tooltype.setCurrentText("")
-#if QT_CONFIG(tooltip)
-        self.checkBox_execute_in_work.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>If checked, Tool specification is executed in a work directory (default).</p><p>If unchecked, Tool specification is executed in main program file directory.</p><p>It is recommended to uncheck this for <span style=\" font-weight:600;\">Executable</span> Tool specifications.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.checkBox_execute_in_work.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>If checked, Tool specification is executed in a work directory (default).</p><p>If unchecked, Tool specification is executed in main program file directory.</p><p>It is recommended to uncheck this for <span style=\" font-weight:600;\">Executable</span> Tool specifications.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.checkBox_execute_in_work.setText(QCoreApplication.translate("Form", u"Execute in work directory", None))
-#if QT_CONFIG(tooltip)
-        self.textEdit_description.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification description (optional)</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.textEdit_description.setPlaceholderText(QCoreApplication.translate("Form", u"Type description here...", None))
-#if QT_CONFIG(tooltip)
-        self.lineEdit_main_program.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Main program file that is used to launch the Tool specification (required)</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.lineEdit_main_program.setPlaceholderText(QCoreApplication.translate("Form", u"Add main program file here...", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_add_main_program.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Create a new main program or select an existing one</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.lineEdit_args.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Command line arguments (space-delimited) for the main program (optional). Use '@@' tags to refer to input files or URLs, see the User Guide for details.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.lineEdit_args.setPlaceholderText(QCoreApplication.translate("Form", u"Type command line arguments here...", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_add_cmdline_tag.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Insert @@ tags to command line arguments. See the User Guide for details.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.treeView_sourcefiles.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Other source files and/or directories (in addition to the main program file) <span style=\" font-weight:600;\">required</span> by the program.</p><p><span style=\" font-weight:600;\">Tip</span>: You can Drag &amp; Drop files and/or directories here from File Explorer.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_add_source_files.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add source code <span style=\" font-weight:600;\">files</span> that your program requires in order to run.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.textEdit_description.setToolTip(
+            QCoreApplication.translate(
+                "Form", u"<html><head/><body><p>Tool specification description (optional)</p></body></html>", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        self.textEdit_description.setPlaceholderText(
+            QCoreApplication.translate("Form", u"Type description here...", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.lineEdit_main_program.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Main program file that is used to launch the Tool specification (required)</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        self.lineEdit_main_program.setPlaceholderText(
+            QCoreApplication.translate("Form", u"Add main program file here...", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.toolButton_add_main_program.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Create a new main program or select an existing one</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.lineEdit_args.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Command line arguments (space-delimited) for the main program (optional). Use '@@' tags to refer to input files or URLs, see the User Guide for details.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        self.lineEdit_args.setPlaceholderText(
+            QCoreApplication.translate("Form", u"Type command line arguments here...", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.toolButton_add_cmdline_tag.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Insert @@ tags to command line arguments. See the User Guide for details.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.treeView_sourcefiles.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Other source files and/or directories (in addition to the main program file) <span style=\" font-weight:600;\">required</span> by the program.</p><p><span style=\" font-weight:600;\">Tip</span>: You can Drag &amp; Drop files and/or directories here from File Explorer.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_add_source_files.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Add source code <span style=\" font-weight:600;\">files</span> that your program requires in order to run.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.toolButton_add_source_files.setText("")
-#if QT_CONFIG(tooltip)
-        self.toolButton_add_source_dirs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add source code <span style=\" font-weight:600;\">directory</span> and all its contents.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_minus_source_files.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected item(s)</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_add_source_dirs.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Add source code <span style=\" font-weight:600;\">directory</span> and all its contents.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_minus_source_files.setToolTip(
+            QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected item(s)</p></body></html>", None)
+        )
+        # endif // QT_CONFIG(tooltip)
         self.toolButton_minus_source_files.setText("")
-#if QT_CONFIG(tooltip)
-        self.treeView_inputfiles.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:600;\">Required</span> data files for the program.</p><p><span style=\" font-weight:600;\">Tip</span>: Double-click or press F2 to edit selected item.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_plus_inputfiles.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add input filenames and/or directories required by the program. Examples:</p><p>'data.csv'</p><p>'input/data.csv'</p><p>'input/'</p><p>'output/'</p><p><br/></p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.treeView_inputfiles.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p><span style=\" font-weight:600;\">Required</span> data files for the program.</p><p><span style=\" font-weight:600;\">Tip</span>: Double-click or press F2 to edit selected item.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_plus_inputfiles.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Add input filenames and/or directories required by the program. Examples:</p><p>'data.csv'</p><p>'input/data.csv'</p><p>'input/'</p><p>'output/'</p><p><br/></p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.toolButton_plus_inputfiles.setText("")
-#if QT_CONFIG(tooltip)
-        self.toolButton_minus_inputfiles.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected item(s)</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_minus_inputfiles.setToolTip(
+            QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected item(s)</p></body></html>", None)
+        )
+        # endif // QT_CONFIG(tooltip)
         self.toolButton_minus_inputfiles.setText("")
-#if QT_CONFIG(tooltip)
-        self.treeView_inputfiles_opt.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:600;\">Optional</span> data files for the program.</p><p><span style=\" font-weight:600;\">Tip</span>: Double-click or press F2 to edit selected item.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_plus_inputfiles_opt.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add optional input filenames and/or directories.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.treeView_inputfiles_opt.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p><span style=\" font-weight:600;\">Optional</span> data files for the program.</p><p><span style=\" font-weight:600;\">Tip</span>: Double-click or press F2 to edit selected item.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_plus_inputfiles_opt.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Add optional input filenames and/or directories.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.toolButton_plus_inputfiles_opt.setText("")
-#if QT_CONFIG(tooltip)
-        self.toolButton_minus_inputfiles_opt.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected item(s)</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_minus_inputfiles_opt.setToolTip(
+            QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected item(s)</p></body></html>", None)
+        )
+        # endif // QT_CONFIG(tooltip)
         self.toolButton_minus_inputfiles_opt.setText("")
-#if QT_CONFIG(tooltip)
-        self.treeView_outputfiles.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Output files that may be used by other project items downstream. These files will be archived into a results directory after execution.</p><p><span style=\" font-weight:600;\">Tip</span>: Double-click or press F2 to edit selected item.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_plus_outputfiles.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add output filenames produced by your program that are saved to results after execution.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.treeView_outputfiles.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Output files that may be used by other project items downstream. These files will be archived into a results directory after execution.</p><p><span style=\" font-weight:600;\">Tip</span>: Double-click or press F2 to edit selected item.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_plus_outputfiles.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Add output filenames produced by your program that are saved to results after execution.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.toolButton_plus_outputfiles.setText("")
-#if QT_CONFIG(tooltip)
-        self.toolButton_minus_outputfiles.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected item(s)</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_minus_outputfiles.setToolTip(
+            QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected item(s)</p></body></html>", None)
+        )
+        # endif // QT_CONFIG(tooltip)
         self.toolButton_minus_outputfiles.setText("")
         self.label.setText(QCoreApplication.translate("Form", u"Main program directory", None))
         self.label_mainpath.setText("")
         self.pushButton_ok.setText(QCoreApplication.translate("Form", u"Ok", None))
         self.pushButton_cancel.setText(QCoreApplication.translate("Form", u"Cancel", None))
-    # retranslateUi
 
+    # retranslateUi

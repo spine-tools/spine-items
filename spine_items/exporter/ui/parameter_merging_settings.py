@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2020 Spine project consortium
-# This file is part of Spine Toolbox.
-# Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# This file is part of Spine Items.
+# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
 # any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
@@ -18,11 +18,34 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    QTime,
+    QUrl,
+    Qt,
+)
+from PySide2.QtGui import (
+    QBrush,
+    QColor,
+    QConicalGradient,
+    QCursor,
+    QFont,
+    QFontDatabase,
+    QIcon,
+    QKeySequence,
+    QLinearGradient,
+    QPalette,
+    QPainter,
+    QPixmap,
+    QRadialGradient,
+)
 from PySide2.QtWidgets import *
 
 
@@ -61,7 +84,6 @@ class Ui_Form(object):
         self.remove_button.setObjectName(u"remove_button")
 
         self.horizontalLayout.addWidget(self.remove_button)
-
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
@@ -102,9 +124,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.move_domain_right_button)
 
-
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
-
 
         self.verticalLayout.addLayout(self.verticalLayout_2)
 
@@ -146,22 +166,23 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.splitter)
 
-
         self.verticalLayout_4.addWidget(self.frame)
-
 
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
+
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.label_4.setText(QCoreApplication.translate("Form", u"Parameter name:", None))
-#if QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
         self.parameter_name_edit.setToolTip(QCoreApplication.translate("Form", u"Name of the merged parameter", None))
-#endif // QT_CONFIG(tooltip)
-        self.parameter_name_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type merged parameter name here...", None))
+        # endif // QT_CONFIG(tooltip)
+        self.parameter_name_edit.setPlaceholderText(
+            QCoreApplication.translate("Form", u"Type merged parameter name here...", None)
+        )
         self.remove_button.setText(QCoreApplication.translate("Form", u"Remove", None))
         self.message_label.setText(QCoreApplication.translate("Form", u"Message", None))
         self.label_3.setText(QCoreApplication.translate("Form", u"Indexing domains:", None))
@@ -170,11 +191,16 @@ class Ui_Form(object):
         self.move_domain_right_button.setText(QCoreApplication.translate("Form", u"Move Right", None))
         self.label.setText(QCoreApplication.translate("Form", u"Domain name:", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Description:", None))
-        self.domain_description_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type explanatory text here...", None))
-#if QT_CONFIG(tooltip)
-        self.domain_name_edit.setToolTip(QCoreApplication.translate("Form", u"Name of the domain that\n"
-"holds the original parameter names.", None))
-#endif // QT_CONFIG(tooltip)
-        self.domain_name_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type new domain name here...", None))
-    # retranslateUi
+        self.domain_description_edit.setPlaceholderText(
+            QCoreApplication.translate("Form", u"Type explanatory text here...", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.domain_name_edit.setToolTip(
+            QCoreApplication.translate("Form", u"Name of the domain that\n" "holds the original parameter names.", None)
+        )
+        # endif // QT_CONFIG(tooltip)
+        self.domain_name_edit.setPlaceholderText(
+            QCoreApplication.translate("Form", u"Type new domain name here...", None)
+        )
 
+    # retranslateUi

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2020 Spine project consortium
-# This file is part of Spine Toolbox.
-# Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# This file is part of Spine Items.
+# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
 # any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
@@ -18,16 +18,40 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    QTime,
+    QUrl,
+    Qt,
+)
+from PySide2.QtGui import (
+    QBrush,
+    QColor,
+    QConicalGradient,
+    QCursor,
+    QFont,
+    QFontDatabase,
+    QIcon,
+    QKeySequence,
+    QLinearGradient,
+    QPalette,
+    QPainter,
+    QPixmap,
+    QRadialGradient,
+)
 from PySide2.QtWidgets import *
 
 from spine_items.widgets.custom_qlineedits import PropertyQLineEdit
 
 from spine_items import resources_icons_rc
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -108,7 +132,6 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.toolButton_tool_specification)
 
-
         self.verticalLayout_17.addLayout(self.horizontalLayout_9)
 
         self.lineEdit_tool_args = PropertyQLineEdit(self.scrollAreaWidgetContents_3)
@@ -155,7 +178,6 @@ class Ui_Form(object):
 
         self.horizontalLayout_11.addWidget(self.pushButton_tool_results)
 
-
         self.verticalLayout_17.addLayout(self.horizontalLayout_11)
 
         self.line_4 = QFrame(self.scrollAreaWidgetContents_3)
@@ -197,7 +219,6 @@ class Ui_Form(object):
 
         self.horizontalLayout_15.addWidget(self.toolButton_tool_open_dir)
 
-
         self.verticalLayout_17.addLayout(self.horizontalLayout_15)
 
         self.scrollArea_3.setWidget(self.scrollAreaWidgetContents_3)
@@ -216,35 +237,67 @@ class Ui_Form(object):
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
+
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.label_tool_name.setText(QCoreApplication.translate("Form", u"Name", None))
         self.label_tool_specification.setText(QCoreApplication.translate("Form", u"Specification", None))
-#if QT_CONFIG(tooltip)
-        self.comboBox_tool.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification for this Tool</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_tool_specification.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification options.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.lineEdit_tool_args.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool command line arguments</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.comboBox_tool.setToolTip(
+            QCoreApplication.translate(
+                "Form", u"<html><head/><body><p>Tool specification for this Tool</p></body></html>", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.toolButton_tool_specification.setToolTip(
+            QCoreApplication.translate(
+                "Form", u"<html><head/><body><p>Tool specification options.</p></body></html>", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.lineEdit_tool_args.setToolTip(
+            QCoreApplication.translate(
+                "Form", u"<html><head/><body><p>Tool command line arguments</p></body></html>", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.lineEdit_tool_args.setPlaceholderText(QCoreApplication.translate("Form", u"Tool command line args", None))
-#if QT_CONFIG(tooltip)
-        self.lineEdit_tool_spec_args.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification command line arguments. </p><p>Modify by editing the selected Tool specification.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.lineEdit_tool_spec_args.setPlaceholderText(QCoreApplication.translate("Form", u"Tool Specification command line args", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.lineEdit_tool_spec_args.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Tool specification command line arguments. </p><p>Modify by editing the selected Tool specification.</p></body></html>",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
+        self.lineEdit_tool_spec_args.setPlaceholderText(
+            QCoreApplication.translate("Form", u"Tool Specification command line args", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.pushButton_tool_results.setToolTip(
+            QCoreApplication.translate(
+                "Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.pushButton_tool_results.setText(QCoreApplication.translate("Form", u"Results...", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
         self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
         self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_tool_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Tool's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-    # retranslateUi
+        # if QT_CONFIG(tooltip)
+        self.toolButton_tool_open_dir.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Open this Tool's project directory in file browser</p></body></html>",
+                None,
+            )
+        )
 
+
+# endif // QT_CONFIG(tooltip)
+# retranslateUi

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2020 Spine project consortium
-# This file is part of Spine Toolbox.
-# Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# This file is part of Spine Items.
+# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
 # any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
@@ -18,14 +18,38 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    QTime,
+    QUrl,
+    Qt,
+)
+from PySide2.QtGui import (
+    QBrush,
+    QColor,
+    QConicalGradient,
+    QCursor,
+    QFont,
+    QFontDatabase,
+    QIcon,
+    QKeySequence,
+    QLinearGradient,
+    QPalette,
+    QPainter,
+    QPixmap,
+    QRadialGradient,
+)
 from PySide2.QtWidgets import *
 
 from spine_items import resources_icons_rc
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -83,7 +107,6 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.cancel_on_error_check_box)
 
-
         self.verticalLayout_21.addLayout(self.horizontalLayout)
 
         self.line_6 = QFrame(self.scrollAreaWidgetContents_5)
@@ -114,25 +137,31 @@ class Ui_Form(object):
 
         self.horizontalLayout_13.addWidget(self.open_directory_button)
 
-
         self.verticalLayout_21.addLayout(self.horizontalLayout_13)
 
         self.scrollArea_6.setWidget(self.scrollAreaWidgetContents_5)
 
         self.verticalLayout.addWidget(self.scrollArea_6)
 
-
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
+
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.item_name_label.setText(QCoreApplication.translate("Form", u"Name", None))
         self.cancel_on_error_check_box.setText(QCoreApplication.translate("Form", u"Cancel export on error", None))
-#if QT_CONFIG(tooltip)
-        self.open_directory_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Exporter's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-    # retranslateUi
+        # if QT_CONFIG(tooltip)
+        self.open_directory_button.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"<html><head/><body><p>Open this Exporter's project directory in file browser</p></body></html>",
+                None,
+            )
+        )
 
+
+# endif // QT_CONFIG(tooltip)
+# retranslateUi

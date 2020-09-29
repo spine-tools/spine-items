@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2020 Spine project consortium
-# This file is part of Spine Toolbox.
-# Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# This file is part of Spine Items.
+# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
 # any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
@@ -18,11 +18,34 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    QTime,
+    QUrl,
+    Qt,
+)
+from PySide2.QtGui import (
+    QBrush,
+    QColor,
+    QConicalGradient,
+    QCursor,
+    QFont,
+    QFontDatabase,
+    QIcon,
+    QKeySequence,
+    QLinearGradient,
+    QPalette,
+    QPainter,
+    QPixmap,
+    QRadialGradient,
+)
 from PySide2.QtWidgets import *
 
 
@@ -66,7 +89,6 @@ class Ui_Form(object):
 
         self.verticalLayout.addItem(self.verticalSpacer_2)
 
-
         self.horizontalLayout.addLayout(self.verticalLayout)
 
         self.splitter.addWidget(self.set_group_box)
@@ -104,7 +126,6 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addItem(self.verticalSpacer_4)
 
-
         self.horizontalLayout_2.addLayout(self.verticalLayout_2)
 
         self.splitter.addWidget(self.contents_group_box)
@@ -141,7 +162,6 @@ class Ui_Form(object):
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_2)
-
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_4)
 
@@ -183,29 +203,28 @@ class Ui_Form(object):
 
         self.formLayout.setWidget(1, QFormLayout.FieldRole, self.none_fallback_combo_box)
 
-
         self.horizontalLayout_3.addLayout(self.formLayout)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer)
 
-
         self.verticalLayout_3.addLayout(self.horizontalLayout_3)
-
 
         self.verticalLayout_4.addWidget(self.misc_control_holder)
 
         self.button_box = QDialogButtonBox(Form)
         self.button_box.setObjectName(u"button_box")
-        self.button_box.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok|QDialogButtonBox.RestoreDefaults)
+        self.button_box.setStandardButtons(
+            QDialogButtonBox.Cancel | QDialogButtonBox.Ok | QDialogButtonBox.RestoreDefaults
+        )
 
         self.verticalLayout_4.addWidget(self.button_box)
-
 
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
+
     # setupUi
 
     def retranslateUi(self, Form):
@@ -214,25 +233,40 @@ class Ui_Form(object):
         self.set_move_up_button.setText(QCoreApplication.translate("Form", u"Move Up", None))
         self.set_move_down_button.setText(QCoreApplication.translate("Form", u"Move Down", None))
         self.contents_group_box.setTitle(QCoreApplication.translate("Form", u"Set Contents", None))
-#if QT_CONFIG(tooltip)
-        self.record_sort_alphabetic.setToolTip(QCoreApplication.translate("Form", u"Sort set contents alphabetically.", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.record_sort_alphabetic.setToolTip(
+            QCoreApplication.translate("Form", u"Sort set contents alphabetically.", None)
+        )
+        # endif // QT_CONFIG(tooltip)
         self.record_sort_alphabetic.setText(QCoreApplication.translate("Form", u"Alphabetic", None))
         self.record_move_up_button.setText(QCoreApplication.translate("Form", u"Move Up", None))
         self.record_move_down_button.setText(QCoreApplication.translate("Form", u"Move Down", None))
-#if QT_CONFIG(tooltip)
-        self.open_indexed_parameter_settings_button.setToolTip(QCoreApplication.translate("Form", u"Set up indexing for time series and other indexed parameters.", None))
-#endif // QT_CONFIG(tooltip)
-        self.open_indexed_parameter_settings_button.setText(QCoreApplication.translate("Form", u"Indexed Parameters...", None))
+        # if QT_CONFIG(tooltip)
+        self.open_indexed_parameter_settings_button.setToolTip(
+            QCoreApplication.translate("Form", u"Set up indexing for time series and other indexed parameters.", None)
+        )
+        # endif // QT_CONFIG(tooltip)
+        self.open_indexed_parameter_settings_button.setText(
+            QCoreApplication.translate("Form", u"Indexed Parameters...", None)
+        )
         self.indexing_status_label.setText("")
-#if QT_CONFIG(tooltip)
-        self.open_parameter_merging_settings_button.setToolTip(QCoreApplication.translate("Form", u"Merge multiple parameters into one.", None))
-#endif // QT_CONFIG(tooltip)
-        self.open_parameter_merging_settings_button.setText(QCoreApplication.translate("Form", u"Parameter Merging...", None))
-#if QT_CONFIG(tooltip)
-        self.label.setToolTip(QCoreApplication.translate("Form", u"Selected domain's parameters are exported as GAMS scalars.\n"
-"The domain itself is not exported.", None))
-#endif // QT_CONFIG(tooltip)
+        # if QT_CONFIG(tooltip)
+        self.open_parameter_merging_settings_button.setToolTip(
+            QCoreApplication.translate("Form", u"Merge multiple parameters into one.", None)
+        )
+        # endif // QT_CONFIG(tooltip)
+        self.open_parameter_merging_settings_button.setText(
+            QCoreApplication.translate("Form", u"Parameter Merging...", None)
+        )
+        # if QT_CONFIG(tooltip)
+        self.label.setToolTip(
+            QCoreApplication.translate(
+                "Form",
+                u"Selected domain's parameters are exported as GAMS scalars.\n" "The domain itself is not exported.",
+                None,
+            )
+        )
+        # endif // QT_CONFIG(tooltip)
         self.label.setText(QCoreApplication.translate("Form", u"Global parameters domain:", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"None values:", None))
         self.none_export_combo_box.setItemText(0, QCoreApplication.translate("Form", u"Do not export", None))
@@ -240,7 +274,8 @@ class Ui_Form(object):
 
         self.label_3.setText(QCoreApplication.translate("Form", u"If parameter value is None:", None))
         self.none_fallback_combo_box.setItemText(0, QCoreApplication.translate("Form", u"Use it", None))
-        self.none_fallback_combo_box.setItemText(1, QCoreApplication.translate("Form", u"Replace by default value", None))
+        self.none_fallback_combo_box.setItemText(
+            1, QCoreApplication.translate("Form", u"Replace by default value", None)
+        )
 
     # retranslateUi
-
