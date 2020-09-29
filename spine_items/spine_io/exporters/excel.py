@@ -425,6 +425,8 @@ def _write_json_array_to_xlsx(wb, data, sheet_type):
                 ws.cell(row=4 + obj_iter, column=2 + col).value = obj
 
             for row_iter, json_val in enumerate(obj_list[1]):
+                if np.isnan(json_val):
+                    json_val = "nan"
                 ws.cell(row=start_row + row_iter, column=2 + col).value = json_val
 
 
@@ -498,6 +500,8 @@ def _write_TimeSeries_to_xlsx(wb, data, sheet_type, data_type):
             for row_index, value in zip(
                 np.where(np.isin(unique_timestamps, obj_list[1].indexes))[0], obj_list[1].values
             ):
+                if np.isnan(value):
+                    value = "nan"
                 ws.cell(row=start_row + row_index, column=2 + col).value = value
 
 
