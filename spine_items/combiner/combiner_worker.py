@@ -19,13 +19,7 @@ Contains Combiner program.
 import sys
 import os
 from PySide2.QtCore import QObject, Signal, Slot
-from spinedb_api import (
-    export_data,
-    import_data,
-    SpineDBAPIError,
-    SpineDBVersionError,
-    DiffDatabaseMapping,
-)
+from spinedb_api import export_data, import_data, SpineDBAPIError, SpineDBVersionError, DiffDatabaseMapping
 from ..helpers import create_log_file_timestamp
 
 
@@ -60,19 +54,9 @@ class CombinerWorker(QObject):
     @Slot()
     def do_work(self):
         """Does the work and emits finished when done."""
-        from_db_maps = [
-            db_map
-            for db_map in (self._get_db_map(url) for url in self._from_urls)
-            if db_map
-        ]
-        to_db_maps = [
-            db_map
-            for db_map in (self._get_db_map(url) for url in self._to_urls)
-            if db_map
-        ]
-        from_db_map_data = {
-            from_db_map: export_data(from_db_map) for from_db_map in from_db_maps
-        }
+        from_db_maps = [db_map for db_map in (self._get_db_map(url) for url in self._from_urls) if db_map]
+        to_db_maps = [db_map for db_map in (self._get_db_map(url) for url in self._to_urls) if db_map]
+        from_db_map_data = {from_db_map: export_data(from_db_map) for from_db_map in from_db_maps}
         all_errors = []
         for to_db_map in to_db_maps:
             to_db_map_import_count = 0
@@ -99,22 +83,14 @@ class CombinerWorker(QObject):
         if all_errors:
             # Log errors in a time stamped file into the logs directory
             timestamp = create_log_file_timestamp()
-            logfilepath = os.path.abspath(
-                os.path.join(self._logs_dir, timestamp + "_error.log")
-            )
+            logfilepath = os.path.abspath(os.path.join(self._logs_dir, timestamp + "_error.log"))
             with open(logfilepath, "w") as f:
                 for err in all_errors:
                     f.write("{0}\n".format(err))
             # Make error log file anchor with path as tooltip
             logfile_anchor = (
-                "<a style='color:#BB99FF;' title='"
-                + logfilepath
-                + "' href='file:///"
-                + logfilepath
-                + "'>error log</a>"
+                "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>error log</a>"
             )
 
-            self._logger.msg_error.emit(
-                "Import errors. Logfile: {0}".format(logfile_anchor), file=sys.stderr
-            )
+            self._logger.msg_error.emit("Import errors. Logfile: {0}".format(logfile_anchor), file=sys.stderr)
         self.finished.emit()

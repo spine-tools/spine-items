@@ -24,12 +24,7 @@ from ..project_item_specification import ProjectItemSpecification
 from spine_items.helpers import open_url
 from ..helpers import split_cmdline_args, expand_tags
 from .item_info import ItemInfo
-from .tool_instance import (
-    GAMSToolInstance,
-    JuliaToolInstance,
-    PythonToolInstance,
-    ExecutableToolInstance,
-)
+from .tool_instance import GAMSToolInstance, JuliaToolInstance, PythonToolInstance, ExecutableToolInstance
 
 # Tool types
 TOOL_TYPES = ["Julia", "Python", "GAMS", "Executable"]
@@ -45,12 +40,7 @@ OPTIONAL_KEYS = [
     "cmdline_args",
     "execute_in_work",
 ]
-LIST_REQUIRED_KEYS = [
-    "includes",
-    "inputfiles",
-    "inputfiles_opt",
-    "outputfiles",
-]  # These should be lists
+LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]  # These should be lists
 
 
 class ToolSpecification(ProjectItemSpecification):
@@ -87,12 +77,7 @@ class ToolSpecification(ProjectItemSpecification):
             cmdline_args (str, optional): Tool command line arguments (read from tool definition file)
             execute_in_work (bool): Execute in work folder
         """
-        super().__init__(
-            name,
-            description,
-            item_type=ItemInfo.item_type(),
-            item_category=ItemInfo.item_category(),
-        )
+        super().__init__(name, description, item_type=ItemInfo.item_type(), item_category=ItemInfo.item_category())
         self._settings = settings
         self._logger = logger
         self.tooltype = tooltype
@@ -132,9 +117,7 @@ class ToolSpecification(ProjectItemSpecification):
             "outputfiles": list(self.outputfiles),
             "cmdline_args": self.cmdline_args,
             "execute_in_work": self.execute_in_work,
-            "includes_main_path": os.path.relpath(
-                self.path, os.path.dirname(definition_path)
-            ).replace(os.sep, "/"),
+            "includes_main_path": os.path.relpath(self.path, os.path.dirname(definition_path)).replace(os.sep, "/"),
         }
         with open(definition_path, "w") as fp:
             try:
@@ -142,11 +125,7 @@ class ToolSpecification(ProjectItemSpecification):
                 return True
             except ValueError:
                 self.statusbar.showMessage("Error saving file", 3000)
-                self._logger.msg_error.emit(
-                    "Saving Tool specification file failed. Path:{0}".format(
-                        definition_path
-                    )
-                )
+                self._logger.msg_error.emit("Saving Tool specification file failed. Path:{0}".format(definition_path))
                 return False
 
     def is_equivalent(self, definition):
@@ -201,9 +180,7 @@ class ToolSpecification(ProjectItemSpecification):
             if p in LIST_REQUIRED_KEYS:
                 try:
                     if not isinstance(data[p], list):
-                        logger.msg_error.emit(
-                            "Keyword '{0}' value must be a list".format(p)
-                        )
+                        logger.msg_error.emit("Keyword '{0}' value must be a list".format(p))
                         return None
                 except KeyError:
                     pass
@@ -227,14 +204,10 @@ class ToolSpecification(ProjectItemSpecification):
         Returns:
             list: a list of expanded command line arguments
         """
-        tags_expanded, args = expand_tags(
-            self.cmdline_args, optional_input_files, input_urls, output_urls
-        )
+        tags_expanded, args = expand_tags(self.cmdline_args, optional_input_files, input_urls, output_urls)
         while tags_expanded:
             # Keep expanding until there is no tag left to expand.
-            tags_expanded, args = expand_tags(
-                args, optional_input_files, input_urls, output_urls
-            )
+            tags_expanded, args = expand_tags(args, optional_input_files, input_urls, output_urls)
         return args
 
     def create_tool_instance(self, basedir):
@@ -248,12 +221,7 @@ class ToolSpecification(ProjectItemSpecification):
 
     @staticmethod
     def toolbox_load(
-        definition,
-        definition_path,
-        app_settings,
-        logger,
-        embedded_julia_console,
-        embedded_python_console,
+        definition, definition_path, app_settings, logger, embedded_julia_console, embedded_python_console
     ):
         """
         Deserializes and constructs a tool specification from definition.
@@ -272,9 +240,7 @@ class ToolSpecification(ProjectItemSpecification):
                 or None if there was an error
         """
         includes_main_path = definition.get("includes_main_path", ".")
-        path = os.path.normpath(
-            os.path.join(os.path.dirname(definition_path), includes_main_path)
-        )
+        path = os.path.normpath(os.path.join(os.path.dirname(definition_path), includes_main_path))
         try:
             _tooltype = definition["tooltype"].lower()
         except KeyError:
@@ -284,21 +250,15 @@ class ToolSpecification(ProjectItemSpecification):
             )
             return None
         if _tooltype == "julia":
-            spec = JuliaTool.load(
-                path, definition, app_settings, embedded_julia_console, logger
-            )
+            spec = JuliaTool.load(path, definition, app_settings, embedded_julia_console, logger)
         elif _tooltype == "python":
-            spec = PythonTool.load(
-                path, definition, app_settings, embedded_python_console, logger
-            )
+            spec = PythonTool.load(path, definition, app_settings, embedded_python_console, logger)
         elif _tooltype == "gams":
             spec = GAMSTool.load(path, definition, app_settings, logger)
         elif _tooltype == "executable":
             spec = ExecutableTool.load(path, definition, app_settings, logger)
         else:
-            logger.msg_warning.emit(
-                "Tool type <b>{}</b> not available".format(_tooltype)
-            )
+            logger.msg_warning.emit("Tool type <b>{}</b> not available".format(_tooltype))
             return None
         spec.definition_file_path = definition_path
         return spec
@@ -309,9 +269,7 @@ class ToolSpecification(ProjectItemSpecification):
         # Check if file exists first. openUrl may return True even if file doesn't exist
         # TODO: this could still fail if the file is deleted or renamed right after the check
         if not os.path.isfile(file_path):
-            self._logger.msg_error.emit(
-                "Tool main program file <b>{0}</b> not found.".format(file_path)
-            )
+            self._logger.msg_error.emit("Tool main program file <b>{0}</b> not found.".format(file_path))
             return
         ext = os.path.splitext(os.path.split(file_path)[1])[1]
         if ext in [".bat", ".exe"]:
@@ -330,9 +288,7 @@ class ToolSpecification(ProjectItemSpecification):
                 "Unable to open Tool specification main program file {0}. "
                 "Make sure that <b>{1}</b> "
                 "files are associated with an editor. E.g. on Windows "
-                "10, go to Control Panel -> Default Programs to do this.".format(
-                    filename, file_extension
-                )
+                "10, go to Control Panel -> Default Programs to do this.".format(filename, file_extension)
             )
 
 
@@ -533,11 +489,7 @@ class JuliaTool(ToolSpecification):
         if kwargs is not None:
             # Return an executable model instance
             return JuliaTool(
-                path=path,
-                settings=settings,
-                embedded_julia_console=embedded_julia_console,
-                logger=logger,
-                **kwargs
+                path=path, settings=settings, embedded_julia_console=embedded_julia_console, logger=logger, **kwargs
             )
         return None
 
@@ -547,9 +499,7 @@ class JuliaTool(ToolSpecification):
         Args:
             basedir (str): the path to the directory where the instance will run
         """
-        return JuliaToolInstance(
-            self, basedir, self._settings, self._embedded_console, self._logger
-        )
+        return JuliaToolInstance(self, basedir, self._settings, self._embedded_console, self._logger)
 
 
 class PythonTool(ToolSpecification):
@@ -634,11 +584,7 @@ class PythonTool(ToolSpecification):
         if kwargs is not None:
             # Return an executable model instance
             return PythonTool(
-                path=path,
-                settings=settings,
-                embedded_python_console=embedded_python_console,
-                logger=logger,
-                **kwargs
+                path=path, settings=settings, embedded_python_console=embedded_python_console, logger=logger, **kwargs
             )
         return None
 
@@ -648,9 +594,7 @@ class PythonTool(ToolSpecification):
         Args:
             basedir (str): the path to the directory where the instance will run
         """
-        return PythonToolInstance(
-            self, basedir, self._settings, self._embedded_console, self._logger
-        )
+        return PythonToolInstance(self, basedir, self._settings, self._embedded_console, self._logger)
 
 
 class ExecutableTool(ToolSpecification):

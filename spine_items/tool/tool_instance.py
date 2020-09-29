@@ -22,10 +22,7 @@ import shutil
 from PySide2.QtCore import QObject, Signal, Slot
 from spine_items.config import GAMS_EXECUTABLE, JULIA_EXECUTABLE
 from spine_items.helpers import python_interpreter
-from spine_items.execution_managers import (
-    ConsoleExecutionManager,
-    QProcessExecutionManager,
-)
+from spine_items.execution_managers import ConsoleExecutionManager, QProcessExecutionManager
 
 
 class ToolInstance(QObject):
@@ -67,9 +64,7 @@ class ToolInstance(QObject):
         """[Obsolete] Removes Tool instance files from work directory."""
         shutil.rmtree(self.basedir, ignore_errors=True)
 
-    def prepare(
-        self, optional_input_files, input_database_urls, output_database_urls, tool_args
-    ):
+    def prepare(self, optional_input_files, input_database_urls, output_database_urls, tool_args):
         """Prepares this instance for execution.
 
         Implement in subclasses to perform specific initialization.
@@ -95,9 +90,7 @@ class ToolInstance(QObject):
         """
         raise NotImplementedError()
 
-    def append_cmdline_args(
-        self, optional_input_files, input_database_urls, output_database_urls, tool_args
-    ):
+    def append_cmdline_args(self, optional_input_files, input_database_urls, output_database_urls, tool_args):
         """
         Appends Tool specification command line args into instance args list.
 
@@ -117,9 +110,7 @@ class ToolInstance(QObject):
 class GAMSToolInstance(ToolInstance):
     """Class for GAMS Tool instances."""
 
-    def prepare(
-        self, optional_input_files, input_database_urls, output_database_urls, tool_args
-    ):
+    def prepare(self, optional_input_files, input_database_urls, output_database_urls, tool_args):
         """See base class."""
         gams_path = self._settings.value("appSettings/gamsPath", defaultValue="")
         if gams_path != "":
@@ -131,15 +122,11 @@ class GAMSToolInstance(ToolInstance):
         self.args.append("curDir=")
         self.args.append(self.basedir)
         self.args.append("logoption=3")  # TODO: This should be an option in Settings
-        self.append_cmdline_args(
-            optional_input_files, input_database_urls, output_database_urls, tool_args
-        )
+        self.append_cmdline_args(optional_input_files, input_database_urls, output_database_urls, tool_args)
 
     def execute(self, **kwargs):
         """Executes a prepared instance."""
-        self.exec_mngr = QProcessExecutionManager(
-            self._logger, self.program, self.args, **kwargs
-        )
+        self.exec_mngr = QProcessExecutionManager(self._logger, self.program, self.args, **kwargs)
         self.exec_mngr.execution_finished.connect(self.handle_execution_finished)
         # TODO: Check if this sets the curDir argument. Is the curDir arg now useless?
         self.exec_mngr.start_execution(workdir=self.basedir)
@@ -162,9 +149,7 @@ class GAMSToolInstance(ToolInstance):
             else:
                 try:
                     return_msg = self.tool_specification.return_codes[ret]
-                    self._logger.msg_error.emit(
-                        f"\t<b>{return_msg}</b> [exit code:{ret}]"
-                    )
+                    self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
                 except KeyError:
                     self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr.deleteLater()
@@ -175,9 +160,7 @@ class GAMSToolInstance(ToolInstance):
 class JuliaToolInstance(ToolInstance):
     """Class for Julia Tool instances."""
 
-    def __init__(
-        self, tool_specification, basedir, settings, embedded_julia_console, logger
-    ):
+    def __init__(self, tool_specification, basedir, settings, embedded_julia_console, logger):
         """
         Args:
             tool_specification (ToolSpecification): the tool specification for this instance
@@ -190,14 +173,10 @@ class JuliaToolInstance(ToolInstance):
         self._embedded_console = embedded_julia_console
         self.ijulia_command_list = list()
 
-    def prepare(
-        self, optional_input_files, input_database_urls, output_database_urls, tool_args
-    ):
+    def prepare(self, optional_input_files, input_database_urls, output_database_urls, tool_args):
         """See base class."""
         work_dir = self.basedir
-        use_embedded_julia = self._settings.value(
-            "appSettings/useEmbeddedJulia", defaultValue="2"
-        )
+        use_embedded_julia = self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2")
         if use_embedded_julia == "2" and self._embedded_console is not None:
             # Prepare Julia REPL command
             mod_work_dir = repr(work_dir).strip("'")
@@ -219,38 +198,24 @@ class JuliaToolInstance(ToolInstance):
                 julia_exe = julia_path
             else:
                 julia_exe = JULIA_EXECUTABLE
-            julia_project_path = self._settings.value(
-                "appSettings/juliaProjectPath", defaultValue=""
-            )
+            julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
             script_path = os.path.join(work_dir, self.tool_specification.main_prgm)
             self.program = julia_exe
             self.args.append(f"--project={julia_project_path}")
             self.args.append(script_path)
-            self.append_cmdline_args(
-                optional_input_files,
-                input_database_urls,
-                output_database_urls,
-                tool_args,
-            )
+            self.append_cmdline_args(optional_input_files, input_database_urls, output_database_urls, tool_args)
 
     def execute(self, **kwargs):
         """Executes a prepared instance."""
         if (
-            self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2")
-            == "2"
+            self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2") == "2"
             and self._embedded_console is not None
         ):
-            self.exec_mngr = ConsoleExecutionManager(
-                self._embedded_console, self.ijulia_command_list, self._logger
-            )
-            self.exec_mngr.execution_finished.connect(
-                self.handle_repl_execution_finished
-            )
+            self.exec_mngr = ConsoleExecutionManager(self._embedded_console, self.ijulia_command_list, self._logger)
+            self.exec_mngr.execution_finished.connect(self.handle_repl_execution_finished)
             self.exec_mngr.start_execution()
         else:
-            self.exec_mngr = QProcessExecutionManager(
-                self._logger, self.program, self.args, **kwargs
-            )
+            self.exec_mngr = QProcessExecutionManager(self._logger, self.program, self.args, **kwargs)
             self.exec_mngr.execution_finished.connect(self.handle_execution_finished)
             # On Julia the QProcess workdir must be set to the path where the main script is
             # Otherwise it doesn't find input files in subdirectories
@@ -263,9 +228,7 @@ class JuliaToolInstance(ToolInstance):
         Args:
             ret (int): Tool specification process return value
         """
-        self.exec_mngr.execution_finished.disconnect(
-            self.handle_repl_execution_finished
-        )
+        self.exec_mngr.execution_finished.disconnect(self.handle_repl_execution_finished)
         if ret != 0:
             try:
                 return_msg = self.tool_specification.return_codes[ret]
@@ -293,9 +256,7 @@ class JuliaToolInstance(ToolInstance):
             else:
                 try:
                     return_msg = self.tool_specification.return_codes[ret]
-                    self._logger.msg_error.emit(
-                        f"\t<b>{return_msg}</b> [exit code:{ret}]"
-                    )
+                    self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
                 except KeyError:
                     self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr.deleteLater()
@@ -306,9 +267,7 @@ class JuliaToolInstance(ToolInstance):
 class PythonToolInstance(ToolInstance):
     """Class for Python Tool instances."""
 
-    def __init__(
-        self, tool_specification, basedir, settings, embedded_python_console, logger
-    ):
+    def __init__(self, tool_specification, basedir, settings, embedded_python_console, logger):
         """
 
         Args:
@@ -322,14 +281,10 @@ class PythonToolInstance(ToolInstance):
         self._embedded_console = embedded_python_console
         self.ipython_command_list = list()
 
-    def prepare(
-        self, optional_input_files, input_database_urls, output_database_urls, tool_args
-    ):
+    def prepare(self, optional_input_files, input_database_urls, output_database_urls, tool_args):
         """See base class."""
         work_dir = self.basedir
-        use_embedded_python = self._settings.value(
-            "appSettings/useEmbeddedPython", defaultValue="0"
-        )
+        use_embedded_python = self._settings.value("appSettings/useEmbeddedPython", defaultValue="0")
         if use_embedded_python == "2" and self._embedded_console is not None:
             # Prepare a command list (FIFO queue) with two commands for Python Console
             # 1st cmd: Change current work directory
@@ -350,34 +305,20 @@ class PythonToolInstance(ToolInstance):
             # Prepare command "python <script.py> <script_arguments>"
             script_path = os.path.join(work_dir, self.tool_specification.main_prgm)
             self.program = python_interpreter(self._settings)
-            self.args.append(
-                script_path
-            )  # First argument for the Python interpreter is path to the tool script
-            self.append_cmdline_args(
-                optional_input_files,
-                input_database_urls,
-                output_database_urls,
-                tool_args,
-            )
+            self.args.append(script_path)  # First argument for the Python interpreter is path to the tool script
+            self.append_cmdline_args(optional_input_files, input_database_urls, output_database_urls, tool_args)
 
     def execute(self, **kwargs):
         """Executes a prepared instance."""
         if (
-            self._settings.value("appSettings/useEmbeddedPython", defaultValue="0")
-            == "2"
+            self._settings.value("appSettings/useEmbeddedPython", defaultValue="0") == "2"
             and self._embedded_console is not None
         ):
-            self.exec_mngr = ConsoleExecutionManager(
-                self._embedded_console, self.ipython_command_list, self._logger
-            )
-            self.exec_mngr.execution_finished.connect(
-                self.handle_console_execution_finished
-            )
+            self.exec_mngr = ConsoleExecutionManager(self._embedded_console, self.ipython_command_list, self._logger)
+            self.exec_mngr.execution_finished.connect(self.handle_console_execution_finished)
             self.exec_mngr.start_execution()
         else:
-            self.exec_mngr = QProcessExecutionManager(
-                self._logger, self.program, self.args, **kwargs
-            )
+            self.exec_mngr = QProcessExecutionManager(self._logger, self.program, self.args, **kwargs)
             self.exec_mngr.execution_finished.connect(self.handle_execution_finished)
             self.exec_mngr.start_execution(workdir=self.basedir)
 
@@ -388,9 +329,7 @@ class PythonToolInstance(ToolInstance):
         Args:
             ret (int): Tool specification process return value
         """
-        self.exec_mngr.execution_finished.disconnect(
-            self.handle_console_execution_finished
-        )
+        self.exec_mngr.execution_finished.disconnect(self.handle_console_execution_finished)
         if ret != 0:
             try:
                 return_msg = self.tool_specification.return_codes[ret]
@@ -418,9 +357,7 @@ class PythonToolInstance(ToolInstance):
             else:
                 try:
                     return_msg = self.tool_specification.return_codes[ret]
-                    self._logger.msg_error.emit(
-                        f"\t<b>{return_msg}</b> [exit code:{ret}]"
-                    )
+                    self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
                 except KeyError:
                     self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr.deleteLater()
@@ -431,9 +368,7 @@ class PythonToolInstance(ToolInstance):
 class ExecutableToolInstance(ToolInstance):
     """Class for Executable Tool instances."""
 
-    def prepare(
-        self, optional_input_files, input_database_urls, output_database_urls, tool_args
-    ):
+    def prepare(self, optional_input_files, input_database_urls, output_database_urls, tool_args):
         """See base class."""
         batch_path = os.path.join(self.basedir, self.tool_specification.main_prgm)
         if sys.platform != "win32":
@@ -441,15 +376,11 @@ class ExecutableToolInstance(ToolInstance):
             self.args.append(batch_path)
         else:
             self.program = batch_path
-        self.append_cmdline_args(
-            optional_input_files, input_database_urls, output_database_urls, tool_args
-        )
+        self.append_cmdline_args(optional_input_files, input_database_urls, output_database_urls, tool_args)
 
     def execute(self, **kwargs):
         """Executes a prepared instance."""
-        self.exec_mngr = QProcessExecutionManager(
-            self._logger, self.program, self.args, **kwargs
-        )
+        self.exec_mngr = QProcessExecutionManager(self._logger, self.program, self.args, **kwargs)
         self.exec_mngr.execution_finished.connect(self.handle_execution_finished)
         self.exec_mngr.start_execution(workdir=self.basedir)
 
@@ -463,15 +394,11 @@ class ExecutableToolInstance(ToolInstance):
         self.exec_mngr.execution_finished.disconnect(self.handle_execution_finished)
         if self.exec_mngr.process_failed:  # process_failed should be True if ret != 0
             if self.exec_mngr.process_failed_to_start:
-                self._logger.msg_error.emit(
-                    f"\t<b>{self.exec_mngr.program()}</b> failed to start."
-                )
+                self._logger.msg_error.emit(f"\t<b>{self.exec_mngr.program()}</b> failed to start.")
             else:
                 try:
                     return_msg = self.tool_specification.return_codes[ret]
-                    self._logger.msg_error.emit(
-                        f"\t<b>{return_msg}</b> [exit code:{ret}]"
-                    )
+                    self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
                 except KeyError:
                     self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr.deleteLater()

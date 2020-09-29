@@ -20,12 +20,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication, QEventLoop, QObject, QThread
-from spinedb_api import (
-    create_new_spine_database,
-    DatabaseMapping,
-    DiffDatabaseMapping,
-    import_functions,
-)
+from spinedb_api import create_new_spine_database, DatabaseMapping, DiffDatabaseMapping, import_functions
 from spine_engine import ExecutionDirection
 from spine_items.project_item_resource import ProjectItemResource
 from spine_items.combiner.executable_item import ExecutableItem
@@ -47,16 +42,8 @@ class TestCombinerExecutable(unittest.TestCase):
 
     def test_from_dict(self):
         logger = mock.MagicMock()
-        item_dict = {
-            "type": "Combiner",
-            "description": "",
-            "x": 0,
-            "y": 0,
-            "cancel_on_error": True,
-        }
-        item = ExecutableItem.from_dict(
-            item_dict, "Combiner 1", "some_dir/", None, dict(), logger
-        )
+        item_dict = {"type": "Combiner", "description": "", "x": 0, "y": 0, "cancel_on_error": True}
+        item = ExecutableItem.from_dict(item_dict, "Combiner 1", "some_dir/", None, dict(), logger)
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("Combiner", item.item_type())
 
@@ -98,9 +85,7 @@ class TestCombinerExecutable(unittest.TestCase):
             import_functions.import_object_classes(db1_map, ["a"])
             import_functions.import_objects(db1_map, [("a", "a_1")])
             # Commit to db1
-            db1_map.commit_session(
-                "Add an object class 'a' and an object for unit tests."
-            )
+            db1_map.commit_session("Add an object class 'a' and an object for unit tests.")
             db2_path = Path(temp_dir).joinpath("db2.sqlite")
             db2_url = "sqlite:///" + str(db2_path)
             create_new_spine_database(db2_url)
@@ -109,9 +94,7 @@ class TestCombinerExecutable(unittest.TestCase):
             import_functions.import_object_classes(db2_map, ["b"])
             import_functions.import_objects(db2_map, [("b", "b_1")])
             # Commit to db2
-            db2_map.commit_session(
-                "Add an object class 'b' and an object for unit tests."
-            )
+            db2_map.commit_session("Add an object class 'b' and an object for unit tests.")
             # Close connections
             db1_map.connection.close()
             db2_map.connection.close()
@@ -125,12 +108,8 @@ class TestCombinerExecutable(unittest.TestCase):
                 ProjectItemResource(None, "database", db2_url),
             ]
             output_db_resource = [ProjectItemResource(None, "database", db3_url)]
-            self.assertTrue(
-                executable.execute(output_db_resource, ExecutionDirection.BACKWARD)
-            )
-            self.assertTrue(
-                executable.execute(input_db_resources, ExecutionDirection.FORWARD)
-            )
+            self.assertTrue(executable.execute(output_db_resource, ExecutionDirection.BACKWARD))
+            self.assertTrue(executable.execute(input_db_resources, ExecutionDirection.FORWARD))
             # Check that _loop, _worker, and _worker_thread are None after execution
             self.assertIsNone(executable._worker)
             self.assertIsNone(executable._worker_thread)

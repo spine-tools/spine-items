@@ -38,9 +38,7 @@ class DataConnectionFactory(ProjectItemFactory):
 
     @staticmethod
     def make_icon(toolbox, x, y, project_item):
-        return DataConnectionIcon(
-            toolbox, x, y, project_item, DataConnectionFactory.icon()
-        )
+        return DataConnectionIcon(toolbox, x, y, project_item, DataConnectionFactory.icon())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project, logger):

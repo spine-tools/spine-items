@@ -120,10 +120,6 @@ class ItemSpecificationMenu(CustomPopupMenu):
         super().__init__(parent)
         self.index = index
         self.add_action("Edit specification", lambda: parent.edit_specification(index))
-        self.add_action(
-            "Remove specification", lambda: parent.remove_specification(index.row())
-        )
-        self.add_action(
-            "Open specification file...", lambda: parent.open_specification_file(index)
-        )
+        self.add_action("Remove specification", lambda: parent.remove_specification(index.row()))
+        self.add_action("Open specification file...", lambda: parent.open_specification_file(index))
         self.addSeparator()

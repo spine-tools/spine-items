@@ -55,10 +55,7 @@ class TestExporterExecutable(unittest.TestCase):
                             },
                             "unit": {
                                 "tier": 2,
-                                "records": {
-                                    "indexing_type": "fixed",
-                                    "indexes": [["a"], ["b"], ["c"]],
-                                },
+                                "records": {"indexing_type": "fixed", "indexes": [["a"], ["b"], ["c"]]},
                                 "metadata": {"exportable": 1, "origin": 1},
                             },
                             "pipe": {
@@ -88,30 +85,22 @@ class TestExporterExecutable(unittest.TestCase):
         }
         logger = mock.MagicMock()
         with TemporaryDirectory() as temp_dir:
-            item = ExecutableItem.from_dict(
-                item_dict, "Exporter 1", temp_dir, _MockSettings(), dict(), logger
-            )
+            item = ExecutableItem.from_dict(item_dict, "Exporter 1", temp_dir, _MockSettings(), dict(), logger)
             self.assertIsInstance(item, ExecutableItem)
             self.assertEqual("Exporter", item.item_type())
             for url, settings_pack in item._settings_packs.items():
                 self.assertIsInstance(settings_pack, SettingsPack)
             # Make SettingsPack.from_dict raise gdx.GdxExportException
-            with mock.patch(
-                "spine_items.exporter.executable_item.SettingsPack.from_dict"
-            ) as mocksetfromdict:
+            with mock.patch("spine_items.exporter.executable_item.SettingsPack.from_dict") as mocksetfromdict:
                 mocksetfromdict.side_effect = gdx.GdxExportException("hello")
-                item = ExecutableItem.from_dict(
-                    item_dict, "Exporter 1", temp_dir, _MockSettings(), dict(), logger
-                )
+                item = ExecutableItem.from_dict(item_dict, "Exporter 1", temp_dir, _MockSettings(), dict(), logger)
                 self.assertIsInstance(item, ExecutableItem)
                 self.assertEqual("Exporter", item.item_type())
                 for url, settings_pack in item._settings_packs.items():
                     self.assertIsInstance(settings_pack, SettingsPack)
             # Modify item_dict
             item_dict.pop("cancel_on_error")
-            item = ExecutableItem.from_dict(
-                item_dict, "Exporter 1", temp_dir, _MockSettings(), dict(), logger
-            )
+            item = ExecutableItem.from_dict(item_dict, "Exporter 1", temp_dir, _MockSettings(), dict(), logger)
             self.assertIsInstance(item, ExecutableItem)
             self.assertEqual("Exporter", item.item_type())
             self.assertTrue(item._cancel_on_error)
@@ -122,9 +111,7 @@ class TestExporterExecutable(unittest.TestCase):
         # TODO: Seems that there is no way to stop the Exporting process at the moment.
         # TODO: Implement this test when Exporter ExecutableItem stop_execution() method is implemented
         with TemporaryDirectory() as temp_data_dir:
-            executable = ExecutableItem(
-                "name", {}, True, temp_data_dir, "", mock.MagicMock()
-            )
+            executable = ExecutableItem("name", {}, True, temp_data_dir, "", mock.MagicMock())
             with mock.patch(
                 "spine_items.executable_item_base.ExecutableItemBase.stop_execution"
             ) as mock_stop_execution:
@@ -135,16 +122,12 @@ class TestExporterExecutable(unittest.TestCase):
         executable = ExecutableItem("name", {}, False, "", "", mock.MagicMock())
         self.assertTrue(executable.execute([], ExecutionDirection.BACKWARD))
 
-    @unittest.skipIf(
-        gdx_utils.find_gams_directory() is None, "No working GAMS installation found."
-    )
+    @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
     def test_execute_forward_no_output(self):
         executable = ExecutableItem("name", {}, False, "", "", mock.MagicMock())
         self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
 
-    @unittest.skipIf(
-        gdx_utils.find_gams_directory() is None, "No working GAMS installation found."
-    )
+    @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
     def test_execute_forward_exports_simple_database_to_gdx(self):
         with TemporaryDirectory() as tmp_dir_name:
             database_path = Path(tmp_dir_name).joinpath("test_execute_forward.sqlite")
@@ -159,26 +142,18 @@ class TestExporterExecutable(unittest.TestCase):
                 database_map, gdx.NoneFallback.USE_IT, logger=mock.MagicMock()
             )
             settings_pack.state = SettingsState.OK
-            database_map.commit_session(
-                "Add an entity_class and an entity for unit tests."
-            )
+            database_map.commit_session("Add an entity_class and an entity for unit tests.")
             database_map.connection.close()
             packs = {database_url: settings_pack}
-            executable = ExecutableItem(
-                "name", packs, False, tmp_dir_name, "", mock.MagicMock()
-            )
+            executable = ExecutableItem("name", packs, False, tmp_dir_name, "", mock.MagicMock())
             resources = [ProjectItemResource(None, "database", database_url)]
             self.assertTrue(executable.execute(resources, ExecutionDirection.FORWARD))
             self.assertTrue(Path(tmp_dir_name, "output.gdx").exists())
             gams_directory = gdx.find_gams_directory()
-            with GdxFile(
-                str(Path(tmp_dir_name, "output.gdx")), "r", gams_directory
-            ) as gdx_file:
+            with GdxFile(str(Path(tmp_dir_name, "output.gdx")), "r", gams_directory) as gdx_file:
                 self.assertEqual(len(gdx_file), 1)
                 expected_symbol_names = ["domain"]
-                for gams_symbol, expected_name in zip(
-                    gdx_file.keys(), expected_symbol_names
-                ):
+                for gams_symbol, expected_name in zip(gdx_file.keys(), expected_symbol_names):
                     self.assertEqual(gams_symbol, expected_name)
                 gams_set = gdx_file["domain"]
                 self.assertEqual(len(gams_set), 1)
@@ -194,13 +169,8 @@ class TestExporterExecutable(unittest.TestCase):
         data_dir = gettempdir()
         settings_pack1 = SettingsPack("output.gdx")
         settings_pack2 = SettingsPack("exported.gdx")
-        packs = {
-            "sqlite:///first_database.sqlite": settings_pack1,
-            "sqlite:///second_database.sqlite": settings_pack2,
-        }
-        executable = ExecutableItem(
-            "name", packs, False, data_dir, "", mock.MagicMock()
-        )
+        packs = {"sqlite:///first_database.sqlite": settings_pack1, "sqlite:///second_database.sqlite": settings_pack2}
+        executable = ExecutableItem("name", packs, False, data_dir, "", mock.MagicMock())
         resources = executable.output_resources(ExecutionDirection.FORWARD)
         self.assertEqual(len(resources), 2)
 

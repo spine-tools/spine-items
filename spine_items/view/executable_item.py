@@ -26,8 +26,6 @@ class ExecutableItem(ExecutableItemBase):
         return ItemInfo.item_type()
 
     @classmethod
-    def from_dict(
-        cls, item_dict, name, project_dir, app_settings, specifications, logger
-    ):
+    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         return cls(name, logger)

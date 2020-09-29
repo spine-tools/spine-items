@@ -50,9 +50,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         return ItemInfo.item_type()
 
     @classmethod
-    def from_dict(
-        cls, item_dict, name, project_dir, app_settings, specifications, logger
-    ):
+    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         logs_dir = os.path.join(data_dir, "logs")
@@ -88,18 +86,14 @@ class ExecutableItem(ExecutableItemBase, QObject):
         from_urls = self._urls_from_resources(resources)
         to_urls = self._urls_from_resources(self._resources_from_downstream)
         if not from_urls:
-            self._logger.msg_warning.emit(
-                "No input database(s) available. Moving on..."
-            )
+            self._logger.msg_warning.emit("No input database(s) available. Moving on...")
             return True
         elif not to_urls:
             self._logger.msg_warning.emit("No output database available. Moving on...")
             return True
         self._destroy_current_worker()
         self._loop = QEventLoop()
-        self._worker = CombinerWorker(
-            from_urls, to_urls, self._logs_dir, self._cancel_on_error, self._logger
-        )
+        self._worker = CombinerWorker(from_urls, to_urls, self._logs_dir, self._cancel_on_error, self._logger)
         self._worker_thread = QThread()
         self._worker.moveToThread(self._worker_thread)
         self._worker.finished.connect(self._handle_worker_finished)

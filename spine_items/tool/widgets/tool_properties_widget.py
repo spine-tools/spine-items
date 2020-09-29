@@ -31,9 +31,7 @@ class ToolPropertiesWidget(QWidget):
 
     def __init__(self, toolbox):
         """Init class."""
-        from ..ui.tool_properties import (
-            Ui_Form,
-        )  # pylint: disable=import-outside-toplevel
+        from ..ui.tool_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__()
         self._toolbox = toolbox
@@ -47,12 +45,8 @@ class ToolPropertiesWidget(QWidget):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self._toolbox.specification_model_changed.connect(
-            self.update_combo_box_tool_model
-        )
-        self.ui.treeView_specification.customContextMenuRequested.connect(
-            self.show_tool_properties_context_menu
-        )
+        self._toolbox.specification_model_changed.connect(self.update_combo_box_tool_model)
+        self.ui.treeView_specification.customContextMenuRequested.connect(self.show_tool_properties_context_menu)
 
     @Slot()
     def update_combo_box_tool_model(self):
@@ -70,9 +64,7 @@ class ToolPropertiesWidget(QWidget):
         ind = self.ui.treeView_specification.indexAt(
             pos
         )  # Index of selected QStandardItem in Tool properties tree view.
-        curr_index = (
-            self._toolbox.ui.treeView_project.currentIndex()
-        )  # Get selected Tool
+        curr_index = self._toolbox.ui.treeView_project.currentIndex()  # Get selected Tool
         tool = self._toolbox.project_item_model.item(curr_index).project_item
         if not tool.specification():
             return
@@ -83,9 +75,7 @@ class ToolPropertiesWidget(QWidget):
         self.tool_prop_context_menu = ToolPropertiesContextMenu(self, global_pos, ind)
         option = self.tool_prop_context_menu.get_action()
         if option == "Edit Tool specification":
-            self._toolbox.edit_specification(
-                tool_index
-            )  # index in tool specification model
+            self._toolbox.edit_specification(tool_index)  # index in tool specification model
         elif option == "Edit main program file...":
             tool.open_main_program_file()
         elif option == "Open main program directory...":

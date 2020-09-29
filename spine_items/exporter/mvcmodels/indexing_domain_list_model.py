@@ -194,10 +194,7 @@ class IndexingDomainListModel(QAbstractListModel):
         if len(rows) == 1:
             self.removeRows(rows[0], 1)
             return
-        if all(
-            previous_row + 1 == next_row
-            for previous_row, next_row in zip(rows[:-1], rows[1:])
-        ):
+        if all(previous_row + 1 == next_row for previous_row, next_row in zip(rows[:-1], rows[1:])):
             self.removeRows(rows[0], len(rows))
             return
         self.beginResetModel()

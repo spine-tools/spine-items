@@ -31,9 +31,7 @@ class CombinerPropertiesWidget(QWidget):
 
     def __init__(self, toolbox):
         """Init class."""
-        from ..ui.combiner_properties import (
-            Ui_Form,
-        )  # pylint: disable=import-outside-toplevel
+        from ..ui.combiner_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__()
         self._toolbox = toolbox
@@ -47,9 +45,7 @@ class CombinerPropertiesWidget(QWidget):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.treeView_files.customContextMenuRequested.connect(
-            self.show_combiner_properties_context_menu
-        )
+        self.ui.treeView_files.customContextMenuRequested.connect(self.show_combiner_properties_context_menu)
 
     @Slot("QPoint")
     def show_combiner_properties_context_menu(self, pos):
@@ -58,17 +54,11 @@ class CombinerPropertiesWidget(QWidget):
         Args:
             pos (QPoint): Mouse position
         """
-        ind = self.ui.treeView_files.indexAt(
-            pos
-        )  # Index of selected item in Combiner references tree view.
-        curr_index = (
-            self._toolbox.ui.treeView_project.currentIndex()
-        )  # Get selected Combiner
+        ind = self.ui.treeView_files.indexAt(pos)  # Index of selected item in Combiner references tree view.
+        curr_index = self._toolbox.ui.treeView_project.currentIndex()  # Get selected Combiner
         combiner = self._toolbox.project_item_model.item(curr_index).project_item
         global_pos = self.ui.treeView_files.viewport().mapToGlobal(pos)
-        self.properties_context_menu = CombinerPropertiesContextMenu(
-            self, global_pos, ind
-        )
+        self.properties_context_menu = CombinerPropertiesContextMenu(self, global_pos, ind)
         option = self.properties_context_menu.get_action()
         if option == "Open editor":
             combiner.open_db_editor()

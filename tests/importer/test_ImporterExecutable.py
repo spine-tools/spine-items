@@ -48,11 +48,7 @@ class TestImporterExecutable(unittest.TestCase):
             "y": 0,
             "mappings": [
                 [
-                    {
-                        "type": "path",
-                        "relative": True,
-                        "path": ".spinetoolbox/items/data/units.xlsx",
-                    },
+                    {"type": "path", "relative": True, "path": ".spinetoolbox/items/data/units.xlsx"},
                     {
                         "table_mappings": {
                             "Sheet1": [
@@ -76,20 +72,11 @@ class TestImporterExecutable(unittest.TestCase):
             ],
             "cancel_on_error": True,
             "mapping_selection": [
-                [
-                    {
-                        "type": "path",
-                        "relative": True,
-                        "path": ".spinetoolbox/items/data/units.xlsx",
-                    },
-                    True,
-                ]
+                [{"type": "path", "relative": True, "path": ".spinetoolbox/items/data/units.xlsx"}, True]
             ],
         }
         with TemporaryDirectory() as temp_dir:
-            item = ExecutableItem.from_dict(
-                item_dict, "name", temp_dir, _MockSettings(), dict(), mock.MagicMock()
-            )
+            item = ExecutableItem.from_dict(item_dict, "name", temp_dir, _MockSettings(), dict(), mock.MagicMock())
             self.assertIsInstance(item, ExecutableItem)
             self.assertEqual("Importer", item.item_type())
 
@@ -129,17 +116,11 @@ class TestImporterExecutable(unittest.TestCase):
             database_url = "sqlite:///" + str(database_path)
             create_new_spine_database(database_url)
             gams_path = ""
-            executable = ExecutableItem(
-                "name", mappings, temp_dir, gams_path, True, mock.MagicMock()
-            )
+            executable = ExecutableItem("name", mappings, temp_dir, gams_path, True, mock.MagicMock())
             database_resources = [ProjectItemResource(None, "database", database_url)]
-            self.assertTrue(
-                executable.execute(database_resources, ExecutionDirection.BACKWARD)
-            )
+            self.assertTrue(executable.execute(database_resources, ExecutionDirection.BACKWARD))
             file_resources = [ProjectItemResource(None, "file", data_file.as_uri())]
-            self.assertTrue(
-                executable.execute(file_resources, ExecutionDirection.FORWARD)
-            )
+            self.assertTrue(executable.execute(file_resources, ExecutionDirection.FORWARD))
             # Check that _loop, _worker, and _worker_thread are None after execution
             self.assertIsNone(executable._worker)
             self.assertIsNone(executable._worker_thread)
@@ -162,17 +143,11 @@ class TestImporterExecutable(unittest.TestCase):
             database_url = "sqlite:///" + str(database_path)
             create_new_spine_database(database_url)
             gams_path = ""
-            executable = ExecutableItem(
-                "name", mappings, temp_dir, gams_path, True, mock.MagicMock()
-            )
+            executable = ExecutableItem("name", mappings, temp_dir, gams_path, True, mock.MagicMock())
             database_resources = [ProjectItemResource(None, "database", database_url)]
-            self.assertTrue(
-                executable.execute(database_resources, ExecutionDirection.BACKWARD)
-            )
+            self.assertTrue(executable.execute(database_resources, ExecutionDirection.BACKWARD))
             file_resources = [ProjectItemResource(None, "file", data_file.as_uri())]
-            self.assertTrue(
-                executable.execute(file_resources, ExecutionDirection.FORWARD)
-            )
+            self.assertTrue(executable.execute(file_resources, ExecutionDirection.FORWARD))
             # Check that _loop, _worker, and _worker_thread are None after execution
             self.assertIsNone(executable._worker)
             self.assertIsNone(executable._worker_thread)

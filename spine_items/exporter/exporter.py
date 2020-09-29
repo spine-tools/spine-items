@@ -45,18 +45,7 @@ class Exporter(ProjectItem):
     Currently, only .gdx format is supported.
     """
 
-    def __init__(
-        self,
-        name,
-        description,
-        x,
-        y,
-        toolbox,
-        project,
-        logger,
-        cancel_on_error=True,
-        settings_packs=None,
-    ):
+    def __init__(self, name, description, x, y, toolbox, project, logger, cancel_on_error=True, settings_packs=None):
         """
         Args:
             name (str): item name
@@ -78,9 +67,7 @@ class Exporter(ProjectItem):
         self._export_list_items = dict()
         self._workers = dict()
         for url, pack in self._settings_packs.items():
-            pack.notifications.changed_due_to_settings_state.connect(
-                self._report_notifications
-            )
+            pack.notifications.changed_due_to_settings_state.connect(self._report_notifications)
             if pack.state not in (SettingsState.OK, SettingsState.INDEXING_PROBLEM):
                 self._start_worker(url)
             elif pack.last_database_commit != _latest_database_commit_time_stamp(url):
@@ -90,12 +77,8 @@ class Exporter(ProjectItem):
 
     def set_up(self):
         """See base class."""
-        self._project.db_mngr.session_committed.connect(
-            self._update_settings_after_db_commit
-        )
-        self._project.db_mngr.database_created.connect(
-            self._update_settings_after_db_creation
-        )
+        self._project.db_mngr.session_committed.connect(self._update_settings_after_db_commit)
+        self._project.db_mngr.database_created.connect(self._update_settings_after_db_creation)
 
     @staticmethod
     def item_type():
@@ -109,16 +92,9 @@ class Exporter(ProjectItem):
 
     def execution_item(self):
         """Creates Exporter's execution counterpart."""
-        gams_path = self._project.settings.value(
-            "appSettings/gamsPath", defaultValue=None
-        )
+        gams_path = self._project.settings.value("appSettings/gamsPath", defaultValue=None)
         executable = ExecutableItem(
-            self.name,
-            self._settings_packs,
-            self._cancel_on_error,
-            self.data_dir,
-            gams_path,
-            self._logger,
+            self.name, self._settings_packs, self._cancel_on_error, self.data_dir, gams_path, self._logger
         )
         return executable
 
@@ -157,18 +133,14 @@ class Exporter(ProjectItem):
         try:
             database_map = DatabaseMapping(database_url)
         except SpineDBAPIError as error:
-            self._logger.msg_error.emit(
-                f"Could not read scenario information for '{database_url}: {error}"
-            )
+            self._logger.msg_error.emit(f"Could not read scenario information for '{database_url}: {error}")
             return {}
         try:
             scenario_rows = database_map.query(database_map.scenario_sq).all()
             scenarios = {row.name: row.active for row in scenario_rows}
             return scenarios
         except SpineDBAPIError as error:
-            self._logger.msg_error.emit(
-                f"Could not read scenario information for '{database_url}: {error}"
-            )
+            self._logger.msg_error.emit(f"Could not read scenario information for '{database_url}: {error}")
             return {}
         finally:
             database_map.connection.close()
@@ -181,9 +153,7 @@ class Exporter(ProjectItem):
             widget_to_remove.widget().deleteLater()
         self._export_list_items.clear()
         for url, pack in self._settings_packs.items():
-            item = self._export_list_items[url] = ExportListItem(
-                url, pack.output_file_name, pack.state
-            )
+            item = self._export_list_items[url] = ExportListItem(url, pack.output_file_name, pack.state)
             item.update_scenarios(self._scenarios.get(url, dict()), pack.scenario)
             database_list_storage.addWidget(item)
             item.open_settings_clicked.connect(self._show_settings)
@@ -232,9 +202,7 @@ class Exporter(ProjectItem):
         worker.msg_warning.connect(self._worker_msg_warning)
         worker.msg_error.connect(self._worker_msg_error)
         if update_settings:
-            worker.set_previous_settings(
-                pack.settings, pack.indexing_settings, pack.merging_settings
-            )
+            worker.set_previous_settings(pack.settings, pack.indexing_settings, pack.merging_settings)
         self._settings_packs[database_url].state = SettingsState.FETCHING
         worker.thread.start()
 
@@ -346,10 +314,7 @@ class Exporter(ProjectItem):
             if pack.state not in (SettingsState.FETCHING, SettingsState.ERROR):
                 pack.state = SettingsState.OK
                 for setting in pack.indexing_settings.values():
-                    if (
-                        setting.indexing_domain_name is None
-                        and pack.settings.is_exportable(setting.set_name)
-                    ):
+                    if setting.indexing_domain_name is None and pack.settings.is_exportable(setting.set_name):
                         pack.state = SettingsState.INDEXING_PROBLEM
                         missing_indexing = True
                         break
@@ -376,9 +341,7 @@ class Exporter(ProjectItem):
         if merged.missing_parameter_indexing:
             self.add_notification("Parameter indexing settings need to be updated.")
         if merged.erroneous_database:
-            self.add_notification(
-                "Failed to initialize export settings for a database."
-            )
+            self.add_notification("Failed to initialize export settings for a database.")
 
     @Slot(str)
     def _show_settings(self, database_url):
@@ -401,18 +364,10 @@ class Exporter(ProjectItem):
                 database_url,
                 self._toolbox,
             )
-            settings_pack.settings_window.settings_accepted.connect(
-                self._update_settings_from_settings_window
-            )
-            settings_pack.settings_window.settings_rejected.connect(
-                self._dispose_settings_window
-            )
-            settings_pack.settings_window.reset_requested.connect(
-                self._reset_settings_window
-            )
-            settings_pack.state_changed.connect(
-                settings_pack.settings_window.handle_settings_state_changed
-            )
+            settings_pack.settings_window.settings_accepted.connect(self._update_settings_from_settings_window)
+            settings_pack.settings_window.settings_rejected.connect(self._dispose_settings_window)
+            settings_pack.settings_window.reset_requested.connect(self._reset_settings_window)
+            settings_pack.state_changed.connect(settings_pack.settings_window.handle_settings_state_changed)
         settings_pack.settings_window.show()
 
     @Slot(str)
@@ -430,9 +385,7 @@ class Exporter(ProjectItem):
     @Slot(str, str)
     def _update_out_file_name(self, file_name, database_path):
         """Pushes a new UpdateExporterOutFileNameCommand to the toolbox undo stack."""
-        self._toolbox.undo_stack.push(
-            UpdateExporterOutFileName(self, file_name, database_path)
-        )
+        self._toolbox.undo_stack.push(UpdateExporterOutFileName(self, file_name, database_path))
 
     @Slot(str, str)
     def _update_scenario(self, scenario, database_url):
@@ -492,9 +445,7 @@ class Exporter(ProjectItem):
         if not self._active:
             return
         # This does not trigger the stateChanged signal.
-        self._properties_ui.cancel_on_error_check_box.setCheckState(
-            Qt.Checked if cancel else Qt.Unchecked
-        )
+        self._properties_ui.cancel_on_error_check_box.setCheckState(Qt.Checked if cancel else Qt.Unchecked)
 
     def undo_redo_out_file_name(self, file_name, database_path):
         """Updates the output file name for given database"""
@@ -502,21 +453,13 @@ class Exporter(ProjectItem):
             export_list_item = self._export_list_items[database_path]
             export_list_item.out_file_name_edit.setText(file_name)
         self._settings_packs[database_path].output_file_name = file_name
-        self._settings_packs[
-            database_path
-        ].notifications.missing_output_file_name = not file_name
+        self._settings_packs[database_path].notifications.missing_output_file_name = not file_name
         self._check_duplicate_file_names()
         self._report_notifications()
         self.item_changed.emit()
 
     def undo_or_redo_settings(
-        self,
-        settings,
-        indexing_settings,
-        merging_settings,
-        none_fallback,
-        none_export,
-        database_path,
+        self, settings, indexing_settings, merging_settings, none_fallback, none_export, database_path
     ):
         """Updates the export settings for given database."""
         settings_pack = self._settings_packs[database_path]
@@ -559,23 +502,11 @@ class Exporter(ProjectItem):
             try:
                 settings_pack = SettingsPack.from_dict(pack, url, logger)
             except gdx.GdxExportException as error:
-                logger.msg_error.emit(
-                    f"Failed to fully restore Exporter settings: {error}"
-                )
+                logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
                 settings_pack = SettingsPack("")
             deserialized_packs[url] = settings_pack
         cancel_on_error = item_dict.get("cancel_on_error", True)
-        return Exporter(
-            name,
-            description,
-            x,
-            y,
-            toolbox,
-            project,
-            logger,
-            cancel_on_error,
-            deserialized_packs,
-        )
+        return Exporter(name, description, x, y, toolbox, project, logger, cancel_on_error, deserialized_packs)
 
     def _discard_settings_window(self, database_path):
         """Discards the settings window for given database."""
@@ -642,16 +573,12 @@ class Exporter(ProjectItem):
     def tear_down(self):
         """See base class."""
         try:
-            self._project.db_mngr.session_committed.disconnect(
-                self._update_settings_after_db_commit
-            )
+            self._project.db_mngr.session_committed.disconnect(self._update_settings_after_db_commit)
         except RuntimeError:
             # Sometimes this fails when quitting Toolbox/deleting Exporter item. Don't know why.
             pass
         try:
-            self._project.db_mngr.database_created.disconnect(
-                self._update_settings_after_db_creation
-            )
+            self._project.db_mngr.database_created.disconnect(self._update_settings_after_db_creation)
         except RuntimeError:
             # Sometimes fails. Needs investigation.
             pass

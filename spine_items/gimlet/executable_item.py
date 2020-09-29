@@ -61,9 +61,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         return ItemInfo.item_type()
 
     @classmethod
-    def from_dict(
-        cls, item_dict, name, project_dir, app_settings, specifications, logger
-    ):
+    def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         if not item_dict["use_shell"]:
             shell = ""
@@ -72,30 +70,20 @@ class ExecutableItem(ExecutableItemBase, QObject):
             try:
                 shell = SHELLS[shell_index]
             except IndexError:
-                logger.msg.emit(
-                    f"Error: Unsupported shell_index in project item {name}"
-                )
+                logger.msg.emit(f"Error: Unsupported shell_index in project item {name}")
                 return None
         cmd_list = helpers.split_cmdline_args(item_dict["cmd"])
-        data_dir = os.path.join(
-            project_dir, ".spinetoolbox", "items", helpers.shorten(name)
-        )
+        data_dir = os.path.join(project_dir, ".spinetoolbox", "items", helpers.shorten(name))
         if item_dict["work_dir_mode"]:  # Use 'default' work dir. i.e. data_dir/work
             work_dir = os.path.join(data_dir, GIMLET_WORK_DIR_NAME)
         else:  # Make unique work dir
             app_work_dir = app_settings.value("appSettings/workDir")
             if not app_work_dir:
                 raise ValueError("Work directory not set, unable to create item")
-            unique_dir_name = (
-                helpers.shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
-            )
+            unique_dir_name = helpers.shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
             work_dir = os.path.join(app_work_dir, unique_dir_name)
-        selected_files = helpers.deserialize_checked_states(
-            item_dict.get("selections", list()), project_dir
-        )
-        selections = [
-            path for path, boolean in selected_files.items() if boolean
-        ]  # List of selected paths
+        selected_files = helpers.deserialize_checked_states(item_dict.get("selections", list()), project_dir)
+        selections = [path for path, boolean in selected_files.items() if boolean]  # List of selected paths
         return cls(name, logger, shell, cmd_list, work_dir, selections)
 
     def stop_execution(self):
@@ -122,24 +110,16 @@ class ExecutableItem(ExecutableItemBase, QObject):
             self._logger.msg_warning.emit("No command to execute.")
             return False
         if sys.platform == "win32" and self.shell_name == "bash":
-            self._logger.msg_warning.emit(
-                "Sorry, Bash shell is not supported on Windows."
-            )
+            self._logger.msg_warning.emit("Sorry, Bash shell is not supported on Windows.")
             return False
-        elif sys.platform != "win32" and (
-            self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"
-        ):
-            self._logger.msg_warning.emit(
-                f"Sorry, selected shell is not supported on your platform [{sys.platform}]"
-            )
+        elif sys.platform != "win32" and (self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"):
+            self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return False
         # Expand tags in command list
         expanded_cmd_list = self._expand_gimlet_tags(self.cmd_list, resources)
         if not self.shell_name:
             prgm = expanded_cmd_list.pop(0)
-            self._gimlet_process = QProcessExecutionManager(
-                self._logger, prgm, expanded_cmd_list
-            )
+            self._gimlet_process = QProcessExecutionManager(self._logger, prgm, expanded_cmd_list)
         else:
             if self.shell_name == "cmd.exe":
                 shell_prgm = "cmd.exe"
@@ -151,9 +131,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
                 return False
-            self._gimlet_process = QProcessExecutionManager(
-                self._logger, shell_prgm, expanded_cmd_list
-            )
+            self._gimlet_process = QProcessExecutionManager(self._logger, shell_prgm, expanded_cmd_list)
         # Copy selected files to work_dir
         if not self._copy_files(self._selected_files, self._work_dir):
             return False
@@ -166,9 +144,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             + "'>work directory</a>"
         )
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
-        self._gimlet_process.execution_finished.connect(
-            self._handle_gimlet_process_finished
-        )
+        self._gimlet_process.execution_finished.connect(self._handle_gimlet_process_finished)
         self._gimlet_process.start_execution(workdir=self._work_dir)
         loop = QEventLoop()
         self.gimlet_finished.connect(loop.quit)
@@ -239,9 +215,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
                 shutil.copyfile(f, dst_file)
                 n_copied_files += 1
             except OSError:
-                self._logger.msg_error.emit(
-                    f"\tCopying file <b>{f}</b> to <b>{dst_file}</b> failed"
-                )
+                self._logger.msg_error.emit(f"\tCopying file <b>{f}</b> to <b>{dst_file}</b> failed")
                 return False
         if n_copied_files == 0:
             self._logger.msg_warning.emit("\tNote: No files were copied")
@@ -272,9 +246,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         tags_expanded, args = helpers.expand_tags(cmd, files, input_urls, output_urls)
         while tags_expanded:
             # Keep expanding until there is no tag left to expand.
-            tags_expanded, args = helpers.expand_tags(
-                args, files, input_urls, output_urls
-            )
+            tags_expanded, args = helpers.expand_tags(args, files, input_urls, output_urls)
         return args
 
 

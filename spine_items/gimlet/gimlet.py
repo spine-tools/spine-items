@@ -26,19 +26,10 @@ from ..helpers import shorten
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .utils import SHELLS
-from .commands import (
-    UpdateShellCheckBoxCommand,
-    UpdateShellComboboxCommand,
-    UpdatecmdCommand,
-    UpdateWorkDirModeCommand,
-)
+from .commands import UpdateShellCheckBoxCommand, UpdateShellComboboxCommand, UpdatecmdCommand, UpdateWorkDirModeCommand
 from ..commands import ChangeItemSelectionCommand
 from ..models import FileListModel
-from ..helpers import (
-    deserialize_checked_states,
-    serialize_checked_states,
-    split_cmdline_args,
-)
+from ..helpers import deserialize_checked_states, serialize_checked_states, split_cmdline_args
 
 
 class Gimlet(ProjectItem):
@@ -77,18 +68,12 @@ class Gimlet(ProjectItem):
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
         self._file_model = FileListModel()
-        self._toolbox_resources = (
-            list()
-        )  # ProjectItemResources for handling changes in the DAG on Design View
+        self._toolbox_resources = list()  # ProjectItemResources for handling changes in the DAG on Design View
         self.use_shell = use_shell
         self.shell_index = shell_index
         self.cmd = cmd
-        self._file_model.set_initial_state(
-            selections if selections is not None else dict()
-        )
-        self._file_model.selected_state_changed.connect(
-            self._push_file_selection_change_to_undo_stack
-        )
+        self._file_model.set_initial_state(selections if selections is not None else dict())
+        self._file_model.selected_state_changed.connect(self._push_file_selection_change_to_undo_stack)
         self._work_dir_mode = None
         self.update_work_dir_mode(work_dir_mode)
         self.default_gimlet_work_dir = os.path.join(self.data_dir, GIMLET_WORK_DIR_NAME)
@@ -109,9 +94,7 @@ class Gimlet(ProjectItem):
         cmd_list = self._split_gimlet_cmd(self.cmd)
         if self._active:
             if self._properties_ui.checkBox_shell.isChecked():
-                shell = self._properties_ui.comboBox_shell.itemText(
-                    self._properties_ui.comboBox_shell.currentIndex()
-                )
+                shell = self._properties_ui.comboBox_shell.itemText(self._properties_ui.comboBox_shell.currentIndex())
         else:
             if self.use_shell:
                 shell = SHELLS[self.shell_index]
@@ -128,9 +111,7 @@ class Gimlet(ProjectItem):
         for file_item in self._file_model.files:
             if file_item.selected:
                 selected_files.append(file_item.label)
-        return ExecutableItem(
-            self.name, self._logger, shell, cmd_list, work_dir, selected_files
-        )
+        return ExecutableItem(self.name, self._logger, shell, cmd_list, work_dir, selected_files)
 
     def _split_gimlet_cmd(self, cmd):
         """Splits given string command to a list.
@@ -148,13 +129,9 @@ class Gimlet(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[
-            self._properties_ui.toolButton_gimlet_open_dir.clicked
-        ] = lambda checked=False: self.open_directory()
+        s[self._properties_ui.toolButton_gimlet_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.checkBox_shell.stateChanged] = self.shell_checkbox_clicked
-        s[
-            self._properties_ui.comboBox_shell.activated
-        ] = self.shell_combobox_index_changed
+        s[self._properties_ui.comboBox_shell.activated] = self.shell_combobox_index_changed
         s[self._properties_ui.lineEdit_cmd.editingFinished] = self.cmd_edited
         s[self._properties_ui.radioButton_default.toggled] = self.push_work_dir_mode_cmd
         return s
@@ -202,9 +179,7 @@ class Gimlet(ProjectItem):
         if not self._active:
             return
         # This does not trigger the stateChanged signal.
-        self._properties_ui.checkBox_shell.setCheckState(
-            Qt.Checked if use_shell else Qt.Unchecked
-        )
+        self._properties_ui.checkBox_shell.setCheckState(Qt.Checked if use_shell else Qt.Unchecked)
         self._properties_ui.comboBox_shell.setEnabled(True if use_shell else False)
 
     @Slot(int)
@@ -302,9 +277,7 @@ class Gimlet(ProjectItem):
         d["use_shell"] = self.use_shell
         d["shell_index"] = self.shell_index
         d["cmd"] = self.cmd
-        d["selections"] = serialize_checked_states(
-            self._file_model.files, self._project.project_dir
-        )
+        d["selections"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
         d["work_dir_mode"] = self._work_dir_mode
         return d
 
@@ -315,40 +288,20 @@ class Gimlet(ProjectItem):
         use_shell = item_dict.get("use_shell", True)
         shel_index = item_dict.get("shell_index", 0)
         cmd = item_dict.get("cmd", "")
-        selections = deserialize_checked_states(
-            item_dict.get("selections", list()), project.project_dir
-        )
+        selections = deserialize_checked_states(item_dict.get("selections", list()), project.project_dir)
         work_dir_mode = item_dict.get("work_dir_mode", True)
         return Gimlet(
-            name,
-            description,
-            x,
-            y,
-            toolbox,
-            project,
-            logger,
-            use_shell,
-            shel_index,
-            cmd,
-            selections,
-            work_dir_mode,
+            name, description, x, y, toolbox, project, logger, use_shell, shel_index, cmd, selections, work_dir_mode
         )
 
     def notify_destination(self, source_item):
         """See base class."""
         if source_item.item_type() == "Data Connection":
             self._logger.msg.emit(
-                f"Link established. Files from <b>{source_item.name}</b> "
-                f"are now available in <b>{self.name}</b>"
+                f"Link established. Files from <b>{source_item.name}</b> " f"are now available in <b>{self.name}</b>"
             )
             return
-        elif source_item.item_type() in [
-            "Data Store",
-            "Data Connection",
-            "Tool",
-            "Exporter",
-            "Gimlet",
-        ]:
+        elif source_item.item_type() in ["Data Store", "Data Connection", "Tool", "Exporter", "Gimlet"]:
             self._logger.msg.emit("Link established")
             return
         super().notify_destination(source_item)
@@ -364,11 +317,7 @@ class Gimlet(ProjectItem):
             if count > 1:
                 duplicates.append(label)
         if duplicates:
-            self.add_notification(
-                "Duplicate input files from predecessor items:<br>{}".format(
-                    "<br>".join(duplicates)
-                )
-            )
+            self.add_notification("Duplicate input files from predecessor items:<br>{}".format("<br>".join(duplicates)))
 
     def update_name_label(self):
         """Updates the name label in Gimlet properties tab.

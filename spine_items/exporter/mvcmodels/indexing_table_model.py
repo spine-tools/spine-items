@@ -138,11 +138,7 @@ class IndexingTableModel(QAbstractTableModel):
             int: mapped values' balance
         """
         count = sum(1 for selected in self._selected if selected)
-        return (
-            count - len(self._parameter_values[0].values)
-            if self._parameter_values
-            else 0
-        )
+        return count - len(self._parameter_values[0].values) if self._parameter_values else 0
 
     def rowCount(self, parent=QModelIndex()):
         """Return the number of rows."""
@@ -206,9 +202,7 @@ class IndexingTableModel(QAbstractTableModel):
 
     def _spread_values_over_selected_rows(self, first_row):
         """Repopulates the table according to selected indexes."""
-        value_start = sum(
-            1 for is_selected in self._selected[:first_row] if is_selected
-        )
+        value_start = sum(1 for is_selected in self._selected[:first_row] if is_selected)
         for i, parameter_value in enumerate(self._parameter_values):
             value_index = value_start
             value_length = len(parameter_value)

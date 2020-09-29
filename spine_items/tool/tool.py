@@ -29,12 +29,7 @@ from .commands import UpdateToolExecuteInWorkCommand, UpdateToolCmdLineArgsComma
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu
 from .executable_item import ExecutableItem
-from .utils import (
-    flatten_file_path_duplicates,
-    find_file,
-    find_last_output_files,
-    is_pattern,
-)
+from .utils import flatten_file_path_duplicates, find_file, find_last_output_files, is_pattern
 
 
 class Tool(ProjectItem):
@@ -82,9 +77,7 @@ class Tool(ProjectItem):
         self.undo_execute_in_work = None
         self.source_files = list()
         self.cmd_line_args = cmd_line_args if cmd_line_args is not None else list()
-        self._specification = self._toolbox.specification_model.find_specification(
-            specification_name
-        )
+        self._specification = self._toolbox.specification_model.find_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
                 f"Tool <b>{self.name}</b> should have a Tool specification <b>{specification_name}</b> but it was not found"
@@ -109,20 +102,12 @@ class Tool(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[
-            self._properties_ui.toolButton_tool_open_dir.clicked
-        ] = lambda checked=False: self.open_directory()
+        s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.pushButton_tool_results.clicked] = self.open_results
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
-        s[
-            self._properties_ui.radioButton_execute_in_work.toggled
-        ] = self.update_execution_mode
-        s[
-            self._properties_ui.lineEdit_tool_args.editingFinished
-        ] = self.tool_args_editing_finished
-        s[
-            self._properties_ui.lineEdit_tool_args.textEdited
-        ] = self.tool_args_text_edited
+        s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
+        s[self._properties_ui.lineEdit_tool_args.editingFinished] = self.tool_args_editing_finished
+        s[self._properties_ui.lineEdit_tool_args.textEdited] = self.tool_args_text_edited
         return s
 
     def restore_selections(self):
@@ -242,19 +227,11 @@ class Tool(ProjectItem):
             self._properties_ui.toolButton_tool_specification.setEnabled(False)
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
-            self._properties_ui.lineEdit_tool_spec_args.setText(
-                " ".join(self.specification().cmdline_args)
-            )
-            spec_model_index = self._toolbox.specification_model.specification_index(
-                self.specification().name
-            )
-            self.specification_options_popup_menu = ToolSpecificationMenu(
-                self._toolbox, spec_model_index
-            )
+            self._properties_ui.lineEdit_tool_spec_args.setText(" ".join(self.specification().cmdline_args))
+            spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
+            self.specification_options_popup_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
             self._properties_ui.toolButton_tool_specification.setEnabled(True)
-            self._properties_ui.toolButton_tool_specification.setMenu(
-                self.specification_options_popup_menu
-            )
+            self._properties_ui.toolButton_tool_specification.setMenu(self.specification_options_popup_menu)
         self._properties_ui.treeView_specification.expandAll()
         self._properties_ui.lineEdit_tool_args.setText(" ".join(self.cmd_line_args))
 
@@ -278,9 +255,7 @@ class Tool(ProjectItem):
     def open_results(self, checked=False):
         """Open output directory in file browser."""
         if not os.path.exists(self.output_dir):
-            self._logger.msg_warning.emit(
-                f"Tool <b>{self.name}</b> has no results. Click Execute to generate them."
-            )
+            self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no results. Click Execute to generate them.")
             return
         url = "file:///" + self.output_dir
         # noinspection PyTypeChecker, PyCallByClass, PyArgumentList
@@ -293,9 +268,7 @@ class Tool(ProjectItem):
         """Open Tool specification editor for the Tool specification attached to this Tool."""
         if not self.specification():
             return
-        index = self._toolbox.specification_model.specification_index(
-            self.specification().name
-        )
+        index = self._toolbox.specification_model.specification_index(self.specification().name)
         self._toolbox.edit_specification(index)
 
     @Slot()
@@ -303,9 +276,7 @@ class Tool(ProjectItem):
         """Open Tool specification file."""
         if not self.specification():
             return
-        index = self._toolbox.specification_model.specification_index(
-            self.specification().name
-        )
+        index = self._toolbox.specification_model.specification_index(self.specification().name)
         self._toolbox.open_specification_file(index)
 
     @Slot()
@@ -335,9 +306,7 @@ class Tool(ProjectItem):
             for item in items:
                 qitem = QStandardItem(item)
                 qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(
-                    QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole
-                )
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.source_file_model.appendRow(qitem)
 
     def populate_input_file_model(self, items):
@@ -348,9 +317,7 @@ class Tool(ProjectItem):
             for item in items:
                 qitem = QStandardItem(item)
                 qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(
-                    QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole
-                )
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.input_file_model.appendRow(qitem)
 
     def populate_opt_input_file_model(self, items):
@@ -361,9 +328,7 @@ class Tool(ProjectItem):
             for item in items:
                 qitem = QStandardItem(item)
                 qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(
-                    QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole
-                )
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.opt_input_file_model.appendRow(qitem)
 
     def populate_output_file_model(self, items):
@@ -374,9 +339,7 @@ class Tool(ProjectItem):
             for item in items:
                 qitem = QStandardItem(item)
                 qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(
-                    QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole
-                )
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.output_file_model.appendRow(qitem)
 
     def populate_specification_model(self, populate):
@@ -386,9 +349,7 @@ class Tool(ProjectItem):
             populate (bool): False to clear model, True to populate.
         """
         self.specification_model.clear()
-        self.specification_model.setHorizontalHeaderItem(
-            0, QStandardItem("Tool specification")
-        )  # Add header
+        self.specification_model.setHorizontalHeaderItem(0, QStandardItem("Tool specification"))  # Add header
         # Add category items
         source_file_category_item = QStandardItem("Source files")
         input_category_item = QStandardItem("Input files")
@@ -404,36 +365,28 @@ class Tool(ProjectItem):
                     text = self.source_file_model.item(row).data(Qt.DisplayRole)
                     qitem = QStandardItem(text)
                     qitem.setFlags(~Qt.ItemIsEditable)
-                    qitem.setData(
-                        QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole
-                    )
+                    qitem.setData(QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole)
                     source_file_category_item.appendRow(qitem)
             if self.input_file_model.rowCount() > 0:
                 for row in range(self.input_file_model.rowCount()):
                     text = self.input_file_model.item(row).data(Qt.DisplayRole)
                     qitem = QStandardItem(text)
                     qitem.setFlags(~Qt.ItemIsEditable)
-                    qitem.setData(
-                        QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole
-                    )
+                    qitem.setData(QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole)
                     input_category_item.appendRow(qitem)
             if self.opt_input_file_model.rowCount() > 0:
                 for row in range(self.opt_input_file_model.rowCount()):
                     text = self.opt_input_file_model.item(row).data(Qt.DisplayRole)
                     qitem = QStandardItem(text)
                     qitem.setFlags(~Qt.ItemIsEditable)
-                    qitem.setData(
-                        QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole
-                    )
+                    qitem.setData(QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole)
                     opt_input_category_item.appendRow(qitem)
             if self.output_file_model.rowCount() > 0:
                 for row in range(self.output_file_model.rowCount()):
                     text = self.output_file_model.item(row).data(Qt.DisplayRole)
                     qitem = QStandardItem(text)
                     qitem.setFlags(~Qt.ItemIsEditable)
-                    qitem.setData(
-                        QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole
-                    )
+                    qitem.setData(QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole)
                     output_category_item.appendRow(qitem)
 
     def update_name_label(self):
@@ -458,43 +411,31 @@ class Tool(ProjectItem):
             self._logger.msg_error.emit("Tool specification missing.")
             return []
         resources = list()
-        last_output_files = find_last_output_files(
-            self._specification.outputfiles, self.output_dir
-        )
+        last_output_files = find_last_output_files(self._specification.outputfiles, self.output_dir)
         for i in range(self.output_file_model.rowCount()):
             out_file_label = self.output_file_model.item(i, 0).data(Qt.DisplayRole)
             latest_files = last_output_files.get(out_file_label, list())
             if is_pattern(out_file_label):
                 if not latest_files:
                     metadata = {"label": out_file_label}
-                    resource = ProjectItemResource(
-                        self, "file_pattern", metadata=metadata
-                    )
+                    resource = ProjectItemResource(self, "file_pattern", metadata=metadata)
                     resources.append(resource)
                 else:
                     for out_file in latest_files:
                         file_url = pathlib.Path(out_file.path).as_uri()
                         metadata = {"label": out_file.label}
-                        resource = ProjectItemResource(
-                            self, "transient_file", url=file_url, metadata=metadata
-                        )
+                        resource = ProjectItemResource(self, "transient_file", url=file_url, metadata=metadata)
                         resources.append(resource)
             else:
                 if not latest_files:
                     metadata = {"label": out_file_label}
-                    resource = ProjectItemResource(
-                        self, "transient_file", metadata=metadata
-                    )
+                    resource = ProjectItemResource(self, "transient_file", metadata=metadata)
                     resources.append(resource)
                 else:
-                    latest_file = latest_files[
-                        0
-                    ]  # Not a pattern; there should be only one element in the list.
+                    latest_file = latest_files[0]  # Not a pattern; there should be only one element in the list.
                     file_url = pathlib.Path(latest_file.path).as_uri()
                     metadata = {"label": latest_file.label}
-                    resource = ProjectItemResource(
-                        self, "transient_file", url=file_url, metadata=metadata
-                    )
+                    resource = ProjectItemResource(self, "transient_file", url=file_url, metadata=metadata)
                     resources.append(resource)
         return resources
 
@@ -502,12 +443,7 @@ class Tool(ProjectItem):
         """Creates project item's execution counterpart."""
         work_dir = self._toolbox.work_dir if self.execute_in_work else None
         return ExecutableItem(
-            self.name,
-            work_dir,
-            self.output_dir,
-            self._specification,
-            self.cmd_line_args,
-            self._logger,
+            self.name, work_dir, self.output_dir, self._specification, self.cmd_line_args, self._logger
         )
 
     def _find_input_files(self, resources):
@@ -545,9 +481,7 @@ class Tool(ProjectItem):
         if not_found:
             self.add_notification(
                 "File(s) {0} needed to execute this Tool are not provided by any input item. "
-                "Connect items that provide the required files to this Tool.".format(
-                    ", ".join(not_found)
-                )
+                "Connect items that provide the required files to this Tool.".format(", ".join(not_found))
             )
 
     def item_dict(self):
@@ -569,16 +503,7 @@ class Tool(ProjectItem):
         execute_in_work = item_dict.get("execute_in_work", True)
         cmd_line_args = item_dict.get("cmd_line_args")
         return Tool(
-            name,
-            description,
-            x,
-            y,
-            toolbox,
-            project,
-            logger,
-            specification_name,
-            execute_in_work,
-            cmd_line_args,
+            name, description, x, y, toolbox, project, logger, specification_name, execute_in_work, cmd_line_args
         )
 
     def custom_context_menu(self, parent, pos):
@@ -672,11 +597,7 @@ class Tool(ProjectItem):
         if not duplicates:
             return
         for duplicate in duplicates:
-            self.add_notification(
-                "Duplicate input files from upstream items:<br>{}".format(
-                    "<br>".join(duplicate)
-                )
-            )
+            self.add_notification("Duplicate input files from upstream items:<br>{}".format("<br>".join(duplicate)))
 
     @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):

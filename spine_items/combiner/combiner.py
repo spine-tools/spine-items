@@ -28,9 +28,7 @@ from .executable_item import ExecutableItem
 
 
 class Combiner(ProjectItem):
-    def __init__(
-        self, name, description, x, y, toolbox, project, logger, cancel_on_error=False
-    ):
+    def __init__(self, name, description, x, y, toolbox, project, logger, cancel_on_error=False):
         """
         Combiner class.
 
@@ -50,9 +48,7 @@ class Combiner(ProjectItem):
         try:
             create_dir(self.logs_dir)
         except OSError:
-            self._logger.msg_error.emit(
-                f"[OSError] Creating directory {self.logs_dir} failed. Check permissions."
-            )
+            self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         self.cancel_on_error = cancel_on_error
         self._references = dict()
         self.reference_model = QStandardItemModel()  # References to databases
@@ -77,15 +73,9 @@ class Combiner(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[
-            self._properties_ui.toolButton_combiner_open_dir.clicked
-        ] = lambda checked=False: self.open_directory()
-        s[
-            self._properties_ui.pushButton_combiner_open_editor.clicked
-        ] = self.open_db_editor
-        s[
-            self._properties_ui.cancel_on_error_checkBox.stateChanged
-        ] = self._handle_cancel_on_error_changed
+        s[self._properties_ui.toolButton_combiner_open_dir.clicked] = lambda checked=False: self.open_directory()
+        s[self._properties_ui.pushButton_combiner_open_editor.clicked] = self.open_db_editor
+        s[self._properties_ui.cancel_on_error_checkBox.stateChanged] = self._handle_cancel_on_error_changed
         return s
 
     @Slot(int)
@@ -106,9 +96,7 @@ class Combiner(ProjectItem):
 
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
-        self._properties_ui.cancel_on_error_checkBox.setCheckState(
-            Qt.Checked if self.cancel_on_error else Qt.Unchecked
-        )
+        self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
         self._properties_ui.label_name.setText(self.name)
         self._properties_ui.treeView_files.setModel(self.reference_model)
 
@@ -128,9 +116,7 @@ class Combiner(ProjectItem):
     def populate_reference_list(self):
         """Populates reference list."""
         self.reference_model.clear()
-        self.reference_model.setHorizontalHeaderItem(
-            0, QStandardItem("References")
-        )  # Add header
+        self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
         for db in sorted(self._references, reverse=True):
             qitem = QStandardItem(db)
             qitem.setFlags(~Qt.ItemIsEditable)
@@ -172,8 +158,7 @@ class Combiner(ProjectItem):
             if successor.item_type() == "Data Store":
                 return
         self.add_notification(
-            "Output database missing. Please connect a Data Store "
-            "to this Combiner for the merged database."
+            "Output database missing. Please connect a Data Store " "to this Combiner for the merged database."
         )
         return
 
@@ -217,9 +202,7 @@ class Combiner(ProjectItem):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         cancel_on_error = item_dict.get("cancel_on_error", False)
-        return Combiner(
-            name, description, x, y, toolbox, project, logger, cancel_on_error
-        )
+        return Combiner(name, description, x, y, toolbox, project, logger, cancel_on_error)
 
     def notify_destination(self, source_item):
         """See base class."""

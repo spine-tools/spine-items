@@ -116,9 +116,7 @@ class DataTreeView(QTreeView):
             return
         if not self.drag_indexes:
             return
-        if (
-            event.pos() - self.drag_start_pos
-        ).manhattanLength() < QApplication.startDragDistance():
+        if (event.pos() - self.drag_start_pos).manhattanLength() < QApplication.startDragDistance():
             return
         drag = QDrag(self)
         mimeData = QMimeData()

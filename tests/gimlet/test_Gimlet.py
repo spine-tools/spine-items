@@ -23,10 +23,7 @@ from PySide2.QtWidgets import QApplication
 import spinetoolbox.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.gimlet.item_info import ItemInfo
 from spine_items.gimlet.gimlet import Gimlet
-from ..mock_helpers import (
-    clean_up_toolboxui_with_project,
-    create_toolboxui_with_project,
-)
+from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
 
 
 class TestGimlet(unittest.TestCase):
@@ -105,15 +102,9 @@ class TestGimlet(unittest.TestCase):
         ret_val = self.gimlet.rename(expected_name)  # Do rename
         self.assertTrue(ret_val)
         self.assertEqual(expected_name, self.gimlet.name)  # Item name
-        self.assertEqual(
-            expected_name, self.gimlet._properties_ui.label_gimlet_name.text()
-        )  # Name label in props
-        self.assertEqual(
-            expected_name, self.gimlet.get_icon().name_item.text()
-        )  # Name item on Design View
-        expected_data_dir = os.path.join(
-            self.toolbox.project().items_dir, expected_short_name
-        )
+        self.assertEqual(expected_name, self.gimlet._properties_ui.label_gimlet_name.text())  # Name label in props
+        self.assertEqual(expected_name, self.gimlet.get_icon().name_item.text())  # Name item on Design View
+        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.gimlet.data_dir)  # Check data dir
 
     def test_split_gimlet_cmd(self):
@@ -122,9 +113,7 @@ class TestGimlet(unittest.TestCase):
         self.assertEqual(["--input=data.dat", "-h", "5"], splitted)
         splitted = self.gimlet._split_gimlet_cmd('--output="a long file name.txt"')
         self.assertEqual(["--output=a long file name.txt"], splitted)
-        splitted = self.gimlet._split_gimlet_cmd(
-            "--file='file name with spaces.dat' -i 3"
-        )
+        splitted = self.gimlet._split_gimlet_cmd("--file='file name with spaces.dat' -i 3")
         self.assertEqual(["--file=file name with spaces.dat", "-i", "3"], splitted)
         splitted = self.gimlet._split_gimlet_cmd("'quotation \"within\" a quotation'")
         self.assertEqual(['quotation "within" a quotation'], splitted)
@@ -133,12 +122,8 @@ class TestGimlet(unittest.TestCase):
         self.assertEqual(["@@optional_inputs@@"], splitted)
         splitted = self.gimlet._split_gimlet_cmd("@@url:database name with spaces@@")
         self.assertEqual(["@@url:database name with spaces@@"], splitted)
-        splitted = self.gimlet._split_gimlet_cmd(
-            "@@url:spaced name@@ -a @@url:another spaced tag@@"
-        )
-        self.assertEqual(
-            ["@@url:spaced name@@", "-a", "@@url:another spaced tag@@"], splitted
-        )
+        splitted = self.gimlet._split_gimlet_cmd("@@url:spaced name@@ -a @@url:another spaced tag@@")
+        self.assertEqual(["@@url:spaced name@@", "-a", "@@url:another spaced tag@@"], splitted)
 
 
 if __name__ == "__main__":

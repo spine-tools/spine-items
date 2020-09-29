@@ -30,11 +30,7 @@ from ..project_item import ProjectItem
 from .commands import UpdateSettingsCommand
 from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand
 from ..models import FileListModel
-from ..helpers import (
-    deserialize_checked_states,
-    serialize_checked_states,
-    ExecutionDirection,
-)
+from ..helpers import deserialize_checked_states, serialize_checked_states, ExecutionDirection
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import deserialize_mappings
@@ -82,24 +78,16 @@ class Importer(ProjectItem):
         try:
             create_dir(self.logs_dir)
         except OSError:
-            self._logger.msg_error.emit(
-                f"[OSError] Creating directory {self.logs_dir} failed. Check permissions."
-            )
+            self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         # Variables for saving selections when item is (de)activated
         self.settings = mapping_settings
         # self.settings is now a dictionary, where elements have the absolute path as the key and the mapping as value
         self.cancel_on_error = cancel_on_error
         self._file_model = FileListModel()
-        self._file_model.set_initial_state(
-            mapping_selection if mapping_selection is not None else dict()
-        )
-        self._file_model.selected_state_changed.connect(
-            self._push_file_selection_change_to_undo_stack
-        )
+        self._file_model.set_initial_state(mapping_selection if mapping_selection is not None else dict())
+        self._file_model.selected_state_changed.connect(self._push_file_selection_change_to_undo_stack)
         # connector class
-        self._preview_widget = (
-            {}
-        )  # Key is the filepath, value is the ImportEditorWindow instance
+        self._preview_widget = {}  # Key is the filepath, value is the ImportEditorWindow instance
 
     @staticmethod
     def item_type():
@@ -120,16 +108,9 @@ class Importer(ProjectItem):
             if not settings:
                 continue
             selected_settings[label] = settings
-        gams_path = self._project.settings.value(
-            "appSettings/gamsPath", defaultValue=None
-        )
+        gams_path = self._project.settings.value("appSettings/gamsPath", defaultValue=None)
         executable = ExecutableItem(
-            self.name,
-            selected_settings,
-            self.logs_dir,
-            gams_path,
-            self.cancel_on_error,
-            self._logger,
+            self.name, selected_settings, self.logs_dir, gams_path, self.cancel_on_error, self._logger
         )
         return executable
 
@@ -154,18 +135,10 @@ class Importer(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[
-            self._properties_ui.toolButton_open_dir.clicked
-        ] = lambda checked=False: self.open_directory()
-        s[
-            self._properties_ui.pushButton_import_editor.clicked
-        ] = self._handle_import_editor_clicked
-        s[
-            self._properties_ui.treeView_files.doubleClicked
-        ] = self._handle_files_double_clicked
-        s[
-            self._properties_ui.cancel_on_error_checkBox.stateChanged
-        ] = self._handle_cancel_on_error_changed
+        s[self._properties_ui.toolButton_open_dir.clicked] = lambda checked=False: self.open_directory()
+        s[self._properties_ui.pushButton_import_editor.clicked] = self._handle_import_editor_clicked
+        s[self._properties_ui.treeView_files.doubleClicked] = self._handle_files_double_clicked
+        s[self._properties_ui.cancel_on_error_checkBox.stateChanged] = self._handle_cancel_on_error_changed
         return s
 
     @Slot(int)
@@ -189,9 +162,7 @@ class Importer(ProjectItem):
 
     def restore_selections(self):
         """Restores selections into shared widgets when this project item is selected."""
-        self._properties_ui.cancel_on_error_checkBox.setCheckState(
-            Qt.Checked if self.cancel_on_error else Qt.Unchecked
-        )
+        self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
         self._properties_ui.label_name.setText(self.name)
         self._properties_ui.treeView_files.setModel(self._file_model)
 
@@ -224,9 +195,7 @@ class Importer(ProjectItem):
         """Opens Import editor for the given index."""
         label = index.data()
         if label is None:
-            self._logger.msg_error.emit(
-                "Please select a source file from the list first."
-            )
+            self._logger.msg_error.emit("Please select a source file from the list first.")
             return
         file_item = self._file_model.find_file(label)
         file_path = file_item.path
@@ -243,9 +212,7 @@ class Importer(ProjectItem):
         if preview_widget:
             if preview_widget.windowState() & Qt.WindowMinimized:
                 # Remove minimized status and restore window with the previous state (maximized/normal state)
-                preview_widget.setWindowState(
-                    preview_widget.windowState() & ~Qt.WindowMinimized | Qt.WindowActive
-                )
+                preview_widget.setWindowState(preview_widget.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
                 preview_widget.activateWindow()
             else:
                 preview_widget.raise_()
@@ -264,20 +231,12 @@ class Importer(ProjectItem):
                 return
         self._logger.msg.emit(f"Opening Import editor for file: {file_path}")
         connector_settings = {"gams_directory": self._gams_system_directory()}
-        preview_widget = self._preview_widget[
-            label
-        ] = self._toolbox.create_import_editor_window(
+        preview_widget = self._preview_widget[label] = self._toolbox.create_import_editor_window(
             self, file_path, connector, connector_settings, settings
         )
-        preview_widget.settings_updated.connect(
-            lambda s, importee=label: self.save_settings(s, importee)
-        )
-        preview_widget.connection_failed.connect(
-            lambda m, importee=label: self._connection_failed(m, importee)
-        )
-        preview_widget.destroyed.connect(
-            lambda o=None, importee=label: self._preview_destroyed(importee)
-        )
+        preview_widget.settings_updated.connect(lambda s, importee=label: self.save_settings(s, importee))
+        preview_widget.connection_failed.connect(lambda m, importee=label: self._connection_failed(m, importee))
+        preview_widget.destroyed.connect(lambda o=None, importee=label: self._preview_destroyed(importee))
         preview_widget.start_ui()
 
     def get_connector(self, importee):
@@ -290,12 +249,7 @@ class Importer(ProjectItem):
         Returns:
             Asynchronous data reader class for the given importee
         """
-        connector_list = [
-            CSVConnector,
-            ExcelConnector,
-            GdxConnector,
-            JSONConnector,
-        ]  # add others as needed
+        connector_list = [CSVConnector, ExcelConnector, GdxConnector, JSONConnector]  # add others as needed
         connector_names = [c.DISPLAY_NAME for c in connector_list]
         dialog = QDialog(self._toolbox)
         dialog.setLayout(QVBoxLayout())
@@ -399,13 +353,9 @@ class Importer(ProjectItem):
         """Returns a dictionary corresponding to this item."""
         d = super().item_dict()
         # Serialize mappings before saving
-        d["mappings"] = self.serialize_mappings(
-            self.settings, self._project.project_dir
-        )
+        d["mappings"] = self.serialize_mappings(self.settings, self._project.project_dir)
         d["cancel_on_error"] = self._properties_ui.cancel_on_error_checkBox.isChecked()
-        d["mapping_selection"] = serialize_checked_states(
-            self._file_model.files, self._project.project_dir
-        )
+        d["mapping_selection"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
         return d
 
     @staticmethod
@@ -432,20 +382,9 @@ class Importer(ProjectItem):
         mapping_settings = deserialize_mappings(mappings, project.project_dir)
         cancel_on_error = item_dict.get("cancel_on_error", False)
         mapping_selection = item_dict.get("mapping_selection")
-        mapping_selection = deserialize_checked_states(
-            mapping_selection, project.project_dir
-        )
+        mapping_selection = deserialize_checked_states(mapping_selection, project.project_dir)
         return Importer(
-            name,
-            description,
-            x,
-            y,
-            toolbox,
-            project,
-            logger,
-            mapping_settings,
-            cancel_on_error,
-            mapping_selection,
+            name, description, x, y, toolbox, project, logger, mapping_settings, cancel_on_error, mapping_selection
         )
 
     def notify_destination(self, source_item):
@@ -491,11 +430,7 @@ class Importer(ProjectItem):
             if count > 1:
                 duplicates.append(label)
         if duplicates:
-            self.add_notification(
-                "Duplicate input files from upstream items:<br>{}".format(
-                    "<br>".join(duplicates)
-                )
-            )
+            self.add_notification("Duplicate input files from upstream items:<br>{}".format("<br>".join(duplicates)))
 
     @staticmethod
     def upgrade_from_no_version_to_version_1(item_name, old_item_dict, old_project_dir):
@@ -512,9 +447,7 @@ class Importer(ProjectItem):
                 _fix_csv_connector_settings(mapping)
             new_path = serialize_path(path, old_project_dir)
             if new_path["relative"]:
-                new_path["path"] = os.path.join(
-                    ".spinetoolbox", "items", new_path["path"]
-                )
+                new_path["path"] = os.path.join(".spinetoolbox", "items", new_path["path"])
             list_of_mappings.append([new_path, mapping])
         new_importer["mappings"] = list_of_mappings
         return new_importer
@@ -565,9 +498,7 @@ class Importer(ProjectItem):
         for (
             source,
             mapping,
-        ) in (
-            mappings.items()
-        ):  # mappings is a dict with absolute paths as keys and mapping as values
+        ) in mappings.items():  # mappings is a dict with absolute paths as keys and mapping as values
             serialized_mappings.append([serialize_path(source, project_path), mapping])
         return serialized_mappings
 

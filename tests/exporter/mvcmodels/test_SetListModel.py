@@ -62,9 +62,7 @@ class TestSetListModel(unittest.TestCase):
         set_settings = SetSettings({"domain1"}, {"set1"}, {})
         model = SetListModel(set_settings)
         flags = model.flags(model.index(0, 0))
-        self.assertEqual(
-            flags, Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable
-        )
+        self.assertEqual(flags, Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable)
 
     def test_headerData(self):
         set_settings = SetSettings(set(), set(), {})
@@ -81,26 +79,18 @@ class TestSetListModel(unittest.TestCase):
         set_settings = SetSettings({"domain1", "domain2", "domain3"}, set(), {})
         model = SetListModel(set_settings)
         self.assertTrue(model.moveRows(QModelIndex(), 0, 1, QModelIndex(), 1))
-        self.assertEqual(
-            set_settings.domain_tiers, {"domain1": 1, "domain2": 0, "domain3": 2}
-        )
+        self.assertEqual(set_settings.domain_tiers, {"domain1": 1, "domain2": 0, "domain3": 2})
         self.assertTrue(model.moveRows(QModelIndex(), 1, 1, QModelIndex(), 2))
-        self.assertEqual(
-            set_settings.domain_tiers, {"domain1": 2, "domain2": 0, "domain3": 1}
-        )
+        self.assertEqual(set_settings.domain_tiers, {"domain1": 2, "domain2": 0, "domain3": 1})
         self.assertFalse(model.moveRows(QModelIndex(), 2, 1, QModelIndex(), 3))
 
     def test_moveRows_move_domain_row_up(self):
         set_settings = SetSettings({"domain1", "domain2", "domain3"}, set(), {})
         model = SetListModel(set_settings)
         self.assertTrue(model.moveRows(QModelIndex(), 2, 1, QModelIndex(), 1))
-        self.assertEqual(
-            set_settings.domain_tiers, {"domain1": 0, "domain2": 2, "domain3": 1}
-        )
+        self.assertEqual(set_settings.domain_tiers, {"domain1": 0, "domain2": 2, "domain3": 1})
         self.assertTrue(model.moveRows(QModelIndex(), 1, 1, QModelIndex(), 0))
-        self.assertEqual(
-            set_settings.domain_tiers, {"domain1": 1, "domain2": 2, "domain3": 0}
-        )
+        self.assertEqual(set_settings.domain_tiers, {"domain1": 1, "domain2": 2, "domain3": 0})
         self.assertFalse(model.moveRows(QModelIndex(), 0, 1, QModelIndex(), -1))
 
     def test_moveRows_domain_cannot_cross_to_sets(self):
@@ -141,24 +131,14 @@ class TestSetListModel(unittest.TestCase):
         model = SetListModel(set_settings)
         index = model.index(0, 0)
         model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
-        self.assertEqual(
-            set_settings.metadata("domain1"), SetMetadata(ExportFlag.NON_EXPORTABLE)
-        )
-        self.assertEqual(
-            set_settings.metadata("set1"), SetMetadata(ExportFlag.EXPORTABLE)
-        )
+        self.assertEqual(set_settings.metadata("domain1"), SetMetadata(ExportFlag.NON_EXPORTABLE))
+        self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.EXPORTABLE))
         model.setData(index, Qt.Checked, Qt.CheckStateRole)
-        self.assertEqual(
-            set_settings.metadata("domain1"), SetMetadata(ExportFlag.EXPORTABLE)
-        )
-        self.assertEqual(
-            set_settings.metadata("set1"), SetMetadata(ExportFlag.EXPORTABLE)
-        )
+        self.assertEqual(set_settings.metadata("domain1"), SetMetadata(ExportFlag.EXPORTABLE))
+        self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.EXPORTABLE))
         index = model.index(1, 0)
         model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
-        self.assertEqual(
-            set_settings.metadata("set1"), SetMetadata(ExportFlag.NON_EXPORTABLE)
-        )
+        self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.NON_EXPORTABLE))
 
 
 if __name__ == "__main__":

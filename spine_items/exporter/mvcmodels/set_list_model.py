@@ -38,12 +38,8 @@ class SetListModel(QAbstractListModel):
         """
         super().__init__()
         self._set_settings = set_settings
-        self._sorted_domains = sorted(
-            set_settings.domain_names, key=lambda name: set_settings.domain_tiers[name]
-        )
-        self._sorted_sets = sorted(
-            set_settings.set_names, key=lambda name: set_settings.set_tiers[name]
-        )
+        self._sorted_domains = sorted(set_settings.domain_names, key=lambda name: set_settings.domain_tiers[name])
+        self._sorted_sets = sorted(set_settings.set_names, key=lambda name: set_settings.set_tiers[name])
 
     def add_domain(self, domain_name, records, origin):
         """
@@ -138,20 +134,12 @@ class SetListModel(QAbstractListModel):
             return None
         if role == Qt.CheckStateRole:
             if row < domain_count:
-                checked = self._set_settings.metadata(
-                    self._sorted_domains[row]
-                ).is_exportable()
+                checked = self._set_settings.metadata(self._sorted_domains[row]).is_exportable()
             else:
-                checked = self._set_settings.metadata(
-                    self._sorted_sets[row - domain_count]
-                ).is_exportable()
+                checked = self._set_settings.metadata(self._sorted_sets[row - domain_count]).is_exportable()
             return Qt.Checked if checked else Qt.Unchecked
         if role == Qt.ToolTipRole:
-            if (
-                row < domain_count
-                and self._sorted_domains[row]
-                == self._set_settings.global_parameters_domain_name
-            ):
+            if row < domain_count and self._sorted_domains[row] == self._set_settings.global_parameters_domain_name:
                 return "This domain has been set as the global\nparameters domain."
         return None
 
@@ -173,9 +161,7 @@ class SetListModel(QAbstractListModel):
             return False
         return index.row() < len(self._sorted_domains)
 
-    def moveRows(
-        self, sourceParent, sourceRow, count, destinationParent, destinationChild
-    ):
+    def moveRows(self, sourceParent, sourceRow, count, destinationParent, destinationChild):
         """
         Moves the domain and set names around.
 
@@ -203,12 +189,8 @@ class SetListModel(QAbstractListModel):
             return False
         if destinationChild < domain_count <= sourceRow:
             return False
-        row_after = (
-            destinationChild if sourceRow > destinationChild else destinationChild + 1
-        )
-        self.beginMoveRows(
-            sourceParent, sourceRow, last_source_row, destinationParent, row_after
-        )
+        row_after = destinationChild if sourceRow > destinationChild else destinationChild + 1
+        self.beginMoveRows(sourceParent, sourceRow, last_source_row, destinationParent, row_after)
         if sourceRow < domain_count:
             names = self._sorted_domains
         else:
@@ -216,14 +198,8 @@ class SetListModel(QAbstractListModel):
             sourceRow -= domain_count
             last_source_row -= domain_count
             destinationChild -= domain_count
-        names[:] = move_list_elements(
-            names, sourceRow, last_source_row, destinationChild
-        )
-        tiers = (
-            self._set_settings.domain_tiers
-            if sourceRow < domain_count
-            else self._set_settings.set_tiers
-        )
+        names[:] = move_list_elements(names, sourceRow, last_source_row, destinationChild)
+        tiers = self._set_settings.domain_tiers if sourceRow < domain_count else self._set_settings.set_tiers
         begin = min(sourceRow, destinationChild)
         end = max(sourceRow, destinationChild)
         for row, name in enumerate(names[begin : end + count]):
@@ -244,21 +220,11 @@ class SetListModel(QAbstractListModel):
         if row < domain_count:
             name = self._sorted_domains[row]
             metadata = self._set_settings.metadata(name)
-            exportable = (
-                gdx.ExportFlag.EXPORTABLE
-                if value == Qt.Checked
-                else gdx.ExportFlag.NON_EXPORTABLE
-            )
+            exportable = gdx.ExportFlag.EXPORTABLE if value == Qt.Checked else gdx.ExportFlag.NON_EXPORTABLE
             metadata.exportable = exportable
         else:
-            metadata = self._set_settings.metadata(
-                self._sorted_sets[row - domain_count]
-            )
-            exportable = (
-                gdx.ExportFlag.EXPORTABLE
-                if value == Qt.Checked
-                else gdx.ExportFlag.NON_EXPORTABLE
-            )
+            metadata = self._set_settings.metadata(self._sorted_sets[row - domain_count])
+            exportable = gdx.ExportFlag.EXPORTABLE if value == Qt.Checked else gdx.ExportFlag.NON_EXPORTABLE
             metadata.exportable = exportable
             self.dataChanged.emit(index, index, [Qt.CheckStateRole, Qt.ToolTipRole])
         self.dataChanged.emit(index, index, [Qt.CheckStateRole, Qt.ToolTipRole])

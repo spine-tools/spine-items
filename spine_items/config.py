@@ -45,11 +45,7 @@ JULIA_EXECUTABLE = _executable("julia")
 PYTHON_EXECUTABLE = _executable("python" if _on_windows else "python3")
 
 STATUSBAR_SS = (
-    "QStatusBar{"
-    "background-color: #EBEBE0;"
-    "border-width: 1px;"
-    "border-color: gray;"
-    "border-style: groove;}"
+    "QStatusBar{" "background-color: #EBEBE0;" "border-width: 1px;" "border-color: gray;" "border-style: groove;}"
 )
 
 TREEVIEW_HEADER_SS = "QHeaderView::section{background-color: #ecd8c6; font-size: 12px;}"

@@ -25,10 +25,7 @@ from spine_items.importer.importer import Importer
 from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.item_info import ItemInfo
 from spine_items.project_item_resource import ProjectItemResource
-from ..mock_helpers import (
-    clean_up_toolboxui_with_project,
-    create_toolboxui_with_project,
-)
+from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
 
 
 class TestImporter(unittest.TestCase):
@@ -73,15 +70,7 @@ class TestImporter(unittest.TestCase):
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.importer.item_dict()
-        a = [
-            "type",
-            "description",
-            "x",
-            "y",
-            "mappings",
-            "cancel_on_error",
-            "mapping_selection",
-        ]
+        a = ["type", "description", "x", "y", "mappings", "cancel_on_error", "mapping_selection"]
         for k in a:
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
@@ -115,8 +104,7 @@ class TestImporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="View")
         self.importer.notify_destination(source_item)
         self.toolbox.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a "
-            "<b>View</b> and a <b>Importer</b> has not been implemented yet."
+            "Link established. Interaction between a " "<b>View</b> and a <b>Importer</b> has not been implemented yet."
         )
 
     def test_default_name_prefix(self):
@@ -131,16 +119,10 @@ class TestImporter(unittest.TestCase):
         self.assertTrue(ret_val)
         # Check name
         self.assertEqual(expected_name, self.importer.name)  # item name
-        self.assertEqual(
-            expected_name, self.importer._properties_ui.label_name.text()
-        )  # name label in props
-        self.assertEqual(
-            expected_name, self.importer.get_icon().name_item.text()
-        )  # name item on Design View
+        self.assertEqual(expected_name, self.importer._properties_ui.label_name.text())  # name label in props
+        self.assertEqual(expected_name, self.importer.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(
-            self.toolbox.project().items_dir, expected_short_name
-        )
+        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.importer.data_dir)  # Check data dir
 
     def test_handle_dag_changed(self):
@@ -148,20 +130,13 @@ class TestImporter(unittest.TestCase):
         self.importer.activate()
         item = NonCallableMagicMock()
         expected_file_list = ["url1", "url2"]
-        resources = [
-            ProjectItemResource(item, "file", url) for url in expected_file_list
-        ]
+        resources = [ProjectItemResource(item, "file", url) for url in expected_file_list]
         rank = 0
         self.importer.handle_dag_changed(rank, resources)
         model = self.importer._properties_ui.treeView_files.model()
-        file_list = [
-            model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())
-        ]
+        file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
-        checked = [
-            model.index(row, 0).data(Qt.CheckStateRole)
-            for row in range(model.rowCount())
-        ]
+        checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]
         selected = [check == Qt.Checked for check in checked]
         self.assertTrue(all(selected))
 
@@ -179,14 +154,9 @@ class TestImporter(unittest.TestCase):
         # Update with one existing, one new file
         resources = [ProjectItemResource(item, "file", url) for url in ["url2", "url3"]]
         self.importer.handle_dag_changed(rank, resources)
-        file_list = [
-            model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())
-        ]
+        file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(file_list, ["url2", "url3"])
-        checked = [
-            model.index(row, 0).data(Qt.CheckStateRole)
-            for row in range(model.rowCount())
-        ]
+        checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]
         selected = [check == Qt.Checked for check in checked]
         self.assertEqual(selected, [False, True])
 

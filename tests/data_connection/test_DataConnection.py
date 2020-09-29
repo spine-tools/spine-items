@@ -27,25 +27,14 @@ from PySide2.QtGui import QStandardItemModel, Qt
 from spine_items.data_connection.data_connection import DataConnection
 from spine_items.data_connection.executable_item import ExecutableItem
 from spine_items.data_connection.item_info import ItemInfo
-from ..mock_helpers import (
-    clean_up_toolboxui_with_project,
-    create_toolboxui_with_project,
-)
+from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
 
 
 class TestDataConnection(unittest.TestCase):
     def setUp(self):
         """Set up toolbox."""
         self.toolbox = create_toolboxui_with_project()
-        item_dict = {
-            "DC": {
-                "type": "Data Connection",
-                "description": "",
-                "references": [],
-                "x": 0,
-                "y": 0,
-            }
-        }
+        item_dict = {"DC": {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}}
         self.toolbox.project().add_project_items(item_dict)
         index = self.toolbox.project_item_model.find_item("DC")
         self.data_connection = self.toolbox.project_item_model.item(index).project_item
@@ -121,8 +110,7 @@ class TestDataConnection(unittest.TestCase):
         with TemporaryDirectory() as temp_dir, mock.patch(
             "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
         ) as mock_filenames, mock.patch.object(
-            self.data_connection._properties_ui.treeView_dc_references,
-            "selectedIndexes",
+            self.data_connection._properties_ui.treeView_dc_references, "selectedIndexes"
         ) as mock_selected_indexes:
             a = Path(temp_dir, "a.txt")
             a.touch()
@@ -130,9 +118,7 @@ class TestDataConnection(unittest.TestCase):
             b.touch()
             c = Path(temp_dir, "c.txt")  # Note. This file is not actually created
             d = Path(temp_dir, "d.txt")  # Note. This file is not actually created
-            self.assertTrue(
-                os.path.isfile(str(a)) and os.path.isfile(str(b))
-            )  # existing files
+            self.assertTrue(os.path.isfile(str(a)) and os.path.isfile(str(b)))  # existing files
             self.assertFalse(os.path.isfile(str(c)))  # non-existing file
             self.assertFalse(os.path.isfile(str(d)))  # non-existing file
             # First add a couple of files as refs
@@ -156,10 +142,7 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(1, self.data_connection.reference_model.rowCount())
             # Check that the remaining item is the one that's supposed to be there
             self.assertEqual([str(b)], self.data_connection.file_references())
-            self.assertEqual(
-                str(b),
-                self.data_connection.reference_model.item(0).data(Qt.DisplayRole),
-            )
+            self.assertEqual(str(b), self.data_connection.reference_model.item(0).data(Qt.DisplayRole))
             # Now remove the remaining one
             b_index = self.data_connection.reference_model.index(0, 0)
             mock_selected_indexes.return_value = [b_index]
@@ -182,20 +165,11 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(3, self.data_connection.reference_model.rowCount())
             # Check that the three remaining items are the ones that are supposed to be there
             self.assertEqual(str(a), self.data_connection.file_references()[0])
-            self.assertEqual(
-                str(a),
-                self.data_connection.reference_model.item(0).data(Qt.DisplayRole),
-            )
+            self.assertEqual(str(a), self.data_connection.reference_model.item(0).data(Qt.DisplayRole))
             self.assertEqual(str(b), self.data_connection.file_references()[1])
-            self.assertEqual(
-                str(b),
-                self.data_connection.reference_model.item(1).data(Qt.DisplayRole),
-            )
+            self.assertEqual(str(b), self.data_connection.reference_model.item(1).data(Qt.DisplayRole))
             self.assertEqual(str(d), self.data_connection.file_references()[2])
-            self.assertEqual(
-                str(d),
-                self.data_connection.reference_model.item(2).data(Qt.DisplayRole),
-            )
+            self.assertEqual(str(d), self.data_connection.reference_model.item(2).data(Qt.DisplayRole))
             # Now select the three remaining ones and remove them
             a_index = self.data_connection.reference_model.index(0, 0)
             b_index = self.data_connection.reference_model.index(1, 0)
@@ -270,19 +244,11 @@ class TestDataConnection(unittest.TestCase):
         self.assertTrue(ret_val)
         # Check name
         self.assertEqual(expected_name, self.data_connection.name)  # item name
-        self.assertEqual(
-            expected_name, self.data_connection._properties_ui.label_dc_name.text()
-        )  # name label in props
-        self.assertEqual(
-            expected_name, self.data_connection.get_icon().name_item.text()
-        )  # name item on Design View
+        self.assertEqual(expected_name, self.data_connection._properties_ui.label_dc_name.text())  # name label in props
+        self.assertEqual(expected_name, self.data_connection.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(
-            self.toolbox.project().items_dir, expected_short_name
-        )
-        self.assertEqual(
-            expected_data_dir, self.data_connection.data_dir
-        )  # Check data dir
+        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
+        self.assertEqual(expected_data_dir, self.data_connection.data_dir)  # Check data dir
         # Check that data_dir_watcher has one path (new data_dir)
         watched_dirs = self.data_connection.data_dir_watcher.directories()
         self.assertEqual(1, len(watched_dirs))

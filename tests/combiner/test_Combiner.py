@@ -25,25 +25,14 @@ from spine_items.combiner.combiner import Combiner
 from spine_items.combiner.executable_item import ExecutableItem
 from spine_items.combiner.item_info import ItemInfo
 from spine_items.project_item_resource import ProjectItemResource
-from ..mock_helpers import (
-    clean_up_toolboxui_with_project,
-    create_toolboxui_with_project,
-)
+from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
 
 
 class TestCombiner(unittest.TestCase):
     def setUp(self):
         """Set up."""
         self.toolbox = create_toolboxui_with_project()
-        item_dict = {
-            "combiner": {
-                "type": "Combiner",
-                "description": "",
-                "cancel_on_error": False,
-                "x": 0,
-                "y": 0,
-            }
-        }
+        item_dict = {"combiner": {"type": "Combiner", "description": "", "cancel_on_error": False, "x": 0, "y": 0}}
         self.toolbox.project().add_project_items(item_dict)
         index = self.toolbox.project_item_model.find_item("combiner")
         self.combiner = self.toolbox.project_item_model.item(index).project_item
@@ -108,16 +97,10 @@ class TestCombiner(unittest.TestCase):
         self.assertTrue(ret_val)
         # Check name
         self.assertEqual(expected_name, self.combiner.name)  # item name
-        self.assertEqual(
-            expected_name, self.combiner._properties_ui.label_name.text()
-        )  # name label in props
-        self.assertEqual(
-            expected_name, self.combiner.get_icon().name_item.text()
-        )  # name item on Design View
+        self.assertEqual(expected_name, self.combiner._properties_ui.label_name.text())  # name label in props
+        self.assertEqual(expected_name, self.combiner.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(
-            self.toolbox.project().items_dir, expected_short_name
-        )
+        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.combiner.data_dir)  # Check data dir
 
     def test_handle_dag_changed(self):
@@ -132,31 +115,21 @@ class TestCombiner(unittest.TestCase):
         rank = 0
         self.combiner.handle_dag_changed(rank, resources)
         model = self.combiner._properties_ui.treeView_files.model()
-        file_list = [
-            model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())
-        ]
+        file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
 
     def test_handle_dag_changed_updates_previous_list_items(self):
         self.combiner.activate()
         item = NonCallableMagicMock()
-        resources = [
-            ProjectItemResource(item, "file", url)
-            for url in ["db1.sqlite", "db2.sqlite"]
-        ]
+        resources = [ProjectItemResource(item, "file", url) for url in ["db1.sqlite", "db2.sqlite"]]
         rank = 0
         # Add initial files
         self.combiner.handle_dag_changed(rank, resources)
         model = self.combiner._properties_ui.treeView_files.model()
         # Update with one existing, one new file
-        resources = [
-            ProjectItemResource(item, "file", url)
-            for url in ["db2.sqlite", "db3.sqlite"]
-        ]
+        resources = [ProjectItemResource(item, "file", url) for url in ["db2.sqlite", "db3.sqlite"]]
         self.combiner.handle_dag_changed(rank, resources)
-        file_list = [
-            model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())
-        ]
+        file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         # NOTE: The item list order is now vice versa for some reason
         self.assertEqual(file_list, ["db3.sqlite", "db2.sqlite"])
 

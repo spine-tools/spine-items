@@ -33,13 +33,7 @@ class ImporterIcon(ProjectItemIcon):
             icon (str): icon resource path
         """
         super().__init__(
-            toolbox,
-            x,
-            y,
-            project_item,
-            icon,
-            icon_color=QColor("#990000"),
-            background_color=QColor("#ffcccc"),
+            toolbox, x, y, project_item, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc")
         )
         self.animation = ImporterAnimation(self, x_shift=4)
         self.start_animation = self.animation.start

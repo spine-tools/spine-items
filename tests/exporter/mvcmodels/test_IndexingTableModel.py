@@ -33,11 +33,7 @@ class TestIndexingTableModel(unittest.TestCase):
     def setUp(self):
         time_series1 = TimePattern(["s1", "s2"], [-1.1, -2.2])
         time_series2 = TimePattern(["t1", "t2"], [1.1, 2.2])
-        parameter = gdx.Parameter(
-            ["domain1", "domain2"],
-            [("A1", "B1"), ("A2", "B2")],
-            [time_series1, time_series2],
-        )
+        parameter = gdx.Parameter(["domain1", "domain2"], [("A1", "B1"), ("A2", "B2")], [time_series1, time_series2])
         self._model = IndexingTableModel(parameter)
 
     def testIndexingTableModel_construction(self):
@@ -74,9 +70,7 @@ class TestIndexingTableModel(unittest.TestCase):
         self.assertEqual(self._model.index(1, 2).data(), None)
         self.assertEqual(self._model.index(2, 2).data(), "2.2")
         self.assertEqual(self._model.mapped_values_balance(), 0)
-        self.assertEqual(
-            self._model.get_picking(), gdx.FixedPicking([True, False, True])
-        )
+        self.assertEqual(self._model.get_picking(), gdx.FixedPicking([True, False, True]))
 
 
 if __name__ == "__main__":
