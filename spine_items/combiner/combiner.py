@@ -111,7 +111,7 @@ class Combiner(ProjectItem):
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
-        self._project.db_mngr.show_data_store_form(db_url_codenames, self._logger)
+        self._project.db_mngr.show_spine_db_editor(db_url_codenames, self._logger)
 
     def populate_reference_list(self):
         """Populates reference list."""

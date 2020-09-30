@@ -40,9 +40,7 @@ class TestTool(unittest.TestCase):
         self.basedir = mkdtemp()
         self.toolbox = MagicMock()
         self.project = create_mock_project()
-        model = _MockToolSpecModel(self.toolbox, self.basedir)
-        self.toolbox.specification_model = self.toolbox.filtered_spec_factory_models["Tool"] = model
-        self.toolbox.specification_model_changed.emit()
+        self.model = self.toolbox.specification_model = _MockToolSpecModel(self.toolbox, self.basedir)
 
     def tearDown(self):
         """Clean up."""
@@ -150,22 +148,23 @@ class TestTool(unittest.TestCase):
         with mock.patch("spine_items.tool.tool.ToolSpecificationMenu") as mock_tool_spec_menu:
             mock_tool_spec_menu.side_effect = lambda *args: QMenu()
             tool.activate()
-        self._assert_is_simple_exec_tool(tool)
+            self._assert_is_simple_exec_tool(tool)
 
     def test_save_and_restore_selections(self):
         """Test that selections are saved and restored when deactivating a Tool and activating it again.
         """
-        item = {"Tool": {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": ""}}
-        self.toolbox.project().add_project_items(item)
-        ind = self.toolbox.project_item_model.find_item("Tool")
-        tool = self.toolbox.project_item_model.item(ind).project_item
-        tool.activate()
-        self._assert_is_no_tool(tool)
-        tool._properties_ui.comboBox_tool.textActivated.emit("simple_exec")  # Set the simple_exec tool specification
-        self._assert_is_simple_exec_tool(tool)
-        tool.deactivate()
-        tool.activate()
-        self._assert_is_simple_exec_tool(tool)
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": ""}
+        tool = self._add_tool(item_dict)
+        with mock.patch("spine_items.tool.tool.ToolSpecificationMenu") as mock_tool_spec_menu:
+            mock_tool_spec_menu.side_effect = lambda *args: QMenu()
+            tool.activate()
+            self._assert_is_no_tool(tool)
+            # Set the simple_exec tool specification manually
+            tool._properties_ui.comboBox_tool.textActivated.emit("simple_exec")
+            self._assert_is_simple_exec_tool(tool)
+            tool.deactivate()
+            tool.activate()
+            self._assert_is_simple_exec_tool(tool)
 
     def _add_tool(self, item_dict=None):
         if item_dict is None:
@@ -174,6 +173,8 @@ class TestTool(unittest.TestCase):
         self.project = create_mock_project()
         tool = factory.make_item("T", item_dict, self.toolbox, self.project, self.toolbox)
         finish_mock_project_item_construction(factory, tool, self.toolbox)
+        # Set model for tool combo box
+        tool._properties_ui.comboBox_tool.setModel(self.model)
         return tool
 
     def _assert_is_simple_exec_tool(self, tool):

@@ -24,9 +24,7 @@ def convert_to_sqlalchemy_url(urllib_url, item_name, logger, log_errors):
     """Returns a sqlalchemy url from the url or None if not valid."""
     if not urllib_url:
         if log_errors:
-            logger.msg_error.emit(
-                f"No URL specified for <b>{item_name}</b>. Please specify one and try again"
-            )
+            logger.msg_error.emit(f"No URL specified for <b>{item_name}</b>. Please specify one and try again")
         return None
     try:
         url = {key: value for key, value in urllib_url.items() if value}

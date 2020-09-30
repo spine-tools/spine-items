@@ -296,7 +296,7 @@ class DataStore(ProjectItem):
     def open_ds_form(self, checked=False):
         """Opens current url in the Spine database editor."""
         self._update_sa_url()
-        self._project.db_mngr.show_data_store_form({self._sa_url: self.name}, self._logger)
+        self._project.db_mngr.show_spine_db_editor({self._sa_url: self.name}, self._logger)
 
     def data_files(self):
         """Return a list of files that are in this items data directory."""

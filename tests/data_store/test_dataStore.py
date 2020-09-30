@@ -22,6 +22,7 @@ from unittest.mock import MagicMock
 import os
 import logging
 import sys
+from sqlalchemy.engine.url import URL
 from spinedb_api import create_new_spine_database
 from PySide2.QtWidgets import QApplication, QMessageBox
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
@@ -57,6 +58,9 @@ class TestDataStore(unittest.TestCase):
         self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project, self.toolbox)
         finish_mock_project_item_construction(factory, self.ds, self.toolbox)
         self.ds_properties_ui = self.ds._properties_ui
+        self.ds.item_changed.connect(self.ds._update_sa_url)
+        # FIXME: Try to make the below work instead of the above line
+        # self.project.notify_changes_in_containing_dag.side_effect: lambda name: self.ds._update_sa_url()
 
     def tearDown(self):
         """Overridden method. Runs after each test.
@@ -110,7 +114,7 @@ class TestDataStore(unittest.TestCase):
 
     def test_create_new_empty_spine_database(self):
         """Test that a new Spine database is created when clicking on 'New Spine db tool button'
-        with an empty Data Store and 'for Spine model' checkbox UNCHECKED.
+        with an empty Data Store.
         """
         cb_dialect = self.ds_properties_ui.comboBox_dialect  # Dialect comboBox
         le_db = self.ds_properties_ui.lineEdit_database  # Database lineEdit
@@ -118,15 +122,17 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(cb_dialect.currentText(), "")
         self.assertEqual(le_db.text(), "")
         # Click New Spine db button
+        self.project.db_mngr = MagicMock()
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
         expected_db_path = os.path.join(self.ds.data_dir, self.ds.name + ".sqlite")
         self.assertEqual(cb_dialect.currentText(), "sqlite")
         self.assertEqual(expected_db_path, le_db.text())
-        self.assertTrue(os.path.exists(le_db.text()))
+        expected_url = URL("sqlite", database=expected_db_path)
+        self.project.db_mngr.create_new_spine_database.assert_called_with(expected_url)
 
     def test_create_new_empty_spine_database2(self):
         """Test that a new Spine database is created when clicking on 'New Spine db tool button'
-        with a Data Store that already has an .sqlite db. Checkbox 'for Spine model' UNCHECKED.
+        with a Data Store that already has an .sqlite db.
         """
         cb_dialect = self.ds_properties_ui.comboBox_dialect  # Dialect comboBox
         le_db = self.ds_properties_ui.lineEdit_database  # Database lineEdit
@@ -140,10 +146,7 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(temp_path, le_db.text())
         self.assertTrue(os.path.exists(le_db.text()))  # temp_db.sqlite should exist in DS data_dir at this point
         # Click New Spine db button. This overwrites the existing sqlite file!
-        with mock.patch("spinetoolbox.spine_db_manager.QMessageBox") as mock_qmessagebox:
-            mock_qmessagebox.exec_().return_value = QMessageBox.AcceptRole
-            self.ds_properties_ui.pushButton_create_new_spine_db.click()
-            mock_qmessagebox.assert_called_once()
+        self.ds_properties_ui.pushButton_create_new_spine_db.click()
         self.assertEqual("sqlite", cb_dialect.currentText())
         self.assertEqual(temp_path, le_db.text())
         self.assertTrue(os.path.exists(le_db.text()))
@@ -206,14 +209,9 @@ class TestDataStore(unittest.TestCase):
             self.ds_properties_ui.toolButton_open_sqlite_file.click()
             mock_qfile_dialog.getOpenFileName.assert_called_once()
         # Open form
-        with mock.patch("spinetoolbox.spine_db_editor.widgets.spine_db_editor.SpineDBEditor.show"):
-            self.ds_properties_ui.pushButton_ds_open_editor.click()
-        self.assertIn((self.ds._sa_url,), self.ds._project.db_mngr._db_editors)
-        ds_form = self.ds._project.db_mngr._db_editors[(self.ds._sa_url,)]
-        expected_url = "sqlite:///" + temp_db_path
-        self.assertEqual(expected_url, str(ds_form.db_url))
-        ds_form.close()
-        self.ds._project.db_mngr.close_all_sessions()
+        self.project.db_mngr = MagicMock()
+        self.ds_properties_ui.pushButton_ds_open_editor.click()
+        self.project.db_mngr.show_spine_db_editor.assert_called_with({self.ds._sa_url: 'DS'}, self.toolbox)
 
     def test_open_ds_form2(self):
         """Test that selecting the 'sqlite' dialect, typing the path to an existing db file,
@@ -227,14 +225,9 @@ class TestDataStore(unittest.TestCase):
         self.ds_properties_ui.lineEdit_database.setText(temp_db_path)
         self.ds_properties_ui.lineEdit_database.editingFinished.emit()
         # Open form
-        with mock.patch("spinetoolbox.spine_db_editor.widgets.spine_db_editor.SpineDBEditor.show"):
-            self.ds_properties_ui.pushButton_ds_open_editor.click()
-        self.assertIn((self.ds._sa_url,), self.ds._project.db_mngr._db_editors)
-        ds_form = self.ds._project.db_mngr._db_editors[(self.ds._sa_url,)]
-        expected_url = "sqlite:///" + temp_db_path
-        self.assertEqual(expected_url, str(ds_form.db_maps[0].db_url))
-        ds_form.close()
-        self.ds._project.db_mngr.close_all_sessions()
+        self.project.db_mngr = MagicMock()
+        self.ds_properties_ui.pushButton_ds_open_editor.click()
+        self.project.db_mngr.show_spine_db_editor.assert_called_with({self.ds._sa_url: 'DS'}, self.toolbox)
 
     def test_notify_destination(self):
         self.toolbox.msg = mock.NonCallableMagicMock()
