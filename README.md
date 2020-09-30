@@ -1,5 +1,9 @@
 # Spine Items
 
+[![Python](https://img.shields.io/badge/python-3.6%20|%203.7-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![Build Status](https://travis-ci.com/Spine-project/spine-items.svg?branch=master)](https://travis-ci.com/Spine-project/spine-items)
+[![codecov](https://codecov.io/gh/Spine-project/spine-items/branch/master/graph/badge.svg)](https://codecov.io/gh/Spine-project/spine-items)
+
 A Python package to supply project items for [Spine Toolbox](https://github.com/Spine-project/Spine-Toolbox) and [Spine Engine](https://github.com/Spine-project/spine-engine).
 
 ## License
