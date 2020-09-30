@@ -86,16 +86,16 @@ class TestToolExecutable(unittest.TestCase):
                 self.assertTrue(item._tool_specification.name, "Python Tool")
                 self.assertEqual("some_work_dir", item._work_dir)
                 self.assertEqual(["a", "b"], item._cmd_line_args)
-                # Test that item is not create if "appSettings/workDir" key is missing from qsettings
-                with self.assertRaises(ValueError):
-                    item = ExecutableItem.from_dict(
-                        item_dict,
-                        name="T",
-                        project_dir=temp_project_dir,
-                        app_settings=_EmptyMockSettings(),
-                        specifications=specs_in_project,
-                        logger=mock.MagicMock(),
-                    )
+                # Test that the item is not created if "appSettings/workDir" key is missing from qsettings
+                item = ExecutableItem.from_dict(
+                    item_dict,
+                    name="T",
+                    project_dir=temp_project_dir,
+                    app_settings=_EmptyMockSettings(),
+                    specifications=specs_in_project,
+                    logger=mock.MagicMock(),
+                )
+                self.assertIsNone(item, ExecutableItem)
                 # This time the project dict does not have any specifications
                 item = ExecutableItem.from_dict(
                     item_dict,
