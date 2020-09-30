@@ -441,7 +441,7 @@ class Tool(ProjectItem):
 
     def execution_item(self):
         """Creates project item's execution counterpart."""
-        work_dir = self._toolbox.work_dir if self.execute_in_work else None
+        work_dir = self._toolbox.qsettings().value("appSettings/workDir") if self.execute_in_work else None
         return ExecutableItem(
             self.name, work_dir, self.output_dir, self._specification, self.cmd_line_args, self._logger
         )
