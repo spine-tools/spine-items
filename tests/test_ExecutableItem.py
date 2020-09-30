@@ -17,7 +17,7 @@ Unit tests for ExecutableItem.
 """
 import unittest
 from unittest import mock
-from spine_engine import ExecutionDirection
+from spine_items.helpers import ExecutionDirection
 from spine_items.executable_item_base import ExecutableItemBase
 
 

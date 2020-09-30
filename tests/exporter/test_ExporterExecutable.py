@@ -21,7 +21,7 @@ from tempfile import gettempdir, TemporaryDirectory
 import unittest
 from unittest import mock
 from gdx2py import GdxFile
-from spine_engine import ExecutionDirection
+from spine_items.helpers import ExecutionDirection
 from spinedb_api import create_new_spine_database, DiffDatabaseMapping, import_functions
 from spine_items.project_item_resource import ProjectItemResource
 from spine_items.exporter.exporter import SettingsPack
