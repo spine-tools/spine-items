@@ -594,7 +594,8 @@ class ExecutableItem(ExecutableItemBase):
         if execute_in_work:
             work_dir = app_settings.value("appSettings/workDir")
             if not work_dir:
-                raise ValueError("Work directory not set, unable to create item")
+                logger.msg_error.emit(f"Error: Work directory not set for project item {name}")
+                return None
         else:
             work_dir = None
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))

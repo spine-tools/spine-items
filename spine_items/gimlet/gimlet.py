@@ -103,7 +103,7 @@ class Gimlet(ProjectItem):
         else:
             app_work_dir = self._toolbox.qsettings().value("appSettings/workDir")
             if not app_work_dir:
-                raise ValueError("Work directory not set, unable to create item")
+                raise ValueError(f"Work directory not set for project item {self.name}")
             unique_dir_name = shorten(self.name) + "__" + uuid.uuid4().hex + "__toolbox"
             work_dir = os.path.join(app_work_dir, unique_dir_name)
         # Only selected files in properties are sent to the executable item

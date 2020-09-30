@@ -70,7 +70,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             try:
                 shell = SHELLS[shell_index]
             except IndexError:
-                logger.msg.emit(f"Error: Unsupported shell_index in project item {name}")
+                logger.msg_error.emit(f"Error: Unsupported shell_index in project item {name}")
                 return None
         cmd_list = helpers.split_cmdline_args(item_dict["cmd"])
         data_dir = os.path.join(project_dir, ".spinetoolbox", "items", helpers.shorten(name))
@@ -79,7 +79,8 @@ class ExecutableItem(ExecutableItemBase, QObject):
         else:  # Make unique work dir
             app_work_dir = app_settings.value("appSettings/workDir")
             if not app_work_dir:
-                raise ValueError("Work directory not set, unable to create item")
+                logger.msg_error.emit(f"Error: Work directory not set for project item {name}")
+                return None
             unique_dir_name = helpers.shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
             work_dir = os.path.join(app_work_dir, unique_dir_name)
         selected_files = helpers.deserialize_checked_states(item_dict.get("selections", list()), project_dir)
