@@ -107,13 +107,16 @@ class ExecutableItem(ExecutableItemBase, QObject):
         Returns:
             True if execution succeeded, False otherwise
         """
+        if not self._work_dir:
+            self._logger.msg_warning.emit("Work directory not set.")
+            return False
         if not self.cmd_list:
             self._logger.msg_warning.emit("No command to execute.")
             return False
         if sys.platform == "win32" and self.shell_name == "bash":
             self._logger.msg_warning.emit("Sorry, Bash shell is not supported on Windows.")
             return False
-        elif sys.platform != "win32" and (self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"):
+        if sys.platform != "win32" and (self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return False
         # Expand tags in command list
@@ -188,7 +191,6 @@ class ExecutableItem(ExecutableItemBase, QObject):
         self._gimlet_process.execution_finished.disconnect()
         self._gimlet_process.deleteLater()
         self._gimlet_process = None
-        self._gimlet_process_successful = True
         self.gimlet_finished.emit()
 
     def _copy_files(self, files, work_dir):
