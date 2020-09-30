@@ -30,7 +30,7 @@ jobs:
 
 cache: pip
 install:
-  - pip install -r requirements.txt
+  - pip install -r requirements.txt .[UI]
   - pip install coverage
   - pip install codecov
 after_success:
