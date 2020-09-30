@@ -27,7 +27,12 @@ class ProjectItemSpecificationFactory:
 
     @staticmethod
     def make_specification(
-        definition, definition_path, app_settings, logger, embedded_julia_console, embedded_python_console
+        definition,
+        definition_path,
+        app_settings,
+        logger,
+        embedded_julia_console,
+        embedded_python_console,
     ):
         """
         Makes a project item specification.

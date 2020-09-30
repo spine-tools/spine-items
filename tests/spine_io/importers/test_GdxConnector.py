@@ -21,7 +21,12 @@ from tempfile import TemporaryDirectory
 import unittest
 from gdx2py import GdxFile
 from spine_items.spine_io.gdx_utils import find_gams_directory
-from spine_items.spine_io.importers.gdx_connector import GdxConnector, GAMSParameter, GAMSScalar, GAMSSet
+from spine_items.spine_io.importers.gdx_connector import (
+    GdxConnector,
+    GAMSParameter,
+    GAMSScalar,
+    GAMSSet,
+)
 
 
 @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
@@ -39,7 +44,9 @@ class TestGdxConnector(unittest.TestCase):
                 gdx_file["domain2"] = domain
                 gams_set = GAMSSet([("key1", "key2")], ["domain1", "domain2"])
                 gdx_file["set"] = gams_set
-                gams_parameter = GAMSParameter({("key1", "key2"): 3.14}, domain=["domain1", "domain2"])
+                gams_parameter = GAMSParameter(
+                    {("key1", "key2"): 3.14}, domain=["domain1", "domain2"]
+                )
                 gdx_file["parameter"] = gams_parameter
                 gams_scalar = GAMSScalar(2.3)
                 gdx_file["scalar"] = gams_scalar
@@ -53,7 +60,9 @@ class TestGdxConnector(unittest.TestCase):
         self.assertTrue("parameter" in tables)
         self.assertTrue("scalar" in tables)
 
-    @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
+    @unittest.skipIf(
+        find_gams_directory() is None, "No working GAMS installation found."
+    )
     def test_get_data_iterator_for_domains(self):
         gams_directory = find_gams_directory()
         connector_settings = {"gams_directory": gams_directory}
@@ -64,7 +73,9 @@ class TestGdxConnector(unittest.TestCase):
                 domain = GAMSSet([("key1",), ("key2",)])
                 gdx_file["domain"] = domain
             connector.connect_to_source(path)
-            data_iterator, header, column_count = connector.get_data_iterator("domain", {})
+            data_iterator, header, column_count = connector.get_data_iterator(
+                "domain", {}
+            )
             connector.disconnect()
         self.assertEqual(column_count, 1)
         self.assertEqual(header, ["dim0"])
@@ -73,7 +84,9 @@ class TestGdxConnector(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(data_iterator)
 
-    @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
+    @unittest.skipIf(
+        find_gams_directory() is None, "No working GAMS installation found."
+    )
     def test_get_data_iterator_for_multiple_universal_sets(self):
         gams_directory = find_gams_directory()
         connector_settings = {"gams_directory": gams_directory}
@@ -84,7 +97,9 @@ class TestGdxConnector(unittest.TestCase):
                 set_ = GAMSSet([("i", "key1"), ("j", "key2")])
                 gdx_file["almost_domain"] = set_
             connector.connect_to_source(path)
-            data_iterator, header, column_count = connector.get_data_iterator("almost_domain", {})
+            data_iterator, header, column_count = connector.get_data_iterator(
+                "almost_domain", {}
+            )
             connector.disconnect()
         self.assertEqual(column_count, 2)
         self.assertEqual(header, ["dim0", "dim1"])
@@ -93,7 +108,9 @@ class TestGdxConnector(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(data_iterator)
 
-    @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
+    @unittest.skipIf(
+        find_gams_directory() is None, "No working GAMS installation found."
+    )
     def test_get_data_iterator_for_mixed_universal_and_named_sets(self):
         gams_directory = find_gams_directory()
         connector_settings = {"gams_directory": gams_directory}
@@ -106,7 +123,9 @@ class TestGdxConnector(unittest.TestCase):
                 set_ = GAMSSet([("i", "key1"), ("j", "key2")], [None, "domain"])
                 gdx_file["almost_domain"] = set_
             connector.connect_to_source(path)
-            data_iterator, header, column_count = connector.get_data_iterator("almost_domain", {})
+            data_iterator, header, column_count = connector.get_data_iterator(
+                "almost_domain", {}
+            )
             connector.disconnect()
         self.assertEqual(column_count, 2)
         self.assertEqual(header, ["dim0", "domain"])
@@ -115,13 +134,18 @@ class TestGdxConnector(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(data_iterator)
 
-    @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
+    @unittest.skipIf(
+        find_gams_directory() is None, "No working GAMS installation found."
+    )
     def test_get_data_iterator_for_sets_with_single_indexing_domain(self):
         gams_directory = find_gams_directory()
         connector_settings = {"gams_directory": gams_directory}
         connector = GdxConnector(connector_settings)
         with TemporaryDirectory() as temporary_dir:
-            path = os.path.join(temporary_dir, "test_get_data_iterator_for_sets_with_single_indexing_domain.gdx")
+            path = os.path.join(
+                temporary_dir,
+                "test_get_data_iterator_for_sets_with_single_indexing_domain.gdx",
+            )
             with GdxFile(path, "w", gams_directory) as gdx_file:
                 domain = GAMSSet([("key1",), ("key2",)])
                 gdx_file["domain"] = domain
@@ -137,19 +161,26 @@ class TestGdxConnector(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(data_iterator)
 
-    @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
+    @unittest.skipIf(
+        find_gams_directory() is None, "No working GAMS installation found."
+    )
     def test_get_data_iterator_for_sets_with_multiple_indexing_domains(self):
         gams_directory = find_gams_directory()
         connector_settings = {"gams_directory": gams_directory}
         connector = GdxConnector(connector_settings)
         with TemporaryDirectory() as temporary_dir:
-            path = os.path.join(temporary_dir, "test_get_data_iterator_for_sets_with_single_indexing_domain.gdx")
+            path = os.path.join(
+                temporary_dir,
+                "test_get_data_iterator_for_sets_with_single_indexing_domain.gdx",
+            )
             with GdxFile(path, "w", gams_directory) as gdx_file:
                 domain = GAMSSet([("key1",), ("key2",)])
                 gdx_file["domain1"] = domain
                 domain = GAMSSet([("keyA",), ("keyB",)])
                 gdx_file["domainA"] = domain
-                gams_set = GAMSSet([("key1", "keyA"), ("key2", "keyB")], ["domain1", "domainA"])
+                gams_set = GAMSSet(
+                    [("key1", "keyA"), ("key2", "keyB")], ["domain1", "domainA"]
+                )
                 gdx_file["set"] = gams_set
             connector.connect_to_source(path)
             data_iterator, header, column_count = connector.get_data_iterator("set", {})
@@ -161,20 +192,29 @@ class TestGdxConnector(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(data_iterator)
 
-    @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
+    @unittest.skipIf(
+        find_gams_directory() is None, "No working GAMS installation found."
+    )
     def test_get_data_iterator_for_parameters_with_single_indexing_domain(self):
         gams_directory = find_gams_directory()
         connector_settings = {"gams_directory": gams_directory}
         connector = GdxConnector(connector_settings)
         with TemporaryDirectory() as temporary_dir:
-            path = os.path.join(temporary_dir, "test_get_data_iterator_for_parameters_with_single_indexing_domain.gdx")
+            path = os.path.join(
+                temporary_dir,
+                "test_get_data_iterator_for_parameters_with_single_indexing_domain.gdx",
+            )
             with GdxFile(path, "w", gams_directory) as gdx_file:
                 domain = GAMSSet([("key1",), ("key2",)])
                 gdx_file["domain"] = domain
-                gams_parameter = GAMSParameter({("key1",): 3.14, ("key2",): -2.3}, domain=["domain"])
+                gams_parameter = GAMSParameter(
+                    {("key1",): 3.14, ("key2",): -2.3}, domain=["domain"]
+                )
                 gdx_file["parameter"] = gams_parameter
             connector.connect_to_source(path)
-            data_iterator, header, column_count = connector.get_data_iterator("parameter", {})
+            data_iterator, header, column_count = connector.get_data_iterator(
+                "parameter", {}
+            )
             connector.disconnect()
         self.assertEqual(column_count, 2)
         self.assertEqual(header, ["domain", "Value"])
@@ -183,14 +223,17 @@ class TestGdxConnector(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(data_iterator)
 
-    @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
+    @unittest.skipIf(
+        find_gams_directory() is None, "No working GAMS installation found."
+    )
     def test_get_data_iterator_for_parameters_with_multiple_indexing_domains(self):
         gams_directory = find_gams_directory()
         connector_settings = {"gams_directory": gams_directory}
         connector = GdxConnector(connector_settings)
         with TemporaryDirectory() as temporary_dir:
             path = os.path.join(
-                temporary_dir, "test_get_data_iterator_for_parameters_with_multiple_indexing_domains.gdx"
+                temporary_dir,
+                "test_get_data_iterator_for_parameters_with_multiple_indexing_domains.gdx",
             )
             with GdxFile(path, "w", gams_directory) as gdx_file:
                 domain = GAMSSet([("key1",), ("key2",)])
@@ -198,11 +241,14 @@ class TestGdxConnector(unittest.TestCase):
                 domain = GAMSSet([("keyA",), ("keyB",)])
                 gdx_file["domainA"] = domain
                 gams_parameter = GAMSParameter(
-                    {("key1", "keyA"): 3.14, ("key2", "keyB"): -2.3}, domain=["domain1", "domainA"]
+                    {("key1", "keyA"): 3.14, ("key2", "keyB"): -2.3},
+                    domain=["domain1", "domainA"],
                 )
                 gdx_file["parameter"] = gams_parameter
             connector.connect_to_source(path)
-            data_iterator, header, column_count = connector.get_data_iterator("parameter", {})
+            data_iterator, header, column_count = connector.get_data_iterator(
+                "parameter", {}
+            )
             connector.disconnect()
         self.assertEqual(column_count, 3)
         self.assertEqual(header, ["domain1", "domainA", "Value"])
@@ -211,7 +257,9 @@ class TestGdxConnector(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(data_iterator)
 
-    @unittest.skipIf(find_gams_directory() is None, "No working GAMS installation found.")
+    @unittest.skipIf(
+        find_gams_directory() is None, "No working GAMS installation found."
+    )
     def test_get_data_iterator_for_scalars(self):
         gams_directory = find_gams_directory()
         connector_settings = {"gams_directory": gams_directory}
@@ -222,7 +270,9 @@ class TestGdxConnector(unittest.TestCase):
                 gams_scalar = GAMSScalar(2.3)
                 gdx_file["scalar"] = gams_scalar
             connector.connect_to_source(path)
-            data_iterator, header, column_count = connector.get_data_iterator("scalar", {})
+            data_iterator, header, column_count = connector.get_data_iterator(
+                "scalar", {}
+            )
             connector.disconnect()
         self.assertEqual(column_count, 1)
         self.assertEqual(header, ["Value"])
@@ -231,5 +281,5 @@ class TestGdxConnector(unittest.TestCase):
             next(data_iterator)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

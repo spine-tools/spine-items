@@ -42,7 +42,9 @@ class ExportListItem(QWidget):
             settings_state (SettingsState): settings state
             parent (QWidget): a parent widget
         """
-        from ..ui.export_list_item import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.export_list_item import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
         self._ui = Ui_Form()
@@ -52,8 +54,12 @@ class ExportListItem(QWidget):
         self._ui.url_field.setText(url)
         self._ui.url_field.setToolTip(url)
         self._ui.out_file_name_edit.setText(file_name)
-        self._ui.out_file_name_edit.editingFinished.connect(self._emit_file_name_changed)
-        self._ui.scenario_combo_box.currentTextChanged.connect(self._emit_scenario_changed)
+        self._ui.out_file_name_edit.editingFinished.connect(
+            self._emit_file_name_changed
+        )
+        self._ui.scenario_combo_box.currentTextChanged.connect(
+            self._emit_scenario_changed
+        )
         self._ui.settings_button.clicked.connect(self._emit_open_settings_clicked)
         self.update_notification_label(settings_state)
 
@@ -103,7 +109,9 @@ class ExportListItem(QWidget):
             scenarios (dict): a map from scenario name to boolean active flag
             selected (str, optional): currently selected scenario, None for the 'Base' alternative
         """
-        active = [_BASE_ALTERNATIVE_TEXT] + [name + " (active)" for name, active in scenarios.items() if active]
+        active = [_BASE_ALTERNATIVE_TEXT] + [
+            name + " (active)" for name, active in scenarios.items() if active
+        ]
         inactive = [name for name, active in scenarios.items() if not active]
         self._ui.scenario_combo_box.clear()
         self._ui.scenario_combo_box.addItems(active)

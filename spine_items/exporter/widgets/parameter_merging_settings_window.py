@@ -38,7 +38,9 @@ class ParameterMergingSettingsWindow(QWidget):
             database_path (str): database URL
             parent (QWidget): a parent widget
         """
-        from ..ui.parameter_merging_settings_window import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.parameter_merging_settings_window import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent, f=Qt.Window)
         self._merging_settings = merging_settings
@@ -77,7 +79,9 @@ class ParameterMergingSettingsWindow(QWidget):
                 self._entity_class_infos = _gather_entity_class_infos(db_map)
             finally:
                 db_map.connection.close()
-        settings_widget = ParameterMergingSettings(self._entity_class_infos, self, parameter_name, merging_setting)
+        settings_widget = ParameterMergingSettings(
+            self._entity_class_infos, self, parameter_name, merging_setting
+        )
         settings_widget.removal_requested.connect(self._remove_setting)
         self._ui.settings_area_layout.insertWidget(0, settings_widget)
         self._setting_widgets.append(settings_widget)
@@ -120,7 +124,10 @@ class ParameterMergingSettingsWindow(QWidget):
         """Collects settings from individual ParameterMergingSettings widgets and hides the window."""
         if not self._ok_to_accept():
             return
-        self._merging_settings = {widget.parameter_name: widget.merging_setting() for widget in self._setting_widgets}
+        self._merging_settings = {
+            widget.parameter_name: widget.merging_setting()
+            for widget in self._setting_widgets
+        }
         self.settings_approved.emit()
         self.hide()
 
@@ -175,17 +182,33 @@ def _gather_entity_class_infos(db_map):
     infos = list()
     for object_class in db_map.object_class_list().all():
         class_id = object_class.id
-        parameter_definitions = db_map.parameter_definition_list(object_class_id=class_id).all()
+        parameter_definitions = db_map.parameter_definition_list(
+            object_class_id=class_id
+        ).all()
         parameter_names = [definition.name for definition in parameter_definitions]
         infos.append(
-            EntityClassInfo(object_class.name, class_id, [object_class.name], parameter_names, is_object_class=True)
+            EntityClassInfo(
+                object_class.name,
+                class_id,
+                [object_class.name],
+                parameter_names,
+                is_object_class=True,
+            )
         )
     for relationship_class in db_map.wide_relationship_class_list().all():
         class_id = relationship_class.id
-        parameter_definitions = db_map.parameter_definition_list(relationship_class_id=class_id).all()
+        parameter_definitions = db_map.parameter_definition_list(
+            relationship_class_id=class_id
+        ).all()
         parameter_names = [definition.name for definition in parameter_definitions]
         domain_names = relationship_class.object_class_name_list.split(",")
         infos.append(
-            EntityClassInfo(relationship_class.name, class_id, domain_names, parameter_names, is_object_class=False)
+            EntityClassInfo(
+                relationship_class.name,
+                class_id,
+                domain_names,
+                parameter_names,
+                is_object_class=False,
+            )
         )
     return infos

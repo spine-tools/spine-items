@@ -43,7 +43,9 @@ class TestExcelExport(unittest.TestCase):
             ["col1_v3", "col2_v3", None, "pivot_col2_v3"],
         ]
 
-        test_data_out, new_headers = _unstack_list_of_tuples(data_in, headers, key_cols, value_name_col, value_col)
+        test_data_out, new_headers = _unstack_list_of_tuples(
+            data_in, headers, key_cols, value_name_col, value_col
+        )
 
         self.assertEqual(test_data_out, data_out)
         self.assertEqual(new_headers, fieldnames)
@@ -73,7 +75,9 @@ class TestExcelExport(unittest.TestCase):
             ["col1_v3", "col2_v3", None, "pivot_col2_v3"],
         ]
 
-        test_data_out, new_headers = _unstack_list_of_tuples(data_in, headers, key_cols, value_name_col, value_col)
+        test_data_out, new_headers = _unstack_list_of_tuples(
+            data_in, headers, key_cols, value_name_col, value_col
+        )
 
         self.assertEqual(test_data_out, data_out)
         self.assertEqual(new_headers, fieldnames)
@@ -109,11 +113,13 @@ class TestExcelExport(unittest.TestCase):
             ["col1_v3", None, None, None, None, "pivot_col2_v3"],
         ]
 
-        test_data_out, test_header_out = _unstack_list_of_tuples(data_in, headers, key_cols, value_name_col, value_col)
+        test_data_out, test_header_out = _unstack_list_of_tuples(
+            data_in, headers, key_cols, value_name_col, value_col
+        )
 
         self.assertEqual(data_out, test_data_out)
         self.assertEqual(headers_out, test_header_out)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

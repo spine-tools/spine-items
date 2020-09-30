@@ -33,7 +33,7 @@ import sys
 from gdx2py import GAMSSet, GAMSScalar, GAMSParameter, GdxFile
 from spinedb_api import from_database, IndexedValue, Map, ParameterValueFormatError
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     import winreg
 
 
@@ -130,7 +130,9 @@ class Set:
         description = set_dict["description"]
         domain_names = set_dict["domain_names"]
         restored = Set(name, description, domain_names)
-        restored.records = [Record.from_dict(record_dict) for record_dict in set_dict["records"]]
+        restored.records = [
+            Record.from_dict(record_dict) for record_dict in set_dict["records"]
+        ]
         return restored
 
 
@@ -198,7 +200,12 @@ class Parameter:
         self.domain_names = domain_names
         if len(indexes) != len(values):
             raise GdxExportException("Parameter index and value length mismatch.")
-        if values and not all([isinstance(value, type(values[0])) or value is None for value in values[1:]]):
+        if values and not all(
+            [
+                isinstance(value, type(values[0])) or value is None
+                for value in values[1:]
+            ]
+        ):
             raise GdxExportException("Not all values are of the same type.")
         self.data = dict(zip(indexes, values))
 
@@ -230,9 +237,14 @@ class Parameter:
         """Checks that all values are :class:`IndexedValue` objects or scalars."""
         if not self.data:
             return True
-        if all(value is None or isinstance(value, IndexedValue) for value in self.data.values()):
+        if all(
+            value is None or isinstance(value, IndexedValue)
+            for value in self.data.values()
+        ):
             return True
-        return all(value is None or isinstance(value, float) for value in self.data.values())
+        return all(
+            value is None or isinstance(value, float) for value in self.data.values()
+        )
 
     def slurp(self, parameter):
         """
@@ -266,10 +278,16 @@ class Parameter:
         index_position = indexing_setting.index_position
         indexing_domain_name = indexing_setting.indexing_domain_name
         self.domain_names = (
-            self.domain_names[:index_position] + [indexing_domain_name] + self.domain_names[index_position:]
+            self.domain_names[:index_position]
+            + [indexing_domain_name]
+            + self.domain_names[index_position:]
         )
         set_ = sets[indexing_domain_name]
-        picked_records = [record.keys for i, record in enumerate(set_.records) if indexing_setting.picking.pick(i)]
+        picked_records = [
+            record.keys
+            for i, record in enumerate(set_.records)
+            if indexing_setting.picking.pick(i)
+        ]
         new_data = dict()
         for parameter_index, parameter_value in self.data.items():
             if parameter_value is None:
@@ -279,7 +297,11 @@ class Parameter:
             else:
                 raise GdxExportException("Cannot expand indexes of a scalar value.")
             for new_index, new_value in zip(picked_records, values):
-                expanded_index = tuple(parameter_index[:index_position] + new_index + parameter_index[index_position:])
+                expanded_index = tuple(
+                    parameter_index[:index_position]
+                    + new_index
+                    + parameter_index[index_position:]
+                )
                 new_data[expanded_index] = new_value
         self.data = new_data
 
@@ -652,7 +674,11 @@ class GeneratedRecords(Records):
 
     def to_dict(self):
         """See base class."""
-        return {"indexing_type": "expression", "indexes": self._expression, "length": self._length}
+        return {
+            "indexing_type": "expression",
+            "indexes": self._expression,
+            "length": self._length,
+        }
 
     @staticmethod
     def from_dict(record_dict):
@@ -672,7 +698,9 @@ class GeneratedRecords(Records):
             raise GdxExportException("Failed to compile index expression.")
         generate_record = functools.partial(eval, compiled, {})
         try:
-            records = [(generate_record({"i": i}),) for i in range(1, self._length + 1)]  # pylint: disable=eval-used
+            records = [
+                (generate_record({"i": i}),) for i in range(1, self._length + 1)
+            ]  # pylint: disable=eval-used
         except (AttributeError, NameError, ValueError):
             raise GdxExportException("Failed to evaluate index expression.")
         return records
@@ -702,7 +730,10 @@ class ExtractedRecords(Records):
         """
         if not isinstance(other, ExtractedRecords):
             return False
-        return self._records == other._records and self._parameter_name == other._parameter_name
+        return (
+            self._records == other._records
+            and self._parameter_name == other._parameter_name
+        )
 
     def __len__(self):
         """See base class."""
@@ -744,15 +775,21 @@ class ExtractedRecords(Records):
             .all()
         )
         if not parameter_definitions:
-            raise GdxExportException(f"No definition found for parameter '{parameter_name}' in the database.")
+            raise GdxExportException(
+                f"No definition found for parameter '{parameter_name}' in the database."
+            )
         definition = parameter_definitions[0]
         parameters = (
             db_map.query(db_map.parameter_value_sq)
-            .filter(db_map.parameter_value_sq.c.parameter_definition_id == definition.id)
+            .filter(
+                db_map.parameter_value_sq.c.parameter_definition_id == definition.id
+            )
             .all()
         )
         if not parameters:
-            raise GdxExportException(f"No parameters found under '{parameter_name}' in the database.")
+            raise GdxExportException(
+                f"No parameters found under '{parameter_name}' in the database."
+            )
         value = from_database(parameters[0].value)
         if not isinstance(value, IndexedValue):
             raise GdxExportException(
@@ -777,7 +814,11 @@ class ExtractedRecords(Records):
 
     def to_dict(self):
         """See base class."""
-        return {"indexing_type": "extracted", "parameter_name": self._parameter_name, "indexes": self._records}
+        return {
+            "indexing_type": "extracted",
+            "parameter_name": self._parameter_name,
+            "indexes": self._records,
+        }
 
     @staticmethod
     def from_dict(record_dict):
@@ -836,12 +877,16 @@ def _read_value(value_in_database):
     except ParameterValueFormatError:
         raise GdxExportException("Failed to read parameter_value.")
     if value is not None and not isinstance(value, (float, IndexedValue)):
-        raise GdxUnsupportedValueTypeException(f"Unsupported parameter_value type '{type(value).__name__}'.")
+        raise GdxUnsupportedValueTypeException(
+            f"Unsupported parameter_value type '{type(value).__name__}'."
+        )
     if isinstance(value, Map):
         if value.is_nested():
             raise GdxUnsupportedValueTypeException("Nested maps are not supported.")
         if not all(isinstance(x, float) for x in value.values):
-            raise GdxUnsupportedValueTypeException("Exporting non-numerical values in map is not supported.")
+            raise GdxUnsupportedValueTypeException(
+                "Exporting non-numerical values in map is not supported."
+            )
     return value
 
 
@@ -866,7 +911,9 @@ def find_gams_directory():
     """
     if sys.platform == "win32":
         try:
-            with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, "gams.location") as gams_location_key:
+            with winreg.OpenKey(
+                winreg.HKEY_CLASSES_ROOT, "gams.location"
+            ) as gams_location_key:
                 gams_path, _ = winreg.QueryValueEx(gams_location_key, "")
                 if not _windows_dlls_exist(gams_path):
                     return None
@@ -899,7 +946,9 @@ def expand_indexed_parameter_values(parameters, indexing_settings, sets):
         try:
             parameter.expand_indexes(indexing_setting, sets)
         except GdxExportException as error:
-            raise GdxExportException(f"Problem with parameter '{parameter_name}': {error}")
+            raise GdxExportException(
+                f"Problem with parameter '{parameter_name}': {error}"
+            )
 
 
 class MergingSetting:
@@ -914,7 +963,14 @@ class MergingSetting:
             not needed for the actual merging but included here to make the parameters' origing traceable
     """
 
-    def __init__(self, parameter_names, new_domain_name, new_domain_description, previous_set, previous_domain_names):
+    def __init__(
+        self,
+        parameter_names,
+        new_domain_name,
+        new_domain_description,
+        previous_set,
+        previous_domain_names,
+    ):
         """
         Args:
             parameter_names (list): parameters to merge
@@ -963,7 +1019,9 @@ class MergingSetting:
         previous_set = setting_dict["previous_set"]
         previous_domains = setting_dict["previous_domains"]
         index_position = setting_dict["index_position"]
-        setting = MergingSetting(parameters, new_domain, description, previous_set, previous_domains)
+        setting = MergingSetting(
+            parameters, new_domain, description, previous_set, previous_domains
+        )
         setting.index_position = index_position
         return setting
 
@@ -981,19 +1039,31 @@ def update_merging_settings(merging_settings, set_settings, db_map):
     """
     updated = dict()
     for merged_parameter_name, setting in merging_settings.items():
-        if setting.previous_set not in set_settings.domain_names | set_settings.set_names:
+        if (
+            setting.previous_set
+            not in set_settings.domain_names | set_settings.set_names
+        ):
             continue
         entity_class_sq = db_map.entity_class_sq
-        entity_class = db_map.query(entity_class_sq).filter(entity_class_sq.c.name == setting.previous_set).first()
+        entity_class = (
+            db_map.query(entity_class_sq)
+            .filter(entity_class_sq.c.name == setting.previous_set)
+            .first()
+        )
         class_id = entity_class.id
         type_id = entity_class.type_id
         type_name = (
-            db_map.query(db_map.entity_class_type_sq).filter(db_map.entity_class_type_sq.c.id == type_id).first().name
+            db_map.query(db_map.entity_class_type_sq)
+            .filter(db_map.entity_class_type_sq.c.id == type_id)
+            .first()
+            .name
         )
         if type_name == "object":
             parameters = db_map.parameter_definition_list(object_class_id=class_id)
         elif type_name == "relationship":
-            parameters = db_map.parameter_definition_list(relationship_class_id=class_id)
+            parameters = db_map.parameter_definition_list(
+                relationship_class_id=class_id
+            )
         else:
             raise GdxExportException(f"Unknown entity_class type '{type_name}'")
         defined_parameter_names = [parameter.name for parameter in parameters]
@@ -1044,13 +1114,17 @@ def merge_parameters(parameters, merging_settings):
                     f"Merged parameter '{parameter_name}' contains indexed values and therefore cannot be merged."
                 )
             for value, base_index in zip(parameter.values, parameter.indexes):
-                expanded_index = base_index[:index_position] + (name,) + base_index[index_position:]
+                expanded_index = (
+                    base_index[:index_position] + (name,) + base_index[index_position:]
+                )
                 indexes.append(expanded_index)
                 values.append(value)
         try:
             parameter = Parameter(merged_domain_names, indexes, values)
         except GdxExportException as error:
-            raise GdxExportException(f"Error while merging parameter '{parameter_name}': {error}")
+            raise GdxExportException(
+                f"Error while merging parameter '{parameter_name}': {error}"
+            )
         merged[parameter_name] = parameter
     for name in used_parameters:
         del parameters[name]
@@ -1076,7 +1150,9 @@ def sets_to_gams(gdx_file, sets, omitted_set=None):
             if record is None:
                 raise RuntimeError()
             record_keys.append(record.keys)
-        gams_set = GAMSSet(record_keys, current_set.domain_names, expl_text=current_set.description)
+        gams_set = GAMSSet(
+            record_keys, current_set.domain_names, expl_text=current_set.description
+        )
         try:
             gdx_file[current_set.name] = gams_set
         except NotImplementedError as error:
@@ -1113,9 +1189,13 @@ def parameters_to_gams(gdx_file, parameters, none_export):
                 )
             indexed_values[tuple(index)] = value
         try:
-            gams_parameter = GAMSParameter(indexed_values, domain=parameter.domain_names)
+            gams_parameter = GAMSParameter(
+                indexed_values, domain=parameter.domain_names
+            )
         except ValueError as error:
-            raise GdxExportException(f"Failed to create GAMS parameter '{parameter_name}': {error}")
+            raise GdxExportException(
+                f"Failed to create GAMS parameter '{parameter_name}': {error}"
+            )
         try:
             gdx_file[parameter_name] = gams_parameter
         except NotImplementedError as error:
@@ -1195,7 +1275,11 @@ def relationship_classes_to_sets(db_map, domain_names, set_names):
         object_class_names = relationship_class_row.object_class_name_list.split(",")
         if not all([name in domain_names for name in object_class_names]):
             continue
-        set_ = Set(relationship_class_row.name, relationship_class_row.description, object_class_names)
+        set_ = Set(
+            relationship_class_row.name,
+            relationship_class_row.description,
+            object_class_names,
+        )
         class_id = relationship_class_row.id
         sets[class_id] = set_
         for relationship_row in db_map.wide_relationship_list(class_id=class_id):
@@ -1221,7 +1305,10 @@ def object_parameters(db_map, domains_with_ids, fallback_on_none, logger):
     classes_with_ignored_parameters = set() if logger is not None else None
     if fallback_on_none == NoneFallback.USE_DEFAULT_VALUE:
         default_values = _default_values(
-            db_map, db_map.object_parameter_definition_sq, domains_with_ids, classes_with_ignored_parameters
+            db_map,
+            db_map.object_parameter_definition_sq,
+            domains_with_ids,
+            classes_with_ignored_parameters,
         )
     else:
         default_values = None
@@ -1242,12 +1329,16 @@ def object_parameters(db_map, domains_with_ids, fallback_on_none, logger):
             parsed_value = default_values[name]
         parameter = parameters.get(name)
         if parameter is None:
-            parameters[name] = Parameter([domain.name], [(parameter_row.object_name,)], [parsed_value])
+            parameters[name] = Parameter(
+                [domain.name], [(parameter_row.object_name,)], [parsed_value]
+            )
             continue
         parameter.data[(parameter_row.object_name,)] = parsed_value
     for name, parameter in parameters.items():
         if not parameter.is_consistent():
-            raise GdxExportException(f"Parameter '{name}' contains a mixture of different value types.")
+            raise GdxExportException(
+                f"Parameter '{name}' contains a mixture of different value types."
+            )
     if classes_with_ignored_parameters:
         class_list = ", ".join(classes_with_ignored_parameters)
         logger.msg_warning.emit(
@@ -1274,7 +1365,10 @@ def relationship_parameters(db_map, sets_with_ids, fallback_on_none, logger):
     classes_with_ignored_parameters = set() if logger is not None else None
     if fallback_on_none == NoneFallback.USE_DEFAULT_VALUE:
         default_values = _default_values(
-            db_map, db_map.relationship_parameter_definition_sq, sets_with_ids, classes_with_ignored_parameters
+            db_map,
+            db_map.relationship_parameter_definition_sq,
+            sets_with_ids,
+            classes_with_ignored_parameters,
         )
     else:
         default_values = None
@@ -1301,7 +1395,9 @@ def relationship_parameters(db_map, sets_with_ids, fallback_on_none, logger):
         parameter.data[keys] = parsed_value
     for name, parameter in parameters.items():
         if not parameter.is_consistent():
-            raise GdxExportException(f"Parameter '{name}' contains a mixture of different value types.")
+            raise GdxExportException(
+                f"Parameter '{name}' contains a mixture of different value types."
+            )
     if classes_with_ignored_parameters:
         class_list = ", ".join(classes_with_ignored_parameters)
         logger.msg_warning.emit(
@@ -1331,7 +1427,9 @@ def _default_values(db_map, subquery, sets_with_ids, classes_with_ignored_parame
             continue
         name = definition_row.parameter_name
         if name in values:
-            raise GdxExportException(f"Duplicate parameter name '{name}' found in different relationship classes.")
+            raise GdxExportException(
+                f"Duplicate parameter name '{name}' found in different relationship classes."
+            )
         try:
             parsed_default_value = _read_value(definition_row.default_value)
         except GdxUnsupportedValueTypeException:
@@ -1414,7 +1512,9 @@ def set_names_and_records(db_map):
         set_name = relationship_class.name
         names.add(set_name)
         records = list()
-        for relationship in db_map.wide_relationship_list(class_id=relationship_class.id):
+        for relationship in db_map.wide_relationship_list(
+            class_id=relationship_class.id
+        ):
             records.append(tuple(relationship.object_name_list.split(",")))
         set_records[set_name] = LiteralRecords(records)
     return names, set_records
@@ -1483,7 +1583,9 @@ class IndexingSetting:
         setting.indexing_domain_name = setting_dict["indexing_domain"]
         setting.index_position = setting_dict["index_position"]
         picking_dict = setting_dict.get("picking")
-        setting.picking = _picking_from_dict(picking_dict) if picking_dict is not None else None
+        setting.picking = (
+            _picking_from_dict(picking_dict) if picking_dict is not None else None
+        )
         return setting
 
 
@@ -1536,7 +1638,9 @@ def _object_indexing_settings(db_map, none_fallback, logger):
         if none_fallback != NoneFallback.USE_DEFAULT_VALUE:
             continue
         name = parameter_row.parameter_name
-        for definition_row in db_map.object_parameter_definition_list(parameter_row.object_class_id):
+        for definition_row in db_map.object_parameter_definition_list(
+            parameter_row.object_class_id
+        ):
             if definition_row.parameter_name != name:
                 continue
             parameter_names_to_skip_on_second_pass.add(name)
@@ -1547,11 +1651,17 @@ def _object_indexing_settings(db_map, none_fallback, logger):
             dimensions = [object_class_name]
             index_keys = (parameter_row.object_name,)
             _add_to_indexing_settings(
-                settings, name, object_class_name, dimensions, value, index_keys, classes_with_unsupported_value_types
+                settings,
+                name,
+                object_class_name,
+                dimensions,
+                value,
+                index_keys,
+                classes_with_unsupported_value_types,
             )
             break
     if classes_with_unsupported_value_types:
-        class_list = ', '.join(classes_with_unsupported_value_types)
+        class_list = ", ".join(classes_with_unsupported_value_types)
         logger.msg_warning.emit(
             f"The following object classes have parameter values of unsupported types: {class_list}"
         )
@@ -1590,7 +1700,9 @@ def _relationship_indexing_settings(db_map, none_fallback, logger):
         if none_fallback != NoneFallback.USE_DEFAULT_VALUE:
             continue
         name = parameter_row.parameter_name
-        for definition_row in db_map.relationship_parameter_definition_list(parameter_row.relationship_class_id):
+        for definition_row in db_map.relationship_parameter_definition_list(
+            parameter_row.relationship_class_id
+        ):
             if definition_row.parameter_name != name:
                 continue
             parameter_names_to_skip_on_second_pass.add(name)
@@ -1610,7 +1722,7 @@ def _relationship_indexing_settings(db_map, none_fallback, logger):
             )
             break
     if classes_with_unsupported_value_types:
-        class_list = ', '.join(classes_with_unsupported_value_types)
+        class_list = ", ".join(classes_with_unsupported_value_types)
         logger.msg_warning.emit(
             f"The following relationship classes have parameter values of unsupported types: {class_list}"
         )
@@ -1652,7 +1764,9 @@ def _add_to_indexing_settings(
         settings[parameter_name] = IndexingSetting(parameter, entity_class_name)
 
 
-def update_indexing_settings(old_indexing_settings, new_indexing_settings, set_settings):
+def update_indexing_settings(
+    old_indexing_settings, new_indexing_settings, set_settings
+):
     """
     Returns new indexing settings merged from old and new ones.
 
@@ -1677,7 +1791,9 @@ def update_indexing_settings(old_indexing_settings, new_indexing_settings, set_s
         if setting.parameter != old_setting.parameter:
             updated[parameter_name] = setting
             if old_setting.indexing_domain_name is not None:
-                old_records = set_settings.records(old_setting.indexing_domain_name).records
+                old_records = set_settings.records(
+                    old_setting.indexing_domain_name
+                ).records
                 if len(old_records) >= len(next(iter(setting.parameter.values))):
                     setting.indexing_domain_name = old_setting.indexing_domain_name
                 else:
@@ -1696,7 +1812,10 @@ def indexing_settings_to_dict(settings):
     Returns:
         dict: a JSON serializable dictionary
     """
-    return {parameter_name: setting.to_dict() for parameter_name, setting in settings.items()}
+    return {
+        parameter_name: setting.to_dict()
+        for parameter_name, setting in settings.items()
+    }
 
 
 def indexing_settings_from_dict(settings_dict, db_map, none_fallback, logger):
@@ -1713,22 +1832,32 @@ def indexing_settings_from_dict(settings_dict, db_map, none_fallback, logger):
     """
     settings = dict()
     for parameter_name, setting_dict in settings_dict.items():
-        parameter, entity_class_name = _find_indexed_parameter(parameter_name, db_map, none_fallback, logger)
+        parameter, entity_class_name = _find_indexed_parameter(
+            parameter_name, db_map, none_fallback, logger
+        )
         if parameter is None:
             continue
-        settings[parameter_name] = IndexingSetting.from_dict(setting_dict, parameter, entity_class_name)
+        settings[parameter_name] = IndexingSetting.from_dict(
+            setting_dict, parameter, entity_class_name
+        )
     return settings
 
 
 def _find_indexed_parameter(parameter_name, db_map, none_fallback, logger=None):
     """Searches for parameter_name in db_map and returns Parameter and its entity_class name."""
-    object_classes_with_unsupported_parameter_types = set() if logger is not None else None
+    object_classes_with_unsupported_parameter_types = (
+        set() if logger is not None else None
+    )
     relationship_classes_with_unsupported_parameter_types = set()
     definition_row = (
-        db_map.parameter_definition_list().filter(db_map.parameter_definition_sq.c.name == parameter_name).first()
+        db_map.parameter_definition_list()
+        .filter(db_map.parameter_definition_sq.c.name == parameter_name)
+        .first()
     )
     if definition_row is None:
-        raise GdxExportException(f"Cannot find parameter '{parameter_name}' in the database.")
+        raise GdxExportException(
+            f"Cannot find parameter '{parameter_name}' in the database."
+        )
     class_name = (
         db_map.query(db_map.entity_class_sq)
         .filter(db_map.entity_class_sq.c.id == definition_row.entity_class_id)
@@ -1761,7 +1890,11 @@ def _find_indexed_parameter(parameter_name, db_map, none_fallback, logger=None):
         if not isinstance(parsed_value, IndexedValue):
             continue
         if value_row.object_id is not None:
-            object_row = db_map.query(db_map.object_sq).filter(db_map.object_sq.c.id == value_row.object_id).first()
+            object_row = (
+                db_map.query(db_map.object_sq)
+                .filter(db_map.object_sq.c.id == value_row.object_id)
+                .first()
+            )
             keys = (object_row.name,)
         else:
             relationship_row = (
@@ -1776,7 +1909,10 @@ def _find_indexed_parameter(parameter_name, db_map, none_fallback, logger=None):
             else:
                 relationship_class_row = (
                     db_map.query(db_map.wide_relationship_class_sq)
-                    .filter(db_map.wide_relationship_class_sq.c.id == value_row.relationship_class_id)
+                    .filter(
+                        db_map.wide_relationship_class_sq.c.id
+                        == value_row.relationship_class_id
+                    )
                     .first()
                 )
                 domain_list = relationship_class_row.object_class_name_list.split(",")
@@ -1784,7 +1920,9 @@ def _find_indexed_parameter(parameter_name, db_map, none_fallback, logger=None):
         else:
             parameter.data[keys] = parsed_value
     if parameter is None:
-        raise GdxExportException(f"Cannot find values for parameter '{parameter_name}' in the database.")
+        raise GdxExportException(
+            f"Cannot find values for parameter '{parameter_name}' in the database."
+        )
     if logger is not None:
         if object_classes_with_unsupported_parameter_types:
             class_list = ", ".join(object_classes_with_unsupported_parameter_types)
@@ -1792,7 +1930,9 @@ def _find_indexed_parameter(parameter_name, db_map, none_fallback, logger=None):
                 f"The following object classes contain parameter values of unsupported types: {class_list}"
             )
         if relationship_classes_with_unsupported_parameter_types:
-            class_list = ", ".join(relationship_classes_with_unsupported_parameter_types)
+            class_list = ", ".join(
+                relationship_classes_with_unsupported_parameter_types
+            )
             logger.msg_warning.emit(
                 f"The following relationship classes contain parameter values of unsupported types: {class_list}"
             )
@@ -1848,7 +1988,9 @@ def sort_sets(sets, order):
     try:
         sorted_sets = sorted(sets, key=lambda set_: order[set_.name])
     except KeyError as error:
-        raise GdxExportException(f"Cannot sort sets: missing set '{error}' in settings.")
+        raise GdxExportException(
+            f"Cannot sort sets: missing set '{error}' in settings."
+        )
     return sorted_sets
 
 
@@ -1864,7 +2006,9 @@ def sort_records_inplace(sets, set_settings):
         sorted_keys = set_settings.records(current_set.name).records
         sort_indexes = {key: index for index, key in enumerate(sorted_keys)}
         # pylint: disable=cell-var-from-loop
-        sorted_records = sorted(current_set.records, key=lambda record: sort_indexes[record.keys])
+        sorted_records = sorted(
+            current_set.records, key=lambda record: sort_indexes[record.keys]
+        )
         current_set.records = sorted_records
 
 
@@ -1917,24 +2061,36 @@ def to_gdx_file(
         exported_domain_names.add(set_settings.global_parameters_domain_name)
     domains_with_ids = object_classes_to_domains(database_map, exported_domain_names)
     domains = list(domains_with_ids.values())
-    domain_parameters = object_parameters(database_map, domains_with_ids, none_fallback, logger)
-    domains, global_parameters_domain = extract_domain(domains, set_settings.global_parameters_domain_name)
+    domain_parameters = object_parameters(
+        database_map, domains_with_ids, none_fallback, logger
+    )
+    domains, global_parameters_domain = extract_domain(
+        domains, set_settings.global_parameters_domain_name
+    )
     domains += _create_additional_domains(set_settings)
     domains = sort_sets(domains, set_settings.domain_tiers)
     sort_records_inplace(domains, set_settings)
     domains_with_names = {domain.name: domain for domain in domains}
-    expand_indexed_parameter_values(domain_parameters, indexing_settings, domains_with_names)
+    expand_indexed_parameter_values(
+        domain_parameters, indexing_settings, domains_with_names
+    )
     exported_set_names = _exported_set_names(set_settings.set_names, set_settings)
-    sets_with_ids = relationship_classes_to_sets(database_map, exported_domain_names, exported_set_names)
+    sets_with_ids = relationship_classes_to_sets(
+        database_map, exported_domain_names, exported_set_names
+    )
     sets = list(sets_with_ids.values())
     sets = sort_sets(sets, set_settings.set_tiers)
     sort_records_inplace(sets, set_settings)
-    set_parameters = relationship_parameters(database_map, sets_with_ids, none_fallback, logger)
-    expand_indexed_parameter_values(set_parameters, indexing_settings, domains_with_names)
+    set_parameters = relationship_parameters(
+        database_map, sets_with_ids, none_fallback, logger
+    )
+    expand_indexed_parameter_values(
+        set_parameters, indexing_settings, domains_with_names
+    )
     parameters = {**domain_parameters, **set_parameters}
     merged_parameters = merge_parameters(parameters, merging_settings)
     parameters.update(merged_parameters)
-    with GdxFile(file_name, mode='w', gams_dir=gams_system_directory) as output_file:
+    with GdxFile(file_name, mode="w", gams_dir=gams_system_directory) as output_file:
         sets_to_gams(output_file, domains, global_parameters_domain)
         sets_to_gams(output_file, sets)
         deletable_parameter_names = list()
@@ -2000,13 +2156,21 @@ class SetSettings:
             raise GdxExportException(f"Duplicate domain and set names: {name_clashes}.")
         self._domain_names = domain_names
         self._domain_tiers = (
-            domain_tiers if domain_tiers is not None else {name: i for i, name in enumerate(sorted(domain_names))}
+            domain_tiers
+            if domain_tiers is not None
+            else {name: i for i, name in enumerate(sorted(domain_names))}
         )
         self._set_names = set_names
-        self._set_tiers = set_tiers if set_tiers is not None else {name: i for i, name in enumerate(sorted(set_names))}
+        self._set_tiers = (
+            set_tiers
+            if set_tiers is not None
+            else {name: i for i, name in enumerate(sorted(set_names))}
+        )
         self._records = records
         if metadatas is None:
-            metadatas = {set_name: SetMetadata() for set_name in domain_names | set_names}
+            metadatas = {
+                set_name: SetMetadata() for set_name in domain_names | set_names
+            }
         self._metadatas = metadatas
         self._global_parameters_domain_name = global_parameters_domain_name
 
@@ -2056,7 +2220,9 @@ class SetSettings:
             name (str): new global parameters domain name
         """
         if self._global_parameters_domain_name:
-            self._metadatas[self._global_parameters_domain_name].exportable = ExportFlag.EXPORTABLE
+            self._metadatas[
+                self._global_parameters_domain_name
+            ].exportable = ExportFlag.EXPORTABLE
         if name:
             self._metadatas[name].exportable = ExportFlag.NON_EXPORTABLE
         self._global_parameters_domain_name = name
@@ -2152,19 +2318,33 @@ class SetSettings:
         updating_names = updating_settings._domain_names | updating_settings._set_names
         common_names = old_names & updating_names
         common_domain_names = self._domain_names & updating_settings._domain_names
-        updating_domain_names = list(updating_settings._domain_names - self._domain_names)
-        sorted_common_domain_names = list(
-            sorted(common_domain_names | updated_domain_names, key=lambda n: self._domain_tiers[n])
+        updating_domain_names = list(
+            updating_settings._domain_names - self._domain_names
         )
-        updated_domain_tiers = {n: i for i, n in enumerate(sorted_common_domain_names + updating_domain_names)}
+        sorted_common_domain_names = list(
+            sorted(
+                common_domain_names | updated_domain_names,
+                key=lambda n: self._domain_tiers[n],
+            )
+        )
+        updated_domain_tiers = {
+            n: i
+            for i, n in enumerate(sorted_common_domain_names + updating_domain_names)
+        }
         for name in common_names:
-            updated_records[name] = _update_records(self._records[name], updating_settings._records[name])
+            updated_records[name] = _update_records(
+                self._records[name], updating_settings._records[name]
+            )
             updated_metadatas[name] = self._metadatas[name]
         new_names = updating_names - common_names
         common_set_names = self._set_names & updating_settings._set_names
         updating_set_names = list(updating_settings._set_names - self._set_names)
-        sorted_common_set_names = list(sorted(common_set_names, key=lambda n: self._set_tiers[n]))
-        updating_set_tiers = {n: i for i, n in enumerate(sorted_common_set_names + updating_set_names)}
+        sorted_common_set_names = list(
+            sorted(common_set_names, key=lambda n: self._set_tiers[n])
+        )
+        updating_set_tiers = {
+            n: i for i, n in enumerate(sorted_common_set_names + updating_set_names)
+        }
         for name in new_names:
             updated_records[name] = updating_settings._records[name]
             updated_metadatas[name] = updating_settings._metadatas[name]
@@ -2239,10 +2419,18 @@ class SetSettings:
                 metadatas[name] = SetMetadata.from_dict(set_dict["metadata"])
             global_parameters_domain_name = dictionary["global_parameters_domain_name"]
             settings = SetSettings(
-                domain_names, set_names, records, domain_tiers, set_tiers, metadatas, global_parameters_domain_name
+                domain_names,
+                set_names,
+                records,
+                domain_tiers,
+                set_tiers,
+                metadatas,
+                global_parameters_domain_name,
             )
         except KeyError as missing_key:
-            raise GdxExportException(f"'{missing_key}' field missing from settings dict.")
+            raise GdxExportException(
+                f"'{missing_key}' field missing from settings dict."
+            )
         return settings
 
 
@@ -2321,7 +2509,9 @@ class SetMetadata:
         metadata = SetMetadata()
         exportable = metadata_dict["exportable"]
         metadata.exportable = (
-            ExportFlag.EXPORTABLE if exportable == ExportFlag.EXPORTABLE.value else ExportFlag.NON_EXPORTABLE
+            ExportFlag.EXPORTABLE
+            if exportable == ExportFlag.EXPORTABLE.value
+            else ExportFlag.NON_EXPORTABLE
         )
         metadata.origin = Origin(metadata_dict["origin"])
         metadata.description = metadata_dict.get("description")

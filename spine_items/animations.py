@@ -42,7 +42,7 @@ class ImporterExporterAnimation:
         self.time_line.setCurveShape(QTimeLine.LinearCurve)
         self.time_line.valueChanged.connect(self._handle_time_line_value_changed)
         self.time_line.stateChanged.connect(self._handle_time_line_state_changed)
-        font = QFont('Font Awesome 5 Free Solid')
+        font = QFont("Font Awesome 5 Free Solid")
         item_rect = item.rect()
         cube_size = percentage_size * 0.875 * item_rect.height()
         font.setPixelSize(cube_size)

@@ -32,9 +32,13 @@ class AddProjectItemWidget(QWidget):
 
     def __init__(self, toolbox, x, y, class_, spec=""):
         """Initialize class."""
-        from ..ui.add_project_item import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.add_project_item import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
-        super().__init__(parent=toolbox, f=Qt.Window)  # Setting parent inherits stylesheet
+        super().__init__(
+            parent=toolbox, f=Qt.Window
+        )  # Setting parent inherits stylesheet
         self._toolbox = toolbox
         self._x = x
         self._y = y
@@ -50,7 +54,9 @@ class AddProjectItemWidget(QWidget):
         self.ui.horizontalLayout_statusbar_placeholder.addWidget(self.statusbar)
         # Init
         if toolbox.item_factories[class_.item_type()].supports_specifications():
-            self.ui.comboBox_specification.setModel(toolbox.filtered_spec_factory_models[class_.item_type()])
+            self.ui.comboBox_specification.setModel(
+                toolbox.filtered_spec_factory_models[class_.item_type()]
+            )
             if spec:
                 self.ui.comboBox_specification.setCurrentText(spec)
                 prefix = spec
@@ -63,7 +69,7 @@ class AddProjectItemWidget(QWidget):
         self.name = toolbox.propose_item_name(prefix)
         self.ui.lineEdit_name.setText(self.name)
         self.ui.lineEdit_name.selectAll()
-        self.description = ''
+        self.description = ""
         self.connect_signals()
         self.ui.lineEdit_name.setFocus()
         # Ensure this window gets garbage-collected when closed
@@ -72,7 +78,9 @@ class AddProjectItemWidget(QWidget):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.lineEdit_name.textChanged.connect(self.handle_name_changed)  # Name -> folder name connection
+        self.ui.lineEdit_name.textChanged.connect(
+            self.handle_name_changed
+        )  # Name -> folder name connection
         self.ui.pushButton_ok.clicked.connect(self.handle_ok_clicked)
         self.ui.pushButton_cancel.clicked.connect(self.close)
 
@@ -81,10 +89,10 @@ class AddProjectItemWidget(QWidget):
         """Update label to show upcoming folder name."""
         name = self.ui.lineEdit_name.text()
         default = "Folder:"
-        if name == '':
+        if name == "":
             self.ui.label_folder.setText(default)
         else:
-            folder_name = name.lower().replace(' ', '_')
+            folder_name = name.lower().replace(" ", "_")
             msg = default + " " + folder_name
             self.ui.label_folder.setText(msg)
 
@@ -106,7 +114,7 @@ class AddProjectItemWidget(QWidget):
             self.statusbar.showMessage(msg, 3000)
             return
         # Check that short name (folder) is not reserved
-        short_name = self.name.lower().replace(' ', '_')
+        short_name = self.name.lower().replace(" ", "_")
         if self._toolbox.project_item_model.short_name_reserved(short_name):
             msg = "Item using folder '{0}' already exists".format(short_name)
             self.statusbar.showMessage(msg, 3000)

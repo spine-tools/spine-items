@@ -37,7 +37,9 @@ def move_list_elements(originals, first, last, target):
     del trashable[first : last + 1]
     elements_that_come_before = trashable[:target]
     elements_that_come_after = trashable[target:]
-    brave_new_list = elements_that_come_before + elements_to_move + elements_that_come_after
+    brave_new_list = (
+        elements_that_come_before + elements_to_move + elements_that_come_after
+    )
     return brave_new_list
 
 
@@ -64,4 +66,6 @@ def move_selected_elements_by(list_view, delta):
             current_contiguous_chunk = contiguous_selections[-1]
     model = list_view.model()
     for chunk in contiguous_selections:
-        model.moveRows(QModelIndex(), chunk[0], chunk[1], QModelIndex(), chunk[0] + delta)
+        model.moveRows(
+            QModelIndex(), chunk[0], chunk[1], QModelIndex(), chunk[0] + delta
+        )
