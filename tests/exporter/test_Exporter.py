@@ -136,10 +136,10 @@ class TestExporter(unittest.TestCase):
 
     def test_activating_second_exporter_with_less_database_urls_does_not_crash(self):
         self.exporter._start_worker = MagicMock()
-        item_dict = {"2nd exporter": {"type": "Exporter", "description": "", "settings_packs": None, "x": 0, "y": 0}}
-        self.toolbox.project().add_project_items(item_dict)
-        index = self.toolbox.project_item_model.find_item("2nd exporter")
-        exporter2 = self.toolbox.project_item_model.item(index).project_item
+        item_dict = {"type": "Exporter", "description": "", "settings_packs": None, "x": 0, "y": 0}
+        factory = ExporterFactory()
+        exporter2 = factory.make_item("2nd exporter", item_dict, self.toolbox, self.project, self.toolbox)
+        finish_mock_project_item_construction(factory, exporter2, self.toolbox)
         exporter2._start_worker = MagicMock()
         resources = [
             ProjectItemResource(None, "database", "first url to database"),
@@ -158,7 +158,7 @@ class TestExporter(unittest.TestCase):
         exporter2.handle_dag_changed(1, resources)
         exporter2.activate()
         self.assertEqual(exporter2._properties_ui.databases_list_layout.count(), 1)
-        database_item = self.exporter._properties_ui.databases_list_layout.itemAt(0).widget()
+        database_item = exporter2._properties_ui.databases_list_layout.itemAt(0).widget()
         self.assertEqual(database_item.url_field.text(), "url to a database in the clouds")
 
     def test_handle_dag_changed_does_not_overwrite_properties_tab_when_no_urls_change(self,):
