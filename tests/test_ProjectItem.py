@@ -19,9 +19,10 @@ Unit tests for ProjectItem base class.
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
-import spinetoolbox.resources_icons_rc  # pylint: disable=unused-import
+from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.project_item import ProjectItem
-from .mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
+import spine_items.resources_icons_rc  # pylint: disable=unused-import
+from .mock_helpers import finish_mock_project_item_construction, create_mock_project
 
 
 class TestProjectItem(unittest.TestCase):
@@ -31,22 +32,20 @@ class TestProjectItem(unittest.TestCase):
             QApplication()
 
     def setUp(self):
-        """Set up toolbox."""
-        self.toolbox = create_toolboxui_with_project()
-        item_dict = {"DC": {"type": "Data Connection", "description": "", "x": 0, "y": 0}}
-        self.toolbox.project().add_project_items(item_dict)
-        index = self.toolbox.project_item_model.find_item("DC")
-        self.data_connection = self.toolbox.project_item_model.item(index).project_item
+        """Set up."""
+        self.toolbox = MagicMock()
+        factory = DataConnectionFactory()
+        item_dict = {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}
+        self.project = create_mock_project()
+        self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project, self.toolbox)
+        finish_mock_project_item_construction(factory, self.data_connection, self.toolbox)
 
     def tearDown(self):
         """Clean up."""
         self.data_connection.data_dir_watcher.removePath(self.data_connection.data_dir)
-        clean_up_toolboxui_with_project(self.toolbox)
 
     def test_notify_destination(self):
-        self.toolbox.msg_warning = NonCallableMagicMock()
-        self.toolbox.msg_warning.attach_mock(MagicMock(), "emit")
-        item = ProjectItem("name", "description", 0.0, 0.0, self.toolbox.project(), self.toolbox)
+        item = ProjectItem("name", "description", 0.0, 0.0, self.project, self.toolbox)
         item.item_type = MagicMock(return_value="item_type")
         item.notify_destination(item)
         self.toolbox.msg_warning.emit.assert_called_with(

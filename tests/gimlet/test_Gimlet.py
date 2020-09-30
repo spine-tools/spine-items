@@ -20,10 +20,11 @@ import os
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
-import spinetoolbox.resources_icons_rc  # pylint: disable=unused-import
+import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.gimlet.item_info import ItemInfo
 from spine_items.gimlet.gimlet import Gimlet
-from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
+from spine_items.gimlet.gimlet_factory import GimletFactory
+from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
 
 
 class TestGimlet(unittest.TestCase):
@@ -34,27 +35,22 @@ class TestGimlet(unittest.TestCase):
 
     def setUp(self):
         """Set up."""
-        self.toolbox = create_toolboxui_with_project()
+        self.toolbox = MagicMock()
+        factory = GimletFactory()
         item_dict = {
-            "G": {
-                "type": "Gimlet",
-                "description": "",
-                "use_shell": True,
-                "shell_index": 0,
-                "cmd": "",
-                "selections": {},
-                "work_dir_mode": True,
-                "x": 0,
-                "y": 0,
-            }
+            "type": "Gimlet",
+            "description": "",
+            "use_shell": True,
+            "shell_index": 0,
+            "cmd": "",
+            "selections": {},
+            "work_dir_mode": True,
+            "x": 0,
+            "y": 0,
         }
-        self.toolbox.project().add_project_items(item_dict)
-        index = self.toolbox.project_item_model.find_item("G")
-        self.gimlet = self.toolbox.project_item_model.item(index).project_item
-
-    def tearDown(self):
-        """Clean up."""
-        clean_up_toolboxui_with_project(self.toolbox)
+        self.project = create_mock_project()
+        self.gimlet = factory.make_item("G", item_dict, self.toolbox, self.project, self.toolbox)
+        finish_mock_project_item_construction(factory, self.gimlet, self.toolbox)
 
     def test_item_type(self):
         self.assertEqual(Gimlet.item_type(), ItemInfo.item_type())
@@ -66,10 +62,6 @@ class TestGimlet(unittest.TestCase):
         self.assertEqual(Gimlet.default_name_prefix(), "Gimlet")
 
     def test_notify_destination(self):
-        self.toolbox.msg = MagicMock()
-        self.toolbox.msg.attach_mock(MagicMock(), "emit")
-        self.toolbox.msg_warning = MagicMock()
-        self.toolbox.msg_warning.attach_mock(MagicMock(), "emit")
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Data Connection")
@@ -104,7 +96,7 @@ class TestGimlet(unittest.TestCase):
         self.assertEqual(expected_name, self.gimlet.name)  # Item name
         self.assertEqual(expected_name, self.gimlet._properties_ui.label_gimlet_name.text())  # Name label in props
         self.assertEqual(expected_name, self.gimlet.get_icon().name_item.text())  # Name item on Design View
-        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
+        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.gimlet.data_dir)  # Check data dir
 
     def test_split_gimlet_cmd(self):

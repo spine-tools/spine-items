@@ -22,32 +22,28 @@ from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
 from spine_items.project_item_resource import ProjectItemResource
 from spine_items.exporter.exporter import Exporter
+from spine_items.exporter.exporter_factory import ExporterFactory
 from spine_items.exporter.executable_item import ExecutableItem
 from spine_items.exporter.item_info import ItemInfo
-from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
+from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
 
 
 class TestExporter(unittest.TestCase):
     def setUp(self):
         """Set up."""
-        self.toolbox = create_toolboxui_with_project()
+        self.toolbox = MagicMock()
+        factory = ExporterFactory()
         item_dict = {
-            "exporter": {
-                "type": "Exporter",
-                "description": "",
-                "settings_packs": list(),
-                "cancel_on_error": True,
-                "x": 0,
-                "y": 0,
-            }
+            "type": "Exporter",
+            "description": "",
+            "settings_packs": list(),
+            "cancel_on_error": True,
+            "x": 0,
+            "y": 0,
         }
-        self.toolbox.project().add_project_items(item_dict)
-        index = self.toolbox.project_item_model.find_item("exporter")
-        self.exporter = self.toolbox.project_item_model.item(index).project_item
-
-    def tearDown(self):
-        """Clean up."""
-        clean_up_toolboxui_with_project(self.toolbox)
+        self.project = create_mock_project()
+        self.exporter = factory.make_item("E", item_dict, self.toolbox, self.project, self.toolbox)
+        finish_mock_project_item_construction(factory, self.exporter, self.toolbox)
 
     @classmethod
     def setUpClass(cls):
@@ -73,10 +69,6 @@ class TestExporter(unittest.TestCase):
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
     def test_notify_destination(self):
-        self.toolbox.msg = MagicMock()
-        self.toolbox.msg.attach_mock(MagicMock(), "emit")
-        self.toolbox.msg_warning = MagicMock()
-        self.toolbox.msg_warning.attach_mock(MagicMock(), "emit")
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Data Connection")
@@ -95,7 +87,7 @@ class TestExporter(unittest.TestCase):
         self.exporter.notify_destination(source_item)
         self.toolbox.msg.emit.assert_called_with(
             "Link established. Data Store <b>source name</b> will be "
-            "exported to a .gdx file by <b>exporter</b> when executing."
+            "exported to a .gdx file by <b>E</b> when executing."
         )
         source_item.item_type = MagicMock(return_value="Tool")
         self.exporter.notify_destination(source_item)
@@ -123,7 +115,7 @@ class TestExporter(unittest.TestCase):
         self.assertEqual(expected_name, self.exporter._properties_ui.item_name_label.text())  # name label in props
         self.assertEqual(expected_name, self.exporter.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
+        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.exporter.data_dir)  # Check data dir
 
     def test_activation_populates_properties_tab(self):

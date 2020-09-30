@@ -18,17 +18,18 @@ Unit tests for DataStore class.
 
 import unittest
 from unittest import mock
+from unittest.mock import MagicMock
 import os
 import logging
 import sys
 from spinedb_api import create_new_spine_database
 from PySide2.QtWidgets import QApplication, QMessageBox
-import spinetoolbox.resources_icons_rc  # pylint: disable=unused-import
-from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
+import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.data_store.data_store import DataStore
+from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.executable_item import ExecutableItem
 from spine_items.data_store.item_info import ItemInfo
-from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
+from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
 
 
 # noinspection PyUnusedLocal
@@ -48,17 +49,14 @@ class TestDataStore(unittest.TestCase):
         )
 
     def setUp(self):
-        """Overridden method. Runs before each test. Makes instance of ToolboxUI class.
-        Note: unittest_settings.conf is not actually saved because ui_main.closeEvent()
-        is not called in tearDown().
-        """
-        self.toolbox = create_toolboxui_with_project()
-        self.ds_properties_ui = self.toolbox.project_item_properties_ui("Data Store")
-        # Let's add a Data Store to the project here since all tests in this class need it
-        item_dict = {"DS": {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}}
-        self.toolbox.project().add_project_items(item_dict)
-        self.ds_index = self.toolbox.project_item_model.find_item("DS")
-        self.ds = self.toolbox.project_item_model.item(self.ds_index).project_item
+        """Set up."""
+        self.toolbox = MagicMock()
+        factory = DataStoreFactory()
+        item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
+        self.project = create_mock_project()
+        self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project, self.toolbox)
+        finish_mock_project_item_construction(factory, self.ds, self.toolbox)
+        self.ds_properties_ui = self.ds._properties_ui
 
     def tearDown(self):
         """Overridden method. Runs after each test.
@@ -76,7 +74,6 @@ class TestDataStore(unittest.TestCase):
                 os.remove(temp_db_path)
             except OSError as os_e:
                 logging.error("Failed to remove %s. Error: %s", temp_db_path, os_e)
-        clean_up_toolboxui_with_project(self.toolbox)
 
     def create_temp_db(self):
         """Let's create a real db to more easily test complicated stuff (such as opening a tree view)."""
@@ -211,8 +208,8 @@ class TestDataStore(unittest.TestCase):
         # Open form
         with mock.patch("spinetoolbox.spine_db_editor.widgets.spine_db_editor.SpineDBEditor.show"):
             self.ds_properties_ui.pushButton_ds_open_editor.click()
+        self.assertIn((self.ds._sa_url,), self.ds._project.db_mngr._db_editors)
         ds_form = self.ds._project.db_mngr._db_editors[(self.ds._sa_url,)]
-        self.assertIsInstance(ds_form, SpineDBEditor)
         expected_url = "sqlite:///" + temp_db_path
         self.assertEqual(expected_url, str(ds_form.db_url))
         ds_form.close()
@@ -232,8 +229,8 @@ class TestDataStore(unittest.TestCase):
         # Open form
         with mock.patch("spinetoolbox.spine_db_editor.widgets.spine_db_editor.SpineDBEditor.show"):
             self.ds_properties_ui.pushButton_ds_open_editor.click()
+        self.assertIn((self.ds._sa_url,), self.ds._project.db_mngr._db_editors)
         ds_form = self.ds._project.db_mngr._db_editors[(self.ds._sa_url,)]
-        self.assertIsInstance(ds_form, SpineDBEditor)
         expected_url = "sqlite:///" + temp_db_path
         self.assertEqual(expected_url, str(ds_form.db_maps[0].db_url))
         ds_form.close()
@@ -293,7 +290,7 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(expected_name, self.ds_properties_ui.label_ds_name.text())  # name label in props
         self.assertEqual(expected_name, self.ds.get_icon().name_item.text())  # name item on Design View
         # Check data_dir and logs_dir
-        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
+        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
         # Check that the database path in properties has been updated
         expected_db_path = os.path.join(expected_data_dir, "DS.sqlite")

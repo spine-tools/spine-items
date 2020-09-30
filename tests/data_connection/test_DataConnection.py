@@ -25,24 +25,21 @@ from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
 from PySide2.QtGui import QStandardItemModel, Qt
 from spine_items.data_connection.data_connection import DataConnection
+from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.data_connection.executable_item import ExecutableItem
 from spine_items.data_connection.item_info import ItemInfo
-from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
+from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
 
 
 class TestDataConnection(unittest.TestCase):
     def setUp(self):
-        """Set up toolbox."""
-        self.toolbox = create_toolboxui_with_project()
-        item_dict = {"DC": {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}}
-        self.toolbox.project().add_project_items(item_dict)
-        index = self.toolbox.project_item_model.find_item("DC")
-        self.data_connection = self.toolbox.project_item_model.item(index).project_item
-
-    def tearDown(self):
-        """Clean up."""
-        self.data_connection.data_dir_watcher.removePath(self.data_connection.data_dir)
-        clean_up_toolboxui_with_project(self.toolbox)
+        """Set up."""
+        self.toolbox = MagicMock()
+        factory = DataConnectionFactory()
+        item_dict = {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}
+        self.project = create_mock_project()
+        self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project, self.toolbox)
+        finish_mock_project_item_construction(factory, self.data_connection, self.toolbox)
 
     @classmethod
     def setUpClass(cls):
@@ -201,10 +198,6 @@ class TestDataConnection(unittest.TestCase):
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
     def test_notify_destination(self):
-        self.toolbox.msg = MagicMock()
-        self.toolbox.msg.attach_mock(MagicMock(), "emit")
-        self.toolbox.msg_warning = MagicMock()
-        self.toolbox.msg_warning.attach_mock(MagicMock(), "emit")
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Importer")
@@ -247,7 +240,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(expected_name, self.data_connection._properties_ui.label_dc_name.text())  # name label in props
         self.assertEqual(expected_name, self.data_connection.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
+        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.data_connection.data_dir)  # Check data dir
         # Check that data_dir_watcher has one path (new data_dir)
         watched_dirs = self.data_connection.data_dir_watcher.directories()

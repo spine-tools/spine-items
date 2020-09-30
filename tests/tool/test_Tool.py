@@ -19,31 +19,33 @@ Unit tests for Tool project item.
 from tempfile import mkdtemp
 import unittest
 from unittest import mock
+from unittest.mock import MagicMock
 import os
 import shutil
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QStandardItem, QStandardItemModel
-from PySide2.QtWidgets import QApplication
+from PySide2.QtWidgets import QApplication, QMenu
 from spine_items.tool.item_info import ItemInfo
 from spine_items.tool.tool_specifications import ExecutableTool
 from spine_items.tool.tool import Tool
+from spine_items.tool.tool_factory import ToolFactory
 from spine_items.tool.executable_item import ExecutableItem
 from spine_items.config import TOOL_OUTPUT_DIR
-from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
+from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
 
 
 class TestTool(unittest.TestCase):
     def setUp(self):
         """Set up."""
         self.basedir = mkdtemp()
-        self.toolbox = create_toolboxui_with_project()
+        self.toolbox = MagicMock()
+        self.project = create_mock_project()
         model = _MockToolSpecModel(self.toolbox, self.basedir)
         self.toolbox.specification_model = self.toolbox.filtered_spec_factory_models["Tool"] = model
         self.toolbox.specification_model_changed.emit()
 
     def tearDown(self):
         """Clean up."""
-        clean_up_toolboxui_with_project(self.toolbox)
         shutil.rmtree(self.basedir)
 
     @classmethod
@@ -126,7 +128,7 @@ class TestTool(unittest.TestCase):
         self.assertEqual(expected_name, tool._properties_ui.label_tool_name.text())  # name label in props
         self.assertEqual(expected_name, tool.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
+        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, tool.data_dir)  # Check data dir
         # Check that output_dir has been updated
         expected_output_dir = os.path.join(tool.data_dir, TOOL_OUTPUT_DIR)
@@ -136,20 +138,18 @@ class TestTool(unittest.TestCase):
         """Test that specification is loaded into selections on Tool creation,
         and then shown in the ui when Tool is activated.
         """
-        item = {
-            "Tool": {
-                "type": "Tool",
-                "description": "",
-                "x": 0,
-                "y": 0,
-                "specification": "simple_exec",
-                "execute_in_work": False,
-            }
+        item_dict = {
+            "type": "Tool",
+            "description": "",
+            "x": 0,
+            "y": 0,
+            "specification": "simple_exec",
+            "execute_in_work": False,
         }
-        self.toolbox.project().add_project_items(item)
-        ind = self.toolbox.project_item_model.find_item("Tool")
-        tool = self.toolbox.project_item_model.item(ind).project_item
-        tool.activate()
+        tool = self._add_tool(item_dict)
+        with mock.patch("spine_items.tool.tool.ToolSpecificationMenu") as mock_tool_spec_menu:
+            mock_tool_spec_menu.side_effect = lambda *args: QMenu()
+            tool.activate()
         self._assert_is_simple_exec_tool(tool)
 
     def test_save_and_restore_selections(self):
@@ -167,11 +167,14 @@ class TestTool(unittest.TestCase):
         tool.activate()
         self._assert_is_simple_exec_tool(tool)
 
-    def _add_tool(self):
-        item_dict = {"T": {"type": "Tool", "description": "", "x": 0, "y": 0}}
-        self.toolbox.project().add_project_items(item_dict)
-        index = self.toolbox.project_item_model.find_item("T")
-        return self.toolbox.project_item_model.item(index).project_item
+    def _add_tool(self, item_dict=None):
+        if item_dict is None:
+            item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0}
+        factory = ToolFactory()
+        self.project = create_mock_project()
+        tool = factory.make_item("T", item_dict, self.toolbox, self.project, self.toolbox)
+        finish_mock_project_item_construction(factory, tool, self.toolbox)
+        return tool
 
     def _assert_is_simple_exec_tool(self, tool):
         """Assert that the given tool has the simple_exec specification."""

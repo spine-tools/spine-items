@@ -22,34 +22,30 @@ from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication
 from spine_items.importer.importer import Importer
+from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.item_info import ItemInfo
 from spine_items.project_item_resource import ProjectItemResource
-from ..mock_helpers import clean_up_toolboxui_with_project, create_toolboxui_with_project
+from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
 
 
 class TestImporter(unittest.TestCase):
     def setUp(self):
         """Set up."""
-        self.toolbox = create_toolboxui_with_project()
+        self.toolbox = MagicMock()
+        factory = ImporterFactory()
         item_dict = {
-            "importer": {
-                "type": "Importer",
-                "description": "",
-                "mappings": list(),
-                "cancel_on_error": True,
-                "mapping_selection": list(),
-                "x": 0,
-                "y": 0,
-            }
+            "type": "Importer",
+            "description": "",
+            "mappings": list(),
+            "cancel_on_error": True,
+            "mapping_selection": list(),
+            "x": 0,
+            "y": 0,
         }
-        self.toolbox.project().add_project_items(item_dict)
-        index = self.toolbox.project_item_model.find_item("importer")
-        self.importer = self.toolbox.project_item_model.item(index).project_item
-
-    def tearDown(self):
-        """Clean up."""
-        clean_up_toolboxui_with_project(self.toolbox)
+        self.project = create_mock_project()
+        self.importer = factory.make_item("I", item_dict, self.toolbox, self.project, self.toolbox)
+        finish_mock_project_item_construction(factory, self.importer, self.toolbox)
 
     @classmethod
     def setUpClass(cls):
@@ -75,16 +71,12 @@ class TestImporter(unittest.TestCase):
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
     def test_notify_destination(self):
-        self.toolbox.msg = MagicMock()
-        self.toolbox.msg.attach_mock(MagicMock(), "emit")
-        self.toolbox.msg_warning = MagicMock()
-        self.toolbox.msg_warning.attach_mock(MagicMock(), "emit")
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Data Connection")
         self.importer.notify_destination(source_item)
         self.toolbox.msg.emit.assert_called_with(
-            "Link established. You can define mappings on data from <b>source name</b> using item <b>importer</b>."
+            "Link established. You can define mappings on data from <b>source name</b> using item <b>I</b>."
         )
         source_item.item_type = MagicMock(return_value="Data Store")
         self.importer.notify_destination(source_item)
@@ -98,8 +90,7 @@ class TestImporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="Tool")
         self.importer.notify_destination(source_item)
         self.toolbox.msg.emit.assert_called_with(
-            "Link established."
-            " You can define mappings on output files from <b>source name</b> using item <b>importer</b>."
+            "Link established." " You can define mappings on output files from <b>source name</b> using item <b>I</b>."
         )
         source_item.item_type = MagicMock(return_value="View")
         self.importer.notify_destination(source_item)
@@ -122,7 +113,7 @@ class TestImporter(unittest.TestCase):
         self.assertEqual(expected_name, self.importer._properties_ui.label_name.text())  # name label in props
         self.assertEqual(expected_name, self.importer.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(self.toolbox.project().items_dir, expected_short_name)
+        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.importer.data_dir)  # Check data dir
 
     def test_handle_dag_changed(self):

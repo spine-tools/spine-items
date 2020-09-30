@@ -527,3 +527,23 @@ class ProjectItemFactory:
             QWidget: item's specification widget
         """
         raise NotImplementedError()
+
+
+def finish_project_item_construction(project_item, toolbox):
+    """
+    Activates the given project item so it works with the given toolbox.
+    This is mainly intended to facilitate adding items back with redo.
+
+    Args:
+        project_item (ProjectItem)
+        toolbox (ToolboxUI)
+    """
+    icon = project_item.get_icon()
+    if icon is not None:
+        icon.activate()
+    else:
+        icon = toolbox.make_project_item_icon(project_item)
+        project_item.set_icon(icon)
+    project_item.set_properties_ui(toolbox.project_item_properties_ui(project_item.item_type()))
+    project_item.create_data_dir()
+    project_item.set_up()
