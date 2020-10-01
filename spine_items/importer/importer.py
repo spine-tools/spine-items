@@ -124,9 +124,7 @@ class Importer(ProjectItem):
         for successor in successors:
             if successor.item_type() == "Data Store":
                 url = successor.sql_alchemy_url()
-                database_map = self._project.db_mngr.get_db_map(url, self._logger)
-                if database_map is not None:
-                    committed_db_maps.add(database_map)
+                committed_db_maps |= set(self._project.db_mngr.open_db_maps(url))
         if committed_db_maps:
             cookie = self
             self._project.db_mngr.session_committed.emit(committed_db_maps, cookie)
