@@ -40,7 +40,7 @@ def create_mock_project():
 
 
 def finish_mock_project_item_construction(factory, project_item, mock_toolbox):
-    icon = factory.make_icon(mock_toolbox, 0, 0)
+    icon = factory.make_icon(mock_toolbox)
     project_item.set_icon(icon)
     properties_widget = factory.make_properties_widget(mock_toolbox)
     project_item.set_properties_ui(properties_widget.ui)
