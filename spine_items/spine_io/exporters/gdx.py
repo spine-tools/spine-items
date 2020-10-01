@@ -1222,8 +1222,6 @@ def object_parameters(db_map, set_settings, fallback_on_none, logger):
         default_values = None
     for parameter_row in db_map.query(db_map.object_parameter_value_sq).all():
         domain = parameter_row.object_class_name
-        if not set_settings.is_exportable(domain) and domain != set_settings.global_parameters_domain_name:
-            continue
         name = parameter_row.parameter_name
         try:
             parsed_value = _read_value(parameter_row.value)
@@ -1305,8 +1303,6 @@ def relationship_parameters(db_map, set_settings, fallback_on_none, logger):
         default_values = None
     for parameter_row in db_map.query(db_map.relationship_parameter_value_sq).all():
         set_name = parameter_row.relationship_class_name
-        if not set_settings.is_exportable(set_name):
-            continue
         name = parameter_row.parameter_name
         try:
             parsed_value = _read_value(parameter_row.value)
