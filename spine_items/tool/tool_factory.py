@@ -16,7 +16,7 @@ The ToolFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item import ProjectItemFactory
+from ..project_item_factory import ProjectItemFactory
 from .tool import Tool
 from .tool_icon import ToolIcon
 from .widgets.tool_properties_widget import ToolPropertiesWidget
@@ -43,8 +43,8 @@ class ToolFactory(ProjectItemFactory):
         return AddToolWidget(toolbox, x, y, specification)
 
     @staticmethod
-    def make_icon(toolbox, x, y, project_item):
-        return ToolIcon(toolbox, x, y, project_item, ToolFactory.icon())
+    def make_icon(toolbox):
+        return ToolIcon(toolbox, ToolFactory.icon())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project, logger):

@@ -16,7 +16,7 @@ The ExporterFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item import ProjectItemFactory
+from ..project_item_factory import ProjectItemFactory
 from .exporter import Exporter
 from .exporter_icon import ExporterIcon
 from .widgets.add_exporter_widget import AddExporterWidget
@@ -37,8 +37,8 @@ class ExporterFactory(ProjectItemFactory):
         return AddExporterWidget(toolbox, x, y, specification)
 
     @staticmethod
-    def make_icon(toolbox, x, y, project_item):
-        return ExporterIcon(toolbox, x, y, project_item, ExporterFactory.icon())
+    def make_icon(toolbox):
+        return ExporterIcon(toolbox, ExporterFactory.icon())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project, logger):

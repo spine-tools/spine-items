@@ -16,7 +16,7 @@ The GimletFactory class.
 :date:   22.4.2020
 """
 
-from ..project_item import ProjectItemFactory
+from ..project_item_factory import ProjectItemFactory
 from .gimlet import Gimlet
 from .gimlet_icon import GimletIcon
 from .widgets.gimlet_properties_widget import GimletPropertiesWidget
@@ -37,8 +37,8 @@ class GimletFactory(ProjectItemFactory):
         return AddGimletWidget(toolbox, x, y, specification)
 
     @staticmethod
-    def make_icon(toolbox, x, y, project_item):
-        return GimletIcon(toolbox, x, y, project_item, GimletFactory.icon())
+    def make_icon(toolbox):
+        return GimletIcon(toolbox, GimletFactory.icon())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project, logger):

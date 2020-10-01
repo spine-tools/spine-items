@@ -16,7 +16,7 @@ The ViewFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item import ProjectItemFactory
+from ..project_item_factory import ProjectItemFactory
 from .view import View
 from .view_icon import ViewIcon
 from .widgets.view_properties_widget import ViewPropertiesWidget
@@ -37,8 +37,8 @@ class ViewFactory(ProjectItemFactory):
         return AddViewWidget(toolbox, x, y, specification)
 
     @staticmethod
-    def make_icon(toolbox, x, y, project_item):
-        return ViewIcon(toolbox, x, y, project_item, ViewFactory.icon())
+    def make_icon(toolbox):
+        return ViewIcon(toolbox, ViewFactory.icon())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project, logger):

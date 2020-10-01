@@ -22,19 +22,14 @@ from ..animations import ImporterAnimation
 
 
 class ImporterIcon(ProjectItemIcon):
-    def __init__(self, toolbox, x, y, project_item, icon):
+    def __init__(self, toolbox, icon):
         """Importer icon for the Design View.
 
         Args:
             toolbox (ToolBoxUI): QMainWindow instance
-            x (float): Icon x coordinate
-            y (float): Icon y coordinate
-            project_item (ProjectItem): Item
             icon (str): icon resource path
         """
-        super().__init__(
-            toolbox, x, y, project_item, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc")
-        )
+        super().__init__(toolbox, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc"))
         self.animation = ImporterAnimation(self, x_shift=4)
         self.start_animation = self.animation.start
         self.stop_animation = self.animation.stop

@@ -21,16 +21,11 @@ from spine_items.graphics_items import ProjectItemIcon
 
 
 class GimletIcon(ProjectItemIcon):
-    def __init__(self, toolbox, x, y, project_item, icon):
+    def __init__(self, toolbox, icon):
         """Gimlet icon for the Design View.
 
         Args:
             toolbox (ToolBoxUI): QMainWindow instance
-            x (float): Icon x coordinate
-            y (float): Icon y coordinate
-            project_item (ProjectItem): Item
             icon (str): Icon resource path
         """
-        super().__init__(
-            toolbox, x, y, project_item, icon, icon_color=QColor("#ffd045"), background_color=QColor("#fff2cc")
-        )
+        super().__init__(toolbox, icon, icon_color=QColor("#ffd045"), background_color=QColor("#fff2cc"))

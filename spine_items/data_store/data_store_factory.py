@@ -16,7 +16,7 @@ The DataStoreFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item import ProjectItemFactory
+from ..project_item_factory import ProjectItemFactory
 from .data_store import DataStore
 from .data_store_icon import DataStoreIcon
 from .widgets.data_store_properties_widget import DataStorePropertiesWidget
@@ -37,8 +37,8 @@ class DataStoreFactory(ProjectItemFactory):
         return AddDataStoreWidget(toolbox, x, y, specification)
 
     @staticmethod
-    def make_icon(toolbox, x, y, project_item):
-        return DataStoreIcon(toolbox, x, y, project_item, DataStoreFactory.icon())
+    def make_icon(toolbox):
+        return DataStoreIcon(toolbox, DataStoreFactory.icon())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project, logger):

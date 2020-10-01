@@ -16,7 +16,7 @@ The CombinerFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item import ProjectItemFactory
+from ..project_item_factory import ProjectItemFactory
 from .combiner import Combiner
 from .combiner_icon import CombinerIcon
 from .widgets.combiner_properties_widget import CombinerPropertiesWidget
@@ -37,8 +37,8 @@ class CombinerFactory(ProjectItemFactory):
         return AddCombinerWidget(toolbox, x, y, specification)
 
     @staticmethod
-    def make_icon(toolbox, x, y, project_item):
-        return CombinerIcon(toolbox, x, y, project_item, CombinerFactory.icon())
+    def make_icon(toolbox):
+        return CombinerIcon(toolbox, CombinerFactory.icon())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project, logger):

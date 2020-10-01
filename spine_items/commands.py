@@ -60,7 +60,7 @@ class MoveIconCommand(SpineToolboxCommand):
         self.previous_pos = {x: x._previous_pos for x in graphics_item.icon_group}
         self.current_pos = {x: x._current_pos for x in graphics_item.icon_group}
         if len(graphics_item.icon_group) == 1:
-            self.setText(f"move {list(graphics_item.icon_group)[0]._project_item.name}")
+            self.setText(f"move {list(graphics_item.icon_group)[0].name()}")
         else:
             self.setText("move multiple items")
 

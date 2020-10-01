@@ -36,21 +36,17 @@ class ProjectItemIcon(QGraphicsRectItem):
 
     ITEM_EXTENT = 64
 
-    def __init__(self, toolbox, x, y, project_item, icon_file, icon_color, background_color):
+    def __init__(self, toolbox, icon_file, icon_color, background_color):
         """Base class for project item icons drawn in Design View.
 
         Args:
             toolbox (ToolBoxUI): QMainWindow instance
-            x (float): Icon x coordinate
-            y (float): Icon y coordinate
-            project_item (ProjectItem): Item
             icon_file (str): Path to icon resource
             icon_color (QColor): Icon's color
             background_color (QColor): Background color
         """
         super().__init__()
         self._toolbox = toolbox
-        self._project_item = project_item
         self.icon_file = icon_file
         self._moved_on_scene = False
         self._previous_pos = QPointF()
@@ -59,11 +55,11 @@ class ProjectItemIcon(QGraphicsRectItem):
         self.renderer = QSvgRenderer()
         self.svg_item = QGraphicsSvgItem(self)
         self.colorizer = QGraphicsColorizeEffect()
-        self.setRect(QRectF(x - self.ITEM_EXTENT / 2, y - self.ITEM_EXTENT / 2, self.ITEM_EXTENT, self.ITEM_EXTENT))
+        self.setRect(QRectF(-self.ITEM_EXTENT / 2, -self.ITEM_EXTENT / 2, self.ITEM_EXTENT, self.ITEM_EXTENT))
         self.text_font_size = 10  # point size
         # Make item name graphics item.
-        name = project_item.name if project_item else ""
-        self.name_item = QGraphicsSimpleTextItem(name, self)
+        self._name = ""
+        self.name_item = QGraphicsSimpleTextItem(self._name, self)
         self.set_name_attributes()  # Set font, size, position, etc.
         # Make connector buttons
         self.connectors = dict(
@@ -77,6 +73,10 @@ class ProjectItemIcon(QGraphicsRectItem):
         brush = QBrush(background_color)
         self._setup(brush, icon_file, icon_color)
         self.activate()
+
+    def update(self, name, x, y):
+        self.update_name_item(name)
+        self.moveBy(x, y)
 
     def activate(self):
         """Adds items to scene and setup graphics effect.
@@ -128,10 +128,11 @@ class ProjectItemIcon(QGraphicsRectItem):
 
     def name(self):
         """Returns name of the item that is represented by this icon."""
-        return self._project_item.name
+        return self._name
 
     def update_name_item(self, new_name):
         """Set a new text to name item. Used when a project item is renamed."""
+        self._name = new_name
         self.name_item.setText(new_name)
         self.set_name_attributes()
 
@@ -237,7 +238,7 @@ class ProjectItemIcon(QGraphicsRectItem):
             event (QKeyEvent): Key event
         """
         if event.key() == Qt.Key_Delete and self.isSelected():
-            self._project_item._project.remove_item(self.name())
+            self._toolbox.project().remove_item(self.name())
             event.accept()
         elif event.key() == Qt.Key_R and self.isSelected():
             # TODO:

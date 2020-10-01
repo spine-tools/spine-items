@@ -16,7 +16,7 @@ The DataConnectionFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item import ProjectItemFactory
+from ..project_item_factory import ProjectItemFactory
 from .data_connection_icon import DataConnectionIcon
 from .data_connection import DataConnection
 from .widgets.data_connection_properties_widget import DataConnectionPropertiesWidget
@@ -37,8 +37,8 @@ class DataConnectionFactory(ProjectItemFactory):
         return AddDataConnectionWidget(toolbox, x, y, specification)
 
     @staticmethod
-    def make_icon(toolbox, x, y, project_item):
-        return DataConnectionIcon(toolbox, x, y, project_item, DataConnectionFactory.icon())
+    def make_icon(toolbox):
+        return DataConnectionIcon(toolbox, DataConnectionFactory.icon())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project, logger):

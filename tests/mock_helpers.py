@@ -20,7 +20,6 @@ from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock
 from PySide2.QtWidgets import QWidget
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
-from spine_items.project_item import finish_project_item_construction
 
 
 class MockQWidget(QWidget):
@@ -41,11 +40,12 @@ def create_mock_project():
 
 
 def finish_mock_project_item_construction(factory, project_item, mock_toolbox):
-    icon = factory.make_icon(mock_toolbox, 0, 0, project_item)
-    mock_toolbox.make_project_item_icon.side_effect = lambda x: icon
+    icon = factory.make_icon(mock_toolbox, 0, 0)
+    project_item.set_icon(icon)
     properties_widget = factory.make_properties_widget(mock_toolbox)
-    mock_toolbox.project_item_properties_ui.return_value = properties_widget.ui
-    finish_project_item_construction(project_item, mock_toolbox)
+    project_item.set_properties_ui(properties_widget.ui)
+    project_item.create_data_dir()
+    project_item.set_up()
     mock_toolbox.msg = MagicMock()
     mock_toolbox.msg.attach_mock(MagicMock(), "emit")
     mock_toolbox.msg_warning = MagicMock()
