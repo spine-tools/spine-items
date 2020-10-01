@@ -18,15 +18,7 @@ Type conversion functions.
 
 import re
 from distutils.util import strtobool
-from PySide2.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QSpinBox,
-    QDateTimeEdit,
-    QLineEdit,
-    QFormLayout,
-)
+from PySide2.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QSpinBox, QDateTimeEdit, QLineEdit, QFormLayout
 from PySide2.QtCore import Qt
 from spinedb_api import DateTime, Duration, ParameterValueFormatError
 

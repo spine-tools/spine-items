@@ -74,8 +74,21 @@ class TestGdx(unittest.TestCase):
         self.assertEqual(list(parameter.indexes), [("label1",), ("label2",)])
         self.assertEqual(list(parameter.values), [4.2, 3.3])
 
+    def test_Parameter_slurp_replaces_different_domain_names_by_None(self):
+        parameter = gdx.Parameter(("domain",), [("label1",)], [4.2])
+        slurpable = gdx.Parameter(("other",), [("label2",)], [3.3])
+        parameter.slurp(slurpable)
+        self.assertEqual(parameter.domain_names, (None,))
+        self.assertEqual(list(parameter.indexes), [("label1",), ("label2",)])
+        self.assertEqual(list(parameter.values), [4.2, 3.3])
+
+    def test_Parameter_slurp_raises_if_domain_names_are_of_different_length(self):
+        parameter = gdx.Parameter(("domain",), [("label1",)], [4.2])
+        slurpable = gdx.Parameter(("domain", "other"), [("label2", "label3")], [3.3])
+        self.assertRaises(gdx.GdxExportException, parameter.slurp, slurpable)
+
     def test_parameter_is_scalar(self):
-        parameter = gdx.Parameter(["domain"], [("label",)], [2.0])
+        parameter = gdx.Parameter(("domain",), [("label",)], [2.0])
         self.assertTrue(parameter.is_scalar())
         parameter = gdx.Parameter(
             ("domain",),
@@ -441,6 +454,32 @@ class TestGdx(unittest.TestCase):
                 self.assertRaises(
                     gdx.GdxExportException, gdx.parameters_to_gams, gdx_file, parameters, gdx.NoneExport.DO_NOT_EXPORT
                 )
+
+    @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
+    def test_parameters_to_gams_slurps_parameters_with_different_doman_names(self):
+        parameters = {
+            "scalar": {
+                ("domain1",): gdx.Parameter(("domain1",), [("key1",)], [2.3]),
+                ("domain2",): gdx.Parameter(("domain2",), [("key2",)], [5.5]),
+            }
+        }
+        gams_directory = gdx_utils.find_gams_directory()
+        with TemporaryDirectory() as temp_directory:
+            path_to_gdx = Path(temp_directory).joinpath(
+                "test_parameters_to_gams_slurps_parameters_with_different_doman_names.gdx"
+            )
+            with GdxFile(path_to_gdx, "w", gams_directory) as gdx_file:
+                gdx.parameters_to_gams(gdx_file, parameters, gdx.NoneExport.DO_NOT_EXPORT)
+            with GdxFile(path_to_gdx, "r", gams_directory) as gdx_file:
+                self.assertEqual(len(gdx_file), 1)
+                gams_parameter = gdx_file["scalar"]
+                self.assertEqual(len(gams_parameter.keys()), 2)
+                keys = ["key1", "key2"]
+                values = [2.3, 5.5]
+                # pylint: disable=not-an-iterable
+                for (key, value), expected_key, expected_value in zip(gams_parameter, keys, values):
+                    self.assertEqual(key, expected_key)
+                    self.assertEqual(value, expected_value)
 
     @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
     def test_domain_parameters_to_gams_scalars(self):

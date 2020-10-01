@@ -51,9 +51,7 @@ def find_gams_directory():
     """
     if sys.platform == "win32":
         try:
-            with winreg.OpenKey(
-                winreg.HKEY_CLASSES_ROOT, "gams.location"
-            ) as gams_location_key:
+            with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, "gams.location") as gams_location_key:
                 gams_path, _ = winreg.QueryValueEx(gams_location_key, None)
                 if not _windows_dlls_exist(gams_path):
                     return None

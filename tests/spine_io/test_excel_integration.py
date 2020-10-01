@@ -75,10 +75,7 @@ class TestExcelIntegration(unittest.TestCase):
             **{"name": "relationship_class", "object_class_id_list": [oc_1.id, oc_2.id]}
         )
         relc2 = db_map.add_wide_relationship_class(
-            **{
-                "name": "relationship_class2",
-                "object_class_id_list": [oc_1.id, oc_2.id],
-            }
+            **{"name": "relationship_class2", "object_class_id_list": [oc_1.id, oc_2.id]}
         )
 
         # create objects
@@ -90,51 +87,23 @@ class TestExcelIntegration(unittest.TestCase):
 
         # add relationships
         rel1 = db_map.add_wide_relationship(
-            **{
-                "name": "rel1",
-                "class_id": relc1.id,
-                "object_id_list": [oc1_obj1.id, oc2_obj1.id],
-            }
+            **{"name": "rel1", "class_id": relc1.id, "object_id_list": [oc1_obj1.id, oc2_obj1.id]}
         )
         rel2 = db_map.add_wide_relationship(
-            **{
-                "name": "rel2",
-                "class_id": relc1.id,
-                "object_id_list": [oc1_obj2.id, oc2_obj2.id],
-            }
+            **{"name": "rel2", "class_id": relc1.id, "object_id_list": [oc1_obj2.id, oc2_obj2.id]}
         )
 
         # create parameters
-        p1 = db_map.add_parameter_definition(
-            **{"name": "parameter1", "object_class_id": oc_1.id}
-        )
-        p2 = db_map.add_parameter_definition(
-            **{"name": "parameter2", "object_class_id": oc_1.id}
-        )
-        p3 = db_map.add_parameter_definition(
-            **{"name": "parameter3", "object_class_id": oc_2.id}
-        )
-        p4 = db_map.add_parameter_definition(
-            **{"name": "parameter4", "object_class_id": oc_2.id}
-        )
-        p5 = db_map.add_parameter_definition(
-            **{"name": "parameter5", "object_class_id": oc_3.id}
-        )
-        p6 = db_map.add_parameter_definition(
-            **{"name": "parameter6", "object_class_id": oc_3.id}
-        )
-        rel_p1 = db_map.add_parameter_definition(
-            **{"name": "rel_parameter1", "relationship_class_id": relc1.id}
-        )
-        rel_p2 = db_map.add_parameter_definition(
-            **{"name": "rel_parameter2", "relationship_class_id": relc1.id}
-        )
-        rel_p3 = db_map.add_parameter_definition(
-            **{"name": "rel_parameter3", "relationship_class_id": relc1.id}
-        )
-        rel_p4 = db_map.add_parameter_definition(
-            **{"name": "rel_parameter4", "relationship_class_id": relc1.id}
-        )
+        p1 = db_map.add_parameter_definition(**{"name": "parameter1", "object_class_id": oc_1.id})
+        p2 = db_map.add_parameter_definition(**{"name": "parameter2", "object_class_id": oc_1.id})
+        p3 = db_map.add_parameter_definition(**{"name": "parameter3", "object_class_id": oc_2.id})
+        p4 = db_map.add_parameter_definition(**{"name": "parameter4", "object_class_id": oc_2.id})
+        p5 = db_map.add_parameter_definition(**{"name": "parameter5", "object_class_id": oc_3.id})
+        p6 = db_map.add_parameter_definition(**{"name": "parameter6", "object_class_id": oc_3.id})
+        rel_p1 = db_map.add_parameter_definition(**{"name": "rel_parameter1", "relationship_class_id": relc1.id})
+        rel_p2 = db_map.add_parameter_definition(**{"name": "rel_parameter2", "relationship_class_id": relc1.id})
+        rel_p3 = db_map.add_parameter_definition(**{"name": "rel_parameter3", "relationship_class_id": relc1.id})
+        rel_p4 = db_map.add_parameter_definition(**{"name": "rel_parameter4", "relationship_class_id": relc1.id})
 
         # add parameter values
         db_map.add_parameter_value(
@@ -210,11 +179,7 @@ class TestExcelIntegration(unittest.TestCase):
             }
         )
 
-        time = [
-            np.datetime64("2005-02-25T00:00"),
-            np.datetime64("2005-02-25T01:00"),
-            np.datetime64("2005-02-25T02:00"),
-        ]
+        time = [np.datetime64("2005-02-25T00:00"), np.datetime64("2005-02-25T01:00"), np.datetime64("2005-02-25T02:00")]
         value = [1, 2, 3]
         ts_val = to_database(TimeSeriesVariableResolution(time, value, False, False))
         db_map.add_parameter_value(
@@ -253,9 +218,7 @@ class TestExcelIntegration(unittest.TestCase):
         oc = {c.id: c.name for c in oc}
         oc_org = db2.object_class_list().all()
         oc_org = {c.id: c.name for c in oc_org}
-        self.assertEqual(
-            set(oc.values()), set(oc_org.values()), msg="Difference in objects classes"
-        )
+        self.assertEqual(set(oc.values()), set(oc_org.values()), msg="Difference in objects classes")
         # objects
         ol = db1.object_list().all()
         ol_id = {o.id: o.name for o in ol}
@@ -266,67 +229,30 @@ class TestExcelIntegration(unittest.TestCase):
         self.assertEqual(ol, ol_org, msg="Difference in objects")
         # relationship classes
         rc = db1.query(db1.relationship_class_sq).all()
-        rc = {
-            c.id: (c.name, tuple(oc[o.object_class_id] for o in rc if o.name == c.name))
-            for c in rc
-        }
+        rc = {c.id: (c.name, tuple(oc[o.object_class_id] for o in rc if o.name == c.name)) for c in rc}
         rc_org = db2.query(db2.relationship_class_sq).all()
-        rc_org = {
-            c.id: (
-                c.name,
-                tuple(oc_org[o.object_class_id] for o in rc_org if o.name == c.name),
-            )
-            for c in rc_org
-        }
-        self.assertEqual(
-            set(rc.values()),
-            set(rc_org.values()),
-            msg="Difference in relationship classes",
-        )
+        rc_org = {c.id: (c.name, tuple(oc_org[o.object_class_id] for o in rc_org if o.name == c.name)) for c in rc_org}
+        self.assertEqual(set(rc.values()), set(rc_org.values()), msg="Difference in relationship classes")
         # relationships
         rel = db1.query(db1.relationship_sq).all()
-        rel = {
-            c.id: (
-                rc[c.class_id][0],
-                tuple(ol_id[o.object_id] for o in rel if o.id == c.id),
-            )
-            for c in rel
-        }
+        rel = {c.id: (rc[c.class_id][0], tuple(ol_id[o.object_id] for o in rel if o.id == c.id)) for c in rel}
         rel_org = db2.query(db2.relationship_sq).all()
         rel_org = {
-            c.id: (
-                rc_org[c.class_id][0],
-                tuple(ol_id_org[o.object_id] for o in rel_org if o.id == c.id),
-            )
+            c.id: (rc_org[c.class_id][0], tuple(ol_id_org[o.object_id] for o in rel_org if o.id == c.id))
             for c in rel_org
         }
-        self.assertEqual(
-            set(rc.values()), set(rc_org.values()), msg="Difference in relationships"
-        )
+        self.assertEqual(set(rc.values()), set(rc_org.values()), msg="Difference in relationships")
         # parameters
         par = db1.parameter_definition_list().all()
         par = {
-            p.id: (
-                p.name,
-                oc[p.object_class_id]
-                if p.object_class_id
-                else rc[p.relationship_class_id][0],
-            )
-            for p in par
+            p.id: (p.name, oc[p.object_class_id] if p.object_class_id else rc[p.relationship_class_id][0]) for p in par
         }
         par_org = db2.parameter_definition_list().all()
         par_org = {
-            p.id: (
-                p.name,
-                oc_org[p.object_class_id]
-                if p.object_class_id
-                else rc_org[p.relationship_class_id][0],
-            )
+            p.id: (p.name, oc_org[p.object_class_id] if p.object_class_id else rc_org[p.relationship_class_id][0])
             for p in par_org
         }
-        self.assertEqual(
-            set(par.values()), set(par_org.values()), msg="Difference in parameters"
-        )
+        self.assertEqual(set(par.values()), set(par_org.values()), msg="Difference in parameters")
         # parameters values
         parv = db1.parameter_value_list().all()
         parv = set(
@@ -373,9 +299,7 @@ class TestExcelIntegration(unittest.TestCase):
                 # is a duplicate relationship_class called relationship_class.
                 # Is this intentional?
                 export_spine_database_to_xlsx(db_map, excel_file_name)
-                import_num = self._import_xlsx_to_database(
-                    excel_file_name, empty_db_map
-                )
+                import_num = self._import_xlsx_to_database(excel_file_name, empty_db_map)
                 self.assertEqual(import_num, 32)
                 self._compare_dbs(empty_db_map, db_map)
             finally:
@@ -392,9 +316,7 @@ class TestExcelIntegration(unittest.TestCase):
                 export_spine_database_to_xlsx(db_map, excel_file_name)
 
                 # import into empty database
-                import_num = self._import_xlsx_to_database(
-                    excel_file_name, empty_db_map
-                )
+                import_num = self._import_xlsx_to_database(excel_file_name, empty_db_map)
                 self.assertEqual(import_num, 32)
 
                 # delete 1 object_class

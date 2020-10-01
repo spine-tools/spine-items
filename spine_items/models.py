@@ -31,9 +31,7 @@ def _file_label(resource):
         label = resource.metadata.get("label")
         if label is None:
             if resource.url is None:
-                raise RuntimeError(
-                    "ProjectItemResource is missing a url and metadata 'label'."
-                )
+                raise RuntimeError("ProjectItemResource is missing a url and metadata 'label'.")
             return resource.path
         return label
     raise RuntimeError(f"Unknown resource type '{resource.type_}'")
@@ -80,12 +78,7 @@ class FileListItem:
             is_pattern = True
         else:
             raise RuntimeError(f"Unknown resource type '{resource.type_}'")
-        return cls(
-            label,
-            resource.path if resource.url else "",
-            resource.provider.name,
-            is_pattern,
-        )
+        return cls(label, resource.path if resource.url else "", resource.provider.name, is_pattern)
 
     def exists(self):
         """Returns True if the file exists, False otherwise."""
@@ -147,12 +140,7 @@ class FileListModel(QAbstractListModel):
             return Qt.NoItemFlags
         item = self._files[index.row()]
         if item.exists():
-            return (
-                Qt.ItemIsSelectable
-                | Qt.ItemIsUserCheckable
-                | Qt.ItemIsEnabled
-                | Qt.ItemNeverHasChildren
-            )
+            return Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemNeverHasChildren
         return Qt.ItemNeverHasChildren
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):

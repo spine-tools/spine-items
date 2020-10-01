@@ -154,13 +154,9 @@ class ConnectionManager(QObject):
             for table_name in table_mappings:
                 options[table_name] = self._table_options.get(table_name, {})
                 types.setdefault(table_name, self._table_types.get(table_name, {}))
-                row_types.setdefault(
-                    table_name, self._table_row_types.get(table_name, {})
-                )
+                row_types.setdefault(table_name, self._table_row_types.get(table_name, {}))
             self.fetching_data.emit()
-            self.start_mapped_data_get.emit(
-                table_mappings, options, types, row_types, max_rows
-            )
+            self.start_mapped_data_get.emit(table_mappings, options, types, row_types, max_rows)
 
     def connection_ui(self):
         """
@@ -182,9 +178,7 @@ class ConnectionManager(QObject):
         self.close_connection()
         # create new thread and worker
         self._thread = QThread()
-        self._worker = ConnectionWorker(
-            self._source, self._connection, self._connection_settings
-        )
+        self._worker = ConnectionWorker(self._source, self._connection, self._connection_settings)
         self._worker.moveToThread(self._thread)
         # connect worker signals
         self._worker.connectionReady.connect(self._handle_connection_ready)
@@ -354,9 +348,7 @@ class ConnectionWorker(QObject):
 
     def mapped_data(self, table_mappings, options, types, table_row_types, max_rows):
         try:
-            data, errors = self._connection.get_mapped_data(
-                table_mappings, options, types, table_row_types, max_rows
-            )
+            data, errors = self._connection.get_mapped_data(table_mappings, options, types, table_row_types, max_rows)
             self.mappedDataReady.emit(data, errors)
         except Exception as error:
             self.error.emit(f"Could not get mapped data from source: {error}")

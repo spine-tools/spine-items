@@ -33,9 +33,7 @@ def latest_database_commit_time_stamp(database_map):
         datetime: latest time stamp or None if there are no commits.
     """
     try:
-        return max(
-            commit.date for commit in database_map.query(database_map.Commit).all()
-        )
+        return max(commit.date for commit in database_map.query(database_map.Commit).all())
     except ValueError:
         return None
 

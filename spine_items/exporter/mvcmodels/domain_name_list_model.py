@@ -45,9 +45,7 @@ class DomainNameListModel(QAbstractListModel):
     def index_for(self, set_name):
         """Returns the QModelIndex for given set name."""
         try:
-            row = [entity_class.name for entity_class in self._entity_classes].index(
-                set_name
-            )
+            row = [entity_class.name for entity_class in self._entity_classes].index(set_name)
         except ValueError:
             return QModelIndex()
         else:

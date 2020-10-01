@@ -26,9 +26,7 @@ def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):
         if paths is not None:
             pick = paths[0]
             if len(paths) > 1 and log_duplicates:
-                logger.msg_warning.emit(
-                    f"Multiple input files satisfy {required_file}; using {pick}"
-                )
+                logger.msg_warning.emit(f"Multiple input files satisfy {required_file}; using {pick}")
             flattened[required_file] = pick
         else:
             flattened[required_file] = None
@@ -105,9 +103,7 @@ def find_last_output_files(output_files, output_dir):
                 if os.path.exists(path):
                     files_found = True
                     file_list = recent_output_files.setdefault(pattern, list())
-                    file_list.append(
-                        _LatestOutputFile.from_paths(path, full_archive_path)
-                    )
+                    file_list.append(_LatestOutputFile.from_paths(path, full_archive_path))
             if files_found:
                 file_patterns.remove(pattern)
             if not file_patterns:

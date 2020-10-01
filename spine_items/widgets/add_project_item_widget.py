@@ -32,13 +32,9 @@ class AddProjectItemWidget(QWidget):
 
     def __init__(self, toolbox, x, y, class_, spec=""):
         """Initialize class."""
-        from ..ui.add_project_item import (
-            Ui_Form,
-        )  # pylint: disable=import-outside-toplevel
+        from ..ui.add_project_item import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__(
-            parent=toolbox, f=Qt.Window
-        )  # Setting parent inherits stylesheet
+        super().__init__(parent=toolbox, f=Qt.Window)  # Setting parent inherits stylesheet
         self._toolbox = toolbox
         self._x = x
         self._y = y
@@ -54,9 +50,7 @@ class AddProjectItemWidget(QWidget):
         self.ui.horizontalLayout_statusbar_placeholder.addWidget(self.statusbar)
         # Init
         if toolbox.item_factories[class_.item_type()].supports_specifications():
-            self.ui.comboBox_specification.setModel(
-                toolbox.filtered_spec_factory_models[class_.item_type()]
-            )
+            self.ui.comboBox_specification.setModel(toolbox.filtered_spec_factory_models[class_.item_type()])
             if spec:
                 self.ui.comboBox_specification.setCurrentText(spec)
                 prefix = spec
@@ -78,9 +72,7 @@ class AddProjectItemWidget(QWidget):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.lineEdit_name.textChanged.connect(
-            self.handle_name_changed
-        )  # Name -> folder name connection
+        self.ui.lineEdit_name.textChanged.connect(self.handle_name_changed)  # Name -> folder name connection
         self.ui.pushButton_ok.clicked.connect(self.handle_ok_clicked)
         self.ui.pushButton_cancel.clicked.connect(self.close)
 

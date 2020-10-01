@@ -209,6 +209,15 @@ class Parameter:
         Args:
             parameter (Parameter): a parameter to append from
         """
+        if len(parameter.domain_names) != len(self.domain_names):
+            raise GdxExportException(f"Cannot combine domains {self.domain_names} into {parameter.domain_names}.")
+        domain_names = list()
+        for name, other_name in zip(self.domain_names, parameter.domain_names):
+            if name == other_name:
+                domain_names.append(name)
+            else:
+                domain_names.append(None)
+        self.domain_names = tuple(domain_names)
         self.data.update(parameter.data)
 
     def is_scalar(self):
@@ -1083,13 +1092,10 @@ def parameters_to_gams(gdx_file, parameters, none_export):
         none_export (NoneExport): option how to handle None values
     """
     for parameter_name, by_dimension in parameters.items():
-        if len(by_dimension) != 1:
-            dimensions = tuple(by_dimension.keys())
-            raise GdxExportException(
-                f"Parameter '{parameter_name}' dimension mismatch: "
-                f"expected a single set of dimensions, but current parameter has {dimensions}"
-            )
-        parameter = next(iter(by_dimension.values()))
+        namesakes = list(by_dimension.values())
+        parameter = namesakes[0]
+        for other in namesakes[1:]:
+            parameter.slurp(other)
         indexed_values = dict()
         for index, value in zip(parameter.indexes, parameter.values):
             if index is None:

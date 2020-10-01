@@ -41,24 +41,9 @@ class CSVConnector(SourceConnection):
     """List of available text encodings"""
 
     OPTIONS = {
-        "encoding": {
-            "type": list,
-            "label": "Encoding",
-            "Items": _ENCODINGS,
-            "default": _ENCODINGS[0],
-        },
-        "delimiter": {
-            "type": list,
-            "label": "Delimiter",
-            "Items": [",", ";", "Tab"],
-            "default": ",",
-        },
-        "delimiter_custom": {
-            "type": str,
-            "label": "Custom Delimiter",
-            "MaxLength": 1,
-            "default": "",
-        },
+        "encoding": {"type": list, "label": "Encoding", "Items": _ENCODINGS, "default": _ENCODINGS[0]},
+        "delimiter": {"type": list, "label": "Delimiter", "Items": [",", ";", "Tab"], "default": ","},
+        "delimiter_custom": {"type": str, "label": "Custom Delimiter", "MaxLength": 1, "default": ""},
         "quotechar": {"type": str, "label": "Quotechar", "MaxLength": 1, "default": ""},
         "has_header": {"type": bool, "label": "Has header", "default": False},
         "skip": {"type": int, "label": "Skip rows", "Minimum": 0, "default": 0},
