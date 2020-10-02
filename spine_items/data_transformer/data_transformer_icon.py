@@ -10,34 +10,22 @@
 ######################################################################################################################
 
 """
-Undo/redo commands for the Importer project item.
+Contains :class:`DataTransformerIcon`.
 
-:authors: M. Marin (KTH)
-:date:   5.5.2020
+:authors: A. Soininen
+:date:   2.10.2020
 """
-import copy
-from spinetoolbox.project_commands import SpineToolboxCommand
+
+from PySide2.QtGui import QColor
+from spinetoolbox.graphics_items import ProjectItemIcon
 
 
-class UpdateSettingsCommand(SpineToolboxCommand):
-    """Command to update Importer settings."""
+class DataTransformerIcon(ProjectItemIcon):
+    def __init__(self, toolbox, icon):
+        """Data transformer icon for the Design View.
 
-    def __init__(self, importer, settings, label):
-        """
         Args:
-            importer (spine_items.importer.importer.Importer): the Importer
-            settings (dict): the new settings
-            label (str): settings file label
+            toolbox (ToolBoxUI): QMainWindow instance
+            icon (str): icon resource path
         """
-        super().__init__()
-        self._importer = importer
-        self._redo_settings = settings
-        self._label = label
-        self._undo_settings = copy.deepcopy(importer.settings.get(label, {}))
-        self.setText(f"change mapping settings of {importer.name}")
-
-    def redo(self):
-        self._importer.settings.setdefault(self._label, {}).update(self._redo_settings)
-
-    def undo(self):
-        self._importer.settings[self._label] = self._undo_settings
+        super().__init__(toolbox, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc"))

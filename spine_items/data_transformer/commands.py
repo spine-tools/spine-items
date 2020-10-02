@@ -10,34 +10,33 @@
 ######################################################################################################################
 
 """
-Undo/redo commands for the Importer project item.
+Contains undo commands for Data Transformer.
 
-:authors: M. Marin (KTH)
-:date:   5.5.2020
+:authors: A. Soininen (VTT)
+:date:    5.10.2020
 """
-import copy
 from spinetoolbox.project_commands import SpineToolboxCommand
 
 
-class UpdateSettingsCommand(SpineToolboxCommand):
-    """Command to update Importer settings."""
+class SetSpecification(SpineToolboxCommand):
+    """Sets Data transformer's specification."""
 
-    def __init__(self, importer, settings, label):
+    def __init__(self, transformer, specification_name, previous_name):
         """
         Args:
-            importer (spine_items.importer.importer.Importer): the Importer
-            settings (dict): the new settings
-            label (str): settings file label
+            transformer (DataTransformer): target project item
+            specification_name (str): new specification's name
+            previous_name (str): previous specification's name
         """
-        super().__init__()
-        self._importer = importer
-        self._redo_settings = settings
-        self._label = label
-        self._undo_settings = copy.deepcopy(importer.settings.get(label, {}))
-        self.setText(f"change mapping settings of {importer.name}")
+        super().__init__(f"set specification of {transformer.name}")
+        self._transformer = transformer
+        self._specification_name = specification_name
+        self._previous_name = previous_name
 
     def redo(self):
-        self._importer.settings.setdefault(self._label, {}).update(self._redo_settings)
+        """Sets the specification."""
+        self._transformer.set_specification(self._specification_name)
 
     def undo(self):
-        self._importer.settings[self._label] = self._undo_settings
+        """Resets the specification."""
+        self._transformer.set_specification(self._previous_name)

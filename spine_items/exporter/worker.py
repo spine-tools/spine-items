@@ -22,6 +22,7 @@ from spinedb_api import (
     apply_scenario_filter_to_parameter_value_sq,
     apply_alternative_filter_to_parameter_value_sq,
     DatabaseMapping,
+    filtered_database_map,
     SpineDBAPIError,
 )
 from spinetoolbox.spine_io.exporters import gdx
@@ -47,9 +48,10 @@ class Worker(QObject):
     msg_warning = Signal(str, str)
     msg_error = Signal(str, str)
 
-    def __init__(self, database_url, scenario, none_fallback):
+    def __init__(self, identifier, database_url, scenario, none_fallback):
         """
         Args:
+            identifier (str): a string that identifies the worker
             database_url (str): database's URL
             scenario (str, optional): scenario name or None if 'Base' alternative should be used
             none_fallback (NoneFallback): how to handle None parameter values
@@ -59,6 +61,7 @@ class Worker(QObject):
         self.moveToThread(self.thread)
         self._scenario = scenario
         self._none_fallback = none_fallback
+        self._identifier = identifier
         self._database_url = str(database_url)
         self._previous_settings = None
         self._previous_indexing_settings = None
@@ -83,7 +86,7 @@ class Worker(QObject):
             result.set_settings = updated_settings
             result.indexing_settings = updated_indexing_settings
             result.merging_settings = updated_merging_settings
-        self.finished.emit(self._database_url, result)
+        self.finished.emit(self._identifier, result)
         self.thread.quit()
 
     def set_previous_settings(self, previous_settings, previous_indexing_settings, previous_merging_settings):
@@ -108,29 +111,29 @@ class Worker(QObject):
     def _read_settings(self):
         """Reads fresh gdx settings from the database."""
         try:
-            database_map = DatabaseMapping(self._database_url)
+            database_map = filtered_database_map(DatabaseMapping, self._database_url)
         except SpineDBAPIError:
-            self.database_unavailable.emit(self._database_url)
+            self.database_unavailable.emit(self._identifier)
             return None, None, None, None
         try:
             scenarios = self._read_scenarios(database_map)
             if self._scenario is not None and self._scenario not in scenarios:
-                self.errored.emit(self._database_url, f"Scenario {self._scenario} not found.")
+                self.errored.emit(self._identifier, f"Scenario {self._scenario} not found.")
                 return None, None, None, None
             if self._scenario is None:
                 apply_alternative_filter_to_parameter_value_sq(database_map, ["Base"])
             else:
                 apply_scenario_filter_to_parameter_value_sq(database_map, self._scenario)
         except SpineDBAPIError as error:
-            self.errored.emit(self._database_url, error)
+            self.errored.emit(self._identifier, error)
             return None, None, None, None
         try:
             time_stamp = latest_database_commit_time_stamp(database_map)
             settings = gdx.make_set_settings(database_map)
-            logger = _Logger(self._database_url, self)
+            logger = _Logger(self._identifier, self)
             indexing_settings = gdx.make_indexing_settings(database_map, self._none_fallback, logger)
         except gdx.GdxExportException as error:
-            self.errored.emit(self._database_url, error)
+            self.errored.emit(self._identifier, error)
             return None, None, None, None
         finally:
             database_map.connection.close()
@@ -146,16 +149,16 @@ class Worker(QObject):
     def _update_merging_settings(self, updated_settings):
         """Updates the parameter merging settings according to changes in the database"""
         try:
-            database_map = DatabaseMapping(self._database_url)
+            database_map = filtered_database_map(DatabaseMapping, self._database_url)
         except SpineDBAPIError as error:
-            self.errored.emit(self._database_url, error)
+            self.errored.emit(self._identifier, error)
             return None
         try:
             updated_merging_settings = gdx.update_merging_settings(
                 self._previous_merging_settings, updated_settings, database_map
             )
         except gdx.GdxExportException as error:
-            self.errored.emit(self._database_url, error)
+            self.errored.emit(self._identifier, error)
             return None
         finally:
             database_map.connection.close()

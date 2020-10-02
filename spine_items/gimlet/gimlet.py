@@ -299,10 +299,17 @@ class Gimlet(ProjectItem):
         """See base class."""
         if source_item.item_type() == "Data Connection":
             self._logger.msg.emit(
-                f"Link established. Files from <b>{source_item.name}</b> " f"are now available in <b>{self.name}</b>"
+                f"Link established. Files from <b>{source_item.name}</b> are now available in <b>{self.name}</b>."
             )
             return
-        elif source_item.item_type() in ["Data Store", "Data Connection", "Tool", "Exporter", "Gimlet"]:
+        elif source_item.item_type() in [
+            "Data Store",
+            "Data Transformer",
+            "Data Connection",
+            "Tool",
+            "Exporter",
+            "Gimlet",
+        ]:
             self._logger.msg.emit("Link established")
             return
         super().notify_destination(source_item)

@@ -20,7 +20,7 @@ from copy import deepcopy
 import pathlib
 import os.path
 from PySide2.QtCore import Qt, Slot
-from spinedb_api import DatabaseMapping, SpineDBAPIError
+from spinedb_api import clear_filter_configs, DatabaseMapping, filtered_database_map, SpineDBAPIError
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from spinetoolbox.helpers import deserialize_path, serialize_url
@@ -45,7 +45,19 @@ class Exporter(ProjectItem):
     Currently, only .gdx format is supported.
     """
 
-    def __init__(self, name, description, x, y, toolbox, project, logger, cancel_on_error=True, settings_packs=None):
+    def __init__(
+        self,
+        name,
+        description,
+        x,
+        y,
+        toolbox,
+        project,
+        logger,
+        cancel_on_error=True,
+        settings_packs=None,
+        url_to_full_url=None,
+    ):
         """
         Args:
             name (str): item name
@@ -57,7 +69,8 @@ class Exporter(ProjectItem):
             logger (LoggerInterface): a logger instance
             cancel_on_error (bool): True if execution should fail on all export errors,
                 False to ignore certain error cases; optional to provide backwards compatibility
-            settings_packs (dict, optional): dicts mapping database URLs to :class:`SettingsPack` objects
+            settings_packs (dict, optional): mapping from vanilla database URLs to :class:`SettingsPack` objects
+            url_to_full_url (dict, optional): mapping from vanilla database URLs to the full URL
         """
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
@@ -74,6 +87,9 @@ class Exporter(ProjectItem):
                 self._start_worker(url, update_settings=True)
             else:
                 self._scenarios[url] = self._read_scenarios(url)
+        if url_to_full_url is None:
+            url_to_full_url = {url: url for url in self._settings_packs}
+        self._url_to_full_url = url_to_full_url
 
     def set_up(self):
         """See base class."""
@@ -131,7 +147,7 @@ class Exporter(ProjectItem):
             dict: a mapping from scenario name to boolean 'active' flag
         """
         try:
-            database_map = DatabaseMapping(database_url)
+            database_map = filtered_database_map(DatabaseMapping, database_url)
         except SpineDBAPIError as error:
             self._logger.msg_error.emit(f"Could not read scenario information for '{database_url}: {error}")
             return {}
@@ -167,21 +183,26 @@ class Exporter(ProjectItem):
     def _do_handle_dag_changed(self, resources):
         """See base class."""
         database_urls = set(r.url for r in resources if r.type_ == "database")
-        if database_urls == set(self._settings_packs):
+        url_to_full_url = {clear_filter_configs(url): url for url in database_urls}
+        if url_to_full_url == self._url_to_full_url:
             self._check_state()
             return
+        old_urls = dict(self._url_to_full_url)
+        self._url_to_full_url = url_to_full_url
         # Drop settings packs and scenario lists without connected databases.
         for database_url in list(self._settings_packs):
-            if database_url not in database_urls:
+            if database_url not in self._url_to_full_url:
                 pack = self._settings_packs[database_url]
                 if pack.settings_window is not None:
                     pack.settings_window.close()
                 del self._settings_packs[database_url]
         # Add new databases.
-        for database_url in database_urls:
+        for database_url in self._url_to_full_url:
             if database_url not in self._settings_packs:
                 self._settings_packs[database_url] = SettingsPack("")
                 self._start_worker(database_url)
+            elif self._url_to_full_url[database_url] != old_urls[database_url]:
+                self._start_worker(database_url, update_settings=True)
         if self._active:
             self._update_properties_tab()
         self._check_state()
@@ -193,7 +214,7 @@ class Exporter(ProjectItem):
             worker.thread.quit()
             worker.thread.wait()
         pack = self._settings_packs[database_url]
-        worker = Worker(database_url, pack.scenario, pack.none_fallback)
+        worker = Worker(database_url, self._url_to_full_url[database_url], pack.scenario, pack.none_fallback)
         self._workers[database_url] = worker
         worker.database_unavailable.connect(self._cancel_worker)
         worker.finished.connect(self._worker_finished)
@@ -485,6 +506,7 @@ class Exporter(ProjectItem):
             packs.append(pack_dict)
         d["settings_packs"] = packs
         d["cancel_on_error"] = self._cancel_on_error
+        d["urls"] = self._url_to_full_url
         return d
 
     @staticmethod
@@ -506,7 +528,10 @@ class Exporter(ProjectItem):
                 settings_pack = SettingsPack("")
             deserialized_packs[url] = settings_pack
         cancel_on_error = item_dict.get("cancel_on_error", True)
-        return Exporter(name, description, x, y, toolbox, project, logger, cancel_on_error, deserialized_packs)
+        url_to_full_url = item_dict.get("urls")
+        return Exporter(
+            name, description, x, y, toolbox, project, logger, cancel_on_error, deserialized_packs, url_to_full_url
+        )
 
     def _discard_settings_window(self, database_path):
         """Discards the settings window for given database."""
@@ -530,6 +555,11 @@ class Exporter(ProjectItem):
         if source_item.item_type() == "Data Store":
             self._logger.msg.emit(
                 f"Link established. Data Store <b>{source_item.name}</b> will be "
+                f"exported to a .gdx file by <b>{self.name}</b> when executing."
+            )
+        elif source_item.item_type() == "Data Transformer":
+            self._logger.msg.emit(
+                f"Link established. Data transformed by <b>{source_item.name}</b> will be "
                 f"exported to a .gdx file by <b>{self.name}</b> when executing."
             )
         else:

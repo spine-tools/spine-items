@@ -69,7 +69,14 @@ class TestCombiner(unittest.TestCase):
         self.combiner.notify_destination(source_item)
         self.toolbox.msg.emit.assert_called_with(
             "Link established. "
-            f"Data from<b>{source_item.name}</b> will be merged "
+            f"Data from <b>{source_item.name}</b> will be merged "
+            f"into <b>{self.combiner.name}</b>'s successor Data Stores upon execution."
+        )
+        source_item.item_type = MagicMock(return_value="Data Transformer")
+        self.combiner.notify_destination(source_item)
+        self.toolbox.msg.emit.assert_called_with(
+            "Link established. "
+            f"Data transformed by <b>{source_item.name}</b> will be merged "
             f"into <b>{self.combiner.name}</b>'s successor Data Stores upon execution."
         )
         source_item.item_type = MagicMock(return_value="Data Connection")

@@ -17,7 +17,7 @@ Contains Exporter's executable item as well as support utilities.
 """
 import os.path
 import pathlib
-from spinedb_api import SpineDBAPIError
+from spinedb_api import clear_filter_configs, SpineDBAPIError
 from spinetoolbox.spine_io import gdx_utils
 from spinetoolbox.spine_io.exporters import gdx
 from spinetoolbox.executable_item_base import ExecutableItemBase
@@ -54,11 +54,12 @@ class ExecutableItem(ExecutableItemBase):
     def _execute_forward(self, resources):
         """See base class."""
         database_urls = [r.url for r in resources if r.type_ == "database"]
+        base_to_full_url = {clear_filter_configs(url): url for url in database_urls}
         gams_system_directory = self._resolve_gams_system_directory()
         if gams_system_directory is None:
             self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")
             return False
-        for url in database_urls:
+        for url in base_to_full_url:
             settings_pack = self._settings_packs.get(url, None)
             if settings_pack is None:
                 self._logger.msg_error.emit(f"<b>{self.name}</b>: No export settings defined for database {url}.")
@@ -79,7 +80,8 @@ class ExecutableItem(ExecutableItemBase):
                 return False
             out_path = os.path.join(self._data_dir, settings_pack.output_file_name)
             try:
-                database_map = scenario_filtered_database_map(url, settings_pack.scenario)
+                full_url = base_to_full_url[url]
+                database_map = scenario_filtered_database_map(full_url, settings_pack.scenario)
             except SpineDBAPIError as error:
                 self._logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
                 return

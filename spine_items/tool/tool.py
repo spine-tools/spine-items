@@ -148,10 +148,7 @@ class Tool(ProjectItem):
             text (str): Tool specification name in the comboBox
         """
         spec = self._toolbox.specification_model.find_specification(text)
-        if spec is None:
-            self.set_specification(None)
-        else:
-            self.set_specification(spec)
+        self.set_specification(spec)
 
     @Slot(str)
     def tool_args_text_edited(self, txt):
@@ -567,7 +564,7 @@ class Tool(ProjectItem):
                 f"Link established. The file exported by <b>{source_item.name}</b> will "
                 f"be passed to Tool <b>{self.name}</b> when executing."
             )
-        elif source_item.item_type() == "Tool":
+        elif source_item.item_type() in ["Data Transformer", "Tool"]:
             self._logger.msg.emit("Link established")
         elif source_item.item_type() == "Gimlet":
             self._logger.msg.emit(

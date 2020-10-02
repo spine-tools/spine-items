@@ -8,36 +8,22 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
 """
-Undo/redo commands for the Importer project item.
+Contains :class:`SpecificationMenu`.
 
-:authors: M. Marin (KTH)
-:date:   5.5.2020
+:author: A. Soininen (VTT)
+:date:   2.10.2020
 """
-import copy
-from spinetoolbox.project_commands import SpineToolboxCommand
+from spine_items.widgets.custom_menus import ItemSpecificationMenu
 
 
-class UpdateSettingsCommand(SpineToolboxCommand):
-    """Command to update Importer settings."""
+class SpecificationMenu(ItemSpecificationMenu):
+    """Context menu class for Data transformer specifications."""
 
-    def __init__(self, importer, settings, label):
+    def __init__(self, parent, index):
         """
         Args:
-            importer (spine_items.importer.importer.Importer): the Importer
-            settings (dict): the new settings
-            label (str): settings file label
+            parent (QWidget): Parent for menu widget (ToolboxUI)
+            index (QModelIndex): the index from specification model
         """
-        super().__init__()
-        self._importer = importer
-        self._redo_settings = settings
-        self._label = label
-        self._undo_settings = copy.deepcopy(importer.settings.get(label, {}))
-        self.setText(f"change mapping settings of {importer.name}")
-
-    def redo(self):
-        self._importer.settings.setdefault(self._label, {}).update(self._redo_settings)
-
-    def undo(self):
-        self._importer.settings[self._label] = self._undo_settings
+        super().__init__(parent, index)

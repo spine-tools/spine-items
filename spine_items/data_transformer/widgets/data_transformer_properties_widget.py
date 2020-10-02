@@ -10,34 +10,34 @@
 ######################################################################################################################
 
 """
-Undo/redo commands for the Importer project item.
+Data transformer properties widget.
 
-:authors: M. Marin (KTH)
-:date:   5.5.2020
+:author: A. Soininen
+:date:   2.10.2020
 """
-import copy
-from spinetoolbox.project_commands import SpineToolboxCommand
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QWidget
+from ..item_info import ItemInfo
 
 
-class UpdateSettingsCommand(SpineToolboxCommand):
-    """Command to update Importer settings."""
+class DataTransformerPropertiesWidget(QWidget):
+    """Widget for the Data transformer item properties."""
 
-    def __init__(self, importer, settings, label):
+    def __init__(self, toolbox):
         """
         Args:
-            importer (spine_items.importer.importer.Importer): the Importer
-            settings (dict): the new settings
-            label (str): settings file label
+            toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
+        from ..ui.data_transformer_properties import Ui_Form  # pylint: disable=import-outside-toplevel
+
         super().__init__()
-        self._importer = importer
-        self._redo_settings = settings
-        self._label = label
-        self._undo_settings = copy.deepcopy(importer.settings.get(label, {}))
-        self.setText(f"change mapping settings of {importer.name}")
+        self.toolbox = toolbox
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
+        self.toolbox.ui.tabWidget_item_properties.addTab(self, ItemInfo.item_type())
+        self.toolbox.specification_model_changed.connect(self._update_specification_model)
 
-    def redo(self):
-        self._importer.settings.setdefault(self._label, {}).update(self._redo_settings)
-
-    def undo(self):
-        self._importer.settings[self._label] = self._undo_settings
+    @Slot()
+    def _update_specification_model(self):
+        model = self.toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
+        self.ui.specification_combo_box.setModel(model)

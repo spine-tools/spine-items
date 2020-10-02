@@ -21,6 +21,7 @@ from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
 from sqlalchemy.engine.url import URL, make_url
 from spinetoolbox.helpers import create_dir
+from spinedb_api import clear_filter_configs
 from spine_engine import ExecutionDirection
 from spinetoolbox.project_item.project_item import ProjectItem
 from ..commands import UpdateCancelOnErrorCommand
@@ -172,7 +173,7 @@ class Combiner(ProjectItem):
         self._references.clear()
         for resource in resources_upstream:
             if resource.type_ == "database" and resource.scheme == "sqlite":
-                url = make_url(resource.url)
+                url = make_url(clear_filter_configs(resource.url))
                 self._references[url.database] = (url, resource.provider.name)
             elif resource.type_ == "file":
                 filepath = resource.path
@@ -210,7 +211,13 @@ class Combiner(ProjectItem):
         if source_item.item_type() == "Data Store":
             self._logger.msg.emit(
                 "Link established. "
-                f"Data from<b>{source_item.name}</b> will be merged "
+                f"Data from <b>{source_item.name}</b> will be merged "
+                f"into <b>{self.name}</b>'s successor Data Stores upon execution."
+            )
+        elif source_item.item_type() == "Data Transformer":
+            self._logger.msg.emit(
+                "Link established. "
+                f"Data transformed by <b>{source_item.name}</b> will be merged "
                 f"into <b>{self.name}</b>'s successor Data Stores upon execution."
             )
         else:
