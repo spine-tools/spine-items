@@ -30,6 +30,16 @@ class MockQWidget(QWidget):
         return True
 
 
+def create_mock_toolbox():
+    mock_toolbox = MagicMock()
+    mock_toolbox.msg = MagicMock()
+    mock_toolbox.msg.attach_mock(MagicMock(), "emit")
+    mock_toolbox.msg_warning = MagicMock()
+    mock_toolbox.msg_warning.attach_mock(MagicMock(), "emit")
+    mock_toolbox.undo_stack.push.side_effect = lambda cmd: cmd.redo()
+    return mock_toolbox
+
+
 def create_mock_project():
     mock_project = MagicMock()
     with TemporaryDirectory() as items_dir:
@@ -39,15 +49,10 @@ def create_mock_project():
     return mock_project
 
 
-def finish_mock_project_item_construction(factory, project_item, mock_toolbox):
+def mock_finish_project_item_construction(factory, project_item, mock_toolbox):
     icon = factory.make_icon(mock_toolbox)
     project_item.set_icon(icon)
     properties_widget = factory.make_properties_widget(mock_toolbox)
     project_item.set_properties_ui(properties_widget.ui)
     project_item.create_data_dir()
     project_item.set_up()
-    mock_toolbox.msg = MagicMock()
-    mock_toolbox.msg.attach_mock(MagicMock(), "emit")
-    mock_toolbox.msg_warning = MagicMock()
-    mock_toolbox.msg_warning.attach_mock(MagicMock(), "emit")
-    mock_toolbox.undo_stack.push.side_effect = lambda cmd: cmd.redo()

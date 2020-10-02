@@ -25,13 +25,13 @@ from spine_items.exporter.exporter import Exporter
 from spine_items.exporter.exporter_factory import ExporterFactory
 from spine_items.exporter.executable_item import ExecutableItem
 from spine_items.exporter.item_info import ItemInfo
-from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
+from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 class TestExporter(unittest.TestCase):
     def setUp(self):
         """Set up."""
-        self.toolbox = MagicMock()
+        self.toolbox = create_mock_toolbox()
         factory = ExporterFactory()
         item_dict = {
             "type": "Exporter",
@@ -43,7 +43,7 @@ class TestExporter(unittest.TestCase):
         }
         self.project = create_mock_project()
         self.exporter = factory.make_item("E", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, self.exporter, self.toolbox)
+        mock_finish_project_item_construction(factory, self.exporter, self.toolbox)
 
     @classmethod
     def setUpClass(cls):
@@ -139,7 +139,7 @@ class TestExporter(unittest.TestCase):
         item_dict = {"type": "Exporter", "description": "", "settings_packs": None, "x": 0, "y": 0}
         factory = ExporterFactory()
         exporter2 = factory.make_item("2nd exporter", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, exporter2, self.toolbox)
+        mock_finish_project_item_construction(factory, exporter2, self.toolbox)
         exporter2._start_worker = MagicMock()
         resources = [
             ProjectItemResource(None, "database", "first url to database"),

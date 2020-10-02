@@ -26,13 +26,13 @@ from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.item_info import ItemInfo
 from spine_items.project_item_resource import ProjectItemResource
-from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
+from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 class TestImporter(unittest.TestCase):
     def setUp(self):
         """Set up."""
-        self.toolbox = MagicMock()
+        self.toolbox = create_mock_toolbox()
         factory = ImporterFactory()
         item_dict = {
             "type": "Importer",
@@ -45,7 +45,7 @@ class TestImporter(unittest.TestCase):
         }
         self.project = create_mock_project()
         self.importer = factory.make_item("I", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, self.importer, self.toolbox)
+        mock_finish_project_item_construction(factory, self.importer, self.toolbox)
 
     @classmethod
     def setUpClass(cls):

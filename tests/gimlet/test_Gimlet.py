@@ -24,7 +24,7 @@ import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.gimlet.item_info import ItemInfo
 from spine_items.gimlet.gimlet import Gimlet
 from spine_items.gimlet.gimlet_factory import GimletFactory
-from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
+from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 class TestGimlet(unittest.TestCase):
@@ -35,7 +35,7 @@ class TestGimlet(unittest.TestCase):
 
     def setUp(self):
         """Set up."""
-        self.toolbox = MagicMock()
+        self.toolbox = create_mock_toolbox()
         factory = GimletFactory()
         item_dict = {
             "type": "Gimlet",
@@ -50,7 +50,7 @@ class TestGimlet(unittest.TestCase):
         }
         self.project = create_mock_project()
         self.gimlet = factory.make_item("G", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, self.gimlet, self.toolbox)
+        mock_finish_project_item_construction(factory, self.gimlet, self.toolbox)
 
     def test_item_type(self):
         self.assertEqual(Gimlet.item_type(), ItemInfo.item_type())

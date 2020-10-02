@@ -26,18 +26,18 @@ from spine_items.combiner.combiner_factory import CombinerFactory
 from spine_items.combiner.executable_item import ExecutableItem
 from spine_items.combiner.item_info import ItemInfo
 from spine_items.project_item_resource import ProjectItemResource
-from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
+from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 class TestCombiner(unittest.TestCase):
     def setUp(self):
         """Set up."""
-        self.toolbox = MagicMock()
+        self.toolbox = create_mock_toolbox()
         factory = CombinerFactory()
         item_dict = {"type": "Combiner", "description": "", "cancel_on_error": False, "x": 0, "y": 0}
         self.project = create_mock_project()
         self.combiner = factory.make_item("C", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, self.combiner, self.toolbox)
+        mock_finish_project_item_construction(factory, self.combiner, self.toolbox)
 
     @classmethod
     def setUpClass(cls):

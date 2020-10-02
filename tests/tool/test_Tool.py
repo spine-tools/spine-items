@@ -31,14 +31,14 @@ from spine_items.tool.tool import Tool
 from spine_items.tool.tool_factory import ToolFactory
 from spine_items.tool.executable_item import ExecutableItem
 from spine_items.config import TOOL_OUTPUT_DIR
-from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
+from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 class TestTool(unittest.TestCase):
     def setUp(self):
         """Set up."""
         self.basedir = mkdtemp()
-        self.toolbox = MagicMock()
+        self.toolbox = create_mock_toolbox()
         self.project = create_mock_project()
         self.model = self.toolbox.specification_model = _MockToolSpecModel(self.toolbox, self.basedir)
 
@@ -172,7 +172,7 @@ class TestTool(unittest.TestCase):
         factory = ToolFactory()
         self.project = create_mock_project()
         tool = factory.make_item("T", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, tool, self.toolbox)
+        mock_finish_project_item_construction(factory, tool, self.toolbox)
         # Set model for tool combo box
         tool._properties_ui.comboBox_tool.setModel(self.model)
         return tool

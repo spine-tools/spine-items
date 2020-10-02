@@ -22,7 +22,7 @@ from PySide2.QtWidgets import QApplication
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.project_item import ProjectItem
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
-from .mock_helpers import finish_mock_project_item_construction, create_mock_project
+from .mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 class TestProjectItem(unittest.TestCase):
@@ -33,12 +33,12 @@ class TestProjectItem(unittest.TestCase):
 
     def setUp(self):
         """Set up."""
-        self.toolbox = MagicMock()
+        self.toolbox = create_mock_toolbox()
         factory = DataConnectionFactory()
         item_dict = {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}
         self.project = create_mock_project()
         self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, self.data_connection, self.toolbox)
+        mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
 
     def tearDown(self):
         """Clean up."""

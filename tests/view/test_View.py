@@ -25,18 +25,18 @@ from spine_items.view.item_info import ItemInfo
 from spine_items.view.view import View
 from spine_items.view.view_factory import ViewFactory
 from spine_items.view.executable_item import ExecutableItem
-from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
+from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 class TestView(unittest.TestCase):
     def setUp(self):
         """Set up."""
-        self.toolbox = MagicMock()
+        self.toolbox = create_mock_toolbox()
         factory = ViewFactory()
         item_dict = {"type": "View", "description": "", "x": 0, "y": 0}
         self.project = create_mock_project()
         self.view = factory.make_item("V", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, self.view, self.toolbox)
+        mock_finish_project_item_construction(factory, self.view, self.toolbox)
 
     @classmethod
     def setUpClass(cls):

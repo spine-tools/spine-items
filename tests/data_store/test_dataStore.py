@@ -24,13 +24,13 @@ import logging
 import sys
 from sqlalchemy.engine.url import URL
 from spinedb_api import create_new_spine_database
-from PySide2.QtWidgets import QApplication, QMessageBox
+from PySide2.QtWidgets import QApplication
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.executable_item import ExecutableItem
 from spine_items.data_store.item_info import ItemInfo
-from ..mock_helpers import finish_mock_project_item_construction, create_mock_project
+from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 # noinspection PyUnusedLocal
@@ -51,12 +51,12 @@ class TestDataStore(unittest.TestCase):
 
     def setUp(self):
         """Set up."""
-        self.toolbox = MagicMock()
+        self.toolbox = create_mock_toolbox()
         factory = DataStoreFactory()
         item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
         self.project = create_mock_project()
         self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project, self.toolbox)
-        finish_mock_project_item_construction(factory, self.ds, self.toolbox)
+        mock_finish_project_item_construction(factory, self.ds, self.toolbox)
         self.ds_properties_ui = self.ds._properties_ui
         self.ds.item_changed.connect(self.ds._update_sa_url)
         # FIXME: Try to make the below work instead of the above line
