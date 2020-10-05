@@ -25,8 +25,10 @@ version = {}
 with open("spine_items/version.py") as fp:
     exec(fp.read(), version)
 
+REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.1"
 
 install_requires = [
+    f"spinetoolbox == {REQUIRED_SPINE_TOOLBOX_VERSION}",
     "sqlalchemy >= 1.3",
     "openpyxl > 3.0",
     "numpy >= 1.15.1",
@@ -36,11 +38,6 @@ install_requires = [
     "gdx2py >= 2.0.4",
     "ijson >= 2.6.1",
 ]
-
-# TODO: We should have here all dependencies that aren't need by `engine`, and have them installed only `toolbox`
-extras_require = {
-    "UI": ["pyside2 >=5.14, <5.15"],
-}
 
 setup(
     name="spine_items",
@@ -58,6 +55,5 @@ setup(
     classifiers=[],
     python_requires=">=3.6, <3.8",
     install_requires=install_requires,
-    extras_require=extras_require,
     test_suite="tests",
 )
