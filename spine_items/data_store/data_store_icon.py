@@ -37,4 +37,5 @@ class DataStoreIcon(ProjectItemIcon):
             e (QGraphicsSceneMouseEvent): Event
         """
         super().mouseDoubleClickEvent(e)
-        self._project_item.open_ds_form()
+        item = self._toolbox.project_item_model.get_item(self._name)
+        item.project_item.open_ds_form()
