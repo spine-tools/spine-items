@@ -25,7 +25,7 @@ from spine_items.combiner.combiner import Combiner
 from spine_items.combiner.combiner_factory import CombinerFactory
 from spine_items.combiner.executable_item import ExecutableItem
 from spine_items.combiner.item_info import ItemInfo
-from spine_items.project_item_resource import ProjectItemResource
+from spinetoolbox.project_item_resource import ProjectItemResource
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 

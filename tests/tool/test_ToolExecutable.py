@@ -23,7 +23,7 @@ import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
 from spine_engine import ExecutionDirection
-from spine_items.project_item_resource import ProjectItemResource
+from spinetoolbox.project_item_resource import ProjectItemResource
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
 from spine_items.tool.utils import _LatestOutputFile
