@@ -30,7 +30,7 @@ from spine_items.tool.tool_specifications import ExecutableTool
 from spine_items.tool.tool import Tool
 from spine_items.tool.tool_factory import ToolFactory
 from spine_items.tool.executable_item import ExecutableItem
-from spine_items.config import TOOL_OUTPUT_DIR
+from spinetoolbox.config import TOOL_OUTPUT_DIR
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 

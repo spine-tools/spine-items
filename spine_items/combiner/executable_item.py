@@ -19,8 +19,8 @@ Contains Combiner's executable item as well as support utilities.
 import os
 import pathlib
 from PySide2.QtCore import QObject, QEventLoop, Slot, QThread
-from ..executable_item_base import ExecutableItemBase
-from ..helpers import shorten
+from spinetoolbox.executable_item_base import ExecutableItemBase
+from spinetoolbox.helpers import shorten
 from .item_info import ItemInfo
 from .combiner_worker import CombinerWorker
 

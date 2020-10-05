@@ -21,10 +21,10 @@ import pathlib
 import os.path
 from PySide2.QtCore import Qt, Slot
 from spinedb_api import DatabaseMapping, SpineDBAPIError
-from ..project_item import ProjectItem
-from ..project_item_resource import ProjectItemResource
-from spine_items.helpers import deserialize_path, serialize_url
-from spine_items.spine_io.exporters import gdx
+from spinetoolbox.project_item import ProjectItem
+from spinetoolbox.project_item_resource import ProjectItemResource
+from spinetoolbox.helpers import deserialize_path, serialize_url
+from spinetoolbox.spine_io.exporters import gdx
 from .commands import UpdateExporterOutFileName, UpdateExporterSettings, UpdateScenario
 from ..commands import UpdateCancelOnErrorCommand
 from .db_utils import latest_database_commit_time_stamp

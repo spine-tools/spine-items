@@ -16,7 +16,7 @@ The CombinerFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item_factory import ProjectItemFactory
+from spinetoolbox.project_item_factory import ProjectItemFactory
 from .combiner import Combiner
 from .combiner_icon import CombinerIcon
 from .widgets.combiner_properties_widget import CombinerPropertiesWidget

@@ -20,16 +20,16 @@ import os
 import uuid
 from collections import Counter
 from PySide2.QtCore import Slot, Qt
-from spine_items.config import GIMLET_WORK_DIR_NAME
-from ..project_item import ProjectItem
-from ..helpers import shorten
+from spinetoolbox.config import GIMLET_WORK_DIR_NAME
+from spinetoolbox.project_item import ProjectItem
+from spinetoolbox.helpers import shorten
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .utils import SHELLS
 from .commands import UpdateShellCheckBoxCommand, UpdateShellComboboxCommand, UpdatecmdCommand, UpdateWorkDirModeCommand
 from ..commands import ChangeItemSelectionCommand
 from ..models import FileListModel
-from ..helpers import deserialize_checked_states, serialize_checked_states, split_cmdline_args
+from spinetoolbox.helpers import deserialize_checked_states, serialize_checked_states, split_cmdline_args
 
 
 class Gimlet(ProjectItem):

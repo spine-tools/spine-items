@@ -16,7 +16,7 @@ The ViewFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item_factory import ProjectItemFactory
+from spinetoolbox.project_item_factory import ProjectItemFactory
 from .view import View
 from .view_icon import ViewIcon
 from .widgets.view_properties_widget import ViewPropertiesWidget

@@ -18,7 +18,7 @@ Tool properties widget.
 
 from PySide2.QtWidgets import QWidget
 from PySide2.QtCore import Slot
-from spine_items.config import TREEVIEW_HEADER_SS
+from spinetoolbox.config import TREEVIEW_HEADER_SS
 from .custom_menus import ToolPropertiesContextMenu
 
 

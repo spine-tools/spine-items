@@ -20,7 +20,7 @@ import sys
 import os
 from PySide2.QtCore import QObject, Signal, Slot
 from spinedb_api import export_data, import_data, SpineDBAPIError, SpineDBVersionError, DiffDatabaseMapping
-from ..helpers import create_log_file_timestamp
+from spinetoolbox.helpers import create_log_file_timestamp
 
 
 class CombinerWorker(QObject):

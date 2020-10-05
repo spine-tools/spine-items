@@ -22,10 +22,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
-from spine_items.helpers import ExecutionDirection
+from spine_engine import ExecutionDirection
 from spine_items.gimlet.executable_item import ExecutableItem
 from spine_items.project_item_resource import ProjectItemResource
-from spine_items.execution_managers import QProcessExecutionManager
+from spinetoolbox.execution_managers import QProcessExecutionManager
 
 
 class TestGimletExecutable(unittest.TestCase):

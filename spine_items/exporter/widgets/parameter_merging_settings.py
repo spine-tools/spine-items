@@ -18,7 +18,7 @@ Parameter merging settings widget.
 
 from PySide2.QtCore import QItemSelection, QItemSelectionModel, Signal, Slot
 from PySide2.QtWidgets import QWidget
-from spine_items.spine_io.exporters.gdx import MergingSetting
+from spinetoolbox.spine_io.exporters.gdx import MergingSetting
 from .merging_error_flag import MergingErrorFlag
 from ..mvcmodels.domain_name_list_model import DomainNameListModel
 from ..mvcmodels.parameter_name_list_model import ParameterNameListModel

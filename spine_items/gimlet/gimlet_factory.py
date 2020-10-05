@@ -16,7 +16,7 @@ The GimletFactory class.
 :date:   22.4.2020
 """
 
-from ..project_item_factory import ProjectItemFactory
+from spinetoolbox.project_item_factory import ProjectItemFactory
 from .gimlet import Gimlet
 from .gimlet_icon import GimletIcon
 from .widgets.gimlet_properties_widget import GimletPropertiesWidget

@@ -17,7 +17,7 @@ Unit tests for ViewExecutable.
 """
 import unittest
 from unittest import mock
-from spine_items.helpers import ExecutionDirection
+from spine_engine import ExecutionDirection
 from spine_items.view.executable_item import ExecutableItem
 
 

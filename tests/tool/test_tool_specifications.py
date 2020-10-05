@@ -18,7 +18,7 @@ Contains unit tests for Tool specification classes.
 
 import unittest
 from spine_items.tool.tool_specifications import ToolSpecification
-from spine_items.helpers import split_cmdline_args
+from spinetoolbox.helpers import split_cmdline_args
 
 
 class TestToolSpecification(unittest.TestCase):

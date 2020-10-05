@@ -21,10 +21,10 @@ import sys
 import shutil
 import uuid
 from PySide2.QtCore import Signal, Slot, QObject, QEventLoop
-from spine_items.execution_managers import QProcessExecutionManager
-from spine_items.config import GIMLET_WORK_DIR_NAME
-from spine_items import helpers
-from ..executable_item_base import ExecutableItemBase
+from spinetoolbox.execution_managers import QProcessExecutionManager
+from spinetoolbox.config import GIMLET_WORK_DIR_NAME
+from spinetoolbox import helpers
+from spinetoolbox.executable_item_base import ExecutableItemBase
 from .item_info import ItemInfo
 from .utils import SHELLS
 

@@ -16,7 +16,7 @@ The ImporterFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item_factory import ProjectItemFactory
+from spinetoolbox.project_item_factory import ProjectItemFactory
 from .importer import Importer
 from .importer_icon import ImporterIcon
 from .widgets.importer_properties_widget import ImporterPropertiesWidget

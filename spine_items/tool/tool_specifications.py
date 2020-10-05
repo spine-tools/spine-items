@@ -20,9 +20,8 @@ from collections import OrderedDict
 import logging
 import os
 import json
-from ..project_item_specification import ProjectItemSpecification
-from spine_items.helpers import open_url
-from ..helpers import split_cmdline_args, expand_tags
+from spinetoolbox.project_item_specification import ProjectItemSpecification
+from spinetoolbox.helpers import open_url, split_cmdline_args, expand_tags
 from .item_info import ItemInfo
 from .tool_instance import GAMSToolInstance, JuliaToolInstance, PythonToolInstance, ExecutableToolInstance
 

@@ -21,14 +21,14 @@ from tempfile import gettempdir, TemporaryDirectory
 import unittest
 from unittest import mock
 from gdx2py import GdxFile
-from spine_items.helpers import ExecutionDirection
+from spine_engine import ExecutionDirection
 from spinedb_api import create_new_spine_database, DiffDatabaseMapping, import_functions
 from spine_items.project_item_resource import ProjectItemResource
 from spine_items.exporter.exporter import SettingsPack
 from spine_items.exporter.executable_item import ExecutableItem
 from spine_items.exporter.settings_state import SettingsState
-from spine_items.spine_io import gdx_utils
-from spine_items.spine_io.exporters import gdx
+from spinetoolbox.spine_io import gdx_utils
+from spinetoolbox.spine_io.exporters import gdx
 
 
 class TestExporterExecutable(unittest.TestCase):

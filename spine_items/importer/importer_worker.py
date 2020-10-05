@@ -19,12 +19,12 @@ Contains importer_program script.
 import os
 from PySide2.QtCore import Signal, QObject
 import spinedb_api
-from spine_items.spine_io.importers.csv_reader import CSVConnector
-from spine_items.spine_io.importers.excel_reader import ExcelConnector
-from spine_items.spine_io.importers.gdx_connector import GdxConnector
-from spine_items.spine_io.importers.json_reader import JSONConnector
-from spine_items.spine_io.type_conversion import value_to_convert_spec
-from ..helpers import create_log_file_timestamp
+from spinetoolbox.spine_io.importers.csv_reader import CSVConnector
+from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
+from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
+from spinetoolbox.spine_io.importers.json_reader import JSONConnector
+from spinetoolbox.spine_io.type_conversion import value_to_convert_spec
+from spinetoolbox.helpers import create_log_file_timestamp
 
 
 class ImporterWorker(QObject):

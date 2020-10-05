@@ -23,10 +23,10 @@ import pathlib
 from PySide2.QtCore import Slot, QFileSystemWatcher, Qt, QFileInfo
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
 from PySide2.QtWidgets import QFileDialog, QStyle, QFileIconProvider, QInputDialog, QMessageBox
-from ..project_item import ProjectItem
-from ..project_item_resource import ProjectItemResource
-from spine_items.helpers import busy_effect, deserialize_path, serialize_path, open_url
-from ..config import INVALID_FILENAME_CHARS
+from spinetoolbox.project_item import ProjectItem
+from spinetoolbox.project_item_resource import ProjectItemResource
+from spinetoolbox.helpers import busy_effect, deserialize_path, serialize_path, open_url
+from spinetoolbox.config import INVALID_FILENAME_CHARS
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo

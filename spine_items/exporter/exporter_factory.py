@@ -16,7 +16,7 @@ The ExporterFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item_factory import ProjectItemFactory
+from spinetoolbox.project_item_factory import ProjectItemFactory
 from .exporter import Exporter
 from .exporter_icon import ExporterIcon
 from .widgets.add_exporter_widget import AddExporterWidget

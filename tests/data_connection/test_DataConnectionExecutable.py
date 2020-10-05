@@ -20,7 +20,7 @@ import pathlib
 import tempfile
 import unittest
 from unittest import mock
-from spine_items.helpers import ExecutionDirection
+from spine_engine import ExecutionDirection
 from spine_items.data_connection.executable_item import ExecutableItem
 
 

@@ -25,10 +25,10 @@ import shutil
 import time
 import uuid
 from PySide2.QtCore import QEventLoop, Slot  # FIXME
-from spine_items.config import TOOL_OUTPUT_DIR
-from ..executable_item_base import ExecutableItemBase
-from ..project_item_resource import ProjectItemResource
-from ..helpers import shorten
+from spinetoolbox.config import TOOL_OUTPUT_DIR
+from spinetoolbox.executable_item_base import ExecutableItemBase
+from spinetoolbox.project_item_resource import ProjectItemResource
+from spinetoolbox.helpers import shorten
 from .item_info import ItemInfo
 from .utils import (
     file_paths_from_resources,

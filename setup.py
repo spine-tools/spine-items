@@ -17,7 +17,6 @@ Setup script for Python's setuptools.
 """
 
 from setuptools import setup, find_packages
-from spine_items.config import REQUIRED_SPINEDB_API_VERSION
 
 with open("README.md", encoding="utf8") as readme_file:
     readme = readme_file.read()
@@ -29,7 +28,6 @@ with open("spine_items/version.py") as fp:
 
 install_requires = [
     "sqlalchemy >= 1.3",
-    "spinedb_api >= {}".format(REQUIRED_SPINEDB_API_VERSION),
     "openpyxl > 3.0",
     "numpy >= 1.15.1",
     "pymysql >= 0.9.2",

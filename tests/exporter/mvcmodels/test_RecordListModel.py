@@ -17,7 +17,7 @@ Unit tests for :class:`RecordListModel`.
 """
 import unittest
 from PySide2.QtCore import QModelIndex, Qt
-from spine_items.spine_io.exporters import gdx
+from spinetoolbox.spine_io.exporters import gdx
 from spine_items.exporter.mvcmodels.record_list_model import RecordListModel
 
 
