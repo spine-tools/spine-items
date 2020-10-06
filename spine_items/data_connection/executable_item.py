@@ -19,7 +19,7 @@ import os
 import pathlib
 from spinetoolbox.executable_item_base import ExecutableItemBase
 from spinetoolbox.helpers import shorten, deserialize_path
-from spinetoolbox.project_item_resource import ProjectItemResource
+from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from .item_info import ItemInfo
 
 

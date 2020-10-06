@@ -20,7 +20,7 @@ from collections import OrderedDict
 import logging
 import os
 import json
-from spinetoolbox.project_item_specification import ProjectItemSpecification
+from spinetoolbox.project_item.project_item_specification import ProjectItemSpecification
 from spinetoolbox.helpers import open_url, split_cmdline_args, expand_tags
 from .item_info import ItemInfo
 from .tool_instance import GAMSToolInstance, JuliaToolInstance, PythonToolInstance, ExecutableToolInstance

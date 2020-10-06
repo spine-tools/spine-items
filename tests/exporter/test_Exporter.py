@@ -20,7 +20,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
-from spinetoolbox.project_item_resource import ProjectItemResource
+from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from spine_items.exporter.exporter import Exporter
 from spine_items.exporter.exporter_factory import ExporterFactory
 from spine_items.exporter.executable_item import ExecutableItem

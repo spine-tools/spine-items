@@ -21,7 +21,7 @@ import uuid
 from collections import Counter
 from PySide2.QtCore import Slot, Qt
 from spinetoolbox.config import GIMLET_WORK_DIR_NAME
-from spinetoolbox.project_item import ProjectItem
+from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import shorten
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem

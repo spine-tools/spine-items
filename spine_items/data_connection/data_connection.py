@@ -23,8 +23,8 @@ import pathlib
 from PySide2.QtCore import Slot, QFileSystemWatcher, Qt, QFileInfo
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
 from PySide2.QtWidgets import QFileDialog, QStyle, QFileIconProvider, QInputDialog, QMessageBox
-from spinetoolbox.project_item import ProjectItem
-from spinetoolbox.project_item_resource import ProjectItemResource
+from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from spinetoolbox.helpers import busy_effect, deserialize_path, serialize_path, open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand

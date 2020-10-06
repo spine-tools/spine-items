@@ -16,7 +16,7 @@ The DataConnectionFactory class.
 :date:   15.4.2020
 """
 
-from spinetoolbox.project_item_factory import ProjectItemFactory
+from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .data_connection_icon import DataConnectionIcon
 from .data_connection import DataConnection
 from .widgets.data_connection_properties_widget import DataConnectionPropertiesWidget

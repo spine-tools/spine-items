@@ -22,7 +22,7 @@ from spinetoolbox.spine_io import gdx_utils
 from spinetoolbox.spine_io.exporters import gdx
 from spinetoolbox.executable_item_base import ExecutableItemBase
 from spinetoolbox.helpers import shorten, deserialize_path
-from spinetoolbox.project_item_resource import ProjectItemResource
+from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from .db_utils import scenario_filtered_database_map
 from .item_info import ItemInfo
 from .settings_pack import SettingsPack

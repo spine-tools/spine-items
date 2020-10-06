@@ -15,7 +15,7 @@ Gimlet project item info.
 :author: P. Savolainen (VTT)
 :date:   15.5.2020
 """
-from spinetoolbox.project_item_info import ProjectItemInfo
+from spinetoolbox.project_item.project_item_info import ProjectItemInfo
 
 
 class ItemInfo(ProjectItemInfo):
