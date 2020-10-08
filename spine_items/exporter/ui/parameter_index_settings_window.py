@@ -18,34 +18,11 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (
-    QCoreApplication,
-    QDate,
-    QDateTime,
-    QMetaObject,
-    QObject,
-    QPoint,
-    QRect,
-    QSize,
-    QTime,
-    QUrl,
-    Qt,
-)
-from PySide2.QtGui import (
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
-    QFont,
-    QFontDatabase,
-    QIcon,
-    QKeySequence,
-    QLinearGradient,
-    QPalette,
-    QPainter,
-    QPixmap,
-    QRadialGradient,
-)
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 
@@ -103,6 +80,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout_3)
 
         self.additional_domains_list_view = QListView(self.additiona_indexing_box)
@@ -110,6 +88,7 @@ class Ui_Form(object):
         self.additional_domains_list_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         self.verticalLayout.addWidget(self.additional_domains_list_view)
+
 
         self.verticalLayout_5.addLayout(self.verticalLayout)
 
@@ -155,6 +134,7 @@ class Ui_Form(object):
 
         self.formLayout.setWidget(2, QFormLayout.FieldRole, self.length_spin_box)
 
+
         self.verticalLayout_5.addLayout(self.formLayout)
 
         self.splitter.addWidget(self.additiona_indexing_box)
@@ -181,6 +161,7 @@ class Ui_Form(object):
 
         self.horizontalLayout.addItem(self.horizontalSpacer_2)
 
+
         self.verticalLayout_4.addLayout(self.horizontalLayout)
 
         self.widget_stack.addWidget(self.empty_message_page)
@@ -189,16 +170,17 @@ class Ui_Form(object):
 
         self.button_box = QDialogButtonBox(Form)
         self.button_box.setObjectName(u"button_box")
-        self.button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self.button_box.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
 
         self.verticalLayout_2.addWidget(self.button_box)
+
 
         self.retranslateUi(Form)
 
         self.widget_stack.setCurrentIndex(0)
 
-        QMetaObject.connectSlotsByName(Form)
 
+        QMetaObject.connectSlotsByName(Form)
     # setupUi
 
     def retranslateUi(self, Form):
@@ -211,5 +193,5 @@ class Ui_Form(object):
         self.extract_from_radio_button.setText(QCoreApplication.translate("Form", u"Extract from:", None))
         self.label_3.setText(QCoreApplication.translate("Form", u"Length:", None))
         self.label.setText(QCoreApplication.translate("Form", u"No indexed parameters found in this database.", None))
-
     # retranslateUi
+

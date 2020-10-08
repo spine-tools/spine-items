@@ -18,41 +18,17 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (
-    QCoreApplication,
-    QDate,
-    QDateTime,
-    QMetaObject,
-    QObject,
-    QPoint,
-    QRect,
-    QSize,
-    QTime,
-    QUrl,
-    Qt,
-)
-from PySide2.QtGui import (
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
-    QFont,
-    QFontDatabase,
-    QIcon,
-    QKeySequence,
-    QLinearGradient,
-    QPalette,
-    QPainter,
-    QPixmap,
-    QRadialGradient,
-)
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 from spine_items.widgets.custom_qlineedits import CustomQLineEdit
 from spine_items.widgets.custom_qlineedits import PropertyQLineEdit
 
 from spine_items import resources_icons_rc
-
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -132,6 +108,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_12.addWidget(self.comboBox_dialect)
 
+
         self.gridLayout_3.addLayout(self.horizontalLayout_12, 0, 2, 1, 2)
 
         self.comboBox_dsn = QComboBox(self.groupBox_3)
@@ -173,6 +150,7 @@ class Ui_Form(object):
         self.toolButton_open_sqlite_file.setIcon(icon)
 
         self.horizontalLayout_24.addWidget(self.toolButton_open_sqlite_file)
+
 
         self.gridLayout_3.addLayout(self.horizontalLayout_24, 5, 2, 1, 2)
 
@@ -266,6 +244,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_23.addWidget(self.lineEdit_port)
 
+
         self.gridLayout_3.addLayout(self.horizontalLayout_23, 4, 2, 1, 2)
 
         self.label_password = QLabel(self.groupBox_3)
@@ -284,7 +263,9 @@ class Ui_Form(object):
 
         self.gridLayout_3.addWidget(self.label_host, 4, 0, 1, 1)
 
+
         self.verticalLayout_26.addLayout(self.gridLayout_3)
+
 
         self.verticalLayout_25.addWidget(self.groupBox_3)
 
@@ -319,6 +300,7 @@ class Ui_Form(object):
         self.pushButton_ds_open_editor.setMaximumSize(QSize(16777215, 23))
 
         self.horizontalLayout.addWidget(self.pushButton_ds_open_editor)
+
 
         self.verticalLayout_25.addLayout(self.horizontalLayout)
 
@@ -357,6 +339,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_27.addWidget(self.toolButton_ds_open_dir)
 
+
         self.verticalLayout_25.addLayout(self.horizontalLayout_27)
 
         self.scrollArea_5.setWidget(self.scrollAreaWidgetContents_7)
@@ -379,7 +362,6 @@ class Ui_Form(object):
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
-
     # setupUi
 
     def retranslateUi(self, Form):
@@ -388,11 +370,9 @@ class Ui_Form(object):
         self.groupBox_3.setTitle(QCoreApplication.translate("Form", u"URL", None))
         self.label_database.setText(QCoreApplication.translate("Form", u"Database", None))
         self.lineEdit_database.setPlaceholderText("")
-        # if QT_CONFIG(tooltip)
-        self.toolButton_open_sqlite_file.setToolTip(
-            QCoreApplication.translate("Form", u"<html><head/><body><p>Open SQLite file.</p></body></html>", None)
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.toolButton_open_sqlite_file.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open SQLite file.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.label_dialect.setText(QCoreApplication.translate("Form", u"Dialect", None))
         self.label_dsn.setText(QCoreApplication.translate("Form", u"DSN", None))
         self.lineEdit_username.setPlaceholderText("")
@@ -403,41 +383,21 @@ class Ui_Form(object):
         self.lineEdit_port.setPlaceholderText("")
         self.label_password.setText(QCoreApplication.translate("Form", u"Password", None))
         self.label_host.setText(QCoreApplication.translate("Form", u"Host", None))
-        # if QT_CONFIG(tooltip)
-        self.pushButton_create_new_spine_db.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Create new Spine database at the selected URL, or at a default one if the selected is not valid.</p></body></html>",
-                None,
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.pushButton_create_new_spine_db.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Create new Spine database at the selected URL, or at a default one if the selected is not valid.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_create_new_spine_db.setText(QCoreApplication.translate("Form", u"New Spine db", None))
-        # if QT_CONFIG(tooltip)
-        self.pushButton_ds_open_editor.setToolTip(
-            QCoreApplication.translate(
-                "Form", u"<html><head/><body><p>Open URL in Spine database editor</p></body></html>", None
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.pushButton_ds_open_editor.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open URL in Spine database editor</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_ds_open_editor.setText(QCoreApplication.translate("Form", u"Open editor", None))
-        # if QT_CONFIG(tooltip)
-        self.toolButton_copy_url.setToolTip(
-            QCoreApplication.translate(
-                "Form", u"<html><head/><body><p>Copy current database url to clipboard.</p></body></html>", None
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.toolButton_copy_url.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Copy current database url to clipboard.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.toolButton_copy_url.setText(QCoreApplication.translate("Form", u"...", None))
-        # if QT_CONFIG(tooltip)
-        self.toolButton_ds_open_dir.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Open this Data Store's project directory in file browser</p></body></html>",
-                None,
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.toolButton_ds_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Data Store's project directory in file browser</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.toolButton_ds_open_dir.setText("")
-
     # retranslateUi
+

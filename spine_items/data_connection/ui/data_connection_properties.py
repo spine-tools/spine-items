@@ -18,41 +18,17 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (
-    QCoreApplication,
-    QDate,
-    QDateTime,
-    QMetaObject,
-    QObject,
-    QPoint,
-    QRect,
-    QSize,
-    QTime,
-    QUrl,
-    Qt,
-)
-from PySide2.QtGui import (
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
-    QFont,
-    QFontDatabase,
-    QIcon,
-    QKeySequence,
-    QLinearGradient,
-    QPalette,
-    QPainter,
-    QPixmap,
-    QRadialGradient,
-)
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 from spine_items.widgets.custom_qtreeview import ReferencesTreeView
 from spine_items.widgets.custom_qtreeview import DataTreeView
 
 from spine_items import resources_icons_rc
-
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -167,6 +143,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
+
         self.verticalLayout_16.addLayout(self.horizontalLayout_2)
 
         self.treeView_dc_data = DataTreeView(self.scrollAreaWidgetContents_2)
@@ -235,82 +212,46 @@ class Ui_Form(object):
 
         self.horizontalLayout_7.addWidget(self.toolButton_dc_open_dir)
 
+
         self.verticalLayout_16.addLayout(self.horizontalLayout_7)
 
         self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
 
         self.verticalLayout.addWidget(self.scrollArea_2)
 
+
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
-
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.label_dc_name.setText(QCoreApplication.translate("Form", u"Name", None))
-        # if QT_CONFIG(tooltip)
-        self.treeView_dc_references.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Drag-and-drop files here, they will be added as references.</p></body></html>",
-                None,
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
-        # if QT_CONFIG(tooltip)
-        self.toolButton_plus.setToolTip(
-            QCoreApplication.translate("Form", u"<html><head/><body><p>Add references</p></body></html>", None)
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.treeView_dc_references.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Drag-and-drop files here, they will be added as references.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.toolButton_plus.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add references</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.toolButton_plus.setText("")
-        # if QT_CONFIG(tooltip)
-        self.toolButton_minus.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Remove selected references or all if nothing is selected</p></body></html>",
-                None,
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.toolButton_minus.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected references or all if nothing is selected</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.toolButton_minus.setText("")
-        # if QT_CONFIG(tooltip)
-        self.toolButton_add.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Add references to project. Copies files to Data connection's directory.</p></body></html>",
-                None,
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.toolButton_add.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add references to project. Copies files to Data connection's directory.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.toolButton_add.setText("")
-        # if QT_CONFIG(tooltip)
-        self.treeView_dc_data.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Drag-and-drop files here, they will be copied to the data directory.</p></body></html>",
-                None,
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
-        # if QT_CONFIG(tooltip)
-        self.pushButton_datapackage.setToolTip(
-            QCoreApplication.translate(
-                "Form", u"<html><head/><body><p>Open Spine datapackage editor</p></body></html>", None
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.treeView_dc_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Drag-and-drop files here, they will be copied to the data directory.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.pushButton_datapackage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open Spine datapackage editor</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_datapackage.setText(QCoreApplication.translate("Form", u"Datapackage", None))
-        # if QT_CONFIG(tooltip)
-        self.toolButton_dc_open_dir.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Open this Data Connection's project directory in file browser</p></body></html>",
-                None,
-            )
-        )
+#if QT_CONFIG(tooltip)
+        self.toolButton_dc_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Data Connection's project directory in file browser</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+    # retranslateUi
 
-
-# endif // QT_CONFIG(tooltip)
-# retranslateUi

@@ -18,34 +18,11 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (
-    QCoreApplication,
-    QDate,
-    QDateTime,
-    QMetaObject,
-    QObject,
-    QPoint,
-    QRect,
-    QSize,
-    QTime,
-    QUrl,
-    Qt,
-)
-from PySide2.QtGui import (
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
-    QFont,
-    QFontDatabase,
-    QIcon,
-    QKeySequence,
-    QLinearGradient,
-    QPalette,
-    QPainter,
-    QPixmap,
-    QRadialGradient,
-)
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 
@@ -116,6 +93,7 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.lineEdit_tool_specification_args)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.label_folder = QLabel(Form)
@@ -152,7 +130,9 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout_2)
+
 
         self.verticalLayout_2.addLayout(self.verticalLayout)
 
@@ -168,6 +148,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_statusbar_placeholder.addWidget(self.widget_invisible_dummy)
 
+
         self.verticalLayout_2.addLayout(self.horizontalLayout_statusbar_placeholder)
 
         QWidget.setTabOrder(self.lineEdit_name, self.lineEdit_description)
@@ -181,47 +162,29 @@ class Ui_Form(object):
         self.pushButton_ok.setDefault(True)
         self.pushButton_cancel.setDefault(True)
 
-        QMetaObject.connectSlotsByName(Form)
 
+        QMetaObject.connectSlotsByName(Form)
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Add Tool", None))
-        # if QT_CONFIG(tooltip)
-        self.lineEdit_name.setToolTip(
-            QCoreApplication.translate("Form", u"<html><head/><body><p>Item name (required)</p></body></html>", None)
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.lineEdit_name.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Item name (required)</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.lineEdit_name.setPlaceholderText(QCoreApplication.translate("Form", u"Type item name here...", None))
-        # if QT_CONFIG(tooltip)
-        self.lineEdit_description.setToolTip(
-            QCoreApplication.translate(
-                "Form", u"<html><head/><body><p>Item description (optional)</p></body></html>", None
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
-        self.lineEdit_description.setPlaceholderText(
-            QCoreApplication.translate("Form", u"Type item description here...", None)
-        )
+#if QT_CONFIG(tooltip)
+        self.lineEdit_description.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Item description (optional)</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.lineEdit_description.setPlaceholderText(QCoreApplication.translate("Form", u"Type item description here...", None))
         self.label.setText(QCoreApplication.translate("Form", u"Args", None))
-        # if QT_CONFIG(tooltip)
-        self.lineEdit_tool_specification_args.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Command line arguments of the selected Tool specification</p></body></html>",
-                None,
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
-        # if QT_CONFIG(tooltip)
-        self.label_folder.setToolTip(
-            QCoreApplication.translate(
-                "Form", u"<html><head/><body><p>Folder name that is created to project folder</p></body></html>", None
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.lineEdit_tool_specification_args.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Command line arguments of the selected Tool specification</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.label_folder.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Folder name that is created to project folder</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.label_folder.setText(QCoreApplication.translate("Form", u"Folder:", None))
         self.pushButton_ok.setText(QCoreApplication.translate("Form", u"Ok", None))
         self.pushButton_cancel.setText(QCoreApplication.translate("Form", u"Cancel", None))
-
     # retranslateUi
+
