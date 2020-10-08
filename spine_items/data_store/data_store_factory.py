@@ -16,7 +16,7 @@ The DataStoreFactory class.
 :date:   15.4.2020
 """
 
-from ..project_item_factory import ProjectItemFactory
+from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .data_store import DataStore
 from .data_store_icon import DataStoreIcon
 from .widgets.data_store_properties_widget import DataStorePropertiesWidget

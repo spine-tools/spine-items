@@ -18,40 +18,16 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (
-    QCoreApplication,
-    QDate,
-    QDateTime,
-    QMetaObject,
-    QObject,
-    QPoint,
-    QRect,
-    QSize,
-    QTime,
-    QUrl,
-    Qt,
-)
-from PySide2.QtGui import (
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
-    QFont,
-    QFontDatabase,
-    QIcon,
-    QKeySequence,
-    QLinearGradient,
-    QPalette,
-    QPainter,
-    QPixmap,
-    QRadialGradient,
-)
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 from spine_items.widgets.custom_qtreeview import ReferencesTreeView
 
 from spine_items import resources_icons_rc
-
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -130,6 +106,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_8.addWidget(self.pushButton_combiner_open_editor)
 
+
         self.verticalLayout_18.addLayout(self.horizontalLayout_8)
 
         self.line_5 = QFrame(self.scrollAreaWidgetContents_4)
@@ -155,46 +132,32 @@ class Ui_Form(object):
 
         self.horizontalLayout_16.addWidget(self.toolButton_combiner_open_dir)
 
+
         self.verticalLayout_18.addLayout(self.horizontalLayout_16)
 
         self.scrollArea_4.setWidget(self.scrollAreaWidgetContents_4)
 
         self.verticalLayout.addWidget(self.scrollArea_4)
 
+
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
-
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.label_name.setText(QCoreApplication.translate("Form", u"Name", None))
-        # if QT_CONFIG(tooltip)
-        self.cancel_on_error_checkBox.setToolTip(
-            QCoreApplication.translate(
-                "Form", u"If there are any errors when trying to import data cancel the whole import.", None
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.cancel_on_error_checkBox.setToolTip(QCoreApplication.translate("Form", u"If there are any errors when trying to import data cancel the whole import.", None))
+#endif // QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setText(QCoreApplication.translate("Form", u"Cancel import on error", None))
-        # if QT_CONFIG(tooltip)
-        self.pushButton_combiner_open_editor.setToolTip(
-            QCoreApplication.translate(
-                "Form", u"<html><head/><body><p>Open selected database in Spine database editor</p></body></html>", None
-            )
-        )
-        # endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.pushButton_combiner_open_editor.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open selected database in Spine database editor</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_combiner_open_editor.setText(QCoreApplication.translate("Form", u"Open editor", None))
-        # if QT_CONFIG(tooltip)
-        self.toolButton_combiner_open_dir.setToolTip(
-            QCoreApplication.translate(
-                "Form",
-                u"<html><head/><body><p>Open this View's project directory in file browser</p></body></html>",
-                None,
-            )
-        )
+#if QT_CONFIG(tooltip)
+        self.toolButton_combiner_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this View's project directory in file browser</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+    # retranslateUi
 
-
-# endif // QT_CONFIG(tooltip)
-# retranslateUi

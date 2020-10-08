@@ -19,7 +19,7 @@ Module for view icon class.
 import random
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QTimeLine, QPointF, Slot
-from spine_items.graphics_items import ProjectItemIcon
+from spinetoolbox.graphics_items import ProjectItemIcon
 
 
 class CombinerIcon(ProjectItemIcon):

@@ -18,34 +18,11 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (
-    QCoreApplication,
-    QDate,
-    QDateTime,
-    QMetaObject,
-    QObject,
-    QPoint,
-    QRect,
-    QSize,
-    QTime,
-    QUrl,
-    Qt,
-)
-from PySide2.QtGui import (
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
-    QFont,
-    QFontDatabase,
-    QIcon,
-    QKeySequence,
-    QLinearGradient,
-    QPalette,
-    QPainter,
-    QPixmap,
-    QRadialGradient,
-)
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 from spine_items.widgets.custom_qlineedits import PropertyQLineEdit
@@ -97,6 +74,7 @@ class Ui_Form(object):
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.scenario_combo_box)
 
+
         self.verticalLayout.addLayout(self.formLayout)
 
         self.horizontalLayout = QHBoxLayout()
@@ -116,27 +94,27 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.settings_button)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout)
 
+
         self.verticalLayout_2.addWidget(self.frame)
+
 
         self.retranslateUi(Form)
 
         QMetaObject.connectSlotsByName(Form)
-
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.file_name_label.setText(QCoreApplication.translate("Form", u"Filename:", None))
-        self.out_file_name_edit.setPlaceholderText(
-            QCoreApplication.translate("Form", u"Type output file name here...", None)
-        )
+        self.out_file_name_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type output file name here...", None))
         self.scenario_label.setText(QCoreApplication.translate("Form", u"Scenarios:", None))
-        # if QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
         self.scenario_combo_box.setToolTip(QCoreApplication.translate("Form", u"Select scenario to export.", None))
-        # endif // QT_CONFIG(tooltip)
+#endif // QT_CONFIG(tooltip)
         self.notification_label.setText("")
         self.settings_button.setText(QCoreApplication.translate("Form", u"Settings...", None))
-
     # retranslateUi
+

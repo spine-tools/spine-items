@@ -20,7 +20,7 @@ import pathlib
 import tempfile
 import unittest
 from unittest import mock
-from spine_items.helpers import ExecutionDirection
+from spine_engine import ExecutionDirection
 from spine_items.data_connection.executable_item import ExecutableItem
 
 
@@ -50,7 +50,7 @@ class TestDataConnectionExecutable(unittest.TestCase):
 
     def test_stop_execution(self):
         executable = ExecutableItem("name", [], [], mock.MagicMock())
-        with mock.patch("spine_items.executable_item_base.ExecutableItemBase.stop_execution") as mock_stop_execution:
+        with mock.patch("spinetoolbox.executable_item_base.ExecutableItemBase.stop_execution") as mock_stop_execution:
             executable.stop_execution()
             mock_stop_execution.assert_called_once()
 

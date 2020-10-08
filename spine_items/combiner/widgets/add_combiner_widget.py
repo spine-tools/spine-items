@@ -16,7 +16,7 @@ Widget shown to user when a new Combiner is created.
 :date:   19.1.2017
 """
 
-from spine_items.widgets.add_project_item_widget import AddProjectItemWidget
+from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..item_info import ItemInfo
 from ..combiner import Combiner
 

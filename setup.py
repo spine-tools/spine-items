@@ -17,7 +17,6 @@ Setup script for Python's setuptools.
 """
 
 from setuptools import setup, find_packages
-from spine_items.config import REQUIRED_SPINEDB_API_VERSION
 
 with open("README.md", encoding="utf8") as readme_file:
     readme = readme_file.read()
@@ -26,10 +25,11 @@ version = {}
 with open("spine_items/version.py") as fp:
     exec(fp.read(), version)
 
+REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.1"
 
 install_requires = [
+    f"spinetoolbox == {REQUIRED_SPINE_TOOLBOX_VERSION}",
     "sqlalchemy >= 1.3",
-    "spinedb_api >= {}".format(REQUIRED_SPINEDB_API_VERSION),
     "openpyxl > 3.0",
     "numpy >= 1.15.1",
     "pymysql >= 0.9.2",
@@ -39,11 +39,6 @@ install_requires = [
     "ijson >= 2.6.1",
 ]
 
-# TODO: We should have here all dependencies that aren't need by `engine`, and have them installed only `toolbox`
-extras_require = {
-    "UI": ["pyside2 >=5.14, <5.15"],
-}
-
 setup(
     name="spine_items",
     version=version["__version__"],
@@ -51,8 +46,8 @@ setup(
     long_description=readme,
     author="Spine Project consortium",
     author_email="spine_info@vtt.fi",
-    url="https://gitlab.vtt.fi/spine/items",
-    packages=find_packages(),
+    url="https://github.com/Spine-project/spine-items",
+    packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     license="LGPL-3.0-or-later",
     zip_safe=False,
@@ -60,6 +55,5 @@ setup(
     classifiers=[],
     python_requires=">=3.6, <3.8",
     install_requires=install_requires,
-    extras_require=extras_require,
     test_suite="tests",
 )

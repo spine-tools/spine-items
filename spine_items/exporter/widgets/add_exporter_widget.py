@@ -16,7 +16,7 @@ Widget shown to user when a new Exporter item is created.
 :date:   6.9.2019
 """
 
-from spine_items.widgets.add_project_item_widget import AddProjectItemWidget
+from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..exporter import Exporter
 from ..item_info import ItemInfo
 

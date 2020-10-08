@@ -17,7 +17,7 @@ Unit tests for ViewExecutable.
 """
 import unittest
 from unittest import mock
-from spine_items.helpers import ExecutionDirection
+from spine_engine import ExecutionDirection
 from spine_items.view.executable_item import ExecutableItem
 
 
@@ -34,7 +34,7 @@ class TestViewExecutable(unittest.TestCase):
 
     def test_stop_execution(self):
         executable = ExecutableItem(name="Viewer", logger=mock.MagicMock())
-        with mock.patch("spine_items.executable_item_base.ExecutableItemBase.stop_execution") as mock_stop_execution:
+        with mock.patch("spinetoolbox.executable_item_base.ExecutableItemBase.stop_execution") as mock_stop_execution:
             executable.stop_execution()
             mock_stop_execution.assert_called_once()
 

@@ -16,7 +16,7 @@ Widget shown to user when a new Importer is created.
 :date:   19.1.2017
 """
 
-from spine_items.widgets.add_project_item_widget import AddProjectItemWidget
+from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..importer import Importer
 from ..item_info import ItemInfo
 

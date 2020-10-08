@@ -20,17 +20,18 @@ from collections import Counter
 import os
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QListWidget, QDialog, QVBoxLayout, QDialogButtonBox
-from spine_items.helpers import create_dir, serialize_path
-from spine_items.spine_io.gdx_utils import find_gams_directory
-from spine_items.spine_io.importers.csv_reader import CSVConnector
-from spine_items.spine_io.importers.excel_reader import ExcelConnector
-from spine_items.spine_io.importers.gdx_connector import GdxConnector
-from spine_items.spine_io.importers.json_reader import JSONConnector
-from ..project_item import ProjectItem
+from spinetoolbox.helpers import create_dir, serialize_path
+from spinetoolbox.spine_io.gdx_utils import find_gams_directory
+from spinetoolbox.spine_io.importers.csv_reader import CSVConnector
+from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
+from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
+from spinetoolbox.spine_io.importers.json_reader import JSONConnector
+from spinetoolbox.project_item.project_item import ProjectItem
 from .commands import UpdateSettingsCommand
 from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand
 from ..models import FileListModel
-from ..helpers import deserialize_checked_states, serialize_checked_states, ExecutionDirection
+from spinetoolbox.helpers import deserialize_checked_states, serialize_checked_states
+from spine_engine import ExecutionDirection
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import deserialize_mappings

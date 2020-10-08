@@ -24,7 +24,7 @@ from spinedb_api import (
     DatabaseMapping,
     SpineDBAPIError,
 )
-from spine_items.spine_io.exporters import gdx
+from spinetoolbox.spine_io.exporters import gdx
 from .db_utils import latest_database_commit_time_stamp
 
 

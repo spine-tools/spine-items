@@ -20,11 +20,10 @@ import pathlib
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimeLine
 from PySide2.QtGui import QStandardItemModel, QStandardItem
 from PySide2.QtWidgets import QFileIconProvider
-from ..project_item import ProjectItem
-from ..project_item_resource import ProjectItemResource
-from spine_items.config import TOOL_OUTPUT_DIR
-from spine_items.helpers import open_url
-from ..helpers import split_cmdline_args
+from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.project_item.project_item_resource import ProjectItemResource
+from spinetoolbox.config import TOOL_OUTPUT_DIR
+from spinetoolbox.helpers import open_url, split_cmdline_args
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu

@@ -18,7 +18,7 @@ Widget shown to user when a new Project Item is created.
 
 from PySide2.QtWidgets import QWidget, QStatusBar
 from PySide2.QtCore import Slot, Qt
-from ..config import STATUSBAR_SS, INVALID_CHARS
+from spinetoolbox.config import STATUSBAR_SS, INVALID_CHARS
 
 
 class AddProjectItemWidget(QWidget):

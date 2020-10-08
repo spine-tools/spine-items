@@ -223,7 +223,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open this View's project directory in file browser&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="icon">
-            <iconset resource="../../../ui/resources/resources_icons.qrc">
+            <iconset resource="../../ui/resources/resources_icons.qrc">
              <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
            </property>
           </widget>
@@ -254,7 +254,7 @@
   <tabstop>toolButton_gimlet_open_dir</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../ui/resources/resources_icons.qrc"/>
+  <include location="../../ui/resources/resources_icons.qrc"/>
  </resources>
  <connections/>
 </ui>

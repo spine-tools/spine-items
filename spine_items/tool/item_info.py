@@ -15,7 +15,7 @@ Tool project item info.
 :authors: A. Soininen (VTT)
 :date:   29.4.2020
 """
-from ..project_item_info import ProjectItemInfo
+from spinetoolbox.project_item.project_item_info import ProjectItemInfo
 
 
 class ItemInfo(ProjectItemInfo):
