@@ -15,6 +15,3 @@ Importer plugin.
 :author: M. Marin (KTH)
 :date:   12.9.2019
 """
-
-from .importer_factory import ImporterFactory as ItemFactory
-from .item_info import ItemInfo

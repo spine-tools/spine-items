@@ -85,7 +85,6 @@ class ToolSpecificationWidget(QWidget):
         self.inputfiles = list(specification.inputfiles) if specification else list()
         self.inputfiles_opt = list(specification.inputfiles_opt) if specification else list()
         self.outputfiles = list(specification.outputfiles) if specification else list()
-        self.def_file_path = specification.definition_file_path if specification else None
         self.program_path = specification.path if specification else None
         self.definition = dict(item_type=ItemInfo.item_type())
         # Get first item from sourcefiles list as the main program file
@@ -513,24 +512,17 @@ class ToolSpecificationWidget(QWidget):
                 self.statusbar.showMessage("{} missing".format(k), 3000)
                 return
         # Create new Tool specification
-        short_name = self.definition["name"].lower().replace(" ", "_")
-        self.def_file_path = os.path.join(self.program_path, short_name + ".json")
         if self.call_add_tool_specification():
             self.close()
 
-    def _make_tool_specification(self, def_path):
+    def _make_tool_specification(self):
         """Returns a ToolSpecification from current form settings.
-
-        Args:
-            def_path (str): path to definition .json file
 
         Returns:
             ToolSpecification
         """
-        self.definition["includes_main_path"] = os.path.relpath(self.program_path, os.path.dirname(def_path)).replace(
-            os.sep, "/"
-        )
-        tool = self._toolbox.load_specification(self.definition, def_path)
+        self.definition["includes_main_path"] = self.program_path.replace(os.sep, "/")
+        tool = self._toolbox.load_specification(self.definition)
         if not tool:
             self.statusbar.showMessage("Adding Tool specification failed", 3000)
         return tool
@@ -550,21 +542,24 @@ class ToolSpecificationWidget(QWidget):
             if old_tool.is_equivalent(self.definition):
                 # Nothing changed
                 return True
-            def_path = old_tool.definition_file_path
-            tool = self._make_tool_specification(def_path)
+            tool = self._make_tool_specification()
             if not tool:
                 return False
             self._toolbox.update_specification(row, tool)
             return True
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getSaveFileName(self, "Save Tool specification file", self.def_file_path, "JSON (*.json)")
+        short_name = self.definition["name"].lower().replace(" ", "_")
+        proposed_def_file_path = os.path.join(self.program_path, short_name + ".json")
+        answer = QFileDialog.getSaveFileName(
+            self, "Save Tool specification file", proposed_def_file_path, "JSON (*.json)"
+        )
         if answer[0] == "":  # Cancel button clicked
             return False
-        def_path = os.path.abspath(answer[0])
-        tool = self._make_tool_specification(def_path)
+        tool = self._make_tool_specification()
         if not tool:
             return False
         self._toolbox.add_specification(tool)
+        tool.definition_path = os.path.abspath(answer[0])
         return tool.save()
 
     def keyPressEvent(self, e):

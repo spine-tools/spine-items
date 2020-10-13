@@ -15,6 +15,3 @@ Data store plugin.
 :author: M. Marin (KTH)
 :date:   12.9.2019
 """
-
-from .data_store_factory import DataStoreFactory as ItemFactory
-from .item_info import ItemInfo

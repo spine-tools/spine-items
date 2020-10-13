@@ -29,8 +29,6 @@ class SpecificationFactory(ProjectItemSpecificationFactory):
         return ItemInfo.item_type()
 
     @staticmethod
-    def make_specification(
-        definition, definition_path, app_settings, logger, embedded_julia_console, embedded_python_console
-    ):
+    def make_specification(definition, app_settings, logger, embedded_julia_console=None, embedded_python_console=None):
         """Returns a Data transformer specification."""
         return DataTransformerSpecification.from_dict(definition, logger)

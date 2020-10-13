@@ -20,20 +20,15 @@ import os
 import sys
 import shutil
 import uuid
-from PySide2.QtCore import Signal, Slot, QObject, QEventLoop
-from spinetoolbox.execution_managers import QProcessExecutionManager
+from spine_engine.execution_managers import StandardExecutionManager
 from spinetoolbox.config import GIMLET_WORK_DIR_NAME
-from spinetoolbox.helpers import split_cmdline_args, shorten, deserialize_checked_states, expand_tags
+from spinetoolbox.helpers_qt_free import split_cmdline_args, shorten, deserialize_checked_states, expand_tags
 from spinetoolbox.executable_item_base import ExecutableItemBase
 from .item_info import ItemInfo
 from .utils import SHELLS
 
 
-class ExecutableItem(ExecutableItemBase, QObject):
-
-    gimlet_finished = Signal()
-    """Emitted after the Gimlet process has finished."""
-
+class ExecutableItem(ExecutableItemBase):
     def __init__(self, name, logger, shell, cmd, work_dir, selected_files):
         """
 
@@ -45,12 +40,10 @@ class ExecutableItem(ExecutableItemBase, QObject):
             work_dir (str): Full path to work directory
             selected_files (list): List of file paths that were selected
         """
-        ExecutableItemBase.__init__(self, name, logger)
-        QObject.__init__(self)
+        super().__init__(name, logger)
         self.shell_name = shell
         self.cmd_list = cmd
         self._work_dir = work_dir
-        self._gimlet_process = None
         self._resources = list()  # Predecessor resources
         self._successor_resources = list()
         self._selected_files = selected_files
@@ -87,13 +80,6 @@ class ExecutableItem(ExecutableItemBase, QObject):
         selections = [path for path, boolean in selected_files.items() if boolean]  # List of selected paths
         return cls(name, logger, shell, cmd_list, work_dir, selections)
 
-    def stop_execution(self):
-        """Stops executing this Gimlet."""
-        super().stop_execution()
-        if self._gimlet_process is not None:
-            self._gimlet_process.stop_execution()
-            self._gimlet_process = None
-
     def _execute_forward(self, resources):
         """See base class.
 
@@ -123,7 +109,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         expanded_cmd_list = self._expand_gimlet_tags(self.cmd_list, resources)
         if not self.shell_name:
             prgm = expanded_cmd_list.pop(0)
-            self._gimlet_process = QProcessExecutionManager(self._logger, prgm, expanded_cmd_list)
+            gimlet_process = StandardExecutionManager(self._logger, prgm, *expanded_cmd_list)
         else:
             if self.shell_name == "cmd.exe":
                 shell_prgm = "cmd.exe"
@@ -135,7 +121,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
                 return False
-            self._gimlet_process = QProcessExecutionManager(self._logger, shell_prgm, expanded_cmd_list)
+            gimlet_process = StandardExecutionManager(self._logger, shell_prgm, *expanded_cmd_list)
         # Copy selected files to work_dir
         if not self._copy_files(self._selected_files, self._work_dir):
             return False
@@ -148,12 +134,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             + "'>work directory</a>"
         )
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
-        self._gimlet_process.execution_finished.connect(self._handle_gimlet_process_finished)
-        self._gimlet_process.start_execution(workdir=self._work_dir)
-        loop = QEventLoop()
-        self.gimlet_finished.connect(loop.quit)
-        # Wait for finished right here
-        loop.exec_()
+        gimlet_process.run_until_complete(workdir=self._work_dir)
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = resources.copy()
         # This is executed after the gimlet process has finished
@@ -181,17 +162,6 @@ class ExecutableItem(ExecutableItemBase, QObject):
             (list) List of ProjectItemResources. Just an empty list for now.
         """
         return list()
-
-    @Slot()
-    def _handle_gimlet_process_finished(self):
-        """Handles clean up after Gimlet process has finished.
-        After clean up, emits a signal indicating that this
-        project item execution is done.
-        """
-        self._gimlet_process.execution_finished.disconnect()
-        self._gimlet_process.deleteLater()
-        self._gimlet_process = None
-        self.gimlet_finished.emit()
 
     def _copy_files(self, files, work_dir):
         """Copies selected resources (files) to work directory.

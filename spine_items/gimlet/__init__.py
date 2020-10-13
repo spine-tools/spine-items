@@ -15,6 +15,3 @@ Gimlet project item plugin.
 :author: P. Savolainen (VTT)
 :date:   15.4.2020
 """
-
-from .gimlet_factory import GimletFactory as ItemFactory
-from .item_info import ItemInfo

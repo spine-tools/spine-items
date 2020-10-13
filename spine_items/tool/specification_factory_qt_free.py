@@ -10,25 +10,25 @@
 ######################################################################################################################
 
 """
-Contains Importer's utility functions.
+Tool's specification factory.
 
 :authors: A. Soininen (VTT)
-:date:    6.5.2020
+:date:   6.5.2020
 """
-from spinetoolbox.helpers_qt_free import deserialize_path
+from spinetoolbox.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
+from .item_info import ItemInfo
+from .tool_specifications_qt_free import make_specification
 
 
-def deserialize_mappings(mappings, project_path):
-    """Returns mapping settings as dict with absolute paths as keys.
+class SpecificationFactory(ProjectItemSpecificationFactory):
+    """A factory to make tool specifications."""
 
-    Args:
-        mappings (list): List where each element contains two dictionaries (path dict and mapping dict)
-        project_path (str): Path to project directory
+    @staticmethod
+    def item_type():
+        """See base class."""
+        return ItemInfo.item_type()
 
-    Returns:
-        dict: Dictionary with absolute paths as keys and mapping settings as values
-    """
-    abs_path_mappings = {}
-    for source, mapping in mappings:
-        abs_path_mappings[deserialize_path(source, project_path)] = mapping
-    return abs_path_mappings
+    @staticmethod
+    def make_specification(definition, app_settings, logger):
+        """Returns a tool specifications."""
+        return make_specification(definition, app_settings, logger)

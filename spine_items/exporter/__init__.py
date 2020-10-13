@@ -15,6 +15,3 @@ Exporter project item plugin.
 :author: A. Soininen (VTT)
 :date:   25.9.2019
 """
-
-from .exporter_factory import ExporterFactory as ItemFactory
-from .item_info import ItemInfo
