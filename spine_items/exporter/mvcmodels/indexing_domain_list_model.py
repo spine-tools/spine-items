@@ -28,7 +28,8 @@ class IndexingDomainListItem:
         description (str): domain's description
         expression (str or NoneType): record key generator expression, or None
         length (int): length of the domain
-        extract_from (str): parameter name if the record keys are to be extracted from a parameter
+        extract_from_parameter_name (str): parameter from which record keys are to be extracted
+        extract_from_parameter_domain_names (tuple): parameter's domain names from which record keys are to be extracted
     """
 
     def __init__(self, name):
@@ -40,23 +41,8 @@ class IndexingDomainListItem:
         self.description = ""
         self.expression = None
         self.length = 0
-        self.extract_from = ""
-
-    def records(self, db_map):
-        """
-        Generates :class:`Records`
-
-        Args:
-            db_map (DatabaseMappingBase): a database mapping, needed to extract parameter indexes
-
-        Return:
-            Records: domain's records
-        """
-        if self.expression is not None:
-            return gdx.GeneratedRecords(self.expression, self.length)
-        if self.extract_from:
-            return gdx.ExtractedRecords.extract(self.extract_from, db_map)
-        return gdx.LiteralRecords([])
+        self.extract_from_parameter_name = None
+        self.extract_from_parameter_domain_names = None
 
 
 class IndexingDomainListModel(QAbstractListModel):
@@ -71,10 +57,11 @@ class IndexingDomainListModel(QAbstractListModel):
     indexes_changed = Signal(str, object)
     """Emitted when a domain's records change."""
 
-    def __init__(self, set_settings):
+    def __init__(self, set_settings, parameters):
         """
         Args:
             set_settings (SetSettings): export settings
+            parameters (dict): indexed parameters
         """
         super().__init__()
         self._domains = list()
@@ -89,7 +76,13 @@ class IndexingDomainListModel(QAbstractListModel):
                 item.expression = records.expression
                 item.length = len(records)
             elif isinstance(records, gdx.ExtractedRecords):
-                item.extract_from = records.parameter_name
+                item.extract_from_parameter_name = records.parameter_name
+                if records.domain_names is None:
+                    item.extract_from_parameter_domain_names = next(
+                        iter(parameters[records.parameter_name].values())
+                    ).domain_names
+                else:
+                    item.extract_from_parameter_domain_names = records.domain_names
             self._domains.append(item)
 
     def create_new_domain(self):
@@ -132,17 +125,31 @@ class IndexingDomainListModel(QAbstractListModel):
         """
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
 
-    def gather_domains(self, db_map):
+    def gather_domains(self, parameters):
         """
         Returns domain name and records.
 
         Args:
-            db_map (DatabaseMappingBase): a database map
+            parameters (dict): parameters
 
         Returns:
-            dict: mapping from domain name to records
+            tuple: mappings from domain name to records and from domain name to description
         """
-        return {item.name: item.records(db_map) for item in self._domains}
+        domains = dict()
+        descriptions = dict()
+        for item in self._domains:
+            descriptions[item.name] = item.description
+            if item.expression is not None:
+                domains[item.name] = gdx.GeneratedRecords(item.expression, item.length)
+            elif item.extract_from_parameter_name is not None:
+                parameter = parameters[item.extract_from_parameter_name][item.extract_from_parameter_domain_names]
+                value_indexes = [(str(i),) for i in next(iter(parameter.values)).indexes]
+                domains[item.name] = gdx.ExtractedRecords(
+                    item.extract_from_parameter_name, item.extract_from_parameter_domain_names, value_indexes
+                )
+            else:
+                domains[item.name] = gdx.LiteralRecords([])
+        return domains, descriptions
 
     def insertRows(self, row, count, parent=QModelIndex()):
         """

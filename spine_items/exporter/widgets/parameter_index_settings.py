@@ -33,10 +33,11 @@ class IndexSettingsState(enum.Enum):
 class ParameterIndexSettings(QWidget):
     """A widget showing setting for a parameter with indexed values."""
 
-    def __init__(self, parameter_name, indexing_setting, available_domains, parent):
+    def __init__(self, parameter_name, parameter, indexing_setting, available_domains, parent):
         """
         Args:
             parameter_name (str): parameter's name
+            parameter (Parameter): parameter to index
             indexing_setting (IndexingSetting): indexing settings for the parameter
             available_domains (dict): a dict from existing domain name to :class:`Records`
             parent (QWidget, optional): a parent widget
@@ -44,6 +45,7 @@ class ParameterIndexSettings(QWidget):
         from ..ui.parameter_index_settings import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
+        self._parameter = parameter
         self._indexing_setting = indexing_setting
         self._state = IndexSettingsState.OK
         self._monitor_domains_combo_box = True
@@ -51,7 +53,7 @@ class ParameterIndexSettings(QWidget):
         self._ui = Ui_Form()
         self._ui.setupUi(self)
         self._ui.box.setTitle(parameter_name)
-        self._indexing_table_model = IndexingTableModel(indexing_setting.parameter)
+        self._indexing_table_model = IndexingTableModel(self._parameter)
         self._ui.index_table_view.setModel(self._indexing_table_model)
         self._available_domains = available_domains
         self._ui.domains_combo.addItems(sorted(available_domains.keys()))
@@ -200,14 +202,17 @@ class ParameterIndexSettings(QWidget):
 
     def _update_indexing_domains_name(self):
         """Updates the model's header and the label showing the indexing domains."""
-        parameter = self._indexing_setting.parameter
         index_position = self._indexing_setting.index_position
         domain_name = self._ui.domains_combo.currentText()
         self._indexing_table_model.set_index_name(domain_name)
         name = "<b>{}</b>".format(domain_name if domain_name else "unnamed")
         label = (
             "("
-            + ", ".join(parameter.domain_names[:index_position] + (name,) + parameter.domain_names[index_position:])
+            + ", ".join(
+                self._parameter.domain_names[:index_position]
+                + (name,)
+                + self._parameter.domain_names[index_position:]
+            )
             + ")"
         )
         self._ui.indexing_domains_label.setText(label)
@@ -251,7 +256,7 @@ class ParameterIndexSettings(QWidget):
     @Slot(bool)
     def _move_indexing_domain_right(self, _):
         """Moves the indexing domain name right on the indexing label."""
-        if self._indexing_setting.index_position < len(self._indexing_setting.parameter.domain_names):
+        if self._indexing_setting.index_position < len(self._indexing_setting.domain_names):
             self._indexing_setting.index_position += 1
             self._update_indexing_domains_name()
 

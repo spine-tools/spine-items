@@ -77,7 +77,7 @@ class Worker(QObject):
         if self._previous_settings is not None:
             updated_settings = deepcopy(self._previous_settings)
             updated_settings.update(result.set_settings)
-            updated_indexing_settings = self._update_indexing_settings(updated_settings, result.indexing_settings)
+            updated_indexing_settings = self._update_indexing_settings(result.indexing_settings)
             if updated_indexing_settings is None:
                 return
             updated_merging_settings = self._update_merging_settings(updated_settings)
@@ -139,10 +139,10 @@ class Worker(QObject):
             database_map.connection.close()
         return time_stamp, settings, indexing_settings, scenarios
 
-    def _update_indexing_settings(self, updated_settings, new_indexing_settings):
+    def _update_indexing_settings(self, new_indexing_settings):
         """Updates the parameter indexing settings according to changes in the database."""
         updated_indexing_settings = gdx.update_indexing_settings(
-            self._previous_indexing_settings, new_indexing_settings, updated_settings
+            self._previous_indexing_settings, new_indexing_settings
         )
         return updated_indexing_settings
 

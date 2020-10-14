@@ -96,7 +96,6 @@ class GdxExportSettings(QWidget):
         self._ui.record_move_down_button.clicked.connect(self._move_records_down)
         self._set_settings = set_settings
         self._set_list_model = SetListModel(set_settings)
-        self._set_list_model.dataChanged.connect(self._domains_sets_exportable_state_changed)
         self._ui.set_list_view.setModel(self._set_list_model)
         record_list_model = RecordListModel()
         self._ui.record_list_view.setModel(record_list_model)
@@ -151,7 +150,6 @@ class GdxExportSettings(QWidget):
         self._populate_global_parameters_combo_box(set_settings)
         self._set_settings = set_settings
         self._set_list_model = SetListModel(set_settings)
-        self._set_list_model.dataChanged.connect(self._domains_sets_exportable_state_changed)
         self._ui.set_list_view.setModel(self._set_list_model)
         self._ui.set_list_view.selectionModel().selectionChanged.connect(self._populate_set_contents)
         self._ui.record_list_view.setModel(RecordListModel())
@@ -161,13 +159,14 @@ class GdxExportSettings(QWidget):
 
     def _check_state(self):
         """Checks if there are parameters in need for indexing."""
-        for setting in self.indexing_settings.values():
-            if setting.indexing_domain_name is None and self._set_settings.is_exportable(setting.set_name):
-                self._ui.indexing_status_label.setText(
-                    "<span style='color:#ff3333;white-space: pre-wrap;'>Not all parameters correctly indexed.</span>"
-                )
-                self._state = State.BAD_INDEXING
-                return
+        for by_dimensions in self._indexing_settings.values():
+            for setting in by_dimensions.values():
+                if setting.indexing_domain_name is None:
+                    self._ui.indexing_status_label.setText(
+                        "<span style='color:#ff3333;white-space: pre-wrap;'>Not all parameters correctly indexed.</span>"
+                    )
+                    self._state = State.BAD_INDEXING
+                    return
         self._state = State.OK
         self._ui.indexing_status_label.setText("")
 
@@ -197,9 +196,7 @@ class GdxExportSettings(QWidget):
             return
         finally:
             database_map.connection.close()
-        self._indexing_settings = gdx.update_indexing_settings(
-            self._indexing_settings, indexing_settings, self._set_settings
-        )
+        self._indexing_settings = gdx.update_indexing_settings(self._indexing_settings, indexing_settings)
         if self._indexed_parameter_settings_window is not None:
             self._indexed_parameter_settings_window.close()
             self._indexed_parameter_settings_window = None
@@ -349,7 +346,7 @@ class GdxExportSettings(QWidget):
         if self._indexed_parameter_settings_window is None:
             indexing_settings = deepcopy(self._indexing_settings)
             self._indexed_parameter_settings_window = ParameterIndexSettingsWindow(
-                indexing_settings, self._set_settings, self._database_url, self._scenario, self
+                indexing_settings, self._set_settings, self._database_url, self._scenario, self._none_fallback, self
             )
             self._indexed_parameter_settings_window.settings_approved.connect(self._gather_parameter_indexing_settings)
             self._indexed_parameter_settings_window.settings_rejected.connect(
@@ -372,8 +369,8 @@ class GdxExportSettings(QWidget):
     def _gather_parameter_indexing_settings(self):
         """Gathers settings from the indexed parameters settings window."""
         self._indexing_settings = self._indexed_parameter_settings_window.indexing_settings
-        indexing_domains = self._indexed_parameter_settings_window.additional_indexing_domains()
-        self._set_list_model.update_indexing_domains(indexing_domains)
+        indexing_domains, descriptions = self._indexed_parameter_settings_window.additional_indexing_domains()
+        self._set_list_model.update_indexing_domains(indexing_domains, descriptions)
         self._state = State.OK
         self._ui.indexing_status_label.setText("")
 
@@ -384,6 +381,7 @@ class GdxExportSettings(QWidget):
         old_domain_names = {s.new_domain_name for setting_list in self._merging_settings.values() for s in setting_list}
         new_domain_names = {s.new_domain_name for setting_list in new_merging_settings.values() for s in setting_list}
         new_records = dict()
+        new_descriptions = dict()
         for setting_list in new_merging_settings.values():
             for setting in setting_list:
                 merge_records = gdx.merging_records(setting)
@@ -393,12 +391,17 @@ class GdxExportSettings(QWidget):
                 else:
                     combined_records = gdx.LiteralRecords(records.records + merge_records.records)
                     new_records[setting.new_domain_name] = combined_records
+                new_descriptions[setting.new_domain_name] = setting.new_domain_description
         for domain_to_drop in old_domain_names - new_domain_names:
             self._set_list_model.drop_domain(domain_to_drop)
         for domain_to_update in old_domain_names & new_domain_names:
-            self._set_list_model.update_domain(domain_to_update, new_records[domain_to_update])
+            self._set_list_model.update_domain(
+                domain_to_update, new_descriptions[domain_to_update], new_records[domain_to_update]
+            )
         for domain_to_add in new_domain_names - old_domain_names:
-            self._set_list_model.add_domain(domain_to_add, new_records[domain_to_add], gdx.Origin.MERGING)
+            self._set_list_model.add_domain(
+                domain_to_add, new_descriptions[domain_to_add], new_records[domain_to_add], gdx.Origin.MERGING
+            )
         self._merging_settings = new_merging_settings
 
     @Slot()
@@ -410,11 +413,3 @@ class GdxExportSettings(QWidget):
     def _dispose_parameter_merging_window(self):
         """Removes references to the parameter merging settings window."""
         self._parameter_merging_settings_window = None
-
-    @Slot(QModelIndex, QModelIndex, list)
-    def _domains_sets_exportable_state_changed(self, top_left, bottom_right, _):
-        name = self._set_list_model.data(top_left)
-        for setting in self._indexing_settings.values():
-            if name == setting.set_name:
-                self._check_state()
-                return
