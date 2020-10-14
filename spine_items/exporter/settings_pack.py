@@ -16,15 +16,13 @@ Contains the SettingsPack class.
 :date:   6.5.2020
 """
 import dateutil.parser
-from PySide2.QtCore import QObject, Signal, Slot
 from spinedb_api import SpineDBAPIError
 from spinetoolbox.spine_io.exporters import gdx
 from .db_utils import scenario_filtered_database_map
-from .notifications import Notifications
 from .settings_state import SettingsState
 
 
-class SettingsPack(QObject):
+class SettingsPack:
     """
     Keeper of all settings and stuff needed for exporting a database.
 
@@ -37,18 +35,13 @@ class SettingsPack(QObject):
         none_export (NoneExport): how to handle None values while exporting
         scenario (str): name of the scenario to export; None for 'Base' alternative
         last_database_commit (datetime): latest database commit time stamp
-        settings_window (GdxExportSettings): settings editor window
     """
-
-    state_changed = Signal(object)
-    """Emitted when the pack's state changes."""
 
     def __init__(self, output_file_name):
         """
         Args:
             output_file_name (str): name of the export file
         """
-        super().__init__()
         self.output_file_name = output_file_name
         self.settings = None
         self.indexing_settings = None
@@ -57,10 +50,7 @@ class SettingsPack(QObject):
         self.none_export = gdx.NoneExport.DO_NOT_EXPORT
         self.scenario = None
         self.last_database_commit = None
-        self.settings_window = None
         self._state = SettingsState.FETCHING
-        self.notifications = Notifications()
-        self.state_changed.connect(self.notifications.update_settings_state)
 
     @property
     def state(self):
@@ -70,7 +60,6 @@ class SettingsPack(QObject):
     @state.setter
     def state(self, state):
         self._state = state
-        self.state_changed.emit(state)
 
     def to_dict(self):
         """Stores the settings pack into a JSON compatible dictionary."""
@@ -94,10 +83,10 @@ class SettingsPack(QObject):
         )
         return d
 
-    @staticmethod
-    def from_dict(pack_dict, database_url, logger):
+    @classmethod
+    def from_dict(cls, pack_dict, database_url, logger):
         """Restores the settings pack from a dictionary."""
-        pack = SettingsPack(pack_dict["output_file_name"])
+        pack = cls(pack_dict["output_file_name"])
         pack.state = SettingsState(pack_dict["state"])
         if pack.state not in (SettingsState.OK, SettingsState.INDEXING_PROBLEM):
             return pack
@@ -113,22 +102,8 @@ class SettingsPack(QObject):
             logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
             return pack
         pack.scenario = pack_dict.get("scenario")
-        try:
-            db_map = scenario_filtered_database_map(database_url, pack.scenario)
-            value_type_logger = _UnsupportedValueTypeLogger(
-                f"Exporter settings ignoring some parameters from database '{database_url}':", logger
-            )
-            pack.indexing_settings = gdx.indexing_settings_from_dict(
-                pack_dict["indexing_settings"], db_map, pack.none_fallback, value_type_logger
-            )
-        except SpineDBAPIError as error:
-            logger.msg_error.emit(
-                f"Failed to fully restore Exporter settings. Error while reading database '{database_url}': {error}"
-            )
-            pack.state = SettingsState.ERROR
+        if not cls._indexing_settings_from_dict(pack_dict, pack, database_url, logger):
             return pack
-        else:
-            db_map.connection.close()
         pack.merging_settings = {
             parameter_name: setting_list for parameter_name, setting_list in pack_dict["merging_settings"].items()
         }
@@ -148,28 +123,27 @@ class SettingsPack(QObject):
                 logger.msg_error.emit(f"Failed to read latest database commit: {error}")
         return pack
 
-
-class _UnsupportedValueTypeLogger(QObject):
-    msg = Signal(str)
-    msg_warning = Signal(str)
-    msg_error = Signal(str)
-
-    def __init__(self, preample, real_logger):
-        super().__init__()
-        self._preample = preample
-        self._logger = real_logger
-        self.msg.connect(self.relay_message)
-        self.msg_warning.connect(self.relay_warning)
-        self.msg_error.connect(self.relay_error)
-
-    @Slot(str)
-    def relay_message(self, text):
-        self._logger.msg.emit(self._preample + " " + text)
-
-    @Slot(str)
-    def relay_warning(self, text):
-        self._logger.msg_warning.emit(self._preample + " " + text)
-
-    @Slot(str)
-    def relay_error(self, text):
-        self._logger.msg_error.emit(self._preample + " " + text)
+    @classmethod
+    def _indexing_settings_from_dict(cls, pack_dict, pack, database_url, logger):
+        """Restores indexing settings from dict."""
+        try:
+            db_map = scenario_filtered_database_map(database_url, pack.scenario)
+        except SpineDBAPIError as error:
+            logger.msg_error.emit(
+                f"Failed to fully restore Exporter settings. Error while reading database '{database_url}': {error}"
+            )
+            pack.state = SettingsState.ERROR
+            return False
+        try:
+            pack.indexing_settings = gdx.indexing_settings_from_dict(
+                pack_dict["indexing_settings"], db_map, pack.none_fallback, logger
+            )
+        except SpineDBAPIError as error:
+            logger.msg_error.emit(
+                f"Failed to fully restore Exporter settings. Error while reading database '{database_url}': {error}"
+            )
+            pack.state = SettingsState.ERROR
+            return False
+        finally:
+            db_map.connection.close()
+        return True

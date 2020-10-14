@@ -26,7 +26,7 @@ from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from .db_utils import scenario_filtered_database_map
 from .item_info import ItemInfo
 from .settings_state import SettingsState
-from .settings_pack import SettingsPack  # FIXME: make qt-free
+from .settings_pack import SettingsPack
 
 
 class ExecutableItem(ExecutableItemBase):
