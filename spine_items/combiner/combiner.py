@@ -129,7 +129,7 @@ class Combiner(ProjectItem):
         """Update Combiner tab name label. Used only when renaming project items."""
         self._properties_ui.label_name.setText(self.name)
 
-    @Slot()
+    @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
         if execution_direction != ExecutionDirection.FORWARD:

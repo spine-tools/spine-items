@@ -18,8 +18,14 @@ Animation class for the Exporter and Importer items.
 
 import random
 from PySide2.QtGui import QFont, QPainterPath
-from PySide2.QtCore import Slot, QTimeLine, QPointF
+from PySide2.QtCore import Signal, Slot, QObject, QTimeLine, QPointF
 from PySide2.QtWidgets import QGraphicsTextItem
+
+
+class AnimationSignaller(QObject):
+
+    animation_started = Signal()
+    animation_stopped = Signal()
 
 
 class ImporterExporterAnimation:
