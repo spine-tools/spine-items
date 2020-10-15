@@ -71,7 +71,6 @@ class ExecutableItem(ExecutableItemBase):
 
     def _get_db_map(self, url):
         try:
-            db_map = DiffDatabaseMapping(url)
             db_map = filtered_database_map(DiffDatabaseMapping, url)
         except (SpineDBAPIError, SpineDBVersionError) as err:
             self._logger.msg_error.emit(f"Skipping url <b>{url}</b>: {err}")
