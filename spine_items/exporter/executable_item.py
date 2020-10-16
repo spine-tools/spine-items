@@ -17,34 +17,37 @@ Contains Exporter's executable item as well as support utilities.
 """
 import os.path
 import pathlib
-from spinedb_api import clear_filter_configs, SpineDBAPIError
+from spinedb_api import SpineDBAPIError
 from spinetoolbox.spine_io import gdx_utils
 from spinetoolbox.spine_io.exporters import gdx
 from spinetoolbox.executable_item_base import ExecutableItemBase
 from spinetoolbox.helpers_qt_free import shorten, deserialize_path
 from spinetoolbox.project_item.project_item_resource import ProjectItemResource
+from .database import Database
 from .db_utils import scenario_filtered_database_map
 from .item_info import ItemInfo
-from .settings_state import SettingsState
 from .settings_pack import SettingsPack
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, settings_packs, cancel_on_error, data_dir, gams_path, logger):
+    def __init__(self, name, settings_pack, databases, cancel_on_error, data_dir, gams_path, logger):
         """
         Args:
             name (str): item's name
-            settings_packs (dict): mapping from database URLs to SettingsPacks
+            settings_pack (SettingsPack): export settings
+            databases (list of Database): database export settings
             cancel_on_error (bool): True if execution should fail on all errors, False if certain errors can be ignored
             data_dir (str): absolute path to exporter's data directory
             gams_path (str): GAMS path from Toolbox settings
             logger (LoggerInterface): a logger
         """
         super().__init__(name, logger)
-        self._settings_packs = settings_packs
+        self._settings_pack = settings_pack
+        self._databases = databases
         self._cancel_on_error = cancel_on_error
         self._data_dir = data_dir
         self._gams_path = gams_path
+        self._exported_databases = list()
 
     @staticmethod
     def item_type():
@@ -53,48 +56,43 @@ class ExecutableItem(ExecutableItemBase):
 
     def _execute_forward(self, resources):
         """See base class."""
+        self._exported_databases.clear()
+        if self._settings_pack.settings is None:
+            self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")
+            return True
         database_urls = [r.url for r in resources if r.type_ == "database"]
-        base_to_full_url = {clear_filter_configs(url): url for url in database_urls}
         gams_system_directory = self._resolve_gams_system_directory()
         if gams_system_directory is None:
             self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")
             return False
-        for url in base_to_full_url:
-            settings_pack = self._settings_packs.get(url, None)
-            if settings_pack is None:
-                self._logger.msg_error.emit(f"<b>{self.name}</b>: No export settings defined for database {url}.")
+        for url in database_urls:
+            database = None
+            for db in self._databases:
+                if url == db.url:
+                    database = db
+                    break
+            if database is None:
+                self._logger.msg_error.emit(f"<b>{self.name}</b>: No settings for database {url}.")
                 return False
-            if not settings_pack.output_file_name:
+            if not database.output_file_name:
                 self._logger.msg_error.emit(f"<b>{self.name}</b>: No file name given to export database {url}.")
                 return False
-            if settings_pack.state == SettingsState.FETCHING:
-                self._logger.msg_error.emit(f"<b>{self.name}</b>: Settings not ready for database {url}.")
-                return False
-            if settings_pack.state == SettingsState.INDEXING_PROBLEM:
-                self._logger.msg_error.emit(
-                    f"<b>{self.name}</b>: Parameters missing indexing information for database {url}."
-                )
-                return False
-            if settings_pack.state == SettingsState.ERROR:
-                self._logger.msg_error.emit(f"<b>{self.name}</b>: Ill formed database {url}.")
-                return False
-            out_path = os.path.join(self._data_dir, settings_pack.output_file_name)
+            out_path = os.path.join(self._data_dir, database.output_file_name)
             try:
-                full_url = base_to_full_url[url]
-                database_map = scenario_filtered_database_map(full_url, settings_pack.scenario)
+                database_map = scenario_filtered_database_map(url, database.scenario)
             except SpineDBAPIError as error:
                 self._logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
-                return
+                return False
             export_logger = self._logger if not self._cancel_on_error else None
             try:
                 gdx.to_gdx_file(
                     database_map,
                     out_path,
-                    settings_pack.settings,
-                    settings_pack.indexing_settings,
-                    settings_pack.merging_settings,
-                    settings_pack.none_fallback,
-                    settings_pack.none_export,
+                    self._settings_pack.settings,
+                    self._settings_pack.indexing_settings,
+                    self._settings_pack.merging_settings,
+                    self._settings_pack.none_fallback,
+                    self._settings_pack.none_export,
                     gams_system_directory,
                     export_logger,
                 )
@@ -103,6 +101,7 @@ class ExecutableItem(ExecutableItemBase):
                 return False
             finally:
                 database_map.connection.close()
+            self._exported_databases.append(database)
             self._logger.msg_success.emit(f"File <b>{out_path}</b> written")
         return True
 
@@ -112,10 +111,10 @@ class ExecutableItem(ExecutableItemBase):
             ProjectItemResource(
                 self,
                 "transient_file",
-                pathlib.Path(self._data_dir, pack.output_file_name).as_uri(),
-                {"label": pack.output_file_name},
+                pathlib.Path(self._data_dir, db.output_file_name).as_uri(),
+                {"label": db.output_file_name},
             )
-            for pack in self._settings_packs.values()
+            for db in self._exported_databases
         ]
         return resources
 
@@ -131,19 +130,16 @@ class ExecutableItem(ExecutableItemBase):
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
-        settings_packs = dict()
-        for pack_dict in item_dict["settings_packs"]:
-            serialized_url = pack_dict["database_url"]
-            url = deserialize_path(serialized_url, project_dir)
-            try:
-                settings_pack = SettingsPack.from_dict(pack_dict, url, logger)
-            except gdx.GdxExportException as error:
-                logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
-                settings_pack = SettingsPack("")
-            settings_packs[url] = settings_pack
-        cancel_on_error = item_dict.get("cancel_on_error")
-        if cancel_on_error is None:
-            cancel_on_error = True
+        try:
+            settings_pack = SettingsPack.from_dict(item_dict["settings_pack"], logger)
+        except gdx.GdxExportException as error:
+            logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
+            settings_pack = SettingsPack()
+        databases = dict()
+        for db_dict in item_dict["databases"]:
+            url = deserialize_path(db_dict["database_url"], project_dir)
+            databases[url] = Database.from_dict(db_dict)
+        cancel_on_error = item_dict.get("cancel_on_error", True)
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
-        return cls(name, settings_packs, cancel_on_error, data_dir, gams_path, logger)
+        return cls(name, settings_pack, databases, cancel_on_error, str(data_dir), gams_path, logger)

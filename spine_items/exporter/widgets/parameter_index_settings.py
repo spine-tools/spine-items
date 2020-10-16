@@ -209,9 +209,7 @@ class ParameterIndexSettings(QWidget):
         label = (
             "("
             + ", ".join(
-                self._parameter.domain_names[:index_position]
-                + (name,)
-                + self._parameter.domain_names[index_position:]
+                self._parameter.domain_names[:index_position] + (name,) + self._parameter.domain_names[index_position:]
             )
             + ")"
         )

@@ -15,11 +15,8 @@ Contains the SettingsPack class.
 :author: A. Soininen (VTT)
 :date:   6.5.2020
 """
-import dateutil.parser
-from spinedb_api import SpineDBAPIError
 from spinetoolbox.spine_io.exporters import gdx
-from .db_utils import scenario_filtered_database_map
-from .settings_state import SettingsState
+from .notifications import Notifications
 
 
 class SettingsPack:
@@ -27,85 +24,63 @@ class SettingsPack:
     Keeper of all settings and stuff needed for exporting a database.
 
     Attributes:
-        output_file_name (str): name of the export file
         settings (gdx.SetSettings): export settings
         indexing_settings (dict): parameter indexing settings
         merging_settings (dict): parameter merging settings
         none_fallback (NoneFallback): fallback for None parameter values
         none_export (NoneExport): how to handle None values while exporting
-        scenario (str): name of the scenario to export; None for 'Base' alternative
-        last_database_commit (datetime): latest database commit time stamp
     """
 
-    def __init__(self, output_file_name):
-        """
-        Args:
-            output_file_name (str): name of the export file
-        """
-        self.output_file_name = output_file_name
+    def __init__(self):
         self.settings = None
         self.indexing_settings = None
         self.merging_settings = dict()
         self.none_fallback = gdx.NoneFallback.USE_IT
         self.none_export = gdx.NoneExport.DO_NOT_EXPORT
-        self.scenario = None
-        self.last_database_commit = None
-        self._state = SettingsState.FETCHING
-
-    @property
-    def state(self):
-        """State of the pack."""
-        return self._state
-
-    @state.setter
-    def state(self, state):
-        self._state = state
+        self.notifications = Notifications()
 
     def to_dict(self):
         """Stores the settings pack into a JSON compatible dictionary."""
         d = dict()
-        d["output_file_name"] = self.output_file_name
-        # Override ERROR by FETCHING so we'll retry reading the database when reopening the project.
-        d["state"] = self.state.value
-        if self.state not in (SettingsState.OK, SettingsState.INDEXING_PROBLEM):
-            return d
-        d["settings"] = self.settings.to_dict()
-        d["indexing_settings"] = gdx.indexing_settings_to_dict(self.indexing_settings)
+        d["settings"] = self.settings.to_dict() if self.settings is not None else None
+        d["indexing_settings"] = (
+            gdx.indexing_settings_to_dict(self.indexing_settings) if self.indexing_settings is not None else None
+        )
         d["merging_settings"] = {
             parameter_name: [s.to_dict() for s in setting_list]
             for parameter_name, setting_list in self.merging_settings.items()
         }
         d["none_fallback"] = self.none_fallback.value
         d["none_export"] = self.none_export.value
-        d["scenario"] = self.scenario
-        d["latest_database_commit"] = (
-            self.last_database_commit.isoformat() if self.last_database_commit is not None else None
-        )
         return d
 
-    @classmethod
-    def from_dict(cls, pack_dict, database_url, logger):
+    @staticmethod
+    def from_dict(pack_dict, logger):
         """Restores the settings pack from a dictionary."""
-        pack = cls(pack_dict["output_file_name"])
-        pack.state = SettingsState(pack_dict["state"])
-        if pack.state not in (SettingsState.OK, SettingsState.INDEXING_PROBLEM):
-            return pack
+        pack = SettingsPack()
         value = pack_dict.get("none_fallback")
         if value is not None:
             pack.none_fallback = gdx.NoneFallback(value)
         value = pack_dict.get("none_export")
         if value is not None:
             pack.none_export = gdx.NoneExport(value)
-        try:
-            pack.settings = gdx.SetSettings.from_dict(pack_dict["settings"])
-        except gdx.GdxExportException as error:
-            logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
-            return pack
-        pack.scenario = pack_dict.get("scenario")
-        if not cls._indexing_settings_from_dict(pack_dict, pack, database_url, logger):
-            return pack
+        set_settings_dict = pack_dict.get("settings")
+        if set_settings_dict is not None:
+            try:
+                pack.settings = gdx.SetSettings.from_dict(set_settings_dict)
+            except gdx.GdxExportException as error:
+                logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
+                return pack
+        indexing_settings_dict = pack_dict.get("indexing_settings")
+        if indexing_settings_dict is not None:
+            try:
+                pack.indexing_settings = gdx.indexing_settings_from_dict(indexing_settings_dict)
+            except gdx.GdxExportException as error:
+                logger.msg_error.emit(f"Failed to fully restore Exporter's indexing settings: {error}")
+                return pack
+        merging_settings_dict = pack_dict.get("merging_settings", dict())
         pack.merging_settings = {
-            parameter_name: setting_list for parameter_name, setting_list in pack_dict["merging_settings"].items()
+            parameter_name: setting_list for parameter_name, setting_list in merging_settings_dict.items()
         }
         for name, setting_list in pack.merging_settings.items():
             # For 0.5 compatibility
@@ -115,35 +90,4 @@ class SettingsPack:
             parameter_name: [gdx.MergingSetting.from_dict(setting_dict) for setting_dict in setting_list]
             for parameter_name, setting_list in pack.merging_settings.items()
         }
-        latest_commit = pack_dict.get("latest_database_commit")
-        if latest_commit is not None:
-            try:
-                pack.last_database_commit = dateutil.parser.parse(latest_commit)
-            except ValueError as error:
-                logger.msg_error.emit(f"Failed to read latest database commit: {error}")
         return pack
-
-    @classmethod
-    def _indexing_settings_from_dict(cls, pack_dict, pack, database_url, logger):
-        """Restores indexing settings from dict."""
-        try:
-            db_map = scenario_filtered_database_map(database_url, pack.scenario)
-        except SpineDBAPIError as error:
-            logger.msg_error.emit(
-                f"Failed to fully restore Exporter settings. Error while reading database '{database_url}': {error}"
-            )
-            pack.state = SettingsState.ERROR
-            return False
-        try:
-            pack.indexing_settings = gdx.indexing_settings_from_dict(
-                pack_dict["indexing_settings"], db_map, pack.none_fallback, logger
-            )
-        except SpineDBAPIError as error:
-            logger.msg_error.emit(
-                f"Failed to fully restore Exporter settings. Error while reading database '{database_url}': {error}"
-            )
-            pack.state = SettingsState.ERROR
-            return False
-        finally:
-            db_map.connection.close()
-        return True

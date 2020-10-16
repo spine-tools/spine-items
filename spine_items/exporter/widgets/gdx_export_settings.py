@@ -18,11 +18,9 @@ Export item's settings window for .gdx export.
 
 from copy import deepcopy
 import enum
-from PySide2.QtCore import QItemSelection, QModelIndex, Qt, Signal, Slot
-from PySide2.QtWidgets import QAbstractButton, QDialogButtonBox, QMessageBox, QWidget
-from spinedb_api import SpineDBAPIError
+from PySide2.QtCore import QItemSelection, Qt, Signal, Slot
+from PySide2.QtWidgets import QDialogButtonBox, QMessageBox, QWidget
 import spinetoolbox.spine_io.exporters.gdx as gdx
-from ..db_utils import scenario_filtered_database_map
 from ..list_utils import move_selected_elements_by
 from ..mvcmodels.record_list_model import RecordListModel
 from ..mvcmodels.set_list_model import SetListModel
@@ -45,9 +43,9 @@ class GdxExportSettings(QWidget):
 
     reset_requested = Signal(str)
     """Emitted when Reset Defaults button has been clicked."""
-    settings_accepted = Signal(str)
+    settings_accepted = Signal()
     """Emitted when the OK button has been clicked."""
-    settings_rejected = Signal(str)
+    settings_rejected = Signal()
     """Emitted when the Cancel button has been clicked."""
 
     def __init__(
@@ -57,8 +55,8 @@ class GdxExportSettings(QWidget):
         merging_settings,
         none_fallback,
         none_export,
-        scenario,
-        database_url,
+        database_model,
+        exporter_name,
         parent,
     ):
         """
@@ -68,8 +66,8 @@ class GdxExportSettings(QWidget):
             merging_settings (dict): parameter merging settings
             none_fallback (NoneFallback): fallback for None parameter values
             none_export (NoneExport): how to handle None values while exporting
-            scenario (str, optional): scenario name
-            database_url (str): database URL
+            database_model (DatabaseListModel): a mapping from URL to :class:`Database`
+            exporter_name (str, optional): name of the Exporter item that opened the window
             parent (QWidget): a parent widget
         """
         from ..ui.gdx_export_settings import Ui_Form  # pylint: disable=import-outside-toplevel
@@ -77,32 +75,29 @@ class GdxExportSettings(QWidget):
         super().__init__(parent=parent, f=Qt.Window)
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        self.setWindowTitle("Gdx Export settings    -- {} --".format(database_url))
+        self.setWindowTitle(f"Gdx Export settings    -- {exporter_name} --")
         self.setAttribute(Qt.WA_DeleteOnClose, True)
-        self._scenario = scenario
-        self._database_url = database_url
+        self._database_model = database_model
+        self._ui.database_combo_box.setModel(self._database_model)
+        self._ui.update_button.clicked.connect(self._request_settings_update)
         self._ui.button_box.accepted.connect(self._accept)
         self._ui.button_box.rejected.connect(self._reject)
-        self._ui.button_box.clicked.connect(self._reset_settings)
-        self._ui.button_box.button(QDialogButtonBox.RestoreDefaults).setToolTip(
-            "Reset all settings\nby reloading the database."
-        )
         self._ui.set_move_up_button.clicked.connect(self._move_sets_up)
         self._ui.set_move_down_button.clicked.connect(self._move_sets_down)
-        self._populate_global_parameters_combo_box(set_settings)
+        self._set_settings = set_settings if set_settings is not None else gdx.SetSettings(set(), set(), dict())
+        self._populate_global_parameters_combo_box(self._set_settings)
         self._ui.global_parameters_combo_box.currentIndexChanged[str].connect(self._update_global_parameters_domain)
         self._ui.record_sort_alphabetic.clicked.connect(self._sort_records_alphabetically)
         self._ui.record_move_up_button.clicked.connect(self._move_records_up)
         self._ui.record_move_down_button.clicked.connect(self._move_records_down)
-        self._set_settings = set_settings
-        self._set_list_model = SetListModel(set_settings)
+        self._set_list_model = SetListModel(self._set_settings)
         self._ui.set_list_view.setModel(self._set_list_model)
         record_list_model = RecordListModel()
         self._ui.record_list_view.setModel(record_list_model)
         self._ui.set_list_view.selectionModel().selectionChanged.connect(self._populate_set_contents)
         self._ui.open_indexed_parameter_settings_button.clicked.connect(self._show_indexed_parameter_settings)
         self._ui.open_parameter_merging_settings_button.clicked.connect(self._show_parameter_merging_settings)
-        self._indexing_settings = indexing_settings
+        self._indexing_settings = indexing_settings if indexing_settings is not None else {}
         self._indexed_parameter_settings_window = None
         self._merging_settings = merging_settings
         self._parameter_merging_settings_window = None
@@ -155,7 +150,13 @@ class GdxExportSettings(QWidget):
         self._ui.record_list_view.setModel(RecordListModel())
         self._indexing_settings = indexing_settings
         self._merging_settings = merging_settings
+        self._ui.controls_group.setEnabled(True)
+        self._ui.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
         self._check_state()
+
+    def settings_reading_cancelled(self):
+        self._ui.controls_group.setEnabled(True)
+        self._ui.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
 
     def _check_state(self):
         """Checks if there are parameters in need for indexing."""
@@ -182,24 +183,6 @@ class GdxExportSettings(QWidget):
             self._none_fallback = gdx.NoneFallback.USE_IT
         else:
             self._none_fallback = gdx.NoneFallback.USE_DEFAULT_VALUE
-        try:
-            database_map = scenario_filtered_database_map(self._database_url, self._scenario)
-        except SpineDBAPIError as error:
-            QMessageBox.warning(self, f"Error", f"Could not open database '{self._database_url}'.")
-            return
-        try:
-            indexing_settings = gdx.make_indexing_settings(database_map, self._none_fallback, logger=None)
-        except gdx.GdxExportException as error:
-            QMessageBox.warning(
-                self, "Error", f"Failed to read indexing settings from database '{self._database_url}':\n{error}"
-            )
-            return
-        finally:
-            database_map.connection.close()
-        self._indexing_settings = gdx.update_indexing_settings(self._indexing_settings, indexing_settings)
-        if self._indexed_parameter_settings_window is not None:
-            self._indexed_parameter_settings_window.close()
-            self._indexed_parameter_settings_window = None
 
     def _init_none_fallback_combo_box(self, fallback):
         """
@@ -257,15 +240,6 @@ class GdxExportSettings(QWidget):
         self._ui.record_move_down_button.setEnabled(enabled)
         self._ui.record_move_up_button.setEnabled(enabled)
 
-    @Slot(object)
-    def handle_settings_state_changed(self, state):
-        enabled = state != SettingsState.FETCHING
-        self._ui.set_group_box.setEnabled(enabled)
-        self._ui.contents_group_box.setEnabled(enabled)
-        self._ui.misc_control_holder.setEnabled(enabled)
-        self._ui.button_box.button(QDialogButtonBox.Ok).setEnabled(enabled)
-        self._ui.button_box.button(QDialogButtonBox.RestoreDefaults).setEnabled(enabled)
-
     @Slot()
     def _accept(self):
         """Emits the settings_accepted signal."""
@@ -276,7 +250,7 @@ class GdxExportSettings(QWidget):
                 "Parameter indexing not set up correctly. Click 'Indexed parameters...' to open the settings window.",
             )
             return
-        self.settings_accepted.emit(self._database_url)
+        self.settings_accepted.emit()
         self.hide()
 
     @Slot(bool)
@@ -306,14 +280,17 @@ class GdxExportSettings(QWidget):
 
     def closeEvent(self, event):
         super().closeEvent(event)
-        self.settings_rejected.emit(self._database_url)
+        self.settings_rejected.emit()
 
-    @Slot(QAbstractButton)
-    def _reset_settings(self, button):
+    @Slot(bool)
+    def _request_settings_update(self, _=True):
         """Requests for fresh settings to be read from the database."""
-        if self._ui.button_box.standardButton(button) != QDialogButtonBox.RestoreDefaults:
+        url = self._ui.database_combo_box.currentText()
+        if not url:
             return
-        self.reset_requested.emit(self._database_url)
+        self._ui.controls_group.setEnabled(False)
+        self._ui.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.reset_requested.emit(url)
 
     @Slot(str)
     def _update_global_parameters_domain(self, text):
@@ -344,9 +321,11 @@ class GdxExportSettings(QWidget):
     def _show_indexed_parameter_settings(self, _):
         """Shows the indexed parameter settings window."""
         if self._indexed_parameter_settings_window is None:
+            url = self._ui.database_combo_box.currentText()
+            scenario = self._database_model.item(url).scenario if url else None
             indexing_settings = deepcopy(self._indexing_settings)
             self._indexed_parameter_settings_window = ParameterIndexSettingsWindow(
-                indexing_settings, self._set_settings, self._database_url, self._scenario, self._none_fallback, self
+                indexing_settings, self._set_settings, url, scenario, self._none_fallback, self
             )
             self._indexed_parameter_settings_window.settings_approved.connect(self._gather_parameter_indexing_settings)
             self._indexed_parameter_settings_window.settings_rejected.connect(
@@ -358,9 +337,8 @@ class GdxExportSettings(QWidget):
     def _show_parameter_merging_settings(self, _):
         """Shows the parameter merging settings window."""
         if self._parameter_merging_settings_window is None:
-            self._parameter_merging_settings_window = ParameterMergingSettingsWindow(
-                self._merging_settings, self._database_url, self
-            )
+            url = self._ui.database_combo_box.currentText()
+            self._parameter_merging_settings_window = ParameterMergingSettingsWindow(self._merging_settings, url, self)
             self._parameter_merging_settings_window.settings_approved.connect(self._parameter_merging_approved)
             self._parameter_merging_settings_window.settings_rejected.connect(self._dispose_parameter_merging_window)
         self._parameter_merging_settings_window.show()

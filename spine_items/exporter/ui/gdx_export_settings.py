@@ -31,10 +31,14 @@ class Ui_Form(object):
         if not Form.objectName():
             Form.setObjectName(u"Form")
         Form.setWindowModality(Qt.WindowModal)
-        Form.resize(603, 406)
+        Form.resize(626, 473)
         self.verticalLayout_4 = QVBoxLayout(Form)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
-        self.splitter = QSplitter(Form)
+        self.controls_group = QWidget(Form)
+        self.controls_group.setObjectName(u"controls_group")
+        self.verticalLayout_3 = QVBoxLayout(self.controls_group)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.splitter = QSplitter(self.controls_group)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Horizontal)
         self.set_group_box = QGroupBox(self.splitter)
@@ -109,31 +113,22 @@ class Ui_Form(object):
 
         self.splitter.addWidget(self.contents_group_box)
 
-        self.verticalLayout_4.addWidget(self.splitter)
+        self.verticalLayout_3.addWidget(self.splitter)
 
-        self.misc_control_holder = QWidget(Form)
-        self.misc_control_holder.setObjectName(u"misc_control_holder")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.misc_control_holder.sizePolicy().hasHeightForWidth())
-        self.misc_control_holder.setSizePolicy(sizePolicy)
-        self.verticalLayout_3 = QVBoxLayout(self.misc_control_holder)
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.open_indexed_parameter_settings_button = QPushButton(self.misc_control_holder)
+        self.open_indexed_parameter_settings_button = QPushButton(self.controls_group)
         self.open_indexed_parameter_settings_button.setObjectName(u"open_indexed_parameter_settings_button")
 
         self.horizontalLayout_4.addWidget(self.open_indexed_parameter_settings_button)
 
-        self.indexing_status_label = QLabel(self.misc_control_holder)
+        self.indexing_status_label = QLabel(self.controls_group)
         self.indexing_status_label.setObjectName(u"indexing_status_label")
         self.indexing_status_label.setTextFormat(Qt.RichText)
 
         self.horizontalLayout_4.addWidget(self.indexing_status_label)
 
-        self.open_parameter_merging_settings_button = QPushButton(self.misc_control_holder)
+        self.open_parameter_merging_settings_button = QPushButton(self.controls_group)
         self.open_parameter_merging_settings_button.setObjectName(u"open_parameter_merging_settings_button")
 
         self.horizontalLayout_4.addWidget(self.open_parameter_merging_settings_button)
@@ -149,34 +144,34 @@ class Ui_Form(object):
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.formLayout = QFormLayout()
         self.formLayout.setObjectName(u"formLayout")
-        self.label = QLabel(self.misc_control_holder)
+        self.label = QLabel(self.controls_group)
         self.label.setObjectName(u"label")
 
         self.formLayout.setWidget(0, QFormLayout.LabelRole, self.label)
 
-        self.global_parameters_combo_box = QComboBox(self.misc_control_holder)
+        self.global_parameters_combo_box = QComboBox(self.controls_group)
         self.global_parameters_combo_box.setObjectName(u"global_parameters_combo_box")
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.global_parameters_combo_box)
 
-        self.label_2 = QLabel(self.misc_control_holder)
+        self.label_2 = QLabel(self.controls_group)
         self.label_2.setObjectName(u"label_2")
 
         self.formLayout.setWidget(2, QFormLayout.LabelRole, self.label_2)
 
-        self.none_export_combo_box = QComboBox(self.misc_control_holder)
+        self.none_export_combo_box = QComboBox(self.controls_group)
         self.none_export_combo_box.addItem("")
         self.none_export_combo_box.addItem("")
         self.none_export_combo_box.setObjectName(u"none_export_combo_box")
 
         self.formLayout.setWidget(2, QFormLayout.FieldRole, self.none_export_combo_box)
 
-        self.label_3 = QLabel(self.misc_control_holder)
+        self.label_3 = QLabel(self.controls_group)
         self.label_3.setObjectName(u"label_3")
 
         self.formLayout.setWidget(1, QFormLayout.LabelRole, self.label_3)
 
-        self.none_fallback_combo_box = QComboBox(self.misc_control_holder)
+        self.none_fallback_combo_box = QComboBox(self.controls_group)
         self.none_fallback_combo_box.addItem("")
         self.none_fallback_combo_box.addItem("")
         self.none_fallback_combo_box.setObjectName(u"none_fallback_combo_box")
@@ -193,12 +188,32 @@ class Ui_Form(object):
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_3)
 
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.update_button = QPushButton(self.controls_group)
+        self.update_button.setObjectName(u"update_button")
 
-        self.verticalLayout_4.addWidget(self.misc_control_holder)
+        self.horizontalLayout_5.addWidget(self.update_button)
+
+        self.database_combo_box = QComboBox(self.controls_group)
+        self.database_combo_box.setObjectName(u"database_combo_box")
+        self.database_combo_box.setMaximumSize(QSize(400, 16777215))
+
+        self.horizontalLayout_5.addWidget(self.database_combo_box)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_5.addItem(self.horizontalSpacer_3)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_5)
+
+
+        self.verticalLayout_4.addWidget(self.controls_group)
 
         self.button_box = QDialogButtonBox(Form)
         self.button_box.setObjectName(u"button_box")
-        self.button_box.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok|QDialogButtonBox.RestoreDefaults)
+        self.button_box.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
 
         self.verticalLayout_4.addWidget(self.button_box)
 
@@ -242,5 +257,6 @@ class Ui_Form(object):
         self.none_fallback_combo_box.setItemText(0, QCoreApplication.translate("Form", u"Use it", None))
         self.none_fallback_combo_box.setItemText(1, QCoreApplication.translate("Form", u"Replace by default value", None))
 
+        self.update_button.setText(QCoreApplication.translate("Form", u"Update from database", None))
     # retranslateUi
 

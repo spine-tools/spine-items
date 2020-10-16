@@ -15,19 +15,23 @@ Contains utilities for filter config paths.
 :authors: A. Soininen (VTT)
 :date:    2.10.2020
 """
+from hashlib import sha1
 from pathlib import Path
-from time import time
 
 
-def filter_config_path(data_dir):
+def filter_config_path(data_dir, specification):
     """
     Constructs an absolute path to transformer's configuration file.
 
     Args:
         data_dir (str): absolute path to project item's data directory
+        specification (DataTransformerSpecification): item's specification
 
     Returns:
         str: a path to the config file
     """
-    file_name = "filter_config-" + f"{hash(time()):0x}" + ".json"
+    hasher = sha1()
+    for name, rename in specification.entity_class_name_map().items():
+        hasher.update(bytes(name + rename, "utf-8"))
+    file_name = "filter_config-" + hasher.hexdigest() + ".json"
     return str(Path(data_dir, file_name))

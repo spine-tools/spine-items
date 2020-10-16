@@ -63,7 +63,7 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(self._specification)
         if specification is None:
             return ExecutableItem(self.name, None, "", self._logger)
-        path = filter_config_path(self.data_dir)
+        path = filter_config_path(self.data_dir, specification)
         return ExecutableItem(self.name, specification.entity_class_renaming_settings, path, self._logger)
 
     def item_dict(self):
@@ -162,7 +162,7 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(self._specification)
         if specification is None:
             return [ProjectItemResource(self, "database", url) for url in self._urls]
-        path = Path(filter_config_path(self.data_dir))
+        path = Path(filter_config_path(self.data_dir, specification))
         if not path.exists():
             with open(path, "w") as filter_config_file:
                 dump(specification.entity_class_renaming_settings, filter_config_file)

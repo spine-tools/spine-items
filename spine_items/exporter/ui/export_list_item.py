@@ -77,26 +77,6 @@ class Ui_Form(object):
 
         self.verticalLayout.addLayout(self.formLayout)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout.addItem(self.horizontalSpacer)
-
-        self.notification_label = QLabel(self.frame)
-        self.notification_label.setObjectName(u"notification_label")
-        self.notification_label.setTextFormat(Qt.RichText)
-
-        self.horizontalLayout.addWidget(self.notification_label)
-
-        self.settings_button = QPushButton(self.frame)
-        self.settings_button.setObjectName(u"settings_button")
-
-        self.horizontalLayout.addWidget(self.settings_button)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout)
-
 
         self.verticalLayout_2.addWidget(self.frame)
 
@@ -110,11 +90,9 @@ class Ui_Form(object):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.file_name_label.setText(QCoreApplication.translate("Form", u"Filename:", None))
         self.out_file_name_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type output file name here...", None))
-        self.scenario_label.setText(QCoreApplication.translate("Form", u"Scenarios:", None))
+        self.scenario_label.setText(QCoreApplication.translate("Form", u"Scenario:", None))
 #if QT_CONFIG(tooltip)
         self.scenario_combo_box.setToolTip(QCoreApplication.translate("Form", u"Select scenario to export.", None))
 #endif // QT_CONFIG(tooltip)
-        self.notification_label.setText("")
-        self.settings_button.setText(QCoreApplication.translate("Form", u"Settings...", None))
     # retranslateUi
 

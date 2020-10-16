@@ -16,6 +16,7 @@ Parameter indexing settings window for .gdx export.
 :date:   25.11.2019
 """
 from contextlib import contextmanager
+from copy import deepcopy
 from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
 from PySide2.QtGui import QStandardItem
 from PySide2.QtWidgets import QMessageBox, QWidget
@@ -42,26 +43,26 @@ class ParameterIndexSettingsWindow(QWidget):
             indexing_settings (dict): a map from parameter name to a dict of domain names and :class:`IndexingSetting`
             set_settings (SetSettings): export settings
             database_path (str): a database url
-            scenario (str): scenario name
+            scenario (str, optional): scenario name
             none_fallback (NoneFallback): how to handle None values
             parent (QWidget): a parent widget
         """
         from ..ui.parameter_index_settings_window import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent, f=Qt.Window)
-        self._indexing_settings = indexing_settings
         self._set_settings = set_settings
-        self._database_mapping = scenario_filtered_database_map(database_path, scenario)
+        self._database_mapping = scenario_filtered_database_map(database_path, scenario) if database_path else None
         self._enable_domain_updates = True
-        self._ui = Ui_Form()
-        self._ui.setupUi(self)
-        self.setWindowTitle(f"Gdx Parameter Indexing Settings    -- {database_path} --")
-        self.setAttribute(Qt.WA_DeleteOnClose, True)
-        self._ui.splitter.setSizes([400, 50])
         self._parameters = dict()
         if not self._read_parameters(none_fallback):
             self.settings_rejected.emit()
             return
+        self._indexing_settings = self._fix_legacy_indexing_settings(indexing_settings)
+        self._ui = Ui_Form()
+        self._ui.setupUi(self)
+        self.setWindowTitle(f"Gdx Parameter Indexing Settings")
+        self.setAttribute(Qt.WA_DeleteOnClose, True)
+        self._ui.splitter.setSizes([400, 50])
         self._ui.button_box.accepted.connect(self._collect_and_hide)
         self._ui.button_box.rejected.connect(self._reject_and_close)
         self._additional_domains_model = IndexingDomainListModel(set_settings, self._parameters)
@@ -82,7 +83,7 @@ class ParameterIndexSettingsWindow(QWidget):
         self._ui.extract_from_combo_box.currentIndexChanged.connect(self._set_extraction_domain)
         self._settings_widgets = dict()
         self._available_domains = {name: set_settings.records(name) for name in set_settings.domain_names}
-        for parameter_name, by_dimensions in indexing_settings.items():
+        for parameter_name, by_dimensions in self._indexing_settings.items():
             for domain_names, indexing_setting in by_dimensions.items():
                 settings_widget = ParameterIndexSettings(
                     parameter_name,
@@ -94,7 +95,7 @@ class ParameterIndexSettingsWindow(QWidget):
                 self._ui.settings_area_layout.insertWidget(0, settings_widget)
                 widgets = self._settings_widgets.setdefault(parameter_name, dict())
                 widgets[domain_names] = settings_widget
-        if not indexing_settings:
+        if not self._indexing_settings:
             self._ui.widget_stack.setCurrentIndex(1)
             return
         self._ui.widget_stack.setCurrentIndex(0)
@@ -358,7 +359,8 @@ class ParameterIndexSettingsWindow(QWidget):
     def closeEvent(self, event):
         """Handles the close event."""
         super().closeEvent(event)
-        self._database_mapping.connection.close()
+        if self._database_mapping is not None:
+            self._database_mapping.connection.close()
         self.settings_rejected.emit()
 
     def _populate_extract_from_combo(self):
@@ -384,12 +386,40 @@ class ParameterIndexSettingsWindow(QWidget):
             model.appendRow(item)
 
     def _read_parameters(self, none_fallback):
-        try:
-            self._parameters = gdx.indexed_parameters(self._database_mapping, none_fallback, logger=None)
-        except gdx.GdxExportException as error:
-            QMessageBox.warning(self, "Failed to read database", str(error))
-            return False
+        """
+        Collects parameters with indexed values from the database.
+
+        Args:
+            none_fallback (NoneFallback): none fallback option
+
+        Returns:
+            bool: True if the operation was successful, False otherwise
+        """
+        if self._database_mapping is not None:
+            try:
+                self._parameters = gdx.indexed_parameters(self._database_mapping, none_fallback, logger=None)
+            except gdx.GdxExportException as error:
+                QMessageBox.warning(self, "Failed to read database", str(error))
+                return False
         return True
+
+    def _fix_legacy_indexing_settings(self, indexing_settings):
+        """
+        Fixes indexing settings that are loaded from 0.5 project file and are missing parameters' domain names.
+
+        Args:
+            indexing_settings (dict): indexing settings
+
+        Returns:
+            dict: fixed indexing settings
+        """
+        for parameter_name, by_dimensions in indexing_settings.items():
+            if next(iter(by_dimensions))[0] is None:
+                setting = next(iter(by_dimensions.values()))
+                by_dimensions.clear()
+                for domain_names in self._parameters[parameter_name]:
+                    by_dimensions[domain_names] = deepcopy(setting)
+        return indexing_settings
 
 
 @contextmanager

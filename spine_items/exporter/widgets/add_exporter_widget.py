@@ -30,7 +30,7 @@ class AddExporterWidget(AddProjectItemWidget):
             toolbox (ToolboxUI): Parent widget
             x (int): X coordinate of new item
             y (int): Y coordinate of new item
-            sped (str): item specification's name
+            spec (str): item specification's name
         """
         super().__init__(toolbox, x, y, Exporter, spec=spec)
 
@@ -40,9 +40,10 @@ class AddExporterWidget(AddProjectItemWidget):
             self.name: {
                 "type": ItemInfo.item_type(),
                 "description": self.description,
-                "settings_packs": None,
                 "x": self._x,
                 "y": self._y,
+                "settings_pack": None,
+                "databases": {},
             }
         }
         self._project.add_project_items(item, set_selected=True)

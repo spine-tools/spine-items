@@ -30,7 +30,7 @@ class AddCombinerWidget(AddProjectItemWidget):
             toolbox (ToolboxUI): Parent widget
             x (int): X coordinate of new item
             y (int): Y coordinate of new item
-            sped (str): item specification's name
+            spec (str): item specification's name
         """
         super().__init__(toolbox, x, y, Combiner, spec=spec)
 

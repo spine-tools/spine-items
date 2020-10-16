@@ -64,9 +64,23 @@ class TestExporter(unittest.TestCase):
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.exporter.item_dict()
-        a = ["type", "description", "x", "y", "settings_packs", "cancel_on_error"]
-        for k in a:
-            self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
+        expected_settings_pack = {
+            "settings": None,
+            "indexing_settings": None,
+            "merging_settings": {},
+            "none_export": 0,
+            "none_fallback": 0,
+        }
+        expected = {
+            "type": "Exporter",
+            "description": "",
+            "x": 0.0,
+            "y": 0.0,
+            "settings_pack": expected_settings_pack,
+            "databases": [],
+            "cancel_on_error": True,
+        }
+        self.assertEqual(d, expected)
 
     def test_notify_destination(self):
         source_item = NonCallableMagicMock()
@@ -160,17 +174,6 @@ class TestExporter(unittest.TestCase):
         self.assertEqual(exporter2._properties_ui.databases_list_layout.count(), 1)
         database_item = exporter2._properties_ui.databases_list_layout.itemAt(0).widget()
         self.assertEqual(database_item.url_field.text(), "url to a database in the clouds")
-
-    def test_handle_dag_changed_does_not_overwrite_properties_tab_when_no_urls_change(self,):
-        self.exporter._start_worker = MagicMock()
-        self.exporter.activate()
-        self.exporter._update_properties_tab = MagicMock()
-        resources = [ProjectItemResource(None, "database", "url to database")]
-        self.exporter.handle_dag_changed(0, resources)
-        self.exporter._update_properties_tab.assert_called_once()
-        self.exporter._update_properties_tab.reset_mock()
-        self.exporter.handle_dag_changed(0, resources)
-        self.exporter._update_properties_tab.assert_not_called()
 
 
 if __name__ == "__main__":

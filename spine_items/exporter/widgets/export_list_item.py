@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-A small widget to set up a database export in Gdx Export settings.
+A small widget to set up a database in Exporter properties tab.
 
 :author: A. Soininen (VTT)
 :date:   10.9.2019
@@ -27,19 +27,16 @@ _BASE_ALTERNATIVE_TEXT = "Export 'Base' alternative"
 class ExportListItem(QWidget):
     """A widget with few controls to select the output file name and open a settings window."""
 
-    open_settings_clicked = Signal(str)
-    """Emitted when settings window should be opened."""
     file_name_changed = Signal(str, str)
     """Emitted when the file name field is changed."""
     scenario_changed = Signal(str, str)
     """Emitted when selected scenario has changed."""
 
-    def __init__(self, url, file_name, settings_state, parent=None):
+    def __init__(self, url, file_name, parent=None):
         """
         Args:
-            url (str): database's identifier to be shown on a label
+            url (str): database URL
             file_name (str): relative path to the exported file name
-            settings_state (SettingsState): settings state
             parent (QWidget): a parent widget
         """
         from ..ui.export_list_item import Ui_Form  # pylint: disable=import-outside-toplevel
@@ -50,12 +47,9 @@ class ExportListItem(QWidget):
         self._file_name = file_name
         self._ui.setupUi(self)
         self._ui.url_field.setText(url)
-        self._ui.url_field.setToolTip(url)
         self._ui.out_file_name_edit.setText(file_name)
         self._ui.out_file_name_edit.editingFinished.connect(self._emit_file_name_changed)
         self._ui.scenario_combo_box.currentTextChanged.connect(self._emit_scenario_changed)
-        self._ui.settings_button.clicked.connect(self._emit_open_settings_clicked)
-        self.update_notification_label(settings_state)
 
     @property
     def out_file_name_edit(self):
@@ -67,34 +61,6 @@ class ExportListItem(QWidget):
         """Text in the database URL field."""
         return self._ui.url_field
 
-    @Slot(object)
-    def update_notification_label(self, state):
-        """
-        Updates the UI and the message label according to settings pack state.
-
-        Args:
-            state (SettingsState): settings state
-        """
-        self._ui.notification_label.setText("")
-        if state == SettingsState.FETCHING:
-            self._ui.settings_button.setEnabled(False)
-            self._ui.settings_button.setToolTip("Database is being read...")
-        elif state == SettingsState.ERROR:
-            self._ui.settings_button.setEnabled(False)
-            self._ui.settings_button.setToolTip("Cannot open settings window.")
-            self._ui.notification_label.setText(
-                "<span style='color:#ff3333;white-space: pre-wrap;'>"
-                + "Failed to initialize settings for the database.</span>"
-            )
-        else:
-            self._ui.settings_button.setEnabled(True)
-            self._ui.settings_button.setToolTip("Open Gdx Export Settings.")
-            if state == SettingsState.INDEXING_PROBLEM:
-                self._ui.notification_label.setText(
-                    "<span style='color:#ff3333;white-space: pre-wrap;'>"
-                    + "Open settings to set up parameter indexing.</span>"
-                )
-
     def update_scenarios(self, scenarios, selected):
         """
         Updates the scenarios combo box.
@@ -103,15 +69,16 @@ class ExportListItem(QWidget):
             scenarios (dict): a map from scenario name to boolean active flag
             selected (str, optional): currently selected scenario, None for the 'Base' alternative
         """
-        active = [_BASE_ALTERNATIVE_TEXT] + [name + " (active)" for name, active in scenarios.items() if active]
+        active = [_BASE_ALTERNATIVE_TEXT] + [_activate(name) for name, active in scenarios.items() if active]
         inactive = [name for name, active in scenarios.items() if not active]
         self._ui.scenario_combo_box.clear()
         self._ui.scenario_combo_box.addItems(active)
         self._ui.scenario_combo_box.addItems(inactive)
-        if selected is None:
-            self._ui.scenario_combo_box.setCurrentIndex(0)
+        active = scenarios.get(selected)
+        if active is not None:
+            self._ui.scenario_combo_box.setCurrentText(_activate(selected) if active else selected)
         else:
-            self._ui.scenario_combo_box.setCurrentText(selected)
+            self._ui.scenario_combo_box.setCurrentIndex(0)
 
     def make_sure_this_scenario_is_shown_in_the_combo_box(self, scenario):
         """
@@ -137,11 +104,6 @@ class ExportListItem(QWidget):
         self._file_name = file_name
         self.file_name_changed.emit(file_name, self._url)
 
-    @Slot(bool)
-    def _emit_open_settings_clicked(self, _):
-        """Emits open_settings_clicked signal."""
-        self.open_settings_clicked.emit(self._url)
-
     @Slot(str)
     def _emit_scenario_changed(self, selected):
         """Emits scenario_changed signal."""
@@ -152,3 +114,16 @@ class ExportListItem(QWidget):
             if active == "(active)":
                 selected = scenario_name
             self.scenario_changed.emit(selected, self._url)
+
+
+def _activate(scenario):
+    """
+    Expands active scenario's name so it is recognizable as combo box label.
+
+    Args:
+        scenario (str): scenario name
+
+    Returns:
+        str: expanded name
+    """
+    return scenario + " (active)"

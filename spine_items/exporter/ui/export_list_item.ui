@@ -70,7 +70,7 @@
         <item row="0" column="0">
          <widget class="QLabel" name="scenario_label">
           <property name="text">
-           <string>Scenarios:</string>
+           <string>Scenario:</string>
           </property>
          </widget>
         </item>
@@ -78,40 +78,6 @@
          <widget class="QComboBox" name="scenario_combo_box">
           <property name="toolTip">
            <string>Select scenario to export.</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLabel" name="notification_label">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="textFormat">
-           <enum>Qt::RichText</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="settings_button">
-          <property name="text">
-           <string>Settings...</string>
           </property>
          </widget>
         </item>

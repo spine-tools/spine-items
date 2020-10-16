@@ -46,13 +46,14 @@ class ParameterMergingSettingsWindow(QWidget):
         self._database_url = database_path
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        self.setWindowTitle(f"Gdx Parameter Merging Settings    -- {database_path} --")
+        self.setWindowTitle(f"Gdx Parameter Merging Settings")
         self._setting_widgets = list()
         for parameter_name, setting_list in merging_settings.items():
             for setting in setting_list:
                 self._add_setting(parameter_name, setting)
         self._ui.button_box.accepted.connect(self._collect_and_hide)
         self._ui.button_box.rejected.connect(self._reject_and_close)
+        self._ui.add_button.setEnabled(bool(database_path))
         self._ui.add_button.clicked.connect(self._add_empty_setting)
 
     @property

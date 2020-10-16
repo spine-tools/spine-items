@@ -177,7 +177,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
-        self.widget_stack.setCurrentIndex(0)
+        self.widget_stack.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(Form)
@@ -192,6 +192,6 @@ class Ui_Form(object):
         self.use_expression_radio_button.setText(QCoreApplication.translate("Form", u"Expression:", None))
         self.extract_from_radio_button.setText(QCoreApplication.translate("Form", u"Extract from:", None))
         self.label_3.setText(QCoreApplication.translate("Form", u"Length:", None))
-        self.label.setText(QCoreApplication.translate("Form", u"No indexed parameters found in this database.", None))
+        self.label.setText(QCoreApplication.translate("Form", u"No indexed parameters found.", None))
     # retranslateUi
 

@@ -35,37 +35,34 @@ class Worker(QObject):
 
     Attributes:
         thread (QThread): the thread the worker executes in
+        database_url (str): database URL
     """
 
-    database_unavailable = Signal(str)
+    database_unavailable = Signal()
     """Emitted when opening the database fails."""
-    errored = Signal(str, object)
+    errored = Signal(object)
     """Emitted when an error occurs."""
-    finished = Signal(str, object)
+    finished = Signal(object)
     """Emitted when the worker has finished."""
-    # LoggerInterface signals
-    msg = Signal(str, str)
-    msg_warning = Signal(str, str)
-    msg_error = Signal(str, str)
 
-    def __init__(self, identifier, database_url, scenario, none_fallback):
+    def __init__(self, database_url, scenario, none_fallback, logger):
         """
         Args:
-            identifier (str): a string that identifies the worker
             database_url (str): database's URL
             scenario (str, optional): scenario name or None if 'Base' alternative should be used
             none_fallback (NoneFallback): how to handle None parameter values
+            logger (LoggerInterface): a logger
         """
         super().__init__()
         self.thread = QThread()
         self.moveToThread(self.thread)
         self._scenario = scenario
         self._none_fallback = none_fallback
-        self._identifier = identifier
-        self._database_url = str(database_url)
+        self.database_url = str(database_url)
         self._previous_settings = None
         self._previous_indexing_settings = None
         self._previous_merging_settings = None
+        self._logger = logger
         self.thread.started.connect(self._fetch_settings)
 
     @Slot()
@@ -86,7 +83,7 @@ class Worker(QObject):
             result.set_settings = updated_settings
             result.indexing_settings = updated_indexing_settings
             result.merging_settings = updated_merging_settings
-        self.finished.emit(self._identifier, result)
+        self.finished.emit(result)
         self.thread.quit()
 
     def set_previous_settings(self, previous_settings, previous_indexing_settings, previous_merging_settings):
@@ -111,33 +108,31 @@ class Worker(QObject):
     def _read_settings(self):
         """Reads fresh gdx settings from the database."""
         try:
-            database_map = filtered_database_map(DatabaseMapping, self._database_url)
+            database_map = filtered_database_map(DatabaseMapping, self.database_url)
         except SpineDBAPIError:
-            self.database_unavailable.emit(self._identifier)
-            return None, None, None, None
+            self.database_unavailable.emit()
+            return None, None, None
         try:
             scenarios = self._read_scenarios(database_map)
             if self._scenario is not None and self._scenario not in scenarios:
-                self.errored.emit(self._identifier, f"Scenario {self._scenario} not found.")
-                return None, None, None, None
+                self.errored.emit(f"Scenario {self._scenario} not found.")
+                return None, None, None
             if self._scenario is None:
                 apply_alternative_filter_to_parameter_value_sq(database_map, ["Base"])
             else:
                 apply_scenario_filter_to_parameter_value_sq(database_map, self._scenario)
         except SpineDBAPIError as error:
-            self.errored.emit(self._identifier, error)
-            return None, None, None, None
+            self.errored.emit(error)
+            return None, None, None
         try:
-            time_stamp = latest_database_commit_time_stamp(database_map)
             settings = gdx.make_set_settings(database_map)
-            logger = _Logger(self._identifier, self)
-            indexing_settings = gdx.make_indexing_settings(database_map, self._none_fallback, logger)
+            indexing_settings = gdx.make_indexing_settings(database_map, self._none_fallback, self._logger)
         except gdx.GdxExportException as error:
-            self.errored.emit(self._identifier, error)
-            return None, None, None, None
+            self.errored.emit(error)
+            return None, None, None
         finally:
             database_map.connection.close()
-        return time_stamp, settings, indexing_settings, scenarios
+        return settings, indexing_settings, scenarios
 
     def _update_indexing_settings(self, new_indexing_settings):
         """Updates the parameter indexing settings according to changes in the database."""
@@ -149,16 +144,16 @@ class Worker(QObject):
     def _update_merging_settings(self, updated_settings):
         """Updates the parameter merging settings according to changes in the database"""
         try:
-            database_map = filtered_database_map(DatabaseMapping, self._database_url)
+            database_map = filtered_database_map(DatabaseMapping, self.database_url)
         except SpineDBAPIError as error:
-            self.errored.emit(self._identifier, error)
+            self.errored.emit(error)
             return None
         try:
             updated_merging_settings = gdx.update_merging_settings(
                 self._previous_merging_settings, updated_settings, database_map
             )
         except gdx.GdxExportException as error:
-            self.errored.emit(self._identifier, error)
+            self.errored.emit(error)
             return None
         finally:
             database_map.connection.close()
@@ -170,56 +165,20 @@ class _Result:
     Contains fetched export settings.
 
     Attributes:
-        commit_time_stamp (datetime): time of the database's last commit
         set_settings (gdx.SetSettings): gdx export settings
         indexing_settings (dict): parameter indexing settings
         merging_settings (dict): parameter merging settings
         scenarios (dict): map from scenario name to boolean 'active' flag
     """
 
-    def __init__(self, time_stamp, set_settings, indexing_settings, scenarios):
+    def __init__(self, set_settings, indexing_settings, scenarios):
         """
         Args:
-            time_stamp (datetime): time of the database's last commit
             set_settings (gdx.SetSettings): gdx export settings
             indexing_settings (dict): parameter indexing settings
             scenarios (dict): map from scenario name to boolean 'active' flag
         """
-        self.commit_time_stamp = time_stamp
         self.set_settings = set_settings
         self.indexing_settings = indexing_settings
         self.merging_settings = dict()
         self.scenarios = scenarios
-
-
-class _Logger(QObject):
-    """A ``LoggerInterface`` compliant logger that relays messages to :class:`Worker`'s signals."""
-
-    msg = Signal(str)
-    msg_warning = Signal(str)
-    msg_error = Signal(str)
-
-    def __init__(self, database_url, worker):
-        """
-        Args:
-            database_url (str): a database url
-            worker (Worker): a worker
-        """
-        super().__init__()
-        self._url = database_url
-        self._worker = worker
-        self.msg.connect(self.relay_message)
-        self.msg_warning.connect(self.relay_warning)
-        self.msg_error.connect(self.relay_error)
-
-    @Slot(str)
-    def relay_message(self, text):
-        self._worker.msg.emit(self._url, text)
-
-    @Slot(str)
-    def relay_warning(self, text):
-        self._worker.msg_warning.emit(self._url, text)
-
-    @Slot(str)
-    def relay_error(self, text):
-        self._worker.msg_error.emit(self._url, text)

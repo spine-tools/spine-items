@@ -66,6 +66,25 @@ class Ui_Form(object):
         self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 292, 348))
         self.verticalLayout_21 = QVBoxLayout(self.scrollAreaWidgetContents_5)
         self.verticalLayout_21.setObjectName(u"verticalLayout_21")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.settings_button = QPushButton(self.scrollAreaWidgetContents_5)
+        self.settings_button.setObjectName(u"settings_button")
+
+        self.horizontalLayout_2.addWidget(self.settings_button)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer)
+
+
+        self.verticalLayout_21.addLayout(self.horizontalLayout_2)
+
+        self.issues_label = QLabel(self.scrollAreaWidgetContents_5)
+        self.issues_label.setObjectName(u"issues_label")
+
+        self.verticalLayout_21.addWidget(self.issues_label)
+
         self.databases_list_layout = QVBoxLayout()
         self.databases_list_layout.setObjectName(u"databases_list_layout")
 
@@ -130,6 +149,8 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.item_name_label.setText(QCoreApplication.translate("Form", u"Name", None))
+        self.settings_button.setText(QCoreApplication.translate("Form", u"Settings...", None))
+        self.issues_label.setText("")
         self.cancel_on_error_check_box.setText(QCoreApplication.translate("Form", u"Cancel export on error", None))
 #if QT_CONFIG(tooltip)
         self.open_directory_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Exporter's project directory in file browser</p></body></html>", None))

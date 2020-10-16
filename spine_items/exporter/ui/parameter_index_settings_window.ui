@@ -32,7 +32,7 @@
    <item>
     <widget class="QStackedWidget" name="widget_stack">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="settings_page">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -178,7 +178,7 @@
          <item>
           <widget class="QLabel" name="label">
            <property name="text">
-            <string>No indexed parameters found in this database.</string>
+            <string>No indexed parameters found.</string>
            </property>
           </widget>
          </item>

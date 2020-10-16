@@ -15,55 +15,19 @@ Contains the Notifications class.
 :author: A. Soininen (VTT)
 :date:   6.5.2020
 """
-from PySide2.QtCore import QObject, Signal, Slot
-from .settings_state import SettingsState
 
 
-class Notifications(QObject):
+class Notifications:
     """
     Holds flags for different error conditions.
 
     Attributes:
-        duplicate_output_file_name (bool): if True there are duplicate output file names
-        missing_output_file_name (bool): if True the output file name is missing
-        missing_parameter_indexing (bool): if True there are indexed parameters without indexing domains
-        erroneous_database (bool): if True the database has issues
+        duplicate_output_file_name (bool): True if there are duplicate output file names
+        missing_output_file_name (bool): True if the output file name is missing
+        missing_settings (bool): True if export settings are missing
     """
 
-    changed_due_to_settings_state = Signal()
-    """Emitted when notifications have changed due to changes in settings state."""
-
     def __init__(self):
-        super().__init__()
         self.duplicate_output_file_name = False
         self.missing_output_file_name = False
-        self.missing_parameter_indexing = False
-        self.erroneous_database = False
-
-    def __ior__(self, other):
-        """
-        ORs the flags with another notifications.
-
-        Args:
-            other (Notifications): a Notifications object
-        """
-        self.duplicate_output_file_name |= other.duplicate_output_file_name
-        self.missing_output_file_name |= other.missing_output_file_name
-        self.missing_parameter_indexing |= other.missing_parameter_indexing
-        self.erroneous_database |= other.erroneous_database
-        return self
-
-    @Slot(object)
-    def update_settings_state(self, state):
-        """Updates the notifications according to settings state."""
-        changed = False
-        is_erroneous = state == SettingsState.ERROR
-        if self.erroneous_database != is_erroneous:
-            self.erroneous_database = is_erroneous
-            changed = True
-        is_problem = state == state.INDEXING_PROBLEM
-        if self.missing_parameter_indexing != is_problem:
-            self.missing_parameter_indexing = is_problem
-            changed = True
-        if changed:
-            self.changed_due_to_settings_state.emit()
+        self.missing_settings = False
