@@ -41,17 +41,19 @@ class SetListModel(QAbstractListModel):
         self._sorted_domains = sorted(set_settings.domain_names, key=lambda name: set_settings.domain_tiers[name])
         self._sorted_sets = sorted(set_settings.set_names, key=lambda name: set_settings.set_tiers[name])
 
-    def add_domain(self, domain_name, records, origin):
+    def add_domain(self, domain_name, description, records, origin):
         """
         Adds a new additional domain.
 
         Args:
             domain_name (str): domain's name
+            description (str): domain's description
             records (gdx.Records): domain's sorted records
             origin (gdx.Origin): domain's origin
         """
         exportable = gdx.ExportFlag.EXPORTABLE if origin == gdx.Origin.DATABASE else gdx.ExportFlag.NON_EXPORTABLE
         metadata = gdx.SetMetadata(exportable, origin)
+        metadata.description = description
         if not self._set_settings.add_or_replace_domain(domain_name, records, metadata):
             first = len(self._set_settings.domain_names)
             last = first
@@ -72,25 +74,28 @@ class SetListModel(QAbstractListModel):
         self._sorted_domains.pop(row)
         self.endRemoveRows()
 
-    def update_domain(self, domain_name, records):
+    def update_domain(self, domain_name, description, records):
         """
-        Updates the records of an existing domain.
+        Updates the records and description of an existing domain.
 
         Args:
             domain_name (str): domain's name
+            description (str): domain's description
             records (gdx.Records): updated records
         """
         self._set_settings.update_records(domain_name, records)
+        self._set_settings.metadata(domain_name).description = description
         row = self._set_settings.domain_tiers[domain_name]
         cell = self.index(row, 0)
         self.dataChanged.emit(cell, cell, [Qt.DisplayRole])
 
-    def update_indexing_domains(self, domains):
+    def update_indexing_domains(self, domains, descriptions):
         """
         Updates additional domains needed for parameter index expansion.
 
         Args:
             domains (dict): a mapping from domain name to records
+            descriptions (dict): a mapping from domain name to domain's description
         """
         old_indexing_domain_names = {
             name
@@ -99,10 +104,11 @@ class SetListModel(QAbstractListModel):
         }
         domains_to_drop = old_indexing_domain_names - set(domains.keys())
         for name, records in domains.items():
+            description = descriptions[name]
             if name in self._set_settings.domain_names:
-                self.update_domain(name, records)
+                self.update_domain(name, description, records)
             else:
-                self.add_domain(name, records, gdx.Origin.INDEXING)
+                self.add_domain(name, description, records, gdx.Origin.INDEXING)
         for name in domains_to_drop:
             self.drop_domain(name)
 

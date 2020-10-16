@@ -77,6 +77,9 @@ class Exporter(ProjectItem):
         self._toolbox = toolbox
         self._cancel_on_error = cancel_on_error
         self._settings_packs = settings_packs if settings_packs is not None else dict()
+        if url_to_full_url is None:
+            url_to_full_url = {url: url for url in self._settings_packs}
+        self._url_to_full_url = url_to_full_url
         self._scenarios = dict()
         self._export_list_items = dict()
         self._workers = dict()
@@ -88,9 +91,6 @@ class Exporter(ProjectItem):
                 self._start_worker(url, update_settings=True)
             else:
                 self._scenarios[url] = self._read_scenarios(url)
-        if url_to_full_url is None:
-            url_to_full_url = {url: url for url in self._settings_packs}
-        self._url_to_full_url = url_to_full_url
 
     def set_up(self):
         """See base class."""
@@ -336,11 +336,12 @@ class Exporter(ProjectItem):
             missing_indexing = False
             if pack.state not in (SettingsState.FETCHING, SettingsState.ERROR):
                 pack.state = SettingsState.OK
-                for setting in pack.indexing_settings.values():
-                    if setting.indexing_domain_name is None and pack.settings.is_exportable(setting.set_name):
-                        pack.state = SettingsState.INDEXING_PROBLEM
-                        missing_indexing = True
-                        break
+                for by_dimension in pack.indexing_settings.values():
+                    for setting in by_dimension.values():
+                        if setting.indexing_domain_name is None:
+                            pack.state = SettingsState.INDEXING_PROBLEM
+                            missing_indexing = True
+                            break
             pack.notifications.missing_parameter_indexing = missing_indexing
 
     def _check_erroneous_databases(self):
