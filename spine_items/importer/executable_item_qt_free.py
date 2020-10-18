@@ -26,7 +26,7 @@ from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
 from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
 from spinetoolbox.spine_io.importers.json_reader import JSONConnector
 from spinetoolbox.executable_item_base import ExecutableItemBase
-from spinetoolbox.helpers_qt_free import shorten, create_log_file_timestamp
+from spinetoolbox.helpers_qt_free import shorten, create_log_file_timestamp, deserialize_checked_states
 from .item_info import ItemInfo
 from .utils import deserialize_mappings
 
@@ -65,10 +65,10 @@ class ExecutableItem(ExecutableItemBase):
             return True
         absolute_paths = _files_from_resources(resources)
         all_import_settings = dict()
-        for label in self._settings:
+        for label, settings in self._settings.items():
             absolute_path = absolute_paths.get(label)
             if absolute_path is not None:
-                all_import_settings[absolute_path] = self._settings[label]
+                all_import_settings[absolute_path] = settings
         all_source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
         success = self._do_work(
             list(absolute_paths.values()),
@@ -233,6 +233,10 @@ class ExecutableItem(ExecutableItemBase):
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         settings = deserialize_mappings(item_dict["mappings"], project_dir)
+        mapping_selection = deserialize_checked_states(item_dict["mapping_selection"], project_dir)
+        for file_path, checked_state in mapping_selection.items():
+            if not checked_state:
+                settings[file_path] = "deselected"
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         logs_dir = os.path.join(data_dir, "logs")
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
