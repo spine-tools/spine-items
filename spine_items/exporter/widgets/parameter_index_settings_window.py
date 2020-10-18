@@ -17,10 +17,15 @@ Parameter indexing settings window for .gdx export.
 """
 from contextlib import contextmanager
 from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
+from PySide2.QtGui import QStandardItem
 from PySide2.QtWidgets import QMessageBox, QWidget
+from spinetoolbox.spine_io.exporters import gdx
 from .parameter_index_settings import IndexSettingsState, ParameterIndexSettings
 from ..mvcmodels.indexing_domain_list_model import IndexingDomainListModel
 from ..db_utils import scenario_filtered_database_map
+
+_PARAMETER_ROLE = Qt.UserRole + 1
+_PARAMETER_NAME_ROLE = Qt.UserRole + 2
 
 
 class ParameterIndexSettingsWindow(QWidget):
@@ -31,13 +36,14 @@ class ParameterIndexSettingsWindow(QWidget):
     settings_rejected = Signal()
     """Emitted when the settings have been rejected."""
 
-    def __init__(self, indexing_settings, set_settings, database_path, scenario, parent):
+    def __init__(self, indexing_settings, set_settings, database_path, scenario, none_fallback, parent):
         """
         Args:
-            indexing_settings (dict): a map from parameter name to :class:`IndexingSetting`
+            indexing_settings (dict): a map from parameter name to a dict of domain names and :class:`IndexingSetting`
             set_settings (SetSettings): export settings
             database_path (str): a database url
             scenario (str): scenario name
+            none_fallback (NoneFallback): how to handle None values
             parent (QWidget): a parent widget
         """
         from ..ui.parameter_index_settings_window import Ui_Form  # pylint: disable=import-outside-toplevel
@@ -52,9 +58,13 @@ class ParameterIndexSettingsWindow(QWidget):
         self.setWindowTitle(f"Gdx Parameter Indexing Settings    -- {database_path} --")
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self._ui.splitter.setSizes([400, 50])
+        self._parameters = dict()
+        if not self._read_parameters(none_fallback):
+            self.settings_rejected.emit()
+            return
         self._ui.button_box.accepted.connect(self._collect_and_hide)
         self._ui.button_box.rejected.connect(self._reject_and_close)
-        self._additional_domains_model = IndexingDomainListModel(set_settings)
+        self._additional_domains_model = IndexingDomainListModel(set_settings, self._parameters)
         self._additional_domains_model.domain_renamed.connect(self._update_after_domain_rename)
         self._additional_domains_model.domains_added.connect(self._add_available_domains)
         self._additional_domains_model.domains_removed.connect(self._remove_available_domains)
@@ -62,21 +72,28 @@ class ParameterIndexSettingsWindow(QWidget):
         self._ui.additional_domains_list_view.selectionModel().currentChanged.connect(self._load_additional_domain)
         self._ui.add_domain_button.clicked.connect(self._add_domain)
         self._ui.remove_domain_button.clicked.connect(self._remove_selected_domains)
+        self._ui.description_edit.textEdited.connect(self._set_domain_description)
         self._ui.use_expression_radio_button.clicked.connect(self._use_expression)
         self._ui.expression_edit.textChanged.connect(self._update_expression)
         self._ui.length_spin_box.valueChanged.connect(self._update_length)
         self._ui.extract_from_radio_button.clicked.connect(self._use_extraction)
         self._set_additional_domain_widgets_enabled(False)
-        self._ui.extract_from_combo_box.addItems(sorted(indexing_settings.keys()))
-        self._ui.extract_from_combo_box.currentTextChanged.connect(self._set_extraction_domain)
+        self._populate_extract_from_combo()
+        self._ui.extract_from_combo_box.currentIndexChanged.connect(self._set_extraction_domain)
         self._settings_widgets = dict()
         self._available_domains = {name: set_settings.records(name) for name in set_settings.domain_names}
-        for parameter_name, indexing_setting in indexing_settings.items():
-            settings_widget = ParameterIndexSettings(
-                parameter_name, indexing_setting, self._available_domains, self._ui.settings_area_contents
-            )
-            self._ui.settings_area_layout.insertWidget(0, settings_widget)
-            self._settings_widgets[parameter_name] = settings_widget
+        for parameter_name, by_dimensions in indexing_settings.items():
+            for domain_names, indexing_setting in by_dimensions.items():
+                settings_widget = ParameterIndexSettings(
+                    parameter_name,
+                    self._parameters[parameter_name][domain_names],
+                    indexing_setting,
+                    self._available_domains,
+                    self._ui.settings_area_contents,
+                )
+                self._ui.settings_area_layout.insertWidget(0, settings_widget)
+                widgets = self._settings_widgets.setdefault(parameter_name, dict())
+                widgets[domain_names] = settings_widget
         if not indexing_settings:
             self._ui.widget_stack.setCurrentIndex(1)
             return
@@ -88,7 +105,7 @@ class ParameterIndexSettingsWindow(QWidget):
         return self._indexing_settings
 
     def additional_indexing_domains(self):
-        return self._additional_domains_model.gather_domains(self._database_mapping)
+        return self._additional_domains_model.gather_domains(self._parameters)
 
     def set_domain_updated_enabled(self, enabled):
         """
@@ -130,16 +147,18 @@ class ParameterIndexSettingsWindow(QWidget):
     @Slot()
     def _collect_and_hide(self):
         """Collects settings from individual ParameterIndexSettings widgets and hides the window."""
-        for parameter_name, settings_widget in self._settings_widgets.items():
-            if settings_widget.state != IndexSettingsState.OK:
-                self._ui.settings_area.ensureWidgetVisible(settings_widget)
-                message = f"Parameter '{parameter_name}' indexing not well-defined."
-                QMessageBox.warning(self, "Bad Parameter Indexing", message)
-                return
-        for parameter_name, settings_widget in self._settings_widgets.items():
-            setting = self._indexing_settings[parameter_name]
-            setting.indexing_domain_name = settings_widget.indexing_domain_name()
-            setting.picking = settings_widget.picking()
+        for parameter_name, widgets in self._settings_widgets.items():
+            for domain_names, settings_widget in widgets.items():
+                if settings_widget.state != IndexSettingsState.OK:
+                    self._ui.settings_area.ensureWidgetVisible(settings_widget)
+                    message = f"Parameter '{parameter_name}' indexing not well-defined."
+                    QMessageBox.warning(self, "Bad Parameter Indexing", message)
+                    return
+        for parameter_name, widgets in self._settings_widgets.items():
+            for domain_names, settings_widget in widgets.items():
+                setting = self._indexing_settings[parameter_name][domain_names]
+                setting.indexing_domain_name = settings_widget.indexing_domain_name()
+                setting.picking = settings_widget.picking()
         self.settings_approved.emit()
         self.hide()
 
@@ -161,10 +180,18 @@ class ParameterIndexSettingsWindow(QWidget):
                 self._switch_additional_domain_widgets_enabled_state(True)
             else:
                 self._ui.extract_from_radio_button.setChecked(True)
-                if domain_proto.extract_from:
-                    self._ui.extract_from_combo_box.setCurrentText(domain_proto.extract_from)
-                else:
-                    self._ui.extract_from_combo_box.setCurrentIndex(-1)
+                self._ui.extract_from_combo_box.setCurrentIndex(-1)
+                if domain_proto.extract_from_parameter_name is not None:
+                    model = self._ui.extract_from_combo_box.model()
+                    for row in range(model.rowCount()):
+                        index = model.index(row, 0)
+                        parameter_name = index.data(_PARAMETER_NAME_ROLE)
+                        if domain_proto.extract_from_parameter_name != parameter_name:
+                            continue
+                        parameter = index.data(_PARAMETER_ROLE)
+                        if domain_proto.extract_from_parameter_domain_names == parameter.domain_names:
+                            self._ui.extract_from_combo_box.setCurrentIndex(row)
+                            break
                 self._ui.expression_edit.clear()
                 self._switch_additional_domain_widgets_enabled_state(False)
 
@@ -192,9 +219,10 @@ class ParameterIndexSettingsWindow(QWidget):
             removed_domains (list of str): domains that were removed
         """
         map(self._available_domains.pop, removed_domains)
-        for widget in self._settings_widgets.values():
-            for domain in removed_domains:
-                widget.remove_domain(domain)
+        for widgets in self._settings_widgets.values():
+            for widget in widgets.values():
+                for domain in removed_domains:
+                    widget.remove_domain(domain)
 
     @Slot(list)
     def _add_available_domains(self, new_domains):
@@ -204,10 +232,12 @@ class ParameterIndexSettingsWindow(QWidget):
         Args:
             new_domains (list of str): a list of new domain names
         """
-        self._available_domains.update(self._additional_domains_model.gather_domains(self._database_mapping))
-        for widget in self._settings_widgets.values():
-            for domain in new_domains:
-                widget.add_domain(domain)
+
+        self._available_domains.update(self._additional_domains_model.gather_domains(self._parameters)[0])
+        for widgets in self._settings_widgets.values():
+            for widget in widgets.values():
+                for domain in new_domains:
+                    widget.add_domain(domain)
 
     @Slot(str, str)
     def _update_after_domain_rename(self, old_name, new_name):
@@ -219,8 +249,9 @@ class ParameterIndexSettingsWindow(QWidget):
             new_name (str): domain's current name
         """
         self._available_domains[new_name] = self._available_domains.pop(old_name)
-        for widget in self._settings_widgets.values():
-            widget.update_domain_name(old_name, new_name)
+        for widgets in self._settings_widgets.values():
+            for widget in widgets.values():
+                widget.update_domain_name(old_name, new_name)
 
     @Slot(str)
     def _update_expression(self, expression):
@@ -235,10 +266,11 @@ class ParameterIndexSettingsWindow(QWidget):
             return
         item = self._additional_domains_model.item_at(list_index.row())
         item.expression = expression
-        records = item.records(self._database_mapping)
+        records = gdx.GeneratedRecords(item.expression, item.length)
         self._available_domains[item.name] = records
-        for widget in self._settings_widgets.values():
-            widget.update_records(item.name)
+        for widgets in self._settings_widgets.values():
+            for widget in widgets.values():
+                widget.update_records(item.name)
 
     @Slot(int)
     def _update_length(self, length):
@@ -253,10 +285,11 @@ class ParameterIndexSettingsWindow(QWidget):
             return
         item = self._additional_domains_model.item_at(list_index.row())
         item.length = length
-        records = item.records(self._database_mapping)
+        records = gdx.GeneratedRecords(item.expression, item.length)
         self._available_domains[item.name] = records
-        for widget in self._settings_widgets.values():
-            widget.update_records(item.name)
+        for widgets in self._settings_widgets.values():
+            for widget in widgets.values():
+                widget.update_records(item.name)
 
     @Slot(bool)
     def _use_expression(self, _):
@@ -267,44 +300,96 @@ class ParameterIndexSettingsWindow(QWidget):
         item = self._additional_domains_model.item_at(list_index.row())
         item.expression = self._ui.expression_edit.text()
         item.length = self._ui.length_spin_box.value()
-        item.extract_from = None
-        records = item.records(self._database_mapping)
+        item.extract_from_parameter_name = None
+        item.extract_from_parameter_domain_names = None
+        records = gdx.GeneratedRecords(item.expression, item.length)
         self._available_domains[item.name] = records
-        for widget in self._settings_widgets.values():
-            widget.update_records(item.name)
+        for widgets in self._settings_widgets.values():
+            for widget in widgets.values():
+                widget.update_records(item.name)
 
     @Slot(bool)
     def _use_extraction(self, _):
         self._switch_additional_domain_widgets_enabled_state(False)
-        domain_name = self._ui.extract_from_combo_box.currentText()
-        self._set_extraction_domain(domain_name)
+        index = self._ui.extract_from_combo_box.currentIndex()
+        self._set_extraction_domain(index)
 
     @Slot(str)
-    def _set_extraction_domain(self, domain_name):
+    def _set_extraction_domain(self, index):
         """
         Sets the domain from which domain's records are extracted.
 
         Args:
-            domain_name (str): domain name
+            index (int): choice in the extract from combo box
         """
-        if not self._enable_domain_updates:
+        if not self._enable_domain_updates or index < 0:
             return
-        list_index = self._ui.additional_domains_list_view.currentIndex()
-        if not domain_name or not list_index.isValid():
+        domain_list_index = self._ui.additional_domains_list_view.currentIndex()
+        if not domain_list_index.isValid():
             return
-        item = self._additional_domains_model.item_at(list_index.row())
+        model = self._ui.extract_from_combo_box.model()
+        model_index = model.index(index, 0)
+        parameter = model_index.data(_PARAMETER_ROLE)
+        parameter_name = model_index.data(_PARAMETER_NAME_ROLE)
+        item = self._additional_domains_model.item_at(domain_list_index.row())
         item.expression = None
-        item.extract_from = domain_name
-        records = item.records(self._database_mapping)
+        item.extract_from_parameter_name = parameter_name
+        item.extract_from_parameter_domain_names = parameter.domain_names
+        first_value = next(iter(parameter.values))
+        value_indexes = [(str(i),) for i in first_value.indexes]
+        records = gdx.ExtractedRecords(parameter_name, parameter.domain_names, value_indexes)
         self._available_domains[item.name] = records
-        for widget in self._settings_widgets.values():
-            widget.update_records(item.name)
+        for widgets in self._settings_widgets.values():
+            for widget in widgets.values():
+                widget.update_records(item.name)
+
+    @Slot(str)
+    def _set_domain_description(self, description):
+        """
+        Sets currently selected additional domain's description.
+
+        Args:
+            description (str): description text
+        """
+        domain_list_index = self._ui.additional_domains_list_view.currentIndex()
+        item = self._additional_domains_model.item_at(domain_list_index.row())
+        item.description = description
 
     def closeEvent(self, event):
         """Handles the close event."""
         super().closeEvent(event)
         self._database_mapping.connection.close()
         self.settings_rejected.emit()
+
+    def _populate_extract_from_combo(self):
+        """Populates the extract from combo box."""
+        model = self._ui.extract_from_combo_box.model()
+        items = list()
+        for parameter_name, by_dimensions in self._parameters.items():
+            if not by_dimensions:
+                continue
+            item = QStandardItem()
+            item.setData(next(iter(by_dimensions.values())), _PARAMETER_ROLE)
+            item.setData(parameter_name, _PARAMETER_NAME_ROLE)
+            if len(by_dimensions) == 1:
+                item.setText(parameter_name)
+            else:
+                for domain_names in by_dimensions:
+                    if len(domain_names) == 1:
+                        item.setText(f"{parameter_name} ({domain_names[0]})")
+                    else:
+                        item.setText(f"{parameter_name} {domain_names}")
+            items.append(item)
+        for item in sorted(items, key=lambda i: i.text()):
+            model.appendRow(item)
+
+    def _read_parameters(self, none_fallback):
+        try:
+            self._parameters = gdx.indexed_parameters(self._database_mapping, none_fallback, logger=None)
+        except gdx.GdxExportException as error:
+            QMessageBox.warning(self, "Failed to read database", str(error))
+            return False
+        return True
 
 
 @contextmanager

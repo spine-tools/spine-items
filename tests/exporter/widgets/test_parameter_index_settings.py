@@ -36,9 +36,9 @@ class TestParameterIndexSettings(unittest.TestCase):
     def test_construction(self):
         value = Map(["s1", "s2"], [-1.1, -2.2])
         parameter = gdx.Parameter(("domain name",), [("key_1",)], [value])
-        indexing_setting = gdx.IndexingSetting(parameter, "set name")
+        indexing_setting = gdx.IndexingSetting(1)
         existing_domains = {"domain name": [("key_1",)]}
-        settings_widget = ParameterIndexSettings("parameter name", indexing_setting, existing_domains, None)
+        settings_widget = ParameterIndexSettings("parameter name", parameter, indexing_setting, existing_domains, None)
         self.assertEqual(settings_widget.state, IndexSettingsState.DOMAIN_MISSING_INDEXES)
 
 
