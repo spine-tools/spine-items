@@ -30,13 +30,9 @@ REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.1"
 install_requires = [
     f"spinetoolbox == {REQUIRED_SPINE_TOOLBOX_VERSION}",
     "sqlalchemy >= 1.3",
-    "openpyxl > 3.0",
-    "numpy >= 1.15.1",
     "pymysql >= 0.9.2",
     "pyodbc >= 4.0.23",
     "psycopg2 >= 2.7.4",
-    "gdx2py >= 2.0.4",
-    "ijson >= 2.6.1",
 ]
 
 setup(

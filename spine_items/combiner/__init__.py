@@ -15,6 +15,3 @@ Combiner plugin.
 :author: M. Marin (KTH)
 :date:   12.9.2019
 """
-
-from .combiner_factory import CombinerFactory as ItemFactory
-from .item_info import ItemInfo

@@ -115,7 +115,7 @@ class Importer(ProjectItem):
         )
         return executable
 
-    @Slot()
+    @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
         if execution_direction != ExecutionDirection.FORWARD:

@@ -280,7 +280,19 @@ class Tool(ProjectItem):
         """Open Tool specification main program file in an external text edit application."""
         if not self.specification():
             return
-        self.specification().open_main_program_file()
+        file_path = self.specification().get_main_program_file_path()
+        if file_path is None:
+            return
+        main_program_url = "file:///" + file_path
+        res = open_url(main_program_url)
+        if not res:
+            filename, file_extension = os.path.splitext(file_path)
+            self._logger.msg_error.emit(
+                "Unable to open Tool specification main program file {0}. "
+                "Make sure that <b>{1}</b> "
+                "files are associated with an editor. E.g. on Windows "
+                "10, go to Control Panel -> Default Programs to do this.".format(filename, file_extension)
+            )
 
     @Slot()
     def open_main_directory(self):

@@ -20,6 +20,7 @@ import random
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QTimeLine, QPointF, Slot
 from spinetoolbox.graphics_items import ProjectItemIcon
+from ..animations import AnimationSignaller
 
 
 class CombinerIcon(ProjectItemIcon):
@@ -40,6 +41,9 @@ class CombinerIcon(ProjectItemIcon):
         self.time_line.valueChanged.connect(self._handle_time_line_value_changed)
         self.time_line.stateChanged.connect(self._handle_time_line_state_changed)
         self._svg_item_pos = self.svg_item.pos()
+        self.animation_signaller = AnimationSignaller()
+        self.animation_signaller.animation_started.connect(self.start_animation)
+        self.animation_signaller.animation_stopped.connect(self.stop_animation)
 
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
@@ -55,6 +59,7 @@ class CombinerIcon(ProjectItemIcon):
         if new_state == QTimeLine.NotRunning:
             self.svg_item.setPos(self._svg_item_pos)
 
+    @Slot()
     def start_animation(self):
         """Start the animation that plays when the Combiner associated to this GraphicsItem is running.
         """
@@ -62,6 +67,7 @@ class CombinerIcon(ProjectItemIcon):
             return
         self.time_line.start()
 
+    @Slot()
     def stop_animation(self):
         """Stop animation"""
         if self.time_line.state() != QTimeLine.Running:

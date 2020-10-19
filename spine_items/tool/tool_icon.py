@@ -19,6 +19,7 @@ Module for tool icon class.
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QTimeLine, Slot, QPointF
 from spinetoolbox.graphics_items import ProjectItemIcon
+from ..animations import AnimationSignaller
 
 
 class ToolIcon(ProjectItemIcon):
@@ -41,6 +42,9 @@ class ToolIcon(ProjectItemIcon):
         rect = self.svg_item.sceneBoundingRect()
         self._anim_transformation_origin_point_y = -0.75 * rect.height()
         self._anim_delta_x_factor = 0.5 * rect.width()
+        self.animation_signaller = AnimationSignaller()
+        self.animation_signaller.animation_started.connect(self.start_animation)
+        self.animation_signaller.animation_stopped.connect(self.stop_animation)
 
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
@@ -59,6 +63,7 @@ class ToolIcon(ProjectItemIcon):
             self.svg_item.setPos(self._svg_item_pos)
             self.svg_item.setRotation(0)
 
+    @Slot()
     def start_animation(self):
         """Starts the item execution animation.
         """
@@ -66,6 +71,7 @@ class ToolIcon(ProjectItemIcon):
             return
         self.time_line.start()
 
+    @Slot()
     def stop_animation(self):
         """Stop animation"""
         if self.time_line.state() != QTimeLine.Running:

@@ -33,6 +33,7 @@ from .item_info import ItemInfo
 from .notifications import Notifications
 from .settings_pack import SettingsPack
 from .settings_state import SettingsState
+from .signalling_settings_pack import SignallingSettingsPack
 from .widgets.gdx_export_settings import GdxExportSettings
 from .widgets.export_list_item import ExportListItem
 from .worker import Worker
@@ -109,8 +110,9 @@ class Exporter(ProjectItem):
     def execution_item(self):
         """Creates Exporter's execution counterpart."""
         gams_path = self._project.settings.value("appSettings/gamsPath", defaultValue=None)
+        settings_packs = {url: pack.to_nonsignalling() for url, pack in self._settings_packs.items()}
         executable = ExecutableItem(
-            self.name, self._settings_packs, self._cancel_on_error, self.data_dir, gams_path, self._logger
+            self.name, settings_packs, self._cancel_on_error, self.data_dir, gams_path, self._logger
         )
         return executable
 
@@ -199,7 +201,7 @@ class Exporter(ProjectItem):
         # Add new databases.
         for database_url in self._url_to_full_url:
             if database_url not in self._settings_packs:
-                self._settings_packs[database_url] = SettingsPack("")
+                self._settings_packs[database_url] = SignallingSettingsPack("")
                 self._start_worker(database_url)
             elif self._url_to_full_url[database_url] != old_urls[database_url]:
                 self._start_worker(database_url, update_settings=True)
@@ -523,10 +525,10 @@ class Exporter(ProjectItem):
             url = deserialize_path(serialized_url, project.project_dir)
             url = _normalize_url(url)
             try:
-                settings_pack = SettingsPack.from_dict(pack, url, logger)
+                settings_pack = SignallingSettingsPack.from_dict(pack, url, logger)
             except gdx.GdxExportException as error:
                 logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
-                settings_pack = SettingsPack("")
+                settings_pack = SignallingSettingsPack("")
             deserialized_packs[url] = settings_pack
         cancel_on_error = item_dict.get("cancel_on_error", True)
         url_to_full_url = item_dict.get("urls")

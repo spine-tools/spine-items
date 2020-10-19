@@ -9,5 +9,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-from .data_transformer_factory import DataTransformerFactory as ItemFactory
-from .item_info import ItemInfo
+"""
+Data transformer plugin.
+
+:author: M. Marin (KTH)
+:date:   12.9.2019
+"""

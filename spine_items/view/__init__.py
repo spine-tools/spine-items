@@ -15,6 +15,3 @@ View plugin.
 :author: M. Marin (KTH)
 :date:   12.9.2019
 """
-
-from .view_factory import ViewFactory as ItemFactory
-from .item_info import ItemInfo

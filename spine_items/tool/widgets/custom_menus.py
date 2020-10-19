@@ -15,8 +15,9 @@ Classes for custom context menus and pop-up menus.
 :author: P. Savolainen (VTT)
 :date:   9.1.2018
 """
-
+import os
 from PySide2.QtCore import QTimeLine, QUrl, Slot
+from spinetoolbox.helpers import open_url
 from spine_items.widgets.custom_menus import (
     CustomContextMenu,
     ProjectItemContextMenu,
@@ -83,7 +84,19 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
     @Slot()
     def open_main_program_file(self):
         spec = self.parent().specification_model.specification(self.index.row())
-        spec.open_main_program_file()
+        file_path = spec.get_main_program_file_path()
+        if file_path is None:
+            return
+        main_program_url = "file:///" + file_path
+        res = open_url(main_program_url)
+        if not res:
+            filename, file_extension = os.path.splitext(file_path)
+            self.parent().msg_error.emit(
+                "Unable to open Tool specification main program file {0}. "
+                "Make sure that <b>{1}</b> "
+                "files are associated with an editor. E.g. on Windows "
+                "10, go to Control Panel -> Default Programs to do this.".format(filename, file_extension)
+            )
 
     @Slot()
     def open_main_program_dir(self):

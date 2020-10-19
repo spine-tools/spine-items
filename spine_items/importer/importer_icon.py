@@ -18,7 +18,7 @@ Module for Importer icon class.
 
 from PySide2.QtGui import QColor
 from spinetoolbox.graphics_items import ProjectItemIcon
-from ..animations import ImporterAnimation
+from ..animations import ImporterAnimation, AnimationSignaller
 
 
 class ImporterIcon(ProjectItemIcon):
@@ -31,5 +31,6 @@ class ImporterIcon(ProjectItemIcon):
         """
         super().__init__(toolbox, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc"))
         self.animation = ImporterAnimation(self, x_shift=4)
-        self.start_animation = self.animation.start
-        self.stop_animation = self.animation.stop
+        self.animation_signaller = AnimationSignaller()
+        self.animation_signaller.animation_started.connect(self.animation.start)
+        self.animation_signaller.animation_stopped.connect(self.animation.stop)

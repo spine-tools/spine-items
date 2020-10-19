@@ -18,7 +18,7 @@ Contains Data transformer's executable item as well as support utilities.
 import json
 from pathlib import Path
 from spinedb_api import append_filter_config
-from spinetoolbox.helpers import shorten
+from spinetoolbox.helpers_qt_free import shorten
 from spinetoolbox.executable_item_base import ExecutableItemBase
 from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from .filter_config_path import filter_config_path

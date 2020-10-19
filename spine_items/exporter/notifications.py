@@ -53,7 +53,7 @@ class Notifications(QObject):
         self.erroneous_database |= other.erroneous_database
         return self
 
-    @Slot("QVariant")
+    @Slot(object)
     def update_settings_state(self, state):
         """Updates the notifications according to settings state."""
         changed = False

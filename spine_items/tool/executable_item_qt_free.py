@@ -24,11 +24,10 @@ import pathlib
 import shutil
 import time
 import uuid
-from PySide2.QtCore import QEventLoop, Slot
 from spinetoolbox.config import TOOL_OUTPUT_DIR
 from spinetoolbox.executable_item_base import ExecutableItemBase
 from spinetoolbox.project_item.project_item_resource import ProjectItemResource
-from spinetoolbox.helpers import shorten
+from spinetoolbox.helpers_qt_free import shorten
 from .item_info import ItemInfo
 from .utils import (
     file_paths_from_resources,
@@ -60,18 +59,14 @@ class ExecutableItem(ExecutableItemBase):
         self._cmd_line_args = cmd_line_args
         self._downstream_resources = list()  # TODO: Rename to _successor_resources
         self._tool_instance = None
-        self._last_return_code = None
 
     @staticmethod
     def item_type():
         """Returns the item's type identifier string."""
         return ItemInfo.item_type()
 
-    def execution_finished(self, execution_token, return_code, execution_dir):
+    def handle_execution_finished(self, return_code, execution_dir):
         """Handles things after execution has finished."""
-        self._last_return_code = return_code
-        # Disconnect instance finished signal
-        self._tool_instance.instance_finished.disconnect(execution_token.handle_execution_finished)
         if return_code == 0:
             self._logger.msg_success.emit(f"Tool <b>{self._name}</b> execution finished")
         else:
@@ -406,7 +401,6 @@ class ExecutableItem(ExecutableItemBase):
         input_database_urls = _database_urls_from_resources(resources)
         output_database_urls = _database_urls_from_resources(self._downstream_resources)
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir)
-
         try:
             self._tool_instance.prepare(
                 list(optional_file_copy_paths.values()), input_database_urls, output_database_urls, self._cmd_line_args
@@ -414,16 +408,10 @@ class ExecutableItem(ExecutableItemBase):
         except RuntimeError as error:
             self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
             return False
-        execution_token = _ExecutionToken(self, execution_dir)
-        self._tool_instance.instance_finished.connect(execution_token.handle_execution_finished)
         self._logger.msg.emit(f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***")
-        # Wait for finished right here
-        loop = QEventLoop()
-        self._tool_instance.instance_finished.connect(loop.quit)
-        self._tool_instance.execute()
-        if self._tool_instance.is_running():
-            loop.exec_()
-        return self._last_return_code == 0
+        return_code = self._tool_instance.execute()
+        self.handle_execution_finished(return_code, execution_dir)
+        return return_code == 0
 
     def _find_input_files(self, resources):
         """
@@ -702,28 +690,3 @@ def _find_files_in_pattern(pattern, available_file_paths):
 def _unique_dir_name(tool_specification):
     """Builds a unique name for Tool's work directory."""
     return tool_specification.short_name + "__" + uuid.uuid4().hex + "__toolbox"
-
-
-class _ExecutionToken:
-    """
-    A token that acts as a callback after the tool process has finished execution.
-    """
-
-    def __init__(self, tool_executable, execution_dir):
-        """
-        Args:
-            tool_executable (spine_items.tool.executable_item.ExecutableItem): the object that has initiated the execution
-            execution_dir (str): absolute path to the execution working directory
-        """
-        self._tool_executable = tool_executable
-        self._execution_dir = execution_dir
-
-    @Slot(int)
-    def handle_execution_finished(self, return_code):
-        """
-        Handles Tool specification execution finished.
-
-        Args:
-            return_code (int): Process exit code
-        """
-        self._tool_executable.execution_finished(self, return_code, self._execution_dir)
