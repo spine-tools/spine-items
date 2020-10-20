@@ -559,7 +559,7 @@ class ToolSpecificationWidget(QWidget):
         if not tool:
             return False
         self._toolbox.add_specification(tool)
-        tool.definition_path = os.path.abspath(answer[0])
+        tool.definition_file_path = os.path.abspath(answer[0])
         return tool.save()
 
     def keyPressEvent(self, e):
