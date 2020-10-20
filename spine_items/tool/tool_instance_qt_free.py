@@ -21,7 +21,7 @@ import sys
 import shutil
 from spinetoolbox.config import GAMS_EXECUTABLE, JULIA_EXECUTABLE
 from spinetoolbox.helpers_qt_free import python_interpreter
-from spine_engine import StandardExecutionManager
+from spine_engine.execution_managers import StandardExecutionManager, KernelExecutionManager
 
 
 class ToolInstance:
@@ -111,22 +111,15 @@ class GAMSToolInstance(ToolInstance):
 
     def execute(self):
         """Executes a prepared instance."""
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args)
-        # TODO: Check if this sets the curDir argument. Is the curDir arg now useless?
-        ret = self.exec_mngr.run_until_complete(workdir=self.basedir)
+        # TODO: Check if the below sets the curDir argument. Is the curDir arg now useless?
+        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+        ret = self.exec_mngr.run_until_complete()
         if ret != 0:
-            if self.exec_mngr.process_failed_to_start:
-                self._logger.msg_error.emit(
-                    f"\t<b>{self.exec_mngr.program()}</b> failed to start. Make sure that "
-                    "GAMS is installed properly on your computer "
-                    "and GAMS directory is given in Settings (F1)."
-                )
-            else:
-                try:
-                    return_msg = self.tool_specification.return_codes[ret]
-                    self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
-                except KeyError:
-                    self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
+            try:
+                return_msg = self.tool_specification.return_codes[ret]
+                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
+            except KeyError:
+                self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr = None
         return ret
 
@@ -134,34 +127,27 @@ class GAMSToolInstance(ToolInstance):
 class JuliaToolInstance(ToolInstance):
     """Class for Julia Tool instances."""
 
-    def __init__(self, tool_specification, basedir, settings, logger):
-        """
-        Args:
-            tool_specification (ToolSpecification): the tool specification for this instance
-            basedir (str): the path to the directory where this instance should run
-            settings (QSettings): Toolbox settings
-            logger (LoggerInterface): a logger instance
-        """
-        super().__init__(tool_specification, basedir, settings, logger)
-        self.ijulia_command_list = list()
-        self._embedded_console = None
-
     def prepare(self, optional_input_files, input_database_urls, output_database_urls, tool_args):
         """See base class."""
         work_dir = self.basedir
         use_embedded_julia = self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2")
-        if use_embedded_julia == "2":  # NOTE: disabled for the moment
+        julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
+        if use_embedded_julia == "2":
             # Prepare Julia REPL command
-            mod_work_dir = repr(work_dir).strip("'")
+            julia_project_path = repr(julia_project_path).strip("'")
+            work_dir = repr(work_dir).strip("'")
             cmdline_args = self.tool_specification.get_cmdline_args(
                 optional_input_files, input_database_urls, output_database_urls
             )
             cmdline_args += tool_args
-            args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
-            self.ijulia_command_list += [
-                f'cd("{mod_work_dir}");',
-                "empty!(ARGS);",
-                f"append!(ARGS, {args});",
+            cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+            self.args = []
+            if julia_project_path:
+                self.args += ["using Pkg;", f'Pkg.activate("{julia_project_path}");']
+            if work_dir:
+                self.args += [f'cd("{work_dir}");']
+            self.args += [
+                f"empty!(ARGS); append!(ARGS, {cmdline_args});",
                 f'include("{self.tool_specification.main_prgm}")',
             ]
         else:
@@ -171,7 +157,6 @@ class JuliaToolInstance(ToolInstance):
                 julia_exe = julia_path
             else:
                 julia_exe = JULIA_EXECUTABLE
-            julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
             script_path = os.path.join(work_dir, self.tool_specification.main_prgm)
             self.program = julia_exe
             self.args.append(f"--project={julia_project_path}")
@@ -187,15 +172,13 @@ class JuliaToolInstance(ToolInstance):
     def _console_execute(self):
         """Executes in console.
         """
-        self._logger.msg_error.emit("Console execution is not supported at the moment.")
-        return -1
-        # FIXME: Support console execution
-        self.exec_mngr = None
+        kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
+        self.exec_mngr = KernelExecutionManager(self._logger, "julia", kernel_name, *self.args)
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:
                 return_msg = self.tool_specification.return_codes[ret]
-                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code: {ret}]")
+                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
             except KeyError:
                 self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr = None
@@ -204,22 +187,16 @@ class JuliaToolInstance(ToolInstance):
     def _cmd_line_execute(self):
         """Executes in command line.
         """
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args)
         # On Julia the QProcess workdir must be set to the path where the main script is
         # Otherwise it doesn't find input files in subdirectories
-        ret = self.exec_mngr.run_until_complete(workdir=self.basedir)
+        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+        ret = self.exec_mngr.run_until_complete()
         if ret != 0:
-            if self.exec_mngr.process_failed_to_start:
-                self._logger.msg_error.emit(
-                    f"\t<b>{self.exec_mngr.program()}</b> failed to start. Make sure that "
-                    "Julia is installed properly on your computer."
-                )
-            else:
-                try:
-                    return_msg = self.tool_specification.return_codes[ret]
-                    self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
-                except KeyError:
-                    self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
+            try:
+                return_msg = self.tool_specification.return_codes[ret]
+                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
+            except KeyError:
+                self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr = None
         return ret
 
@@ -227,23 +204,11 @@ class JuliaToolInstance(ToolInstance):
 class PythonToolInstance(ToolInstance):
     """Class for Python Tool instances."""
 
-    def __init__(self, tool_specification, basedir, settings, logger):
-        """
-
-        Args:
-            tool_specification (ToolSpecification): the tool specification for this instance
-            basedir (str): the path to the directory where this instance should run
-            settings (QSettings): Toolbox settings
-            logger (LoggerInterface): A logger instance
-        """
-        super().__init__(tool_specification, basedir, settings, logger)
-        self.ipython_command_list = list()
-
     def prepare(self, optional_input_files, input_database_urls, output_database_urls, tool_args):
         """See base class."""
         work_dir = self.basedir
         use_embedded_python = self._settings.value("appSettings/useEmbeddedPython", defaultValue="0")
-        if use_embedded_python == "2" and self._embedded_console is not None:
+        if use_embedded_python == "2":
             # Prepare a command list (FIFO queue) with two commands for Python Console
             # 1st cmd: Change current work directory
             # 2nd cmd: Run script with given args
@@ -257,8 +222,7 @@ class PythonToolInstance(ToolInstance):
             if all_args:
                 run_script_cmd = run_script_cmd + " " + '"' + '" "'.join(all_args) + '"'
             # Populate FIFO command queue
-            self.ipython_command_list.append(cd_work_dir_cmd)
-            self.ipython_command_list.append(run_script_cmd)
+            self.args = [cd_work_dir_cmd, run_script_cmd]
         else:
             # Prepare command "python <script.py> <script_arguments>"
             script_path = os.path.join(work_dir, self.tool_specification.main_prgm)
@@ -273,17 +237,15 @@ class PythonToolInstance(ToolInstance):
         return self._cmd_line_execute()
 
     def _console_execute(self):
-        """Executes in console
+        """Executes in console.
         """
-        self._logger.msg_error.emit("Console execution is not supported at the moment.")
-        return -1
-        # FIXME: Support console execution
-        self.exec_mngr = None
+        kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
+        self.exec_mngr = KernelExecutionManager(self._logger, "python", kernel_name, *self.args)
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:
                 return_msg = self.tool_specification.return_codes[ret]
-                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code: {ret}]")
+                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
             except KeyError:
                 self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr = None
@@ -292,20 +254,14 @@ class PythonToolInstance(ToolInstance):
     def _cmd_line_execute(self):
         """Executes in cmd line
         """
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args)
-        ret = self.exec_mngr.run_until_complete(workdir=self.basedir)
+        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+        ret = self.exec_mngr.run_until_complete()
         if ret != 0:
-            if self.exec_mngr.process_failed_to_start:
-                self._logger.msg_error.emit(
-                    f"\t<b>{self.exec_mngr.program()}</b> failed to start. Make sure that "
-                    "Python is installed properly on your computer."
-                )
-            else:
-                try:
-                    return_msg = self.tool_specification.return_codes[ret]
-                    self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
-                except KeyError:
-                    self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
+            try:
+                return_msg = self.tool_specification.return_codes[ret]
+                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
+            except KeyError:
+                self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr = None
         return ret
 
@@ -328,13 +284,10 @@ class ExecutableToolInstance(ToolInstance):
         self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args)
         ret = self.exec_mngr.run_until_complete(workdir=self.basedir)
         if ret != 0:
-            if self.exec_mngr.process_failed_to_start:
-                self._logger.msg_error.emit(f"\t<b>{self.exec_mngr.program()}</b> failed to start.")
-            else:
-                try:
-                    return_msg = self.tool_specification.return_codes[ret]
-                    self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
-                except KeyError:
-                    self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
+            try:
+                return_msg = self.tool_specification.return_codes[ret]
+                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
+            except KeyError:
+                self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
         self.exec_mngr = None
         return ret
