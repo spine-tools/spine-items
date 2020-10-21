@@ -118,7 +118,8 @@ class DataTransformer(ProjectItem):
     @Slot(bool)
     def _show_specification_window(self, _):
         """Opens the settings window."""
-        specification_window = SpecificationEditorWindow(self._toolbox, self._specification, self.name)
+        specification = self._toolbox.specification_model.find_specification(self._specification)
+        specification_window = SpecificationEditorWindow(self._toolbox, specification, self.name)
         specification_window.set_available_databases(self._urls)
         specification_window.accepted.connect(self._change_specification)
         specification_window.show()

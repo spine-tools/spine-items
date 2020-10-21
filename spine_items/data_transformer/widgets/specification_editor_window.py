@@ -30,20 +30,17 @@ class SpecificationEditorWindow(QWidget):
 
     _BROWSE_CHOICE = "<browse file system>"
 
-    def __init__(self, toolbox, specification_name, item_name=None):
+    def __init__(self, toolbox, specification, item_name=None):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window
-            specification_name (str, optional): transformer specification's name
+            specification (ProjectItemSpecification, optional): transformer specification's name
             item_name (str, optional): invoking project item's name, if window was opened from its properties tab
         """
         from ..ui.specification_editor_widget import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent=toolbox, f=Qt.Window | Qt.WA_DeleteOnClose)
         self._toolbox = toolbox
-        specification = (
-            self._toolbox.specification_model.find_specification(specification_name) if specification_name else None
-        )
         if specification is None:
             specification = DataTransformerSpecification(name="", renaming=dict())
         self._specification = specification
