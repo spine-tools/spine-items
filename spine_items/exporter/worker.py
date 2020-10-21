@@ -22,11 +22,9 @@ from spinedb_api import (
     apply_scenario_filter_to_parameter_value_sq,
     apply_alternative_filter_to_parameter_value_sq,
     DatabaseMapping,
-    filtered_database_map,
     SpineDBAPIError,
 )
 from spinetoolbox.spine_io.exporters import gdx
-from .db_utils import latest_database_commit_time_stamp
 
 
 class Worker(QObject):
@@ -108,7 +106,7 @@ class Worker(QObject):
     def _read_settings(self):
         """Reads fresh gdx settings from the database."""
         try:
-            database_map = filtered_database_map(DatabaseMapping, self.database_url)
+            database_map = DatabaseMapping(self.database_url)
         except SpineDBAPIError:
             self.database_unavailable.emit()
             return None, None, None
@@ -144,7 +142,7 @@ class Worker(QObject):
     def _update_merging_settings(self, updated_settings):
         """Updates the parameter merging settings according to changes in the database"""
         try:
-            database_map = filtered_database_map(DatabaseMapping, self.database_url)
+            database_map = DatabaseMapping(self.database_url)
         except SpineDBAPIError as error:
             self.errored.emit(error)
             return None

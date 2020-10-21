@@ -106,7 +106,7 @@ class DataTransformer(ProjectItem):
             return
         if self._active:
             self._properties_ui.specification_combo_box.setCurrentText(name)
-        path = filter_config_path(self.data_dir)
+        path = filter_config_path(self.data_dir, specification)
         with open(path, "w") as filter_config_file:
             dump(specification.entity_class_renaming_settings, filter_config_file)
         self.item_changed.emit()

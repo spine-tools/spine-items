@@ -17,7 +17,7 @@ Contains :class:`SettingsWindow`.
 import os.path
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import QFileDialog, QMessageBox, QWidget
-from spinedb_api import clear_filter_configs, DatabaseMapping, filtered_database_map, SpineDBAPIError
+from spinedb_api import clear_filter_configs, DatabaseMapping, SpineDBAPIError
 from ..data_transformer_specification import DataTransformerSpecification
 from ..mvcmodels.rename_table_model import RenameTableModel
 
@@ -119,7 +119,7 @@ class SpecificationEditorWindow(QWidget):
                 return
             url = "sqlite:///" + path
         try:
-            db_map = filtered_database_map(DatabaseMapping, self._urls[url])
+            db_map = DatabaseMapping(self._urls[url])
         except SpineDBAPIError as error:
             QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
             return

@@ -201,7 +201,7 @@ class Exporter(ProjectItem):
                 db.available_scenarios = self._read_scenarios(db_map)
             else:
                 try:
-                    db_map = DatabaseMapping(url)
+                    db_map = DatabaseMapping(url, apply_filters=False)
                 except SpineDBAPIError:
                     continue
                 try:

@@ -22,7 +22,6 @@ from PySide2.QtCore import QObject, Signal, Slot
 from spinedb_api import (
     clear_filter_configs,
     export_data,
-    filtered_database_map,
     import_data,
     SpineDBAPIError,
     SpineDBVersionError,
@@ -53,7 +52,7 @@ class CombinerWorker(QObject):
 
     def _get_db_map(self, url):
         try:
-            db_map = filtered_database_map(DiffDatabaseMapping, url)
+            db_map = DiffDatabaseMapping(url)
         except (SpineDBAPIError, SpineDBVersionError) as err:
             self._logger.msg_error.emit(f"Skipping url <b>{clear_filter_configs(url)}</b>: {err}")
             return None
