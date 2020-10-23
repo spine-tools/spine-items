@@ -230,9 +230,9 @@ class Exporter(ProjectItem):
         worker.errored.connect(self._worker_failed)
         if update_settings:
             worker.set_previous_settings(
-                self._settings_pack.settings,
-                self._settings_pack.indexing_settings,
-                self._settings_pack.merging_settings,
+                self._settings_window.set_settings,
+                self._settings_window.indexing_settings,
+                self._settings_window.merging_settings,
             )
         worker.thread.start()
 
@@ -349,12 +349,12 @@ class Exporter(ProjectItem):
             )
             self._settings_window.settings_accepted.connect(self._update_settings_from_settings_window)
             self._settings_window.settings_rejected.connect(self._dispose_settings_window)
-            self._settings_window.reset_requested.connect(self._reset_settings_window)
+            self._settings_window.update_requested.connect(self._update_settings_in_window)
         self._settings_window.show()
 
     @Slot(str)
-    def _reset_settings_window(self, database_url):
-        """Sends new settings to Gdx Export Settings window."""
+    def _update_settings_in_window(self, database_url):
+        """Updates settings currently in the Gdx Export Settings window."""
         self._start_worker(database_url, update_settings=True)
 
     @Slot()

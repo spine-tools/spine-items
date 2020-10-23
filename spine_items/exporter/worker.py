@@ -71,7 +71,11 @@ class Worker(QObject):
             return
         if self._previous_settings is not None:
             updated_settings = deepcopy(self._previous_settings)
-            updated_settings.update(result.set_settings)
+            try:
+                updated_settings.update(result.set_settings)
+            except gdx.GdxExportException as error:
+                self.errored.emit(str(error))
+                return
             updated_indexing_settings = self._update_indexing_settings(result.indexing_settings)
             if updated_indexing_settings is None:
                 return

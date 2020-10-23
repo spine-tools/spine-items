@@ -64,6 +64,7 @@ class IndexingDomainListModel(QAbstractListModel):
             parameters (dict): indexed parameters
         """
         super().__init__()
+        self._set_settings = set_settings
         self._domains = list()
         for name in set_settings.domain_names:
             metadata = set_settings.metadata(name)
@@ -240,7 +241,7 @@ class IndexingDomainListModel(QAbstractListModel):
         """
         if role != Qt.EditRole:
             return False
-        reserved = {d.name for d in self._domains}
+        reserved = {d.name for d in self._domains} | self._set_settings.set_names
         if value in reserved:
             return False
         item = self._domains[index.row()]

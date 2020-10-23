@@ -32,10 +32,11 @@ class ParameterMergingSettings(QWidget):
     removal_requested = Signal("QVariant")
     """Emitted when the settings widget wants to get removed from the parent window."""
 
-    def __init__(self, entity_class_infos, parent, parameter_name=None, merging_setting=None):
+    def __init__(self, entity_class_infos, set_settings, parent, parameter_name=None, merging_setting=None):
         """
         Args:
             entity_class_infos (list): list of EntityClassInfo objects
+            set_settings (SetSettings): set settings
             parent (QWidget): a parent widget
             parameter_name (str): merged parameter name of None for widget
             merging_setting (MergingSetting): merging settings or None for empty widget
@@ -43,6 +44,7 @@ class ParameterMergingSettings(QWidget):
         from ..ui.parameter_merging_settings import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
+        self._set_settings = set_settings
         self._error_flags = (
             MergingErrorFlag.DOMAIN_NAME_MISSING
             | MergingErrorFlag.PARAMETER_NAME_MISSING
@@ -106,7 +108,9 @@ class ParameterMergingSettings(QWidget):
         elif self._error_flags & MergingErrorFlag.DOMAIN_NAME_MISSING:
             self._ui.message_label.setText(_ERROR_MESSAGE.format("Domain name missing."))
         elif self._error_flags & MergingErrorFlag.NO_PARAMETER_SELECTED:
-            self._ui.message_label.setText(_ERROR_MESSAGE.format("No domain selected."))
+            self._ui.message_label.setText(_ERROR_MESSAGE.format("No source domain selected."))
+        elif self._error_flags & MergingErrorFlag.DOMAIN_NAME_CLASH:
+            self._ui.message_label.setText(_ERROR_MESSAGE.format("Domain name clashes with an existing set."))
         else:
             self._ui.message_label.setText("")
 
@@ -172,6 +176,10 @@ class ParameterMergingSettings(QWidget):
             self._set_flag(MergingErrorFlag.DOMAIN_NAME_MISSING)
         else:
             self._clear_flag(MergingErrorFlag.DOMAIN_NAME_MISSING)
+            if name in self._set_settings.set_names:
+                self._set_flag(MergingErrorFlag.DOMAIN_NAME_CLASH)
+            else:
+                self._clear_flag(MergingErrorFlag.DOMAIN_NAME_CLASH)
 
     @Slot(bool)
     def _move_domain_left(self, _):
