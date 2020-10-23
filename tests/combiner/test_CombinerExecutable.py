@@ -104,10 +104,10 @@ class TestCombinerExecutable(unittest.TestCase):
             create_new_spine_database(db3_url)
             executable = ExecutableItem("name", temp_dir, True, mock.MagicMock())
             input_db_resources = [
-                ProjectItemResource(None, "database", db1_url),
-                ProjectItemResource(None, "database", db2_url),
+                ProjectItemResource(mock.Mock(), "database", db1_url),
+                ProjectItemResource(mock.Mock(), "database", db2_url),
             ]
-            output_db_resource = [ProjectItemResource(None, "database", db3_url)]
+            output_db_resource = [ProjectItemResource(mock.Mock(), "database", db3_url)]
             self.assertTrue(executable.execute(output_db_resource, ExecutionDirection.BACKWARD))
             self.assertTrue(executable.execute(input_db_resources, ExecutionDirection.FORWARD))
             # Check that _loop, _worker, and _worker_thread are None after execution

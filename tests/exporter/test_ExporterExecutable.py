@@ -145,7 +145,7 @@ class TestExporterExecutable(unittest.TestCase):
             databases[0].output_file_name = "output.gdx"
             databases[0].url = database_url
             executable = ExecutableItem("name", settings_pack, databases, False, tmp_dir_name, "", mock.MagicMock())
-            resources = [ProjectItemResource(None, "database", database_url)]
+            resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             self.assertTrue(executable.execute(resources, ExecutionDirection.FORWARD))
             self.assertTrue(Path(tmp_dir_name, "output.gdx").exists())
             gams_directory = gdx.find_gams_directory()

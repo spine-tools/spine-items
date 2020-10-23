@@ -191,7 +191,7 @@ class TestToolExecutable(unittest.TestCase):
                 cmd_line_args=[],
                 logger=logger,
             )
-            resources = [ProjectItemResource(None, "file", optional_file.as_uri())]
+            resources = [ProjectItemResource(mock.Mock(), "file", optional_file.as_uri())]
             file_paths = executable._find_optional_input_files(resources)
             self.assertEqual(file_paths, {"1.txt": [str(optional_file)]})
 
@@ -216,8 +216,8 @@ class TestToolExecutable(unittest.TestCase):
                 logger=logger,
             )
             resources = [
-                ProjectItemResource(None, "file", optional_file1.as_uri()),
-                ProjectItemResource(None, "file", optional_file2.as_uri()),
+                ProjectItemResource(mock.Mock(), "file", optional_file1.as_uri()),
+                ProjectItemResource(mock.Mock(), "file", optional_file2.as_uri()),
             ]
             file_paths = executable._find_optional_input_files(resources)
             self.assertEqual(file_paths, {"*.txt": [str(optional_file1), str(optional_file2)]})
@@ -244,8 +244,8 @@ class TestToolExecutable(unittest.TestCase):
                 logger=logger,
             )
             resources = [
-                ProjectItemResource(None, "file", optional_file1.as_uri()),
-                ProjectItemResource(None, "file", optional_file2.as_uri()),
+                ProjectItemResource(mock.Mock(), "file", optional_file1.as_uri()),
+                ProjectItemResource(mock.Mock(), "file", optional_file2.as_uri()),
             ]
             file_paths = executable._find_optional_input_files(resources)
             self.assertEqual(

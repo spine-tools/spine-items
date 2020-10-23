@@ -117,9 +117,9 @@ class TestImporterExecutable(unittest.TestCase):
             create_new_spine_database(database_url)
             gams_path = ""
             executable = ExecutableItem("name", mappings, temp_dir, gams_path, True, mock.MagicMock())
-            database_resources = [ProjectItemResource(None, "database", database_url)]
+            database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             self.assertTrue(executable.execute(database_resources, ExecutionDirection.BACKWARD))
-            file_resources = [ProjectItemResource(None, "file", data_file.as_uri())]
+            file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
             self.assertTrue(executable.execute(file_resources, ExecutionDirection.FORWARD))
             # Check that _loop, _worker, and _worker_thread are None after execution
             self.assertIsNone(executable._worker)
@@ -144,9 +144,9 @@ class TestImporterExecutable(unittest.TestCase):
             create_new_spine_database(database_url)
             gams_path = ""
             executable = ExecutableItem("name", mappings, temp_dir, gams_path, True, mock.MagicMock())
-            database_resources = [ProjectItemResource(None, "database", database_url)]
+            database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             self.assertTrue(executable.execute(database_resources, ExecutionDirection.BACKWARD))
-            file_resources = [ProjectItemResource(None, "file", data_file.as_uri())]
+            file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
             self.assertTrue(executable.execute(file_resources, ExecutionDirection.FORWARD))
             # Check that _loop, _worker, and _worker_thread are None after execution
             self.assertIsNone(executable._worker)
