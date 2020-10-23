@@ -545,6 +545,7 @@ class ToolSpecificationWidget(QWidget):
             tool = self._make_tool_specification()
             if not tool:
                 return False
+            tool.definition_file_path = old_tool.definition_file_path
             self._toolbox.update_specification(row, tool)
             return True
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
