@@ -31,10 +31,11 @@ class ParameterMergingSettingsWindow(QWidget):
     settings_rejected = Signal()
     """Emitted when the settings have been rejected."""
 
-    def __init__(self, merging_settings, database_path, parent):
+    def __init__(self, merging_settings, set_settings, database_path, parent):
         """
         Args:
             merging_settings (dict): a map from merged parameter name to a list of merging settings
+            set_settings (SetSettings): set settings
             database_path (str): database URL
             parent (QWidget): a parent widget
         """
@@ -42,6 +43,7 @@ class ParameterMergingSettingsWindow(QWidget):
 
         super().__init__(parent, f=Qt.Window)
         self._merging_settings = merging_settings
+        self._set_settings = set_settings
         self._entity_class_infos = None
         self._database_url = database_path
         self._ui = Ui_Form()
@@ -79,7 +81,9 @@ class ParameterMergingSettingsWindow(QWidget):
                 self._entity_class_infos = _gather_entity_class_infos(db_map)
             finally:
                 db_map.connection.close()
-        settings_widget = ParameterMergingSettings(self._entity_class_infos, self, parameter_name, merging_setting)
+        settings_widget = ParameterMergingSettings(
+            self._entity_class_infos, self._set_settings, self, parameter_name, merging_setting
+        )
         settings_widget.removal_requested.connect(self._remove_setting)
         self._ui.settings_area_layout.insertWidget(0, settings_widget)
         self._setting_widgets.append(settings_widget)
@@ -102,6 +106,11 @@ class ParameterMergingSettingsWindow(QWidget):
                 self._ui.setting_area.ensureWidgetVisible(settings_widget)
                 message = "No domain selected for parameter merging."
                 QMessageBox.warning(self, "Domain Selection Missing", message)
+                return False
+            if flags & MergingErrorFlag.DOMAIN_NAME_CLASH:
+                self._ui.setting_area.ensureWidgetVisible(settings_widget)
+                message = "A set with the same name already exists."
+                QMessageBox.warning(self, "Invalid Domain Name", message)
                 return False
         return True
 

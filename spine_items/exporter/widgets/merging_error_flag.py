@@ -26,3 +26,4 @@ class MergingErrorFlag(Flag):
     PARAMETER_NAME_MISSING = auto()
     DOMAIN_NAME_MISSING = auto()
     NO_PARAMETER_SELECTED = auto()
+    DOMAIN_NAME_CLASH = auto()
