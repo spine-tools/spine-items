@@ -20,7 +20,7 @@ import pathlib
 from spinedb_api import SpineDBAPIError
 from spinetoolbox.spine_io import gdx_utils
 from spinetoolbox.spine_io.exporters import gdx
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
 from spinetoolbox.helpers_qt_free import shorten, deserialize_path
 from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from .database import Database

@@ -25,7 +25,7 @@ from spinetoolbox.spine_io.importers.csv_reader import CSVConnector
 from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
 from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
 from spinetoolbox.spine_io.importers.json_reader import JSONConnector
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
 from spinetoolbox.helpers_qt_free import shorten, create_log_file_timestamp, deserialize_checked_states
 from .item_info import ItemInfo
 from .utils import deserialize_mappings

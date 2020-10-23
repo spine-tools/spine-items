@@ -110,7 +110,7 @@ class TestExporterExecutable(unittest.TestCase):
         with TemporaryDirectory() as temp_data_dir:
             executable = ExecutableItem("name", SettingsPack(), [], True, temp_data_dir, "", mock.MagicMock())
             with mock.patch(
-                "spinetoolbox.executable_item_base.ExecutableItemBase.stop_execution"
+                "spinetoolbox.project_item.executable_item_base.ExecutableItemBase.stop_execution"
             ) as mock_stop_execution:
                 executable.stop_execution()
                 mock_stop_execution.assert_called_once()

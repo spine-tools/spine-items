@@ -18,7 +18,7 @@ Contains Combiner's executable item as well as support utilities.
 import sys
 import os
 import pathlib
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
 from spinetoolbox.helpers_qt_free import shorten, create_log_file_timestamp
 from spinedb_api import (
     clear_filter_configs,

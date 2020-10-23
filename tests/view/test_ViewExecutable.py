@@ -34,7 +34,9 @@ class TestViewExecutable(unittest.TestCase):
 
     def test_stop_execution(self):
         executable = ExecutableItem(name="Viewer", logger=mock.MagicMock())
-        with mock.patch("spinetoolbox.executable_item_base.ExecutableItemBase.stop_execution") as mock_stop_execution:
+        with mock.patch(
+            "spinetoolbox.project_item.executable_item_base.ExecutableItemBase.stop_execution"
+        ) as mock_stop_execution:
             executable.stop_execution()
             mock_stop_execution.assert_called_once()
 

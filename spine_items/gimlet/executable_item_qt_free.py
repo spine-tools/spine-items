@@ -23,7 +23,7 @@ import uuid
 from spine_engine.execution_managers import StandardExecutionManager
 from spinetoolbox.config import GIMLET_WORK_DIR_NAME
 from spinetoolbox.helpers_qt_free import split_cmdline_args, shorten, deserialize_checked_states, expand_tags
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
 from .item_info import ItemInfo
 from .utils import SHELLS
 

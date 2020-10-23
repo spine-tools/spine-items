@@ -25,7 +25,7 @@ import shutil
 import time
 import uuid
 from spinetoolbox.config import TOOL_OUTPUT_DIR
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
 from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from spinetoolbox.helpers_qt_free import shorten
 from .item_info import ItemInfo

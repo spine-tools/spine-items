@@ -19,7 +19,7 @@ import os
 import pathlib
 from PySide2.QtCore import QObject, QEventLoop, Signal, Slot, QThread
 from spinetoolbox.spine_io.gdx_utils import find_gams_directory
-from spinetoolbox.executable_item_base import ExecutableItemBase
+from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
 from spinetoolbox.helpers import shorten
 from .importer_worker import ImporterWorker
 from .item_info import ItemInfo
