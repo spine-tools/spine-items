@@ -41,8 +41,8 @@ class State(enum.Enum):
 class GdxExportSettings(QWidget):
     """A setting window for exporting .gdx files."""
 
-    reset_requested = Signal(str)
-    """Emitted when Reset Defaults button has been clicked."""
+    update_requested = Signal(str)
+    """Emitted when the Update from database button has been clicked."""
     settings_accepted = Signal()
     """Emitted when the OK button has been clicked."""
     settings_rejected = Signal()
@@ -290,7 +290,7 @@ class GdxExportSettings(QWidget):
             return
         self._ui.controls_group.setEnabled(False)
         self._ui.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.reset_requested.emit(url)
+        self.update_requested.emit(url)
 
     @Slot(str)
     def _update_global_parameters_domain(self, text):
