@@ -28,8 +28,6 @@ class SpecificationEditorWindow(QWidget):
     accepted = Signal(str)
     """Emitted when the specification has be accepted by the user."""
 
-    _BROWSE_CHOICE = "<browse file system>"
-
     def __init__(self, toolbox, specification, item_name=None):
         """
         Args:
@@ -57,10 +55,14 @@ class SpecificationEditorWindow(QWidget):
         if self._specification.description:
             self._ui.specification_description_edit.setText(self._specification.description)
         self._ui.renaming_table.setModel(self._class_renaming_model)
-        self._ui.database_url_combo_box.addItem(self._BROWSE_CHOICE)
+        self._ui.load_url_from_fs_button.clicked.connect(self._load_url_from_filesystem)
         self._ui.load_entity_classes_button.clicked.connect(self._load_entity_classes)
         self._ui.button_box.rejected.connect(self.close)
         self._ui.button_box.accepted.connect(self._accept_settings)
+        self._ui.database_url_combo_box.model().rowsInserted.connect(
+            lambda *args: self._ui.load_entity_classes_button.setEnabled(True)
+        )
+        self._class_renaming_model.modelReset.connect(self._ui.renaming_table.resizeColumnsToContents)
 
     def set_available_databases(self, urls):
         """
@@ -71,7 +73,6 @@ class SpecificationEditorWindow(QWidget):
         """
         self._urls = {clear_filter_configs(url): url for url in urls}
         self._ui.database_url_combo_box.clear()
-        self._ui.database_url_combo_box.addItem(self._BROWSE_CHOICE)
         self._ui.database_url_combo_box.addItems(sorted(self._urls))
 
     @Slot()
@@ -105,16 +106,20 @@ class SpecificationEditorWindow(QWidget):
         return QFileDialog.getOpenFileName(self, "Select database", initial_path, "sqlite (*.sqlite)")[0]
 
     @Slot(bool)
+    def _load_url_from_filesystem(self, _):
+        path = self._browse_database()
+        if not path:
+            return
+        url = "sqlite:///" + path
+        self._ui.database_url_combo_box.addItem(url)
+        self._urls[url] = url
+
+    @Slot(bool)
     def _load_entity_classes(self, _):
         """Loads entity class names to the class renaming table."""
         url = self._ui.database_url_combo_box.currentText()
         if not url:
             return
-        if url == self._BROWSE_CHOICE:
-            path = self._browse_database()
-            if not path:
-                return
-            url = "sqlite:///" + path
         try:
             db_map = DatabaseMapping(self._urls[url])
         except SpineDBAPIError as error:

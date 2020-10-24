@@ -25,6 +25,9 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
+from spinetoolbox.widgets.custom_combobox import ElidedCombobox
+
+from spine_items import resources_icons_rc
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -63,10 +66,36 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.renaming_table)
 
-        self.database_url_combo_box = QComboBox(Form)
-        self.database_url_combo_box.setObjectName(u"database_url_combo_box")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.label_3 = QLabel(Form)
+        self.label_3.setObjectName(u"label_3")
+        font = QFont()
+        font.setPointSize(8)
+        self.label_3.setFont(font)
 
-        self.verticalLayout.addWidget(self.database_url_combo_box)
+        self.horizontalLayout_2.addWidget(self.label_3)
+
+        self.database_url_combo_box = ElidedCombobox(Form)
+        self.database_url_combo_box.setObjectName(u"database_url_combo_box")
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
+        self.database_url_combo_box.setSizePolicy(sizePolicy)
+
+        self.horizontalLayout_2.addWidget(self.database_url_combo_box)
+
+        self.load_url_from_fs_button = QToolButton(Form)
+        self.load_url_from_fs_button.setObjectName(u"load_url_from_fs_button")
+        icon = QIcon()
+        icon.addFile(u":/icons/file.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.load_url_from_fs_button.setIcon(icon)
+
+        self.horizontalLayout_2.addWidget(self.load_url_from_fs_button)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
@@ -76,6 +105,7 @@ class Ui_Form(object):
 
         self.load_entity_classes_button = QPushButton(Form)
         self.load_entity_classes_button.setObjectName(u"load_entity_classes_button")
+        self.load_entity_classes_button.setEnabled(False)
 
         self.horizontalLayout.addWidget(self.load_entity_classes_button)
 
@@ -100,6 +130,11 @@ class Ui_Form(object):
         self.specification_name_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Enter specification name here", None))
         self.label.setText(QCoreApplication.translate("Form", u"Description:", None))
         self.specification_description_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Enter specification description here", None))
+        self.label_3.setText(QCoreApplication.translate("Form", u"Database url:", None))
+#if QT_CONFIG(tooltip)
+        self.load_url_from_fs_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Browse file system</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.load_url_from_fs_button.setText(QCoreApplication.translate("Form", u"...", None))
         self.load_entity_classes_button.setText(QCoreApplication.translate("Form", u"Load names from database", None))
     # retranslateUi
 
