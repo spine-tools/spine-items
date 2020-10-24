@@ -25,13 +25,12 @@ from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
 from .widgets.specification_editor_window import SpecificationEditorWindow
-from .commands import SetSpecification
 
 
 class DataTransformer(ProjectItem):
     """Data transformer project item."""
 
-    def __init__(self, name, description, x, y, toolbox, project, logger, specification=None):
+    def __init__(self, name, description, x, y, toolbox, project, logger, specification_name=None):
         """
         Args:
             name (str): item's name
@@ -41,11 +40,17 @@ class DataTransformer(ProjectItem):
             toolbox (QWidget): parent window
             project (SpineToolboxProject): the project this item belongs to
             logger (LoggerInterface): a logger instance
-            specification (str, optional): transformer specification
+            specification_name (str, optional): transformer specification
         """
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
-        self._specification = specification
+        self._specification_name = specification_name
+        self._specification = self._toolbox.specification_model.find_specification(specification_name)
+        if specification_name and not self._specification:
+            self._logger.msg_error.emit(
+                f"Data Transformer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
+            )
+        self.do_set_specification(self._specification)
         self._urls = []
 
     @staticmethod
@@ -60,7 +65,7 @@ class DataTransformer(ProjectItem):
 
     def execution_item(self):
         """Creates project item's execution counterpart."""
-        specification = self._toolbox.specification_model.find_specification(self._specification)
+        specification = self._toolbox.specification_model.find_specification(self._specification_name)
         if specification is None:
             return ExecutableItem(self.name, None, "", self._logger)
         path = filter_config_path(self.data_dir, specification)
@@ -69,7 +74,7 @@ class DataTransformer(ProjectItem):
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()
-        serialized["specification"] = self._specification
+        serialized["specification"] = self._specification_name
         return serialized
 
     @staticmethod
@@ -91,21 +96,16 @@ class DataTransformer(ProjectItem):
         s[self._properties_ui.specification_combo_box.currentTextChanged] = self._change_specification
         return s
 
-    def set_specification(self, name):
-        """
-        Sets a new specification.
-
-        Args:
-            name (str): specification's name
-        """
-        self._specification = name
-        specification = self._toolbox.specification_model.find_specification(self._specification)
+    def do_set_specification(self, specification):
+        """see base class"""
+        super().do_set_specification(specification)
         if specification is None:
             if self._active:
                 self._properties_ui.specification_combo_box.setCurrentIndex(-1)
             return
+        self._specification_name = specification.name
         if self._active:
-            self._properties_ui.specification_combo_box.setCurrentText(name)
+            self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
         path = filter_config_path(self.data_dir, specification)
         with open(path, "w") as filter_config_file:
             dump(specification.entity_class_renaming_settings, filter_config_file)
@@ -118,7 +118,7 @@ class DataTransformer(ProjectItem):
     @Slot(bool)
     def _show_specification_window(self, _):
         """Opens the settings window."""
-        specification = self._toolbox.specification_model.find_specification(self._specification)
+        specification = self._toolbox.specification_model.find_specification(self._specification_name)
         specification_window = SpecificationEditorWindow(self._toolbox, specification, self.name)
         specification_window.set_available_databases(self._urls)
         specification_window.accepted.connect(self._change_specification)
@@ -152,7 +152,8 @@ class DataTransformer(ProjectItem):
         Args:
             specification_name (str): new specification name
         """
-        self._toolbox.undo_stack.push(SetSpecification(self, specification_name, self._specification))
+        specification = self._toolbox.specification_model.find_specification(specification_name)
+        self.set_specification(specification)
 
     def _do_handle_dag_changed(self, resources):
         """See base class."""
@@ -160,7 +161,7 @@ class DataTransformer(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        specification = self._toolbox.specification_model.find_specification(self._specification)
+        specification = self._toolbox.specification_model.find_specification(self._specification_name)
         if specification is None:
             return [ProjectItemResource(self, "database", url) for url in self._urls]
         path = Path(filter_config_path(self.data_dir, specification))
@@ -172,7 +173,7 @@ class DataTransformer(ProjectItem):
     def restore_selections(self):
         """See base class."""
         self._properties_ui.item_name_label.setText(self.name)
-        if self._specification:
-            self._properties_ui.specification_combo_box.setCurrentText(self._specification)
+        if self._specification_name:
+            self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
         else:
             self._properties_ui.specification_combo_box.setCurrentIndex(-1)

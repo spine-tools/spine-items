@@ -187,11 +187,7 @@ class Tool(ProjectItem):
         self._properties_ui.lineEdit_tool_args.setText(" ".join(self.cmd_line_args))
 
     def do_set_specification(self, specification):
-        """Sets Tool specification for this Tool. Removes Tool specification if None given as argument.
-
-        Args:
-            specification (ToolSpecification): Tool specification of this Tool. None removes the specification.
-        """
+        """see base class"""
         super().do_set_specification(specification)
         self.update_tool_models()
         self.update_tool_ui()
@@ -202,6 +198,7 @@ class Tool(ProjectItem):
         self.item_changed.emit()
 
     def undo_set_specification(self):
+        """see base class"""
         super().undo_set_specification()
         self.do_update_execution_mode(self.undo_execute_in_work)
         self.undo_execute_in_work = None
