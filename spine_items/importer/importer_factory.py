@@ -33,6 +33,10 @@ class ImporterFactory(ProjectItemFactory):
         return ":/icons/item_icons/database-import.svg"
 
     @staticmethod
+    def supports_specifications():
+        return True
+
+    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddImporterWidget(toolbox, x, y, specification)
 

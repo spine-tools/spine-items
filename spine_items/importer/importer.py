@@ -54,16 +54,16 @@ class Importer(ProjectItem):
         toolbox,
         project,
         logger,
-        mapping_settings,
+        specification_name="",
         cancel_on_error=True,
-        mapping_selection=None,
+        file_selection=None,
     ):
         """Importer class.
 
         Args:
             name (str): Project item name
             description (str): Project item description
-            mapping_selection (dict): a map from label to a bool indicating if the file item is checked
+            file_selection (dict): a map from label to a bool indicating if the file item is checked
             x (float): Initial icon scene X coordinate
             y (float): Initial icon scene Y coordinate
             toolbox (ToolboxUI): QMainWindow instance
@@ -81,11 +81,14 @@ class Importer(ProjectItem):
         except OSError:
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         # Variables for saving selections when item is (de)activated
-        self.settings = mapping_settings
-        # self.settings is now a dictionary, where elements have the absolute path as the key and the mapping as value
+        self._specification = self._toolbox.specification_model.find_specification(specification_name)
+        if specification_name and not self._specification:
+            self._logger.msg_error.emit(
+                f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
+            )
         self.cancel_on_error = cancel_on_error
         self._file_model = FileListModel()
-        self._file_model.set_initial_state(mapping_selection if mapping_selection is not None else dict())
+        self._file_model.set_initial_state(file_selection if file_selection is not None else dict())
         self._file_model.selected_state_changed.connect(self._push_file_selection_change_to_undo_stack)
         # connector class
         self._preview_widget = {}  # Key is the filepath, value is the ImportEditorWindow instance
@@ -337,10 +340,6 @@ class Importer(ProjectItem):
     def _do_handle_dag_changed(self, resources):
         """See base class."""
         self._file_model.update(resources)
-        labels = self._file_model.labels()
-        for settings_label in list(self.settings):
-            if settings_label not in labels:
-                del self.settings[settings_label]
         self._notify_if_duplicate_file_paths()
         if self._file_model.rowCount() == 0:
             self.add_notification(
@@ -351,39 +350,24 @@ class Importer(ProjectItem):
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
         d = super().item_dict()
-        # Serialize mappings before saving
-        d["mappings"] = self.serialize_mappings(self.settings, self._project.project_dir)
+        if not self.specification():
+            d["specification"] = ""
+        else:
+            d["specification"] = self.specification().name
         d["cancel_on_error"] = self._properties_ui.cancel_on_error_checkBox.isChecked()
-        d["mapping_selection"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
+        d["file_selection"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
         return d
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project, logger):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
-        mappings = item_dict.get("mappings")
-        if mappings is None:
-            mappings = list()
-        # convert table_types and table_row_types keys to int since json always has strings as keys.
-        for _, mapping in mappings:
-            table_types = mapping.get("table_types", {})
-            mapping["table_types"] = {
-                table_name: {int(col): t for col, t in col_types.items()}
-                for table_name, col_types in table_types.items()
-            }
-            table_row_types = mapping.get("table_row_types", {})
-            mapping["table_row_types"] = {
-                table_name: {int(row): t for row, t in row_types.items()}
-                for table_name, row_types in table_row_types.items()
-            }
-        # Convert serialized paths to absolute in mappings
-        _fix_1d_array_to_array(mappings)
-        mapping_settings = deserialize_mappings(mappings, project.project_dir)
+        specification_name = item_dict.get("specification", "")
         cancel_on_error = item_dict.get("cancel_on_error", False)
-        mapping_selection = item_dict.get("mapping_selection")
-        mapping_selection = deserialize_checked_states(mapping_selection, project.project_dir)
+        file_selection = item_dict.get("file_selection")
+        file_selection = deserialize_checked_states(file_selection, project.project_dir)
         return Importer(
-            name, description, x, y, toolbox, project, logger, mapping_settings, cancel_on_error, mapping_selection
+            name, description, x, y, toolbox, project, logger, specification_name, cancel_on_error, file_selection
         )
 
     def notify_destination(self, source_item):
@@ -456,8 +440,8 @@ class Importer(ProjectItem):
         """Upgrades item's dictionary from v1 to v2.
 
         Changes:
-        - if mapping_selection does not exist or if it
-        is a list of booleans, reset mapping_selection
+        - if file_selection does not exist or if it
+        is a list of booleans, reset file_selection
         to an empty list.
 
         Args:
@@ -468,15 +452,44 @@ class Importer(ProjectItem):
             dict: Version 2 Exporter dictionary
         """
         try:
-            mapping_selection = item_dict["mapping_selection"]
+            file_selection = item_dict["file_selection"]
         except KeyError:
-            item_dict["mapping_selection"] = list()
+            item_dict["file_selection"] = list()
             return item_dict
-        if len(mapping_selection) == 0:
+        if len(file_selection) == 0:
             return item_dict
-        if isinstance(mapping_selection[0], bool):
-            item_dict["mapping_selection"] = list()
+        if isinstance(file_selection[0], bool):
+            item_dict["file_selection"] = list()
         return item_dict
+
+    @staticmethod
+    def upgrade_v2_to_v3(item_name, item_dict, project_upgrader):
+        """
+        Upgrades item's dictionary from v2 to v3.
+
+        1. Get rid of "mappings" in favor of "specification".
+           The "mappings" are being turned into specifications by the project_upgrader
+        2. Rename "mapping_selection" to "file_selection"
+
+        Args:
+            item_name (str): item's name
+            item_dict (dict): Version 1 item dictionary
+            project_upgrader (ProjectUpgrader)
+
+        Returns:
+            dict: Version 2 item dictionary
+        """
+        mappings = item_dict["mappings"]
+        mapping = next(iter(mappings), None)
+        if mapping is None:
+            specification_name = ""
+        else:
+            label, _ = mapping
+            specification_name = project_upgrader.make_unique_importer_specification_name(item_name, label, 0)
+        new_item_dict = {k: v for k, v in item_dict.items() if k != "mappings"}
+        new_item_dict["specification"] = specification_name
+        new_item_dict["file_selection"] = item_dict.pop("mapping_selection")
+        return new_item_dict
 
     @staticmethod
     def serialize_mappings(mappings, project_path):
@@ -509,28 +522,6 @@ class Importer(ProjectItem):
         if path is not None and os.path.isfile(path):
             path = os.path.dirname(path)
         return path
-
-
-def _fix_1d_array_to_array(mappings):
-    """
-    Replaces '1d array' with 'array' for parameter type in mappings.
-
-    With spinedb_api >= 0.3, '1d array' parameter type was replaced by 'array'.
-    Other settings in a mapping are backwards compatible except the name.
-    """
-    for more_mappings in mappings:
-        for settings in more_mappings:
-            table_mappings = settings.get("table_mappings")
-            if table_mappings is None:
-                continue
-            for sheet_settings in table_mappings.values():
-                for setting in sheet_settings:
-                    parameter_setting = setting.get("parameters")
-                    if parameter_setting is None:
-                        continue
-                    parameter_type = parameter_setting.get("parameter_type")
-                    if parameter_type == "1d array":
-                        parameter_setting["parameter_type"] = "array"
 
 
 def _fix_csv_connector_settings(settings):

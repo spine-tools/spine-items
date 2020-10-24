@@ -233,8 +233,8 @@ class ExecutableItem(ExecutableItemBase):
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         settings = deserialize_mappings(item_dict["mappings"], project_dir)
-        mapping_selection = deserialize_checked_states(item_dict["mapping_selection"], project_dir)
-        for file_path, checked_state in mapping_selection.items():
+        file_selection = deserialize_checked_states(item_dict["file_selection"], project_dir)
+        for file_path, checked_state in file_selection.items():
             if not checked_state:
                 settings[file_path] = "deselected"
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
