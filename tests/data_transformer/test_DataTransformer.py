@@ -30,6 +30,8 @@ class TestDataTransformer(unittest.TestCase):
     def setUp(self):
         """Set up."""
         self.toolbox = create_mock_toolbox()
+        mock_spec_model = self.toolbox.specification_model = MagicMock()
+        mock_spec_model.find_specification.side_effect = lambda x: None
         factory = DataTransformerFactory()
         item_dict = {"type": "Data Transformer", "description": "", "specification": None, "x": 0, "y": 0}
         self.project = create_mock_project()
@@ -81,7 +83,7 @@ class TestDataTransformer(unittest.TestCase):
         )
 
     def test_rename(self):
-        """Tests renaming a Gimlet."""
+        """Tests renaming a DT."""
         self.transformer.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
