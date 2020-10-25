@@ -33,6 +33,8 @@ class TestImporter(unittest.TestCase):
     def setUp(self):
         """Set up."""
         self.toolbox = create_mock_toolbox()
+        mock_spec_model = self.toolbox.specification_model = MagicMock()
+        mock_spec_model.find_specification.side_effect = lambda x: None
         factory = ImporterFactory()
         item_dict = {
             "type": "Importer",
@@ -66,7 +68,7 @@ class TestImporter(unittest.TestCase):
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.importer.item_dict()
-        a = ["type", "description", "x", "y", "mappings", "cancel_on_error", "mapping_selection"]
+        a = ["type", "description", "x", "y", "specification", "cancel_on_error", "file_selection"]
         for k in a:
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
