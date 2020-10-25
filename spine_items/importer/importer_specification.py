@@ -62,6 +62,7 @@ class ImporterSpecification(ProjectItemSpecification):
             "name": self.name,
             "item_type": ItemInfo.item_type(),
             "mapping": self.mapping,
+            "description": self.description,
         }
 
     @staticmethod
@@ -85,5 +86,5 @@ class ImporterSpecification(ProjectItemSpecification):
         """See base class."""
         specification_dict = self.to_dict()
         with open(self.definition_file_path, "w") as fp:
-            json.dump(specification_dict, fp)
+            json.dump(specification_dict, fp, indent=4)
         return True

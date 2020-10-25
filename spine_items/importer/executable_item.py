@@ -20,10 +20,9 @@ import pathlib
 from PySide2.QtCore import QObject, QEventLoop, Signal, Slot, QThread
 from spinetoolbox.spine_io.gdx_utils import find_gams_directory
 from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
-from spinetoolbox.helpers import shorten
+from spinetoolbox.helpers import shorten, deserialize_checked_states
 from .importer_worker import ImporterWorker
 from .item_info import ItemInfo
-from .utils import deserialize_mappings
 
 
 class ExecutableItem(ExecutableItemBase, QObject):
@@ -31,11 +30,12 @@ class ExecutableItem(ExecutableItemBase, QObject):
     importing_finished = Signal()
     """Emitted after import thread has finished."""
 
-    def __init__(self, name, settings, logs_dir, gams_path, cancel_on_error, logger):
+    def __init__(self, name, mapping, selected_files, logs_dir, gams_path, cancel_on_error, logger):
         """
         Args:
             name (str): Importer's name
-            settings (dict): import mappings
+            mapping (dict): import mapping
+            selected_files (list): selected_files
             logs_dir (str): path to the directory where logs should be stored
             gams_path (str): path to system's GAMS executable or empty string for the default path
             cancel_on_error (bool): if True, revert changes on error and quit
@@ -43,7 +43,8 @@ class ExecutableItem(ExecutableItemBase, QObject):
         """
         ExecutableItemBase.__init__(self, name, logger)
         QObject.__init__(self)
-        self._settings = settings
+        self._mapping = mapping
+        self._selected_files = selected_files
         self._logs_dir = logs_dir
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
@@ -80,20 +81,20 @@ class ExecutableItem(ExecutableItemBase, QObject):
 
     def _execute_forward(self, resources):
         """See base class."""
-        if not self._settings:
+        if not self._mapping:
             return True
         absolute_paths = _files_from_resources(resources)
-        absolute_path_settings = dict()
-        for label in self._settings:
+        selected_abs_paths = list()
+        for label in self._selected_files:
             absolute_path = absolute_paths.get(label)
             if absolute_path is not None:
-                absolute_path_settings[absolute_path] = self._settings[label]
+                selected_abs_paths.append(absolute_path)
         source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
         self._destroy_current_worker()
         self._loop = QEventLoop()
         self._worker = ImporterWorker(
-            list(absolute_paths.values()),
-            absolute_path_settings,
+            selected_abs_paths,
+            self._mapping,
             source_settings,
             [r.url for r in self._resources_from_downstream if r.type_ == "database"],
             self._logs_dir,
@@ -151,12 +152,26 @@ class ExecutableItem(ExecutableItemBase, QObject):
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
-        settings = deserialize_mappings(item_dict["mappings"], project_dir)
+        specification_name = item_dict["specification"]
+        if not specification_name:
+            logger.msg_error.emit(f"<b>{name}<b>: No specification defined. Unable to execute.")
+            return None
+        try:
+            specification = specifications[ItemInfo.item_type()][specification_name]
+        except KeyError as missing:
+            if missing == ItemInfo.item_type():
+                logger.msg_error.emit(f"No specifications defined for item type '{ItemInfo.item_type()}'.")
+                return None
+            logger.msg_error.emit(f"Cannot find specification '{missing}'.")
+            return None
+        mapping = specification.mapping
+        file_selection = item_dict.get("file_selection")
+        file_selection = deserialize_checked_states(file_selection, project_dir)
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         logs_dir = os.path.join(data_dir, "logs")
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
-        return cls(name, settings, logs_dir, gams_path, cancel_on_error, logger)
+        return cls(name, mapping, file_selection, logs_dir, gams_path, cancel_on_error, logger)
 
 
 def _files_from_resources(resources):

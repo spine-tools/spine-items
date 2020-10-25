@@ -28,22 +28,23 @@ from spinetoolbox.spine_io.importers.json_reader import JSONConnector
 from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
 from spinetoolbox.helpers_qt_free import shorten, create_log_file_timestamp, deserialize_checked_states
 from .item_info import ItemInfo
-from .utils import deserialize_mappings
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, settings, logs_dir, gams_path, cancel_on_error, logger):
+    def __init__(self, name, mapping, selected_files, logs_dir, gams_path, cancel_on_error, logger):
         """
         Args:
             name (str): Importer's name
-            settings (dict): import mappings
+            mapping (dict): import mapping
+            selected_files (list): selected_files
             logs_dir (str): path to the directory where logs should be stored
             gams_path (str): path to system's GAMS executable or empty string for the default path
             cancel_on_error (bool): if True, revert changes on error and quit
             logger (LoggerInterface): a logger
         """
         super().__init__(name, logger)
-        self._settings = settings
+        self._mapping = mapping
+        self._selected_files = selected_files
         self._logs_dir = logs_dir
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
@@ -61,18 +62,17 @@ class ExecutableItem(ExecutableItemBase):
 
     def _execute_forward(self, resources):
         """See base class."""
-        if not self._settings:
+        if not self._mapping:
             return True
         absolute_paths = _files_from_resources(resources)
-        all_import_settings = dict()
-        for label, settings in self._settings.items():
+        selected_abs_paths = list()
+        for label in self._selected_files:
             absolute_path = absolute_paths.get(label)
             if absolute_path is not None:
-                all_import_settings[absolute_path] = settings
+                selected_abs_paths.append(absolute_path)
         all_source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
         success = self._do_work(
-            list(absolute_paths.values()),
-            all_import_settings,
+            selected_abs_paths,
             all_source_settings,
             [r.url for r in self._resources_from_downstream if r.type_ == "database"],
         )
@@ -82,12 +82,11 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_success.emit(f"Executing Importer {self.name} finished")
         return success
 
-    def _do_work(self, checked_files, all_import_settings, all_source_settings, urls_downstream):
+    def _do_work(self, checked_files, all_source_settings, urls_downstream):
         """Does the work and returns a boolean value indicating the outcome.
 
         Args:
-            checked_files (list(str)): List of paths to checked source files
-            all_import_settings (dict): Maps source file to setting for that file
+            checked_files (list(str)): List of paths of checked source files
             all_source_settings (dict): Maps source type to setting for that type
             urls_downstream (list(str)): List of urls to import data into
 
@@ -96,45 +95,38 @@ class ExecutableItem(ExecutableItemBase):
         """
         all_data = []
         all_errors = []
+        source_type = self._mapping["source_type"]
+        source_settings = all_source_settings.get(source_type)
+        connector = {
+            "CSVConnector": CSVConnector,
+            "ExcelConnector": ExcelConnector,
+            "GdxConnector": GdxConnector,
+            "JSONConnector": JSONConnector,
+        }[source_type](source_settings)
+        table_mappings = {
+            name: mapping
+            for name, mapping in self._mapping.get("table_mappings", {}).items()
+            if name in self._mapping["selected_tables"]
+        }
+        table_options = {
+            name: options
+            for name, options in self._mapping.get("table_options", {}).items()
+            if name in self._mapping["selected_tables"]
+        }
+        table_types = {
+            tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
+            for tn, cols in self._mapping.get("table_types", {}).items()
+        }
+        table_row_types = {
+            tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
+            for tn, cols in self._mapping.get("table_row_types", {}).items()
+        }
         for source in checked_files:
-            settings = all_import_settings.get(source, None)
-            if settings == "deselected":
-                continue
-            if settings is None or not settings:
-                self._logger.msg_warning.emit(f"There are no mappings defined for {source}, moving on...")
-                continue
-            source_type = settings["source_type"]
-            source_settings = all_source_settings.get(source_type)
-            connector = {
-                "CSVConnector": CSVConnector,
-                "ExcelConnector": ExcelConnector,
-                "GdxConnector": GdxConnector,
-                "JSONConnector": JSONConnector,
-            }[source_type](source_settings)
             try:
                 connector.connect_to_source(source)
             except IOError as error:
                 self._logger.msg_error.emit(f"Failed to connect to source: {error}")
                 return False
-            table_mappings = {
-                name: mapping
-                for name, mapping in settings.get("table_mappings", {}).items()
-                if name in settings["selected_tables"]
-            }
-            table_options = {
-                name: options
-                for name, options in settings.get("table_options", {}).items()
-                if name in settings["selected_tables"]
-            }
-
-            table_types = {
-                tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
-                for tn, cols in settings.get("table_types", {}).items()
-            }
-            table_row_types = {
-                tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
-                for tn, cols in settings.get("table_row_types", {}).items()
-            }
             try:
                 data, errors = connector.get_mapped_data(
                     table_mappings, table_options, table_types, table_row_types, max_rows=-1
@@ -232,16 +224,26 @@ class ExecutableItem(ExecutableItemBase):
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
-        settings = deserialize_mappings(item_dict["mappings"], project_dir)
-        file_selection = deserialize_checked_states(item_dict["file_selection"], project_dir)
-        for file_path, checked_state in file_selection.items():
-            if not checked_state:
-                settings[file_path] = "deselected"
+        specification_name = item_dict["specification"]
+        if not specification_name:
+            logger.msg_error.emit(f"<b>{name}<b>: No specification defined. Unable to execute.")
+            return None
+        try:
+            specification = specifications[ItemInfo.item_type()][specification_name]
+        except KeyError as missing:
+            if missing == ItemInfo.item_type():
+                logger.msg_error.emit(f"No specifications defined for item type '{ItemInfo.item_type()}'.")
+                return None
+            logger.msg_error.emit(f"Cannot find specification '{missing}'.")
+            return None
+        mapping = specification.mapping
+        file_selection = item_dict.get("file_selection")
+        file_selection = deserialize_checked_states(file_selection, project_dir)
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         logs_dir = os.path.join(data_dir, "logs")
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
-        return cls(name, settings, logs_dir, gams_path, cancel_on_error, logger)
+        return cls(name, mapping, file_selection, logs_dir, gams_path, cancel_on_error, logger)
 
 
 def _files_from_resources(resources):
