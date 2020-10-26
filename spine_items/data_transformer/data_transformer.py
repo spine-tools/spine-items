@@ -69,7 +69,7 @@ class DataTransformer(ProjectItem):
         if specification is None:
             return ExecutableItem(self.name, None, "", self._logger)
         path = filter_config_path(self.data_dir, specification)
-        return ExecutableItem(self.name, specification.entity_class_renaming_settings, path, self._logger)
+        return ExecutableItem(self.name, specification, path, self._logger)
 
     def item_dict(self):
         """See base class."""
@@ -108,7 +108,7 @@ class DataTransformer(ProjectItem):
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
         path = filter_config_path(self.data_dir, specification)
         with open(path, "w") as filter_config_file:
-            dump(specification.entity_class_renaming_settings, filter_config_file)
+            dump(specification.entity_class_rename_config(), filter_config_file)
         self.item_changed.emit()
 
     def update_name_label(self):
@@ -167,7 +167,7 @@ class DataTransformer(ProjectItem):
         path = Path(filter_config_path(self.data_dir, specification))
         if not path.exists():
             with open(path, "w") as filter_config_file:
-                dump(specification.entity_class_renaming_settings, filter_config_file)
+                dump(specification.entity_class_rename_config(), filter_config_file)
         return [ProjectItemResource(self, "database", append_filter_config(url, path)) for url in self._urls]
 
     def restore_selections(self):

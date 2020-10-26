@@ -9,7 +9,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains :class:`SettingsWindow`.
+Contains :class:`SpecificationEditorWindow`.
 
 :author: A. Soininen (VTT)
 :date:   2.10.2020
@@ -32,7 +32,7 @@ class SpecificationEditorWindow(QWidget):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window
-            specification (ProjectItemSpecification, optional): transformer specification's name
+            specification (ProjectItemSpecification, optional): transformer specification
             item_name (str, optional): invoking project item's name, if window was opened from its properties tab
         """
         from ..ui.specification_editor_widget import Ui_Form  # pylint: disable=import-outside-toplevel
@@ -42,7 +42,7 @@ class SpecificationEditorWindow(QWidget):
         if specification is None:
             specification = DataTransformerSpecification(name="", renaming=dict())
         self._specification = specification
-        self._class_renaming_model = RenameTableModel(self._specification.entity_class_name_map())
+        self._class_renaming_model = RenameTableModel(self._specification.entity_class_name_map)
         self._urls = dict()
         self._ui = Ui_Form()
         self._ui.setupUi(self)
