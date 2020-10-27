@@ -31,7 +31,7 @@ def filter_config_path(data_dir, specification):
         str: a path to the config file
     """
     hasher = sha1()
-    for name, rename in specification.entity_class_name_map().items():
+    for name, rename in specification.entity_class_name_map.items():
         hasher.update(bytes(name + rename, "utf-8"))
     file_name = "filter_config-" + hasher.hexdigest() + ".json"
     return str(Path(data_dir, file_name))

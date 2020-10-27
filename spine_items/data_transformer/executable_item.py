@@ -26,17 +26,17 @@ from .item_info import ItemInfo
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, entity_class_renaming_settings, config_path, logger):
+    def __init__(self, name, specification, config_path, logger):
         """
         Args:
             name (str): item's name
-            entity_class_renaming_settings (dict, optional): renaming settings
+            specification (DataTransformerSpecification): item's specification
             config_path (str): path to the filter's configuration file
             logger (LoggerInterface): a logger
         """
         super().__init__(name, logger)
         self._forward_resources = list()
-        self._entity_class_renaming_settings = entity_class_renaming_settings
+        self._specification = specification
         self._filter_config_path = config_path
 
     @staticmethod
@@ -50,13 +50,13 @@ class ExecutableItem(ExecutableItemBase):
 
     def _execute_forward(self, resources):
         """See base class."""
-        if self._entity_class_renaming_settings is None:
+        if not self._specification.entity_class_name_map:
             self._forward_resources = resources
             return True
         self._forward_resources = list()
         database_resources = [r for r in resources if r.type_ == "database"]
         with open(self._filter_config_path, "w") as out_file:
-            json.dump(self._entity_class_renaming_settings, out_file)
+            json.dump(self._specification.entity_class_rename_config(), out_file)
         for resource in database_resources:
             url = append_filter_config(resource.url, self._filter_config_path)
             filter_resource = ProjectItemResource(self, "database", url)
@@ -79,5 +79,5 @@ class ExecutableItem(ExecutableItemBase):
             logger.msg_error.emit(f"Cannot find data transformer specification '{missing}'.")
             return None
         data_dir = str(Path(project_dir, ".spinetoolbox", "items", shorten(name)))
-        path = filter_config_path(data_dir)
+        path = filter_config_path(data_dir, specification)
         return cls(name, specification, path, logger)
