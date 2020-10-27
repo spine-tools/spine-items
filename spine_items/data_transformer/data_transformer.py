@@ -92,7 +92,7 @@ class DataTransformer(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.open_dir_button.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.specification_button.clicked] = self._show_specification_window
+        s[self._properties_ui.specification_button.clicked] = self.show_specification_window
         s[self._properties_ui.specification_combo_box.currentTextChanged] = self._change_specification
         return s
 
@@ -116,7 +116,7 @@ class DataTransformer(ProjectItem):
         self._properties_ui.item_name_label.setText(self.name)
 
     @Slot(bool)
-    def _show_specification_window(self, _):
+    def show_specification_window(self, _=True):
         """Opens the settings window."""
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
         specification_window = SpecificationEditorWindow(self._toolbox, specification, self.name)

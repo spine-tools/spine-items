@@ -34,3 +34,14 @@ class ExporterIcon(ProjectItemIcon):
         self.animation_signaller = AnimationSignaller()
         self.animation_signaller.animation_started.connect(self.animation.start)
         self.animation_signaller.animation_stopped.connect(self.animation.stop)
+
+    def mouseDoubleClickEvent(self, e):
+        """
+        Opens exporter's settings window.
+
+        Args:
+            e (QGraphicsSceneMouseEvent): Event
+        """
+        super().mouseDoubleClickEvent(e)
+        item = self._toolbox.project_item_model.get_item(self._name)
+        item.project_item.show_settings()

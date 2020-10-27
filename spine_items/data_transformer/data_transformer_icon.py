@@ -29,3 +29,14 @@ class DataTransformerIcon(ProjectItemIcon):
             icon (str): icon resource path
         """
         super().__init__(toolbox, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc"))
+
+    def mouseDoubleClickEvent(self, e):
+        """
+        Opens transformer's specification editor.
+
+        Args:
+            e (QGraphicsSceneMouseEvent): Event
+        """
+        super().mouseDoubleClickEvent(e)
+        item = self._toolbox.project_item_model.get_item(self._name)
+        item.project_item.show_specification_window()
