@@ -37,7 +37,8 @@ class SpecificationEditorWindow(QWidget):
         """
         from ..ui.specification_editor_widget import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__(parent=toolbox, f=Qt.Window | Qt.WA_DeleteOnClose)
+        super().__init__(parent=toolbox, f=Qt.Window)
+        self.setAttribute(Qt.WA_DeleteOnClose, True)
         self._toolbox = toolbox
         if specification is None:
             specification = DataTransformerSpecification(name="", renaming=dict())
