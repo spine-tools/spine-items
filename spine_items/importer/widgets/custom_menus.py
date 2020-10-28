@@ -16,7 +16,7 @@ Classes for context menus used alongside the Importer project item.
 :date:   9.1.2018
 """
 
-from spine_items.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu
+from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu
 
 
 class FilesContextMenu(CustomContextMenu):

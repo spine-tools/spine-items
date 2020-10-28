@@ -25,7 +25,7 @@ version = {}
 with open("spine_items/version.py") as fp:
     exec(fp.read(), version)
 
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.1"
+REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.2"
 
 install_requires = [f"spinetoolbox == {REQUIRED_SPINE_TOOLBOX_VERSION}"]
 

@@ -14,7 +14,7 @@ Contains :class:`SpecificationMenu`.
 :author: A. Soininen (VTT)
 :date:   2.10.2020
 """
-from spine_items.widgets.custom_menus import ItemSpecificationMenu
+from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 
 
 class SpecificationMenu(ItemSpecificationMenu):

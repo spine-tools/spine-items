@@ -245,7 +245,7 @@
   <customwidget>
    <class>ReferencesTreeView</class>
    <extends>QTreeView</extends>
-   <header>spine_items/widgets/custom_qtreeview.h</header>
+   <header>spinetoolbox/widgets/custom_qtreeview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

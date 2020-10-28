@@ -16,7 +16,7 @@ Classes for custom context menus and pop-up menus for Gimlets
 :date:   15.4.2020
 """
 
-from spine_items.widgets.custom_menus import CustomContextMenu
+from spinetoolbox.widgets.custom_menus import CustomContextMenu
 
 
 class GimletPropertiesContextMenu(CustomContextMenu):
