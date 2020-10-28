@@ -107,8 +107,9 @@ class DataTransformer(ProjectItem):
         if self._active:
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
         path = filter_config_path(self.data_dir)
-        with open(path, "w") as filter_config_file:
-            dump(specification.entity_class_rename_config(), filter_config_file)
+        if specification.settings is not None:
+            with open(path, "w") as filter_config_file:
+                dump(specification.settings.filter_config(), filter_config_file)
         self.item_changed.emit()
 
     def update_name_label(self):
@@ -119,8 +120,7 @@ class DataTransformer(ProjectItem):
     def show_specification_window(self, _=True):
         """Opens the settings window."""
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
-        specification_window = SpecificationEditorWindow(self._toolbox, specification, self.name)
-        specification_window.set_available_databases(self._urls)
+        specification_window = SpecificationEditorWindow(self._toolbox, specification, self._urls, self.name)
         specification_window.accepted.connect(self._change_specification)
         specification_window.show()
 
@@ -162,12 +162,11 @@ class DataTransformer(ProjectItem):
     def resources_for_direct_successors(self):
         """See base class."""
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
-        if specification is None:
+        if specification is None or specification.settings is None:
             return [ProjectItemResource(self, "database", url) for url in self._urls]
         path = Path(filter_config_path(self.data_dir))
-        if not path.exists():
-            with open(path, "w") as filter_config_file:
-                dump(specification.entity_class_rename_config(), filter_config_file)
+        with open(path, "w") as filter_config_file:
+            dump(specification.settings.filter_config(), filter_config_file)
         return [ProjectItemResource(self, "database", append_filter_config(url, path)) for url in self._urls]
 
     def restore_selections(self):

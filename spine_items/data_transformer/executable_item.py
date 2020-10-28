@@ -30,7 +30,7 @@ class ExecutableItem(ExecutableItemBase):
         """
         Args:
             name (str): item's name
-            specification (DataTransformerSpecification): item's specification
+            specification (DataTransformerSpecification, optional): item's specification
             config_path (str): path to the filter's configuration file
             logger (LoggerInterface): a logger
         """
@@ -51,12 +51,12 @@ class ExecutableItem(ExecutableItemBase):
     def _execute_forward(self, resources):
         """See base class."""
         database_resources = [r for r in resources if r.type_ == "database"]
-        if self._specification is None or not self._specification.entity_class_name_map:
+        if self._specification is None or not self._specification.settings:
             self._forward_resources = database_resources
             return True
         self._forward_resources = list()
         with open(self._filter_config_path, "w") as out_file:
-            json.dump(self._specification.entity_class_rename_config(), out_file)
+            json.dump(self._specification.settings.filter_config(), out_file)
         for resource in database_resources:
             url = append_filter_config(resource.url, self._filter_config_path)
             filter_resource = ProjectItemResource(self, "database", url)

@@ -16,6 +16,7 @@ Contains the :class:`RenameTableModel` class.
 :date:   5.10.2020
 """
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide2.QtGui import QFont
 
 
 class RenameTableModel(QAbstractTableModel):
@@ -42,6 +43,17 @@ class RenameTableModel(QAbstractTableModel):
             return None
         if role == Qt.DisplayRole:
             return self._table[index.row()][index.column()]
+        if role == Qt.FontRole:
+            if index.column() == 0:
+                return None
+            row = index.row()
+            original = self._table[row][0]
+            new = self._table[row][1]
+            if new == original:
+                return None
+            font = QFont()
+            font.setBold(True)
+            return font
         return None
 
     def flags(self, index):
@@ -67,7 +79,7 @@ class RenameTableModel(QAbstractTableModel):
         """
         self.beginResetModel()
         old_settings = self.renaming_settings()
-        self._table = [[name, old_settings.get(name, "")] for name in names]
+        self._table = [[name, old_settings.get(name, name)] for name in names]
         self._table.sort(key=lambda row: row[0])
         self.endResetModel()
 

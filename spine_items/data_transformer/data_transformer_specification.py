@@ -16,23 +16,28 @@ Contains Data transformer's specification.
 :date:    2.10.2020
 """
 import json
-from spinedb_api.filters.renamer import entity_class_renamer_config
 from spinetoolbox.project_item.project_item_specification import ProjectItemSpecification
 from .item_info import ItemInfo
+from .settings import EntityClassRenamingSettings, settings_from_dict
 
 
 class DataTransformerSpecification(ProjectItemSpecification):
-    """Data transformer's specification."""
+    """
+    Data transformer's specification.
 
-    def __init__(self, name, renaming, description=None):
+    Attributes:
+        settings (FilterSettings): transformer's filter settings
+    """
+
+    def __init__(self, name, settings=None, description=None):
         """
         Args:
             name (str): specification's name
-            renaming (dict): mapping from previous to the new name
-            description (str): specification's description
+            settings (FilterSettings, optional): filter settings
+            description (str, optional): specification's description
         """
         super().__init__(name, description, ItemInfo.item_type(), ItemInfo.item_category())
-        self._name_map = renaming
+        self.settings = settings
 
     def is_equivalent(self, other):
         """
@@ -44,20 +49,7 @@ class DataTransformerSpecification(ProjectItemSpecification):
         Returns:
             bool: True if the specifications are equivalent, False otherwise
         """
-        return self.name == other.name and self.description == other.description and self._name_map == other._name_map
-
-    @property
-    def entity_class_name_map(self):
-        """
-        Returns the map for entity class renaming.
-
-        Returns:
-            dict: map from original to new name
-        """
-        return self._name_map
-
-    def entity_class_rename_config(self):
-        return entity_class_renamer_config(**self._name_map)
+        return self.name == other.name and self.description == other.description and self.settings == other.settings
 
     def to_dict(self):
         """
@@ -66,11 +58,14 @@ class DataTransformerSpecification(ProjectItemSpecification):
         Returns:
             dict: serialized specification
         """
+        filter_dict = (
+            {"type": self.settings.type(), "settings": self.settings.to_dict()} if self.settings is not None else None
+        )
         return {
             "name": self.name,
             "item_type": ItemInfo.item_type(),
             "description": self.description,
-            "entity_class_name_map": self._name_map,
+            "filter": filter_dict,
         }
 
     @staticmethod
@@ -87,8 +82,14 @@ class DataTransformerSpecification(ProjectItemSpecification):
         """
         name = specification_dict["name"]
         description = specification_dict["description"]
-        renaming = specification_dict["entity_class_name_map"]
-        return DataTransformerSpecification(name, renaming, description)
+        filter_ = specification_dict.get("filter")
+        if filter_ is not None:
+            settings = settings_from_dict(filter_)
+        else:
+            # For legacy JSON.
+            renaming = specification_dict["entity_class_name_map"]
+            settings = EntityClassRenamingSettings(renaming)
+        return DataTransformerSpecification(name, settings, description)
 
     def save(self):
         """See base class."""
