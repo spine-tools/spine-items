@@ -19,22 +19,18 @@ Contains Importer project item class.
 from collections import Counter
 import os
 from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QListWidget, QDialog, QVBoxLayout, QDialogButtonBox
 from spinetoolbox.helpers import create_dir, serialize_path
-from spinetoolbox.spine_io.gdx_utils import find_gams_directory
 from spinetoolbox.spine_io.importers.csv_reader import CSVConnector
 from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
 from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
 from spinetoolbox.spine_io.importers.json_reader import JSONConnector
 from spinetoolbox.project_item.project_item import ProjectItem
-from .commands import UpdateSettingsCommand
 from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand
 from ..models import FileListModel
 from spinetoolbox.helpers import deserialize_checked_states, serialize_checked_states
 from spine_engine import ExecutionDirection
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
-from .utils import deserialize_mappings
 
 _CONNECTOR_NAME_TO_CLASS = {
     "CSVConnector": CSVConnector,
@@ -54,16 +50,16 @@ class Importer(ProjectItem):
         toolbox,
         project,
         logger,
-        mapping_settings,
+        specification_name="",
         cancel_on_error=True,
-        mapping_selection=None,
+        file_selection=None,
     ):
         """Importer class.
 
         Args:
             name (str): Project item name
             description (str): Project item description
-            mapping_selection (dict): a map from label to a bool indicating if the file item is checked
+            file_selection (dict): a map from label to a bool indicating if the file item is checked
             x (float): Initial icon scene X coordinate
             y (float): Initial icon scene Y coordinate
             toolbox (ToolboxUI): QMainWindow instance
@@ -81,14 +77,16 @@ class Importer(ProjectItem):
         except OSError:
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         # Variables for saving selections when item is (de)activated
-        self.settings = mapping_settings
-        # self.settings is now a dictionary, where elements have the absolute path as the key and the mapping as value
+        self._specification = self._toolbox.specification_model.find_specification(specification_name)
+        if specification_name and not self._specification:
+            self._logger.msg_error.emit(
+                f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
+            )
+        self.do_set_specification(self._specification)
         self.cancel_on_error = cancel_on_error
         self._file_model = FileListModel()
-        self._file_model.set_initial_state(mapping_selection if mapping_selection is not None else dict())
+        self._file_model.set_initial_state(file_selection if file_selection is not None else dict())
         self._file_model.selected_state_changed.connect(self._push_file_selection_change_to_undo_stack)
-        # connector class
-        self._preview_widget = {}  # Key is the filepath, value is the ImportEditorWindow instance
 
     @staticmethod
     def item_type():
@@ -102,16 +100,11 @@ class Importer(ProjectItem):
 
     def execution_item(self):
         """Creates project item's execution counterpart."""
-        selected_settings = dict()
-        for file_item in self._file_model.files:
-            label = file_item.label
-            settings = self.settings.get(label) if file_item.selected else "deselected"
-            if not settings:
-                continue
-            selected_settings[label] = settings
+        mapping = self.specification().mapping if self.specification() is not None else dict()
+        selected_files = [file_item.label for file_item in self._file_model.files if file_item.selected]
         gams_path = self._project.settings.value("appSettings/gamsPath", defaultValue=None)
         executable = ExecutableItem(
-            self.name, selected_settings, self.logs_dir, gams_path, self.cancel_on_error, self._logger
+            self.name, mapping, selected_files, self.logs_dir, gams_path, self.cancel_on_error, self._logger
         )
         return executable
 
@@ -135,10 +128,22 @@ class Importer(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_open_dir.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.pushButton_import_editor.clicked] = self._handle_import_editor_clicked
+        s[self._properties_ui.toolButton_edit_specification.clicked] = self._edit_specification
         s[self._properties_ui.treeView_files.doubleClicked] = self._handle_files_double_clicked
+        s[self._properties_ui.comboBox_specification.currentTextChanged] = self._change_specification
         s[self._properties_ui.cancel_on_error_checkBox.stateChanged] = self._handle_cancel_on_error_changed
         return s
+
+    @Slot(str)
+    def _change_specification(self, specification_name):
+        """
+        Pushes a set specification command to the undo stack.
+
+        Args:
+            specification_name (str): new specification name
+        """
+        specification = self._toolbox.specification_model.find_specification(specification_name)
+        self.set_specification(specification)
 
     @Slot(int)
     def _handle_cancel_on_error_changed(self, _state):
@@ -164,6 +169,10 @@ class Importer(ProjectItem):
         self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
         self._properties_ui.label_name.setText(self.name)
         self._properties_ui.treeView_files.setModel(self._file_model)
+        if self._specification:
+            self._properties_ui.comboBox_specification.setCurrentText(self._specification.name)
+        else:
+            self._properties_ui.comboBox_specification.setCurrentIndex(-1)
 
     def save_selections(self):
         """Saves selections in shared widgets for this project item into instance variables."""
@@ -173,8 +182,18 @@ class Importer(ProjectItem):
         """Update Importer properties tab name label. Used only when renaming project items."""
         self._properties_ui.label_name.setText(self.name)
 
+    def do_set_specification(self, specification):
+        """see base class"""
+        super().do_set_specification(specification)
+        if self._active:
+            if specification is None:
+                self._properties_ui.comboBox_specification.setCurrentIndex(-1)
+                return
+            self._properties_ui.comboBox_specification.setCurrentText(specification.name)
+        self.item_changed.emit()
+
     @Slot(bool)
-    def _handle_import_editor_clicked(self, checked=False):
+    def _edit_specification(self, checked=False):
         """Opens Import editor for the file selected in list view."""
         index = self._properties_ui.treeView_files.currentIndex()
         if not index.isValid():
@@ -194,96 +213,23 @@ class Importer(ProjectItem):
         """Opens Import editor for the given index."""
         label = index.data()
         if label is None:
-            self._logger.msg_error.emit("Please select a source file from the list first.")
-            return
-        file_item = self._file_model.find_file(label)
-        file_path = file_item.path
-        if not file_item.exists():
-            self._logger.msg_error.emit(f"File does not exist yet.")
-            self._file_model.mark_as_nonexistent(index)
-            return
-        if not os.path.exists(file_path):
-            self._logger.msg_error.emit(f"Cannot find file '{file_path}'.")
-            self._file_model.mark_as_nonexistent(index)
-            return
-        # Raise current form for the selected file if any
-        preview_widget = self._preview_widget.get(label, None)
-        if preview_widget:
-            if preview_widget.windowState() & Qt.WindowMinimized:
-                # Remove minimized status and restore window with the previous state (maximized/normal state)
-                preview_widget.setWindowState(preview_widget.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
-                preview_widget.activateWindow()
-            else:
-                preview_widget.raise_()
-            return
-        # Create a new form for the selected file
-        settings = self.get_settings(label)
-        # Try and get connector from settings
-        source_type = settings.get("source_type", None)
-        if source_type is not None:
-            connector = _CONNECTOR_NAME_TO_CLASS[source_type]
+            filepath = None
         else:
-            # Ask user
-            connector = self.get_connector(label)
-            if not connector:
-                # Aborted by the user
-                return
-        self._logger.msg.emit(f"Opening Import editor for file: {file_path}")
-        connector_settings = {"gams_directory": self._gams_system_directory()}
-        preview_widget = self._preview_widget[label] = self._toolbox.create_import_editor_window(
-            self, file_path, connector, connector_settings, settings
-        )
-        preview_widget.settings_updated.connect(lambda s, importee=label: self.save_settings(s, importee))
-        preview_widget.connection_failed.connect(lambda m, importee=label: self._connection_failed(m, importee))
-        preview_widget.destroyed.connect(lambda o=None, importee=label: self._preview_destroyed(importee))
-        preview_widget.start_ui()
-
-    def get_connector(self, importee):
-        """Shows a QDialog to select a connector for the given source file.
-        Mimics similar routine in `spine_io.widgets.import_widget.ImportDialog`
-
-        Args:
-            importee (str): Label of the file acting as an importee
-
-        Returns:
-            Asynchronous data reader class for the given importee
-        """
-        connector_list = [CSVConnector, ExcelConnector, GdxConnector, JSONConnector]  # add others as needed
-        connector_names = [c.DISPLAY_NAME for c in connector_list]
-        dialog = QDialog(self._toolbox)
-        dialog.setLayout(QVBoxLayout())
-        connector_list_wg = QListWidget()
-        connector_list_wg.addItems(connector_names)
-        # Set current item in `connector_list_wg` based on file extension
-        _filename, file_extension = os.path.splitext(importee)
-        file_extension = file_extension.lower()
-        if file_extension.startswith(".xls"):
-            row = connector_list.index(ExcelConnector)
-        elif file_extension in (".csv", ".dat", ".txt"):
-            row = connector_list.index(CSVConnector)
-        elif file_extension == ".gdx":
-            row = connector_list.index(GdxConnector)
-        elif file_extension == ".json":
-            row = connector_list.index(JSONConnector)
-        else:
-            row = None
-        if row is not None:
-            connector_list_wg.setCurrentRow(row)
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.button(QDialogButtonBox.Ok).clicked.connect(dialog.accept)
-        button_box.button(QDialogButtonBox.Cancel).clicked.connect(dialog.reject)
-        connector_list_wg.doubleClicked.connect(dialog.accept)
-        dialog.layout().addWidget(connector_list_wg)
-        dialog.layout().addWidget(button_box)
-        _dirname, filename = os.path.split(importee)
-        dialog.setWindowTitle("Select connector for '{}'".format(filename))
-        answer = dialog.exec_()
-        if answer:
-            row = connector_list_wg.currentIndex().row()
-            return connector_list[row]
+            file_item = self._file_model.find_file(label)
+            filepath = file_item.path
+            if not file_item.exists():
+                self._logger.msg_error.emit("File does not exist yet.")
+                self._file_model.mark_as_nonexistent(index)
+                filepath = None
+            elif not os.path.exists(filepath):
+                self._logger.msg_error.emit(f"Cannot find file '{filepath}'.")
+                self._file_model.mark_as_nonexistent(index)
+                filepath = None
+        self._toolbox.show_specification_form(self.item_type(), self.specification(), filepath=filepath)
 
     def select_connector_type(self, index):
         """Opens dialog to select connector type for the given index."""
+        # FIXME: Move this to a file menu option in Import editor maybe
         importee = index.data()
         connector = self.get_connector(importee)
         if not connector:
@@ -291,43 +237,6 @@ class Importer(ProjectItem):
             return
         settings = self.get_settings(importee)
         settings["source_type"] = connector.__name__
-
-    def _connection_failed(self, msg, importee):
-        self._logger.msg_error.emit(msg)
-        preview_widget = self._preview_widget.pop(importee, None)
-        if preview_widget:
-            preview_widget.close()
-
-    def get_settings(self, importee):
-        """Returns the mapping dictionary for the file in given path.
-
-        Args:
-            importee (str): Label of the file whose mapping is queried
-
-        Returns:
-            dict: Mapping dictionary for the requested importee or an empty dict if not found
-        """
-        return self.settings.get(importee, {})
-
-    def save_settings(self, settings, importee):
-        """Updates an existing mapping or adds a new mapping
-         (settings) after closing the import preview window.
-
-        Args:
-            settings (dict): Updated mapping (settings) dictionary
-            importee (str): Absolute path to a file, whose mapping has been updated
-        """
-        if self.settings.get(importee) == settings:
-            return
-        self._toolbox.undo_stack.push(UpdateSettingsCommand(self, settings, importee))
-
-    def _preview_destroyed(self, importee):
-        """Destroys preview widget instance for the given importee.
-
-        Args:
-            importee (str): Absolute path to a file, whose preview widget is destroyed
-        """
-        self._preview_widget.pop(importee, None)
 
     @Slot(bool, str)
     def _push_file_selection_change_to_undo_stack(self, selected, label):
@@ -337,10 +246,6 @@ class Importer(ProjectItem):
     def _do_handle_dag_changed(self, resources):
         """See base class."""
         self._file_model.update(resources)
-        labels = self._file_model.labels()
-        for settings_label in list(self.settings):
-            if settings_label not in labels:
-                del self.settings[settings_label]
         self._notify_if_duplicate_file_paths()
         if self._file_model.rowCount() == 0:
             self.add_notification(
@@ -351,39 +256,24 @@ class Importer(ProjectItem):
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
         d = super().item_dict()
-        # Serialize mappings before saving
-        d["mappings"] = self.serialize_mappings(self.settings, self._project.project_dir)
+        if not self.specification():
+            d["specification"] = ""
+        else:
+            d["specification"] = self.specification().name
         d["cancel_on_error"] = self._properties_ui.cancel_on_error_checkBox.isChecked()
-        d["mapping_selection"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
+        d["file_selection"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
         return d
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project, logger):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
-        mappings = item_dict.get("mappings")
-        if mappings is None:
-            mappings = list()
-        # convert table_types and table_row_types keys to int since json always has strings as keys.
-        for _, mapping in mappings:
-            table_types = mapping.get("table_types", {})
-            mapping["table_types"] = {
-                table_name: {int(col): t for col, t in col_types.items()}
-                for table_name, col_types in table_types.items()
-            }
-            table_row_types = mapping.get("table_row_types", {})
-            mapping["table_row_types"] = {
-                table_name: {int(row): t for row, t in row_types.items()}
-                for table_name, row_types in table_row_types.items()
-            }
-        # Convert serialized paths to absolute in mappings
-        _fix_1d_array_to_array(mappings)
-        mapping_settings = deserialize_mappings(mappings, project.project_dir)
+        specification_name = item_dict.get("specification", "")
         cancel_on_error = item_dict.get("cancel_on_error", False)
-        mapping_selection = item_dict.get("mapping_selection")
-        mapping_selection = deserialize_checked_states(mapping_selection, project.project_dir)
+        file_selection = item_dict.get("file_selection")
+        file_selection = deserialize_checked_states(file_selection, project.project_dir)
         return Importer(
-            name, description, x, y, toolbox, project, logger, mapping_settings, cancel_on_error, mapping_selection
+            name, description, x, y, toolbox, project, logger, specification_name, cancel_on_error, file_selection
         )
 
     def notify_destination(self, source_item):
@@ -412,11 +302,6 @@ class Importer(ProjectItem):
     def default_name_prefix():
         """see base class"""
         return "Importer"
-
-    def tear_down(self):
-        """Closes all preview widgets."""
-        for widget in self._preview_widget.values():
-            widget.close()
 
     def _notify_if_duplicate_file_paths(self):
         """Adds a notification if file_list contains duplicate entries."""
@@ -456,8 +341,8 @@ class Importer(ProjectItem):
         """Upgrades item's dictionary from v1 to v2.
 
         Changes:
-        - if mapping_selection does not exist or if it
-        is a list of booleans, reset mapping_selection
+        - if file_selection does not exist or if it
+        is a list of booleans, reset file_selection
         to an empty list.
 
         Args:
@@ -468,69 +353,44 @@ class Importer(ProjectItem):
             dict: Version 2 Exporter dictionary
         """
         try:
-            mapping_selection = item_dict["mapping_selection"]
+            file_selection = item_dict["file_selection"]
         except KeyError:
-            item_dict["mapping_selection"] = list()
+            item_dict["file_selection"] = list()
             return item_dict
-        if len(mapping_selection) == 0:
+        if len(file_selection) == 0:
             return item_dict
-        if isinstance(mapping_selection[0], bool):
-            item_dict["mapping_selection"] = list()
+        if isinstance(file_selection[0], bool):
+            item_dict["file_selection"] = list()
         return item_dict
 
     @staticmethod
-    def serialize_mappings(mappings, project_path):
+    def upgrade_v2_to_v3(item_name, item_dict, project_upgrader):
         """
-        Serializes the importer's mappings.
+        Upgrades item's dictionary from v2 to v3.
 
-        Returns a list where each element contains two dictionaries:
-        the 'serialized' file label in a dictionary and the mapping dictionary.
+        1. Get rid of "mappings" in favor of "specification".
+           The "mappings" are being turned into specifications by the project_upgrader
+        2. Rename "mapping_selection" to "file_selection"
 
         Args:
-            mappings (dict): Dictionary with mapping specifications
-            project_path (str): Path to project directory
+            item_name (str): item's name
+            item_dict (dict): Version 1 item dictionary
+            project_upgrader (ProjectUpgrader)
 
         Returns:
-            list: serialized file item labels and mappings
+            dict: Version 2 item dictionary
         """
-        serialized_mappings = list()
-        for (
-            source,
-            mapping,
-        ) in mappings.items():  # mappings is a dict with absolute paths as keys and mapping as values
-            serialized_mappings.append([serialize_path(source, project_path), mapping])
-        return serialized_mappings
-
-    def _gams_system_directory(self):
-        """Returns GAMS system path from Toolbox settings or None if GAMS default is to be used."""
-        path = self._project.settings.value("appSettings/gamsPath", defaultValue=None)
-        if not path:
-            path = find_gams_directory()
-        if path is not None and os.path.isfile(path):
-            path = os.path.dirname(path)
-        return path
-
-
-def _fix_1d_array_to_array(mappings):
-    """
-    Replaces '1d array' with 'array' for parameter type in mappings.
-
-    With spinedb_api >= 0.3, '1d array' parameter type was replaced by 'array'.
-    Other settings in a mapping are backwards compatible except the name.
-    """
-    for more_mappings in mappings:
-        for settings in more_mappings:
-            table_mappings = settings.get("table_mappings")
-            if table_mappings is None:
-                continue
-            for sheet_settings in table_mappings.values():
-                for setting in sheet_settings:
-                    parameter_setting = setting.get("parameters")
-                    if parameter_setting is None:
-                        continue
-                    parameter_type = parameter_setting.get("parameter_type")
-                    if parameter_type == "1d array":
-                        parameter_setting["parameter_type"] = "array"
+        mappings = item_dict["mappings"]
+        mapping = next(iter(mappings), None)
+        if mapping is None:
+            specification_name = ""
+        else:
+            label, _ = mapping
+            specification_name = project_upgrader.make_unique_importer_specification_name(item_name, label, 0)
+        new_item_dict = {k: v for k, v in item_dict.items() if k != "mappings"}
+        new_item_dict["specification"] = specification_name
+        new_item_dict["file_selection"] = item_dict.pop("mapping_selection")
+        return new_item_dict
 
 
 def _fix_csv_connector_settings(settings):

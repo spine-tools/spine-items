@@ -23,9 +23,8 @@ from PySide2.QtGui import QStandardItemModel, QStandardItem
 from PySide2.QtWidgets import QWidget, QStatusBar, QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QMenu
 from PySide2.QtCore import Slot, Qt, QFileInfo
 from spinetoolbox.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
-from spinetoolbox.helpers import busy_effect, open_url
+from spinetoolbox.helpers import busy_effect, open_url, CmdlineTag, CMDLINE_TAG_EDGE, split_cmdline_args, shorten
 from ..item_info import ItemInfo
-from spinetoolbox.helpers import CmdlineTag, CMDLINE_TAG_EDGE, split_cmdline_args
 from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS
 from .custom_menus import AddIncludesPopupMenu, CreateMainProgramPopupMenu
 
@@ -47,6 +46,7 @@ class ToolSpecificationWidget(QWidget):
         # Class attributes
         self._toolbox = toolbox
         self._project = self._toolbox.project()
+        self._original_specification = specification
         # init models
         self.sourcefiles_model = QStandardItemModel()
         self.inputfiles_model = QStandardItemModel()
@@ -293,13 +293,13 @@ class ToolSpecificationWidget(QWidget):
             common_prefix = os.path.commonprefix([os.path.abspath(self.program_path), os.path.abspath(path)])
             # logging.debug("common_prefix:{0}".format(common_prefix))
             if common_prefix != self.program_path:
-                self.statusbar.showMessage(
-                    "Source file {0}'s location is invalid " "(should be in main directory)".format(file_pattern), 5000
+                self.show_status_bar_msg(
+                    "Source file {0}'s location is invalid " "(should be in main directory)".format(file_pattern)
                 )
                 return False
             path_to_add = os.path.relpath(path, self.program_path)
         if self.sourcefiles_model.findItems(path_to_add):
-            self.statusbar.showMessage("Source file {0} already included".format(path_to_add), 5000)
+            self.show_status_bar_msg("Source file {0} already included".format(path_to_add))
             return False
         qitem = QStandardItem(path_to_add)
         qitem.setFlags(~Qt.ItemIsEditable)
@@ -342,7 +342,7 @@ class ToolSpecificationWidget(QWidget):
         """
         indexes = self.ui.treeView_sourcefiles.selectedIndexes()
         if not indexes:  # Nothing selected
-            self.statusbar.showMessage("Please select the source files to remove", 3000)
+            self.show_status_bar_msg("Please select the source files to remove")
         else:
             rows = [ind.row() for ind in indexes]
             rows.sort(reverse=True)
@@ -352,7 +352,7 @@ class ToolSpecificationWidget(QWidget):
                 if self.ui.lineEdit_main_program.text().strip() == "":
                     self.program_path = None
                     self.ui.label_mainpath.clear()
-            self.statusbar.showMessage("Selected source files removed", 3000)
+            self.show_status_bar_msg("Selected source files removed")
 
     @Slot(bool)
     def add_inputfiles(self, checked=False):
@@ -387,13 +387,13 @@ class ToolSpecificationWidget(QWidget):
         """
         indexes = self.ui.treeView_inputfiles.selectedIndexes()
         if not indexes:  # Nothing selected
-            self.statusbar.showMessage("Please select the input files to remove", 3000)
+            self.show_status_bar_msg("Please select the input files to remove")
         else:
             rows = [ind.row() for ind in indexes]
             rows.sort(reverse=True)
             for row in rows:
                 self.inputfiles_model.removeRow(row)
-            self.statusbar.showMessage("Selected input files removed", 3000)
+            self.show_status_bar_msg("Selected input files removed")
 
     @Slot(bool)
     def add_inputfiles_opt(self, checked=False):
@@ -430,13 +430,13 @@ class ToolSpecificationWidget(QWidget):
         """
         indexes = self.ui.treeView_inputfiles_opt.selectedIndexes()
         if not indexes:  # Nothing selected
-            self.statusbar.showMessage("Please select the optional input files to remove", 3000)
+            self.show_status_bar_msg("Please select the optional input files to remove")
         else:
             rows = [ind.row() for ind in indexes]
             rows.sort(reverse=True)
             for row in rows:
                 self.inputfiles_opt_model.removeRow(row)
-            self.statusbar.showMessage("Selected optional input files removed", 3000)
+            self.show_status_bar_msg("Selected optional input files removed")
 
     @Slot(bool)
     def add_outputfiles(self, checked=False):
@@ -471,20 +471,20 @@ class ToolSpecificationWidget(QWidget):
         """
         indexes = self.ui.treeView_outputfiles.selectedIndexes()
         if not indexes:  # Nothing selected
-            self.statusbar.showMessage("Please select the output files to remove", 3000)
+            self.show_status_bar_msg("Please select the output files to remove")
         else:
             rows = [ind.row() for ind in indexes]
             rows.sort(reverse=True)
             for row in rows:
                 self.outputfiles_model.removeRow(row)
-            self.statusbar.showMessage("Selected output files removed", 3000)
+            self.show_status_bar_msg("Selected output files removed")
 
     @Slot()
     def handle_ok_clicked(self):
         """Checks that everything is valid, creates Tool spec definition dictionary and adds Tool spec to project."""
         # Check that tool type is selected
         if self.ui.comboBox_tooltype.currentIndex() == 0:
-            self.statusbar.showMessage("Tool type not selected", 3000)
+            self.show_status_bar_msg("Tool type not selected")
             return
         self.definition["name"] = self.ui.lineEdit_name.text()
         self.definition["description"] = self.ui.textEdit_description.toPlainText()
@@ -493,7 +493,7 @@ class ToolSpecificationWidget(QWidget):
         # Check that path of main program file is valid before saving it
         main_program = self.ui.lineEdit_main_program.text().strip()
         if not os.path.isfile(main_program):
-            self.statusbar.showMessage("Main program file is not valid", 6000)
+            self.show_status_bar_msg("Main program file is not valid")
             return
         # Fix for issue #241
         folder_path, file_path = os.path.split(main_program)
@@ -509,7 +509,7 @@ class ToolSpecificationWidget(QWidget):
         self.definition["cmdline_args"] = split_cmdline_args(self.ui.lineEdit_args.text())
         for k in REQUIRED_KEYS:
             if not self.definition[k]:
-                self.statusbar.showMessage("{} missing".format(k), 3000)
+                self.show_status_bar_msg(f"{k} missing")
                 return
         # Create new Tool specification
         if self.call_add_tool_specification():
@@ -524,7 +524,7 @@ class ToolSpecificationWidget(QWidget):
         self.definition["includes_main_path"] = self.program_path.replace(os.sep, "/")
         tool = self._toolbox.load_specification(self.definition)
         if not tool:
-            self.statusbar.showMessage("Adding Tool specification failed", 3000)
+            self.show_status_bar_msg("Adding Tool specification failed")
         return tool
 
     def call_add_tool_specification(self):
@@ -535,33 +535,30 @@ class ToolSpecificationWidget(QWidget):
         a new tool specification and offers to save the definition file. (User is
         creating a new tool specification from scratch or spawning from an existing one).
         """
-        # Check if a tool specification with this name already exists
-        row = self._toolbox.specification_model.specification_row(self.definition["name"])
-        if row >= 0:
-            old_tool = self._toolbox.specification_model.specification(row)
-            if old_tool.is_equivalent(self.definition):
-                # Nothing changed
-                return True
-            tool = self._make_tool_specification()
-            if not tool:
-                return False
-            tool.definition_file_path = old_tool.definition_file_path
-            self._toolbox.update_specification(row, tool)
+        new_spec = self._make_tool_specification()
+        if not new_spec:
+            return False
+        if new_spec.is_equivalent(self._original_specification):
+            # Nothing changed
             return True
-        # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        short_name = self.definition["name"].lower().replace(" ", "_")
-        proposed_def_file_path = os.path.join(self.program_path, short_name + ".json")
-        answer = QFileDialog.getSaveFileName(
-            self, "Save Tool specification file", proposed_def_file_path, "JSON (*.json)"
-        )
-        if answer[0] == "":  # Cancel button clicked
-            return False
-        tool = self._make_tool_specification()
-        if not tool:
-            return False
-        self._toolbox.add_specification(tool)
-        tool.definition_file_path = os.path.abspath(answer[0])
-        return tool.save()
+        new_spec.definition_file_path = self._original_specification.definition_file_path
+        if self._original_specification is None or self.definition["name"] != self._original_specification.name:
+            # The user is creating a new spec, either from scratch (no original spec)
+            # or by changing the name of an existing one
+            start_dir = self._toolbox.project().project_dir
+            proposed_def_file_path = os.path.join(start_dir, shorten(self.definition["name"]) + ".json")
+            answer = QFileDialog.getSaveFileName(
+                self, "Save Importer specification file", proposed_def_file_path, "JSON (*.json)"
+            )
+            if answer[0] == "":  # Cancel button clicked
+                return False
+            new_spec.definition_file_path = os.path.abspath(answer[0])
+            new_spec.save()
+            self._toolbox.add_specification(new_spec)
+        else:
+            # The user is modifying an existing spec, while conserving the name
+            self._toolbox.update_specification(new_spec)
+        return True
 
     def keyPressEvent(self, e):
         """Close Setup form when escape key is pressed.
@@ -655,3 +652,9 @@ class ToolSpecificationWidget(QWidget):
         tag = CmdlineTag.OPTIONAL_INPUTS
         self.ui.lineEdit_args.insert(tag)
         self._insert_spaces_around_tag_in_args_edit(len(tag))
+
+    def show_status_bar_msg(self, msg):
+        word_count = len(msg.split(" "))
+        mspw = 60000 / 140  # Assume people can read ~140 words per minute
+        duration = mspw * word_count
+        self.statusbar.showMessage(msg, duration)

@@ -24,6 +24,7 @@ from spinedb_api import create_new_spine_database, DatabaseMapping
 from spine_engine import ExecutionDirection
 from spinetoolbox.project_item.project_item_resource import ProjectItemResource
 from spine_items.importer.executable_item import ExecutableItem
+from spine_items.importer.importer_specification import ImporterSpecification
 
 
 class TestImporterExecutable(unittest.TestCase):
@@ -46,43 +47,44 @@ class TestImporterExecutable(unittest.TestCase):
             "description": "",
             "x": 0,
             "y": 0,
-            "mappings": [
-                [
-                    {"type": "path", "relative": True, "path": ".spinetoolbox/items/data/units.xlsx"},
-                    {
-                        "table_mappings": {
-                            "Sheet1": [
-                                {
-                                    "map_type": "ObjectClass",
-                                    "name": {"map_type": "column", "reference": 0},
-                                    "parameters": {"map_type": "None"},
-                                    "skip_columns": [],
-                                    "read_start_row": 0,
-                                    "objects": {"map_type": "column", "reference": 1},
-                                }
-                            ]
-                        },
-                        "table_options": {},
-                        "table_types": {"Sheet1": {"0": "string", "1": "string"}},
-                        "table_row_types": {},
-                        "selected_tables": ["Sheet1"],
-                        "source_type": "ExcelConnector",
-                    },
-                ]
-            ],
+            "specification": "importer_spec",
             "cancel_on_error": True,
             "mapping_selection": [
                 [{"type": "path", "relative": True, "path": ".spinetoolbox/items/data/units.xlsx"}, True]
             ],
         }
+        spec_dict = {
+            "name": "importer_spec",
+            "description": "Some importer spec",
+            "mapping": {
+                "table_mappings": {
+                    "Sheet1": [
+                        {
+                            "map_type": "ObjectClass",
+                            "name": {"map_type": "column", "reference": 0},
+                            "parameters": {"map_type": "None"},
+                            "skip_columns": [],
+                            "read_start_row": 0,
+                            "objects": {"map_type": "column", "reference": 1},
+                        }
+                    ]
+                },
+                "table_options": {},
+                "table_types": {"Sheet1": {"0": "string", "1": "string"}},
+                "table_row_types": {},
+                "selected_tables": ["Sheet1"],
+                "source_type": "ExcelConnector",
+            },
+        }
+        logger = mock.MagicMock()
+        specs = {"Importer": {"importer_spec": ImporterSpecification.from_dict(spec_dict, logger)}}
         with TemporaryDirectory() as temp_dir:
-            item = ExecutableItem.from_dict(item_dict, "name", temp_dir, _MockSettings(), dict(), mock.MagicMock())
+            item = ExecutableItem.from_dict(item_dict, "name", temp_dir, _MockSettings(), specs, logger)
             self.assertIsInstance(item, ExecutableItem)
             self.assertEqual("Importer", item.item_type())
 
     def test_stop_execution(self):
-        mappings = {}
-        executable = ExecutableItem("name", mappings, "", "", True, mock.MagicMock())
+        executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
         executable._loop = QEventLoop()
         executable._worker = QObject()
         executable._worker_thread = QThread()
@@ -92,7 +94,7 @@ class TestImporterExecutable(unittest.TestCase):
         self.assertIsNone(executable._loop)
 
     def test_execute_backward(self):
-        executable = ExecutableItem("name", {}, "", "", True, mock.MagicMock())
+        executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
         self.assertTrue(executable.execute([], ExecutionDirection.BACKWARD))
         # Check that _loop, _worker, and _worker_thread are None after execution
         self.assertIsNone(executable._worker)
@@ -100,7 +102,7 @@ class TestImporterExecutable(unittest.TestCase):
         self.assertIsNone(executable._loop)
 
     def test_execute_forward_simplest_case(self):
-        executable = ExecutableItem("name", {}, "", "", True, mock.MagicMock())
+        executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
         self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
         # Check that _loop, _worker, and _worker_thread are None after execution
         self.assertIsNone(executable._worker)
@@ -111,12 +113,12 @@ class TestImporterExecutable(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             data_file = Path(temp_dir, "data.dat")
             self._write_simple_data(data_file)
-            mappings = self._simple_input_data_mappings(str(data_file))
+            mapping = self._simple_input_data_mapping()
             database_path = Path(temp_dir).joinpath("database.sqlite")
             database_url = "sqlite:///" + str(database_path)
             create_new_spine_database(database_url)
             gams_path = ""
-            executable = ExecutableItem("name", mappings, temp_dir, gams_path, True, mock.MagicMock())
+            executable = ExecutableItem("name", mapping, [str(data_file)], temp_dir, gams_path, True, mock.MagicMock())
             database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             self.assertTrue(executable.execute(database_resources, ExecutionDirection.BACKWARD))
             file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
@@ -138,12 +140,11 @@ class TestImporterExecutable(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             data_file = Path(temp_dir, "data.dat")
             self._write_simple_data(data_file)
-            mappings = {data_file: "deselected"}
             database_path = Path(temp_dir).joinpath("database.sqlite")
             database_url = "sqlite:///" + str(database_path)
             create_new_spine_database(database_url)
             gams_path = ""
-            executable = ExecutableItem("name", mappings, temp_dir, gams_path, True, mock.MagicMock())
+            executable = ExecutableItem("name", {}, [], temp_dir, gams_path, True, mock.MagicMock())
             database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             self.assertTrue(executable.execute(database_resources, ExecutionDirection.BACKWARD))
             file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
@@ -163,36 +164,34 @@ class TestImporterExecutable(unittest.TestCase):
             out_file.write("class,entity\n")
 
     @staticmethod
-    def _simple_input_data_mappings(file_name):
+    def _simple_input_data_mapping():
         return {
-            file_name: {
-                "table_mappings": {
-                    "csv": [
-                        {
-                            "map_type": "ObjectClass",
-                            "name": {"map_type": "column", "reference": 0},
-                            "parameters": {"map_type": "None"},
-                            "skip_columns": [],
-                            "read_start_row": 0,
-                            "objects": {"map_type": "column", "reference": 1},
-                        }
-                    ]
-                },
-                "table_options": {
-                    "csv": {
-                        "encoding": "ascii",
-                        "delimeter": ",",
-                        "delimiter_custom": "",
-                        "quotechar": '"',
-                        "skip_header": False,
-                        "skip": 0,
+            "table_mappings": {
+                "csv": [
+                    {
+                        "map_type": "ObjectClass",
+                        "name": {"map_type": "column", "reference": 0},
+                        "parameters": {"map_type": "None"},
+                        "skip_columns": [],
+                        "read_start_row": 0,
+                        "objects": {"map_type": "column", "reference": 1},
                     }
-                },
-                "table_types": {"csv": {0: "string", 1: "string"}},
-                "table_row_types": {},
-                "selected_tables": ["csv"],
-                "source_type": "CSVConnector",
-            }
+                ]
+            },
+            "table_options": {
+                "csv": {
+                    "encoding": "ascii",
+                    "delimeter": ",",
+                    "delimiter_custom": "",
+                    "quotechar": '"',
+                    "skip_header": False,
+                    "skip": 0,
+                }
+            },
+            "table_types": {"csv": {0: "string", 1: "string"}},
+            "table_row_types": {},
+            "selected_tables": ["csv"],
+            "source_type": "CSVConnector",
         }
 
 

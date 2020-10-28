@@ -413,7 +413,9 @@ class Tool(ProjectItem):
             list: a list of Tool's output resources
         """
         if self.specification() is None:
-            self._logger.msg_error.emit("Tool specification missing.")
+            self._logger.msg_error.emit(
+                f"Fail to determine <b>{self.name}</b> resources for direct successors. Tool specification is missing."
+            )
             return []
         resources = list()
         last_output_files = find_last_output_files(self._specification.outputfiles, self.output_dir)

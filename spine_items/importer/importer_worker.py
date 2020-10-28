@@ -33,19 +33,12 @@ class ImporterWorker(QObject):
     """Emitted when work is finished with 0 if successful, -1 otherwise."""
 
     def __init__(
-        self,
-        checked_files,
-        all_import_settings,
-        all_source_settings,
-        urls_downstream,
-        logs_dir,
-        cancel_on_error,
-        logger,
+        self, checked_files, mapping, all_source_settings, urls_downstream, logs_dir, cancel_on_error, logger,
     ):
         """
         Args:
-            checked_files (list(str)): List of paths to checked source files
-            all_import_settings (dict): Maps source file to setting for that file
+            checked_files (list(str)): List of paths of checked source files
+            mapping (dict): Mapping
             all_source_settings (dict): Maps source type to setting for that type
             urls_downstream (list(str)): List of urls to import data into
             logs_dir (str): path to the directory where logs should be written
@@ -54,7 +47,7 @@ class ImporterWorker(QObject):
         """
         super().__init__()
         self._checked_files = checked_files
-        self._all_import_settings = all_import_settings
+        self._mapping = mapping
         self._all_source_settings = all_source_settings
         self._urls_downstream = urls_downstream
         self._logs_dir = logs_dir
@@ -65,45 +58,38 @@ class ImporterWorker(QObject):
         """Does the work and emits import_finished when done."""
         all_data = []
         all_errors = []
+        source_type = self._mapping["source_type"]
+        source_settings = self._all_source_settings.get(source_type)
+        connector = {
+            "CSVConnector": CSVConnector,
+            "ExcelConnector": ExcelConnector,
+            "GdxConnector": GdxConnector,
+            "JSONConnector": JSONConnector,
+        }[source_type](source_settings)
+        table_mappings = {
+            name: mapping
+            for name, mapping in self._mapping.get("table_mappings", {}).items()
+            if name in self._mapping["selected_tables"]
+        }
+        table_options = {
+            name: options
+            for name, options in self._mapping.get("table_options", {}).items()
+            if name in self._mapping["selected_tables"]
+        }
+        table_types = {
+            tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
+            for tn, cols in self._mapping.get("table_types", {}).items()
+        }
+        table_row_types = {
+            tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
+            for tn, cols in self._mapping.get("table_row_types", {}).items()
+        }
         for source in self._checked_files:
-            settings = self._all_import_settings.get(source, None)
-            if settings == "deselected":
-                continue
-            if settings is None or not settings:
-                self._logger.msg_warning.emit(f"There are no mappings defined for {source}, moving on...")
-                continue
-            source_type = settings["source_type"]
-            source_settings = self._all_source_settings.get(source_type)
-            connector = {
-                "CSVConnector": CSVConnector,
-                "ExcelConnector": ExcelConnector,
-                "GdxConnector": GdxConnector,
-                "JSONConnector": JSONConnector,
-            }[source_type](source_settings)
             try:
                 connector.connect_to_source(source)
             except IOError as error:
                 self._logger.msg_error.emit(f"Failed to connect to source: {error}")
                 self.import_finished.emit(-1)
-            table_mappings = {
-                name: mapping
-                for name, mapping in settings.get("table_mappings", {}).items()
-                if name in settings["selected_tables"]
-            }
-            table_options = {
-                name: options
-                for name, options in settings.get("table_options", {}).items()
-                if name in settings["selected_tables"]
-            }
-
-            table_types = {
-                tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
-                for tn, cols in settings.get("table_types", {}).items()
-            }
-            table_row_types = {
-                tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
-                for tn, cols in settings.get("table_row_types", {}).items()
-            }
             try:
                 data, errors = connector.get_mapped_data(
                     table_mappings, table_options, table_types, table_row_types, max_rows=-1

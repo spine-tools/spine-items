@@ -130,22 +130,22 @@ class ToolSpecification(ProjectItemSpecification):
                 )
                 return False
 
-    def is_equivalent(self, definition):
+    def is_equivalent(self, other):
         """Checks if this spec is equivalent to the given definition dictionary.
         Used by the tool spec widget when updating specs.
 
         Args:
-            definition (dict)
+            definition (ToolSpecification)
 
         Returns:
             bool: True if equivalent
         """
-        for p in definition:
-            if p in LIST_REQUIRED_KEYS:
-                if set(self.__dict__[p]) != set(definition[p]):
+        for k, v in other.__dict__.items():
+            if k in LIST_REQUIRED_KEYS:
+                if set(self.__dict__[k]) != set(v):
                     return False
             else:
-                if self.__dict__[p] != definition[p]:
+                if self.__dict__[k] != v:
                     return False
         return True
 

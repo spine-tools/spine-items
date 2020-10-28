@@ -20,6 +20,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QWidget
 from spinetoolbox.config import TREEVIEW_HEADER_SS
 from .custom_menus import FilesContextMenu
+from ..item_info import ItemInfo
 
 
 class ImporterPropertiesWidget(QWidget):
@@ -44,7 +45,13 @@ class ImporterPropertiesWidget(QWidget):
 
     def connect_signals(self):
         """Connect signals to slots."""
+        self._toolbox.specification_model_changed.connect(self._update_specification_model)
         self.ui.treeView_files.customContextMenuRequested.connect(self.show_files_context_menu)
+
+    @Slot()
+    def _update_specification_model(self):
+        model = self._toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
+        self.ui.comboBox_specification.setModel(model)
 
     @Slot("QPoint", name="show_di_files_context_menu")
     def show_files_context_menu(self, pos):

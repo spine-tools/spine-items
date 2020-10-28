@@ -16,7 +16,7 @@ Classes for context menus used alongside the Importer project item.
 :date:   9.1.2018
 """
 
-from spine_items.widgets.custom_menus import CustomContextMenu
+from spine_items.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu
 
 
 class FilesContextMenu(CustomContextMenu):
@@ -37,3 +37,7 @@ class FilesContextMenu(CustomContextMenu):
             self.add_action("Select connector type")
             self.addSeparator()
             self.add_action("Open directory...")
+
+
+class SpecificationMenu(ItemSpecificationMenu):
+    """Context menu class for Data transformer specifications."""

@@ -36,13 +36,14 @@ class AddImporterWidget(AddProjectItemWidget):
 
     def call_add_item(self):
         """Creates new Item according to user's selections."""
+        spec = self.ui.comboBox_specification.currentText()
         item = {
             self.name: {
                 "type": ItemInfo.item_type(),
                 "description": self.description,
+                "specification": spec,
                 "x": self._x,
                 "y": self._y,
-                "mappings": dict(),
             }
         }
         self._project.add_project_items(item, set_selected=True)
