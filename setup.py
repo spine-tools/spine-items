@@ -27,13 +27,7 @@ with open("spine_items/version.py") as fp:
 
 REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.1"
 
-install_requires = [
-    f"spinetoolbox == {REQUIRED_SPINE_TOOLBOX_VERSION}",
-    "sqlalchemy >= 1.3",
-    "pymysql >= 0.9.2",
-    "pyodbc >= 4.0.23",
-    "psycopg2 >= 2.7.4",
-]
+install_requires = [f"spinetoolbox == {REQUIRED_SPINE_TOOLBOX_VERSION}"]
 
 setup(
     name="spine_items",
