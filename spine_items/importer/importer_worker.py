@@ -32,9 +32,7 @@ class ImporterWorker(QObject):
     import_finished = Signal(int)
     """Emitted when work is finished with 0 if successful, -1 otherwise."""
 
-    def __init__(
-        self, checked_files, mapping, all_source_settings, urls_downstream, logs_dir, cancel_on_error, logger,
-    ):
+    def __init__(self, checked_files, mapping, all_source_settings, urls_downstream, logs_dir, cancel_on_error, logger):
         """
         Args:
             checked_files (list(str)): List of paths of checked source files

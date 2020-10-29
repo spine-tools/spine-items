@@ -44,11 +44,7 @@ class DataTransformerSpecification(ProjectItemSpecification):
         Returns:
             bool: True if the specifications are equivalent, False otherwise
         """
-        return (
-            self.name == other.name
-            and self.description == other.description
-            and self._name_map == other._name_map
-        )
+        return self.name == other.name and self.description == other.description and self._name_map == other._name_map
 
     @property
     def entity_class_name_map(self):
