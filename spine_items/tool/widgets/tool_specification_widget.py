@@ -538,10 +538,9 @@ class ToolSpecificationWidget(QWidget):
         new_spec = self._make_tool_specification()
         if not new_spec:
             return False
-        if new_spec.is_equivalent(self._original_specification):
+        if self._original_specification is not None and new_spec.is_equivalent(self._original_specification):
             # Nothing changed
             return True
-        new_spec.definition_file_path = self._original_specification.definition_file_path
         if self._original_specification is None or self.definition["name"] != self._original_specification.name:
             # The user is creating a new spec, either from scratch (no original spec)
             # or by changing the name of an existing one
@@ -557,6 +556,7 @@ class ToolSpecificationWidget(QWidget):
             self._toolbox.add_specification(new_spec)
         else:
             # The user is modifying an existing spec, while conserving the name
+            new_spec.definition_file_path = self._original_specification.definition_file_path
             self._toolbox.update_specification(new_spec)
         return True
 

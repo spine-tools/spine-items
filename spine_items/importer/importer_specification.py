@@ -23,9 +23,7 @@ from .item_info import ItemInfo
 class ImporterSpecification(ProjectItemSpecification):
     """Importer's specification."""
 
-    def __init__(
-        self, name, mapping, description=None,
-    ):
+    def __init__(self, name, mapping, description=None):
         """
         Args:
             name (str): specification's name
@@ -80,7 +78,7 @@ class ImporterSpecification(ProjectItemSpecification):
         name = specification_dict["name"]
         description = specification_dict.get("description", None)
         mapping = specification_dict["mapping"]
-        return ImporterSpecification(name, mapping, description,)
+        return ImporterSpecification(name, mapping, description)
 
     def save(self):
         """See base class."""

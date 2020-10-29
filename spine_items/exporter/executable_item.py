@@ -47,7 +47,6 @@ class ExecutableItem(ExecutableItemBase):
         self._cancel_on_error = cancel_on_error
         self._data_dir = data_dir
         self._gams_path = gams_path
-        self._exported_databases = list()
 
     @staticmethod
     def item_type():
@@ -56,7 +55,6 @@ class ExecutableItem(ExecutableItemBase):
 
     def _execute_forward(self, resources):
         """See base class."""
-        self._exported_databases.clear()
         if self._settings_pack.settings is None:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")
             return True
@@ -101,21 +99,17 @@ class ExecutableItem(ExecutableItemBase):
                 return False
             finally:
                 database_map.connection.close()
-            self._exported_databases.append(database)
             self._logger.msg_success.emit(f"File <b>{out_path}</b> written")
         return True
 
     def _output_resources_forward(self):
         """See base class."""
-        resources = [
-            ProjectItemResource(
-                self,
-                "transient_file",
-                pathlib.Path(self._data_dir, db.output_file_name).as_uri(),
-                {"label": db.output_file_name},
-            )
-            for db in self._exported_databases
-        ]
+        resources = list()
+        for db in self._databases:
+            path = pathlib.Path(self._data_dir, db.output_file_name)
+            if path.exists():
+                resource = ProjectItemResource(self, "transient_file", path.as_uri(), {"label": db.output_file_name})
+                resources.append(resource)
         return resources
 
     def _resolve_gams_system_directory(self):
