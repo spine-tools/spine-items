@@ -16,41 +16,7 @@ Setup script for Python's setuptools.
 :date:   3.10.2019
 """
 
-from setuptools import setup, find_packages, DistutilsOptionError
-from setuptools.command.install import install
-from setuptools.command.develop import develop
-
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.2"
-
-
-class CommandMixin:
-    user_options = [
-        ("spinetoolboxversion=", None, "the version of spinetoolbox that is trying to install this spine_items")
-    ]
-
-    def initialize_options(self):
-        super().initialize_options()
-        self.spinetoolboxversion = None
-
-    def run(self):
-        if self.spinetoolboxversion is not None:
-            user_split = [int(x) for x in self.spinetoolboxversion.split(".")]
-            required_split = [int(x) for x in REQUIRED_SPINE_TOOLBOX_VERSION.split(".")]
-            if user_split < required_split:
-                raise DistutilsOptionError(
-                    "Bad spine toolbox version. "
-                    f"Current: {self.spinetoolboxversion}, required: {REQUIRED_SPINE_TOOLBOX_VERSION}. "
-                )
-        super().run()
-
-
-class InstallCommand(CommandMixin, install):
-    user_options = getattr(install, 'user_options', []) + CommandMixin.user_options
-
-
-class DevelopCommand(CommandMixin, develop):
-    user_options = getattr(develop, 'user_options', []) + CommandMixin.user_options
-
+from setuptools import setup, find_packages
 
 with open("README.md", encoding="utf8") as readme_file:
     readme = readme_file.read()
@@ -58,7 +24,8 @@ with open("README.md", encoding="utf8") as readme_file:
 version = {}
 with open("spine_items/version.py") as fp:
     exec(fp.read(), version)
-
+req_toolbox_version = version["REQUIRED_SPINE_TOOLBOX_VERSION"]
+install_requires = [f"spinetoolbox == {req_toolbox_version}"]
 
 setup(
     name="spine_items",
@@ -75,6 +42,6 @@ setup(
     keywords="",
     classifiers=[],
     python_requires=">=3.6, <3.8",
+    install_requires=install_requires,
     test_suite="tests",
-    cmdclass={'install': InstallCommand, 'develop': DevelopCommand},
 )

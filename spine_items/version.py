@@ -9,3 +9,4 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 __version__ = "0.1.18"
+REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.2"
