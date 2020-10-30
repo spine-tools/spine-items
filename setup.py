@@ -24,8 +24,6 @@ with open("README.md", encoding="utf8") as readme_file:
 version = {}
 with open("spine_items/version.py") as fp:
     exec(fp.read(), version)
-req_toolbox_version = version["REQUIRED_SPINE_TOOLBOX_VERSION"]
-install_requires = [f"spinetoolbox == {req_toolbox_version}"]
 
 setup(
     name="spine_items",
@@ -42,6 +40,5 @@ setup(
     keywords="",
     classifiers=[],
     python_requires=">=3.6, <3.8",
-    install_requires=install_requires,
     test_suite="tests",
 )
