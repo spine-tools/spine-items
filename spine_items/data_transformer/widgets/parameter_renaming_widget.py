@@ -17,16 +17,16 @@ Contains a widget to set up a renamer filter.
 from PySide2.QtWidgets import QMessageBox, QWidget
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from ..mvcmodels.rename_table_model import RenameTableModel
-from ..settings import EntityClassRenamingSettings
+from ..settings import ParameterRenamingSettings
 
 
-class EntityClassRenamingWidget(QWidget):
+class ParameterRenamingWidget(QWidget):
     """Widget for entity class renamer settings."""
 
     def __init__(self, settings=None):
         """
         Args:
-            settings (EntityClassRenamingSettings): a mapping from name to name
+            settings (ParameterRenamingSettings): a mapping from name to name
         """
         super().__init__()
         from ..ui.renamer_editor import Ui_Form
@@ -50,8 +50,8 @@ class EntityClassRenamingWidget(QWidget):
             return
         names = set()
         try:
-            for entity_class_row in db_map.query(db_map.entity_class_sq).all():
-                names.add(entity_class_row.name)
+            for definition_row in db_map.query(db_map.parameter_definition_sq).all():
+                names.add(definition_row.name)
         except SpineDBAPIError as error:
             QMessageBox.information(
                 self, "Error while reading database", f"Could not read from database {url}:\n{error}"
@@ -67,4 +67,4 @@ class EntityClassRenamingWidget(QWidget):
         Returns:
             FilterSettings: settings
         """
-        return EntityClassRenamingSettings(self._rename_table_model.renaming_settings())
+        return ParameterRenamingSettings(self._rename_table_model.renaming_settings())
