@@ -19,19 +19,15 @@ from hashlib import sha1
 from pathlib import Path
 
 
-def filter_config_path(data_dir, specification):
+def filter_config_path(data_dir):
     """
     Constructs an absolute path to transformer's configuration file.
 
     Args:
         data_dir (str): absolute path to project item's data directory
-        specification (DataTransformerSpecification): item's specification
 
     Returns:
         str: a path to the config file
     """
-    hasher = sha1()
-    for name, rename in specification.entity_class_name_map.items():
-        hasher.update(bytes(name + rename, "utf-8"))
-    file_name = "filter_config-" + hasher.hexdigest() + ".json"
+    file_name = "filter_config.json"
     return str(Path(data_dir, file_name))

@@ -50,11 +50,11 @@ class ExecutableItem(ExecutableItemBase):
 
     def _execute_forward(self, resources):
         """See base class."""
-        if not self._specification.entity_class_name_map:
-            self._forward_resources = resources
+        database_resources = [r for r in resources if r.type_ == "database"]
+        if self._specification is None or not self._specification.entity_class_name_map:
+            self._forward_resources = database_resources
             return True
         self._forward_resources = list()
-        database_resources = [r for r in resources if r.type_ == "database"]
         with open(self._filter_config_path, "w") as out_file:
             json.dump(self._specification.entity_class_rename_config(), out_file)
         for resource in database_resources:
@@ -62,6 +62,11 @@ class ExecutableItem(ExecutableItemBase):
             filter_resource = ProjectItemResource(self, "database", url)
             self._forward_resources.append(filter_resource)
         return True
+
+    # pylint: disable=no-self-use
+    def _skip_forward(self, resources):
+        """See base class."""
+        self._execute_forward(resources)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
@@ -79,5 +84,5 @@ class ExecutableItem(ExecutableItemBase):
             logger.msg_error.emit(f"Cannot find data transformer specification '{missing}'.")
             return None
         data_dir = str(Path(project_dir, ".spinetoolbox", "items", shorten(name)))
-        path = filter_config_path(data_dir, specification)
+        path = filter_config_path(data_dir)
         return cls(name, specification, path, logger)

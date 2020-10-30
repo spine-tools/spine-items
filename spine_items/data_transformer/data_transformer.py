@@ -68,7 +68,7 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
         if specification is None:
             return ExecutableItem(self.name, None, "", self._logger)
-        path = filter_config_path(self.data_dir, specification)
+        path = filter_config_path(self.data_dir)
         return ExecutableItem(self.name, specification, path, self._logger)
 
     def item_dict(self):
@@ -106,7 +106,7 @@ class DataTransformer(ProjectItem):
         self._specification_name = specification.name
         if self._active:
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
-        path = filter_config_path(self.data_dir, specification)
+        path = filter_config_path(self.data_dir)
         with open(path, "w") as filter_config_file:
             dump(specification.entity_class_rename_config(), filter_config_file)
         self.item_changed.emit()
@@ -164,7 +164,7 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
         if specification is None:
             return [ProjectItemResource(self, "database", url) for url in self._urls]
-        path = Path(filter_config_path(self.data_dir, specification))
+        path = Path(filter_config_path(self.data_dir))
         if not path.exists():
             with open(path, "w") as filter_config_file:
                 dump(specification.entity_class_rename_config(), filter_config_file)
