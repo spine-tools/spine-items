@@ -88,7 +88,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         if not from_urls:
             self._logger.msg_warning.emit("No input database(s) available. Moving on...")
             return True
-        elif not to_urls:
+        if not to_urls:
             self._logger.msg_warning.emit("No output database available. Moving on...")
             return True
         self._destroy_current_worker()
@@ -106,8 +106,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             # user stops execution
             self._logger.msg_error.emit(f"Combiner {self.name} stopped")
             return False
-        else:
-            self._logger.msg_success.emit(f"Executing Combiner {self.name} finished")
+        self._logger.msg_success.emit(f"Executing Combiner {self.name} finished")
         return self._merge_succeeded
 
     def _handle_worker_finished(self):

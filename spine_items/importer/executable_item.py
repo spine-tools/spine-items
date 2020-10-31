@@ -153,25 +153,18 @@ class ExecutableItem(ExecutableItemBase, QObject):
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         specification_name = item_dict["specification"]
-        if not specification_name:
-            logger.msg_error.emit(f"<b>{name}<b>: No specification defined. Unable to execute.")
-            return None
-        try:
-            specification = specifications[ItemInfo.item_type()][specification_name]
-        except KeyError as missing:
-            if missing == ItemInfo.item_type():
-                logger.msg_error.emit(f"No specifications defined for item type '{ItemInfo.item_type()}'.")
-                return None
-            logger.msg_error.emit(f"Cannot find specification '{missing}'.")
-            return None
-        mapping = specification.mapping
+        specification = ExecutableItemBase._get_specification(
+            name, ItemInfo.item_type(), specification_name, specifications, logger
+        )
+        mapping = specification.mapping if specification else {}
         file_selection = item_dict.get("file_selection")
         file_selection = deserialize_checked_states(file_selection, project_dir)
+        selected_files = [filepath for filepath, selected in file_selection.items() if selected]
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         logs_dir = os.path.join(data_dir, "logs")
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
-        return cls(name, mapping, file_selection, logs_dir, gams_path, cancel_on_error, logger)
+        return cls(name, mapping, selected_files, logs_dir, gams_path, cancel_on_error, logger)
 
 
 def _files_from_resources(resources):

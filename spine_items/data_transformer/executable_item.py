@@ -72,17 +72,9 @@ class ExecutableItem(ExecutableItemBase):
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         specification_name = item_dict["specification"]
-        if not specification_name:
-            logger.msg_error.emit(f"<b>{name}<b>: No transformer specification defined. Unable to execute.")
-            return None
-        try:
-            specification = specifications[ItemInfo.item_type()][specification_name]
-        except KeyError as missing:
-            if missing == ItemInfo.item_type():
-                logger.msg_error.emit(f"No specifications defined for item type '{ItemInfo.item_type()}'.")
-                return None
-            logger.msg_error.emit(f"Cannot find data transformer specification '{missing}'.")
-            return None
+        specification = ExecutableItemBase._get_specification(
+            name, ItemInfo.item_type(), specification_name, specifications, logger
+        )
         data_dir = str(Path(project_dir, ".spinetoolbox", "items", shorten(name)))
         path = filter_config_path(data_dir)
         return cls(name, specification, path, logger)
