@@ -19,13 +19,25 @@ from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QWidget
 from .entity_class_renaming_widget import EntityClassRenamingWidget
 from .parameter_renaming_widget import ParameterRenamingWidget
+from .scenario_filter_widget import ScenarioFilterWidget
+from .tool_filter_widget import ToolFilterWidget
 from ..data_transformer_specification import DataTransformerSpecification
-from ..settings import EntityClassRenamingSettings, ParameterRenamingSettings
+from ..settings import (
+    EntityClassRenamingSettings,
+    ParameterRenamingSettings,
+    ScenarioFilterSettings,
+    ToolFilterSettings,
+)
 
 
-_DISPLAY_NAMES = ("No filter", "Rename entity classes", "Rename parameters")
+_DISPLAY_NAMES = ("No filter", "Rename entity classes", "Rename parameters", "Select scenario", "Select tool")
 
-_SETTINGS_CLASSES = {_DISPLAY_NAMES[1]: EntityClassRenamingSettings, _DISPLAY_NAMES[2]: ParameterRenamingSettings}
+_SETTINGS_CLASSES = {
+    _DISPLAY_NAMES[1]: EntityClassRenamingSettings,
+    _DISPLAY_NAMES[2]: ParameterRenamingSettings,
+    _DISPLAY_NAMES[3]: ScenarioFilterSettings,
+    _DISPLAY_NAMES[4]: ToolFilterSettings,
+}
 
 _CLASSES_TO_DISPLAY_NAMES = {class_: name for name, class_ in _SETTINGS_CLASSES.items()}
 
@@ -95,16 +107,14 @@ class SpecificationEditorWindow(QWidget):
             # Specification names are case insensitive. Make sure we use the correct casing.
             specification_name = existing.name
             self._ui.specification_name_edit.setText(specification_name)
-        self._specification.name = specification_name
         description = self._ui.specification_description_edit.text()
-        self._specification.description = description
         filter_name = self._ui.filter_combo_box.currentText()
         if filter_name == _DISPLAY_NAMES[0]:
             filter_settings = None
         else:
             filter_widget = self._filter_widgets[filter_name]
             filter_settings = filter_widget.settings()
-        self._specification.settings = filter_settings
+        self._specification = DataTransformerSpecification(specification_name, filter_settings, description)
         if not self._store_specification():
             return
         self.accepted.emit(self._specification.name)
@@ -123,7 +133,7 @@ class SpecificationEditorWindow(QWidget):
             if old_specification.is_equivalent(self._specification):
                 return True
             self._specification.definition_file_path = old_specification.definition_file_path
-            self._toolbox.update_specification(row, self._specification)
+            self._toolbox.update_specification(self._specification)
             return True
         initial_path = self._specification.definition_file_path
         if not initial_path:
@@ -151,9 +161,12 @@ class SpecificationEditorWindow(QWidget):
             return
         widget = self._filter_widgets.get(display_name)
         if widget is None:
-            widget = {_DISPLAY_NAMES[1]: EntityClassRenamingWidget, _DISPLAY_NAMES[2]: ParameterRenamingWidget}[
-                display_name
-            ](self._specification.settings)
+            widget = {
+                _DISPLAY_NAMES[1]: EntityClassRenamingWidget,
+                _DISPLAY_NAMES[2]: ParameterRenamingWidget,
+                _DISPLAY_NAMES[3]: ScenarioFilterWidget,
+                _DISPLAY_NAMES[4]: ToolFilterWidget,
+            }[display_name](self._specification.settings)
             self._filter_widgets[display_name] = widget
         layout = self._ui.filter_widget.layout()
         if layout is None:

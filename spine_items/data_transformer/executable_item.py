@@ -55,12 +55,18 @@ class ExecutableItem(ExecutableItemBase):
             self._forward_resources = database_resources
             return True
         self._forward_resources = list()
-        with open(self._filter_config_path, "w") as out_file:
-            json.dump(self._specification.settings.filter_config(), out_file)
-        for resource in database_resources:
-            url = append_filter_config(resource.url, self._filter_config_path)
-            filter_resource = ProjectItemResource(self, "database", url)
-            self._forward_resources.append(filter_resource)
+        if self._specification.settings.use_shorthand():
+            for resource in database_resources:
+                url = append_filter_config(resource.url, self._specification.settings.filter_config())
+                filter_resource = ProjectItemResource(self, "database", url)
+                self._forward_resources.append(filter_resource)
+        else:
+            with open(self._filter_config_path, "w") as out_file:
+                json.dump(self._specification.settings.filter_config(), out_file)
+            for resource in database_resources:
+                url = append_filter_config(resource.url, self._filter_config_path)
+                filter_resource = ProjectItemResource(self, "database", url)
+                self._forward_resources.append(filter_resource)
         return True
 
     # pylint: disable=no-self-use

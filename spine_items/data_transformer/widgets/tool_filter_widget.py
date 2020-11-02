@@ -9,36 +9,36 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains a widget to set up a renamer filter.
+Contains a widget to set up a tool filter.
 
 :author: A. Soininen (VTT)
-:date:   30.10.2020
+:date:   2.11.2020
 """
+
 from PySide2.QtWidgets import QMessageBox, QWidget
 from spinedb_api import DatabaseMapping, SpineDBAPIError
-from ..mvcmodels.rename_table_model import RenameTableModel
-from ..settings import ParameterRenamingSettings
+from ..settings import ToolFilterSettings
 
 
-class ParameterRenamingWidget(QWidget):
-    """Widget for entity class renamer settings."""
+class ToolFilterWidget(QWidget):
+    """Widget for tool filter settings."""
 
     def __init__(self, settings=None):
         """
         Args:
-            settings (ParameterRenamingSettings): filter settings
+            settings (ToolFilterSettings): filter settings
         """
         super().__init__()
-        from ..ui.renamer_editor import Ui_Form
+        from ..ui.selector import Ui_Form
 
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        self._rename_table_model = RenameTableModel(settings.name_map if settings is not None else {})
-        self._ui.renaming_table.setModel(self._rename_table_model)
+        if settings is not None:
+            self._ui.selection_combo_box.addItem(settings.tool)
 
     def load_data(self, url):
         """
-        Loads entity class names from given URL.
+        Loads tool names from given URL.
 
         Args:
             url (str): database URL
@@ -48,17 +48,22 @@ class ParameterRenamingWidget(QWidget):
         except SpineDBAPIError as error:
             QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
             return
-        names = set()
+        tools = list()
         try:
-            for definition_row in db_map.query(db_map.parameter_definition_sq).all():
-                names.add(definition_row.name)
+            tools = [row.name for row in db_map.query(db_map.tool_sq).all()]
         except SpineDBAPIError as error:
             QMessageBox.information(
                 self, "Error while reading database", f"Could not read from database {url}:\n{error}"
             )
         finally:
             db_map.connection.close()
-        self._rename_table_model.reset_originals(names)
+        self._ui.selection_combo_box.clear()
+        previous_tool = self._ui.selection_combo_box.currentText()
+        for tool in tools:
+            self._ui.selection_combo_box.addItem(tool)
+        i = self._ui.selection_combo_box.findText(previous_tool)
+        if i >= 0:
+            self._ui.selection_combo_box.setCurrentIndex(i)
 
     def settings(self):
         """
@@ -67,4 +72,4 @@ class ParameterRenamingWidget(QWidget):
         Returns:
             FilterSettings: settings
         """
-        return ParameterRenamingSettings(self._rename_table_model.renaming_settings())
+        return ToolFilterSettings(self._ui.selection_combo_box.currentText())

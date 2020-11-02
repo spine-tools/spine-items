@@ -26,7 +26,7 @@ class EntityClassRenamingWidget(QWidget):
     def __init__(self, settings=None):
         """
         Args:
-            settings (EntityClassRenamingSettings): a mapping from name to name
+            settings (EntityClassRenamingSettings): filter settings
         """
         super().__init__()
         from ..ui.renamer_editor import Ui_Form

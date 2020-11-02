@@ -20,7 +20,7 @@ from pathlib import Path
 from PySide2.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.project_item.project_item_resource import ProjectItemResource
-from spinedb_api import append_filter_config
+from spinedb_api import append_filter_config, config_to_shorthand
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
@@ -164,6 +164,9 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
         if specification is None or specification.settings is None:
             return [ProjectItemResource(self, "database", url) for url in self._urls]
+        if specification.settings.use_shorthand:
+            shorthand = config_to_shorthand(specification.settings.filter_config())
+            return [ProjectItemResource(self, "database", append_filter_config(url, shorthand)) for url in self._urls]
         path = Path(filter_config_path(self.data_dir))
         with open(path, "w") as filter_config_file:
             dump(specification.settings.filter_config(), filter_config_file)
