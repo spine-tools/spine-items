@@ -109,7 +109,7 @@ class ExecutableItem(ExecutableItemBase):
         expanded_cmd_list = self._expand_gimlet_tags(self.cmd_list, resources)
         if not self.shell_name:
             prgm = expanded_cmd_list.pop(0)
-            gimlet_process = StandardExecutionManager(self._logger, prgm, *expanded_cmd_list)
+            gimlet_process = StandardExecutionManager(self._logger, prgm, *expanded_cmd_list, workdir=self._work_dir)
         else:
             if self.shell_name == "cmd.exe":
                 shell_prgm = "cmd.exe"
@@ -121,7 +121,9 @@ class ExecutableItem(ExecutableItemBase):
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
                 return False
-            gimlet_process = StandardExecutionManager(self._logger, shell_prgm, *expanded_cmd_list)
+            gimlet_process = StandardExecutionManager(
+                self._logger, shell_prgm, *expanded_cmd_list, workdir=self._work_dir
+            )
         # Copy selected files to work_dir
         if not self._copy_files(self._selected_files, self._work_dir):
             return False
@@ -134,7 +136,7 @@ class ExecutableItem(ExecutableItemBase):
             + "'>work directory</a>"
         )
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
-        gimlet_process.run_until_complete(workdir=self._work_dir)
+        gimlet_process.run_until_complete()
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = resources.copy()
         # This is executed after the gimlet process has finished
