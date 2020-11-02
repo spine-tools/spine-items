@@ -15,7 +15,7 @@ Data transformer's specification factory.
 :authors: A. Soininen (VTT)
 :date:   6.5.2020
 """
-from spinetoolbox.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
+from spine_engine.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
 from .item_info import ItemInfo
 from .data_transformer_specification import DataTransformerSpecification
 

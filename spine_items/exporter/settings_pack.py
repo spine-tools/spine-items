@@ -15,7 +15,7 @@ Contains the SettingsPack class.
 :author: A. Soininen (VTT)
 :date:   6.5.2020
 """
-from spinetoolbox.spine_io.exporters import gdx
+from spine_engine.spine_io.exporters import gdx
 from .notifications import Notifications
 
 

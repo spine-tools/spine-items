@@ -15,7 +15,7 @@ Data Connection project item info.
 :authors: A. Soininen (VTT)
 :date:   29.4.2020
 """
-from spinetoolbox.project_item.project_item_info import ProjectItemInfo
+from spine_engine.project_item.project_item_info import ProjectItemInfo
 
 
 class ItemInfo(ProjectItemInfo):

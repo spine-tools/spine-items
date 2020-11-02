@@ -20,8 +20,8 @@ import os
 import sys
 import shutil
 from PySide2.QtCore import QObject, Signal, Slot
-from spinetoolbox.config import GAMS_EXECUTABLE, JULIA_EXECUTABLE
-from spinetoolbox.helpers import python_interpreter
+from spine_engine.config import GAMS_EXECUTABLE, JULIA_EXECUTABLE
+from spine_engine.helpers_qt_free import python_interpreter
 from spinetoolbox.execution_managers import ConsoleExecutionManager, QProcessExecutionManager
 
 

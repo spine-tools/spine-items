@@ -20,11 +20,10 @@ from copy import deepcopy
 import enum
 from PySide2.QtCore import QItemSelection, Qt, Signal, Slot
 from PySide2.QtWidgets import QDialogButtonBox, QMessageBox, QWidget
-import spinetoolbox.spine_io.exporters.gdx as gdx
+import spine_engine.spine_io.exporters.gdx as gdx
 from ..list_utils import move_selected_elements_by
 from ..mvcmodels.record_list_model import RecordListModel
 from ..mvcmodels.set_list_model import SetListModel
-from ..settings_state import SettingsState
 from .parameter_index_settings_window import ParameterIndexSettingsWindow
 from .parameter_merging_settings_window import ParameterMergingSettingsWindow
 

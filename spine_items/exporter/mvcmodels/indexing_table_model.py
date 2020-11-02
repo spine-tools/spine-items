@@ -16,7 +16,7 @@ Contains :class:`IndexingTableModel`.
 :date:   25.8.2020
 """
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
-from spinetoolbox.spine_io.exporters import gdx
+from spine_engine.spine_io.exporters import gdx
 
 
 class IndexingTableModel(QAbstractTableModel):

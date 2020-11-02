@@ -16,7 +16,7 @@ Contains :class:`RecordListModel`
 :date:   25.8.2020
 """
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
-from spinetoolbox.spine_io.exporters import gdx
+from spine_engine.spine_io.exporters import gdx
 from ..list_utils import move_list_elements
 
 

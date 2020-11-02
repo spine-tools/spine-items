@@ -20,14 +20,14 @@ import os
 import pathlib
 import multiprocessing as mp
 import spinedb_api
-from spinetoolbox.spine_io.type_conversion import value_to_convert_spec
-from spinetoolbox.spine_io.gdx_utils import find_gams_directory
-from spinetoolbox.spine_io.importers.csv_reader import CSVConnector
-from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
-from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
-from spinetoolbox.spine_io.importers.json_reader import JSONConnector
-from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
-from spinetoolbox.helpers_qt_free import (
+from spine_engine.spine_io.type_conversion import value_to_convert_spec
+from spine_engine.spine_io.gdx_utils import find_gams_directory
+from spine_engine.spine_io.importers.csv_reader import CSVConnector
+from spine_engine.spine_io.importers.excel_reader import ExcelConnector
+from spine_engine.spine_io.importers.gdx_connector import GdxConnector
+from spine_engine.spine_io.importers.json_reader import JSONConnector
+from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.helpers_qt_free import (
     shorten,
     create_log_file_timestamp,
     deserialize_checked_states,

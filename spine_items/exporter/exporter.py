@@ -23,9 +23,9 @@ from PySide2.QtCore import Qt, Slot
 from sqlalchemy.engine.url import make_url
 from spinedb_api import clear_filter_configs, DatabaseMapping, SpineDBAPIError
 from spinetoolbox.project_item.project_item import ProjectItem
-from spinetoolbox.project_item.project_item_resource import ProjectItemResource
-from spinetoolbox.helpers import deserialize_path, serialize_url
-from spinetoolbox.spine_io.exporters import gdx
+from spine_engine.helpers_qt_free import deserialize_path, serialize_url
+from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.spine_io.exporters import gdx
 from .commands import UpdateExporterOutFileName, UpdateExporterSettings, UpdateScenario
 from ..commands import UpdateCancelOnErrorCommand
 from .database import Database

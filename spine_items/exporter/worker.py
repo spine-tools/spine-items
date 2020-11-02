@@ -24,7 +24,7 @@ from spinedb_api import (
     DatabaseMapping,
     SpineDBAPIError,
 )
-from spinetoolbox.spine_io.exporters import gdx
+from spine_engine.spine_io.exporters import gdx
 
 
 class Worker(QObject):

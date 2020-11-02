@@ -22,9 +22,9 @@ import shutil
 import uuid
 from PySide2.QtCore import Signal, Slot, QObject, QEventLoop
 from spinetoolbox.execution_managers import QProcessExecutionManager
-from spinetoolbox.config import GIMLET_WORK_DIR_NAME
-from spinetoolbox.helpers import split_cmdline_args, shorten, deserialize_checked_states, expand_tags
-from spinetoolbox.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.helpers_qt_free import split_cmdline_args, shorten, deserialize_checked_states, expand_tags
+from spine_engine.config import GIMLET_WORK_DIR_NAME
 from .item_info import ItemInfo
 from .utils import SHELLS
 

@@ -21,13 +21,14 @@ from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QDialogButtonBox, QDialog, QVBoxLayout, QListWidget, QFileDialog
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from spinetoolbox.import_editor.widgets.import_editor_window import ImportEditorWindow
-from spinetoolbox.helpers import get_open_file_name_in_last_dir, shorten
+from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH
-from spinetoolbox.spine_io.importers.csv_reader import CSVConnector
-from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
-from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
-from spinetoolbox.spine_io.importers.json_reader import JSONConnector
-from spinetoolbox.spine_io.gdx_utils import find_gams_directory
+from spine_engine.helpers_qt_free import shorten
+from spine_engine.spine_io.importers.csv_reader import CSVConnector
+from spine_engine.spine_io.importers.excel_reader import ExcelConnector
+from spine_engine.spine_io.importers.gdx_connector import GdxConnector
+from spine_engine.spine_io.importers.json_reader import JSONConnector
+from spine_engine.spine_io.gdx_utils import find_gams_directory
 from .importer import Importer
 from .importer_icon import ImporterIcon
 from .importer_specification import ImporterSpecification

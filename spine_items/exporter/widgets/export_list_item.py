@@ -18,7 +18,6 @@ A small widget to set up a database in Exporter properties tab.
 
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QWidget
-from ..settings_state import SettingsState
 
 
 _BASE_ALTERNATIVE_TEXT = "Export 'Base' alternative"

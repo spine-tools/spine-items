@@ -19,16 +19,16 @@ Contains Importer project item class.
 from collections import Counter
 import os
 from PySide2.QtCore import Qt, Slot
-from spinetoolbox.helpers import create_dir, serialize_path
-from spinetoolbox.spine_io.importers.csv_reader import CSVConnector
-from spinetoolbox.spine_io.importers.excel_reader import ExcelConnector
-from spinetoolbox.spine_io.importers.gdx_connector import GdxConnector
-from spinetoolbox.spine_io.importers.json_reader import JSONConnector
+from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem
+from spine_engine.helpers_qt_free import serialize_path, deserialize_checked_states, serialize_checked_states
+from spine_engine.spine_io.importers.csv_reader import CSVConnector
+from spine_engine.spine_io.importers.excel_reader import ExcelConnector
+from spine_engine.spine_io.importers.gdx_connector import GdxConnector
+from spine_engine.spine_io.importers.json_reader import JSONConnector
+from spine_engine import ExecutionDirection
 from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand
 from ..models import FileListModel
-from spinetoolbox.helpers import deserialize_checked_states, serialize_checked_states
-from spine_engine import ExecutionDirection
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 

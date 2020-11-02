@@ -19,8 +19,8 @@ Contains ToolInstance class.
 import os
 import sys
 import shutil
-from spinetoolbox.config import GAMS_EXECUTABLE, JULIA_EXECUTABLE
-from spinetoolbox.helpers_qt_free import python_interpreter
+from spine_engine.config import GAMS_EXECUTABLE, JULIA_EXECUTABLE
+from spine_engine.helpers_qt_free import python_interpreter
 from spine_engine.execution_managers import StandardExecutionManager, KernelExecutionManager
 
 

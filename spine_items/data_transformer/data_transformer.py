@@ -19,7 +19,7 @@ from json import dump
 from pathlib import Path
 from PySide2.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
-from spinetoolbox.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spinedb_api import append_filter_config, config_to_shorthand
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
