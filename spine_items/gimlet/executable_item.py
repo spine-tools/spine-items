@@ -154,7 +154,8 @@ class ExecutableItem(ExecutableItemBase, QObject):
         loop = QEventLoop()
         self.gimlet_finished.connect(loop.quit)
         # Wait for finished right here
-        loop.exec_()
+        if self._gimlet_process._process is not None:
+            loop.exec_()
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = resources.copy()
         # This is executed after the gimlet process has finished
