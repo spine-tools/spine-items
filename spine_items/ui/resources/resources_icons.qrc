@@ -24,7 +24,5 @@
         <file>item_icons/hammer.svg</file>
         <file>item_icons/screwdriver.svg</file>
         <file>item_icons/paint-brush-solid.svg</file>
-        <file>down.svg</file>
-        <file>up.svg</file>
     </qresource>
 </RCC>
