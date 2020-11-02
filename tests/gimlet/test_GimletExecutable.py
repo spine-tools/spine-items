@@ -106,7 +106,8 @@ class TestGimletExecutable(unittest.TestCase):
                 specifications=dict(),
                 logger=mock.MagicMock(),
             )
-            self.assertIsNone(item)
+            self.assertIsInstance(item, ExecutableItem)
+            self.assertEqual(item.shell_name, "")
 
     @unittest.skipIf(sys.platform != "win32", "Windows test")
     def test_execute_backward(self):

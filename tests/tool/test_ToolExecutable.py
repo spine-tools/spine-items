@@ -95,7 +95,8 @@ class TestToolExecutable(unittest.TestCase):
                     specifications=specs_in_project,
                     logger=mock.MagicMock(),
                 )
-                self.assertIsNone(item, ExecutableItem)
+                self.assertIsInstance(item, ExecutableItem)
+                self.assertIsNone(item._work_dir, "")
                 # This time the project dict does not have any specifications
                 item = ExecutableItem.from_dict(
                     item_dict,
@@ -105,7 +106,8 @@ class TestToolExecutable(unittest.TestCase):
                     specifications=dict(),
                     logger=mock.MagicMock(),
                 )
-                self.assertIsNone(item)
+                self.assertIsInstance(item, ExecutableItem)
+                self.assertIsNone(item._tool_specification)
                 # Modify item_dict
                 item_dict["execute_in_work"] = False
                 item = ExecutableItem.from_dict(
@@ -130,7 +132,7 @@ class TestToolExecutable(unittest.TestCase):
                     specifications=specs_in_project,
                     logger=mock.MagicMock(),
                 )
-                self.assertIsNone(item)
+                self.assertIsInstance(item, ExecutableItem)
 
     def test_execute_forward_without_specification_fails(self):
         logger = mock.MagicMock()
