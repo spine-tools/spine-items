@@ -18,7 +18,6 @@ Contains Importer's executable item as well as support utilities.
 
 import os
 import pathlib
-import multiprocessing as mp
 import spinedb_api
 from spine_engine.spine_io.type_conversion import value_to_convert_spec
 from spine_engine.spine_io.gdx_utils import find_gams_directory
@@ -31,8 +30,8 @@ from spine_engine.helpers_qt_free import (
     shorten,
     create_log_file_timestamp,
     deserialize_checked_states,
-    QueueLogger,
-    QueueLoggerSignalHandler,
+    LoggingProcess,
+    get_logger,
 )
 from .item_info import ItemInfo
 
@@ -56,11 +55,19 @@ class ExecutableItem(ExecutableItemBase):
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
         self._resources_from_downstream = list()
+        self._process = None
 
     @staticmethod
     def item_type():
         """Returns ImporterExecutable's type identifier string."""
         return ItemInfo.item_type()
+
+    def stop_execution(self):
+        """Stops executing this Gimlet."""
+        super().stop_execution()
+        if self._process is not None:
+            self._process.terminate()
+            self._process = None
 
     def _execute_backward(self, resources):
         """See base class."""
@@ -79,8 +86,8 @@ class ExecutableItem(ExecutableItemBase):
                 checked_files.append(absolute_path)
         all_source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
         urls_downstream = [r.url for r in self._resources_from_downstream if r.type_ == "database"]
-        queue = mp.Queue()
-        p = mp.Process(
+        self._process = LoggingProcess(
+            self._logger,
             target=_do_work,
             args=(
                 self._mapping,
@@ -89,16 +96,12 @@ class ExecutableItem(ExecutableItemBase):
                 checked_files,
                 all_source_settings,
                 urls_downstream,
-                queue,
             ),
         )
-        handler = QueueLoggerSignalHandler(queue, self._logger)
-        p.start()
-        while not handler.is_the_job_done():
-            pass
-        p.join()
-        success = handler.process_exitcode == 0
+        self._process.run_until_complete()
+        success = self._process.success
         self._logger.msg_success.emit(f"Executing Importer {self.name} {'finished' if success else 'failed'}")
+        self._process = None
         return success
 
     def _gams_system_directory(self):
@@ -139,8 +142,8 @@ def _files_from_resources(resources):
     return files
 
 
-def _do_work(mapping, cancel_on_error, logs_dir, checked_files, all_source_settings, urls_downstream, queue):
-    logger = QueueLogger(queue)
+def _do_work(mapping, cancel_on_error, logs_dir, checked_files, all_source_settings, urls_downstream):
+    logger = get_logger()
     all_data = []
     all_errors = []
     source_type = mapping["source_type"]
@@ -172,8 +175,7 @@ def _do_work(mapping, cancel_on_error, logs_dir, checked_files, all_source_setti
             connector.connect_to_source(source)
         except IOError as error:
             logger.msg_error.emit(f"Failed to connect to source: {error}")
-            logger.job_done.emit(-1)
-            return
+            return False
         try:
             data, errors = connector.get_mapped_data(
                 table_mappings, table_options, table_types, table_row_types, max_rows=-1
@@ -182,8 +184,7 @@ def _do_work(mapping, cancel_on_error, logs_dir, checked_files, all_source_setti
             logger.msg_error.emit(f"Failed to import '{source}': {error}")
             if cancel_on_error:
                 logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
-                logger.job_done.emit(-1)
-                return
+                return False
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
             continue
         if not errors:
@@ -208,19 +209,18 @@ def _do_work(mapping, cancel_on_error, logs_dir, checked_files, all_source_setti
         logger.msg_error.emit(logfile_anchor)
         if cancel_on_error:
             logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
-            logger.job_done.emit(-1)
-            return
+            return False
         logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
     if all_data:
         for url in urls_downstream:
             success = _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger)
             if not success and cancel_on_error:
-                logger.job_done.emit(-1)
-                return
-    logger.job_done.emit(0)
+                return False
+    return True
 
 
 def _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger):
+    logger = get_logger()
     try:
         db_map = spinedb_api.DiffDatabaseMapping(url, upgrade=False, username="Mapper")
     except (spinedb_api.SpineDBAPIError, spinedb_api.SpineDBVersionError) as err:

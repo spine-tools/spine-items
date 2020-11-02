@@ -47,6 +47,7 @@ class ExecutableItem(ExecutableItemBase):
         self._resources = list()  # Predecessor resources
         self._successor_resources = list()
         self._selected_files = selected_files
+        self._exec_mngr = None
 
     @staticmethod
     def item_type():
@@ -80,6 +81,13 @@ class ExecutableItem(ExecutableItemBase):
         selections = [path for path, boolean in selected_files.items() if boolean]  # List of selected paths
         return cls(name, logger, shell, cmd_list, work_dir, selections)
 
+    def stop_execution(self):
+        """Stops executing this Gimlet."""
+        super().stop_execution()
+        if self._exec_mngr is not None:
+            self._exec_mngr.stop_execution()
+            self._exec_mngr = None
+
     def _execute_forward(self, resources):
         """See base class.
 
@@ -109,7 +117,7 @@ class ExecutableItem(ExecutableItemBase):
         expanded_cmd_list = self._expand_gimlet_tags(self.cmd_list, resources)
         if not self.shell_name:
             prgm = expanded_cmd_list.pop(0)
-            gimlet_process = StandardExecutionManager(self._logger, prgm, *expanded_cmd_list, workdir=self._work_dir)
+            self._exec_mngr = StandardExecutionManager(self._logger, prgm, *expanded_cmd_list, workdir=self._work_dir)
         else:
             if self.shell_name == "cmd.exe":
                 shell_prgm = "cmd.exe"
@@ -121,7 +129,7 @@ class ExecutableItem(ExecutableItemBase):
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
                 return False
-            gimlet_process = StandardExecutionManager(
+            self._exec_mngr = StandardExecutionManager(
                 self._logger, shell_prgm, *expanded_cmd_list, workdir=self._work_dir
             )
         # Copy selected files to work_dir
@@ -136,11 +144,11 @@ class ExecutableItem(ExecutableItemBase):
             + "'>work directory</a>"
         )
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
-        gimlet_process.run_until_complete()
+        self._exec_mngr.run_until_complete()
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = resources.copy()
-        # This is executed after the gimlet process has finished
         self._logger.msg_success.emit(f"Executing {self.name} finished")
+        self._exec_mngr = None
         return True
 
     def _execute_backward(self, resources):

@@ -15,12 +15,10 @@ Contains Combiner's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:   2.4.2020
 """
-import sys
 import os
 import pathlib
-import multiprocessing as mp
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.helpers_qt_free import shorten, create_log_file_timestamp, QueueLogger, QueueLoggerSignalHandler
+from spine_engine.helpers_qt_free import shorten, create_log_file_timestamp, LoggingProcess, get_logger
 from spinedb_api import (
     clear_filter_configs,
     export_data,
@@ -46,6 +44,7 @@ class ExecutableItem(ExecutableItemBase):
         self._resources_from_downstream = list()
         self._logs_dir = logs_dir
         self._cancel_on_error = cancel_on_error
+        self._process = None
 
     @staticmethod
     def item_type():
@@ -59,6 +58,13 @@ class ExecutableItem(ExecutableItemBase):
         logs_dir = os.path.join(data_dir, "logs")
         cancel_on_error = item_dict["cancel_on_error"]
         return cls(name, logs_dir, cancel_on_error, logger)
+
+    def stop_execution(self):
+        """Stops executing this Gimlet."""
+        super().stop_execution()
+        if self._process is not None:
+            self._process.terminate()
+            self._process = None
 
     def _execute_backward(self, resources):
         """See base class."""
@@ -79,31 +85,30 @@ class ExecutableItem(ExecutableItemBase):
         if not to_urls:
             self._logger.msg_warning.emit("No output database available. Moving on...")
             return True
-        queue = mp.Queue()
-        p = mp.Process(target=_do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, to_urls, queue,),)
-        handler = QueueLoggerSignalHandler(queue, self._logger)
-        p.start()
-        while not handler.is_the_job_done():
-            pass
-        p.join()
+        self._process = LoggingProcess(
+            self._logger, target=_do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, to_urls),
+        )
+        self._process.run_until_complete()
         self._logger.msg_success.emit(f"Executing Combiner {self.name} finished")
+        self._process = None
         return True
 
 
-def _get_db_map(url, logger):
+def _get_db_map(url):
     try:
         db_map = DiffDatabaseMapping(url)
     except (SpineDBAPIError, SpineDBVersionError) as err:
+        logger = get_logger()
         logger.msg_error.emit(f"Skipping url <b>{url}</b>: {err}")
         logger.msg_error.emit(f"Skipping url <b>{clear_filter_configs(url)}</b>: {err}")
         return None
     return db_map
 
 
-def _do_work(cancel_on_error, logs_dir, from_urls, to_urls, queue):
-    logger = QueueLogger(queue)
-    from_db_maps = [db_map for db_map in (_get_db_map(url, logger) for url in from_urls) if db_map]
-    to_db_maps = [db_map for db_map in (_get_db_map(url, logger) for url in to_urls) if db_map]
+def _do_work(cancel_on_error, logs_dir, from_urls, to_urls):
+    logger = get_logger()
+    from_db_maps = [db_map for db_map in (_get_db_map(url) for url in from_urls) if db_map]
+    to_db_maps = [db_map for db_map in (_get_db_map(url) for url in to_urls) if db_map]
     from_db_map_data = {from_db_map: export_data(from_db_map) for from_db_map in from_db_maps}
     all_errors = []
     for to_db_map in to_db_maps:
@@ -137,5 +142,4 @@ def _do_work(cancel_on_error, logs_dir, from_urls, to_urls, queue):
                 f.write("{0}\n".format(err))
         # Make error log file anchor with path as tooltip
         logfile_anchor = f"<a style='color:#BB99FF;' title='{logfilepath}' href='file:///{logfilepath}'>error log</a>"
-        logger.msg_error.emit("Import errors. Logfile: {0}".format(logfile_anchor), file=sys.stderr)
-    logger.job_done.emit(0)
+        logger.msg_error.emit("Import errors. Logfile: {0}".format(logfile_anchor))
