@@ -25,7 +25,7 @@ from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.item_info import ItemInfo
-from spinetoolbox.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import ProjectItemResource
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 

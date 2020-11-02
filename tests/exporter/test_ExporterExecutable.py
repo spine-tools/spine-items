@@ -23,13 +23,13 @@ from unittest import mock
 from gdx2py import GdxFile
 from spine_engine import ExecutionDirection
 from spinedb_api import create_new_spine_database, DiffDatabaseMapping, import_functions
-from spinetoolbox.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_items.exporter.database import Database
 from spine_items.exporter.exporter import SettingsPack
 from spine_items.exporter.executable_item import ExecutableItem
 from spine_items.exporter.settings_state import SettingsState
-from spinetoolbox.spine_io import gdx_utils
-from spinetoolbox.spine_io.exporters import gdx
+from spine_engine.spine_io import gdx_utils
+from spine_engine.spine_io.exporters import gdx
 
 
 class TestExporterExecutable(unittest.TestCase):
@@ -110,7 +110,7 @@ class TestExporterExecutable(unittest.TestCase):
         with TemporaryDirectory() as temp_data_dir:
             executable = ExecutableItem("name", SettingsPack(), [], True, temp_data_dir, "", mock.MagicMock())
             with mock.patch(
-                "spinetoolbox.project_item.executable_item_base.ExecutableItemBase.stop_execution"
+                "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
             ) as mock_stop_execution:
                 executable.stop_execution()
                 mock_stop_execution.assert_called_once()
