@@ -28,7 +28,7 @@ from PySide2.QtCore import QEventLoop, Slot
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_engine.helpers_qt_free import shorten
+from spine_engine.utils.helpers import shorten
 from .item_info import ItemInfo
 from .utils import (
     file_paths_from_resources,

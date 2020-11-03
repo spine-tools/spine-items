@@ -22,7 +22,7 @@ from spine_engine.spine_io import gdx_utils
 from spine_engine.spine_io.exporters import gdx
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_engine.helpers_qt_free import shorten
+from spine_engine.utils.helpers import shorten
 from .database import Database
 from .db_utils import scenario_filtered_database_map
 from .item_info import ItemInfo

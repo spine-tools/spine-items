@@ -24,7 +24,8 @@ from PySide2.QtWidgets import QWidget, QStatusBar, QInputDialog, QFileDialog, QF
 from PySide2.QtCore import Slot, Qt, QFileInfo
 from spinetoolbox.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
 from spinetoolbox.helpers import busy_effect, open_url
-from spine_engine.helpers_qt_free import CmdlineTag, CMDLINE_TAG_EDGE, split_cmdline_args, shorten
+from spine_engine.utils.command_line_arguments import CmdlineTag, CMDLINE_TAG_EDGE, split_cmdline_args
+from spine_engine.utils.helpers import shorten
 from ..item_info import ItemInfo
 from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS
 from .custom_menus import AddIncludesPopupMenu, CreateMainProgramPopupMenu

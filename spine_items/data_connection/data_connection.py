@@ -27,7 +27,7 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import busy_effect, open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_engine.helpers_qt_free import deserialize_path, serialize_path
+from spine_engine.utils.serialization import deserialize_path, serialize_path
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo

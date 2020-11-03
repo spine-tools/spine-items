@@ -22,7 +22,7 @@ from PySide2.QtWidgets import QFileDialog, QApplication
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import busy_effect
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_engine.helpers_qt_free import serialize_path, deserialize_path
+from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo

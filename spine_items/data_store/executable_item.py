@@ -18,7 +18,7 @@ Contains Data Store's executable item as well as support utilities.
 
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_engine.helpers_qt_free import deserialize_path
+from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url
 

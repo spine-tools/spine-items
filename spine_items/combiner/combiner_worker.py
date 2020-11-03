@@ -27,7 +27,7 @@ from spinedb_api import (
     SpineDBVersionError,
     DiffDatabaseMapping,
 )
-from spine_engine.helpers_qt_free import create_log_file_timestamp
+from spine_engine.utils.helpers import create_log_file_timestamp
 
 
 class CombinerWorker(QObject):

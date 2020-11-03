@@ -18,7 +18,8 @@ Contains Combiner's executable item as well as support utilities.
 import os
 import pathlib
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.helpers_qt_free import shorten, create_log_file_timestamp, LoggingProcess, get_logger
+from spine_engine.utils.helpers import shorten, create_log_file_timestamp
+from spine_engine.utils.logging_process import LoggingProcess, get_logger
 from spinedb_api import (
     clear_filter_configs,
     export_data,

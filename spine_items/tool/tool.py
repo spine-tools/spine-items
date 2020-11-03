@@ -24,7 +24,7 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.helpers_qt_free import split_cmdline_args
+from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu

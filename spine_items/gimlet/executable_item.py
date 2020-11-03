@@ -23,7 +23,9 @@ import uuid
 from PySide2.QtCore import Signal, Slot, QObject, QEventLoop
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.helpers_qt_free import split_cmdline_args, shorten, deserialize_checked_states, expand_tags
+from spine_engine.utils.helpers import shorten
+from spine_engine.utils.serialization import deserialize_checked_states
+from spine_engine.utils.command_line_arguments import split_cmdline_args, expand_tags
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from .item_info import ItemInfo
 from .utils import SHELLS
