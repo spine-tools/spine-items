@@ -32,7 +32,7 @@ class ScenarioFilterWidget(QWidget):
 
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        if settings is not None:
+        if isinstance(settings, ScenarioFilterSettings):
             self._ui.selection_combo_box.addItem(settings.scenario, settings.scenario)
 
     def load_data(self, url):

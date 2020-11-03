@@ -33,7 +33,7 @@ class ToolFilterWidget(QWidget):
 
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        if settings is not None:
+        if isinstance(settings, ToolFilterSettings):
             self._ui.selection_combo_box.addItem(settings.tool)
 
     def load_data(self, url):

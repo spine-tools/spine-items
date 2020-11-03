@@ -87,7 +87,7 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_warning.emit("No output database available. Moving on...")
             return True
         self._process = LoggingProcess(
-            self._logger, target=_do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, to_urls),
+            self._logger, target=_do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, to_urls)
         )
         self._process.run_until_complete()
         self._logger.msg_success.emit(f"Executing Combiner {self.name} finished")

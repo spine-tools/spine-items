@@ -33,7 +33,8 @@ class EntityClassRenamingWidget(QWidget):
 
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        self._rename_table_model = RenameTableModel(settings.name_map if settings is not None else {})
+        name_map = settings.name_map if isinstance(settings, EntityClassRenamingSettings) else {}
+        self._rename_table_model = RenameTableModel(name_map)
         self._ui.renaming_table.setModel(self._rename_table_model)
 
     def load_data(self, url):

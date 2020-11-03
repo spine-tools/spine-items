@@ -173,8 +173,10 @@ class SpecificationEditorWindow(QWidget):
             layout = QVBoxLayout()
             self._ui.filter_widget.setLayout(layout)
         for i in range(layout.count()):
-            layout.takeAt(0)
+            removed = layout.takeAt(0)
+            removed.widget().hide()
         layout.addWidget(widget)
+        widget.show()
         self._ui.filter_stack.setCurrentIndex(1)
 
     def close(self):
