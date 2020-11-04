@@ -137,7 +137,7 @@ class Exporter(ProjectItem):
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers."""
         s = {
-            self._properties_ui.settings_button.clicked: self.show_settings,
+            self._properties_ui.settings_button.clicked: lambda _: self.show_settings(),
             self._properties_ui.open_directory_button.clicked: self.open_directory,
             self._properties_ui.cancel_on_error_check_box.stateChanged: self._cancel_on_error_option_changed,
         }
@@ -329,8 +329,7 @@ class Exporter(ProjectItem):
         if self._notifications.missing_settings:
             self.add_notification("Export settings missing.")
 
-    @Slot(bool)
-    def show_settings(self, _=True):
+    def show_settings(self):
         """Opens the item's settings window."""
         # Give window its own settings and indexing domains so Cancel doesn't change anything here.
         if self._settings_window is None:
