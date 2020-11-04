@@ -86,7 +86,6 @@ class ExecutableItem(ExecutableItemBase):
             self._logger,
             target=_do_work,
             args=(
-                self.name,
                 self._mapping,
                 self._cancel_on_error,
                 self._logs_dir,
@@ -139,7 +138,7 @@ def _files_from_resources(resources):
     return files
 
 
-def _do_work(name, mapping, cancel_on_error, logs_dir, checked_files, all_source_settings, urls_downstream):
+def _do_work(mapping, cancel_on_error, logs_dir, checked_files, all_source_settings, urls_downstream):
     logger = get_logger()
     all_data = []
     all_errors = []
@@ -171,24 +170,24 @@ def _do_work(name, mapping, cancel_on_error, logs_dir, checked_files, all_source
         try:
             connector.connect_to_source(source)
         except IOError as error:
-            logger.msg_error.emit(f"{name}: Failed to connect to source: {error}")
+            logger.msg_error.emit(f"Failed to connect to source: {error}")
             return False
         try:
             data, errors = connector.get_mapped_data(
                 table_mappings, table_options, table_types, table_row_types, max_rows=-1
             )
         except spinedb_api.InvalidMapping as error:
-            logger.msg_error.emit(f"{name}: Failed to import '{source}': {error}")
+            logger.msg_error.emit(f"Failed to import '{source}': {error}")
             if cancel_on_error:
-                logger.msg_error.emit(f"{name}: Cancel import on error has been set. Bailing out.")
+                logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
                 return False
-            logger.msg_warning.emit(f"{name}: Ignoring errors. Set Cancel import on error to bail out instead.")
+            logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
             continue
         if not errors:
-            logger.msg.emit(f"{name}: Successfully read {sum(len(d) for d in data.values())} data from {source}")
+            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data from {source}")
         else:
             logger.msg_warning.emit(
-                f"{name}: Read {sum(len(d) for d in data.values())} data from {source} with {len(errors)} errors."
+                f"Read {sum(len(d) for d in data.values())} data from {source} with {len(errors)} errors."
             )
         all_data.append(data)
         all_errors.extend(errors)
@@ -205,43 +204,41 @@ def _do_work(name, mapping, cancel_on_error, logs_dir, checked_files, all_source
         )
         logger.msg_error.emit(logfile_anchor)
         if cancel_on_error:
-            logger.msg_error.emit(f"{name}: Cancel import on error has been set. Bailing out.")
+            logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
             return False
-        logger.msg_warning.emit(f"{name}: Ignoring errors. Set Cancel import on error to bail out instead.")
+        logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
     if all_data:
         for url in urls_downstream:
-            success = _import_data_to_url(name, cancel_on_error, logs_dir, all_data, url, logger)
+            success = _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger)
             if not success and cancel_on_error:
                 return False
     return True
 
 
-def _import_data_to_url(name, cancel_on_error, logs_dir, all_data, url, logger):
+def _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger):
     try:
         db_map = spinedb_api.DiffDatabaseMapping(url, upgrade=False, username="Mapper")
     except (spinedb_api.SpineDBAPIError, spinedb_api.SpineDBVersionError) as err:
-        logger.msg_error.emit(
-            f"{name}: Unable to create database mapping, all import operations will be omitted: {err}"
-        )
+        logger.msg_error.emit(f"Unable to create database mapping, all import operations will be omitted: {err}")
         return False
     all_import_errors = []
     for data in all_data:
         import_num, import_errors = spinedb_api.import_data(db_map, **data)
         all_import_errors += import_errors
         if import_errors:
-            logger.msg_error.emit(f"{name}: Errors while importing a table.")
+            logger.msg_error.emit("Errors while importing a table.")
             if cancel_on_error:
-                logger.msg_error.emit(f"{name}: Cancel import on error is set. Bailing out.")
+                logger.msg_error.emit("Cancel import on error is set. Bailing out.")
                 if db_map.has_pending_changes():
-                    logger.msg_error.emit(f"{name}: Rolling back changes.")
+                    logger.msg_error.emit("Rolling back changes.")
                     db_map.rollback_session()
                 break
-            logger.msg_warning.emit(f"{name}: Ignoring errors. Set Cancel import on error to bail out instead.")
+            logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
         if import_num:
             db_map.commit_session("Import data by Spine Toolbox Importer")
-            logger.msg_success.emit(f"{name}: Inserted {import_num} data with {len(import_errors)} errors into {url}")
+            logger.msg_success.emit("Inserted {import_num} data with {len(import_errors)} errors into {url}")
         elif import_num == 0:
-            logger.msg_warning.emit(f"{name}: No new data imported")
+            logger.msg_warning.emit("No new data imported")
     db_map.connection.close()
     if all_import_errors:
         # Log errors in a time stamped file into the logs directory
