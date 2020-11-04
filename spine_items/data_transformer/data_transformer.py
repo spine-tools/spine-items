@@ -164,7 +164,7 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
         if specification is None or specification.settings is None:
             return [ProjectItemResource(self, "database", url) for url in self._urls]
-        if specification.settings.use_shorthand:
+        if specification.settings.use_shorthand():
             shorthand = config_to_shorthand(specification.settings.filter_config())
             return [ProjectItemResource(self, "database", append_filter_config(url, shorthand)) for url in self._urls]
         path = Path(filter_config_path(self.data_dir))
