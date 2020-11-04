@@ -252,12 +252,12 @@ class ToolSpecification(ProjectItemSpecification):
             tags_expanded, args = expand_tags(args, optional_input_files, input_urls, output_urls)
         return args
 
-    def create_tool_instance(self, basedir):
-        """Returns an instance of the tool specification configured to run in the given directory.
-        Needs to be implemented in subclasses.
+    def create_tool_instance(self, basedir, logger):
+        """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
-            basedir (str): Path to directory where the instance will run
+            basedir (str): the path to the directory where the instance will run
+            logger (LoggerInterface)
         """
         raise NotImplementedError
 
@@ -386,13 +386,14 @@ class GAMSTool(ToolSpecification):
             return GAMSTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir):
+    def create_tool_instance(self, basedir, logger):
         """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
             basedir (str): the path to the directory where the instance will run
+            logger (LoggerInterface)
         """
-        return GAMSToolInstance(self, basedir, self._settings, self._logger)
+        return GAMSToolInstance(self, basedir, self._settings, logger)
 
 
 class JuliaTool(ToolSpecification):
@@ -474,13 +475,14 @@ class JuliaTool(ToolSpecification):
             return JuliaTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir):
+    def create_tool_instance(self, basedir, logger):
         """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
             basedir (str): the path to the directory where the instance will run
+            logger (LoggerInterface)
         """
-        return JuliaToolInstance(self, basedir, self._settings, self._logger)
+        return JuliaToolInstance(self, basedir, self._settings, logger)
 
 
 class PythonTool(ToolSpecification):
@@ -563,13 +565,14 @@ class PythonTool(ToolSpecification):
             return PythonTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir):
+    def create_tool_instance(self, basedir, logger):
         """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
             basedir (str): the path to the directory where the instance will run
+            logger (LoggerInterface)
         """
-        return PythonToolInstance(self, basedir, self._settings, self._logger)
+        return PythonToolInstance(self, basedir, self._settings, logger)
 
 
 class ExecutableTool(ToolSpecification):
@@ -645,10 +648,11 @@ class ExecutableTool(ToolSpecification):
             return ExecutableTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir):
+    def create_tool_instance(self, basedir, logger):
         """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
             basedir (str): the path to the directory where the instance will run
+            logger (LoggerInterface)
         """
-        return ExecutableToolInstance(self, basedir, self._settings, self._logger)
+        return ExecutableToolInstance(self, basedir, self._settings, logger)

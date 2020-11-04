@@ -400,7 +400,7 @@ class ExecutableItem(ExecutableItemBase):
             return False
         input_database_urls = _database_urls_from_resources(resources)
         output_database_urls = _database_urls_from_resources(self._downstream_resources)
-        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir)
+        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger)
         try:
             self._tool_instance.prepare(
                 list(optional_file_copy_paths.values()), input_database_urls, output_database_urls, self._cmd_line_args
