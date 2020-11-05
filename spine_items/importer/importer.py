@@ -18,7 +18,7 @@ Contains Importer project item class.
 
 from collections import Counter
 import os
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import serialize_path, deserialize_checked_states, serialize_checked_states
@@ -204,7 +204,7 @@ class Importer(ProjectItem):
                     break
         self.open_import_editor(index)
 
-    @Slot("QModelIndex")
+    @Slot(QModelIndex)
     def _handle_files_double_clicked(self, index):
         """Opens Import editor for the double clicked index."""
         self.open_import_editor(index)

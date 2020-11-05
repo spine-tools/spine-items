@@ -151,13 +151,13 @@ def _add_or_update_specification(toolbox, original_specification, definition):
     new_specification.definition_file_path = original_specification.definition_file_path
     if not new_specification.definition_file_path or new_specification.name != original_specification.name:
         # The user is creating a new spec, either from scratch (no definition file path set)
-        # or by chaning the name of an existing one
+        # or by changing the name of an existing one
         start_dir = toolbox.project().project_dir
         proposed_def_file_path = os.path.join(start_dir, shorten(new_specification.name) + ".json")
         answer = QFileDialog.getSaveFileName(
             toolbox, "Save Importer specification file", proposed_def_file_path, "JSON (*.json)"
         )
-        if answer[0] == "":  # Cancel button clicked
+        if not answer[0]:  # Cancel button clicked
             return
         new_specification.definition_file_path = os.path.abspath(answer[0])
         new_specification.save()

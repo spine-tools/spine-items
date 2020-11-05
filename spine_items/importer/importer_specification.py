@@ -10,10 +10,10 @@
 ######################################################################################################################
 
 """
-Contains Data transformer's specification.
+Contains Importer's specification.
 
-:authors: A. Soininen (VTT)
-:date:    2.10.2020
+:authors: M. Marin (KTH)
+:date:    32.10.2020
 """
 import json
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
@@ -66,14 +66,14 @@ class ImporterSpecification(ProjectItemSpecification):
     @staticmethod
     def from_dict(specification_dict, logger):
         """
-        Restores :class:`DataTransformerSpecification` from a dictionary.
+        Restores :class:`ImporterSpecification` from a dictionary.
 
         Args:
             specification_dict (dict): serialized specification
             logger (LoggerInterface): a logger
 
         Returns:
-            DataTransformerSpecification: deserialized specification
+            ImporterSpecification: deserialized specification
         """
         name = specification_dict["name"]
         description = specification_dict.get("description", None)
