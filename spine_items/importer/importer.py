@@ -260,7 +260,7 @@ class Importer(ProjectItem):
             d["specification"] = ""
         else:
             d["specification"] = self.specification().name
-        d["cancel_on_error"] = self._properties_ui.cancel_on_error_checkBox.isChecked()
+        d["cancel_on_error"] = self.cancel_on_error
         d["file_selection"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
         return d
 
