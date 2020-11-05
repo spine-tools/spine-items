@@ -296,6 +296,9 @@ class DataStore(ProjectItem):
     @Slot(bool)
     def open_ds_form(self, checked=False):
         """Opens current url in the Spine database editor."""
+        if not self._url["database"]:
+            self._logger.msg_error.emit(f"<b>{self.name}</b> is not connected to a database.")
+            return
         self._update_sa_url()
         self._project.db_mngr.show_spine_db_editor({self._sa_url: self.name}, self._logger)
 

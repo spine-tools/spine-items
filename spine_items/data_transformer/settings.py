@@ -186,7 +186,7 @@ class ScenarioFilterSettings(FilterSettings):
 
     def filter_config(self):
         """See base class."""
-        return scenario_filter_config(self.scenario)
+        return scenario_filter_config(self.scenario) if self.scenario is not None else {}
 
     def to_dict(self):
         """See base class."""

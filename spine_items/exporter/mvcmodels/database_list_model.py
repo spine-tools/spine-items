@@ -98,6 +98,19 @@ class DatabaseListModel(QAbstractListModel):
     def rowCount(self, parent=QModelIndex()):
         return len(self._databases)
 
+    def update_url(self, old, new):
+        """
+        Updates a database URL.
+
+        Args:
+            old (str): old URL
+            new (str): new URL
+        """
+        for db in self._databases:
+            if old == db.url:
+                db.url = new
+                return
+
     def urls(self):
         """
         Returns database URLs.

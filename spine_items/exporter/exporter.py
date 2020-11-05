@@ -17,6 +17,7 @@ Exporter project item.
 """
 
 from copy import deepcopy
+from itertools import zip_longest
 import pathlib
 import os.path
 from PySide2.QtCore import Qt, Slot
@@ -82,6 +83,7 @@ class Exporter(ProjectItem):
         if databases is None:
             databases = list()
         self._database_model = DatabaseListModel(databases)
+        self._providers = dict()
         self._output_filenames = dict()
         self._export_list_items = dict()
         self._settings_window = None
@@ -162,7 +164,7 @@ class Exporter(ProjectItem):
             scenario_rows = db_map.query(db_map.scenario_sq).all()
             scenarios = {row.name: row.active for row in scenario_rows}
             return scenarios
-        except SpineDBAPIError as error:
+        except SpineDBAPIError:
             return {}
 
     def _update_properties_tab(self):
@@ -187,29 +189,42 @@ class Exporter(ProjectItem):
         database_urls = set(r.url for r in resources if r.type_ == "database")
         old_urls = self._database_model.urls()
         if database_urls != old_urls:
-            for url in old_urls - database_urls:
+            common = old_urls & database_urls
+            old_urls_by_base = dict()
+            for url in old_urls:
+                if url not in common:
+                    old_urls_by_base.setdefault(clear_filter_configs(url), list()).append(url)
+            old_urls_by_base = {base: sorted(url_list) for base, url_list in old_urls_by_base.items()}
+            new_urls_by_base = dict()
+            for url in database_urls:
+                if url not in common:
+                    new_urls_by_base.setdefault(clear_filter_configs(url), list()).append(url)
+            new_urls_by_base = {base: sorted(url_list) for base, url_list in new_urls_by_base.items()}
+            useless_oldies = set()
+            homeless_new_urls = set()
+            for new_base, newbies in new_urls_by_base.items():
+                oldies = old_urls_by_base.get(new_base)
+                if oldies is None:
+                    homeless_new_urls |= set(newbies)
+                    continue
+                for oldie, newbie in zip_longest(oldies, newbies):
+                    if oldie is None:
+                        homeless_new_urls.add(newbie)
+                        continue
+                    if newbie is None:
+                        useless_oldies.add(oldie)
+                        continue
+                    self._database_model.update_url(oldie, newbie)
+            useless_oldies |= old_urls - database_urls
+            for url in useless_oldies:
                 self._database_model.remove(url)
-            for url in database_urls - old_urls:
+            for url in homeless_new_urls:
                 db = Database()
                 db.url = url
                 self._database_model.add(db)
         for url in database_urls:
             db = self._database_model.item(url)
-            clean_url = clear_filter_configs(url)
-            db_map = self._project.db_mngr.db_map(clean_url)
-            if db_map is not None:
-                db.available_scenarios = self._read_scenarios(db_map)
-            else:
-                try:
-                    db_map = DatabaseMapping(url, apply_filters=False)
-                except SpineDBAPIError:
-                    continue
-                try:
-                    db.available_scenarios = {row.name: row.active for row in db_map.query(db_map.scenario_sq).all()}
-                except SpineDBAPIError:
-                    continue
-                finally:
-                    db_map.connection.close()
+            db.available_scenarios = self._available_scenarios(url)
         if self._active:
             self._update_properties_tab()
         self._check_state()
@@ -571,6 +586,32 @@ class Exporter(ProjectItem):
             for db in self._database_model.items():
                 if url == make_url(clear_filter_configs(db.url)):
                     self._read_scenarios(db_map)
+
+    def _available_scenarios(self, url):
+        """
+        Reads available scenarios from a database even when the database is not (yet) managed.
+
+        Args:
+            url (str): database URL
+
+        Returns:
+            dict: a mapping from scenario name to active flag
+        """
+        clean_url = clear_filter_configs(url)
+        db_map = self._project.db_mngr.db_map(clean_url)
+        if db_map is not None:
+            return self._read_scenarios(db_map)
+        else:
+            try:
+                db_map = DatabaseMapping(url, apply_filters=False)
+            except SpineDBAPIError:
+                return dict()
+            try:
+                return {row.name: row.active for row in db_map.query(db_map.scenario_sq).all()}
+            except SpineDBAPIError:
+                return dict()
+            finally:
+                db_map.connection.close()
 
 
 def _normalize_url(url):
