@@ -19,17 +19,13 @@ Contains Importer's executable item as well as support utilities.
 import os
 import pathlib
 import spinedb_api
-from spine_engine.spine_io.type_conversion import value_to_convert_spec
 from spine_engine.spine_io.gdx_utils import find_gams_directory
-from spine_engine.spine_io.importers.csv_reader import CSVConnector
-from spine_engine.spine_io.importers.excel_reader import ExcelConnector
-from spine_engine.spine_io.importers.gdx_connector import GdxConnector
-from spine_engine.spine_io.importers.json_reader import JSONConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.utils.helpers import shorten, create_log_file_timestamp
+from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_checked_states
-from spine_engine.utils.logging_process import LoggingProcess, get_logger
+from spine_engine.utils.returning_process import ReturningProcess
 from .item_info import ItemInfo
+from .do_work import do_work
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -82,9 +78,8 @@ class ExecutableItem(ExecutableItemBase):
                 checked_files.append(absolute_path)
         all_source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
         urls_downstream = [r.url for r in self._resources_from_downstream if r.type_ == "database"]
-        self._process = LoggingProcess(
-            self._logger,
-            target=_do_work,
+        self._process = ReturningProcess(
+            target=do_work,
             args=(
                 self._mapping,
                 self._cancel_on_error,
@@ -92,6 +87,7 @@ class ExecutableItem(ExecutableItemBase):
                 checked_files,
                 all_source_settings,
                 urls_downstream,
+                self._logger,
             ),
         )
         self._process.run_until_complete()
@@ -136,121 +132,3 @@ def _files_from_resources(resources):
         elif resource.type_ == "transient_file":
             files[resource.metadata["label"]] = resource.path
     return files
-
-
-def _do_work(mapping, cancel_on_error, logs_dir, checked_files, all_source_settings, urls_downstream):
-    logger = get_logger()
-    all_data = []
-    all_errors = []
-    source_type = mapping["source_type"]
-    source_settings = all_source_settings.get(source_type)
-    connector = {
-        "CSVConnector": CSVConnector,
-        "ExcelConnector": ExcelConnector,
-        "GdxConnector": GdxConnector,
-        "JSONConnector": JSONConnector,
-    }[source_type](source_settings)
-    table_mappings = {
-        name: m for name, m in mapping.get("table_mappings", {}).items() if name in mapping["selected_tables"]
-    }
-    table_options = {
-        name: options
-        for name, options in mapping.get("table_options", {}).items()
-        if name in mapping["selected_tables"]
-    }
-    table_types = {
-        tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
-        for tn, cols in mapping.get("table_types", {}).items()
-    }
-    table_row_types = {
-        tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
-        for tn, cols in mapping.get("table_row_types", {}).items()
-    }
-    for source in checked_files:
-        try:
-            connector.connect_to_source(source)
-        except IOError as error:
-            logger.msg_error.emit(f"Failed to connect to source: {error}")
-            return False
-        try:
-            data, errors = connector.get_mapped_data(
-                table_mappings, table_options, table_types, table_row_types, max_rows=-1
-            )
-        except spinedb_api.InvalidMapping as error:
-            logger.msg_error.emit(f"Failed to import '{source}': {error}")
-            if cancel_on_error:
-                logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
-                return False
-            logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-            continue
-        if not errors:
-            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data from {source}")
-        else:
-            logger.msg_warning.emit(
-                f"Read {sum(len(d) for d in data.values())} data from {source} with {len(errors)} errors."
-            )
-        all_data.append(data)
-        all_errors.extend(errors)
-    if all_errors:
-        # Log errors in a time stamped file into the logs directory
-        timestamp = create_log_file_timestamp()
-        logfilepath = os.path.abspath(os.path.join(logs_dir, timestamp + "_read_error.log"))
-        with open(logfilepath, "w") as f:
-            for err in all_errors:
-                f.write(f"{err}\n")
-        # Make error log file anchor with path as tooltip
-        logfile_anchor = (
-            "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
-        )
-        logger.msg_error.emit(logfile_anchor)
-        if cancel_on_error:
-            logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
-            return False
-        logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-    if all_data:
-        for url in urls_downstream:
-            success = _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger)
-            if not success and cancel_on_error:
-                return False
-    return True
-
-
-def _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger):
-    try:
-        db_map = spinedb_api.DiffDatabaseMapping(url, upgrade=False, username="Mapper")
-    except (spinedb_api.SpineDBAPIError, spinedb_api.SpineDBVersionError) as err:
-        logger.msg_error.emit(f"Unable to create database mapping, all import operations will be omitted: {err}")
-        return False
-    all_import_errors = []
-    for data in all_data:
-        import_num, import_errors = spinedb_api.import_data(db_map, **data)
-        all_import_errors += import_errors
-        if import_errors:
-            logger.msg_error.emit("Errors while importing a table.")
-            if cancel_on_error:
-                logger.msg_error.emit("Cancel import on error is set. Bailing out.")
-                if db_map.has_pending_changes():
-                    logger.msg_error.emit("Rolling back changes.")
-                    db_map.rollback_session()
-                break
-            logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-        if import_num:
-            db_map.commit_session("Import data by Spine Toolbox Importer")
-            logger.msg_success.emit("Inserted {import_num} data with {len(import_errors)} errors into {url}")
-        elif import_num == 0:
-            logger.msg_warning.emit("No new data imported")
-    db_map.connection.close()
-    if all_import_errors:
-        # Log errors in a time stamped file into the logs directory
-        timestamp = create_log_file_timestamp()
-        logfilepath = os.path.abspath(os.path.join(logs_dir, timestamp + "_import_error.log"))
-        with open(logfilepath, "w") as f:
-            for err in all_import_errors:
-                f.write(str(err) + "\n")
-        # Make error log file anchor with path as tooltip
-        logfile_anchor = (
-            "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
-        )
-        logger.msg_error.emit(logfile_anchor)
-        return False
-    return True
