@@ -87,8 +87,11 @@ class DataTransformerSpecification(ProjectItemSpecification):
             settings = settings_from_dict(filter_)
         else:
             # For legacy JSON.
-            renaming = specification_dict["entity_class_name_map"]
-            settings = EntityClassRenamingSettings(renaming)
+            renaming = specification_dict.get("entity_class_name_map")
+            if renaming is not None:
+                settings = EntityClassRenamingSettings(renaming)
+            else:
+                settings = None
         return DataTransformerSpecification(name, settings, description)
 
     def save(self):
