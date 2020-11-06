@@ -286,7 +286,7 @@ class Exporter(ProjectItem):
         )
         self._report_notifications()
 
-    @Slot(str)
+    @Slot()
     def _cancel_worker(self):
         """Cleans up after worker has given up fetching export settings."""
         if self._worker is None:
