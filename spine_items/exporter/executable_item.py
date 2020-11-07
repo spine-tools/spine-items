@@ -17,17 +17,17 @@ Contains Exporter's executable item as well as support utilities.
 """
 import os.path
 import pathlib
-from spinedb_api import SpineDBAPIError
 from spine_engine.spine_io import gdx_utils
 from spine_engine.spine_io.exporters import gdx
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
+from spine_engine.utils.returning_process import ReturningProcess
 from .database import Database
-from .db_utils import scenario_filtered_database_map
 from .item_info import ItemInfo
 from .settings_pack import SettingsPack
+from .do_work import do_work
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -48,11 +48,19 @@ class ExecutableItem(ExecutableItemBase):
         self._cancel_on_error = cancel_on_error
         self._data_dir = data_dir
         self._gams_path = gams_path
+        self._process = None
 
     @staticmethod
     def item_type():
         """Returns Exporter's type identifier string."""
         return ItemInfo.item_type()
+
+    def stop_execution(self):
+        """Stops executing this Gimlet."""
+        super().stop_execution()
+        if self._process is not None:
+            self._process.terminate()
+            self._process = None
 
     def _execute_forward(self, resources):
         """See base class."""
@@ -64,6 +72,7 @@ class ExecutableItem(ExecutableItemBase):
         if gams_system_directory is None:
             self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")
             return False
+        databases = []
         for url in database_urls:
             database = None
             for db in self._databases:
@@ -72,35 +81,25 @@ class ExecutableItem(ExecutableItemBase):
                     break
             if database is None:
                 self._logger.msg_error.emit(f"<b>{self.name}</b>: No settings for database {url}.")
-                return False
+                continue
             if not database.output_file_name:
                 self._logger.msg_error.emit(f"<b>{self.name}</b>: No file name given to export database {url}.")
-                return False
-            out_path = os.path.join(self._data_dir, database.output_file_name)
-            try:
-                database_map = scenario_filtered_database_map(url, database.scenario)
-            except SpineDBAPIError as error:
-                self._logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
-                return False
-            export_logger = self._logger if not self._cancel_on_error else None
-            try:
-                gdx.to_gdx_file(
-                    database_map,
-                    out_path,
-                    self._settings_pack.settings,
-                    self._settings_pack.indexing_settings,
-                    self._settings_pack.merging_settings,
-                    self._settings_pack.none_fallback,
-                    self._settings_pack.none_export,
-                    gams_system_directory,
-                    export_logger,
-                )
-            except gdx.GdxExportException as error:
-                self._logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
-                return False
-            finally:
-                database_map.connection.close()
-            self._logger.msg_success.emit(f"File <b>{out_path}</b> written")
+                continue
+            databases.append(database)
+        self._process = ReturningProcess(
+            target=do_work,
+            args=(
+                self._settings_pack,
+                self._cancel_on_error,
+                self._data_dir,
+                gams_system_directory,
+                databases,
+                self._logger,
+            ),
+        )
+        self._process.run_until_complete()
+        self._logger.msg_success.emit(f"Executing Exporter {self.name} finished")
+        self._process = None
         return True
 
     def _output_resources_forward(self):
