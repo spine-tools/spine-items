@@ -23,6 +23,7 @@ from spine_engine.spine_io.exporters import gdx
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
+from spine_engine.utils.serialization import deserialize_path
 from .database import Database
 from .db_utils import scenario_filtered_database_map
 from .item_info import ItemInfo
@@ -129,7 +130,11 @@ class ExecutableItem(ExecutableItemBase):
         except gdx.GdxExportException as error:
             logger.msg_error.emit(f"Failed to fully restore Exporter settings: {error}")
             settings_pack = SettingsPack()
-        databases = [Database.from_dict(db_dict) for db_dict in item_dict["databases"]]
+        databases = list()
+        for db_dict in item_dict["databases"]:
+            db = Database.from_dict(db_dict)
+            db.url = deserialize_path(db_dict["database_url"], project_dir)
+            databases.append(db)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
