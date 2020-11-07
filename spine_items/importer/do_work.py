@@ -19,24 +19,12 @@ Importer's execute kernel (do_work), as target for a multiprocess.Process
 import os
 import spinedb_api
 from spine_engine.spine_io.type_conversion import value_to_convert_spec
-from spine_engine.spine_io.importers.csv_reader import CSVConnector
-from spine_engine.spine_io.importers.excel_reader import ExcelConnector
-from spine_engine.spine_io.importers.gdx_connector import GdxConnector
-from spine_engine.spine_io.importers.json_reader import JSONConnector
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 
-def do_work(mapping, cancel_on_error, logs_dir, checked_files, all_source_settings, urls_downstream, logger):
+def do_work(mapping, cancel_on_error, logs_dir, checked_files, connector, urls_downstream, logger):
     all_data = []
     all_errors = []
-    source_type = mapping["source_type"]
-    source_settings = all_source_settings.get(source_type)
-    connector = {
-        "CSVConnector": CSVConnector,
-        "ExcelConnector": ExcelConnector,
-        "GdxConnector": GdxConnector,
-        "JSONConnector": JSONConnector,
-    }[source_type](source_settings)
     table_mappings = {
         name: m for name, m in mapping.get("table_mappings", {}).items() if name in mapping["selected_tables"]
     }

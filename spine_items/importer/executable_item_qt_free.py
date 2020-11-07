@@ -20,6 +20,10 @@ import os
 import pathlib
 import spinedb_api
 from spine_engine.spine_io.gdx_utils import find_gams_directory
+from spine_engine.spine_io.importers.csv_reader import CSVConnector
+from spine_engine.spine_io.importers.excel_reader import ExcelConnector
+from spine_engine.spine_io.importers.gdx_connector import GdxConnector
+from spine_engine.spine_io.importers.json_reader import JSONConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_checked_states
@@ -76,8 +80,18 @@ class ExecutableItem(ExecutableItemBase):
             absolute_path = absolute_paths.get(label)
             if absolute_path is not None:
                 checked_files.append(absolute_path)
-        all_source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
         urls_downstream = [r.url for r in self._resources_from_downstream if r.type_ == "database"]
+        source_type = self._mapping["source_type"]
+        if source_type == "GdxConnector":
+            source_settings = {"gams_directory": self._gams_system_directory()}
+        else:
+            source_settings = None
+        connector = {
+            "CSVConnector": CSVConnector,
+            "ExcelConnector": ExcelConnector,
+            "GdxConnector": GdxConnector,
+            "JSONConnector": JSONConnector,
+        }[source_type](source_settings)
         self._process = ReturningProcess(
             target=do_work,
             args=(
@@ -85,7 +99,7 @@ class ExecutableItem(ExecutableItemBase):
                 self._cancel_on_error,
                 self._logs_dir,
                 checked_files,
-                all_source_settings,
+                connector,
                 urls_downstream,
                 self._logger,
             ),
