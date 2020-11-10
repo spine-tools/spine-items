@@ -25,6 +25,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
+from ..widgets.tool_properties_widget import ArgsTreeView
+
 from spine_items import resources_icons_rc
 
 class Ui_Form(object):
@@ -112,7 +114,7 @@ class Ui_Form(object):
         self.splitter = QSplitter(self.scrollAreaWidgetContents_3)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Vertical)
-        self.treeView_cmdline_args = QTreeView(self.splitter)
+        self.treeView_cmdline_args = ArgsTreeView(self.splitter)
         self.treeView_cmdline_args.setObjectName(u"treeView_cmdline_args")
         sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy3.setHorizontalStretch(0)
@@ -123,6 +125,7 @@ class Ui_Form(object):
         font2.setPointSize(10)
         self.treeView_cmdline_args.setFont(font2)
         self.treeView_cmdline_args.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView_cmdline_args.setAcceptDrops(True)
         self.treeView_cmdline_args.setEditTriggers(QAbstractItemView.AnyKeyPressed|QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed)
         self.treeView_cmdline_args.setDragDropMode(QAbstractItemView.DragDrop)
         self.treeView_cmdline_args.setSelectionMode(QAbstractItemView.ExtendedSelection)

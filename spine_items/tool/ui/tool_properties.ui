@@ -187,7 +187,7 @@
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
-         <widget class="QTreeView" name="treeView_cmdline_args">
+         <widget class="ArgsTreeView" name="treeView_cmdline_args">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -201,6 +201,9 @@
           </property>
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
+          </property>
+          <property name="acceptDrops">
+           <bool>true</bool>
           </property>
           <property name="editTriggers">
            <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
@@ -456,6 +459,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ArgsTreeView</class>
+   <extends>QTreeView</extends>
+   <header>./widgets/tool_properties_widget.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>scrollArea_3</tabstop>
   <tabstop>comboBox_tool</tabstop>

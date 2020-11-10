@@ -16,6 +16,7 @@ Models for the Tool item
 :date:   9.11.2020
 """
 
+import json
 from PySide2.QtCore import Qt, QMimeData, Signal
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QPixmap, QPainter, QIcon
 from ..models import FileListModel
@@ -85,20 +86,28 @@ class CommandLineArgsModel(QStandardItemModel):
 
     def mimeData(self, indexes):
         data = QMimeData()
-        data.setText(";;".join([str(index.row()) for index in indexes]))
+        text = json.dumps(("rows", ";;".join([str(index.row()) for index in indexes])))
+        data.setText(text)
         return data
 
     def canDropMimeData(self, data, drop_action, row, column, parent):
         return parent.data() is not None and row >= 0
 
     def dropMimeData(self, data, drop_action, row, column, parent):
-        rows = [int(x) for x in data.text().split(";;")]
-        head = [arg for k, arg in enumerate(self._tool_args[:row]) if k not in rows]
-        body = [self._tool_args[k] for k in rows]
-        tail = [arg for k, arg in enumerate(self._tool_args[row:]) if k + row not in rows]
-        new_args = head + body + tail
-        self.args_updated.emit(new_args)
-        return True
+        head, contents = json.loads(data.text())
+        if head == "rows":
+            rows = [int(x) for x in contents.split(";;")]
+            head = [arg for k, arg in enumerate(self._tool_args[:row]) if k not in rows]
+            body = [self._tool_args[k] for k in rows]
+            tail = [arg for k, arg in enumerate(self._tool_args[row:]) if k + row not in rows]
+            new_args = head + body + tail
+            self.args_updated.emit(new_args)
+            return True
+        if head == "paths":
+            new_args = self._tool_args[:row] + contents.split(";;") + self._tool_args[row:]
+            self.args_updated.emit(new_args)
+            return True
+        return False
 
 
 class InputFileListModel(FileListModel):
@@ -118,5 +127,6 @@ class InputFileListModel(FileListModel):
 
     def mimeData(self, indexes):
         data = QMimeData()
-        data.setText(";;".join([str(index.row()) for index in indexes]))
+        text = json.dumps(("paths", ";;".join([index.data() for index in indexes])))
+        data.setText(text)
         return data
