@@ -43,7 +43,7 @@ class CommandLineArgItem(QStandardItem):
             self.setIcon(icon)
 
 
-class EditableCommandLineArgItem(CommandLineArgItem):
+class NewCommandLineArgItem(CommandLineArgItem):
     def __init__(self):
         super().__init__("Type new arg here...", selectable=True, editable=True)
         gray_color = qApp.palette().text().color()
@@ -74,10 +74,10 @@ class CommandLineArgsModel(QStandardItemModel):
         self.appendRow(tool_args_root)
         spec_args_children = [CommandLineArgItem(arg, rank=k + 1) for k, arg in enumerate(spec_args)]
         tool_args_children = [
-            CommandLineArgItem(arg, rank=k + len(spec_args) + 1, selectable=True, drag_enabled=True)
+            CommandLineArgItem(arg, rank=k + len(spec_args) + 1, editable=True, selectable=True, drag_enabled=True)
             for k, arg in enumerate(tool_args)
         ]
-        tool_args_children.append(EditableCommandLineArgItem())
+        tool_args_children.append(NewCommandLineArgItem())
         spec_args_root.appendRows(spec_args_children)
         tool_args_root.appendRows(tool_args_children)
 
