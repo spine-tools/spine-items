@@ -28,6 +28,7 @@ from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
+from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .utils import (
     file_paths_from_resources,
@@ -57,7 +58,6 @@ class ExecutableItem(ExecutableItemBase):
         self._output_dir = output_dir
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
-        self._downstream_resources = list()  # TODO: Rename to _successor_resources
         self._tool_instance = None
 
     @staticmethod
@@ -310,11 +310,6 @@ class ExecutableItem(ExecutableItemBase):
                 return False
         return True
 
-    def _execute_backward(self, resources):
-        """Stores resources for forward execution."""
-        self._downstream_resources = resources.copy()
-        return True
-
     def _execute_forward(self, resources):
         """
         Executes the Tool according to the Tool specification.
@@ -398,13 +393,9 @@ class ExecutableItem(ExecutableItemBase):
         if not self._create_output_dirs(execution_dir):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
             return False
-        input_database_urls = _database_urls_from_resources(resources)
-        output_database_urls = _database_urls_from_resources(self._downstream_resources)
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger)
         try:
-            self._tool_instance.prepare(
-                list(optional_file_copy_paths.values()), input_database_urls, output_database_urls, self._cmd_line_args
-            )
+            self._tool_instance.prepare(self._cmd_line_args)
         except RuntimeError as error:
             self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
             return False
@@ -593,6 +584,7 @@ class ExecutableItem(ExecutableItemBase):
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
         cmd_line_args = item_dict["cmd_line_args"]
+        cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
         return cls(name, work_dir, output_dir, specification, cmd_line_args, logger)
 
 
@@ -631,22 +623,6 @@ def _create_output_dir_timestamp():
         return ""
     extension = stamp.strftime("%Y-%m-%dT%H.%M.%S")
     return extension
-
-
-def _database_urls_from_resources(resources):
-    """
-    Pries database URLs and their providers' names from resources.
-
-    Args:
-        resources (list): a list of ProjectItemResource objects
-    Returns:
-        dict: a mapping from resource provider's name to a database URL.
-    """
-    urls = dict()
-    for resource in resources:
-        if resource.type_ == "database":
-            urls[resource.provider.name] = resource.url
-    return urls
 
 
 def _execution_directory(work_dir, tool_specification):

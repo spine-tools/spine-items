@@ -155,7 +155,7 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(specification_name)
         self.set_specification(specification)
 
-    def _do_handle_dag_changed(self, resources):
+    def _do_handle_dag_changed(self, resources, _):
         """See base class."""
         self._urls = [r.url for r in resources if r.type_ == "database"]
 

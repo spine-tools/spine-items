@@ -260,7 +260,7 @@ class Gimlet(ProjectItem):
             self._properties_ui.radioButton_unique.setChecked(True)
         self._properties_ui.radioButton_default.blockSignals(False)
 
-    def _do_handle_dag_changed(self, resources):
+    def _do_handle_dag_changed(self, resources, _):
         """Saves a copy of ProjectItemResources for handling
         changes in the DAG on Design View.
 

@@ -184,7 +184,7 @@ class Exporter(ProjectItem):
             Qt.Checked if self._cancel_on_error else Qt.Unchecked
         )
 
-    def _do_handle_dag_changed(self, resources):
+    def _do_handle_dag_changed(self, resources, _):
         """See base class."""
         database_urls = set(r.url for r in resources if r.type_ == "database")
         old_urls = self._database_model.urls()

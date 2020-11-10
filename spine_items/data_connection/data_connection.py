@@ -390,7 +390,7 @@ class DataConnection(ProjectItem):
         resources = [ProjectItemResource(self, "file", url=pathlib.Path(ref).as_uri()) for ref in refs + f_list]
         return resources
 
-    def _do_handle_dag_changed(self, resources):
+    def _do_handle_dag_changed(self, resources, _):
         """See base class."""
         if not self.file_references() and not self.data_files():
             self.add_notification(

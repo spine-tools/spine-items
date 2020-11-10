@@ -127,16 +127,6 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.lineEdit_args)
 
-        self.toolButton_add_cmdline_tag = QToolButton(Form)
-        self.toolButton_add_cmdline_tag.setObjectName(u"toolButton_add_cmdline_tag")
-        self.toolButton_add_cmdline_tag.setMinimumSize(QSize(22, 22))
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/double-at.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_add_cmdline_tag.setIcon(icon1)
-        self.toolButton_add_cmdline_tag.setPopupMode(QToolButton.InstantPopup)
-
-        self.horizontalLayout_9.addWidget(self.toolButton_add_cmdline_tag)
-
 
         self.verticalLayout_5.addLayout(self.horizontalLayout_9)
 
@@ -181,9 +171,9 @@ class Ui_Form(object):
         font1.setBold(True)
         font1.setWeight(75)
         self.toolButton_add_source_files.setFont(font1)
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/file-link.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_add_source_files.setIcon(icon2)
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/file-link.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_add_source_files.setIcon(icon1)
 
         self.horizontalLayout_2.addWidget(self.toolButton_add_source_files)
 
@@ -191,9 +181,9 @@ class Ui_Form(object):
         self.toolButton_add_source_dirs.setObjectName(u"toolButton_add_source_dirs")
         self.toolButton_add_source_dirs.setMinimumSize(QSize(22, 22))
         self.toolButton_add_source_dirs.setMaximumSize(QSize(22, 22))
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/folder-link.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_add_source_dirs.setIcon(icon3)
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/folder-link.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_add_source_dirs.setIcon(icon2)
 
         self.horizontalLayout_2.addWidget(self.toolButton_add_source_dirs)
 
@@ -204,9 +194,9 @@ class Ui_Form(object):
         self.toolButton_minus_source_files.setMinimumSize(QSize(22, 22))
         self.toolButton_minus_source_files.setMaximumSize(QSize(22, 22))
         self.toolButton_minus_source_files.setFont(font1)
-        icon4 = QIcon()
-        icon4.addFile(u":/icons/trash-alt.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_minus_source_files.setIcon(icon4)
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/trash-alt.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_minus_source_files.setIcon(icon3)
 
         self.horizontalLayout_2.addWidget(self.toolButton_minus_source_files)
 
@@ -247,7 +237,7 @@ class Ui_Form(object):
         self.toolButton_plus_inputfiles.setMinimumSize(QSize(22, 22))
         self.toolButton_plus_inputfiles.setMaximumSize(QSize(22, 22))
         self.toolButton_plus_inputfiles.setFont(font1)
-        self.toolButton_plus_inputfiles.setIcon(icon2)
+        self.toolButton_plus_inputfiles.setIcon(icon1)
 
         self.horizontalLayout_4.addWidget(self.toolButton_plus_inputfiles)
 
@@ -258,7 +248,7 @@ class Ui_Form(object):
         self.toolButton_minus_inputfiles.setMinimumSize(QSize(22, 22))
         self.toolButton_minus_inputfiles.setMaximumSize(QSize(22, 22))
         self.toolButton_minus_inputfiles.setFont(font1)
-        self.toolButton_minus_inputfiles.setIcon(icon4)
+        self.toolButton_minus_inputfiles.setIcon(icon3)
 
         self.horizontalLayout_4.addWidget(self.toolButton_minus_inputfiles)
 
@@ -295,7 +285,7 @@ class Ui_Form(object):
         self.toolButton_plus_inputfiles_opt.setMinimumSize(QSize(22, 22))
         self.toolButton_plus_inputfiles_opt.setMaximumSize(QSize(22, 22))
         self.toolButton_plus_inputfiles_opt.setFont(font1)
-        self.toolButton_plus_inputfiles_opt.setIcon(icon2)
+        self.toolButton_plus_inputfiles_opt.setIcon(icon1)
 
         self.horizontalLayout_5.addWidget(self.toolButton_plus_inputfiles_opt)
 
@@ -306,7 +296,7 @@ class Ui_Form(object):
         self.toolButton_minus_inputfiles_opt.setMinimumSize(QSize(22, 22))
         self.toolButton_minus_inputfiles_opt.setMaximumSize(QSize(22, 22))
         self.toolButton_minus_inputfiles_opt.setFont(font1)
-        self.toolButton_minus_inputfiles_opt.setIcon(icon4)
+        self.toolButton_minus_inputfiles_opt.setIcon(icon3)
 
         self.horizontalLayout_5.addWidget(self.toolButton_minus_inputfiles_opt)
 
@@ -343,7 +333,7 @@ class Ui_Form(object):
         self.toolButton_plus_outputfiles.setMinimumSize(QSize(22, 22))
         self.toolButton_plus_outputfiles.setMaximumSize(QSize(22, 22))
         self.toolButton_plus_outputfiles.setFont(font1)
-        self.toolButton_plus_outputfiles.setIcon(icon2)
+        self.toolButton_plus_outputfiles.setIcon(icon1)
 
         self.horizontalLayout_3.addWidget(self.toolButton_plus_outputfiles)
 
@@ -354,7 +344,7 @@ class Ui_Form(object):
         self.toolButton_minus_outputfiles.setMinimumSize(QSize(22, 22))
         self.toolButton_minus_outputfiles.setMaximumSize(QSize(22, 22))
         self.toolButton_minus_outputfiles.setFont(font1)
-        self.toolButton_minus_outputfiles.setIcon(icon4)
+        self.toolButton_minus_outputfiles.setIcon(icon3)
 
         self.horizontalLayout_3.addWidget(self.toolButton_minus_outputfiles)
 
@@ -444,8 +434,7 @@ class Ui_Form(object):
         QWidget.setTabOrder(self.textEdit_description, self.lineEdit_main_program)
         QWidget.setTabOrder(self.lineEdit_main_program, self.toolButton_add_main_program)
         QWidget.setTabOrder(self.toolButton_add_main_program, self.lineEdit_args)
-        QWidget.setTabOrder(self.lineEdit_args, self.toolButton_add_cmdline_tag)
-        QWidget.setTabOrder(self.toolButton_add_cmdline_tag, self.treeView_sourcefiles)
+        QWidget.setTabOrder(self.lineEdit_args, self.treeView_sourcefiles)
         QWidget.setTabOrder(self.treeView_sourcefiles, self.toolButton_add_source_files)
         QWidget.setTabOrder(self.toolButton_add_source_files, self.toolButton_add_source_dirs)
         QWidget.setTabOrder(self.toolButton_add_source_dirs, self.toolButton_minus_source_files)
@@ -499,9 +488,6 @@ class Ui_Form(object):
         self.lineEdit_args.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Command line arguments (space-delimited) for the main program (optional). Use '@@' tags to refer to input files or URLs, see the User Guide for details.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.lineEdit_args.setPlaceholderText(QCoreApplication.translate("Form", u"Type command line arguments here...", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_add_cmdline_tag.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Insert @@ tags to command line arguments. See the User Guide for details.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.treeView_sourcefiles.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Other source files and/or directories (in addition to the main program file) <span style=\" font-weight:600;\">required</span> by the program.</p><p><span style=\" font-weight:600;\">Tip</span>: You can Drag &amp; Drop files and/or directories here from File Explorer.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

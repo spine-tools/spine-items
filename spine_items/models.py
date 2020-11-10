@@ -18,7 +18,6 @@ as well.
 :date:   5.6.2020
 """
 
-from itertools import takewhile
 from PySide2.QtCore import QAbstractListModel, QFileInfo, QModelIndex, Qt, Signal
 from PySide2.QtWidgets import QFileIconProvider
 
@@ -27,6 +26,8 @@ def _file_label(resource):
     """Picks a label for given file resource."""
     if resource.type_ == "file":
         return resource.path
+    if resource.type_ == "database":
+        return resource.url
     if resource.type_ in ("transient_file", "file_pattern"):
         label = resource.metadata.get("label")
         if label is None:
@@ -48,10 +49,10 @@ class FileListItem:
         is_pattern (bool): True if the file is actually a file name pattern
     """
 
-    def __init__(self, label, path, provider_name, is_pattern=False):
+    def __init__(self, label, path, provider_name, is_pattern=False, selected=False):
         self.label = label
         self.path = path
-        self.selected = True
+        self.selected = selected
         self.provider_name = provider_name
         self.is_pattern = is_pattern
 
@@ -71,6 +72,8 @@ class FileListItem:
         is_pattern = False
         if resource.type_ == "file":
             label = resource.path
+        elif resource.type_ == "database":
+            label = resource.url
         elif resource.type_ == "transient_file":
             label = _file_label(resource)
         elif resource.type_ == "file_pattern":
@@ -100,6 +103,9 @@ class FileListModel(QAbstractListModel):
 
     selected_state_changed = Signal(bool, str)
     """Emitted when a file check box state changes."""
+
+    _invalid_resource_types = ("database",)
+    _header_label = "Source files"
 
     def __init__(self):
         super().__init__()
@@ -147,7 +153,7 @@ class FileListModel(QAbstractListModel):
         """Returns header information."""
         if role != Qt.DisplayRole or orientation != Qt.Horizontal:
             return None
-        return "Source files"
+        return self._header_label
 
     def find_file(self, label):
         """Returns a file item with given label."""
@@ -172,7 +178,7 @@ class FileListModel(QAbstractListModel):
         updated = list()
         new = list()
         for resource in resources:
-            if resource.type_ not in ("file", "transient_file", "file_pattern"):
+            if resource.type_ in self._invalid_resource_types:
                 continue
             label = _file_label(resource)
             item = items.get(label)
@@ -195,12 +201,13 @@ class FileListModel(QAbstractListModel):
             label (str): item's label
             selected (bool): True to select the item, False to deselect
         """
-        row = len(list(takewhile(lambda item: item.label != label, self._files)))
-        if row < len(self._files):
-            item = self._files[row]
-            item.selected = selected
-            index = self.index(row, 0)
-            self.dataChanged.emit(index, index, [Qt.CheckStateRole])
+        row = next((k for k, item in enumerate(self._files) if item.label == label), None)
+        if row is None:
+            return
+        item = self._files[row]
+        item.selected = selected
+        index = self.index(row, 0)
+        self.dataChanged.emit(index, index, [Qt.CheckStateRole])
 
     def setData(self, index, value, role=Qt.EditRole):
         """Sets data in the model."""
@@ -214,5 +221,4 @@ class FileListModel(QAbstractListModel):
     def set_initial_state(self, selected_items):
         """Fills model with incomplete data; needs a call to :func:`update` to make the model usable."""
         for label, selected in selected_items.items():
-            self._files.append(FileListItem(label, label, ""))
-            self._files[-1].selected = selected
+            self._files.append(FileListItem(label, label, "", selected=selected))

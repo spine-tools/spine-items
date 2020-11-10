@@ -25,15 +25,13 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
-from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
-
 from spine_items import resources_icons_rc
 
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(390, 424)
+        Form.resize(408, 451)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -66,7 +64,7 @@ class Ui_Form(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 388, 402))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 406, 429))
         self.verticalLayout_17 = QVBoxLayout(self.scrollAreaWidgetContents_3)
         self.verticalLayout_17.setObjectName(u"verticalLayout_17")
         self.horizontalLayout_9 = QHBoxLayout()
@@ -111,30 +109,76 @@ class Ui_Form(object):
 
         self.verticalLayout_17.addLayout(self.horizontalLayout_9)
 
-        self.lineEdit_tool_args = PropertyQLineEdit(self.scrollAreaWidgetContents_3)
-        self.lineEdit_tool_args.setObjectName(u"lineEdit_tool_args")
-        self.lineEdit_tool_args.setClearButtonEnabled(True)
+        self.splitter = QSplitter(self.scrollAreaWidgetContents_3)
+        self.splitter.setObjectName(u"splitter")
+        self.splitter.setOrientation(Qt.Vertical)
+        self.treeView_cmdline_args = QTreeView(self.splitter)
+        self.treeView_cmdline_args.setObjectName(u"treeView_cmdline_args")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.treeView_cmdline_args.sizePolicy().hasHeightForWidth())
+        self.treeView_cmdline_args.setSizePolicy(sizePolicy3)
+        font2 = QFont()
+        font2.setPointSize(10)
+        self.treeView_cmdline_args.setFont(font2)
+        self.treeView_cmdline_args.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView_cmdline_args.setEditTriggers(QAbstractItemView.AnyKeyPressed|QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed)
+        self.treeView_cmdline_args.setDragDropMode(QAbstractItemView.DragDrop)
+        self.treeView_cmdline_args.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.treeView_cmdline_args.setTextElideMode(Qt.ElideLeft)
+        self.splitter.addWidget(self.treeView_cmdline_args)
+        self.treeView_cmdline_args.header().setMinimumSectionSize(26)
+        self.gridLayoutWidget = QWidget(self.splitter)
+        self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
+        self.gridLayout = QGridLayout(self.gridLayoutWidget)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.verticalLayout_17.addWidget(self.lineEdit_tool_args)
+        self.gridLayout.addItem(self.horizontalSpacer_2, 0, 1, 1, 1)
 
-        self.lineEdit_tool_spec_args = QLineEdit(self.scrollAreaWidgetContents_3)
-        self.lineEdit_tool_spec_args.setObjectName(u"lineEdit_tool_spec_args")
-        self.lineEdit_tool_spec_args.setEnabled(True)
-        self.lineEdit_tool_spec_args.setFont(font1)
-        self.lineEdit_tool_spec_args.setCursor(QCursor(Qt.ArrowCursor))
-        self.lineEdit_tool_spec_args.setFocusPolicy(Qt.NoFocus)
-        self.lineEdit_tool_spec_args.setReadOnly(True)
+        self.toolButton_add_file_path_arg = QToolButton(self.gridLayoutWidget)
+        self.toolButton_add_file_path_arg.setObjectName(u"toolButton_add_file_path_arg")
+        self.toolButton_add_file_path_arg.setMinimumSize(QSize(22, 22))
+        self.toolButton_add_file_path_arg.setMaximumSize(QSize(22, 22))
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/file-upload.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_add_file_path_arg.setIcon(icon1)
+        self.toolButton_add_file_path_arg.setIconSize(QSize(16, 16))
+        self.toolButton_add_file_path_arg.setPopupMode(QToolButton.InstantPopup)
 
-        self.verticalLayout_17.addWidget(self.lineEdit_tool_spec_args)
+        self.gridLayout.addWidget(self.toolButton_add_file_path_arg, 0, 0, 1, 1)
 
-        self.treeView_specification = QTreeView(self.scrollAreaWidgetContents_3)
-        self.treeView_specification.setObjectName(u"treeView_specification")
-        self.treeView_specification.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.treeView_specification.setIndentation(20)
-        self.treeView_specification.setUniformRowHeights(True)
-        self.treeView_specification.setAnimated(True)
+        self.toolButton_remove_arg = QToolButton(self.gridLayoutWidget)
+        self.toolButton_remove_arg.setObjectName(u"toolButton_remove_arg")
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/minus.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_remove_arg.setIcon(icon2)
 
-        self.verticalLayout_17.addWidget(self.treeView_specification)
+        self.gridLayout.addWidget(self.toolButton_remove_arg, 0, 2, 1, 1)
+
+        self.treeView_input_files = QTreeView(self.gridLayoutWidget)
+        self.treeView_input_files.setObjectName(u"treeView_input_files")
+        sizePolicy3.setHeightForWidth(self.treeView_input_files.sizePolicy().hasHeightForWidth())
+        self.treeView_input_files.setSizePolicy(sizePolicy3)
+        self.treeView_input_files.setFont(font2)
+        self.treeView_input_files.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView_input_files.setDragEnabled(False)
+        self.treeView_input_files.setDragDropMode(QAbstractItemView.DragOnly)
+        self.treeView_input_files.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.treeView_input_files.setTextElideMode(Qt.ElideLeft)
+        self.treeView_input_files.setIndentation(5)
+        self.treeView_input_files.setRootIsDecorated(False)
+        self.treeView_input_files.setUniformRowHeights(True)
+        self.treeView_input_files.setAnimated(False)
+        self.treeView_input_files.header().setMinimumSectionSize(26)
+
+        self.gridLayout.addWidget(self.treeView_input_files, 1, 0, 1, 3)
+
+        self.splitter.addWidget(self.gridLayoutWidget)
+
+        self.verticalLayout_17.addWidget(self.splitter)
 
         self.horizontalLayout_11 = QHBoxLayout()
         self.horizontalLayout_11.setSpacing(6)
@@ -145,11 +189,11 @@ class Ui_Form(object):
 
         self.pushButton_tool_results = QPushButton(self.scrollAreaWidgetContents_3)
         self.pushButton_tool_results.setObjectName(u"pushButton_tool_results")
-        sizePolicy3 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.pushButton_tool_results.sizePolicy().hasHeightForWidth())
-        self.pushButton_tool_results.setSizePolicy(sizePolicy3)
+        sizePolicy4 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.pushButton_tool_results.sizePolicy().hasHeightForWidth())
+        self.pushButton_tool_results.setSizePolicy(sizePolicy4)
         self.pushButton_tool_results.setMinimumSize(QSize(75, 23))
         self.pushButton_tool_results.setMaximumSize(QSize(75, 23))
 
@@ -165,13 +209,13 @@ class Ui_Form(object):
 
         self.verticalLayout_17.addWidget(self.line_4)
 
+        self.horizontalLayout_15 = QHBoxLayout()
+        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
         self.label_2 = QLabel(self.scrollAreaWidgetContents_3)
         self.label_2.setObjectName(u"label_2")
 
-        self.verticalLayout_17.addWidget(self.label_2)
+        self.horizontalLayout_15.addWidget(self.label_2)
 
-        self.horizontalLayout_15 = QHBoxLayout()
-        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
         self.radioButton_execute_in_work = QRadioButton(self.scrollAreaWidgetContents_3)
         self.radioButton_execute_in_work.setObjectName(u"radioButton_execute_in_work")
         self.radioButton_execute_in_work.setChecked(True)
@@ -191,9 +235,9 @@ class Ui_Form(object):
         self.toolButton_tool_open_dir.setObjectName(u"toolButton_tool_open_dir")
         self.toolButton_tool_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_tool_open_dir.setMaximumSize(QSize(22, 22))
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_tool_open_dir.setIcon(icon1)
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_tool_open_dir.setIcon(icon3)
 
         self.horizontalLayout_15.addWidget(self.toolButton_tool_open_dir)
 
@@ -206,12 +250,8 @@ class Ui_Form(object):
 
         QWidget.setTabOrder(self.scrollArea_3, self.comboBox_tool)
         QWidget.setTabOrder(self.comboBox_tool, self.toolButton_tool_specification)
-        QWidget.setTabOrder(self.toolButton_tool_specification, self.lineEdit_tool_args)
-        QWidget.setTabOrder(self.lineEdit_tool_args, self.treeView_specification)
-        QWidget.setTabOrder(self.treeView_specification, self.pushButton_tool_results)
-        QWidget.setTabOrder(self.pushButton_tool_results, self.radioButton_execute_in_work)
-        QWidget.setTabOrder(self.radioButton_execute_in_work, self.radioButton_execute_in_source)
-        QWidget.setTabOrder(self.radioButton_execute_in_source, self.toolButton_tool_open_dir)
+        QWidget.setTabOrder(self.toolButton_tool_specification, self.pushButton_tool_results)
+        QWidget.setTabOrder(self.pushButton_tool_results, self.toolButton_tool_open_dir)
 
         self.retranslateUi(Form)
 
@@ -229,13 +269,13 @@ class Ui_Form(object):
         self.toolButton_tool_specification.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification options.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
-        self.lineEdit_tool_args.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool command line arguments</p></body></html>", None))
+        self.toolButton_add_file_path_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Append selected input file paths to the list of command line args</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.lineEdit_tool_args.setPlaceholderText(QCoreApplication.translate("Form", u"Tool command line args", None))
+        self.toolButton_add_file_path_arg.setText("")
 #if QT_CONFIG(tooltip)
-        self.lineEdit_tool_spec_args.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification command line arguments. </p><p>Modify by editing the selected Tool specification.</p></body></html>", None))
+        self.toolButton_remove_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected tool command line args</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.lineEdit_tool_spec_args.setPlaceholderText(QCoreApplication.translate("Form", u"Tool Specification command line args", None))
+        self.toolButton_remove_arg.setText(QCoreApplication.translate("Form", u"...", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

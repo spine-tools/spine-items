@@ -18,32 +18,7 @@ Classes for custom context menus and pop-up menus.
 import os
 from PySide2.QtCore import QTimeLine, QUrl, Slot
 from spinetoolbox.helpers import open_url
-from spinetoolbox.widgets.custom_menus import (
-    CustomContextMenu,
-    ProjectItemContextMenu,
-    ItemSpecificationMenu,
-    CustomPopupMenu,
-)
-
-
-class ToolPropertiesContextMenu(CustomContextMenu):
-    """Common context menu class for all Tool QTreeViews in Tool properties.
-
-    Attributes:
-        parent (QWidget): Parent for menu widget (ToolboxUI)
-        position (QPoint): Position on screen
-        index (QModelIndex): Index of item that requested the context-menu
-    """
-
-    def __init__(self, parent, position, index):
-        """Class constructor."""
-        super().__init__(parent, position)
-        self.add_action("Edit Tool specification")
-        self.add_action("Edit main program file...")
-        self.add_action("Open main program directory...")
-        self.add_action("Open Tool specification file...")
-        self.addSeparator()
-        self.add_action("Open directory...")
+from spinetoolbox.widgets.custom_menus import ProjectItemContextMenu, ItemSpecificationMenu, CustomPopupMenu
 
 
 class ToolContextMenu(ProjectItemContextMenu):

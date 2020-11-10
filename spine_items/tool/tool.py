@@ -17,19 +17,20 @@ Tool class.
 """
 import os
 import pathlib
-from PySide2.QtCore import Slot, Qt, QFileInfo, QTimeLine
-from PySide2.QtGui import QStandardItemModel, QStandardItem
-from PySide2.QtWidgets import QFileIconProvider
+from collections import Counter
+from PySide2.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.utils.command_line_arguments import split_cmdline_args
+from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file, find_last_output_files, is_pattern
+from .mvcmodels import CommandLineArgsModel, InputFileListModel
 
 
 class Tool(ProjectItem):
@@ -62,31 +63,25 @@ class Tool(ProjectItem):
         """
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
-        self.last_return_code = None
-        self.source_file_model = QStandardItemModel()
-        self.populate_source_file_model(None)
-        self.input_file_model = QStandardItemModel()
-        self.populate_input_file_model(None)
-        self.opt_input_file_model = QStandardItemModel()
-        self.populate_opt_input_file_model(None)
-        self.output_file_model = QStandardItemModel()
-        self.populate_output_file_model(None)
-        self.specification_model = QStandardItemModel()
-        self.populate_specification_model(False)
         self.execute_in_work = None
         self.undo_execute_in_work = None
-        self.source_files = list()
-        self.cmd_line_args = cmd_line_args if cmd_line_args is not None else list()
         self._specification = self._toolbox.specification_model.find_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
                 f"Tool <b>{self.name}</b> should have a Tool specification <b>{specification_name}</b> but it was not found"
             )
-        self.do_set_specification(self._specification)
-        self.do_update_execution_mode(execute_in_work)
+        if cmd_line_args is None:
+            cmd_line_args = []
+        self.cmd_line_args = cmd_line_args
+        self._cmdline_args_model = CommandLineArgsModel(self)
+        self._cmdline_args_model.args_updated.connect(self._push_update_tool_cmd_lind_args_command)
+        self._populate_cmdline_args_model()
+        self._input_file_model = InputFileListModel()
         self.specification_options_popup_menu = None
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
+        self.do_set_specification(self._specification)
+        self.do_update_execution_mode(execute_in_work)
 
     @staticmethod
     def item_type():
@@ -106,16 +101,19 @@ class Tool(ProjectItem):
         s[self._properties_ui.pushButton_tool_results.clicked] = self.open_results
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
-        s[self._properties_ui.lineEdit_tool_args.editingFinished] = self.tool_args_editing_finished
-        s[self._properties_ui.lineEdit_tool_args.textEdited] = self.tool_args_text_edited
+        s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
+        s[self._properties_ui.treeView_input_files.doubleClicked] = self._add_file_path_arg
+        s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
         return s
 
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
         self._properties_ui.label_tool_name.setText(self.name)
-        self._properties_ui.treeView_specification.setModel(self.specification_model)
+        self._properties_ui.treeView_input_files.setModel(self._input_file_model)
+        self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
+        self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
-        self.update_tool_ui()
+        self._update_tool_ui()
 
     @Slot(bool)
     def update_execution_mode(self, checked):
@@ -151,27 +149,23 @@ class Tool(ProjectItem):
         spec = self._toolbox.specification_model.find_specification(text)
         self.set_specification(spec)
 
-    @Slot(str)
-    def tool_args_text_edited(self, txt):
-        """Calls the editingFinished slot when
-        the line edit is cleared. Needed in order to
-        clear the cmd line args list in case the line
-        edit clear button is clicked.
+    @Slot(bool)
+    def _remove_arg(self, _=False):
+        removed_rows = [index.row() for index in self._properties_ui.treeView_cmdline_args.selectedIndexes()]
+        cmd_line_args = [arg for row, arg in enumerate(self.cmd_line_args) if row not in removed_rows]
+        self._push_update_tool_cmd_lind_args_command(cmd_line_args)
 
-        Args:
-            txt (str): Text in line edit after edit
-        """
-        if txt == "":
-            self.tool_args_editing_finished()
+    @Slot("QModelIndex")
+    def _add_file_path_arg(self, index):
+        self._push_update_tool_cmd_lind_args_command(self.cmd_line_args + [index.data()])
 
-    @Slot()
-    def tool_args_editing_finished(self):
-        """Processed when the user has finished editing
-        the cmd line args line edit. Pushes a new command
-        to undo stack if the args were changed.
-        """
-        txt = self._properties_ui.lineEdit_tool_args.text()
-        cmd_line_args = split_cmdline_args(txt)
+    @Slot(bool)
+    def _add_selected_file_path_args(self, _=False):
+        new_args = [index.data() for index in self._properties_ui.treeView_input_files.selectedIndexes()]
+        self._push_update_tool_cmd_lind_args_command(self.cmd_line_args + new_args)
+
+    @Slot(list)
+    def _push_update_tool_cmd_lind_args_command(self, cmd_line_args):
         if self.cmd_line_args == cmd_line_args:
             return
         self._toolbox.undo_stack.push(UpdateToolCmdLineArgsCommand(self, cmd_line_args))
@@ -185,13 +179,24 @@ class Tool(ProjectItem):
         self.cmd_line_args = cmd_line_args
         if not self._active:
             return
-        self._properties_ui.lineEdit_tool_args.setText(" ".join(self.cmd_line_args))
+        self._populate_cmdline_args_model()
+
+    def _populate_cmdline_args_model(self):
+        spec_args = self.specification().cmdline_args if self.specification() else []
+        tool_args = self.cmd_line_args
+        if self._properties_ui:
+            pos = self._properties_ui.treeView_cmdline_args.verticalScrollBar().sliderPosition()
+        self._cmdline_args_model.reset_model(spec_args, tool_args)
+        if self._properties_ui:
+            self._properties_ui.treeView_cmdline_args.expandAll()
+            self._properties_ui.treeView_cmdline_args.verticalScrollBar().setSliderPosition(pos)
+            # TODO: self._properties_ui.treeView_cmdline_args.setFocus()
 
     def do_set_specification(self, specification):
         """see base class"""
         super().do_set_specification(specification)
-        self.update_tool_models()
-        self.update_tool_ui()
+        self._populate_cmdline_args_model()
+        self._update_tool_ui()
         if self.undo_execute_in_work is None:
             self.undo_execute_in_work = self.execute_in_work
         if specification:
@@ -204,46 +209,25 @@ class Tool(ProjectItem):
         self.do_update_execution_mode(self.undo_execute_in_work)
         self.undo_execute_in_work = None
 
-    def update_tool_ui(self):
+    def _update_tool_ui(self):
         """Updates Tool UI to show Tool specification details. Used when Tool specification is changed.
         Overrides execution mode (work or source) with the specification default."""
         if not self._active:
             return
         if not self._properties_ui:
-            # This happens when calling self.set_specification() in the __init__ method,
-            # because the UI only becomes available *after* adding the item to the project_item_model... problem??
             return
         if not self.specification():
             self._properties_ui.comboBox_tool.setCurrentIndex(-1)
-            self._properties_ui.lineEdit_tool_spec_args.setText("")
             self.do_update_execution_mode(True)
             spec_model_index = None
+            self.do_update_execution_mode(True)
             self._properties_ui.toolButton_tool_specification.setEnabled(False)
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
-            self._properties_ui.lineEdit_tool_spec_args.setText(" ".join(self.specification().cmdline_args))
             spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
             self.specification_options_popup_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
             self._properties_ui.toolButton_tool_specification.setEnabled(True)
             self._properties_ui.toolButton_tool_specification.setMenu(self.specification_options_popup_menu)
-        self._properties_ui.treeView_specification.expandAll()
-        self._properties_ui.lineEdit_tool_args.setText(" ".join(self.cmd_line_args))
-
-    def update_tool_models(self):
-        """Update Tool models with Tool specification details. Used when Tool specification is changed.
-        Overrides execution mode (work or source) with the specification default."""
-        if not self.specification():
-            self.populate_source_file_model(None)
-            self.populate_input_file_model(None)
-            self.populate_opt_input_file_model(None)
-            self.populate_output_file_model(None)
-            self.populate_specification_model(populate=False)
-        else:
-            self.populate_source_file_model(self.specification().includes)
-            self.populate_input_file_model(self.specification().inputfiles)
-            self.populate_opt_input_file_model(self.specification().inputfiles_opt)
-            self.populate_output_file_model(self.specification().outputfiles)
-            self.populate_specification_model(populate=True)
 
     @Slot(bool)
     def open_results(self, checked=False):
@@ -304,97 +288,6 @@ class Tool(ProjectItem):
         """Returns Tool specification."""
         return self._specification
 
-    def populate_source_file_model(self, items):
-        """Add required source files (includes) into a model.
-        If items is None or an empty list, model is cleared."""
-        self.source_file_model.clear()
-        if items is not None:
-            for item in items:
-                qitem = QStandardItem(item)
-                qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
-                self.source_file_model.appendRow(qitem)
-
-    def populate_input_file_model(self, items):
-        """Add required Tool input files into a model.
-        If items is None or an empty list, model is cleared."""
-        self.input_file_model.clear()
-        if items is not None:
-            for item in items:
-                qitem = QStandardItem(item)
-                qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
-                self.input_file_model.appendRow(qitem)
-
-    def populate_opt_input_file_model(self, items):
-        """Add optional Tool specification files into a model.
-        If items is None or an empty list, model is cleared."""
-        self.opt_input_file_model.clear()
-        if items is not None:
-            for item in items:
-                qitem = QStandardItem(item)
-                qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
-                self.opt_input_file_model.appendRow(qitem)
-
-    def populate_output_file_model(self, items):
-        """Add Tool output files into a model.
-         If items is None or an empty list, model is cleared."""
-        self.output_file_model.clear()
-        if items is not None:
-            for item in items:
-                qitem = QStandardItem(item)
-                qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
-                self.output_file_model.appendRow(qitem)
-
-    def populate_specification_model(self, populate):
-        """Add all tool specifications to a single QTreeView.
-
-        Args:
-            populate (bool): False to clear model, True to populate.
-        """
-        self.specification_model.clear()
-        self.specification_model.setHorizontalHeaderItem(0, QStandardItem("Tool specification"))  # Add header
-        # Add category items
-        source_file_category_item = QStandardItem("Source files")
-        input_category_item = QStandardItem("Input files")
-        opt_input_category_item = QStandardItem("Optional input files")
-        output_category_item = QStandardItem("Output files")
-        self.specification_model.appendRow(source_file_category_item)
-        self.specification_model.appendRow(input_category_item)
-        self.specification_model.appendRow(opt_input_category_item)
-        self.specification_model.appendRow(output_category_item)
-        if populate:
-            if self.source_file_model.rowCount() > 0:
-                for row in range(self.source_file_model.rowCount()):
-                    text = self.source_file_model.item(row).data(Qt.DisplayRole)
-                    qitem = QStandardItem(text)
-                    qitem.setFlags(~Qt.ItemIsEditable)
-                    qitem.setData(QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole)
-                    source_file_category_item.appendRow(qitem)
-            if self.input_file_model.rowCount() > 0:
-                for row in range(self.input_file_model.rowCount()):
-                    text = self.input_file_model.item(row).data(Qt.DisplayRole)
-                    qitem = QStandardItem(text)
-                    qitem.setFlags(~Qt.ItemIsEditable)
-                    qitem.setData(QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole)
-                    input_category_item.appendRow(qitem)
-            if self.opt_input_file_model.rowCount() > 0:
-                for row in range(self.opt_input_file_model.rowCount()):
-                    text = self.opt_input_file_model.item(row).data(Qt.DisplayRole)
-                    qitem = QStandardItem(text)
-                    qitem.setFlags(~Qt.ItemIsEditable)
-                    qitem.setData(QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole)
-                    opt_input_category_item.appendRow(qitem)
-            if self.output_file_model.rowCount() > 0:
-                for row in range(self.output_file_model.rowCount()):
-                    text = self.output_file_model.item(row).data(Qt.DisplayRole)
-                    qitem = QStandardItem(text)
-                    qitem.setFlags(~Qt.ItemIsEditable)
-                    qitem.setData(QFileIconProvider().icon(QFileInfo(text)), Qt.DecorationRole)
-                    output_category_item.appendRow(qitem)
-
     def update_name_label(self):
         """Update Tool tab name label. Used only when renaming project items."""
         self._properties_ui.label_tool_name.setText(self.name)
@@ -419,9 +312,8 @@ class Tool(ProjectItem):
             )
             return []
         resources = list()
-        last_output_files = find_last_output_files(self._specification.outputfiles, self.output_dir)
-        for i in range(self.output_file_model.rowCount()):
-            out_file_label = self.output_file_model.item(i, 0).data(Qt.DisplayRole)
+        last_output_files = find_last_output_files(self.specification().outputfiles, self.output_dir)
+        for out_file_label in self.specification().outputfiles:
             latest_files = last_output_files.get(out_file_label, list())
             if is_pattern(out_file_label):
                 if not latest_files:
@@ -463,9 +355,10 @@ class Tool(ProjectItem):
         Returns:
             Dictionary mapping required files to path where they are found, or to None if not found
         """
+        if not self.specification():
+            return {}
         file_paths = dict()
-        for i in range(self.input_file_model.rowCount()):
-            req_file_path = self.input_file_model.item(i, 0).data(Qt.DisplayRole)
+        for req_file_path in self.specification().inputfiles:
             # Just get the filename if there is a path attached to the file
             _, filename = os.path.split(req_file_path)
             if not filename:
@@ -474,16 +367,18 @@ class Tool(ProjectItem):
             file_paths[req_file_path] = find_file(filename, resources)
         return file_paths
 
-    def _do_handle_dag_changed(self, resources):
+    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
         """See base class."""
         if not self.specification():
+            self.add_notification("This Tool does not have a specification. Set it in the Tool Properties Panel.")
+        resources = upstream_resources + downstream_resources
+        self._input_file_model.update(resources)
+        if not resources:
             self.add_notification(
-                "This Tool is not connected to a Tool specification. Set it in the Tool Properties Panel."
+                "This Tool does not have any input data. Connect Items to this Tool to use their data as input."
             )
-            return
+        self._notify_if_duplicate_file_paths()
         file_paths = self._find_input_files(resources)
-        duplicates = self._file_path_duplicates(file_paths)
-        self._notify_if_duplicate_file_paths(duplicates)
         file_paths = flatten_file_path_duplicates(file_paths, self._logger)
         not_found = [k for k, v in file_paths.items() if v is None]
         if not_found:
@@ -491,6 +386,19 @@ class Tool(ProjectItem):
                 "File(s) {0} needed to execute this Tool are not provided by any input item. "
                 "Connect items that provide the required files to this Tool.".format(", ".join(not_found))
             )
+
+    def _notify_if_duplicate_file_paths(self):
+        """Adds a notification if file_list contains duplicate entries."""
+        labels = list()
+        for item in self._input_file_model.files:
+            labels.append(item.label)
+        file_counter = Counter(labels)
+        duplicates = list()
+        for label, count in file_counter.items():
+            if count > 1:
+                duplicates.append(label)
+        if duplicates:
+            self.add_notification("Duplicate input files:<br>{}".format("<br>".join(duplicates)))
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
@@ -500,7 +408,10 @@ class Tool(ProjectItem):
         else:
             d["specification"] = self.specification().name
         d["execute_in_work"] = self.execute_in_work
-        d["cmd_line_args"] = split_cmdline_args(" ".join(self.cmd_line_args))
+        # NOTE: We enclose the arguments in quotes because that preserves the args that have spaces
+        cmd_line_args = [f'"{arg}"' for arg in self.cmd_line_args]
+        cmd_line_args = split_cmdline_args(" ".join(cmd_line_args))
+        d["cmd_line_args"] = [serialize_path(arg, self._project.project_dir) for arg in cmd_line_args]
         return d
 
     @staticmethod
@@ -509,7 +420,8 @@ class Tool(ProjectItem):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict.get("specification", "")
         execute_in_work = item_dict.get("execute_in_work", True)
-        cmd_line_args = item_dict.get("cmd_line_args")
+        cmd_line_args = item_dict.get("cmd_line_args", [])
+        cmd_line_args = [deserialize_path(arg, project.project_dir) for arg in cmd_line_args]
         return Tool(
             name, description, x, y, toolbox, project, logger, specification_name, execute_in_work, cmd_line_args
         )
@@ -534,11 +446,7 @@ class Tool(ProjectItem):
         if action == "Results...":
             self.open_results()
         elif action == "Stop":
-            # Check that the wheel is still visible, because execution may have stopped before the user clicks Stop
-            if self.get_icon().timer.state() != QTimeLine.Running:
-                self._logger.msg.emit(f"Tool <b>{self.name}</b> is not running")
-            else:
-                self.stop_execution()  # Proceed with stopping
+            self.stop_execution()  # Proceed with stopping
         elif action == "Edit Tool specification":
             self.edit_specification()
         elif action == "Edit main program file...":
@@ -590,22 +498,6 @@ class Tool(ProjectItem):
     def default_name_prefix():
         """see base class"""
         return "Tool"
-
-    @staticmethod
-    def _file_path_duplicates(file_paths):
-        """Returns a list of lists of duplicate items in file_paths."""
-        duplicates = list()
-        for paths in file_paths.values():
-            if paths is not None and len(paths) > 1:
-                duplicates.append(paths)
-        return duplicates
-
-    def _notify_if_duplicate_file_paths(self, duplicates):
-        """Adds a notification if duplicates contains items."""
-        if not duplicates:
-            return
-        for duplicate in duplicates:
-            self.add_notification("Duplicate input files from upstream items:<br>{}".format("<br>".join(duplicate)))
 
     @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):

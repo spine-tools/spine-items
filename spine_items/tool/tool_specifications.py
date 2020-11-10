@@ -21,7 +21,7 @@ import logging
 import os
 import json
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
-from spine_engine.utils.command_line_arguments import split_cmdline_args, expand_tags
+from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .item_info import ItemInfo
 from .tool_instance import GAMSToolInstance, JuliaToolInstance, PythonToolInstance, ExecutableToolInstance
 
@@ -187,30 +187,6 @@ class ToolSpecification(ProjectItemSpecification):
                 except KeyError:
                     pass
         return kwargs
-
-    def get_cmdline_args(self, optional_input_files, input_urls, output_urls):
-        """
-        Returns tool specification's command line args as list.
-
-        Replaces special tags in arguments:
-
-        - @@optional_inputs@@ expands to a space-separated list of Tool's optional input files
-        - @@url:<Data Store name>@@ expands to the URL provided by a named data store
-        - @@url_inputs@@ expands to a space-separated list of Tool's input database URLs
-        - @@url_outputs@@ expands to a space-separated list of Tool's output database URLs
-
-        Args:
-            optional_input_files (list): a list of Tool's optional input file names
-            input_urls (dict): a mapping from URL provider (input Data Store name) to URL string
-            output_urls (dict): a mapping from URL provider (output Data Store name) to URL string
-        Returns:
-            list: a list of expanded command line arguments
-        """
-        tags_expanded, args = expand_tags(self.cmdline_args, optional_input_files, input_urls, output_urls)
-        while tags_expanded:
-            # Keep expanding until there is no tag left to expand.
-            tags_expanded, args = expand_tags(args, optional_input_files, input_urls, output_urls)
-        return args
 
     def create_tool_instance(self, basedir):
         """Returns an instance of the tool specification configured to run in the given directory.

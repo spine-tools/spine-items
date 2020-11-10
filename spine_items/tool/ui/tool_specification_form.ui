@@ -235,26 +235,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_add_cmdline_tag">
-         <property name="minimumSize">
-          <size>
-           <width>22</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Insert @@ tags to command line arguments. See the User Guide for details.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="icon">
-          <iconset resource="../../ui/resources/resources_icons.qrc">
-           <normaloff>:/icons/double-at.svg</normaloff>:/icons/double-at.svg</iconset>
-         </property>
-         <property name="popupMode">
-          <enum>QToolButton::InstantPopup</enum>
-         </property>
-        </widget>
-       </item>
       </layout>
      </item>
      <item>
@@ -962,12 +942,12 @@
    <header>spinetoolbox/widgets/custom_qlineedits.h</header>
   </customwidget>
   <customwidget>
-   <class>SourcesTreeView</class>
+   <class>CustomTreeView</class>
    <extends>QTreeView</extends>
    <header>spinetoolbox/widgets/custom_qtreeview.h</header>
   </customwidget>
   <customwidget>
-   <class>CustomTreeView</class>
+   <class>SourcesTreeView</class>
    <extends>QTreeView</extends>
    <header>spinetoolbox/widgets/custom_qtreeview.h</header>
   </customwidget>
@@ -980,7 +960,6 @@
   <tabstop>lineEdit_main_program</tabstop>
   <tabstop>toolButton_add_main_program</tabstop>
   <tabstop>lineEdit_args</tabstop>
-  <tabstop>toolButton_add_cmdline_tag</tabstop>
   <tabstop>treeView_sourcefiles</tabstop>
   <tabstop>toolButton_add_source_files</tabstop>
   <tabstop>toolButton_add_source_dirs</tabstop>

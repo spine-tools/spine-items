@@ -59,14 +59,14 @@ class Importer(ProjectItem):
         Args:
             name (str): Project item name
             description (str): Project item description
-            file_selection (dict): a map from label to a bool indicating if the file item is checked
             x (float): Initial icon scene X coordinate
             y (float): Initial icon scene Y coordinate
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
             logger (LoggerInterface): a logger instance
+            specification_name (str, optional): a spec name
             cancel_on_error (bool): if True the item's execution will stop on import error
-            mapping_settings (dict, optional): a map from label to its mappings
+            file_selection (dict): a map from label to a bool indicating if the file item is checked
        """
         super().__init__(name, description, x, y, project, logger)
         # Make logs subdirectory for this item
@@ -243,8 +243,12 @@ class Importer(ProjectItem):
         """Makes changes to file selection undoable."""
         self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self, selected, label))
 
-    def _do_handle_dag_changed(self, resources):
+    def _do_handle_dag_changed(self, resources, _):
         """See base class."""
+        if not self.specification():
+            self.add_notification(
+                "This Importer does not have a specification. Set it in the Importer Properties Panel."
+            )
         self._file_model.update(resources)
         self._notify_if_duplicate_file_paths()
         if self._file_model.rowCount() == 0:

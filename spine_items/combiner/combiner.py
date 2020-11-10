@@ -146,7 +146,7 @@ class Combiner(ProjectItem):
             cookie = self
             self._project.db_mngr.session_committed.emit(committed_db_maps, cookie)
 
-    def _do_handle_dag_changed(self, resources):
+    def _do_handle_dag_changed(self, resources, _):
         """Update the list of references that this item is viewing."""
         self._update_references_list(resources)
         if not self._references:
