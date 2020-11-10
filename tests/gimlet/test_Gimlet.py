@@ -109,24 +109,6 @@ class TestGimlet(unittest.TestCase):
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.gimlet.data_dir)  # Check data dir
 
-    def test_split_gimlet_cmd(self):
-        # Without expandable tags
-        splitted = self.gimlet._split_gimlet_cmd("--input=data.dat -h 5")
-        self.assertEqual(["--input=data.dat", "-h", "5"], splitted)
-        splitted = self.gimlet._split_gimlet_cmd('--output="a long file name.txt"')
-        self.assertEqual(["--output=a long file name.txt"], splitted)
-        splitted = self.gimlet._split_gimlet_cmd("--file='file name with spaces.dat' -i 3")
-        self.assertEqual(["--file=file name with spaces.dat", "-i", "3"], splitted)
-        splitted = self.gimlet._split_gimlet_cmd("'quotation \"within\" a quotation'")
-        self.assertEqual(['quotation "within" a quotation'], splitted)
-        # With expandable tags
-        splitted = self.gimlet._split_gimlet_cmd("@@optional_inputs@@")
-        self.assertEqual(["@@optional_inputs@@"], splitted)
-        splitted = self.gimlet._split_gimlet_cmd("@@url:database name with spaces@@")
-        self.assertEqual(["@@url:database name with spaces@@"], splitted)
-        splitted = self.gimlet._split_gimlet_cmd("@@url:spaced name@@ -a @@url:another spaced tag@@")
-        self.assertEqual(["@@url:spaced name@@", "-a", "@@url:another spaced tag@@"], splitted)
-
 
 if __name__ == "__main__":
     unittest.main()

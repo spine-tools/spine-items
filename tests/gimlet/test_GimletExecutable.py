@@ -56,6 +56,7 @@ class TestGimletExecutable(unittest.TestCase):
             "shell_index": 0,
             "cmd": "dir",
             "selections": selections,
+            "cmd_line_args": ["--show-hidden"],
             "work_dir_mode": True,
         }
         mock_settings = _MockSettings()
@@ -73,7 +74,7 @@ class TestGimletExecutable(unittest.TestCase):
             self.assertEqual("cmd.exe", item.shell_name)
             self.assertTrue(os.path.join(temp_dir, "G", "work"), item._work_dir)
             self.assertIsInstance(item._selected_files, list)
-            self.assertEqual(item.cmd_list, ["dir"])
+            self.assertEqual(item.cmd_list, ["dir", "--show-hidden"])
             # Modify item_dict
             item_dict["use_shell"] = False
             item_dict["work_dir_mode"] = False

@@ -179,87 +179,40 @@ class TestTool(unittest.TestCase):
 
     def _assert_is_simple_exec_tool(self, tool):
         """Assert that the given tool has the simple_exec specification."""
-        # Check internal models
-        source_files = [x.text() for x in tool.source_file_model.findItems("*", Qt.MatchWildcard)]
-        input_files = [x.text() for x in tool.input_file_model.findItems("*", Qt.MatchWildcard)]
-        opt_input_files = [x.text() for x in tool.opt_input_file_model.findItems("*", Qt.MatchWildcard)]
-        output_files = [x.text() for x in tool.output_file_model.findItems("*", Qt.MatchWildcard)]
+        # Check tool spec
+        source_files = tool.specification().includes
+        input_files = tool.specification().inputfiles
+        opt_input_files = tool.specification().inputfiles_opt
+        output_files = tool.specification().outputfiles
         self.assertEqual(source_files, ["main.sh"])
         self.assertIn("input1.csv", input_files)
         self.assertIn("input2.csv", input_files)
-        self.assertEqual(opt_input_files, ["opt_input.csv"])
+        self.assertEqual(opt_input_files, {"opt_input.csv"})
         self.assertIn("output1.csv", output_files)
         self.assertIn("output2.csv", output_files)
-        # Check specification model
-        model = tool.specification_model
-        root = model.invisibleRootItem()
-        categories = [root.child(i).text() for i in range(model.rowCount())]
-        self.assertIn("Source files", categories)
-        self.assertIn("Input files", categories)
-        self.assertIn("Optional input files", categories)
-        self.assertIn("Output files", categories)
-        source_files_cat = model.findItems("Source files", Qt.MatchExactly)[0]
-        input_files_cat = model.findItems("Input files", Qt.MatchExactly)[0]
-        opt_input_files_cat = model.findItems("Optional input files", Qt.MatchExactly)[0]
-        output_files_cat = model.findItems("Output files", Qt.MatchExactly)[0]
-        source_files = [source_files_cat.child(i).text() for i in range(source_files_cat.rowCount())]
-        input_files = [input_files_cat.child(i).text() for i in range(input_files_cat.rowCount())]
-        opt_input_files = [opt_input_files_cat.child(i).text() for i in range(opt_input_files_cat.rowCount())]
-        output_files = [output_files_cat.child(i).text() for i in range(output_files_cat.rowCount())]
-        self.assertEqual(source_files, ["main.sh"])
-        self.assertIn("input1.csv", input_files)
-        self.assertIn("input2.csv", input_files)
-        self.assertEqual(opt_input_files, ["opt_input.csv"])
-        self.assertIn("output1.csv", output_files)
-        self.assertIn("output2.csv", output_files)
+        # Check cmdline model
+        spec_args_root = tool._cmdline_args_model.invisibleRootItem().child(0)
+        self.assertEqual(spec_args_root.rowCount(), 1)
+        cmdline_args = spec_args_root.child(0).text()
+        self.assertEqual(cmdline_args, "<args>")
         # Check ui
         combox_text = tool._properties_ui.comboBox_tool.currentText()
-        cmdline_args = tool._properties_ui.lineEdit_tool_spec_args.text()
         in_work = tool._properties_ui.radioButton_execute_in_work.isChecked()
         in_source = tool._properties_ui.radioButton_execute_in_source.isChecked()
         self.assertEqual(combox_text, "simple_exec")
-        self.assertEqual(cmdline_args, "<args>")
         self.assertFalse(in_work)
         self.assertTrue(in_source)
 
     def _assert_is_no_tool(self, tool):
         """Assert that the given tool has no tool specification."""
-        # Check internal models
-        source_files = [x.text() for x in tool.source_file_model.findItems("*", Qt.MatchWildcard)]
-        input_files = [x.text() for x in tool.input_file_model.findItems("*", Qt.MatchWildcard)]
-        opt_input_files = [x.text() for x in tool.opt_input_file_model.findItems("*", Qt.MatchWildcard)]
-        output_files = [x.text() for x in tool.output_file_model.findItems("*", Qt.MatchWildcard)]
-        self.assertEqual(source_files, [])
-        self.assertEqual(input_files, [])
-        self.assertEqual(opt_input_files, [])
-        self.assertEqual(output_files, [])
-        # Check specification model
-        model = tool.specification_model
-        root = model.invisibleRootItem()
-        categories = [root.child(i).text() for i in range(model.rowCount())]
-        self.assertIn("Source files", categories)
-        self.assertIn("Input files", categories)
-        self.assertIn("Optional input files", categories)
-        self.assertIn("Output files", categories)
-        source_files_cat = model.findItems("Source files", Qt.MatchExactly)[0]
-        input_files_cat = model.findItems("Input files", Qt.MatchExactly)[0]
-        opt_input_files_cat = model.findItems("Optional input files", Qt.MatchExactly)[0]
-        output_files_cat = model.findItems("Output files", Qt.MatchExactly)[0]
-        source_files = [source_files_cat.child(i).text() for i in range(source_files_cat.rowCount())]
-        input_files = [input_files_cat.child(i).text() for i in range(input_files_cat.rowCount())]
-        opt_input_files = [opt_input_files_cat.child(i).text() for i in range(opt_input_files_cat.rowCount())]
-        output_files = [output_files_cat.child(i).text() for i in range(output_files_cat.rowCount())]
-        self.assertEqual(source_files, [])
-        self.assertEqual(input_files, [])
-        self.assertEqual(opt_input_files, [])
-        self.assertEqual(output_files, [])
+        # Check cmdline model
+        tool_args_root = tool._cmdline_args_model.invisibleRootItem().child(1)
+        self.assertEqual(tool_args_root.rowCount(), 1)  # The "Type new arg here..." item
         # Check ui
         combox_text = tool._properties_ui.comboBox_tool.currentText()
-        cmdline_args = tool._properties_ui.lineEdit_tool_args.text()
         in_work = tool._properties_ui.radioButton_execute_in_work.isChecked()
         in_source = tool._properties_ui.radioButton_execute_in_source.isChecked()
         self.assertEqual(combox_text, "")
-        self.assertEqual(cmdline_args, "")
         self.assertTrue(in_work)
         self.assertFalse(in_source)
 
