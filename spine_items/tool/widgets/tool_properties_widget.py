@@ -16,7 +16,7 @@ Tool properties widget.
 :date:   12.9.2019
 """
 
-from PySide2.QtWidgets import QWidget, QTreeView
+from PySide2.QtWidgets import QWidget
 from PySide2.QtCore import Slot
 from spinetoolbox.config import TREEVIEW_HEADER_SS
 
@@ -49,9 +49,3 @@ class ToolPropertiesWidget(QWidget):
     def update_combo_box_tool_model(self):
         model = self._toolbox.filtered_spec_factory_models["Tool"]
         self.ui.comboBox_tool.setModel(model)
-
-
-class ArgsTreeView(QTreeView):
-    def dragEnterEvent(self, event):
-        super().dragEnterEvent(event)
-        event.accept()

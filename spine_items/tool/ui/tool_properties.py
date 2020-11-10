@@ -25,7 +25,7 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
-from ..widgets.tool_properties_widget import ArgsTreeView
+from ...widgets import ArgsTreeView
 
 from spine_items import resources_icons_rc
 
@@ -81,7 +81,7 @@ class Ui_Form(object):
         self.label_tool_specification.setSizePolicy(sizePolicy1)
         self.label_tool_specification.setMaximumSize(QSize(16777215, 16777215))
         font1 = QFont()
-        font1.setPointSize(8)
+        font1.setPointSize(10)
         self.label_tool_specification.setFont(font1)
 
         self.horizontalLayout_9.addWidget(self.label_tool_specification)
@@ -121,9 +121,7 @@ class Ui_Form(object):
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.treeView_cmdline_args.sizePolicy().hasHeightForWidth())
         self.treeView_cmdline_args.setSizePolicy(sizePolicy3)
-        font2 = QFont()
-        font2.setPointSize(10)
-        self.treeView_cmdline_args.setFont(font2)
+        self.treeView_cmdline_args.setFont(font1)
         self.treeView_cmdline_args.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView_cmdline_args.setAcceptDrops(True)
         self.treeView_cmdline_args.setEditTriggers(QAbstractItemView.AnyKeyPressed|QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed)
@@ -165,7 +163,7 @@ class Ui_Form(object):
         self.treeView_input_files.setObjectName(u"treeView_input_files")
         sizePolicy3.setHeightForWidth(self.treeView_input_files.sizePolicy().hasHeightForWidth())
         self.treeView_input_files.setSizePolicy(sizePolicy3)
-        self.treeView_input_files.setFont(font2)
+        self.treeView_input_files.setFont(font1)
         self.treeView_input_files.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView_input_files.setDragEnabled(False)
         self.treeView_input_files.setDragDropMode(QAbstractItemView.DragOnly)

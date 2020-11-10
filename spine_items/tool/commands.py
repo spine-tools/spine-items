@@ -36,24 +36,3 @@ class UpdateToolExecuteInWorkCommand(SpineToolboxCommand):
 
     def undo(self):
         self.tool.do_update_execution_mode(not self.execute_in_work)
-
-
-class UpdateToolCmdLineArgsCommand(SpineToolboxCommand):
-    def __init__(self, tool, cmd_line_args):
-        """Command to update Tool command line args.
-
-        Args:
-            tool (Tool): the Tool
-            cmd_line_args (list): list of str args
-        """
-        super().__init__()
-        self.tool = tool
-        self.redo_cmd_line_args = cmd_line_args
-        self.undo_cmd_line_args = self.tool.cmd_line_args
-        self.setText(f"change command line arguments of {tool.name}")
-
-    def redo(self):
-        self.tool.update_tool_cmd_line_args(self.redo_cmd_line_args)
-
-    def undo(self):
-        self.tool.update_tool_cmd_line_args(self.undo_cmd_line_args)

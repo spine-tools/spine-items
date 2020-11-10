@@ -127,7 +127,7 @@
            </property>
            <property name="font">
             <font>
-             <pointsize>8</pointsize>
+             <pointsize>10</pointsize>
             </font>
            </property>
            <property name="text">
@@ -463,7 +463,7 @@
   <customwidget>
    <class>ArgsTreeView</class>
    <extends>QTreeView</extends>
-   <header>./widgets/tool_properties_widget.h</header>
+   <header>../widgets.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

@@ -23,8 +23,8 @@ import uuid
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from spine_engine.utils.helpers import shorten
-from spine_engine.utils.serialization import deserialize_checked_states
-from spine_engine.utils.command_line_arguments import split_cmdline_args, expand_tags
+from spine_engine.utils.serialization import deserialize_checked_states, deserialize_path
+from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.execution_managers import StandardExecutionManager
 from .item_info import ItemInfo
 from .utils import SHELLS
@@ -47,7 +47,6 @@ class ExecutableItem(ExecutableItemBase):
         self.cmd_list = cmd
         self._work_dir = work_dir
         self._resources = list()  # Predecessor resources
-        self._successor_resources = list()
         self._selected_files = selected_files
         self._exec_mngr = None
 
@@ -69,6 +68,9 @@ class ExecutableItem(ExecutableItemBase):
                 logger.msg_error.emit(f"Error: Unsupported shell_index in project item {name}")
                 return None
         cmd_list = split_cmdline_args(item_dict["cmd"])
+        cmd_line_args = item_dict["cmd_line_args"]
+        cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
+        cmd_list += cmd_line_args
         data_dir = os.path.join(project_dir, ".spinetoolbox", "items", shorten(name))
         if item_dict["work_dir_mode"]:  # Use 'default' work dir. i.e. data_dir/work
             work_dir = os.path.join(data_dir, GIMLET_WORK_DIR_NAME)
@@ -115,25 +117,20 @@ class ExecutableItem(ExecutableItemBase):
         if sys.platform != "win32" and (self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return False
-        # Expand tags in command list
-        expanded_cmd_list = self._expand_gimlet_tags(self.cmd_list, resources)
-        if not self.shell_name:
-            prgm = expanded_cmd_list.pop(0)
-            self._exec_mngr = StandardExecutionManager(self._logger, prgm, *expanded_cmd_list, workdir=self._work_dir)
+        cmd_list = self.cmd_list.copy()
+        if not self.shell_name or self.shell_name == "bash":
+            prgm = cmd_list.pop(0)
+            self._exec_mngr = StandardExecutionManager(self._logger, prgm, *cmd_list, workdir=self._work_dir)
         else:
             if self.shell_name == "cmd.exe":
                 shell_prgm = "cmd.exe"
-                expanded_cmd_list = ["/C"] + expanded_cmd_list
+                cmd_list = ["/C"] + cmd_list
             elif self.shell_name == "powershell.exe":
                 shell_prgm = "powershell.exe"
-            elif self.shell_name == "bash":
-                shell_prgm = "sh"
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
                 return False
-            self._exec_mngr = StandardExecutionManager(
-                self._logger, shell_prgm, *expanded_cmd_list, workdir=self._work_dir
-            )
+            self._exec_mngr = StandardExecutionManager(self._logger, shell_prgm, *cmd_list, workdir=self._work_dir)
         # Copy selected files to work_dir
         if not self._copy_files(self._selected_files, self._work_dir):
             return False
@@ -151,11 +148,6 @@ class ExecutableItem(ExecutableItemBase):
         self._resources = resources.copy()
         self._logger.msg_success.emit(f"Executing {self.name} finished")
         self._exec_mngr = None
-        return True
-
-    def _execute_backward(self, resources):
-        """Executes this item in the backward direction."""
-        self._successor_resources = resources.copy()
         return True
 
     def _output_resources_forward(self):
@@ -207,61 +199,3 @@ class ExecutableItem(ExecutableItemBase):
         else:
             self._logger.msg.emit(f"\tCopied <b>{n_copied_files}</b> file(s)")
         return True
-
-    def _expand_gimlet_tags(self, cmd, resources):
-        """Returns Gimlet's command as list with special tags expanded.
-
-        Tags that will be replaced:
-
-        - @@optional_inputs@@ expands to a space-separated list of Gimlet's optional input files
-        - @@url:<Data Store name>@@ expands to the URL provided by a named data store
-        - @@url_inputs@@ expands to a space-separated list of Gimlet's input database URLs
-        - @@url_outputs@@ expands to a space-separated list of Gimlet's output database URLs
-
-        Args:
-            cmd (list): Command that may include tags that should be expanded
-            resources (list): List of resources from direct predecessor items
-
-        Returns:
-            list: Expanded command
-        """
-        files = _file_paths_from_resources(resources)
-        input_urls = _database_urls_from_resources(resources)
-        output_urls = _database_urls_from_resources(self._successor_resources)
-        tags_expanded, args = expand_tags(cmd, files, input_urls, output_urls)
-        while tags_expanded:
-            # Keep expanding until there is no tag left to expand.
-            tags_expanded, args = expand_tags(args, files, input_urls, output_urls)
-        return args
-
-
-def _file_paths_from_resources(resources):
-    """Pries file paths from resources.
-
-    Args:
-        resources (list): a list of ProjectItemResource objects
-
-    Returns:
-        list: List of file paths.
-    """
-    files = list()
-    for resource in resources:
-        if resource.type_ == "file":
-            files.append(resource.path)
-    return files
-
-
-def _database_urls_from_resources(resources):
-    """Pries database URLs and their providers' names from resources.
-
-    Args:
-        resources (list): a list of ProjectItemResource objects
-
-    Returns:
-        dict: a mapping from resource provider's name to a database URL.
-    """
-    urls = dict()
-    for resource in resources:
-        if resource.type_ == "database":
-            urls[resource.provider.name] = resource.url
-    return urls

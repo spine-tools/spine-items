@@ -75,6 +75,9 @@ class ExecutableItem(ExecutableItemBase, QObject):
                 logger.msg_error.emit(f"Error: Unsupported shell_index in project item {name}")
                 shell = ""
         cmd_list = split_cmdline_args(item_dict["cmd"])
+        cmd_line_args = item_dict["cmd_line_args"]
+        cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
+        cmd_list += cmd_line_args
         data_dir = os.path.join(project_dir, ".spinetoolbox", "items", shorten(name))
         if item_dict["work_dir_mode"]:  # Use 'default' work dir. i.e. data_dir/work
             work_dir = os.path.join(data_dir, GIMLET_WORK_DIR_NAME)
@@ -123,14 +126,14 @@ class ExecutableItem(ExecutableItemBase, QObject):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return False
         # Expand tags in command list
-        expanded_cmd_list = self._expand_gimlet_tags(self.cmd_list, resources)
+        cmd_list = self.cmd_list.copy()
         if not self.shell_name:
-            prgm = expanded_cmd_list.pop(0)
-            self._gimlet_process = QProcessExecutionManager(self._logger, prgm, expanded_cmd_list)
+            prgm = cmd_list.pop(0)
+            self._gimlet_process = QProcessExecutionManager(self._logger, prgm, cmd_list)
         else:
             if self.shell_name == "cmd.exe":
                 shell_prgm = "cmd.exe"
-                expanded_cmd_list = ["/C"] + expanded_cmd_list
+                cmd_list = ["/C"] + cmd_list
             elif self.shell_name == "powershell.exe":
                 shell_prgm = "powershell.exe"
             elif self.shell_name == "bash":
@@ -138,7 +141,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
                 return False
-            self._gimlet_process = QProcessExecutionManager(self._logger, shell_prgm, expanded_cmd_list)
+            self._gimlet_process = QProcessExecutionManager(self._logger, shell_prgm, cmd_list)
         # Copy selected files to work_dir
         if not self._copy_files(self._selected_files, self._work_dir):
             return False

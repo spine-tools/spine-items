@@ -23,14 +23,19 @@ from PySide2.QtCore import Slot, Qt
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from spine_engine.utils.helpers import shorten
-from spine_engine.utils.serialization import deserialize_checked_states, serialize_checked_states
+from spine_engine.utils.serialization import (
+    deserialize_checked_states,
+    serialize_checked_states,
+    serialize_url,
+    deserialize_path,
+)
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .utils import SHELLS
 from .commands import UpdateShellCheckBoxCommand, UpdateShellComboboxCommand, UpdatecmdCommand, UpdateWorkDirModeCommand
-from ..commands import ChangeItemSelectionCommand
-from ..models import FileListModel
+from ..commands import ChangeItemSelectionCommand, UpdateCmdLineArgsCommand
+from ..models import GimletCommandLineArgsModel, InputFileListModel
 
 
 class Gimlet(ProjectItem):
@@ -48,6 +53,7 @@ class Gimlet(ProjectItem):
         use_shell=True,
         shell_index=0,
         cmd="",
+        cmd_line_args=None,
         selections=None,
         work_dir_mode=True,
     ):
@@ -63,16 +69,23 @@ class Gimlet(ProjectItem):
             use_shell (bool): Use shell flag
             shell_index (int): Selected shell as index
             cmd (str): Command that this Gimlet executes at run time
+            cmd_line_args (list, optional): Gimlet command line arguments
             selections (dict, optional): A mapping from file label to boolean 'checked' flag
             work_dir_mode (bool): True uses Gimlet's default work dir, False uses a unique work dir on every execution
         """
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
-        self._file_model = FileListModel()
+        self._file_model = InputFileListModel()
         self._toolbox_resources = list()  # ProjectItemResources for handling changes in the DAG on Design View
         self.use_shell = use_shell
         self.shell_index = shell_index
         self.cmd = cmd
+        if cmd_line_args is None:
+            cmd_line_args = []
+        self.cmd_line_args = cmd_line_args
+        self._cmdline_args_model = GimletCommandLineArgsModel(self)
+        self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
+        self._populate_cmdline_args_model()
         self._file_model.set_initial_state(selections if selections is not None else dict())
         self._file_model.selected_state_changed.connect(self._push_file_selection_change_to_undo_stack)
         self._work_dir_mode = None
@@ -92,7 +105,7 @@ class Gimlet(ProjectItem):
     def execution_item(self):
         """Creates project item's execution counterpart."""
         shell = ""
-        cmd_list = self._split_gimlet_cmd(self.cmd)
+        cmd_list = [self.cmd] + self.cmd_line_args
         if self._active:
             if self._properties_ui.checkBox_shell.isChecked():
                 shell = self._properties_ui.comboBox_shell.itemText(self._properties_ui.comboBox_shell.currentIndex())
@@ -115,18 +128,6 @@ class Gimlet(ProjectItem):
                 selected_files.append(file_item.label)
         return ExecutableItem(self.name, self._logger, shell, cmd_list, work_dir, selected_files)
 
-    def _split_gimlet_cmd(self, cmd):
-        """Splits given string command to a list.
-
-        Args:
-            cmd (str): Command to execute as a string
-
-        Returns:
-            list: Same command as a list
-        """
-        cmd_list = split_cmdline_args(cmd)
-        return cmd_list
-
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
@@ -136,6 +137,8 @@ class Gimlet(ProjectItem):
         s[self._properties_ui.comboBox_shell.activated] = self.shell_combobox_index_changed
         s[self._properties_ui.lineEdit_cmd.editingFinished] = self.cmd_edited
         s[self._properties_ui.radioButton_default.toggled] = self.push_work_dir_mode_cmd
+        # s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
+        # s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
         return s
 
     def restore_selections(self):
@@ -143,6 +146,7 @@ class Gimlet(ProjectItem):
         self._properties_ui.label_gimlet_name.setText(self.name)
         if not self._active:
             return
+        self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_files.setModel(self._file_model)
         self._properties_ui.checkBox_shell.setChecked(self.use_shell)
         if self.use_shell:
@@ -182,7 +186,7 @@ class Gimlet(ProjectItem):
             return
         # This does not trigger the stateChanged signal.
         self._properties_ui.checkBox_shell.setCheckState(Qt.Checked if use_shell else Qt.Unchecked)
-        self._properties_ui.comboBox_shell.setEnabled(True if use_shell else False)
+        self._properties_ui.comboBox_shell.setEnabled(bool(use_shell))
 
     @Slot(int)
     def shell_combobox_index_changed(self, ind):
@@ -221,6 +225,44 @@ class Gimlet(ProjectItem):
         if not self._active:
             return
         self._properties_ui.lineEdit_cmd.setText(txt)
+
+    @Slot(bool)
+    def _remove_arg(self, _=False):
+        removed_rows = [index.row() for index in self._properties_ui.treeView_cmdline_args.selectedIndexes()]
+        cmd_line_args = [arg for row, arg in enumerate(self.cmd_line_args) if row not in removed_rows]
+        self._push_update_cmd_line_args_command(cmd_line_args)
+
+    @Slot(bool)
+    def _add_selected_file_path_args(self, _=False):
+        new_args = [index.data() for index in self._properties_ui.treeView_input_files.selectedIndexes()]
+        self._push_update_cmd_line_args_command(self.cmd_line_args + new_args)
+
+    @Slot(list)
+    def _push_update_cmd_line_args_command(self, cmd_line_args):
+        if self.cmd_line_args == cmd_line_args:
+            return
+        self._toolbox.undo_stack.push(UpdateCmdLineArgsCommand(self, cmd_line_args))
+
+    def update_cmd_line_args(self, cmd_line_args):
+        """Updates instance cmd line args list and sets the list as text to the line edit widget.
+
+        Args:
+            cmd_line_args (list): Tool cmd line args
+        """
+        self.cmd_line_args = cmd_line_args
+        if not self._active:
+            return
+        self._populate_cmdline_args_model()
+
+    def _populate_cmdline_args_model(self):
+        gimlet_args = self.cmd_line_args
+        if self._properties_ui:
+            pos = self._properties_ui.treeView_cmdline_args.verticalScrollBar().sliderPosition()
+        self._cmdline_args_model.reset_model(gimlet_args)
+        if self._properties_ui:
+            self._properties_ui.treeView_cmdline_args.expandAll()
+            self._properties_ui.treeView_cmdline_args.verticalScrollBar().setSliderPosition(pos)
+            # TODO: self._properties_ui.treeView_cmdline_args.setFocus()
 
     @Slot(bool, str)
     def _push_file_selection_change_to_undo_stack(self, selected, label):
@@ -281,6 +323,10 @@ class Gimlet(ProjectItem):
         d["cmd"] = self.cmd
         d["selections"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
         d["work_dir_mode"] = self._work_dir_mode
+        # NOTE: We enclose the arguments in quotes because that preserves the args that have spaces
+        cmd_line_args = [f'"{arg}"' for arg in self.cmd_line_args]
+        cmd_line_args = split_cmdline_args(" ".join(cmd_line_args))
+        d["cmd_line_args"] = [serialize_url(arg, self._project.project_dir) for arg in cmd_line_args]
         return d
 
     @staticmethod
@@ -292,8 +338,22 @@ class Gimlet(ProjectItem):
         cmd = item_dict.get("cmd", "")
         selections = deserialize_checked_states(item_dict.get("selections", list()), project.project_dir)
         work_dir_mode = item_dict.get("work_dir_mode", True)
+        cmd_line_args = item_dict.get("cmd_line_args", [])
+        cmd_line_args = [deserialize_path(arg, project.project_dir) for arg in cmd_line_args]
         return Gimlet(
-            name, description, x, y, toolbox, project, logger, use_shell, shel_index, cmd, selections, work_dir_mode
+            name,
+            description,
+            x,
+            y,
+            toolbox,
+            project,
+            logger,
+            use_shell,
+            shel_index,
+            cmd,
+            cmd_line_args,
+            selections,
+            work_dir_mode,
         )
 
     def notify_destination(self, source_item):
@@ -303,7 +363,7 @@ class Gimlet(ProjectItem):
                 f"Link established. Files from <b>{source_item.name}</b> are now available in <b>{self.name}</b>."
             )
             return
-        elif source_item.item_type() in [
+        if source_item.item_type() in [
             "Data Store",
             "Data Transformer",
             "Data Connection",

@@ -10,33 +10,17 @@
 ######################################################################################################################
 
 """
-Gimlet properties widget.
+Common widgets.
 
-:author: P. Savolainen (VTT)
-:date:   15.4.2020
+:authors: M. Marin (KTH)
+:date:   10.11.2020
 """
 
-from PySide2.QtWidgets import QWidget
-from spinetoolbox.config import TREEVIEW_HEADER_SS
-from ..utils import SHELLS
+
+from PySide2.QtWidgets import QTreeView
 
 
-class GimletPropertiesWidget(QWidget):
-    """Widget for the Gimlet Item Properties."""
-
-    def __init__(self, toolbox):
-        """
-
-        Args:
-            toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
-        """
-        from ..ui.gimlet_properties import Ui_Form
-
-        super().__init__()
-        self._toolbox = toolbox
-        self.ui = Ui_Form()
-        self.ui.setupUi(self)
-        self.ui.comboBox_shell.addItems(SHELLS)
-        self.ui.treeView_cmdline_args.setStyleSheet(TREEVIEW_HEADER_SS)
-        self.ui.treeView_files.setStyleSheet(TREEVIEW_HEADER_SS)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "Gimlet")
+class ArgsTreeView(QTreeView):
+    def dragEnterEvent(self, event):
+        super().dragEnterEvent(event)
+        event.accept()

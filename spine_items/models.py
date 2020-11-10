@@ -10,16 +10,19 @@
 ######################################################################################################################
 
 """
+Common models.
 Contains a generic File list model and an Item for that model.
-Used by the Importer project item but this may be handy for other project items
+Used by the Importer, Gimlet and Tool project items but this may be handy for other project items
 as well.
 
 :authors: P. Savolainen (VTT), P. Vennström (VTT), A. Soininen (VTT)
 :date:   5.6.2020
 """
 
-from PySide2.QtCore import QAbstractListModel, QFileInfo, QModelIndex, Qt, Signal
+import json
+from PySide2.QtCore import QAbstractListModel, QFileInfo, QModelIndex, Qt, Signal, QMimeData
 from PySide2.QtWidgets import QFileIconProvider
+from PySide2.QtGui import QStandardItemModel, QStandardItem, QPixmap, QPainter, QIcon
 
 
 def _file_label(resource):
@@ -104,12 +107,11 @@ class FileListModel(QAbstractListModel):
     selected_state_changed = Signal(bool, str)
     """Emitted when a file check box state changes."""
 
-    _invalid_resource_types = ("database",)
-    _header_label = "Source files"
-
-    def __init__(self):
+    def __init__(self, invalid_resource_types=(), header_label=""):
         super().__init__()
         self._files = list()
+        self._invalid_resource_types = invalid_resource_types
+        self._header_label = header_label
 
     @property
     def files(self):
@@ -222,3 +224,146 @@ class FileListModel(QAbstractListModel):
         """Fills model with incomplete data; needs a call to :func:`update` to make the model usable."""
         for label, selected in selected_items.items():
             self._files.append(FileListItem(label, label, "", selected=selected))
+
+
+class InputFileListModel(FileListModel):
+    """A model for input files to be shown in a file list view."""
+
+    _invalid_resource_types = ()
+    _header_label = "Input files"
+
+    def __init__(self, invalid_resource_types=(), header_label="Input files", checkable=True):
+        super().__init__(invalid_resource_types=invalid_resource_types, header_label=header_label)
+        self._checkable = checkable
+
+    def flags(self, index):
+        flags = super().flags(index) | Qt.ItemIsDragEnabled
+        if not self._checkable:
+            flags &= ~Qt.ItemIsUserCheckable
+        return flags
+
+    def data(self, index, role=Qt.DisplayRole):
+        """Returns data associated with given role at given index."""
+        if role == Qt.CheckStateRole and not self._checkable:
+            return None
+        return super().data(index, role=role)
+
+    def mimeData(self, indexes):
+        data = QMimeData()
+        text = json.dumps(("paths", ";;".join([index.data() for index in indexes])))
+        data.setText(text)
+        return data
+
+
+class CommandLineArgItem(QStandardItem):
+    def __init__(self, text, rank=None, selectable=False, editable=False, drag_enabled=False, drop_enabled=False):
+        super().__init__(text)
+        self.setEditable(editable)
+        self.setDropEnabled(drop_enabled)
+        self.setDragEnabled(drag_enabled)
+        self.setSelectable(selectable)
+        if rank is not None:
+            icon = self._make_icon(rank)
+            self.setIcon(icon)
+
+    @staticmethod
+    def _make_icon(rank=None):
+        pixmap = QPixmap(16, 16)
+        pixmap.fill(Qt.white)
+        painter = QPainter(pixmap)
+        painter.drawText(0, 0, 16, 16, Qt.AlignCenter, f"{rank}:")
+        painter.end()
+        return QIcon(pixmap)
+
+    def setData(self, value, role=Qt.UserRole + 1):
+        if role != Qt.EditRole:
+            return super().setData(value, role=role)
+        if value != self.data(role=role):
+            self.model().replace_arg(self.row(), value)
+        return False
+
+
+class NewCommandLineArgItem(CommandLineArgItem):
+    def __init__(self):
+        super().__init__("Type new arg here...", selectable=True, editable=True)
+        gray_color = qApp.palette().text().color()
+        gray_color.setAlpha(128)
+        self.setForeground(gray_color)
+
+    def setData(self, value, role=Qt.UserRole + 1):
+        if role != Qt.EditRole:
+            return super().setData(value, role=role)
+        if value != self.data(role=role):
+            self.model().append_arg(value)
+        return False
+
+
+class CommandLineArgsModel(QStandardItemModel):
+    args_updated = Signal(list)
+    _args = []
+
+    def append_arg(self, arg):
+        self.args_updated.emit(self._args + [arg])
+
+    def replace_arg(self, row, arg):
+        new_args = self._args.copy()
+        new_args[row] = arg
+        self.args_updated.emit(new_args)
+
+    def mimeData(self, indexes):
+        data = QMimeData()
+        text = json.dumps(("rows", ";;".join([str(index.row()) for index in indexes])))
+        data.setText(text)
+        return data
+
+    def dropMimeData(self, data, drop_action, row, column, parent):
+        head, contents = json.loads(data.text())
+        if head == "rows":
+            rows = [int(x) for x in contents.split(";;")]
+            head = [arg for k, arg in enumerate(self._args[:row]) if k not in rows]
+            body = [self._args[k] for k in rows]
+            tail = [arg for k, arg in enumerate(self._args[row:]) if k + row not in rows]
+            new_args = head + body + tail
+            self.args_updated.emit(new_args)
+            return True
+        if head == "paths":
+            new_args = self._args[:row] + contents.split(";;") + self._args[row:]
+            self.args_updated.emit(new_args)
+            return True
+        return False
+
+
+class GimletCommandLineArgsModel(CommandLineArgsModel):
+    def reset_model(self, args):
+        self._args = args
+        self.clear()
+        self.setHorizontalHeaderItem(0, QStandardItem("Command line arguments"))
+        for k, arg in enumerate(args):
+            item = CommandLineArgItem(arg, rank=k + 1, editable=True, selectable=True, drag_enabled=True)
+            self.appendRow(item)
+        self.appendRow(NewCommandLineArgItem())
+
+    def canDropMimeData(self, data, drop_action, row, column, parent):
+        return row >= 0
+
+
+class ToolCommandLineArgsModel(CommandLineArgsModel):
+    def reset_model(self, spec_args, tool_args):
+        self._args = tool_args
+        self.clear()
+        self.setHorizontalHeaderItem(0, QStandardItem("Command line arguments"))
+        spec_args_root = CommandLineArgItem("Specification arguments")
+        tool_args_root = CommandLineArgItem("Tool arguments", drop_enabled=True)
+        self.appendRow(spec_args_root)
+        self.appendRow(tool_args_root)
+        spec_args_children = [CommandLineArgItem(arg, rank=k + 1) for k, arg in enumerate(spec_args)]
+        tool_args_children = [
+            CommandLineArgItem(arg, rank=k + len(spec_args) + 1, editable=True, selectable=True, drag_enabled=True)
+            for k, arg in enumerate(tool_args)
+        ]
+        tool_args_children.append(NewCommandLineArgItem())
+        spec_args_root.appendRows(spec_args_children)
+        tool_args_root.appendRows(tool_args_children)
+
+    def canDropMimeData(self, data, drop_action, row, column, parent):
+        return parent.data() is not None and row >= 0

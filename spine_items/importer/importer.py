@@ -84,7 +84,7 @@ class Importer(ProjectItem):
             )
         self.do_set_specification(self._specification)
         self.cancel_on_error = cancel_on_error
-        self._file_model = FileListModel()
+        self._file_model = FileListModel(invalid_resource_types=("database",), header_label="Source files")
         self._file_model.set_initial_state(file_selection if file_selection is not None else dict())
         self._file_model.selected_state_changed.connect(self._push_file_selection_change_to_undo_stack)
 

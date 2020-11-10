@@ -61,3 +61,24 @@ class ChangeItemSelectionCommand(SpineToolboxCommand):
 
     def undo(self):
         self._item.set_file_selected(self._label, not self._selected)
+
+
+class UpdateCmdLineArgsCommand(SpineToolboxCommand):
+    def __init__(self, item, cmd_line_args):
+        """Command to update Tool command line args.
+
+        Args:
+            item (ProjectItemBase): the item
+            cmd_line_args (list): list of str args
+        """
+        super().__init__()
+        self.item = item
+        self.redo_cmd_line_args = cmd_line_args
+        self.undo_cmd_line_args = self.item.cmd_line_args
+        self.setText(f"change command line arguments of {item.name}")
+
+    def redo(self):
+        self.item.update_cmd_line_args(self.redo_cmd_line_args)
+
+    def undo(self):
+        self.item.update_cmd_line_args(self.undo_cmd_line_args)

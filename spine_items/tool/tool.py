@@ -25,12 +25,13 @@ from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.utils.serialization import serialize_url, deserialize_path
-from .commands import UpdateToolExecuteInWorkCommand, UpdateToolCmdLineArgsCommand
+from .commands import UpdateToolExecuteInWorkCommand
+from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file, find_last_output_files, is_pattern
-from .mvcmodels import CommandLineArgsModel, InputFileListModel
+from ..models import ToolCommandLineArgsModel, InputFileListModel
 
 
 class Tool(ProjectItem):
@@ -73,10 +74,10 @@ class Tool(ProjectItem):
         if cmd_line_args is None:
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
-        self._cmdline_args_model = CommandLineArgsModel(self)
-        self._cmdline_args_model.args_updated.connect(self._push_update_tool_cmd_lind_args_command)
+        self._cmdline_args_model = ToolCommandLineArgsModel(self)
+        self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
-        self._input_file_model = InputFileListModel()
+        self._input_file_model = InputFileListModel(checkable=False)
         self.specification_options_popup_menu = None
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
@@ -102,7 +103,6 @@ class Tool(ProjectItem):
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
         s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
-        s[self._properties_ui.treeView_input_files.doubleClicked] = self._add_file_path_arg
         s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
         return s
 
@@ -153,24 +153,20 @@ class Tool(ProjectItem):
     def _remove_arg(self, _=False):
         removed_rows = [index.row() for index in self._properties_ui.treeView_cmdline_args.selectedIndexes()]
         cmd_line_args = [arg for row, arg in enumerate(self.cmd_line_args) if row not in removed_rows]
-        self._push_update_tool_cmd_lind_args_command(cmd_line_args)
-
-    @Slot("QModelIndex")
-    def _add_file_path_arg(self, index):
-        self._push_update_tool_cmd_lind_args_command(self.cmd_line_args + [index.data()])
+        self._push_update_cmd_line_args_command(cmd_line_args)
 
     @Slot(bool)
     def _add_selected_file_path_args(self, _=False):
         new_args = [index.data() for index in self._properties_ui.treeView_input_files.selectedIndexes()]
-        self._push_update_tool_cmd_lind_args_command(self.cmd_line_args + new_args)
+        self._push_update_cmd_line_args_command(self.cmd_line_args + new_args)
 
     @Slot(list)
-    def _push_update_tool_cmd_lind_args_command(self, cmd_line_args):
+    def _push_update_cmd_line_args_command(self, cmd_line_args):
         if self.cmd_line_args == cmd_line_args:
             return
-        self._toolbox.undo_stack.push(UpdateToolCmdLineArgsCommand(self, cmd_line_args))
+        self._toolbox.undo_stack.push(UpdateCmdLineArgsCommand(self, cmd_line_args))
 
-    def update_tool_cmd_line_args(self, cmd_line_args):
+    def update_cmd_line_args(self, cmd_line_args):
         """Updates instance cmd line args list and sets the list as text to the line edit widget.
 
         Args:

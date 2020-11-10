@@ -25,6 +25,7 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
+from ...widgets import ArgsTreeView
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
 
 from spine_items import resources_icons_rc
@@ -72,6 +73,9 @@ class Ui_Form(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.checkBox_shell = QCheckBox(self.scrollAreaWidgetContents_4)
         self.checkBox_shell.setObjectName(u"checkBox_shell")
+        font1 = QFont()
+        font1.setPointSize(10)
+        self.checkBox_shell.setFont(font1)
         self.checkBox_shell.setChecked(True)
 
         self.horizontalLayout.addWidget(self.checkBox_shell)
@@ -89,21 +93,87 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.label_2 = QLabel(self.scrollAreaWidgetContents_4)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setFont(font1)
+
+        self.horizontalLayout_2.addWidget(self.label_2)
+
         self.lineEdit_cmd = PropertyQLineEdit(self.scrollAreaWidgetContents_4)
         self.lineEdit_cmd.setObjectName(u"lineEdit_cmd")
         self.lineEdit_cmd.setClearButtonEnabled(True)
 
-        self.verticalLayout_2.addWidget(self.lineEdit_cmd)
+        self.horizontalLayout_2.addWidget(self.lineEdit_cmd)
 
-        self.treeView_files = QTreeView(self.scrollAreaWidgetContents_4)
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+
+        self.splitter = QSplitter(self.scrollAreaWidgetContents_4)
+        self.splitter.setObjectName(u"splitter")
+        self.splitter.setOrientation(Qt.Vertical)
+        self.treeView_cmdline_args = ArgsTreeView(self.splitter)
+        self.treeView_cmdline_args.setObjectName(u"treeView_cmdline_args")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.treeView_cmdline_args.sizePolicy().hasHeightForWidth())
+        self.treeView_cmdline_args.setSizePolicy(sizePolicy2)
+        self.treeView_cmdline_args.setFont(font1)
+        self.treeView_cmdline_args.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView_cmdline_args.setAcceptDrops(True)
+        self.treeView_cmdline_args.setEditTriggers(QAbstractItemView.AnyKeyPressed|QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed)
+        self.treeView_cmdline_args.setDragDropMode(QAbstractItemView.DragDrop)
+        self.treeView_cmdline_args.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.treeView_cmdline_args.setTextElideMode(Qt.ElideLeft)
+        self.splitter.addWidget(self.treeView_cmdline_args)
+        self.treeView_cmdline_args.header().setMinimumSectionSize(26)
+        self.gridLayoutWidget = QWidget(self.splitter)
+        self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
+        self.gridLayout = QGridLayout(self.gridLayoutWidget)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.toolButton_remove_arg = QToolButton(self.gridLayoutWidget)
+        self.toolButton_remove_arg.setObjectName(u"toolButton_remove_arg")
+        icon = QIcon()
+        icon.addFile(u":/icons/minus.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_remove_arg.setIcon(icon)
+
+        self.gridLayout.addWidget(self.toolButton_remove_arg, 0, 2, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer_2, 0, 1, 1, 1)
+
+        self.toolButton_add_file_path_arg = QToolButton(self.gridLayoutWidget)
+        self.toolButton_add_file_path_arg.setObjectName(u"toolButton_add_file_path_arg")
+        self.toolButton_add_file_path_arg.setMinimumSize(QSize(22, 22))
+        self.toolButton_add_file_path_arg.setMaximumSize(QSize(22, 22))
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/file-upload.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_add_file_path_arg.setIcon(icon1)
+        self.toolButton_add_file_path_arg.setIconSize(QSize(16, 16))
+        self.toolButton_add_file_path_arg.setPopupMode(QToolButton.InstantPopup)
+
+        self.gridLayout.addWidget(self.toolButton_add_file_path_arg, 0, 0, 1, 1)
+
+        self.treeView_files = QTreeView(self.gridLayoutWidget)
         self.treeView_files.setObjectName(u"treeView_files")
+        self.treeView_files.setFont(font1)
+        self.treeView_files.setDragDropMode(QAbstractItemView.DragOnly)
+        self.treeView_files.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.treeView_files.setTextElideMode(Qt.ElideLeft)
         self.treeView_files.setIndentation(5)
         self.treeView_files.setRootIsDecorated(False)
         self.treeView_files.setUniformRowHeights(True)
         self.treeView_files.header().setMinimumSectionSize(54)
 
-        self.verticalLayout_2.addWidget(self.treeView_files)
+        self.gridLayout.addWidget(self.treeView_files, 1, 0, 1, 3)
+
+        self.splitter.addWidget(self.gridLayoutWidget)
+
+        self.verticalLayout_2.addWidget(self.splitter)
 
         self.line_5 = QFrame(self.scrollAreaWidgetContents_4)
         self.line_5.setObjectName(u"line_5")
@@ -138,9 +208,9 @@ class Ui_Form(object):
         self.toolButton_gimlet_open_dir.setObjectName(u"toolButton_gimlet_open_dir")
         self.toolButton_gimlet_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_gimlet_open_dir.setMaximumSize(QSize(22, 22))
-        icon = QIcon()
-        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_gimlet_open_dir.setIcon(icon)
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_gimlet_open_dir.setIcon(icon2)
 
         self.horizontalLayout_16.addWidget(self.toolButton_gimlet_open_dir)
 
@@ -153,9 +223,7 @@ class Ui_Form(object):
 
         QWidget.setTabOrder(self.scrollArea_4, self.checkBox_shell)
         QWidget.setTabOrder(self.checkBox_shell, self.comboBox_shell)
-        QWidget.setTabOrder(self.comboBox_shell, self.lineEdit_cmd)
-        QWidget.setTabOrder(self.lineEdit_cmd, self.treeView_files)
-        QWidget.setTabOrder(self.treeView_files, self.radioButton_default)
+        QWidget.setTabOrder(self.comboBox_shell, self.radioButton_default)
         QWidget.setTabOrder(self.radioButton_default, self.radioButton_unique)
         QWidget.setTabOrder(self.radioButton_unique, self.toolButton_gimlet_open_dir)
 
@@ -171,7 +239,15 @@ class Ui_Form(object):
         self.checkBox_shell.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>If checked, command is executed with the specified shell.</p><p>If unchecked, command is executed without a shell.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_shell.setText(QCoreApplication.translate("Form", u"Shell", None))
-        self.lineEdit_cmd.setPlaceholderText(QCoreApplication.translate("Form", u"Command", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Command", None))
+#if QT_CONFIG(tooltip)
+        self.toolButton_remove_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected command line args</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.toolButton_remove_arg.setText(QCoreApplication.translate("Form", u"...", None))
+#if QT_CONFIG(tooltip)
+        self.toolButton_add_file_path_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Append selected input file paths to the list of command line args</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.toolButton_add_file_path_arg.setText("")
         self.label.setText(QCoreApplication.translate("Form", u"Work directory", None))
         self.radioButton_default.setText(QCoreApplication.translate("Form", u"Default", None))
         self.radioButton_unique.setText(QCoreApplication.translate("Form", u"Unique", None))
