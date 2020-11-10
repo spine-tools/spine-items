@@ -125,7 +125,6 @@ class JuliaToolInstance(ToolInstance):
         use_embedded_julia = self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2")
         if use_embedded_julia == "2":
             # Prepare Julia REPL command
-            julia_project_path = repr(julia_project_path).strip("'")
             work_dir = repr(work_dir).strip("'")
             cmdline_args = self.tool_specification.cmdline_args + args
             cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
@@ -144,6 +143,7 @@ class JuliaToolInstance(ToolInstance):
             else:
                 julia_exe = JULIA_EXECUTABLE
             script_path = os.path.join(work_dir, self.tool_specification.main_prgm)
+            julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
             self.program = julia_exe
             self.args.append(f"--project={julia_project_path}")
             self.args.append(script_path)
