@@ -104,8 +104,8 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0">
           <widget class="QCheckBox" name="checkBox_shell">
            <property name="font">
             <font>
@@ -123,7 +123,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="1">
           <widget class="QComboBox" name="comboBox_shell">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -133,11 +133,7 @@
            </property>
           </widget>
          </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
+         <item row="1" column="0">
           <widget class="QLabel" name="label_2">
            <property name="font">
             <font>
@@ -149,7 +145,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="1">
           <widget class="PropertyQLineEdit" name="lineEdit_cmd">
            <property name="clearButtonEnabled">
             <bool>true</bool>
@@ -386,8 +382,6 @@
  </customwidgets>
  <tabstops>
   <tabstop>scrollArea_4</tabstop>
-  <tabstop>checkBox_shell</tabstop>
-  <tabstop>comboBox_shell</tabstop>
   <tabstop>radioButton_default</tabstop>
   <tabstop>radioButton_unique</tabstop>
   <tabstop>toolButton_gimlet_open_dir</tabstop>

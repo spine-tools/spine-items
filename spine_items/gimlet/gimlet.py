@@ -137,8 +137,8 @@ class Gimlet(ProjectItem):
         s[self._properties_ui.comboBox_shell.activated] = self.shell_combobox_index_changed
         s[self._properties_ui.lineEdit_cmd.editingFinished] = self.cmd_edited
         s[self._properties_ui.radioButton_default.toggled] = self.push_work_dir_mode_cmd
-        # s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
-        # s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
+        s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
+        s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
         return s
 
     def restore_selections(self):
@@ -161,13 +161,13 @@ class Gimlet(ProjectItem):
         """Saves selections in shared widgets for this project item into instance variables."""
         self._properties_ui.treeView_files.setModel(None)
 
-    @Slot(str)
+    @Slot(int)
     def shell_checkbox_clicked(self, state):
         """Pushes a new shell check box command to undo stack.
         Pushing the command calls the commands redo method.
 
         Args:
-            state (str): New check box state (Qt.CheckState enum)
+            state (int): New check box state (Qt.CheckState enum)
         """
         use_shell = state == Qt.Checked
         if self.use_shell == use_shell:
@@ -234,7 +234,7 @@ class Gimlet(ProjectItem):
 
     @Slot(bool)
     def _add_selected_file_path_args(self, _=False):
-        new_args = [index.data() for index in self._properties_ui.treeView_input_files.selectedIndexes()]
+        new_args = [index.data() for index in self._properties_ui.treeView_files.selectedIndexes()]
         self._push_update_cmd_line_args_command(self.cmd_line_args + new_args)
 
     @Slot(list)
