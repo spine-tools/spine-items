@@ -114,7 +114,7 @@ class TestCombiner(unittest.TestCase):
             ProjectItemResource(item, "database", "sqlite:///db2.sqlite"),
         ]
         rank = 0
-        self.combiner.handle_dag_changed(rank, resources)
+        self.combiner.handle_dag_changed(rank, resources, [])
         model = self.combiner._properties_ui.treeView_files.model()
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
@@ -125,11 +125,11 @@ class TestCombiner(unittest.TestCase):
         resources = [ProjectItemResource(item, "file", url) for url in ["db1.sqlite", "db2.sqlite"]]
         rank = 0
         # Add initial files
-        self.combiner.handle_dag_changed(rank, resources)
+        self.combiner.handle_dag_changed(rank, resources, [])
         model = self.combiner._properties_ui.treeView_files.model()
         # Update with one existing, one new file
         resources = [ProjectItemResource(item, "file", url) for url in ["db2.sqlite", "db3.sqlite"]]
-        self.combiner.handle_dag_changed(rank, resources)
+        self.combiner.handle_dag_changed(rank, resources, [])
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         # NOTE: The item list order is now vice versa for some reason
         self.assertEqual(file_list, ["db3.sqlite", "db2.sqlite"])

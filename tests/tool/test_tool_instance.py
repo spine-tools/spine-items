@@ -24,27 +24,23 @@ from spine_items.tool.tool_specifications import PythonTool
 class TestPythonToolInstance(unittest.TestCase):
     def test_prepare_with_cmd_line_arguments_in_embedded_console(self):
         instance = self._make_tool_instance(True)
-        instance.prepare(
-            optional_input_files=[], input_database_urls={}, output_database_urls={}, tool_args=["arg1", "arg2"]
-        )
+        instance.prepare(["arg1", "arg2"])
         self.assertEqual(instance.ipython_command_list, ["%cd -q path/", '%run "main.py" "arg1" "arg2"'])
 
     def test_prepare_with_empty_cmd_line_arguments_in_embedded_console(self):
         instance = self._make_tool_instance(True)
-        instance.prepare(optional_input_files=[], input_database_urls={}, output_database_urls={}, tool_args=[])
+        instance.prepare([])
         self.assertEqual(instance.ipython_command_list, ["%cd -q path/", '%run "main.py"'])
 
     def test_prepare_with_cmd_line_arguments(self):
         instance = self._make_tool_instance(False)
-        instance.prepare(
-            optional_input_files=[], input_database_urls={}, output_database_urls={}, tool_args=["arg1", "arg2"]
-        )
+        instance.prepare(["arg1", "arg2"])
         self.assertEqual(instance.program, "python_path/python.exe")
         self.assertEqual(instance.args, ["path/main.py", "arg1", "arg2"])
 
     def test_prepare_without_cmd_line_arguments(self):
         instance = self._make_tool_instance(False)
-        instance.prepare(optional_input_files=[], input_database_urls={}, output_database_urls={}, tool_args=[])
+        instance.prepare([])
         self.assertEqual(instance.program, "python_path/python.exe")
         self.assertEqual(instance.args, ["path/main.py"])
 

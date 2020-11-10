@@ -49,7 +49,7 @@ class FileListItem:
         is_pattern (bool): True if the file is actually a file name pattern
     """
 
-    def __init__(self, label, path, provider_name, is_pattern=False, selected=False):
+    def __init__(self, label, path, provider_name, is_pattern=False, selected=True):
         self.label = label
         self.path = path
         self.selected = selected

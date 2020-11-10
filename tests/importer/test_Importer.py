@@ -15,7 +15,7 @@ Unit tests for Importer project item.
 :author: A. Soininen (VTT), P. Savolainen (VTT)
 :date:   4.10.2019
 """
-
+import collections
 import os
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
@@ -34,14 +34,15 @@ class TestImporter(unittest.TestCase):
         """Set up."""
         self.toolbox = create_mock_toolbox()
         mock_spec_model = self.toolbox.specification_model = MagicMock()
-        mock_spec_model.find_specification.side_effect = lambda x: None
+        Specification = collections.namedtuple('Specification', 'name mapping')
+        mock_spec_model.find_specification.side_effect = lambda x: Specification(name=x, mapping={})
         factory = ImporterFactory()
         item_dict = {
             "type": "Importer",
             "description": "",
-            "mappings": list(),
+            "specification": "importer_spec",
             "cancel_on_error": True,
-            "mapping_selection": list(),
+            "file_selection": list(),
             "x": 0,
             "y": 0,
         }
@@ -125,7 +126,7 @@ class TestImporter(unittest.TestCase):
         expected_file_list = ["url1", "url2"]
         resources = [ProjectItemResource(item, "file", url) for url in expected_file_list]
         rank = 0
-        self.importer.handle_dag_changed(rank, resources)
+        self.importer.handle_dag_changed(rank, resources, [])
         model = self.importer._properties_ui.treeView_files.model()
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
@@ -139,14 +140,14 @@ class TestImporter(unittest.TestCase):
         resources = [ProjectItemResource(item, "file", url) for url in ["url1", "url2"]]
         rank = 0
         # Add initial files
-        self.importer.handle_dag_changed(rank, resources)
+        self.importer.handle_dag_changed(rank, resources, [])
         model = self.importer._properties_ui.treeView_files.model()
         for row in range(2):
             index = model.index(row, 0)
             model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
         # Update with one existing, one new file
         resources = [ProjectItemResource(item, "file", url) for url in ["url2", "url3"]]
-        self.importer.handle_dag_changed(rank, resources)
+        self.importer.handle_dag_changed(rank, resources, [])
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(file_list, ["url2", "url3"])
         checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]
