@@ -24,7 +24,7 @@ from spinetoolbox.helpers import open_url
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spine_engine.utils.serialization import serialize_path, deserialize_path
+from spine_engine.utils.serialization import serialize_url, deserialize_path
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu
@@ -411,7 +411,7 @@ class Tool(ProjectItem):
         # NOTE: We enclose the arguments in quotes because that preserves the args that have spaces
         cmd_line_args = [f'"{arg}"' for arg in self.cmd_line_args]
         cmd_line_args = split_cmdline_args(" ".join(cmd_line_args))
-        d["cmd_line_args"] = [serialize_path(arg, self._project.project_dir) for arg in cmd_line_args]
+        d["cmd_line_args"] = [serialize_url(arg, self._project.project_dir) for arg in cmd_line_args]
         return d
 
     @staticmethod
