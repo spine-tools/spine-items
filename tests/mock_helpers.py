@@ -23,7 +23,7 @@ import spine_items.resources_icons_rc  # pylint: disable=unused-import
 
 
 class MockQWidget(QWidget):
-    """Dummy QWidget for mocking test_push_vars method in PythonReplWidget class."""
+    """Dummy QWidget for mocking test_push_vars method in SpineConsoleWidget class."""
 
     # noinspection PyMethodMayBeStatic
     def test_push_vars(self):

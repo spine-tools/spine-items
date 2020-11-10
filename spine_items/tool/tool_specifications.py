@@ -230,9 +230,9 @@ class ToolSpecification(ProjectItemSpecification):
             definition (dict): a dictionary containing the serialized specification.
             app_settings (QSettings): Toolbox settings
             logger (LoggerInterface): a logger
-            embedded_julia_console (JuliaREPLWidget, optional): Julia console widget,
+            embedded_julia_console (SpineConsoleWidget, optional): Julia console widget,
                 required if a Julia tool is to be run in the console
-            embedded_python_console (PythonReplWidget, optional): Python console widget,
+            embedded_python_console (SpineConsoleWidget, optional): Python console widget,
                 required if a Python tool is to be run in the console
         Returns:
             ToolSpecification: a tool specification constructed from the given definition,
@@ -421,7 +421,7 @@ class JuliaTool(ToolSpecification):
             includes (list): List of files belonging to the tool (relative to 'path').  # TODO: Change to src_files
             First file in the list is the main Julia program.
             settings (QSettings): Toolbox settings
-            embedded_julia_console (JuliaREPLWidget): a Julia console widget for execution in the embedded console
+            embedded_julia_console (SpineConsoleWidget): a Julia console widget for execution in the embedded console
             logger (LoggerInterface): A logger instance
             description (str): Julia Tool description
             inputfiles (list): List of required data files
@@ -465,7 +465,7 @@ class JuliaTool(ToolSpecification):
             path (str): Base path to tool files
             data (dict): Dictionary of tool definitions
             settings (QSetting): Toolbox settings
-            embedded_julia_console (JuliaREPLWidget): a Julia console for execution in the embedded console
+            embedded_julia_console (SpineConsoleWidget): a Julia console for execution in the embedded console
             logger (LoggerInterface): A logger instance
 
         Returns:
@@ -515,7 +515,7 @@ class PythonTool(ToolSpecification):
             path (str): Path to model main file
             includes (list): List of files belonging to the tool (relative to 'path').  # TODO: Change to src_files
             settings (QSettings): Toolbox settings
-            embedded_python_console (PythonReplWidget): a Python console widget for embedded console execution
+            embedded_python_console (SpineConsoleWidget): a Python console widget for embedded console execution
             logger (LoggerInterface): A logger instance
             First file in the list is the main Python program.
             description (str): Python Tool description
@@ -560,7 +560,7 @@ class PythonTool(ToolSpecification):
             path (str): Base path to tool files
             data (dict): Dictionary of tool definitions
             settings (QSettings): Toolbox settings
-            embedded_python_console (PythonReplWidget): Python console widget for execution in the embedded console
+            embedded_python_console (SpineConsoleWidget): Python console widget for execution in the embedded console
             logger (LoggerInterface): A logger instance
 
         Returns:

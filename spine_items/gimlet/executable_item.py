@@ -53,6 +53,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         self.cmd_list = cmd
         self._work_dir = work_dir
         self._gimlet_process = None
+        self._gimlet_execution_succeeded = True
         self._resources = list()  # Predecessor resources
         self._successor_resources = list()
         self._selected_files = selected_files
@@ -161,7 +162,11 @@ class ExecutableItem(ExecutableItemBase, QObject):
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = resources.copy()
         # This is executed after the gimlet process has finished
-        self._logger.msg_success.emit(f"Executing {self.name} finished")
+        if not self._gimlet_execution_succeeded:
+            self._logger.msg_error.emit(f"{self.name} execution failed")
+            return False
+        else:
+            self._logger.msg_success.emit(f"Executing {self.name} finished")
         return True
 
     def _execute_backward(self, resources):
@@ -186,8 +191,8 @@ class ExecutableItem(ExecutableItemBase, QObject):
         """
         return list()
 
-    @Slot()
-    def _handle_gimlet_process_finished(self):
+    @Slot(int)
+    def _handle_gimlet_process_finished(self, ret_code):
         """Handles clean up after Gimlet process has finished.
         After clean up, emits a signal indicating that this
         project item execution is done.
@@ -195,6 +200,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         self._gimlet_process.execution_finished.disconnect()
         self._gimlet_process.deleteLater()
         self._gimlet_process = None
+        self._gimlet_execution_succeeded = ret_code == 0
         self.gimlet_finished.emit()
 
     def _copy_files(self, files, work_dir):
