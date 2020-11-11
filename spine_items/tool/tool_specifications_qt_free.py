@@ -51,9 +51,9 @@ def make_specification(definition, app_settings, logger):
         definition (dict): a dictionary containing the serialized specification.
         app_settings (QSettings): Toolbox settings
         logger (LoggerInterface): a logger
-        embedded_julia_console (JuliaREPLWidget, optional): Julia console widget,
+        embedded_julia_console (SpineConsoleWidget, optional): Julia console widget,
             required if a Julia tool is to be run in the console
-        embedded_python_console (PythonReplWidget, optional): Python console widget,
+        embedded_python_console (SpineConsoleWidget, optional): Python console widget,
             required if a Python tool is to be run in the console
     Returns:
         ToolSpecification: a tool specification constructed from the given definition,

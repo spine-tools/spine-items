@@ -158,7 +158,7 @@ class JuliaToolInstance(ToolInstance):
             tool_specification (ToolSpecification): the tool specification for this instance
             basedir (str): the path to the directory where this instance should run
             settings (QSettings): Toolbox settings
-            embedded_julia_console (JuliaREPLWidget): a Julia console for execution in the embedded console
+            embedded_julia_console (SpineConsoleWidget): a Julia console for execution in the embedded console
             logger (LoggerInterface): a logger instance
         """
         super().__init__(tool_specification, basedir, settings, logger)
@@ -201,7 +201,7 @@ class JuliaToolInstance(ToolInstance):
             and self._embedded_console is not None
         ):
             self.exec_mngr = ConsoleExecutionManager(self._embedded_console, self.ijulia_command_list, self._logger)
-            self.exec_mngr.execution_finished.connect(self.handle_repl_execution_finished)
+            self.exec_mngr.execution_finished.connect(self.handle_julia_console_execution_finished)
             self.exec_mngr.start_execution()
         else:
             self.exec_mngr = QProcessExecutionManager(self._logger, self.program, self.args, **kwargs)
@@ -211,13 +211,13 @@ class JuliaToolInstance(ToolInstance):
             self.exec_mngr.start_execution(workdir=self.basedir)
 
     @Slot(int)
-    def handle_repl_execution_finished(self, ret):
+    def handle_julia_console_execution_finished(self, ret):
         """Handles repl-execution finished.
 
         Args:
             ret (int): Tool specification process return value
         """
-        self.exec_mngr.execution_finished.disconnect(self.handle_repl_execution_finished)
+        self.exec_mngr.execution_finished.disconnect(self.handle_julia_console_execution_finished)
         if ret != 0:
             try:
                 return_msg = self.tool_specification.return_codes[ret]
@@ -263,7 +263,7 @@ class PythonToolInstance(ToolInstance):
             tool_specification (ToolSpecification): the tool specification for this instance
             basedir (str): the path to the directory where this instance should run
             settings (QSettings): Toolbox settings
-            embedded_python_console (PythonReplWidget): a Python console widget for execution in embedded console
+            embedded_python_console (SpineConsoleWidget): a Python console widget for execution in embedded console
             logger (LoggerInterface): A logger instance
         """
         super().__init__(tool_specification, basedir, settings, logger)
@@ -300,7 +300,7 @@ class PythonToolInstance(ToolInstance):
             and self._embedded_console is not None
         ):
             self.exec_mngr = ConsoleExecutionManager(self._embedded_console, self.ipython_command_list, self._logger)
-            self.exec_mngr.execution_finished.connect(self.handle_console_execution_finished)
+            self.exec_mngr.execution_finished.connect(self.handle_python_console_execution_finished)
             self.exec_mngr.start_execution()
         else:
             self.exec_mngr = QProcessExecutionManager(self._logger, self.program, self.args, **kwargs)
@@ -308,13 +308,13 @@ class PythonToolInstance(ToolInstance):
             self.exec_mngr.start_execution(workdir=self.basedir)
 
     @Slot(int)
-    def handle_console_execution_finished(self, ret):
+    def handle_python_console_execution_finished(self, ret):
         """Handles console-execution finished.
 
         Args:
             ret (int): Tool specification process return value
         """
-        self.exec_mngr.execution_finished.disconnect(self.handle_console_execution_finished)
+        self.exec_mngr.execution_finished.disconnect(self.handle_python_console_execution_finished)
         if ret != 0:
             try:
                 return_msg = self.tool_specification.return_codes[ret]
