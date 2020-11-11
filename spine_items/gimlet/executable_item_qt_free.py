@@ -143,11 +143,14 @@ class ExecutableItem(ExecutableItemBase):
             + "'>work directory</a>"
         )
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
-        self._exec_mngr.run_until_complete()
+        ret = self._exec_mngr.run_until_complete()
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = resources.copy()
-        self._logger.msg_success.emit(f"Executing {self.name} finished")
         self._exec_mngr = None
+        if ret != 0:
+            self._logger.msg_error.emit(f"{self.name} execution failed")
+            return False
+        self._logger.msg_success.emit(f"Executing {self.name} finished")
         return True
 
     def _output_resources_forward(self):

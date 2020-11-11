@@ -168,8 +168,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         if not self._gimlet_execution_succeeded:
             self._logger.msg_error.emit(f"{self.name} execution failed")
             return False
-        else:
-            self._logger.msg_success.emit(f"Executing {self.name} finished")
+        self._logger.msg_success.emit(f"Executing {self.name} finished")
         return True
 
     def _execute_backward(self, resources):
