@@ -77,7 +77,7 @@ class Tool(ProjectItem):
         self._cmdline_args_model = ToolCommandLineArgsModel(self)
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
-        self._input_file_model = InputFileListModel(checkable=False)
+        self._input_file_model = InputFileListModel(header_label="Available resources", checkable=False)
         self.specification_options_popup_menu = None
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
@@ -295,8 +295,8 @@ class Tool(ProjectItem):
         The output files are available only after tool has been executed,
         therefore the resource type is 'transient_file' or 'file_pattern'.
         A 'file_pattern' type resource is returned only if the pattern doesn't match any output file.
-        For 'transient_file' resources, the url attribute is set to an empty string if the file doesn't exist yet
-        or it points to a file from most recent execution.
+        For 'transient_file' resources, the url attribute is set to an empty string if the file doesn't exist yet,
+        otherwise it points to a file from most recent execution.
         The metadata attribute's label key gives the base name or file pattern of the output file.
 
         Returns:

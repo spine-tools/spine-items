@@ -232,7 +232,7 @@ class InputFileListModel(FileListModel):
     _invalid_resource_types = ()
     _header_label = "Input files"
 
-    def __init__(self, invalid_resource_types=(), header_label="Input files", checkable=True):
+    def __init__(self, invalid_resource_types=(), header_label="", checkable=True):
         super().__init__(invalid_resource_types=invalid_resource_types, header_label=header_label)
         self._checkable = checkable
 

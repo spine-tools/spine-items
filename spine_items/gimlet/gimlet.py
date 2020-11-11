@@ -75,7 +75,7 @@ class Gimlet(ProjectItem):
         """
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
-        self._file_model = InputFileListModel()
+        self._file_model = InputFileListModel(header_label="Available resources")
         self._toolbox_resources = list()  # ProjectItemResources for handling changes in the DAG on Design View
         self.use_shell = use_shell
         self.shell_index = shell_index

@@ -185,7 +185,7 @@ class ExecutableItem(ExecutableItemBase):
             return False
         n_copied_files = 0
         for f in files:
-            src_dir, name = os.path.split(f)
+            name = os.path.basename(f)
             dst_file = os.path.abspath(os.path.join(work_dir, name))
             try:
                 # Copy file
