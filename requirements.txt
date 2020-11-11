@@ -1,4 +1,4 @@
 git+https://github.com/Spine-project/Spine-Database-API.git#egg=spinedb_api
 git+https://github.com/Spine-project/spine-engine.git#egg=spine_engine
-git+https://github.com/Spine-project/Spine-Toolbox.git@dev#egg=spinetoolbox
+git+https://github.com/Spine-project/Spine-Toolbox.git#egg=spinetoolbox
 -e .
