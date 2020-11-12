@@ -92,14 +92,14 @@ class TestDataConnection(unittest.TestCase):
             mock_filenames.return_value = ([str(b), str(c)], "*.*")
             self.data_connection.add_references()
             self.assertEqual(4, mock_filenames.call_count)
-            self.assertEqual(2, len(self.data_connection.file_references()))
-            self.assertEqual(2, self.data_connection.reference_model.rowCount())
+            self.assertEqual(1, len(self.data_connection.file_references()))
+            self.assertEqual(1, self.data_connection.reference_model.rowCount())
             # Now add new reference
             mock_filenames.return_value = ([str(a)], "*.*")
             self.data_connection.add_references()
             self.assertEqual(5, mock_filenames.call_count)
-            self.assertEqual(3, len(self.data_connection.file_references()))
-            self.assertEqual(3, self.data_connection.reference_model.rowCount())
+            self.assertEqual(2, len(self.data_connection.file_references()))
+            self.assertEqual(2, self.data_connection.reference_model.rowCount())
             # self.data_connection.references = list()
             # self.data_connection.reference_model = QStandardItemModel()
 
@@ -152,28 +152,19 @@ class TestDataConnection(unittest.TestCase):
             mock_filenames.return_value = ([str(a), str(b), str(c), str(d)], "*.*")
             self.data_connection.add_references()
             self.assertEqual(2, mock_filenames.call_count)
-            self.assertEqual(4, len(self.data_connection.file_references()))
-            self.assertEqual(4, self.data_connection.reference_model.rowCount())
-            c_index = self.data_connection.reference_model.index(2, 0)
-            mock_selected_indexes.return_value = [c_index]
-            self.data_connection.remove_references()
-            self.assertEqual(4, mock_selected_indexes.call_count)
-            self.assertEqual(3, len(self.data_connection.file_references()))
-            self.assertEqual(3, self.data_connection.reference_model.rowCount())
-            # Check that the three remaining items are the ones that are supposed to be there
+            self.assertEqual(2, len(self.data_connection.file_references()))
+            self.assertEqual(2, self.data_connection.reference_model.rowCount())
+            # Check that the two remaining items are the ones that are supposed to be there
             self.assertEqual(str(a), self.data_connection.file_references()[0])
             self.assertEqual(str(a), self.data_connection.reference_model.item(0).data(Qt.DisplayRole))
             self.assertEqual(str(b), self.data_connection.file_references()[1])
             self.assertEqual(str(b), self.data_connection.reference_model.item(1).data(Qt.DisplayRole))
-            self.assertEqual(str(d), self.data_connection.file_references()[2])
-            self.assertEqual(str(d), self.data_connection.reference_model.item(2).data(Qt.DisplayRole))
-            # Now select the three remaining ones and remove them
+            # Now select the two remaining ones and remove them
             a_index = self.data_connection.reference_model.index(0, 0)
             b_index = self.data_connection.reference_model.index(1, 0)
-            d_index = self.data_connection.reference_model.index(2, 0)
-            mock_selected_indexes.return_value = [a_index, b_index, d_index]
+            mock_selected_indexes.return_value = [a_index, b_index]
             self.data_connection.remove_references()
-            self.assertEqual(5, mock_selected_indexes.call_count)
+            self.assertEqual(4, mock_selected_indexes.call_count)
             self.assertEqual(0, len(self.data_connection.file_references()))
             self.assertEqual(0, self.data_connection.reference_model.rowCount())
             # Add a, b, c, and d back Select all and remove.
@@ -182,11 +173,9 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(3, mock_filenames.call_count)
             a_index = self.data_connection.reference_model.index(0, 0)
             b_index = self.data_connection.reference_model.index(1, 0)
-            c_index = self.data_connection.reference_model.index(2, 0)
-            d_index = self.data_connection.reference_model.index(3, 0)
-            mock_selected_indexes.return_value = [a_index, b_index, c_index, d_index]
+            mock_selected_indexes.return_value = [a_index, b_index]
             self.data_connection.remove_references()
-            self.assertEqual(6, mock_selected_indexes.call_count)
+            self.assertEqual(5, mock_selected_indexes.call_count)
             self.assertEqual(0, len(self.data_connection.file_references()))
             self.assertEqual(0, self.data_connection.reference_model.rowCount())
 
