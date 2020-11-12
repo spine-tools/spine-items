@@ -56,10 +56,9 @@ class DataConnection(ProjectItem):
         self.datapackage_icon = QIcon(QPixmap(":/icons/datapkg.png"))
         self.data_dir_watcher = None
         self.references = [ref for ref in references if os.path.isfile(ref)]
-        self.populate_reference_list(self.references)
+        self.populate_reference_list()
         # Populate data (files) model
-        data_files = self.data_files()
-        self.populate_data_list(data_files)
+        self.populate_data_list()
         self.spine_datapackage_form = None
 
     def set_up(self):
@@ -133,7 +132,7 @@ class DataConnection(ProjectItem):
     def do_add_files_to_references(self, paths):
         abspaths = [os.path.abspath(path) for path in paths]
         self.references.extend(abspaths)
-        self.populate_reference_list(self.references)
+        self.populate_reference_list()
 
     @Slot("QGraphicsItem", list)
     def receive_files_dropped_on_icon(self, icon, file_paths):
@@ -188,7 +187,7 @@ class DataConnection(ProjectItem):
         self.references = [
             r for r in self.references if not any(os.path.samefile(r, ref) for ref in removed_references)
         ]
-        self.populate_reference_list(self.references)
+        self.populate_reference_list()
 
     @Slot(bool)
     def copy_to_project(self, checked=False):
@@ -342,41 +341,36 @@ class DataConnection(ProjectItem):
     def refresh(self, _=None):
         """Refresh data files in Data Connection Properties.
         NOTE: Might lead to performance issues."""
-        d = self.data_files()
-        self.populate_data_list(d)
+        self.populate_data_list()
 
-    def populate_reference_list(self, items):
+    def populate_reference_list(self):
         """List file references in QTreeView.
-        If items is None or empty list, model is cleared.
         """
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
-        if items is not None:
-            for item in items:
-                qitem = QStandardItem(item)
-                qitem.setFlags(~Qt.ItemIsEditable)
-                qitem.setData(item, Qt.ToolTipRole)
-                qitem.setData(self._toolbox.style().standardIcon(QStyle.SP_FileLinkIcon), Qt.DecorationRole)
-                self.reference_model.appendRow(qitem)
+        for item in self.references:
+            qitem = QStandardItem(item)
+            qitem.setFlags(~Qt.ItemIsEditable)
+            qitem.setData(item, Qt.ToolTipRole)
+            qitem.setData(self._toolbox.style().standardIcon(QStyle.SP_FileLinkIcon), Qt.DecorationRole)
+            self.reference_model.appendRow(qitem)
         self.item_changed.emit()
 
-    def populate_data_list(self, items):
+    def populate_data_list(self):
         """List project internal data (files) in QTreeView.
-        If items is None or empty list, model is cleared.
         """
         self.data_model.clear()
         self.data_model.setHorizontalHeaderItem(0, QStandardItem("Data"))  # Add header
-        if items is not None:
-            for item in items:
-                qitem = QStandardItem(item)
-                qitem.setFlags(~Qt.ItemIsEditable)
-                if item == "datapackage.json":
-                    qitem.setData(self.datapackage_icon, Qt.DecorationRole)
-                else:
-                    qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
-                full_path = os.path.join(self.data_dir, item)  # For drag and drop
-                qitem.setData(full_path, Qt.UserRole)
-                self.data_model.appendRow(qitem)
+        for item in self.data_files():
+            qitem = QStandardItem(item)
+            qitem.setFlags(~Qt.ItemIsEditable)
+            if item == "datapackage.json":
+                qitem.setData(self.datapackage_icon, Qt.DecorationRole)
+            else:
+                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
+            full_path = os.path.join(self.data_dir, item)  # For drag and drop
+            qitem.setData(full_path, Qt.UserRole)
+            self.data_model.appendRow(qitem)
         self.item_changed.emit()
 
     def update_name_label(self):
