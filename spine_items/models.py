@@ -72,18 +72,8 @@ class FileListItem:
         Raises:
             RuntimeError: If given resource has an unknown type
         """
-        is_pattern = False
-        if resource.type_ == "file":
-            label = resource.path
-        elif resource.type_ == "database":
-            label = resource.url
-        elif resource.type_ == "transient_file":
-            label = _file_label(resource)
-        elif resource.type_ == "file_pattern":
-            label = _file_label(resource)
-            is_pattern = True
-        else:
-            raise RuntimeError(f"Unknown resource type '{resource.type_}'")
+        label = _file_label(resource)
+        is_pattern = resource.type_ == "file_pattern"
         return cls(label, resource.path if resource.url else "", resource.provider.name, is_pattern)
 
     def exists(self):
