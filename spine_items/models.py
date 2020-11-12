@@ -133,13 +133,9 @@ class FileListModel(QAbstractListModel):
         return None
 
     def flags(self, index):
-        """Returns item's flags."""
         if not index.isValid():
             return Qt.NoItemFlags
-        item = self._files[index.row()]
-        if item.exists():
-            return Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemNeverHasChildren
-        return Qt.ItemNeverHasChildren
+        return Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         """Returns header information."""
@@ -228,8 +224,8 @@ class InputFileListModel(FileListModel):
 
     def flags(self, index):
         flags = super().flags(index) | Qt.ItemIsDragEnabled
-        if not self._checkable:
-            flags &= ~Qt.ItemIsUserCheckable
+        if self._checkable:
+            flags |= Qt.ItemIsUserCheckable
         return flags
 
     def data(self, index, role=Qt.DisplayRole):

@@ -134,42 +134,6 @@ class TestGimletExecutable(unittest.TestCase):
             executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[])
             self.assertEqual(executable.output_resources(ExecutionDirection.FORWARD), [])
 
-    def test_expand_gimlet_tags(self):
-
-        with TemporaryDirectory() as temp_dir:
-            executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[])
-            expanded = executable._expand_gimlet_tags(["a"], [])
-            self.assertEqual(["a"], expanded)
-            expanded = executable._expand_gimlet_tags(["a", "b"], [])
-            self.assertEqual(["a", "b"], expanded)
-
-            # Make predecessor resources
-            db1_path = Path(temp_dir).joinpath("input_db1.sqlite")
-            db1_url = "sqlite:///" + str(db1_path)
-            db2_path = Path(temp_dir).joinpath("input_db2.sqlite")
-            db2_url = "sqlite:///" + str(db2_path)
-            db3_path = Path(temp_dir).joinpath("output_db.sqlite")
-            db3_url = "sqlite:///" + str(db3_path)
-            resources = [
-                ProjectItemResource(FakeProvider("DATA STORE 1"), "database", db1_url),
-                ProjectItemResource(FakeProvider("DATA STORE 2"), "database", db2_url),
-            ]
-            # Add a resource for the executable that comes from a successor Data Store
-            executable._successor_resources = [ProjectItemResource(FakeProvider("DATA STORE 3"), "database", db3_url)]
-            expanded = executable._expand_gimlet_tags(["@@url_inputs@@"], resources)
-            self.assertEqual([db1_url, db2_url], expanded)
-            expanded = executable._expand_gimlet_tags(["@@url_inputs@@", "@@url_outputs@@"], resources)
-            self.assertEqual([db1_url, db2_url, db3_url], expanded)
-
-            expanded = executable._expand_gimlet_tags(["@@url:DATA STORE 1@@"], resources)
-            self.assertEqual([db1_url], expanded)
-            expanded = executable._expand_gimlet_tags(["@@url:DATA STORE 1@@", "@@url:DATA STORE 3@@"], resources)
-            self.assertEqual([db1_url, db3_url], expanded)
-            expanded = executable._expand_gimlet_tags(["@@url_inputs@@", "@@url:DATA STORE 2@@"], resources)
-            self.assertEqual([db1_url, db2_url, db2_url], expanded)
-            expanded = executable._expand_gimlet_tags(["a", "-z", "@@url:DATA STORE 3@@", "--output"], resources)
-            self.assertEqual(["a", "-z", db3_url, "--output"], expanded)
-
     def test_stop_execution(self):
         logger = mock.MagicMock()
         prgm = "cmd.exe"

@@ -24,6 +24,7 @@ from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_checked_states
 from .importer_worker import ImporterWorker
 from .item_info import ItemInfo
+from ..utils import labelled_filepaths_from_resources
 
 
 class ExecutableItem(ExecutableItemBase, QObject):
@@ -84,7 +85,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         """See base class."""
         if not self._mapping:
             return True
-        absolute_paths = _files_from_resources(resources)
+        absolute_paths = labelled_filepaths_from_resources(resources)
         selected_abs_paths = list()
         for label in self._selected_files:
             absolute_path = absolute_paths.get(label)
@@ -166,14 +167,3 @@ class ExecutableItem(ExecutableItemBase, QObject):
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
         return cls(name, mapping, selected_files, logs_dir, gams_path, cancel_on_error, logger)
-
-
-def _files_from_resources(resources):
-    """Returns a list of files available in given resources."""
-    files = dict()
-    for resource in resources:
-        if resource.type_ == "file":
-            files[resource.path] = resource.path
-        elif resource.type_ == "transient_file":
-            files[resource.metadata["label"]] = resource.path
-    return files

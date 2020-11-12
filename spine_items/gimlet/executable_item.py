@@ -25,7 +25,7 @@ from spinetoolbox.execution_managers import QProcessExecutionManager
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_checked_states, deserialize_path
-from spine_engine.utils.command_line_arguments import split_cmdline_args, expand_tags
+from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from .item_info import ItemInfo
 from .utils import SHELLS
@@ -237,61 +237,3 @@ class ExecutableItem(ExecutableItemBase, QObject):
         else:
             self._logger.msg.emit(f"\tCopied <b>{n_copied_files}</b> file(s)")
         return True
-
-    def _expand_gimlet_tags(self, cmd, resources):
-        """Returns Gimlet's command as list with special tags expanded.
-
-        Tags that will be replaced:
-
-        - @@optional_inputs@@ expands to a space-separated list of Gimlet's optional input files
-        - @@url:<Data Store name>@@ expands to the URL provided by a named data store
-        - @@url_inputs@@ expands to a space-separated list of Gimlet's input database URLs
-        - @@url_outputs@@ expands to a space-separated list of Gimlet's output database URLs
-
-        Args:
-            cmd (list): Command that may include tags that should be expanded
-            resources (list): List of resources from direct predecessor items
-
-        Returns:
-            list: Expanded command
-        """
-        files = _file_paths_from_resources(resources)
-        input_urls = _database_urls_from_resources(resources)
-        output_urls = _database_urls_from_resources(self._successor_resources)
-        tags_expanded, args = expand_tags(cmd, files, input_urls, output_urls)
-        while tags_expanded:
-            # Keep expanding until there is no tag left to expand.
-            tags_expanded, args = expand_tags(args, files, input_urls, output_urls)
-        return args
-
-
-def _file_paths_from_resources(resources):
-    """Pries file paths from resources.
-
-    Args:
-        resources (list): a list of ProjectItemResource objects
-
-    Returns:
-        list: List of file paths.
-    """
-    files = list()
-    for resource in resources:
-        if resource.type_ == "file":
-            files.append(resource.path)
-    return files
-
-
-def _database_urls_from_resources(resources):
-    """Pries database URLs and their providers' names from resources.
-
-    Args:
-        resources (list): a list of ProjectItemResource objects
-
-    Returns:
-        dict: a mapping from resource provider's name to a database URL.
-    """
-    urls = dict()
-    for resource in resources:
-        if resource.type_ == "database":
-            urls[resource.provider.name] = resource.url
-    return urls
