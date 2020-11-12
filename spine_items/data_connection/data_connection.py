@@ -48,12 +48,14 @@ class DataConnection(ProjectItem):
             references (list, optional): a list of file paths
         """
         super().__init__(name, description, x, y, project, logger)
+        if references is None:
+            references = list()
         self._toolbox = toolbox
         self.reference_model = QStandardItemModel()  # References to files
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
         self.datapackage_icon = QIcon(QPixmap(":/icons/datapkg.png"))
         self.data_dir_watcher = None
-        self.references = references if references is not None else list()
+        self.references = [ref for ref in references if os.path.isfile(ref)]
         self.populate_reference_list(self.references)
         # Populate data (files) model
         data_files = self.data_files()
@@ -116,7 +118,9 @@ class DataConnection(ProjectItem):
         repeated_paths = []
         new_paths = []
         for path in paths:
-            if any(os.path.samefile(path, ref) for ref in self.references if os.path.isfile(ref)):
+            if not os.path.isfile(path):
+                continue
+            if any(os.path.samefile(path, ref) for ref in self.references):
                 repeated_paths.append(path)
             else:
                 new_paths.append(path)
@@ -174,18 +178,15 @@ class DataConnection(ProjectItem):
 
     def do_remove_references(self, references):
         """Removes given references from this Data Connection.
-        Removes references to file paths that do not exist.
 
         Args:
             references (list): List of selected paths.
         """
         # samefile() needs the file path to exist so we need to
         # check that the references actually exist before looking for duplicates
+        removed_references = (ref for ref in references if os.path.isfile(ref))
         self.references = [
-            r
-            for r in self.references
-            if (r not in references)
-            or (os.path.isfile(r) and not any(os.path.samefile(r, ref) for ref in references if os.path.isfile(ref)))
+            r for r in self.references if not any(os.path.samefile(r, ref) for ref in removed_references)
         ]
         self.populate_reference_list(self.references)
 
@@ -344,7 +345,7 @@ class DataConnection(ProjectItem):
         d = self.data_files()
         self.populate_data_list(d)
 
-    def populate_reference_list(self, items, emit_item_changed=True):
+    def populate_reference_list(self, items):
         """List file references in QTreeView.
         If items is None or empty list, model is cleared.
         """
@@ -357,8 +358,7 @@ class DataConnection(ProjectItem):
                 qitem.setData(item, Qt.ToolTipRole)
                 qitem.setData(self._toolbox.style().standardIcon(QStyle.SP_FileLinkIcon), Qt.DecorationRole)
                 self.reference_model.appendRow(qitem)
-        if emit_item_changed:
-            self.item_changed.emit()
+        self.item_changed.emit()
 
     def populate_data_list(self, items):
         """List project internal data (files) in QTreeView.
