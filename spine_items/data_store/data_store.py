@@ -50,6 +50,7 @@ class DataStore(ProjectItem):
             url = dict()
         self._url = self.parse_url(url)
         self._sa_url = None
+        self._additional_resource_metadata = None
 
     @staticmethod
     def item_type():
@@ -412,6 +413,7 @@ class DataStore(ProjectItem):
             bool: True if renaming succeeded, False otherwise
         """
         old_data_dir = os.path.abspath(self.data_dir)  # Old data_dir before rename
+        old_name = self.name
         if not super().rename(new_name):
             return False
         # If dialect is sqlite and db line edit refers to a file in the old data_dir, db line edit needs updating
@@ -421,7 +423,10 @@ class DataStore(ProjectItem):
                 database = os.path.join(self.data_dir, db_filename)  # NOTE: data_dir has been updated at this point
                 # Check that the db was moved successfully to the new data_dir
                 if os.path.exists(database):
-                    self.do_update_url(database=database)
+                    self._url.update(database=database)
+                    self.load_url_into_selections(self._url)
+        self._additional_resource_metadata = {"updated_from": make_label(old_name)}
+        self.item_changed.emit()
         return True
 
     def notify_destination(self, source_item):
@@ -452,6 +457,8 @@ class DataStore(ProjectItem):
         self._update_sa_url(log_errors=False)
         if self._sa_url:
             metadata = {"label": make_label(self.name)}
+            if self._additional_resource_metadata:
+                metadata.update(self._additional_resource_metadata)
             resource = ProjectItemResource(self, "database", url=str(self._sa_url), metadata=metadata)
             return [resource]
         self.add_notification(

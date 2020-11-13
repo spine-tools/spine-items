@@ -32,7 +32,7 @@ class AddDCReferencesCommand(SpineToolboxCommand):
         self.setText(f"add references to {dc.name}")
 
     def redo(self):
-        self.dc.do_add_files_to_references(self.paths)
+        self.dc.do_add_references(self.paths)
 
     def undo(self):
         self.dc.do_remove_references(self.paths)
@@ -55,4 +55,4 @@ class RemoveDCReferencesCommand(SpineToolboxCommand):
         self.dc.do_remove_references(self.paths)
 
     def undo(self):
-        self.dc.do_add_files_to_references(self.paths)
+        self.dc.do_add_references(self.paths)

@@ -250,16 +250,14 @@ class Gimlet(ProjectItem):
             cmd_line_args (list): Tool cmd line args
         """
         self.cmd_line_args = cmd_line_args
-        if not self._active:
-            return
         self._populate_cmdline_args_model()
 
     def _populate_cmdline_args_model(self):
         gimlet_args = self.cmd_line_args
-        if self._properties_ui:
+        if self._active:
             pos = self._properties_ui.treeView_cmdline_args.verticalScrollBar().sliderPosition()
         self._cmdline_args_model.reset_model(gimlet_args)
-        if self._properties_ui:
+        if self._active:
             self._properties_ui.treeView_cmdline_args.expandAll()
             self._properties_ui.treeView_cmdline_args.verticalScrollBar().setSliderPosition(pos)
             # TODO: self._properties_ui.treeView_cmdline_args.setFocus()
@@ -302,18 +300,29 @@ class Gimlet(ProjectItem):
             self._properties_ui.radioButton_unique.setChecked(True)
         self._properties_ui.radioButton_default.blockSignals(False)
 
-    def _do_handle_dag_changed(self, resources, _):
+    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
         """Saves a copy of ProjectItemResources for handling
         changes in the DAG on Design View.
 
         See also base class.
 
         Args:
-            resources (list): ProjectItemResources available from direct predecessors
+            upstream_resources (list): ProjectItemResources available from upstream
+            downstream_resources (list): ProjectItemResources available from downstream
         """
-        self._toolbox_resources = resources.copy()
-        self._file_model.update(resources)
+        self._toolbox_resources = upstream_resources + downstream_resources
+        self._file_model.update(self._toolbox_resources)
         self._notify_if_duplicate_file_paths()
+        # Update cmdline args
+        cmd_line_args = self.cmd_line_args.copy()
+        for resource in self._toolbox_resources:
+            updated_from = resource.metadata.get("updated_from")
+            try:
+                i = cmd_line_args.index(updated_from)
+            except ValueError:
+                continue
+            cmd_line_args[i] = resource.label
+        self.update_cmd_line_args(cmd_line_args)
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""

@@ -173,17 +173,15 @@ class Tool(ProjectItem):
             cmd_line_args (list): Tool cmd line args
         """
         self.cmd_line_args = cmd_line_args
-        if not self._active:
-            return
         self._populate_cmdline_args_model()
 
     def _populate_cmdline_args_model(self):
         spec_args = self.specification().cmdline_args if self.specification() else []
         tool_args = self.cmd_line_args
-        if self._properties_ui:
+        if self._active:
             pos = self._properties_ui.treeView_cmdline_args.verticalScrollBar().sliderPosition()
         self._cmdline_args_model.reset_model(spec_args, tool_args)
-        if self._properties_ui:
+        if self._active:
             self._properties_ui.treeView_cmdline_args.expandAll()
             self._properties_ui.treeView_cmdline_args.verticalScrollBar().setSliderPosition(pos)
             # TODO: self._properties_ui.treeView_cmdline_args.setFocus()
@@ -382,6 +380,16 @@ class Tool(ProjectItem):
                 "File(s) {0} needed to execute this Tool are not provided by any input item. "
                 "Connect items that provide the required files to this Tool.".format(", ".join(not_found))
             )
+        # Update cmdline args
+        cmd_line_args = self.cmd_line_args.copy()
+        for resource in resources:
+            updated_from = resource.metadata.get("updated_from")
+            try:
+                i = cmd_line_args.index(updated_from)
+            except ValueError:
+                continue
+            cmd_line_args[i] = resource.label
+        self.update_cmd_line_args(cmd_line_args)
 
     def _notify_if_duplicate_file_paths(self):
         """Adds a notification if file_list contains duplicate entries."""

@@ -20,10 +20,11 @@ import os
 import shutil
 import logging
 import pathlib
-from PySide2.QtCore import Slot, QFileSystemWatcher, Qt, QFileInfo
+from PySide2.QtCore import Slot, Qt, QFileInfo
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
 from PySide2.QtWidgets import QFileDialog, QStyle, QFileIconProvider, QInputDialog, QMessageBox
 from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.custom_file_system_watcher import CustomFileSystemWatcher
 from spinetoolbox.helpers import busy_effect, open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from spine_engine.project_item.project_item_resource import ProjectItemResource
@@ -54,18 +55,21 @@ class DataConnection(ProjectItem):
         self.reference_model = QStandardItemModel()  # References to files
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
         self.datapackage_icon = QIcon(QPixmap(":/icons/datapkg.png"))
-        self.data_dir_watcher = None
+        self.file_system_watcher = None
         self.references = [ref for ref in references if os.path.isfile(ref)]
         self.populate_reference_list()
         # Populate data (files) model
         self.populate_data_list()
         self.spine_datapackage_form = None
+        self._updated_from = {}
 
     def set_up(self):
-        self.data_dir_watcher = QFileSystemWatcher(self)
-        if os.path.isdir(self.data_dir):
-            self.data_dir_watcher.addPath(self.data_dir)
-        self.data_dir_watcher.directoryChanged.connect(self.refresh)
+        self.file_system_watcher = CustomFileSystemWatcher(self)
+        self.file_system_watcher.add_persistent_file_paths(self.references)
+        self.file_system_watcher.add_persistent_dir_path(self.data_dir)
+        self.file_system_watcher.file_removed.connect(self._handle_file_removed)
+        self.file_system_watcher.file_renamed.connect(self._handle_file_renamed)
+        self.file_system_watcher.file_added.connect(self._handle_file_added)
 
     @staticmethod
     def item_type():
@@ -88,14 +92,14 @@ class DataConnection(ProjectItem):
         s = super().make_signal_handler_dict()
         # pylint: disable=unnecessary-lambda
         s[self._properties_ui.toolButton_dc_open_dir.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.toolButton_plus.clicked] = self.add_references
+        s[self._properties_ui.toolButton_plus.clicked] = self.show_add_references_dialog
         s[self._properties_ui.toolButton_minus.clicked] = self.remove_references
         s[self._properties_ui.toolButton_add.clicked] = self.copy_to_project
         s[self._properties_ui.pushButton_datapackage.clicked] = self.show_spine_datapackage_form
         s[self._properties_ui.treeView_dc_references.doubleClicked] = self.open_reference
         s[self._properties_ui.treeView_dc_data.doubleClicked] = self.open_data_file
-        s[self._properties_ui.treeView_dc_references.files_dropped] = self.add_files_to_references
-        s[self._properties_ui.treeView_dc_data.files_dropped] = self.add_files_to_data_dir
+        s[self._properties_ui.treeView_dc_references.files_dropped] = self.add_references
+        s[self._properties_ui.treeView_dc_data.files_dropped] = self.add_data_files
         s[self.get_icon().files_dropped_on_icon] = self.receive_files_dropped_on_icon
         s[self._properties_ui.treeView_dc_references.del_key_pressed] = lambda: self.remove_references()
         s[self._properties_ui.treeView_dc_data.del_key_pressed] = lambda: self.remove_files()
@@ -107,8 +111,37 @@ class DataConnection(ProjectItem):
         self._properties_ui.treeView_dc_references.setModel(self.reference_model)
         self._properties_ui.treeView_dc_data.setModel(self.data_model)
 
+    @Slot("QGraphicsItem", list)
+    def receive_files_dropped_on_icon(self, icon, file_paths):
+        """Called when files are dropped onto a data connection graphics item.
+        If the item is this Data Connection's graphics item, add the files to data."""
+        if icon == self.get_icon():
+            self.add_data_files(file_paths)
+
     @Slot("QVariant")
-    def add_files_to_references(self, paths):
+    def add_data_files(self, file_paths):
+        """Add files to data directory"""
+        for file_path in file_paths:
+            filename = os.path.split(file_path)[1]
+            self._logger.msg.emit(f"Copying file <b>{filename}</b> to <b>{self.name}</b>")
+            try:
+                shutil.copy(file_path, self.data_dir)
+            except OSError:
+                self._logger.msg_error.emit("[OSError] Copying failed")
+
+    @Slot(bool)
+    def show_add_references_dialog(self, checked=False):
+        """Opens a file browser where user can select the files to be
+        added as references for this Data Connection."""
+        # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
+        answer = QFileDialog.getOpenFileNames(self._toolbox, "Add file references", self._project.project_dir, "*.*")
+        file_paths = answer[0]
+        if not file_paths:  # Cancel button clicked
+            return
+        self.add_references(file_paths)
+
+    @Slot("QVariant")
+    def add_references(self, paths):
         """Add multiple file paths to reference list.
 
         Args:
@@ -129,40 +162,11 @@ class DataConnection(ProjectItem):
         if new_paths:
             self._toolbox.undo_stack.push(AddDCReferencesCommand(self, new_paths))
 
-    def do_add_files_to_references(self, paths):
-        abspaths = [os.path.abspath(path) for path in paths]
-        self.references.extend(abspaths)
-        self.populate_reference_list()
-
-    @Slot("QGraphicsItem", list)
-    def receive_files_dropped_on_icon(self, icon, file_paths):
-        """Called when files are dropped onto a data connection graphics item.
-        If the item is this Data Connection's graphics item, add the files to data."""
-        if icon == self.get_icon():
-            self.add_files_to_data_dir(file_paths)
-
-    @Slot("QVariant")
-    def add_files_to_data_dir(self, file_paths):
-        """Add files to data directory"""
-        for file_path in file_paths:
-            filename = os.path.split(file_path)[1]
-            self._logger.msg.emit(f"Copying file <b>{filename}</b> to <b>{self.name}</b>")
-            try:
-                shutil.copy(file_path, self.data_dir)
-            except OSError:
-                self._logger.msg_error.emit("[OSError] Copying failed")
-                return
-
-    @Slot(bool)
-    def add_references(self, checked=False):
-        """Opens a file browser where user can select the files to be
-        added as references for this Data Connection."""
-        # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileNames(self._toolbox, "Add file references", self._project.project_dir, "*.*")
-        file_paths = answer[0]
-        if not file_paths:  # Cancel button clicked
-            return
-        self.add_files_to_references(file_paths)
+    def do_add_references(self, paths):
+        paths = [os.path.abspath(path) for path in paths]
+        self.references += paths
+        self.file_system_watcher.add_persistent_file_paths(paths)
+        self._append_references_to_model(*paths)
 
     @Slot(bool)
     def remove_references(self, checked=False):
@@ -175,19 +179,64 @@ class DataConnection(ProjectItem):
         self._toolbox.undo_stack.push(RemoveDCReferencesCommand(self, references))
         self._logger.msg.emit("Selected references removed")
 
-    def do_remove_references(self, references):
-        """Removes given references from this Data Connection.
+    def do_remove_references(self, paths):
+        """Removes given paths from references.
 
         Args:
-            references (list): List of selected paths.
+            paths (list): List of removed paths.
         """
-        # samefile() needs the file path to exist so we need to
-        # check that the references actually exist before looking for duplicates
-        removed_references = (ref for ref in references if os.path.isfile(ref))
-        self.references = [
-            r for r in self.references if not any(os.path.samefile(r, ref) for ref in removed_references)
-        ]
-        self.populate_reference_list()
+        self.file_system_watcher.remove_persistent_file_paths(paths)
+        if self._remove_references(*paths):
+            self.item_changed.emit()
+
+    def _remove_references(self, *paths):
+        result = False
+        for k in reversed(range(self.reference_model.rowCount())):
+            ref = self.reference_model.item(k).text()
+            if any(_samepath(ref, path) for path in paths):
+                self.references.pop(k)
+                self.reference_model.removeRow(k)
+                result = True
+        return result
+
+    def _rename_reference(self, old_path, new_path):
+        for k in range(self.reference_model.rowCount()):
+            item = self.reference_model.item(k)
+            if _samepath(item.text(), old_path):
+                item.setText(new_path)
+                self.references[k] = new_path
+                return True
+
+    def _remove_data_file(self, path):
+        for k in reversed(range(self.data_model.rowCount())):
+            data_filepath = self.data_model.item(k).text()
+            if _samepath(data_filepath, path):
+                self.data_model.removeRow(k)
+                return True
+
+    def _rename_data_file(self, old_path, new_path):
+        for k in range(self.data_model.rowCount()):
+            item = self.data_model.item(k)
+            if _samepath(item.text(), old_path):
+                item.setText(new_path)
+                return True
+
+    @Slot(str)
+    def _handle_file_removed(self, path):
+        if self._remove_references(path) or self._remove_data_file(path):
+            self.item_changed.emit()
+
+    @Slot(str, str)
+    def _handle_file_renamed(self, old_path, new_path):
+        if self._rename_reference(old_path, new_path) or self._rename_data_file(old_path, new_path):
+            self._updated_from[new_path] = old_path
+            self.item_changed.emit()
+
+    @Slot(str)
+    def _handle_file_added(self, path):
+        if _samepath(os.path.dirname(path), self.data_dir):
+            self._append_data_files_to_model(path)
+            self.item_changed.emit()
 
     @Slot(bool)
     def copy_to_project(self, checked=False):
@@ -207,7 +256,6 @@ class DataConnection(ProjectItem):
                 shutil.copy(file_path, self.data_dir)
             except OSError:
                 self._logger.msg_error.emit("[OSError] Copying failed")
-                continue
 
     @Slot("QModelIndex")
     def open_reference(self, index):
@@ -217,7 +265,7 @@ class DataConnection(ProjectItem):
         if not index.isValid():
             logging.error("Index not valid")
             return
-        reference = self.file_references()[index.row()]
+        reference = self.references[index.row()]
         url = "file:///" + reference
         # noinspection PyTypeChecker, PyCallByClass, PyArgumentList
         res = open_url(url)
@@ -287,7 +335,6 @@ class DataConnection(ProjectItem):
         except OSError:
             msg = "Please check directory permissions."
             self._logger.information_box.emit("Creating file failed", msg)
-        return
 
     def remove_files(self):
         """Remove selected files from data directory."""
@@ -320,7 +367,6 @@ class DataConnection(ProjectItem):
                 self._logger.msg.emit(f"File <b>{path_to_remove}</b> removed")
             except OSError:
                 self._logger.msg_error.emit(f"Removing file {path_to_remove} failed.\nCheck permissions.")
-        return
 
     def file_references(self):
         """Returns a list of paths to files that are in this item as references."""
@@ -337,41 +383,39 @@ class DataConnection(ProjectItem):
                     files.append(entry.path)
         return files
 
-    @Slot("QString")
-    def refresh(self, _=None):
-        """Refresh data files in Data Connection Properties.
-        NOTE: Might lead to performance issues."""
-        self.populate_data_list()
-
     def populate_reference_list(self):
         """List file references in QTreeView.
         """
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
-        for item in self.references:
-            qitem = QStandardItem(item)
-            qitem.setFlags(~Qt.ItemIsEditable)
-            qitem.setData(item, Qt.ToolTipRole)
-            qitem.setData(self._toolbox.style().standardIcon(QStyle.SP_FileLinkIcon), Qt.DecorationRole)
-            self.reference_model.appendRow(qitem)
-        self.item_changed.emit()
+        self._append_references_to_model(*self.references)
+
+    def _append_references_to_model(self, *paths):
+        for path in paths:
+            item = QStandardItem(path)
+            item.setFlags(~Qt.ItemIsEditable)
+            item.setData(path, Qt.ToolTipRole)
+            item.setData(self._toolbox.style().standardIcon(QStyle.SP_FileLinkIcon), Qt.DecorationRole)
+            self.reference_model.appendRow(item)
 
     def populate_data_list(self):
         """List project internal data (files) in QTreeView.
         """
         self.data_model.clear()
         self.data_model.setHorizontalHeaderItem(0, QStandardItem("Data"))  # Add header
-        for item in self.data_files():
-            qitem = QStandardItem(item)
-            qitem.setFlags(~Qt.ItemIsEditable)
-            if item == "datapackage.json":
-                qitem.setData(self.datapackage_icon, Qt.DecorationRole)
+        self._append_data_files_to_model(*self.data_files())
+
+    def _append_data_files_to_model(self, *paths):
+        for path in paths:
+            item = QStandardItem(path)
+            item.setFlags(~Qt.ItemIsEditable)
+            if path == "datapackage.json":
+                item.setData(self.datapackage_icon, Qt.DecorationRole)
             else:
-                qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
-            full_path = os.path.join(self.data_dir, item)  # For drag and drop
-            qitem.setData(full_path, Qt.UserRole)
-            self.data_model.appendRow(qitem)
-        self.item_changed.emit()
+                item.setData(QFileIconProvider().icon(QFileInfo(path)), Qt.DecorationRole)
+            full_path = os.path.join(self.data_dir, path)  # For drag and drop
+            item.setData(full_path, Qt.UserRole)
+            self.data_model.appendRow(item)
 
     def update_name_label(self):
         """Update Data Connection tab name label. Used only when renaming project items."""
@@ -380,8 +424,13 @@ class DataConnection(ProjectItem):
     def resources_for_direct_successors(self):
         """see base class"""
         refs = self.file_references()
-        f_list = [os.path.join(self.data_dir, f) for f in self.data_files()]
-        resources = [ProjectItemResource(self, "file", url=pathlib.Path(ref).as_uri()) for ref in refs + f_list]
+        data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
+        resources = []
+        for path in refs + data_files:
+            updated_from = self._updated_from.pop(path, None)
+            metadata = {"updated_from": updated_from} if updated_from else {}
+            resource = ProjectItemResource(self, "file", url=pathlib.Path(path).as_uri(), metadata=metadata)
+            resources.append(resource)
         return resources
 
     def _do_handle_dag_changed(self, resources, _):
@@ -413,14 +462,11 @@ class DataConnection(ProjectItem):
         Returns:
             bool: True if renaming succeeded, False otherwise
         """
-        dirs = self.data_dir_watcher.directories()
-        if dirs:
-            self.data_dir_watcher.removePaths(dirs)
+        self.file_system_watcher.remove_persistent_dir_path(self.data_dir)
         if not super().rename(new_name):
-            self.data_dir_watcher.addPaths(dirs)
             return False
-        self.data_dir_watcher.addPath(self.data_dir)
-        self.refresh()
+        self.file_system_watcher.add_persistent_dir_path(self.data_dir)
+        self.populate_data_list()
         return True
 
     def tear_down(self):
@@ -428,10 +474,7 @@ class DataConnection(ProjectItem):
         Closes the SpineDatapackageWidget instances opened."""
         if self.spine_datapackage_form:
             self.spine_datapackage_form.close()
-        watched_paths = self.data_dir_watcher.directories()
-        if watched_paths:
-            self.data_dir_watcher.removePaths(watched_paths)
-        self.data_dir_watcher.deleteLater()
+        self.file_system_watcher.tear_down()
 
     def notify_destination(self, source_item):
         """See base class."""
@@ -450,3 +493,7 @@ class DataConnection(ProjectItem):
     def default_name_prefix():
         """See base class."""
         return "Data Connection"
+
+
+def _samepath(path1, path2):
+    return os.path.normcase(path1) == os.path.normcase(path2)

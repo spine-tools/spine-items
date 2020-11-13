@@ -231,8 +231,8 @@ class TestDataConnection(unittest.TestCase):
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.data_connection.data_dir)  # Check data dir
-        # Check that data_dir_watcher has one path (new data_dir)
-        watched_dirs = self.data_connection.data_dir_watcher.directories()
+        # Check that file_system_watcher has one path (new data_dir)
+        watched_dirs = self.data_connection.file_system_watcher.directories()
         self.assertEqual(1, len(watched_dirs))
         self.assertEqual(self.data_connection.data_dir, watched_dirs[0])
 
