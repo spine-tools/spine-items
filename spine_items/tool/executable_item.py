@@ -37,8 +37,9 @@ from .utils import (
     find_last_output_files,
     flatten_file_path_duplicates,
     is_pattern,
+    make_label,
 )
-from ..utils import labelled_filepaths_from_resources, make_label
+from ..utils import labelled_resource_args
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -407,11 +408,11 @@ class ExecutableItem(ExecutableItemBase):
             return False
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir)
         # Expand cmd_line_args from resources
-        labelled_filepaths = labelled_filepaths_from_resources(resources + self._resources_from_downstream)
-        for k, arg in enumerate(self._cmd_line_args):
-            filepath = labelled_filepaths.get(arg)
-            if filepath is not None:
-                self._cmd_line_args[k] = filepath
+        labelled_args = labelled_resource_args(resources + self._resources_from_downstream)
+        for k, label in enumerate(self._cmd_line_args):
+            arg = labelled_args.get(label)
+            if arg is not None:
+                self._cmd_line_args[k] = arg
         try:
             self._tool_instance.prepare(self._cmd_line_args)
         except RuntimeError as error:

@@ -26,7 +26,7 @@ from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
-from .utils import convert_to_sqlalchemy_url
+from .utils import convert_to_sqlalchemy_url, make_label
 from .widgets.custom_menus import DataStoreContextMenu
 
 
@@ -451,7 +451,8 @@ class DataStore(ProjectItem):
         """See base class."""
         self._update_sa_url(log_errors=False)
         if self._sa_url:
-            resource = ProjectItemResource(self, "database", url=str(self._sa_url))
+            metadata = {"label": make_label(self.name)}
+            resource = ProjectItemResource(self, "database", url=str(self._sa_url), metadata=metadata)
             return [resource]
         self.add_notification(
             "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."

@@ -45,11 +45,7 @@ def file_paths_from_resources(resources):
     """
     file_paths = []
     for resource in resources:
-        if (
-            resource.type_ == "file"
-            or (resource.type_ == "database" and resource.scheme == "sqlite")
-            or (resource.type_ == "transient_file" and resource.url)
-        ):
+        if resource.hasfilepath:
             file_paths += glob.glob(resource.path)
         elif resource.type_ == "transient_file":
             file_paths.append(resource.metadata["label"])
@@ -134,3 +130,13 @@ class _LatestOutputFile:
         """Constructs a _LatestOutputFile object from an absolute path and archive directory."""
         label = os.path.relpath(path, archive_dir)
         return _LatestOutputFile(label, path)
+
+
+def make_label(label):
+    """
+    Annotates a label so the user can distinguish it from a normal path.
+
+    Args:
+        label (str): A label to annotate
+    """
+    return "{" + label + "}"

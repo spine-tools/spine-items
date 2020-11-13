@@ -30,9 +30,8 @@ from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu
 from .executable_item import ExecutableItem
-from .utils import flatten_file_path_duplicates, find_file, find_last_output_files, is_pattern
+from .utils import flatten_file_path_duplicates, find_file, find_last_output_files, is_pattern, make_label
 from ..models import ToolCommandLineArgsModel, InputFileListModel
-from ..utils import make_label
 
 
 class Tool(ProjectItem):

@@ -29,7 +29,7 @@ from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from .item_info import ItemInfo
 from .utils import SHELLS
-from ..utils import labelled_filepaths_from_resources
+from ..utils import labelled_resource_filepaths, labelled_resource_args
 
 
 class ExecutableItem(ExecutableItemBase, QObject):
@@ -135,11 +135,11 @@ class ExecutableItem(ExecutableItemBase, QObject):
             return False
         cmd_list = self.cmd_list.copy()
         # Expand cmd_list from resources
-        labelled_filepaths = labelled_filepaths_from_resources(resources + self._resources_from_downstream)
-        for k, arg in enumerate(cmd_list):
-            filepath = labelled_filepaths.get(arg)
-            if filepath is not None:
-                cmd_list[k] = filepath
+        labelled_args = labelled_resource_args(resources + self._resources_from_downstream)
+        for k, label in enumerate(cmd_list):
+            arg = labelled_args.get(label)
+            if arg is not None:
+                cmd_list[k] = arg
         if not self.shell_name:
             prgm = cmd_list.pop(0)
             self._gimlet_process = QProcessExecutionManager(self._logger, prgm, cmd_list)
@@ -157,6 +157,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             self._gimlet_process = QProcessExecutionManager(self._logger, shell_prgm, cmd_list)
         # Copy selected files to work_dir
         selected_files = self._selected_files.copy()
+        labelled_filepaths = labelled_resource_filepaths(resources + self._resources_from_downstream)
         for k, label in enumerate(selected_files):
             filepath = labelled_filepaths.get(label)
             if filepath is not None:

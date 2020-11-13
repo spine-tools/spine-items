@@ -25,22 +25,6 @@ from PySide2.QtWidgets import QFileIconProvider
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QPixmap, QPainter, QIcon
 
 
-def _file_label(resource):
-    """Picks a label for given file resource."""
-    if resource.type_ == "file":
-        return resource.path
-    if resource.type_ == "database":
-        return resource.url
-    if resource.type_ in ("transient_file", "file_pattern"):
-        label = resource.metadata.get("label")
-        if label is None:
-            if resource.url is None:
-                raise RuntimeError("ProjectItemResource is missing a url and metadata 'label'.")
-            return resource.path
-        return label
-    raise RuntimeError(f"Unknown resource type '{resource.type_}'")
-
-
 class FileListItem:
     """An item for FileListModel.
 
@@ -72,7 +56,7 @@ class FileListItem:
         Raises:
             RuntimeError: If given resource has an unknown type
         """
-        label = _file_label(resource)
+        label = resource.label
         is_pattern = resource.type_ == "file_pattern"
         return cls(label, resource.path if resource.url else "", resource.provider.name, is_pattern)
 
@@ -168,8 +152,7 @@ class FileListModel(QAbstractListModel):
         for resource in resources:
             if resource.type_ in self._invalid_resource_types:
                 continue
-            label = _file_label(resource)
-            item = items.get(label)
+            item = items.get(resource.label)
             if item is not None:
                 item.update(resource)
                 updated.append(item)

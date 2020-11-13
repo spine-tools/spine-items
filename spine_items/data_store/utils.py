@@ -70,3 +70,7 @@ def convert_to_sqlalchemy_url(urllib_url, item_name, logger, log_errors):
             )
         return None
     return sa_url
+
+
+def make_label(name):
+    return "{db_url@" + name + "}"

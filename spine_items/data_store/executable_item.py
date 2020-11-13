@@ -20,7 +20,7 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
-from .utils import convert_to_sqlalchemy_url
+from .utils import convert_to_sqlalchemy_url, make_label
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -47,7 +47,8 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         if not self._url:
             return list()
-        resource = ProjectItemResource(self, "database", url=str(self._url))
+        metadata = {"label": make_label(self.name)}
+        resource = ProjectItemResource(self, "database", url=str(self._url), metadata=metadata)
         return [resource]
 
     @classmethod

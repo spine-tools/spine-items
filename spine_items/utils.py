@@ -17,24 +17,12 @@ Contains utilities for all items.
 """
 
 
-def labelled_filepaths_from_resources(resources):
+def labelled_resource_filepaths(resources):
     """Returns a dice mapping resource labels to filepaths available in given resources.
     The label acts as an identifier for a 'transient_file'.
     """
-    files = dict()
-    for resource in resources:
-        if resource.type_ == "file":
-            files[resource.path] = resource.path
-        elif resource.type_ == "transient_file":
-            files[resource.metadata["label"]] = resource.path
-    return files
+    return {resource.label: resource.path for resource in resources if resource.hasfilepath}
 
 
-def make_label(label):
-    """
-    Annotates a label so the user can distinguish it from a normal path.
-
-    Args:
-        label (str): A label to annotate
-    """
-    return "{" + label + "}"
+def labelled_resource_args(resources):
+    return {resource.label: resource.arg for resource in resources}

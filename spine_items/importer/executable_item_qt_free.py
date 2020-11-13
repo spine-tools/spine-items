@@ -30,7 +30,7 @@ from spine_engine.utils.serialization import deserialize_checked_states
 from spine_engine.utils.returning_process import ReturningProcess
 from .item_info import ItemInfo
 from .do_work import do_work
-from ..utils import labelled_filepaths_from_resources
+from ..utils import labelled_resource_filepaths
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -75,7 +75,7 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         if not self._mapping:
             return True
-        labelled_filepaths = labelled_filepaths_from_resources(resources)
+        labelled_filepaths = labelled_resource_filepaths(resources)
         source_filepaths = list()
         for label in self._selected_files:
             filepath = labelled_filepaths.get(label)
