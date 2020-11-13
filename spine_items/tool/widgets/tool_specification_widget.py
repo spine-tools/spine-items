@@ -545,15 +545,6 @@ class ToolSpecificationWidget(QWidget):
         if self._original_specification is None or self.definition["name"] != self._original_specification.name:
             # The user is creating a new spec, either from scratch (no original spec)
             # or by changing the name of an existing one
-            start_dir = self._toolbox.project().project_dir
-            proposed_def_file_path = os.path.join(start_dir, shorten(self.definition["name"]) + ".json")
-            answer = QFileDialog.getSaveFileName(
-                self, "Save Importer specification file", proposed_def_file_path, "JSON (*.json)"
-            )
-            if answer[0] == "":  # Cancel button clicked
-                return False
-            new_spec.definition_file_path = os.path.abspath(answer[0])
-            new_spec.save()
             self._toolbox.add_specification(new_spec)
         else:
             # The user is modifying an existing spec, while conserving the name

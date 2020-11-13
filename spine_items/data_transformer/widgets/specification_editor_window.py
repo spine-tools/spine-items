@@ -135,15 +135,6 @@ class SpecificationEditorWindow(QWidget):
             self._specification.definition_file_path = old_specification.definition_file_path
             self._toolbox.update_specification(self._specification)
             return True
-        initial_path = self._specification.definition_file_path
-        if not initial_path:
-            initial_path = self._toolbox.project().project_dir
-        path = QFileDialog.getSaveFileName(
-            self, "Save Data Transformer specification file", initial_path, "JSON (*.json)"
-        )[0]
-        if not path:
-            return False
-        self._specification.definition_file_path = os.path.abspath(path)
         self._toolbox.add_specification(self._specification)
         self._specification.save()
         return True
