@@ -22,7 +22,7 @@ from spine_engine.spine_io.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 
-def do_work(mapping, cancel_on_error, logs_dir, checked_files, connector, urls_downstream, logger):
+def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, urls_downstream, logger):
     all_data = []
     all_errors = []
     table_mappings = {
@@ -41,9 +41,9 @@ def do_work(mapping, cancel_on_error, logs_dir, checked_files, connector, urls_d
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_row_types", {}).items()
     }
-    for source in checked_files:
+    for path in source_filepaths:
         try:
-            connector.connect_to_source(source)
+            connector.connect_to_source(path)
         except IOError as error:
             logger.msg_error.emit(f"Failed to connect to source: {error}")
             return False
@@ -52,17 +52,17 @@ def do_work(mapping, cancel_on_error, logs_dir, checked_files, connector, urls_d
                 table_mappings, table_options, table_types, table_row_types, max_rows=-1
             )
         except spinedb_api.InvalidMapping as error:
-            logger.msg_error.emit(f"Failed to import '{source}': {error}")
+            logger.msg_error.emit(f"Failed to import '{path}': {error}")
             if cancel_on_error:
                 logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
                 return False
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
             continue
         if not errors:
-            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data from {source}")
+            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data from {path}")
         else:
             logger.msg_warning.emit(
-                f"Read {sum(len(d) for d in data.values())} data from {source} with {len(errors)} errors."
+                f"Read {sum(len(d) for d in data.values())} data from {path} with {len(errors)} errors."
             )
         all_data.append(data)
         all_errors.extend(errors)

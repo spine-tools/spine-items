@@ -29,6 +29,7 @@ from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from .item_info import ItemInfo
 from .utils import SHELLS
+from ..utils import labelled_filepaths_from_resources
 
 
 class ExecutableItem(ExecutableItemBase, QObject):
@@ -57,6 +58,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         self._resources = list()  # Predecessor resources
         self._successor_resources = list()
         self._selected_files = selected_files
+        self._resources_from_downstream = []
 
     @staticmethod
     def item_type():
@@ -101,6 +103,11 @@ class ExecutableItem(ExecutableItemBase, QObject):
             self._gimlet_process.stop_execution()
             self._gimlet_process = None
 
+    def _execute_backward(self, resources):
+        """See base class."""
+        self._resources_from_downstream = resources.copy()
+        return True
+
     def _execute_forward(self, resources):
         """See base class.
 
@@ -126,8 +133,13 @@ class ExecutableItem(ExecutableItemBase, QObject):
         if sys.platform != "win32" and (self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return False
-        # Expand tags in command list
         cmd_list = self.cmd_list.copy()
+        # Expand cmd_list from resources
+        labelled_filepaths = labelled_filepaths_from_resources(resources + self._resources_from_downstream)
+        for k, arg in enumerate(cmd_list):
+            filepath = labelled_filepaths.get(arg)
+            if filepath is not None:
+                cmd_list[k] = filepath
         if not self.shell_name:
             prgm = cmd_list.pop(0)
             self._gimlet_process = QProcessExecutionManager(self._logger, prgm, cmd_list)
@@ -144,7 +156,12 @@ class ExecutableItem(ExecutableItemBase, QObject):
                 return False
             self._gimlet_process = QProcessExecutionManager(self._logger, shell_prgm, cmd_list)
         # Copy selected files to work_dir
-        if not self._copy_files(self._selected_files, self._work_dir):
+        selected_files = self._selected_files.copy()
+        for k, label in enumerate(selected_files):
+            filepath = labelled_filepaths.get(label)
+            if filepath is not None:
+                selected_files[k] = filepath
+        if not self._copy_files(selected_files, self._work_dir):
             return False
         # Make work directory anchor with path as tooltip
         work_anchor = (

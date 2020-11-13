@@ -402,11 +402,11 @@ class ExecutableItem(ExecutableItemBase):
             return False
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger)
         # Expand cmd_line_args from resources
-        absolute_paths = labelled_filepaths_from_resources(resources + self._resources_from_downstream)
+        labelled_filepaths = labelled_filepaths_from_resources(resources + self._resources_from_downstream)
         for k, arg in enumerate(self._cmd_line_args):
-            absolute_path = absolute_paths.get(arg)
-            if absolute_path is not None:
-                self._cmd_line_args[k] = absolute_path
+            filepath = labelled_filepaths.get(arg)
+            if filepath is not None:
+                self._cmd_line_args[k] = filepath
         try:
             self._tool_instance.prepare(self._cmd_line_args)
         except RuntimeError as error:

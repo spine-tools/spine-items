@@ -85,17 +85,17 @@ class ExecutableItem(ExecutableItemBase, QObject):
         """See base class."""
         if not self._mapping:
             return True
-        absolute_paths = labelled_filepaths_from_resources(resources)
-        selected_abs_paths = list()
+        labelled_filepaths = labelled_filepaths_from_resources(resources)
+        source_filepaths = list()
         for label in self._selected_files:
-            absolute_path = absolute_paths.get(label)
-            if absolute_path is not None:
-                selected_abs_paths.append(absolute_path)
+            filepath = labelled_filepaths.get(label)
+            if filepath is not None:
+                source_filepaths.append(filepath)
         source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
         self._destroy_current_worker()
         self._loop = QEventLoop()
         self._worker = ImporterWorker(
-            selected_abs_paths,
+            source_filepaths,
             self._mapping,
             source_settings,
             [r.url for r in self._resources_from_downstream if r.type_ == "database"],

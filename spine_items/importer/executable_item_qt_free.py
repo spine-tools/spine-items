@@ -75,12 +75,12 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         if not self._mapping:
             return True
-        absolute_paths = labelled_filepaths_from_resources(resources)
-        checked_files = list()
+        labelled_filepaths = labelled_filepaths_from_resources(resources)
+        source_filepaths = list()
         for label in self._selected_files:
-            absolute_path = absolute_paths.get(label)
-            if absolute_path is not None:
-                checked_files.append(absolute_path)
+            filepath = labelled_filepaths.get(label)
+            if filepath is not None:
+                source_filepaths.append(filepath)
         urls_downstream = [r.url for r in self._resources_from_downstream if r.type_ == "database"]
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
@@ -99,7 +99,7 @@ class ExecutableItem(ExecutableItemBase):
                 self._mapping,
                 self._cancel_on_error,
                 self._logs_dir,
-                checked_files,
+                source_filepaths,
                 connector,
                 urls_downstream,
                 self._logger,

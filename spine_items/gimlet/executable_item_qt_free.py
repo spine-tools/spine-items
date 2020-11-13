@@ -28,6 +28,7 @@ from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.execution_managers import StandardExecutionManager
 from .item_info import ItemInfo
 from .utils import SHELLS
+from ..utils import labelled_filepaths_from_resources
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -49,6 +50,7 @@ class ExecutableItem(ExecutableItemBase):
         self._resources = list()  # Predecessor resources
         self._selected_files = selected_files
         self._exec_mngr = None
+        self._resources_from_downstream = []
 
     @staticmethod
     def item_type():
@@ -92,6 +94,11 @@ class ExecutableItem(ExecutableItemBase):
             self._exec_mngr.stop_execution()
             self._exec_mngr = None
 
+    def _execute_backward(self, resources):
+        """See base class."""
+        self._resources_from_downstream = resources.copy()
+        return True
+
     def _execute_forward(self, resources):
         """See base class.
 
@@ -118,6 +125,12 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return False
         cmd_list = self.cmd_list.copy()
+        # Expand cmd_list from resources
+        labelled_filepaths = labelled_filepaths_from_resources(resources + self._resources_from_downstream)
+        for k, arg in enumerate(cmd_list):
+            filepath = labelled_filepaths.get(arg)
+            if filepath is not None:
+                cmd_list[k] = filepath
         if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)
             self._exec_mngr = StandardExecutionManager(self._logger, prgm, *cmd_list, workdir=self._work_dir)
@@ -132,7 +145,12 @@ class ExecutableItem(ExecutableItemBase):
                 return False
             self._exec_mngr = StandardExecutionManager(self._logger, shell_prgm, *cmd_list, workdir=self._work_dir)
         # Copy selected files to work_dir
-        if not self._copy_files(self._selected_files, self._work_dir):
+        selected_files = self._selected_files.copy()
+        for k, label in enumerate(selected_files):
+            filepath = labelled_filepaths.get(label)
+            if filepath is not None:
+                selected_files[k] = filepath
+        if not self._copy_files(selected_files, self._work_dir):
             return False
         # Make work directory anchor with path as tooltip
         work_anchor = (
