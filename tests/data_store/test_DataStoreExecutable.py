@@ -79,7 +79,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
         self.assertEqual(resource.url, "sqlite:///database.sqlite")
-        self.assertEqual(resource.metadata, {})
+        self.assertEqual(resource.metadata, {'label': '{db_url@name}'})
 
     def test_output_resources_forward(self):
         executable = ExecutableItem("name", "sqlite:///database.sqlite", mock.MagicMock())
@@ -88,7 +88,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
         self.assertEqual(resource.url, "sqlite:///database.sqlite")
-        self.assertEqual(resource.metadata, {})
+        self.assertEqual(resource.metadata, {'label': '{db_url@name}'})
 
 
 if __name__ == "__main__":
