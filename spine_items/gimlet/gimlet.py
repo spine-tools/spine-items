@@ -26,7 +26,7 @@ from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import (
     deserialize_checked_states,
     serialize_checked_states,
-    serialize_url,
+    serialize_path,
     deserialize_path,
 )
 from spine_engine.utils.command_line_arguments import split_cmdline_args
@@ -253,10 +253,9 @@ class Gimlet(ProjectItem):
         self._populate_cmdline_args_model()
 
     def _populate_cmdline_args_model(self):
-        gimlet_args = self.cmd_line_args
         if self._active:
             pos = self._properties_ui.treeView_cmdline_args.verticalScrollBar().sliderPosition()
-        self._cmdline_args_model.reset_model(gimlet_args)
+        self._cmdline_args_model.reset_model(self.cmd_line_args)
         if self._active:
             self._properties_ui.treeView_cmdline_args.expandAll()
             self._properties_ui.treeView_cmdline_args.verticalScrollBar().setSliderPosition(pos)
@@ -335,7 +334,7 @@ class Gimlet(ProjectItem):
         # NOTE: We enclose the arguments in quotes because that preserves the args that have spaces
         cmd_line_args = [f'"{arg}"' for arg in self.cmd_line_args]
         cmd_line_args = split_cmdline_args(" ".join(cmd_line_args))
-        d["cmd_line_args"] = [serialize_url(arg, self._project.project_dir) for arg in cmd_line_args]
+        d["cmd_line_args"] = [serialize_path(arg, self._project.project_dir) for arg in cmd_line_args]
         return d
 
     @staticmethod
