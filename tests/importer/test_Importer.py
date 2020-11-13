@@ -34,8 +34,10 @@ class TestImporter(unittest.TestCase):
         """Set up."""
         self.toolbox = create_mock_toolbox()
         mock_spec_model = self.toolbox.specification_model = MagicMock()
-        Specification = collections.namedtuple('Specification', 'name mapping')
-        mock_spec_model.find_specification.side_effect = lambda x: Specification(name=x, mapping={})
+        Specification = collections.namedtuple('Specification', 'name mapping item_type')
+        mock_spec_model.find_specification.side_effect = lambda x: Specification(
+            name=x, mapping={}, item_type="Importer"
+        )
         factory = ImporterFactory()
         item_dict = {
             "type": "Importer",
