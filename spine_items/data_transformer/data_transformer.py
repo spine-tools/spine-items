@@ -98,19 +98,22 @@ class DataTransformer(ProjectItem):
 
     def do_set_specification(self, specification):
         """see base class"""
-        super().do_set_specification(specification)
+        if not super().do_set_specification(specification):
+            return False
         if specification is None:
             if self._active:
                 self._properties_ui.specification_combo_box.setCurrentIndex(-1)
-            return
+            return True
         self._specification_name = specification.name
         if self._active:
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
+        # FIXME: Find a better place for saving the filter file
         path = filter_config_path(self.data_dir)
         if specification.settings is not None:
             with open(path, "w") as filter_config_file:
                 dump(specification.settings.filter_config(), filter_config_file)
         self.item_changed.emit()
+        return True
 
     def update_name_label(self):
         """Update properties tab name label. Used only when renaming project items."""

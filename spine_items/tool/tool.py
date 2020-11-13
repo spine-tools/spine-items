@@ -66,19 +66,19 @@ class Tool(ProjectItem):
         self._toolbox = toolbox
         self.execute_in_work = None
         self.undo_execute_in_work = None
-        self._specification = self._toolbox.specification_model.find_specification(specification_name)
-        if specification_name and not self._specification:
-            self._logger.msg_error.emit(
-                f"Tool <b>{self.name}</b> should have a Tool specification <b>{specification_name}</b> but it was not found"
-            )
         if cmd_line_args is None:
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
         self._cmdline_args_model = ToolCommandLineArgsModel(self)
+        self.specification_options_popup_menu = None
+        specification = self._toolbox.specification_model.find_specification(specification_name)
+        if not self.do_set_specification(specification):
+            self._logger.msg_error.emit(
+                f"Tool <b>{self.name}</b> should have a Tool specification <b>{specification_name}</b> but it was not found"
+            )
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = InputFileListModel(header_label="Available resources", checkable=False)
-        self.specification_options_popup_menu = None
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_set_specification(self._specification)
@@ -188,7 +188,8 @@ class Tool(ProjectItem):
 
     def do_set_specification(self, specification):
         """see base class"""
-        super().do_set_specification(specification)
+        if not super().do_set_specification(specification):
+            return False
         self._populate_cmdline_args_model()
         self._update_tool_ui()
         if self.undo_execute_in_work is None:
@@ -196,6 +197,7 @@ class Tool(ProjectItem):
         if specification:
             self.do_update_execution_mode(specification.execute_in_work)
         self.item_changed.emit()
+        return True
 
     def undo_set_specification(self):
         """see base class"""

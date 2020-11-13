@@ -184,13 +184,15 @@ class Importer(ProjectItem):
 
     def do_set_specification(self, specification):
         """see base class"""
-        super().do_set_specification(specification)
+        if not super().do_set_specification(specification):
+            return False
         if self._active:
             if specification is None:
                 self._properties_ui.comboBox_specification.setCurrentIndex(-1)
-                return
+                return True
             self._properties_ui.comboBox_specification.setCurrentText(specification.name)
         self.item_changed.emit()
+        return True
 
     @Slot(bool)
     def _edit_specification(self, checked=False):
