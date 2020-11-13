@@ -68,18 +68,18 @@ class TestDataConnection(unittest.TestCase):
             c = Path(temp_dir, "c.txt")  # Note. Does not exist
             # Add nothing
             mock_filenames.return_value = ([], "*.*")
-            self.data_connection.add_references()
+            self.data_connection.show_add_references_dialog()
             self.assertEqual(1, mock_filenames.call_count)
             self.assertEqual(0, len(self.data_connection.file_references()))
             self.assertEqual(0, self.data_connection.reference_model.rowCount())
             # Add one file
             mock_filenames.return_value = ([str(a)], "*.*")
-            self.data_connection.add_references()
+            self.data_connection.show_add_references_dialog()
             self.assertEqual(2, mock_filenames.call_count)
             self.assertEqual(1, len(self.data_connection.file_references()))
             self.assertEqual(1, self.data_connection.reference_model.rowCount())
             # Try to add a path that has already been added
-            self.data_connection.add_references()
+            self.data_connection.show_add_references_dialog()
             self.assertEqual(3, mock_filenames.call_count)
             self.assertEqual(1, len(self.data_connection.file_references()))
             self.assertEqual(1, self.data_connection.reference_model.rowCount())
@@ -90,13 +90,13 @@ class TestDataConnection(unittest.TestCase):
             # project.json file has references to files that do not exist anymore and user tries to add a
             # new reference to a Data Connection that contains non-existing file references
             mock_filenames.return_value = ([str(b), str(c)], "*.*")
-            self.data_connection.add_references()
+            self.data_connection.show_add_references_dialog()
             self.assertEqual(4, mock_filenames.call_count)
             self.assertEqual(1, len(self.data_connection.file_references()))
             self.assertEqual(1, self.data_connection.reference_model.rowCount())
             # Now add new reference
             mock_filenames.return_value = ([str(a)], "*.*")
-            self.data_connection.add_references()
+            self.data_connection.show_add_references_dialog()
             self.assertEqual(5, mock_filenames.call_count)
             self.assertEqual(2, len(self.data_connection.file_references()))
             self.assertEqual(2, self.data_connection.reference_model.rowCount())
@@ -120,7 +120,7 @@ class TestDataConnection(unittest.TestCase):
             self.assertFalse(os.path.isfile(str(d)))  # non-existing file
             # First add a couple of files as refs
             mock_filenames.return_value = ([str(a), str(b)], "*.*")
-            self.data_connection.add_references()
+            self.data_connection.show_add_references_dialog()
             self.assertEqual(1, mock_filenames.call_count)
             self.assertEqual(2, len(self.data_connection.file_references()))
             self.assertEqual(2, self.data_connection.reference_model.rowCount())
@@ -150,7 +150,7 @@ class TestDataConnection(unittest.TestCase):
             # Add a and b back and the two non-existing files as well
             # Select non-existing file c and remove it
             mock_filenames.return_value = ([str(a), str(b), str(c), str(d)], "*.*")
-            self.data_connection.add_references()
+            self.data_connection.show_add_references_dialog()
             self.assertEqual(2, mock_filenames.call_count)
             self.assertEqual(2, len(self.data_connection.file_references()))
             self.assertEqual(2, self.data_connection.reference_model.rowCount())
@@ -169,7 +169,7 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(0, self.data_connection.reference_model.rowCount())
             # Add a, b, c, and d back Select all and remove.
             mock_filenames.return_value = ([str(a), str(b), str(c), str(d)], "*.*")
-            self.data_connection.add_references()
+            self.data_connection.show_add_references_dialog()
             self.assertEqual(3, mock_filenames.call_count)
             a_index = self.data_connection.reference_model.index(0, 0)
             b_index = self.data_connection.reference_model.index(1, 0)
