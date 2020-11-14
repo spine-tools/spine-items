@@ -111,7 +111,7 @@ class Ui_Form(object):
         self.treeView_files = QTreeView(self.scrollAreaWidgetContents_5)
         self.treeView_files.setObjectName(u"treeView_files")
         font2 = QFont()
-        font2.setPointSize(9)
+        font2.setPointSize(10)
         self.treeView_files.setFont(font2)
         self.treeView_files.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView_files.setTextElideMode(Qt.ElideLeft)
