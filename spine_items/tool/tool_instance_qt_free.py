@@ -263,8 +263,8 @@ class ExecutableToolInstance(ToolInstance):
 
     def execute(self):
         """Executes a prepared instance."""
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args)
-        ret = self.exec_mngr.run_until_complete(workdir=self.basedir)
+        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+        ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:
                 return_msg = self.tool_specification.return_codes[ret]
