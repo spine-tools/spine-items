@@ -24,6 +24,7 @@ from spine_engine.spine_io.importers.csv_reader import CSVConnector
 from spine_engine.spine_io.importers.excel_reader import ExcelConnector
 from spine_engine.spine_io.importers.gdx_connector import GdxConnector
 from spine_engine.spine_io.importers.json_reader import JSONConnector
+from spine_engine.spine_io.importers.datapackage_reader import DataPackageConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_checked_states
@@ -92,6 +93,7 @@ class ExecutableItem(ExecutableItemBase):
             "ExcelConnector": ExcelConnector,
             "GdxConnector": GdxConnector,
             "JSONConnector": JSONConnector,
+            "DataPackageConnector": DataPackageConnector,
         }[source_type](source_settings)
         self._process = ReturningProcess(
             target=do_work,
