@@ -23,13 +23,13 @@ from spinedb_api import (
     import_data,
     SpineDBAPIError,
     SpineDBVersionError,
-    DiffDatabaseMapping,
+    QuickDatabaseMapping,
 )
 
 
 def _get_db_map(url, logger):
     try:
-        db_map = DiffDatabaseMapping(url)
+        db_map = QuickDatabaseMapping(url)
     except (SpineDBAPIError, SpineDBVersionError) as err:
         logger.msg_error.emit(f"Skipping url <b>{url}</b>: {err}")
         logger.msg_error.emit(f"Skipping url <b>{clear_filter_configs(url)}</b>: {err}")
