@@ -178,13 +178,9 @@ class Tool(ProjectItem):
     def _populate_cmdline_args_model(self):
         spec_args = self.specification().cmdline_args if self.specification() else []
         tool_args = self.cmd_line_args
-        if self._active:
-            pos = self._properties_ui.treeView_cmdline_args.verticalScrollBar().sliderPosition()
         self._cmdline_args_model.reset_model(spec_args, tool_args)
         if self._active:
-            self._properties_ui.treeView_cmdline_args.expandAll()
-            self._properties_ui.treeView_cmdline_args.verticalScrollBar().setSliderPosition(pos)
-            # TODO: self._properties_ui.treeView_cmdline_args.setFocus()
+            self._properties_ui.treeView_cmdline_args.setFocus()
 
     def do_set_specification(self, specification):
         """see base class"""

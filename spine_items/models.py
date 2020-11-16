@@ -225,12 +225,15 @@ class InputFileListModel(FileListModel):
 
 
 class CommandLineArgItem(QStandardItem):
-    def __init__(self, text, rank=None, selectable=False, editable=False, drag_enabled=False, drop_enabled=False):
+    def __init__(self, text="", rank=None, selectable=False, editable=False, drag_enabled=False, drop_enabled=False):
         super().__init__(text)
         self.setEditable(editable)
         self.setDropEnabled(drop_enabled)
         self.setDragEnabled(drag_enabled)
         self.setSelectable(selectable)
+        self.set_rank(rank)
+
+    def set_rank(self, rank):
         if rank is not None:
             icon = self._make_icon(rank)
             self.setIcon(icon)
@@ -271,6 +274,10 @@ class CommandLineArgsModel(QStandardItemModel):
     args_updated = Signal(list)
     _args = []
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setHorizontalHeaderItem(0, QStandardItem("Command line arguments"))
+
     def append_arg(self, arg):
         self.args_updated.emit(self._args + [arg])
 
@@ -301,38 +308,54 @@ class CommandLineArgsModel(QStandardItemModel):
             return True
         return False
 
+    @staticmethod
+    def _reset_root(root, args, child_params, has_empty_row=True):
+        last_row = root.rowCount()
+        if has_empty_row:
+            last_row -= 1
+        count = len(args) - last_row
+        for _ in range(count):
+            root.insertRow(last_row, [CommandLineArgItem(**child_params)])
+        if count < 0:
+            count = -count
+            first = last_row - count
+            root.removeRows(first, count)
+        for k, arg in enumerate(args):
+            child = root.child(k)
+            child.set_rank(k)
+            child.setText(arg)
+
 
 class GimletCommandLineArgsModel(CommandLineArgsModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.invisibleRootItem().appendRow(NewCommandLineArgItem())
+
     def reset_model(self, args):
         self._args = args
-        self.clear()
-        self.setHorizontalHeaderItem(0, QStandardItem("Command line arguments"))
-        for k, arg in enumerate(args):
-            item = CommandLineArgItem(arg, rank=k + 1, editable=True, selectable=True, drag_enabled=True)
-            self.appendRow(item)
-        self.appendRow(NewCommandLineArgItem())
+        self._reset_root(
+            self.invisibleRootItem(), args, dict(editable=True, selectable=True, drag_enabled=True), has_empty_row=True
+        )
 
     def canDropMimeData(self, data, drop_action, row, column, parent):
         return row >= 0
 
 
 class ToolCommandLineArgsModel(CommandLineArgsModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._spec_args_root = CommandLineArgItem("Specification arguments")
+        self._tool_args_root = CommandLineArgItem("Tool arguments", drop_enabled=True)
+        self.appendRow(self._spec_args_root)
+        self.appendRow(self._tool_args_root)
+        self._tool_args_root.appendRow(NewCommandLineArgItem())
+
     def reset_model(self, spec_args, tool_args):
         self._args = tool_args
-        self.clear()
-        self.setHorizontalHeaderItem(0, QStandardItem("Command line arguments"))
-        spec_args_root = CommandLineArgItem("Specification arguments")
-        tool_args_root = CommandLineArgItem("Tool arguments", drop_enabled=True)
-        self.appendRow(spec_args_root)
-        self.appendRow(tool_args_root)
-        spec_args_children = [CommandLineArgItem(arg, rank=k + 1) for k, arg in enumerate(spec_args)]
-        tool_args_children = [
-            CommandLineArgItem(arg, rank=k + len(spec_args) + 1, editable=True, selectable=True, drag_enabled=True)
-            for k, arg in enumerate(tool_args)
-        ]
-        tool_args_children.append(NewCommandLineArgItem())
-        spec_args_root.appendRows(spec_args_children)
-        tool_args_root.appendRows(tool_args_children)
+        self._reset_root(self._spec_args_root, spec_args, dict(), has_empty_row=False)
+        self._reset_root(
+            self._tool_args_root, tool_args, dict(editable=True, selectable=True, drag_enabled=True), has_empty_row=True
+        )
 
     def canDropMimeData(self, data, drop_action, row, column, parent):
         return parent.data() is not None and row >= 0

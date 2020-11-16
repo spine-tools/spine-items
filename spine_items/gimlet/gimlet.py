@@ -253,13 +253,9 @@ class Gimlet(ProjectItem):
         self._populate_cmdline_args_model()
 
     def _populate_cmdline_args_model(self):
-        if self._active:
-            pos = self._properties_ui.treeView_cmdline_args.verticalScrollBar().sliderPosition()
         self._cmdline_args_model.reset_model(self.cmd_line_args)
         if self._active:
-            self._properties_ui.treeView_cmdline_args.expandAll()
-            self._properties_ui.treeView_cmdline_args.verticalScrollBar().setSliderPosition(pos)
-            # TODO: self._properties_ui.treeView_cmdline_args.setFocus()
+            self._properties_ui.treeView_cmdline_args.setFocus()
 
     @Slot(bool, str)
     def _push_file_selection_change_to_undo_stack(self, selected, label):
