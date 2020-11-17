@@ -20,17 +20,17 @@ from sqlalchemy.engine.url import URL
 import spinedb_api
 
 
-def convert_to_sqlalchemy_url(urllib_url, item_name, logger, log_errors):
+def convert_to_sqlalchemy_url(urllib_url, item_name, logger):
     """Returns a sqlalchemy url from the url or None if not valid."""
     if not urllib_url:
-        if log_errors:
+        if logger is not None:
             logger.msg_error.emit(f"No URL specified for <b>{item_name}</b>. Please specify one and try again")
         return None
     try:
         url = {key: value for key, value in urllib_url.items() if value}
         dialect = url.pop("dialect")
         if not dialect:
-            if log_errors:
+            if logger is not None:
                 logger.msg_error.emit(
                     f"Unable to generate URL from <b>{item_name}</b> selections: invalid dialect {dialect}. "
                     "<br>Please select a new dialect and try again."
@@ -44,14 +44,14 @@ def convert_to_sqlalchemy_url(urllib_url, item_name, logger, log_errors):
             sa_url = URL(drivername, **url)  # pylint: disable=unexpected-keyword-arg
     except Exception as e:  # pylint: disable=broad-except
         # This is in case one of the keys has invalid format
-        if log_errors:
+        if logger is not None:
             logger.msg_error.emit(
                 f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
                 "<br>Please make new selections and try again."
             )
         return None
     if not sa_url.database:
-        if log_errors:
+        if logger is not None:
             logger.msg_error.emit(
                 f"Unable to generate URL from <b>{item_name}</b> selections: database missing. "
                 "<br>Please select a database and try again."
@@ -63,7 +63,7 @@ def convert_to_sqlalchemy_url(urllib_url, item_name, logger, log_errors):
         with engine.connect():
             pass
     except Exception as e:  # pylint: disable=broad-except
-        if log_errors:
+        if logger is not None:
             logger.msg_error.emit(
                 f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
                 "<br>Please make new selections and try again."

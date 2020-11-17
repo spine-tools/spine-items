@@ -30,6 +30,7 @@ from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.executable_item import ExecutableItem
 from spine_items.data_store.item_info import ItemInfo
+from spine_items.data_store.utils import convert_to_sqlalchemy_url
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
@@ -58,9 +59,6 @@ class TestDataStore(unittest.TestCase):
         self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project, self.toolbox)
         mock_finish_project_item_construction(factory, self.ds, self.toolbox)
         self.ds_properties_ui = self.ds._properties_ui
-        self.ds.item_changed.connect(self.ds._update_sa_url)
-        # FIXME: Try to make the below work instead of the above line
-        # self.project.notify_changes_in_containing_dag.side_effect: lambda name: self.ds._update_sa_url()
 
     def tearDown(self):
         """Overridden method. Runs after each test.
@@ -211,7 +209,9 @@ class TestDataStore(unittest.TestCase):
         # Open form
         self.project.db_mngr = MagicMock()
         self.ds_properties_ui.pushButton_ds_open_editor.click()
-        self.project.db_mngr.show_spine_db_editor.assert_called_with({self.ds._sa_url: 'DS'}, self.toolbox)
+        sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
+        self.assertIsNotNone(sa_url)
+        self.project.db_mngr.show_spine_db_editor.assert_called_with({sa_url: 'DS'}, self.toolbox)
 
     def test_open_ds_form2(self):
         """Test that selecting the 'sqlite' dialect, typing the path to an existing db file,
@@ -227,7 +227,9 @@ class TestDataStore(unittest.TestCase):
         # Open form
         self.project.db_mngr = MagicMock()
         self.ds_properties_ui.pushButton_ds_open_editor.click()
-        self.project.db_mngr.show_spine_db_editor.assert_called_with({self.ds._sa_url: 'DS'}, self.toolbox)
+        sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
+        self.assertIsNotNone(sa_url)
+        self.project.db_mngr.show_spine_db_editor.assert_called_with({sa_url: 'DS'}, self.toolbox)
 
     def test_notify_destination(self):
         self.toolbox.msg = mock.NonCallableMagicMock()

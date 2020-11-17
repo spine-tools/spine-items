@@ -20,7 +20,6 @@ import os
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFileDialog, QApplication
 from spinetoolbox.project_item.project_item import ProjectItem
-from spinetoolbox.helpers import busy_effect
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
@@ -49,7 +48,6 @@ class DataStore(ProjectItem):
         if url is None:
             url = dict()
         self._url = self.parse_url(url)
-        self._sa_url = None
         self._additional_resource_metadata = None
 
     @staticmethod
@@ -64,8 +62,7 @@ class DataStore(ProjectItem):
 
     def execution_item(self):
         """Creates DataStore's execution counterpart."""
-        self._update_sa_url(log_errors=False)
-        return ExecutableItem(self.name, self._sa_url, self._logger)
+        return ExecutableItem(self.name, convert_to_sqlalchemy_url(self._url, self.name, logger=None), self._logger)
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
@@ -110,18 +107,13 @@ class DataStore(ProjectItem):
 
     def sql_alchemy_url(self):
         """Returns the URL as an SQLAlchemy URL object or None if no URL is set."""
-        self._update_sa_url()
-        return self._sa_url
-
-    @busy_effect
-    def _update_sa_url(self, log_errors=True):
-        self._sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger, log_errors)
+        return convert_to_sqlalchemy_url(self._url, self.name, self._logger)
 
     def project(self):
         """Returns current project or None if no project open."""
         return self._project
 
-    @Slot("QString")
+    @Slot(str)
     def set_path_to_sqlite_file(self, file_path):
         """Set path to SQLite file."""
         abs_path = os.path.abspath(file_path)
@@ -214,7 +206,7 @@ class DataStore(ProjectItem):
         password = self._properties_ui.lineEdit_password.text()
         self.update_url(password=password)
 
-    @Slot("QString")
+    @Slot(str)
     def refresh_dialect(self, dialect):
         self.update_url(dialect=dialect)
 
@@ -300,8 +292,8 @@ class DataStore(ProjectItem):
         if not self._url["database"]:
             self._logger.msg_error.emit(f"<b>{self.name}</b> is not connected to a database.")
             return
-        self._update_sa_url()
-        self._project.db_mngr.show_spine_db_editor({self._sa_url: self.name}, self._logger)
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
+        self._project.db_mngr.show_spine_db_editor({sa_url: self.name}, self._logger)
 
     def data_files(self):
         """Return a list of files that are in this items data directory."""
@@ -312,26 +304,27 @@ class DataStore(ProjectItem):
     @Slot(bool)
     def copy_url(self, checked=False):
         """Copy db url to clipboard."""
-        self._update_sa_url()
-        if not self._sa_url:
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
+        if sa_url is None:
             return
-        self._sa_url.password = None
-        QApplication.clipboard().setText(str(self._sa_url))
-        self._logger.msg.emit(f"Database url <b>{self._sa_url}</b> copied to clipboard")
+        sa_url.password = None
+        QApplication.clipboard().setText(str(sa_url))
+        self._logger.msg.emit(f"Database url <b>{sa_url}</b> copied to clipboard")
 
     @Slot(bool)
     def create_new_spine_database(self, checked=False):
         """Create new (empty) Spine database."""
         # Try to make an url from the current status
-        self._update_sa_url(log_errors=False)
-        if not self._sa_url:
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
+        if not sa_url:
             self._logger.msg_warning.emit(
                 f"Unable to generate URL from <b>{self.name}</b> selections. Defaults will be used..."
             )
             dialect = "sqlite"
             database = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
             self.update_url(dialect=dialect, database=database)
-        self._project.db_mngr.create_new_spine_database(self._sa_url)
+            sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
+        self._project.db_mngr.create_new_spine_database(sa_url)
 
     def update_name_label(self):
         """Update Data Store tab name label. Used only when renaming project items."""
@@ -339,8 +332,8 @@ class DataStore(ProjectItem):
 
     def _do_handle_dag_changed(self, resources, _):
         """See base class."""
-        self._update_sa_url(log_errors=False)
-        if not self._sa_url:
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name, logger=None)
+        if sa_url is None:
             self.add_notification(
                 "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
             )
@@ -454,12 +447,12 @@ class DataStore(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        self._update_sa_url(log_errors=False)
-        if self._sa_url:
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name, logger=None)
+        if sa_url:
             metadata = {"label": make_label(self.name)}
             if self._additional_resource_metadata:
                 metadata.update(self._additional_resource_metadata)
-            resource = ProjectItemResource(self, "database", url=str(self._sa_url), metadata=metadata)
+            resource = ProjectItemResource(self, "database", url=str(sa_url), metadata=metadata)
             return [resource]
         self.add_notification(
             "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."

@@ -56,5 +56,5 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         if item_dict["url"]["dialect"] == "sqlite":
             item_dict["url"]["database"] = deserialize_path(item_dict["url"]["database"], project_dir)
-        url = convert_to_sqlalchemy_url(item_dict["url"], name, logger, log_errors=True)
+        url = convert_to_sqlalchemy_url(item_dict["url"], name, logger)
         return cls(name, url, logger)
