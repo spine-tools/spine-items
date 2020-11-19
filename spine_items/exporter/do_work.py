@@ -22,6 +22,7 @@ from .db_utils import scenario_filtered_database_map
 
 
 def do_work(settings_pack, cancel_on_error, data_dir, gams_system_directory, databases, logger):
+    successes = list()
     for database in databases:
         url = database.url
         out_path = os.path.join(data_dir, database.output_file_name)
@@ -29,6 +30,7 @@ def do_work(settings_pack, cancel_on_error, data_dir, gams_system_directory, dat
             database_map = scenario_filtered_database_map(url, database.scenario)
         except SpineDBAPIError as error:
             logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
+            successes.append(False)
             continue
         export_logger = logger if not cancel_on_error else None
         try:
@@ -45,8 +47,10 @@ def do_work(settings_pack, cancel_on_error, data_dir, gams_system_directory, dat
             )
         except gdx.GdxExportException as error:
             logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
+            successes.append(False)
             continue
         finally:
             database_map.connection.close()
         logger.msg_success.emit(f"File <b>{out_path}</b> written")
-    return True
+        successes.append(True)
+    return all(successes)

@@ -98,9 +98,11 @@ class ExecutableItem(ExecutableItemBase):
             ),
         )
         self._process.run_until_complete()
-        self._logger.msg_success.emit(f"Executing Exporter {self.name} finished")
+        success = self._process.success
         self._process = None
-        return True
+        if success:
+            self._logger.msg_success.emit(f"Executing Exporter {self.name} finished")
+        return success
 
     def _output_resources_forward(self):
         """See base class."""
