@@ -99,7 +99,6 @@ class Ui_Form(object):
         self.label_folder = QLabel(Form)
         self.label_folder.setObjectName(u"label_folder")
         self.label_folder.setEnabled(False)
-        self.label_folder.setContextMenuPolicy(Qt.NoContextMenu)
         self.label_folder.setIndent(-1)
 
         self.verticalLayout.addWidget(self.label_folder)

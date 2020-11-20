@@ -19,6 +19,7 @@ import os
 import pathlib
 from collections import Counter
 from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spine_engine.project_item.project_item_resource import ProjectItemResource
@@ -28,7 +29,7 @@ from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateToolExecuteInWorkCommand
 from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
-from .widgets.custom_menus import ToolContextMenu, ToolSpecificationMenu
+from .widgets.custom_menus import ToolSpecificationMenu
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file, find_last_output_files, is_pattern, make_label
 from ..models import ToolCommandLineArgsModel, InputFileListModel
@@ -66,6 +67,12 @@ class Tool(ProjectItem):
         self._toolbox = toolbox
         self.execute_in_work = None
         self.undo_execute_in_work = None
+        self._actions.append(QAction("Edit specification..."))
+        self._actions[-1].triggered.connect(lambda _: self._edit_specification())
+        self._actions.append(QAction("Open results directory..."))
+        self._actions[-1].triggered.connect(self._open_results_directory)
+        self._actions.append(QAction("Open main program file..."))
+        self._actions[-1].triggered.connect(lambda _: self._open_main_program_file())
         if cmd_line_args is None:
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
@@ -98,8 +105,8 @@ class Tool(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.pushButton_tool_results.clicked] = self.open_results
+        s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda _: self.open_directory
+        s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
         s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
@@ -222,7 +229,7 @@ class Tool(ProjectItem):
             self._properties_ui.toolButton_tool_specification.setMenu(self.specification_options_popup_menu)
 
     @Slot(bool)
-    def open_results(self, checked=False):
+    def _open_results_directory(self, _):
         """Open output directory in file browser."""
         if not os.path.exists(self.output_dir):
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no results. Click Execute to generate them.")
@@ -234,7 +241,7 @@ class Tool(ProjectItem):
             self._logger.msg_error.emit(f"Failed to open directory: {self.output_dir}")
 
     @Slot()
-    def edit_specification(self):
+    def _edit_specification(self):
         """Open Tool specification editor for the Tool specification attached to this Tool."""
         if not self.specification():
             return
@@ -250,7 +257,7 @@ class Tool(ProjectItem):
         self._toolbox.open_specification_file(index)
 
     @Slot()
-    def open_main_program_file(self):
+    def _open_main_program_file(self):
         """Open Tool specification main program file in an external text edit application."""
         if not self.specification():
             return
@@ -427,32 +434,6 @@ class Tool(ProjectItem):
         return Tool(
             name, description, x, y, toolbox, project, logger, specification_name, execute_in_work, cmd_line_args
         )
-
-    def custom_context_menu(self, parent, pos):
-        """Returns the context menu for this item.
-
-        Args:
-            parent (QWidget): The widget that is controlling the menu
-            pos (QPoint): Position on screen
-        """
-        return ToolContextMenu(parent, self, pos)
-
-    def apply_context_menu_action(self, parent, action):
-        """Applies given action from context menu. Implement in subclasses as needed.
-
-        Args:
-            parent (QWidget): The widget that is controlling the menu
-            action (str): The selected action
-        """
-        super().apply_context_menu_action(parent, action)
-        if action == "Results...":
-            self.open_results()
-        elif action == "Stop":
-            self.stop_execution()  # Proceed with stopping
-        elif action == "Edit Tool specification":
-            self.edit_specification()
-        elif action == "Edit main program file...":
-            self.open_main_program_file()
 
     def rename(self, new_name):
         """Rename this item.

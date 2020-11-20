@@ -16,31 +16,9 @@ Classes for custom context menus and pop-up menus.
 :date:   9.1.2018
 """
 import os
-from PySide2.QtCore import QTimeLine, QUrl, Slot
+from PySide2.QtCore import QUrl, Slot
 from spinetoolbox.helpers import open_url
-from spinetoolbox.widgets.custom_menus import ProjectItemContextMenu, ItemSpecificationMenu, CustomPopupMenu
-
-
-class ToolContextMenu(ProjectItemContextMenu):
-    """Context menu for Tools in the QTreeView and in the QGraphicsView.
-
-    Attributes:
-        parent (QWidget): Parent for menu widget (ToolboxUI)
-        position (QPoint): Position on screen
-    """
-
-    def __init__(self, parent, tool, position):
-        """Class constructor."""
-        super().__init__(parent, position)
-        self.addSeparator()
-        self.add_action("Results...")
-        # TODO: Do we still want to have the stop action here???
-        enabled = tool.get_icon().timer.state() == QTimeLine.Running
-        self.add_action("Stop", enabled=False)
-        self.addSeparator()
-        enabled = bool(tool.tool_specification())
-        self.add_action("Edit Tool specification", enabled=enabled)
-        self.add_action("Edit main program file...", enabled=enabled)
+from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu, CustomPopupMenu
 
 
 class ToolSpecificationMenu(ItemSpecificationMenu):

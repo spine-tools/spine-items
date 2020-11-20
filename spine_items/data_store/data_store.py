@@ -18,7 +18,7 @@ Module for data store class.
 
 import os
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QFileDialog, QApplication
+from PySide2.QtWidgets import QAction, QFileDialog, QApplication
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.serialization import serialize_path, deserialize_path
@@ -26,7 +26,6 @@ from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url, make_label
-from .widgets.custom_menus import DataStoreContextMenu
 
 
 class DataStore(ProjectItem):
@@ -45,6 +44,8 @@ class DataStore(ProjectItem):
         """
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
+        self._actions.append(QAction("Open database editor..."))
+        self._actions[-1].triggered.connect(self.open_ds_form)
         if url is None:
             url = dict()
         self._url = self.parse_url(url)
@@ -375,27 +376,6 @@ class DataStore(ProjectItem):
             url["database"] = serialized_url_path
         new_data_store["url"] = url
         return new_data_store
-
-    @staticmethod
-    def custom_context_menu(parent, pos):
-        """Returns the context menu for this item.
-
-        Args:
-            parent (QWidget): The widget that is controlling the menu
-            pos (QPoint): Position on screen
-        """
-        return DataStoreContextMenu(parent, pos)
-
-    def apply_context_menu_action(self, parent, action):
-        """Applies given action from context menu. Implement in subclasses as needed.
-
-        Args:
-            parent (QWidget): The widget that is controlling the menu
-            action (str): The selected action
-        """
-        super().apply_context_menu_action(parent, action)
-        if action == "Open view...":
-            self.open_ds_form()
 
     def rename(self, new_name):
         """Rename this item.

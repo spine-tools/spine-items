@@ -518,6 +518,7 @@ class DataConnection(ProjectItem):
     def tear_down(self):
         """Tears down this item. Called by toolbox just before closing.
         Closes the SpineDatapackageWidget instances opened."""
+        super().tear_down()
         if self.spine_datapackage_form:
             self.spine_datapackage_form.close()
         self.file_system_watcher.tear_down()

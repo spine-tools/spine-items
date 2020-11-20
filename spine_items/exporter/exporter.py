@@ -543,6 +543,7 @@ class Exporter(ProjectItem):
 
     def tear_down(self):
         """See base class."""
+        super().tear_down()
         if self._worker is not None:
             self._worker.thread.quit()
             self._worker.thread.wait()
