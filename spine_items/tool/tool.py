@@ -478,11 +478,6 @@ class Tool(ProjectItem):
             super().notify_destination(source_item)
 
     @staticmethod
-    def default_name_prefix():
-        """see base class"""
-        return "Tool"
-
-    @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):
         """Upgrades item's dictionary from v1 to v2.
 

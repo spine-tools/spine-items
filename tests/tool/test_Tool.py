@@ -110,9 +110,6 @@ class TestTool(unittest.TestCase):
             "Link established. Interaction between a " "<b>View</b> and a <b>Tool</b> has not been implemented yet."
         )
 
-    def test_default_name_prefix(self):
-        self.assertEqual(Tool.default_name_prefix(), "Tool")
-
     def test_rename(self):
         """Tests renaming a self.tool."""
         tool = self._add_tool()

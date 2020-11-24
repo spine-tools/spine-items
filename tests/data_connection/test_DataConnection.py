@@ -214,9 +214,6 @@ class TestDataConnection(unittest.TestCase):
             " a <b>Data Connection</b> has not been implemented yet."
         )
 
-    def test_default_name_prefix(self):
-        self.assertEqual(DataConnection.default_name_prefix(), "Data Connection")
-
     def test_rename(self):
         """Tests renaming a Data Connection."""
         self.data_connection.activate()

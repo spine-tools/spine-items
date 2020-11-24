@@ -115,9 +115,6 @@ class TestExporter(unittest.TestCase):
             "Link established. Interaction between a " "<b>View</b> and a <b>Exporter</b> has not been implemented yet."
         )
 
-    def test_default_name_prefix(self):
-        self.assertEqual(Exporter.default_name_prefix(), "Exporter")
-
     def test_rename(self):
         """Tests renaming an Exporter."""
         self.exporter.activate()

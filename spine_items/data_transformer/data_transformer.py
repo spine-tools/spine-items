@@ -142,11 +142,6 @@ class DataTransformer(ProjectItem):
         else:
             super().notify_destination(source_item)
 
-    @staticmethod
-    def default_name_prefix():
-        """see base class"""
-        return "Data Transformer"
-
     @Slot(str)
     def _change_specification(self, specification_name):
         """

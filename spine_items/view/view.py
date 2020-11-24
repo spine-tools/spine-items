@@ -151,7 +151,3 @@ class View(ProjectItem):
         else:
             super().notify_destination(source_item)
 
-    @staticmethod
-    def default_name_prefix():
-        """see base class"""
-        return "View"

@@ -397,11 +397,6 @@ class Gimlet(ProjectItem):
         Used only when a project item is renamed."""
         self._properties_ui.label_gimlet_name.setText(self.name)
 
-    @staticmethod
-    def default_name_prefix():
-        """See base class."""
-        return "Gimlet"
-
     def resources_for_direct_successors(self):
         """Returns resources for direct successors.
 

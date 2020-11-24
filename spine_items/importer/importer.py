@@ -304,11 +304,6 @@ class Importer(ProjectItem):
         else:
             super().notify_destination(source_item)
 
-    @staticmethod
-    def default_name_prefix():
-        """see base class"""
-        return "Importer"
-
     def _notify_if_duplicate_file_paths(self):
         """Adds a notification if file_list contains duplicate entries."""
         labels = list()

@@ -87,9 +87,6 @@ class TestCombiner(unittest.TestCase):
             "implemented yet."
         )
 
-    def test_default_name_prefix(self):
-        self.assertEqual(Combiner.default_name_prefix(), "Combiner")
-
     def test_rename(self):
         self.combiner.activate()
         expected_name = "ABC"

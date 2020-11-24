@@ -536,11 +536,5 @@ class DataConnection(ProjectItem):
         else:
             super().notify_destination(source_item)
 
-    @staticmethod
-    def default_name_prefix():
-        """See base class."""
-        return "Data Connection"
-
-
 def _samepath(path1, path2):
     return os.path.normcase(path1) == os.path.normcase(path2)
