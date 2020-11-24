@@ -524,11 +524,6 @@ class Exporter(ProjectItem):
         else:
             super().notify_destination(source_item)
 
-    @staticmethod
-    def default_name_prefix():
-        """See base class."""
-        return "Exporter"
-
     def resources_for_direct_successors(self):
         """See base class."""
         resources = list()

@@ -262,9 +262,6 @@ class TestDataStore(unittest.TestCase):
             "<b>View</b> and a <b>Data Store</b> has not been implemented yet."
         )
 
-    def test_default_name_prefix(self):
-        self.assertEqual(DataStore.default_name_prefix(), "Data Store")
-
     def test_rename(self):
         """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
         cb_dialect = self.ds_properties_ui.comboBox_dialect  # Dialect comboBox

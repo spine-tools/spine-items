@@ -61,9 +61,6 @@ class TestView(unittest.TestCase):
         for k in a:
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
-    def test_default_name_prefix(self):
-        self.assertEqual(View.default_name_prefix(), "View")
-
     def test_notify_destination(self):
         source_item = NonCallableMagicMock()
         source_item.name = "source name"

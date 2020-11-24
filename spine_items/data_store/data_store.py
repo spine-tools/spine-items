@@ -420,11 +420,6 @@ class DataStore(ProjectItem):
         else:
             super().notify_destination(source_item)
 
-    @staticmethod
-    def default_name_prefix():
-        """see base class"""
-        return "Data Store"
-
     def resources_for_direct_successors(self):
         """See base class."""
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, logger=None)

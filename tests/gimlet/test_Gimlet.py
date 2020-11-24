@@ -58,9 +58,6 @@ class TestGimlet(unittest.TestCase):
     def test_item_category(self):
         self.assertEqual(Gimlet.item_category(), ItemInfo.item_category())
 
-    def test_default_name_prefix(self):
-        self.assertEqual(Gimlet.default_name_prefix(), "Gimlet")
-
     def test_notify_destination(self):
         source_item = NonCallableMagicMock()
         source_item.name = "source name"

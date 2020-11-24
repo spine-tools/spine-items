@@ -103,9 +103,6 @@ class TestImporter(unittest.TestCase):
             "Link established. Interaction between a " "<b>View</b> and a <b>Importer</b> has not been implemented yet."
         )
 
-    def test_default_name_prefix(self):
-        self.assertEqual(Importer.default_name_prefix(), "Importer")
-
     def test_rename(self):
         """Tests renaming an Importer."""
         self.importer.activate()
