@@ -23,6 +23,7 @@ from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
 from .filter_config_path import filter_config_path
 from .item_info import ItemInfo
+from .utils import make_metadata
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -58,14 +59,18 @@ class ExecutableItem(ExecutableItemBase):
         if self._specification.settings.use_shorthand():
             for resource in database_resources:
                 url = append_filter_config(resource.url, self._specification.settings.filter_config())
-                filter_resource = ProjectItemResource(self, "database", url)
+                filter_resource = ProjectItemResource(
+                    self, "database", url, metadata=make_metadata(resource, self.name)
+                )
                 self._forward_resources.append(filter_resource)
         else:
             with open(self._filter_config_path, "w") as out_file:
                 json.dump(self._specification.settings.filter_config(), out_file)
             for resource in database_resources:
                 url = append_filter_config(resource.url, self._filter_config_path)
-                filter_resource = ProjectItemResource(self, "database", url)
+                filter_resource = ProjectItemResource(
+                    self, "database", url, metadata=make_metadata(resource, self.name)
+                )
                 self._forward_resources.append(filter_resource)
         return True
 

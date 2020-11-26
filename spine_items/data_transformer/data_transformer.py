@@ -25,6 +25,7 @@ from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
 from .widgets.specification_editor_window import SpecificationEditorWindow
+from .utils import make_metadata
 
 
 class DataTransformer(ProjectItem):
@@ -51,7 +52,7 @@ class DataTransformer(ProjectItem):
                 f"Data Transformer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
             )
         self.do_set_specification(self._specification)
-        self._urls = []
+        self._db_resources = []
 
     @staticmethod
     def item_type():
@@ -123,7 +124,9 @@ class DataTransformer(ProjectItem):
     def show_specification_window(self, _=True):
         """Opens the settings window."""
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
-        specification_window = SpecificationEditorWindow(self._toolbox, specification, self._urls, self.name)
+        specification_window = SpecificationEditorWindow(
+            self._toolbox, specification, [r.url for r in self._db_resources], self.name
+        )
         specification_window.accepted.connect(self._change_specification)
         specification_window.show()
 
@@ -155,20 +158,33 @@ class DataTransformer(ProjectItem):
 
     def _do_handle_dag_changed(self, resources, _):
         """See base class."""
-        self._urls = [r.url for r in resources if r.type_ == "database"]
+        self._db_resources = [r for r in resources if r.type_ == "database"]
+
+    def _url_metadata_iterator(self):
+        for resource in self._db_resources:
+            yield resource.url, make_metadata(resource, self.name)
 
     def resources_for_direct_successors(self):
         """See base class."""
         specification = self._toolbox.specification_model.find_specification(self._specification_name)
         if specification is None or specification.settings is None:
-            return [ProjectItemResource(self, "database", url) for url in self._urls]
+            return [
+                ProjectItemResource(self, "database", url, metadata=metadata)
+                for url, metadata in self._url_metadata_iterator()
+            ]
         if specification.settings.use_shorthand():
             shorthand = config_to_shorthand(specification.settings.filter_config())
-            return [ProjectItemResource(self, "database", append_filter_config(url, shorthand)) for url in self._urls]
+            return [
+                ProjectItemResource(self, "database", append_filter_config(url, shorthand), metadata=metadata)
+                for url, metadata in self._url_metadata_iterator()
+            ]
         path = Path(filter_config_path(self.data_dir))
         with open(path, "w") as filter_config_file:
             dump(specification.settings.filter_config(), filter_config_file)
-        return [ProjectItemResource(self, "database", append_filter_config(url, path)) for url in self._urls]
+        return [
+            ProjectItemResource(self, "database", append_filter_config(url, path), metadata=metadata)
+            for url, metadata in self._url_metadata_iterator()
+        ]
 
     def restore_selections(self):
         """See base class."""
