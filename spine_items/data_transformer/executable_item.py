@@ -36,7 +36,7 @@ class ExecutableItem(ExecutableItemBase):
             logger (LoggerInterface): a logger
         """
         super().__init__(name, logger)
-        self._forward_resources = list()
+        self._db_resources = list()
         self._specification = specification
         self._filter_config_path = config_path
 
@@ -47,37 +47,41 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return self._forward_resources
-
-    def _execute_forward(self, resources):
-        """See base class."""
-        database_resources = [r for r in resources if r.type_ == "database"]
-        if self._specification is None or not self._specification.settings:
-            self._forward_resources = database_resources
-            return True
-        self._forward_resources = list()
+        if self._specification is None or self._specification.settings is None:
+            return [
+                ProjectItemResource(self, "database", url, metadata=metadata)
+                for url, metadata in self._url_metadata_iterator()
+            ]
         if self._specification.settings.use_shorthand():
-            for resource in database_resources:
-                url = append_filter_config(resource.url, self._specification.settings.filter_config())
-                filter_resource = ProjectItemResource(
-                    self, "database", url, metadata=make_metadata(resource, self.name)
-                )
-                self._forward_resources.append(filter_resource)
-        else:
-            with open(self._filter_config_path, "w") as out_file:
-                json.dump(self._specification.settings.filter_config(), out_file)
-            for resource in database_resources:
-                url = append_filter_config(resource.url, self._filter_config_path)
-                filter_resource = ProjectItemResource(
-                    self, "database", url, metadata=make_metadata(resource, self.name)
-                )
-                self._forward_resources.append(filter_resource)
+            config = self._specification.settings.filter_config()
+            return [
+                ProjectItemResource(self, "database", append_filter_config(url, config), metadata=metadata)
+                for url, metadata in self._url_metadata_iterator()
+            ]
+        with open(self._filter_config_path, "w") as filter_config_file:
+            json.dump(self._specification.settings.filter_config(), filter_config_file)
+        return [
+            ProjectItemResource(
+                self, "database", append_filter_config(url, self._filter_config_path), metadata=metadata
+            )
+            for url, metadata in self._url_metadata_iterator()
+        ]
+
+    def _url_metadata_iterator(self):
+        for resource in self._db_resources:
+            yield resource.url, make_metadata(resource, self.name)
+
+    def execute(self, forward_resources, backward_resources):
+        """See base class."""
+        if not super().execute(forward_resources, backward_resources):
+            return False
+        self._db_resources = [r for r in forward_resources if r.type_ == "database"]
         return True
 
     # pylint: disable=no-self-use
-    def _skip_forward(self, resources):
+    def skip_execution(self, forward_resources, backward_resources):
         """See base class."""
-        self._execute_forward(resources)
+        self.execute(forward_resources, backward_resources)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):

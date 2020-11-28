@@ -102,31 +102,9 @@ class Gimlet(ProjectItem):
         """See base class."""
         return ItemInfo.item_category()
 
-    def execution_item(self):
-        """Creates project item's execution counterpart."""
-        shell = ""
-        cmd_list = [self.cmd] + self.cmd_line_args
-        if self._active:
-            if self._properties_ui.checkBox_shell.isChecked():
-                shell = self._properties_ui.comboBox_shell.itemText(self._properties_ui.comboBox_shell.currentIndex())
-        else:
-            if self.use_shell:
-                shell = SHELLS[self.shell_index]
-        if self._work_dir_mode:
-            work_dir = self.default_gimlet_work_dir
-        else:
-            app_work_dir = self._toolbox.qsettings().value("appSettings/workDir")
-            if not app_work_dir:
-                work_dir = None
-            else:
-                unique_dir_name = shorten(self.name) + "__" + uuid.uuid4().hex + "__toolbox"
-                work_dir = os.path.join(app_work_dir, unique_dir_name)
-        # Only selected files in properties are sent to the executable item
-        selected_files = list()
-        for file_item in self._file_model.files:
-            if file_item.selected:
-                selected_files.append(file_item.label)
-        return ExecutableItem(self.name, self._logger, shell, cmd_list, work_dir, selected_files)
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.

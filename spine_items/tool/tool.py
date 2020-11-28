@@ -305,6 +305,7 @@ class Tool(ProjectItem):
         Returns:
             list: a list of Tool's output resources
         """
+        # TODO: Try to use self.execution_item()._output_resources_forward() to remove boilerplate
         if self.specification() is None:
             self._logger.msg_error.emit(
                 f"Fail to determine <b>{self.name}</b> resources for direct successors. Tool specification is missing."
@@ -338,12 +339,9 @@ class Tool(ProjectItem):
                     resources.append(resource)
         return resources
 
-    def execution_item(self):
-        """Creates project item's execution counterpart."""
-        work_dir = self._toolbox.qsettings().value("appSettings/workDir") if self.execute_in_work else None
-        return ExecutableItem(
-            self.name, work_dir, self.output_dir, self._specification, self.cmd_line_args, self._logger
-        )
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     def _find_input_files(self, resources):
         """Iterates files in required input files model and looks for them in the given resources.

@@ -57,24 +57,15 @@ class TestCombinerExecutable(unittest.TestCase):
         self.assertIsNone(executable._worker_thread)
         self.assertIsNone(executable._loop)
 
-    def test_execute_backward(self):
-        # name, logs_dir, cancel_on_error, logger
+    def test_execute_simplest_case(self):
         executable = ExecutableItem("name", "", True, mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.BACKWARD))
+        self.assertTrue(executable.execute([], []))
         # Check that _loop, _worker, and _worker_thread are None after execution
         self.assertIsNone(executable._worker)
         self.assertIsNone(executable._worker_thread)
         self.assertIsNone(executable._loop)
 
-    def test_execute_forward_simplest_case(self):
-        executable = ExecutableItem("name", "", True, mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
-        # Check that _loop, _worker, and _worker_thread are None after execution
-        self.assertIsNone(executable._worker)
-        self.assertIsNone(executable._worker_thread)
-        self.assertIsNone(executable._loop)
-
-    def test_execute_forward_merge_two_dbs(self):
+    def test_execute_merge_two_dbs(self):
         """Creates two db's with some data and merges them to a third db."""
         with TemporaryDirectory() as temp_dir:
             db1_path = Path(temp_dir).joinpath("db1.sqlite")
@@ -108,8 +99,7 @@ class TestCombinerExecutable(unittest.TestCase):
                 ProjectItemResource(mock.Mock(), "database", db2_url),
             ]
             output_db_resource = [ProjectItemResource(mock.Mock(), "database", db3_url)]
-            self.assertTrue(executable.execute(output_db_resource, ExecutionDirection.BACKWARD))
-            self.assertTrue(executable.execute(input_db_resources, ExecutionDirection.FORWARD))
+            self.assertTrue(executable.execute(input_db_resources, output_db_resource))
             # Check that _loop, _worker, and _worker_thread are None after execution
             self.assertIsNone(executable._worker)
             self.assertIsNone(executable._worker_thread)

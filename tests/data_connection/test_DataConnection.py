@@ -54,7 +54,8 @@ class TestDataConnection(unittest.TestCase):
 
     def test_execution_item(self):
         """Tests that the ExecutableItem counterpart is created successfully."""
-        exec_item = self.data_connection.execution_item()
+        with mock.patch("spine_items.data_connection.data_connection.os.scandir"):
+            exec_item = self.data_connection.execution_item()
         self.assertIsInstance(exec_item, ExecutableItem)
 
     def test_add_references(self):

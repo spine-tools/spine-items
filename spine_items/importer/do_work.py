@@ -97,6 +97,7 @@ def _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger):
         logger.msg_error.emit(f"Unable to create database mapping, all import operations will be omitted: {err}")
         return False
     all_import_errors = []
+    all_import_num = 0
     for data in all_data:
         import_num, import_errors = spinedb_api.import_data(db_map, **data)
         all_import_errors += import_errors
@@ -109,11 +110,12 @@ def _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger):
                     db_map.rollback_session()
                 break
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-        if import_num:
-            db_map.commit_session("Import data by Spine Toolbox Importer")
-            logger.msg_success.emit(f"Inserted {import_num} data with {len(import_errors)} errors into {url}")
-        elif import_num == 0:
-            logger.msg_warning.emit("No new data imported")
+        all_import_num += import_num
+    if import_num:
+        db_map.commit_session("Import data by Spine Toolbox Importer")
+        logger.msg_success.emit(f"Inserted {import_num} data with {len(import_errors)} errors into {url}")
+    else:
+        logger.msg_warning.emit("No new data imported")
     db_map.connection.close()
     if all_import_errors:
         # Log errors in a time stamped file into the logs directory

@@ -84,10 +84,9 @@ class DataConnection(ProjectItem):
         """See base class."""
         return ItemInfo.item_category()
 
-    def execution_item(self):
-        """Creates DataConnection's execution counterpart."""
-        data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
-        return ExecutableItem(self.name, self.file_references(), data_files, self._logger)
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
@@ -469,14 +468,13 @@ class DataConnection(ProjectItem):
 
     def resources_for_direct_successors(self):
         """see base class"""
-        refs = self.file_references()
-        data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
-        resources = []
-        for path in refs + data_files:
-            updated_from = self._updated_from.pop(path, None)
-            metadata = {"updated_from": updated_from} if updated_from else {}
-            resource = ProjectItemResource(self, "file", url=pathlib.Path(path).as_uri(), metadata=metadata)
-            resources.append(resource)
+        resources = self.execution_item()._output_resources_forward()
+        for k, resource in enumerate(resources):
+            updated_from = self._updated_from.pop(resource.path, None)
+            if not updated_from:
+                continue
+            additional_metadata = {"updated_from": updated_from}
+            resources[k] = resource.clone(additional_metadata=additional_metadata)
         return resources
 
     def _do_handle_dag_changed(self, resources, _):
@@ -535,6 +533,7 @@ class DataConnection(ProjectItem):
             self._logger.msg.emit("Link established")
         else:
             super().notify_destination(source_item)
+
 
 def _samepath(path1, path2):
     return os.path.normcase(path1) == os.path.normcase(path2)

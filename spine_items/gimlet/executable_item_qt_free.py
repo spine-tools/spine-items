@@ -50,7 +50,6 @@ class ExecutableItem(ExecutableItemBase):
         self._resources = list()  # Predecessor resources
         self._selected_files = selected_files
         self._exec_mngr = None
-        self._resources_from_downstream = []
 
     @staticmethod
     def item_type():
@@ -94,24 +93,10 @@ class ExecutableItem(ExecutableItemBase):
             self._exec_mngr.stop_execution()
             self._exec_mngr = None
 
-    def _execute_backward(self, resources):
+    def execute(self, forward_resources, backward_resources):
         """See base class."""
-        self._resources_from_downstream = resources.copy()
-        return True
-
-    def _execute_forward(self, resources):
-        """See base class.
-
-        Note: resources given here in args is not used. Files to be copied are
-        given by the Gimlet project item based on user selections made in
-        Gimlet properties.
-
-        Args:
-            resources (list): List of resources from direct predecessor items
-
-        Returns:
-            True if execution succeeded, False otherwise
-        """
+        if not super().execute(forward_resources, backward_resources):
+            return False
         if not self._work_dir:
             self._logger.msg_warning.emit("Work directory not set.")
             return False
@@ -126,7 +111,7 @@ class ExecutableItem(ExecutableItemBase):
             return False
         cmd_list = self.cmd_list.copy()
         # Expand cmd_list from resources
-        labelled_args = labelled_resource_args(resources + self._resources_from_downstream)
+        labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(cmd_list):
             arg = labelled_args.get(label)
             if arg is not None:
@@ -146,7 +131,7 @@ class ExecutableItem(ExecutableItemBase):
             self._exec_mngr = StandardExecutionManager(self._logger, shell_prgm, *cmd_list, workdir=self._work_dir)
         # Copy selected files to work_dir
         selected_files = self._selected_files.copy()
-        labelled_filepaths = labelled_resource_filepaths(resources + self._resources_from_downstream)
+        labelled_filepaths = labelled_resource_filepaths(forward_resources + backward_resources)
         for k, label in enumerate(selected_files):
             filepath = labelled_filepaths.get(label)
             if filepath is not None:
@@ -164,7 +149,7 @@ class ExecutableItem(ExecutableItemBase):
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
         ret = self._exec_mngr.run_until_complete()
         # Copy predecessor's resources so they can be passed to Gimlet's successors
-        self._resources = resources.copy()
+        self._resources = forward_resources.copy()
         self._exec_mngr = None
         if ret != 0:
             self._logger.msg_error.emit(f"{self.name} execution failed")
@@ -179,15 +164,6 @@ class ExecutableItem(ExecutableItemBase):
             (list) List of ProjectItemResources.
         """
         return self._resources
-
-    def _output_resources_backward(self):
-        """Returns output resources for backward execution.
-        The default implementation returns an empty list.
-
-        Returns:
-            (list) List of ProjectItemResources. Just an empty list for now.
-        """
-        return list()
 
     def _copy_files(self, files, work_dir):
         """Copies selected resources (files) to work directory.

@@ -62,12 +62,14 @@ class ExecutableItem(ExecutableItemBase):
             self._process.terminate()
             self._process = None
 
-    def _execute_forward(self, resources):
+    def execute(self, forward_resources, backward_resources):
         """See base class."""
+        if not super().execute(forward_resources, backward_resources):
+            return False
         if self._settings_pack.settings is None:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")
             return True
-        database_urls = [r.url for r in resources if r.type_ == "database"]
+        database_urls = [r.url for r in forward_resources if r.type_ == "database"]
         gams_system_directory = self._resolve_gams_system_directory()
         if gams_system_directory is None:
             self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")

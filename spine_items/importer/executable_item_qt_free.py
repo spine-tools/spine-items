@@ -52,7 +52,6 @@ class ExecutableItem(ExecutableItemBase):
         self._logs_dir = logs_dir
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
-        self._resources_from_downstream = list()
         self._process = None
 
     @staticmethod
@@ -67,22 +66,19 @@ class ExecutableItem(ExecutableItemBase):
             self._process.terminate()
             self._process = None
 
-    def _execute_backward(self, resources):
+    def execute(self, forward_resources, backward_resources):
         """See base class."""
-        self._resources_from_downstream = resources.copy()
-        return True
-
-    def _execute_forward(self, resources):
-        """See base class."""
+        if not super().execute(forward_resources, backward_resources):
+            return False
         if not self._mapping:
             return True
-        labelled_filepaths = labelled_resource_filepaths(resources)
+        labelled_filepaths = labelled_resource_filepaths(forward_resources)
         source_filepaths = list()
         for label in self._selected_files:
             filepath = labelled_filepaths.get(label)
             if filepath is not None:
                 source_filepaths.append(filepath)
-        urls_downstream = [r.url for r in self._resources_from_downstream if r.type_ == "database"]
+        urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
             source_settings = {"gams_directory": self._gams_system_directory()}

@@ -61,7 +61,6 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
         self._tool_instance = None
-        self._resources_from_downstream = []
 
     @staticmethod
     def item_type():
@@ -313,26 +312,16 @@ class ExecutableItem(ExecutableItemBase):
                 return False
         return True
 
-    def _execute_backward(self, resources):
-        """See base class."""
-        self._resources_from_downstream = resources.copy()
-        return True
-
-    def _execute_forward(self, resources):
-        """
-        Executes the Tool according to the Tool specification.
+    def execute(self, forward_resources, backward_resources):
+        """See base class.
 
         Before launching the tool script in a separate instance,
         prepares the execution environment by creating all necessary directories
         and copying input files where needed.
         After execution archives the output files.
-
-        Args:
-            resources (list): a list of resources from direct predecessor items
-
-        Returns:
-            True if execution succeeded, False otherwise
         """
+        if not super().execute(forward_resources, backward_resources):
+            return False
         if self._tool_specification is None:
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no Tool specification to execute")
             return False
@@ -373,7 +362,7 @@ class ExecutableItem(ExecutableItemBase):
             if n_files > 0:
                 self._logger.msg.emit("*** Searching for required input files ***")
                 file_paths = flatten_file_path_duplicates(
-                    self._find_input_files(resources), self._logger, log_duplicates=True
+                    self._find_input_files(forward_resources), self._logger, log_duplicates=True
                 )
                 not_found = [k for k, v in file_paths.items() if v is None]
                 if not_found:
@@ -393,7 +382,7 @@ class ExecutableItem(ExecutableItemBase):
         optional_file_copy_paths = dict()
         if self._tool_specification.inputfiles_opt:
             self._logger.msg.emit("*** Searching for optional input files ***")
-            optional_file_paths = self._find_optional_input_files(resources)
+            optional_file_paths = self._find_optional_input_files(forward_resources)
             for k, v in optional_file_paths.items():
                 self._logger.msg.emit(f"\tFound <b>{len(v)}</b> files matching pattern <b>{k}</b>")
             optional_file_copy_paths = self._optional_output_destination_paths(optional_file_paths, execution_dir)
@@ -403,7 +392,7 @@ class ExecutableItem(ExecutableItemBase):
             return False
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger)
         # Expand cmd_line_args from resources
-        labelled_args = labelled_resource_args(resources + self._resources_from_downstream)
+        labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(self._cmd_line_args):
             arg = labelled_args.get(label)
             if arg is not None:

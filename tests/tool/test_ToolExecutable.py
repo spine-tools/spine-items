@@ -134,15 +134,15 @@ class TestToolExecutable(unittest.TestCase):
                 )
                 self.assertIsInstance(item, ExecutableItem)
 
-    def test_execute_forward_without_specification_fails(self):
+    def test_execute_without_specification_fails(self):
         logger = mock.MagicMock()
         executable = ExecutableItem(
             "executable name", work_dir="", output_dir="", tool_specification=None, cmd_line_args=[], logger=logger
         )
-        self.assertFalse(executable.execute([], ExecutionDirection.FORWARD))
+        self.assertFalse(executable.execute([], []))
         logger.msg_warning.emit.assert_called_with("Tool <b>executable name</b> has no Tool specification to execute")
 
-    def test_execute_forward_archives_output_files(self):
+    def test_execute_archives_output_files(self):
         with TemporaryDirectory() as temp_dir:
             script_dir = pathlib.Path(temp_dir, "scripts")
             script_dir.mkdir()
@@ -166,7 +166,7 @@ class TestToolExecutable(unittest.TestCase):
             archive_dir = pathlib.Path(temp_dir, "archive")
             archive_dir.mkdir()
             executable = ExecutableItem("Create files", str(work_dir), str(archive_dir), tool_specification, [], logger)
-            executable.execute([], ExecutionDirection.FORWARD)
+            executable.execute([], [])
             while executable._tool_instance is not None:
                 QCoreApplication.processEvents()
             archives = list(archive_dir.iterdir())

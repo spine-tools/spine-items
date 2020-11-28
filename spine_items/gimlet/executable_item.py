@@ -56,9 +56,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
         self._gimlet_process = None
         self._gimlet_execution_succeeded = True
         self._resources = list()  # Predecessor resources
-        self._successor_resources = list()
         self._selected_files = selected_files
-        self._resources_from_downstream = []
 
     @staticmethod
     def item_type():
@@ -103,24 +101,10 @@ class ExecutableItem(ExecutableItemBase, QObject):
             self._gimlet_process.stop_execution()
             self._gimlet_process = None
 
-    def _execute_backward(self, resources):
+    def execute(self, forward_resources, backward_resources):
         """See base class."""
-        self._resources_from_downstream = resources.copy()
-        return True
-
-    def _execute_forward(self, resources):
-        """See base class.
-
-        Note: resources given here in args is not used. Files to be copied are
-        given by the Gimlet project item based on user selections made in
-        Gimlet properties.
-
-        Args:
-            resources (list): List of resources from direct predecessor items
-
-        Returns:
-            True if execution succeeded, False otherwise
-        """
+        if not super().execute(forward_resources, backward_resources):
+            return False
         if not self._work_dir:
             self._logger.msg_warning.emit("Work directory not set.")
             return False
@@ -135,7 +119,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             return False
         cmd_list = self.cmd_list.copy()
         # Expand cmd_list from resources
-        labelled_args = labelled_resource_args(resources + self._resources_from_downstream)
+        labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(cmd_list):
             arg = labelled_args.get(label)
             if arg is not None:
@@ -157,7 +141,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             self._gimlet_process = QProcessExecutionManager(self._logger, shell_prgm, cmd_list)
         # Copy selected files to work_dir
         selected_files = self._selected_files.copy()
-        labelled_filepaths = labelled_resource_filepaths(resources + self._resources_from_downstream)
+        labelled_filepaths = labelled_resource_filepaths(forward_resources + backward_resources)
         for k, label in enumerate(selected_files):
             filepath = labelled_filepaths.get(label)
             if filepath is not None:
@@ -181,17 +165,12 @@ class ExecutableItem(ExecutableItemBase, QObject):
         if self._gimlet_process._process is not None:
             loop.exec_()
         # Copy predecessor's resources so they can be passed to Gimlet's successors
-        self._resources = resources.copy()
+        self._resources = forward_resources.copy()
         # This is executed after the gimlet process has finished
         if not self._gimlet_execution_succeeded:
             self._logger.msg_error.emit(f"{self.name} execution failed")
             return False
         self._logger.msg_success.emit(f"Executing {self.name} finished")
-        return True
-
-    def _execute_backward(self, resources):
-        """Executes this item in the backward direction."""
-        self._successor_resources = resources.copy()
         return True
 
     def _output_resources_forward(self):
@@ -201,15 +180,6 @@ class ExecutableItem(ExecutableItemBase, QObject):
             (list) List of ProjectItemResources.
         """
         return self._resources
-
-    def _output_resources_backward(self):
-        """Returns output resources for backward execution.
-        The default implementation returns an empty list.
-
-        Returns:
-            (list) List of ProjectItemResources. Just an empty list for now.
-        """
-        return list()
 
     @Slot(int)
     def _handle_gimlet_process_finished(self, ret_code):

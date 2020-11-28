@@ -101,19 +101,9 @@ class Exporter(ProjectItem):
         """See base class."""
         return ItemInfo.item_category()
 
-    def execution_item(self):
-        """Creates Exporter's execution counterpart."""
-        gams_path = self._project.settings.value("appSettings/gamsPath", defaultValue=None)
-        executable = ExecutableItem(
-            self.name,
-            self._settings_pack,
-            self._database_model.items(),
-            self._cancel_on_error,
-            self.data_dir,
-            gams_path,
-            self._logger,
-        )
-        return executable
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     def settings_pack(self):
         """
@@ -526,15 +516,7 @@ class Exporter(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        resources = list()
-        for database in self._database_model.items():
-            if not database.output_file_name:
-                continue
-            metadata = {"label": database.output_file_name}
-            path = pathlib.Path(self.data_dir, database.output_file_name)
-            url = path.as_uri() if path.exists() else ""
-            resources.append(ProjectItemResource(self, "transient_file", url, metadata))
-        return resources
+        return self.execution_item()._output_resources_forward()
 
     def tear_down(self):
         """See base class."""

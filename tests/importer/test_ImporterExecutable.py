@@ -93,23 +93,15 @@ class TestImporterExecutable(unittest.TestCase):
         self.assertIsNone(executable._worker_thread)
         self.assertIsNone(executable._loop)
 
-    def test_execute_backward(self):
+    def test_execute_simplest_case(self):
         executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.BACKWARD))
+        self.assertTrue(executable.execute([], []))
         # Check that _loop, _worker, and _worker_thread are None after execution
         self.assertIsNone(executable._worker)
         self.assertIsNone(executable._worker_thread)
         self.assertIsNone(executable._loop)
 
-    def test_execute_forward_simplest_case(self):
-        executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
-        # Check that _loop, _worker, and _worker_thread are None after execution
-        self.assertIsNone(executable._worker)
-        self.assertIsNone(executable._worker_thread)
-        self.assertIsNone(executable._loop)
-
-    def test_execute_forward_import_small_file(self):
+    def test_execute_import_small_file(self):
         with TemporaryDirectory() as temp_dir:
             data_file = Path(temp_dir, "data.dat")
             self._write_simple_data(data_file)
@@ -120,9 +112,8 @@ class TestImporterExecutable(unittest.TestCase):
             gams_path = ""
             executable = ExecutableItem("name", mapping, [str(data_file)], temp_dir, gams_path, True, mock.MagicMock())
             database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
-            self.assertTrue(executable.execute(database_resources, ExecutionDirection.BACKWARD))
             file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
-            self.assertTrue(executable.execute(file_resources, ExecutionDirection.FORWARD))
+            self.assertTrue(executable.execute(file_resources, database_resources))
             # Check that _loop, _worker, and _worker_thread are None after execution
             self.assertIsNone(executable._worker)
             self.assertIsNone(executable._worker_thread)
@@ -136,7 +127,7 @@ class TestImporterExecutable(unittest.TestCase):
             self.assertEqual(object_list[0].name, "entity")
             database_map.connection.close()
 
-    def test_execute_forward_skip_deselected_file(self):
+    def test_execute_skip_deselected_file(self):
         with TemporaryDirectory() as temp_dir:
             data_file = Path(temp_dir, "data.dat")
             self._write_simple_data(data_file)
@@ -146,9 +137,8 @@ class TestImporterExecutable(unittest.TestCase):
             gams_path = ""
             executable = ExecutableItem("name", {}, [], temp_dir, gams_path, True, mock.MagicMock())
             database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
-            self.assertTrue(executable.execute(database_resources, ExecutionDirection.BACKWARD))
             file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
-            self.assertTrue(executable.execute(file_resources, ExecutionDirection.FORWARD))
+            self.assertTrue(executable.execute(file_resources, database_resources))
             # Check that _loop, _worker, and _worker_thread are None after execution
             self.assertIsNone(executable._worker)
             self.assertIsNone(executable._worker_thread)

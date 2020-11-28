@@ -61,9 +61,9 @@ class DataStore(ProjectItem):
         """See base class."""
         return ItemInfo.item_category()
 
-    def execution_item(self):
-        """Creates DataStore's execution counterpart."""
-        return ExecutableItem(self.name, convert_to_sqlalchemy_url(self._url, self.name, logger=None), self._logger)
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
@@ -422,17 +422,14 @@ class DataStore(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        sa_url = convert_to_sqlalchemy_url(self._url, self.name, logger=None)
-        if sa_url:
-            metadata = {"label": make_label(self.name)}
-            if self._additional_resource_metadata:
-                metadata.update(self._additional_resource_metadata)
-            resource = ProjectItemResource(self, "database", url=str(sa_url), metadata=metadata)
-            return [resource]
-        self.add_notification(
-            "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
-        )
-        return list()
+        resources = self.execution_item()._output_resources_forward()
+        if self._additional_resource_metadata:
+            resources = [r.clone(additional_metadata=self._additional_resource_metadata) for r in resources]
+        if not resources:
+            self.add_notification(
+                "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
+            )
+        return resources
 
     def resources_for_direct_predecessors(self):
         """See base class."""

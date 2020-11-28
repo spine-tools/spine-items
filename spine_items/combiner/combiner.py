@@ -66,10 +66,9 @@ class Combiner(ProjectItem):
         """See base class."""
         return ItemInfo.item_category()
 
-    def execution_item(self):
-        """Creates project item's execution counterpart."""
-        cancel_on_error = self.cancel_on_error
-        return ExecutableItem(self.name, self.logs_dir, cancel_on_error, self._logger)
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
@@ -162,7 +161,6 @@ class Combiner(ProjectItem):
         self.add_notification(
             "Output database missing. Please connect a Data Store " "to this Combiner for the merged database."
         )
-        return
 
     def _update_references_list(self, resources_upstream):
         """Updates the references list with resources upstream.

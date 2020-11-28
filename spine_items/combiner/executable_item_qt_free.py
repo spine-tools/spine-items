@@ -34,7 +34,6 @@ class ExecutableItem(ExecutableItemBase):
             logger (LoggerInterface): a logger
         """
         super().__init__(name, logger)
-        self._resources_from_downstream = list()
         self._logs_dir = logs_dir
         self._cancel_on_error = cancel_on_error
         self._process = None
@@ -59,19 +58,16 @@ class ExecutableItem(ExecutableItemBase):
             self._process.terminate()
             self._process = None
 
-    def _execute_backward(self, resources):
-        """See base class."""
-        self._resources_from_downstream = resources.copy()
-        return True
-
     @staticmethod
     def _urls_from_resources(resources):
         return [r.url for r in resources if r.type_ == "database"]
 
-    def _execute_forward(self, resources):
+    def execute(self, forward_resources, backward_resources):
         """See base class."""
-        from_urls = self._urls_from_resources(resources)
-        to_urls = self._urls_from_resources(self._resources_from_downstream)
+        if not super().execute(forward_resources, backward_resources):
+            return False
+        from_urls = self._urls_from_resources(forward_resources)
+        to_urls = self._urls_from_resources(backward_resources)
         if not from_urls:
             self._logger.msg_warning.emit("No input database(s) available. Moving on...")
             return True

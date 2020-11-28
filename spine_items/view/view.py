@@ -53,9 +53,9 @@ class View(ProjectItem):
         """See base class."""
         return ItemInfo.item_category()
 
-    def execution_item(self):
-        """Creates project item's execution counterpart."""
-        return ExecutableItem(self.name, self._logger)
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project, logger):
@@ -150,4 +150,3 @@ class View(ProjectItem):
             )
         else:
             super().notify_destination(source_item)
-

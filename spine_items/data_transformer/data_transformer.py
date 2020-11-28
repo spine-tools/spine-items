@@ -16,11 +16,8 @@ Contains the :class:`DataTransformer` project item.
 :date:    2.10.2020
 """
 from json import dump
-from pathlib import Path
 from PySide2.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
-from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spinedb_api import append_filter_config, config_to_shorthand
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
@@ -64,13 +61,9 @@ class DataTransformer(ProjectItem):
         """See base class."""
         return ItemInfo.item_category()
 
-    def execution_item(self):
-        """Creates project item's execution counterpart."""
-        specification = self._toolbox.specification_model.find_specification(self._specification_name)
-        if specification is None:
-            return ExecutableItem(self.name, None, "", self._logger)
-        path = filter_config_path(self.data_dir)
-        return ExecutableItem(self.name, specification, path, self._logger)
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     def item_dict(self):
         """See base class."""
@@ -166,25 +159,9 @@ class DataTransformer(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        specification = self._toolbox.specification_model.find_specification(self._specification_name)
-        if specification is None or specification.settings is None:
-            return [
-                ProjectItemResource(self, "database", url, metadata=metadata)
-                for url, metadata in self._url_metadata_iterator()
-            ]
-        if specification.settings.use_shorthand():
-            shorthand = config_to_shorthand(specification.settings.filter_config())
-            return [
-                ProjectItemResource(self, "database", append_filter_config(url, shorthand), metadata=metadata)
-                for url, metadata in self._url_metadata_iterator()
-            ]
-        path = Path(filter_config_path(self.data_dir))
-        with open(path, "w") as filter_config_file:
-            dump(specification.settings.filter_config(), filter_config_file)
-        return [
-            ProjectItemResource(self, "database", append_filter_config(url, path), metadata=metadata)
-            for url, metadata in self._url_metadata_iterator()
-        ]
+        exec_item = self.execution_item()
+        exec_item._db_resources = self._db_resources
+        return exec_item._output_resources_forward()
 
     def restore_selections(self):
         """See base class."""
