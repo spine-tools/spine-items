@@ -81,7 +81,7 @@ class ToolSpecification(ProjectItemSpecification):
         self._logger = logger
         self.tooltype = tooltype
         if not os.path.exists(path):
-            pass
+            self.path = ""
         else:
             self.path = path
         self.includes = includes
