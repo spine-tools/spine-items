@@ -23,6 +23,7 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
+from spine_engine.utils.returning_process import ReturningProcess
 from .database import Database
 from .item_info import ItemInfo
 from .settings_pack import SettingsPack
@@ -47,11 +48,19 @@ class ExecutableItem(ExecutableItemBase):
         self._cancel_on_error = cancel_on_error
         self._data_dir = data_dir
         self._gams_path = gams_path
+        self._process = None
 
     @staticmethod
     def item_type():
         """Returns Exporter's type identifier string."""
         return ItemInfo.item_type()
+
+    def stop_execution(self):
+        """Stops executing this Gimlet."""
+        super().stop_execution()
+        if self._process is not None:
+            self._process.terminate()
+            self._process = None
 
     def execute(self, forward_resources, backward_resources):
         """See base class."""
@@ -79,9 +88,20 @@ class ExecutableItem(ExecutableItemBase):
                 self._logger.msg_error.emit(f"<b>{self.name}</b>: No file name given to export database {url}.")
                 continue
             databases.append(database)
-        success = do_work(
-            self._settings_pack, self._cancel_on_error, self._data_dir, gams_system_directory, databases, self._logger
+        self._process = ReturningProcess(
+            target=do_work,
+            args=(
+                self._settings_pack,
+                self._cancel_on_error,
+                self._data_dir,
+                gams_system_directory,
+                databases,
+                self._logger,
+            ),
         )
+        self._process.run_until_complete()
+        success = self._process.success
+        self._process = None
         if success:
             self._logger.msg_success.emit(f"Executing Exporter {self.name} finished")
         return success
