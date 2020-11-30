@@ -9,6 +9,6 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 __version__ = "0.2.11"
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.12"
+REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.13"
 REQUIRED_SPINE_ENGINE_VERSION = "0.8.7"
 REQUIRED_SPINEDB_API_VERSION = "0.9.5"
