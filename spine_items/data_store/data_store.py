@@ -20,7 +20,6 @@ import os
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QAction, QFileDialog, QApplication
 from spinetoolbox.project_item.project_item import ProjectItem
-from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
