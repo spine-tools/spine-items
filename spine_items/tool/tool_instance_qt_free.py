@@ -27,7 +27,7 @@ from spine_engine.execution_managers import StandardExecutionManager, KernelExec
 class ToolInstance:
     """Tool instance base class."""
 
-    def __init__(self, tool_specification, basedir, settings, logger):
+    def __init__(self, tool_specification, basedir, settings, logger, owner):
         """
 
         Args:
@@ -35,14 +35,20 @@ class ToolInstance:
             basedir (str): the path to the directory where this instance should run
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): a logger instance
+            owner (ExecutableItemBase): The item that owns the instance
         """
         self.tool_specification = tool_specification
         self.basedir = basedir
         self._settings = settings
         self._logger = logger
+        self._owner = owner
         self.exec_mngr = None
         self.program = None  # Program to start in the subprocess
         self.args = list()  # List of command line arguments for the program
+
+    @property
+    def owner(self):
+        return self._owner
 
     def is_running(self):
         return self.exec_mngr is not None
@@ -159,7 +165,9 @@ class JuliaToolInstance(ToolInstance):
         """Executes in console.
         """
         kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
-        self.exec_mngr = KernelExecutionManager(self._logger, "julia", kernel_name, *self.args)
+        self.exec_mngr = KernelExecutionManager(
+            self._logger, "julia", kernel_name, *self.args, group_id=self.owner.group_id
+        )
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:
@@ -222,7 +230,9 @@ class PythonToolInstance(ToolInstance):
         """Executes in console.
         """
         kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-        self.exec_mngr = KernelExecutionManager(self._logger, "python", kernel_name, *self.args)
+        self.exec_mngr = KernelExecutionManager(
+            self._logger, "python", kernel_name, *self.args, group_id=self.owner.group_id
+        )
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:

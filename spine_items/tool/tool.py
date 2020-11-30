@@ -22,6 +22,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
+from spinetoolbox.widgets.spine_console_widget import SpineConsoleWidget
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.utils.command_line_arguments import split_cmdline_args
@@ -90,6 +91,8 @@ class Tool(ProjectItem):
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_set_specification(self._specification)
         self.do_update_execution_mode(execute_in_work)
+        self.julia_console = SpineConsoleWidget(toolbox, "Julia Console", owner=name)
+        self.python_console = SpineConsoleWidget(toolbox, "Python Console", owner=name)
 
     @staticmethod
     def item_type():

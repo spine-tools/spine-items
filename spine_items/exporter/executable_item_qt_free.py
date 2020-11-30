@@ -99,8 +99,7 @@ class ExecutableItem(ExecutableItemBase):
                 self._logger,
             ),
         )
-        self._process.run_until_complete()
-        success = self._process.success
+        success = self._process.run_until_complete()
         self._process = None
         if success:
             self._logger.msg_success.emit(f"Executing Exporter {self.name} finished")

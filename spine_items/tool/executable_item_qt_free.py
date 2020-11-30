@@ -390,7 +390,7 @@ class ExecutableItem(ExecutableItemBase):
         if not self._create_output_dirs(execution_dir):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
             return False
-        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger)
+        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         # Expand cmd_line_args from resources
         labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(self._cmd_line_args):
