@@ -19,10 +19,8 @@ Unit tests for Tool project item.
 from tempfile import mkdtemp
 import unittest
 from unittest import mock
-from unittest.mock import MagicMock
 import os
 import shutil
-from PySide2.QtCore import Qt
 from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QApplication, QMenu
 from spine_items.tool.item_info import ItemInfo
@@ -168,7 +166,8 @@ class TestTool(unittest.TestCase):
             item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0}
         factory = ToolFactory()
         self.project = create_mock_project()
-        tool = factory.make_item("T", item_dict, self.toolbox, self.project, self.toolbox)
+        with mock.patch("spine_items.tool.tool.SpineConsoleWidget"):
+            tool = factory.make_item("T", item_dict, self.toolbox, self.project, self.toolbox)
         mock_finish_project_item_construction(factory, tool, self.toolbox)
         # Set model for tool combo box
         tool._properties_ui.comboBox_tool.setModel(self.model)
