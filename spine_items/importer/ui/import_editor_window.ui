@@ -624,12 +624,12 @@
   <customwidget>
    <class>TableViewWithButtonHeader</class>
    <extends>QTableView</extends>
-   <header>spinetoolbox/import_editor/widgets/table_view_with_button_header.h</header>
+   <header>spine_items/importer/widgets/table_view_with_button_header.h</header>
   </customwidget>
   <customwidget>
    <class>MultiCheckableTreeView</class>
    <extends>QTreeView</extends>
-   <header>spinetoolbox/import_editor/widgets/multi_checkable_tree_view.h</header>
+   <header>spine_items/importer/widgets/multi_checkable_tree_view.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
