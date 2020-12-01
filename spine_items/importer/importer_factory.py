@@ -18,10 +18,9 @@ The ImporterFactory class.
 
 from PySide2.QtCore import Qt
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
-from spinetoolbox.import_editor.widgets.import_editor_window import ImportEditorWindow
+from .widgets.import_editor_window import ImportEditorWindow
 from .importer import Importer
 from .importer_icon import ImporterIcon
-from .importer_specification import ImporterSpecification
 from .widgets.importer_properties_widget import ImporterPropertiesWidget
 from .widgets.add_importer_widget import AddImporterWidget
 from .widgets.custom_menus import SpecificationMenu
