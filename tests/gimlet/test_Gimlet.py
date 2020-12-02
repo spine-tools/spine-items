@@ -85,7 +85,7 @@ class TestGimlet(unittest.TestCase):
         self.gimlet.notify_destination(source_item)
         self.toolbox.msg.emit.assert_called_with("Link established")
 
-        source_item.item_type = MagicMock(return_value="Exporter")
+        source_item.item_type = MagicMock(return_value="GdxExporter")
         self.gimlet.notify_destination(source_item)
         self.toolbox.msg.emit.assert_called_with("Link established")
 

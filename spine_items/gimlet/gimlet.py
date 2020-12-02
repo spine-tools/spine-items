@@ -350,7 +350,7 @@ class Gimlet(ProjectItem):
             "Data Transformer",
             "Data Connection",
             "Tool",
-            "Exporter",
+            "GdxExporter",
             "Gimlet",
         ]:
             self._logger.msg.emit("Link established")

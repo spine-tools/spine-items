@@ -80,10 +80,10 @@ class TestView(unittest.TestCase):
         self.toolbox.msg.emit.assert_called_with(
             "Link established. You can visualize Data Store <b>source name</b> in View <b>V</b>."
         )
-        source_item.item_type = MagicMock(return_value="Exporter")
+        source_item.item_type = MagicMock(return_value="GdxExporter")
         self.view.notify_destination(source_item)
         self.toolbox.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a <b>Exporter</b> and a <b>View</b> has not been implemented yet."
+            "Link established. Interaction between a <b>GdxExporter</b> and a <b>View</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Tool")
         self.view.notify_destination(source_item)

@@ -8,7 +8,24 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-__version__ = "0.3.0"
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.13"
-REQUIRED_SPINE_ENGINE_VERSION = "0.8.7"
-REQUIRED_SPINEDB_API_VERSION = "0.9.5"
+
+"""
+Unit tests for GdxExporter's ItemInfo class.
+
+:author: A. Soininen (VTT)
+:date:   5.5.2020
+"""
+import unittest
+from spine_items.gdx_exporter.item_info import ItemInfo
+
+
+class TestItemInfo(unittest.TestCase):
+    def test_item_type(self):
+        self.assertEqual(ItemInfo.item_type(), "GdxExporter")
+
+    def test_item_category(self):
+        self.assertEqual(ItemInfo.item_category(), "Exporters")
+
+
+if __name__ == "__main__":
+    unittest.main()

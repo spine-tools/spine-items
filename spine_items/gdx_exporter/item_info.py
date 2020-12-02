@@ -8,7 +8,23 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-__version__ = "0.3.0"
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.13"
-REQUIRED_SPINE_ENGINE_VERSION = "0.8.7"
-REQUIRED_SPINEDB_API_VERSION = "0.9.5"
+
+"""
+GdxExporter project item info.
+
+:authors: A. Soininen (VTT)
+:date:   29.4.2020
+"""
+from spine_engine.project_item.project_item_info import ProjectItemInfo
+
+
+class ItemInfo(ProjectItemInfo):
+    @staticmethod
+    def item_category():
+        """See base class."""
+        return "Exporters"
+
+    @staticmethod
+    def item_type():
+        """See base class."""
+        return "GdxExporter"

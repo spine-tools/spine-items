@@ -8,7 +8,33 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-__version__ = "0.3.0"
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.13"
-REQUIRED_SPINE_ENGINE_VERSION = "0.8.7"
-REQUIRED_SPINEDB_API_VERSION = "0.9.5"
+
+"""
+GdxExporter properties widget.
+
+:author: A. Soininen (VTT)
+:date:   25.9.2019
+"""
+
+from PySide2.QtWidgets import QWidget
+
+
+class GdxExporterProperties(QWidget):
+    """A main window widget to show GdxExport item's properties."""
+
+    def __init__(self, toolbox):
+        """
+        Args:
+            toolbox (ToolboxUI): a main window instance
+        """
+        from ..ui.gdx_exporter_properties import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__()
+        self._ui = Ui_Form()
+        self._ui.setupUi(self)
+        toolbox.ui.tabWidget_item_properties.addTab(self, "GdxExporter")
+
+    @property
+    def ui(self):
+        """The UI form of this widget."""
+        return self._ui
