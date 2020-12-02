@@ -16,8 +16,6 @@ Contains settings classes for filters and manipulators.
 :date:    28.10.2020
 """
 from spinedb_api.filters.renamer import entity_class_renamer_config, parameter_renamer_config
-from spinedb_api.filters.scenario_filter import scenario_filter_config
-from spinedb_api.filters.tool_filter import tool_filter_config
 
 
 class FilterSettings:
@@ -164,94 +162,6 @@ class ParameterRenamingSettings(RenamingSettings):
         return "parameter_rename"
 
 
-class ScenarioFilterSettings(FilterSettings):
-    """
-    Settings for scenario filter.
-
-    Attributes:
-        scenario (str): scenario name
-    """
-
-    def __init__(self, scenario):
-        """
-        Args:
-            scenario (str): scenario name
-        """
-        self.scenario = scenario
-
-    def __eq__(self, other):
-        if not isinstance(other, ScenarioFilterSettings):
-            return NotImplemented
-        return self.scenario == other.scenario
-
-    def filter_config(self):
-        """See base class."""
-        return scenario_filter_config(self.scenario) if self.scenario is not None else {}
-
-    def to_dict(self):
-        """See base class."""
-        return {"scenario": self.scenario}
-
-    @staticmethod
-    def type():
-        """See base class."""
-        return "scenario_filter"
-
-    @staticmethod
-    def use_shorthand():
-        """See base class."""
-        return True
-
-    @staticmethod
-    def from_dict(settings_dict):
-        """See base class."""
-        return ScenarioFilterSettings(settings_dict["scenario"])
-
-
-class ToolFilterSettings(FilterSettings):
-    """
-    Settings for tool filter.
-
-    Attributes:
-        tool (str): tool name
-    """
-
-    def __init__(self, tool):
-        """
-        Args:
-            tool (str): tool name
-        """
-        self.tool = tool
-
-    def __eq__(self, other):
-        if not isinstance(other, ToolFilterSettings):
-            return NotImplemented
-        return self.tool == other.tool
-
-    def filter_config(self):
-        """See base class."""
-        return tool_filter_config(self.tool)
-
-    def to_dict(self):
-        """See base class."""
-        return {"tool": self.tool}
-
-    @staticmethod
-    def type():
-        """See base class."""
-        return "tool_filter"
-
-    @staticmethod
-    def use_shorthand():
-        """See base class."""
-        return True
-
-    @staticmethod
-    def from_dict(settings_dict):
-        """See base class."""
-        return ToolFilterSettings(settings_dict["tool"])
-
-
 def settings_from_dict(settings_dict):
     """
     Restores filter settings.
@@ -265,7 +175,5 @@ def settings_from_dict(settings_dict):
     restorers = {
         EntityClassRenamingSettings.type(): EntityClassRenamingSettings.from_dict,
         ParameterRenamingSettings.type(): ParameterRenamingSettings.from_dict,
-        ScenarioFilterSettings.type(): ScenarioFilterSettings.from_dict,
-        ToolFilterSettings.type(): ToolFilterSettings.from_dict,
     }
-    return restorers[settings_dict["type"]](settings_dict["settings"])
+    return restorers.get(settings_dict["type"], lambda _: None)(settings_dict["settings"])

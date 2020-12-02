@@ -14,29 +14,22 @@ Contains :class:`SpecificationEditorWindow`.
 :author: A. Soininen (VTT)
 :date:   2.10.2020
 """
-import os.path
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QWidget
 from .entity_class_renaming_widget import EntityClassRenamingWidget
 from .parameter_renaming_widget import ParameterRenamingWidget
-from .scenario_filter_widget import ScenarioFilterWidget
-from .tool_filter_widget import ToolFilterWidget
 from ..data_transformer_specification import DataTransformerSpecification
 from ..settings import (
     EntityClassRenamingSettings,
     ParameterRenamingSettings,
-    ScenarioFilterSettings,
-    ToolFilterSettings,
 )
 
 
-_DISPLAY_NAMES = ("No filter", "Rename entity classes", "Rename parameters", "Select scenario", "Select tool")
+_DISPLAY_NAMES = ("No filter", "Rename entity classes", "Rename parameters")
 
 _SETTINGS_CLASSES = {
     _DISPLAY_NAMES[1]: EntityClassRenamingSettings,
     _DISPLAY_NAMES[2]: ParameterRenamingSettings,
-    _DISPLAY_NAMES[3]: ScenarioFilterSettings,
-    _DISPLAY_NAMES[4]: ToolFilterSettings,
 }
 
 _CLASSES_TO_DISPLAY_NAMES = {class_: name for name, class_ in _SETTINGS_CLASSES.items()}
@@ -155,8 +148,6 @@ class SpecificationEditorWindow(QWidget):
             widget = {
                 _DISPLAY_NAMES[1]: EntityClassRenamingWidget,
                 _DISPLAY_NAMES[2]: ParameterRenamingWidget,
-                _DISPLAY_NAMES[3]: ScenarioFilterWidget,
-                _DISPLAY_NAMES[4]: ToolFilterWidget,
             }[display_name](self._specification.settings)
             self._filter_widgets[display_name] = widget
         layout = self._ui.filter_widget.layout()
