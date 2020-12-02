@@ -23,15 +23,11 @@ class Database:
 
     Attributes:
         url (str): database URL
-        scenario (str): scenario to export
-        available_scenarios (dict): a mapping from scenario name to its active flag
         output_file_name (str): output file name (relative to item's data dir)
     """
 
     def __init__(self):
         self.url = ""
-        self.scenario = None
-        self.available_scenarios = dict()
         self.output_file_name = ""
 
     def to_dict(self):
@@ -41,7 +37,7 @@ class Database:
         Returns:
             dict: serialized :class:`Database`
         """
-        return {"scenario": self.scenario, "output_file_name": self.output_file_name}
+        return {"output_file_name": self.output_file_name}
 
     @staticmethod
     def from_dict(database_dict):
@@ -55,6 +51,5 @@ class Database:
             Database: deserialized instance
         """
         db = Database()
-        db.scenario = database_dict["scenario"]
         db.output_file_name = database_dict["output_file_name"]
         return db

@@ -57,22 +57,12 @@ class Ui_Form(object):
         self.file_name_label = QLabel(self.frame)
         self.file_name_label.setObjectName(u"file_name_label")
 
-        self.formLayout.setWidget(1, QFormLayout.LabelRole, self.file_name_label)
+        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.file_name_label)
 
         self.out_file_name_edit = PropertyQLineEdit(self.frame)
         self.out_file_name_edit.setObjectName(u"out_file_name_edit")
 
-        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.out_file_name_edit)
-
-        self.scenario_label = QLabel(self.frame)
-        self.scenario_label.setObjectName(u"scenario_label")
-
-        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.scenario_label)
-
-        self.scenario_combo_box = QComboBox(self.frame)
-        self.scenario_combo_box.setObjectName(u"scenario_combo_box")
-
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.scenario_combo_box)
+        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.out_file_name_edit)
 
 
         self.verticalLayout.addLayout(self.formLayout)
@@ -90,9 +80,5 @@ class Ui_Form(object):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.file_name_label.setText(QCoreApplication.translate("Form", u"Filename:", None))
         self.out_file_name_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type output file name here...", None))
-        self.scenario_label.setText(QCoreApplication.translate("Form", u"Scenario:", None))
-#if QT_CONFIG(tooltip)
-        self.scenario_combo_box.setToolTip(QCoreApplication.translate("Form", u"Select scenario to export.", None))
-#endif // QT_CONFIG(tooltip)
     # retranslateUi
 

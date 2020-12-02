@@ -41,28 +41,6 @@ class UpdateOutFileName(SpineToolboxCommand):
         self.exporter.undo_redo_out_file_name(self.undo_file_name, self.database_path)
 
 
-class UpdateScenario(SpineToolboxCommand):
-    def __init__(self, exporter, scenario, database_url):
-        """
-        Args:
-            exporter (GdxExporter): the GdxExporter
-            scenario (str, optional): new scenario name
-            database_url (str): database URL
-        """
-        super().__init__()
-        self._exporter = exporter
-        self._scenario = scenario
-        self._previous_scenario = exporter.database(database_url).scenario
-        self._url = database_url
-        self.setText(f"change {exporter.name}'s scenario")
-
-    def redo(self):
-        self._exporter.set_scenario(self._scenario, self._url)
-
-    def undo(self):
-        self._exporter.set_scenario(self._previous_scenario, self._url)
-
-
 class UpdateSettings(SpineToolboxCommand):
     def __init__(self, exporter, settings, indexing_settings, merging_settings, none_fallback, none_export):
         """Command to update GdxExporter settings.

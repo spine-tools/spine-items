@@ -20,12 +20,11 @@ from copy import deepcopy
 from itertools import zip_longest
 import os.path
 from PySide2.QtCore import Qt, Slot
-from sqlalchemy.engine.url import make_url
-from spinedb_api import clear_filter_configs, DatabaseMapping, SpineDBAPIError
+from spinedb_api import clear_filter_configs
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path, serialize_url
 from spine_engine.spine_io.exporters import gdx
-from .commands import UpdateOutFileName, UpdateSettings, UpdateScenario
+from .commands import UpdateOutFileName, UpdateSettings
 from ..commands import UpdateCancelOnErrorCommand
 from .database import Database
 from .mvcmodels.database_list_model import DatabaseListModel
@@ -84,8 +83,6 @@ class GdxExporter(ProjectItem):
         self._export_list_items = dict()
         self._settings_window = None
         self._worker = None
-        self._project.db_mngr.session_committed.connect(lambda db_map, _: self._check_scenarios_after_rollback(db_map))
-        self._project.db_mngr.session_rolled_back.connect(self._check_scenarios_after_rollback)
 
     @staticmethod
     def item_type():
@@ -136,25 +133,8 @@ class GdxExporter(ProjectItem):
         self._properties_ui.item_name_label.setText(self.name)
         self._update_properties_tab()
 
-    def _read_scenarios(self, db_map):
-        """
-        Reads scenarios from database.
-
-        Args:
-            db_map (DatabaseMappingBase): database map
-
-        Returns:
-            dict: a mapping from scenario name to boolean 'active' flag
-        """
-        try:
-            scenario_rows = db_map.query(db_map.scenario_sq).all()
-            scenarios = {row.name: row.active for row in scenario_rows}
-            return scenarios
-        except SpineDBAPIError:
-            return {}
-
     def _update_properties_tab(self):
-        """Updates the database list and scenario combo boxes in the properties tab."""
+        """Updates the database list in the properties tab."""
         database_list_storage = self._properties_ui.databases_list_layout
         while not database_list_storage.isEmpty():
             widget_to_remove = database_list_storage.takeAt(0)
@@ -162,10 +142,8 @@ class GdxExporter(ProjectItem):
         self._export_list_items.clear()
         for db in self._database_model.items():
             item = self._export_list_items[db.url] = ExportListItem(db.url, db.output_file_name)
-            item.update_scenarios(db.available_scenarios, db.scenario)
             database_list_storage.addWidget(item)
             item.file_name_changed.connect(self._update_out_file_name)
-            item.scenario_changed.connect(self._update_scenario)
         self._properties_ui.cancel_on_error_check_box.setCheckState(
             Qt.Checked if self._cancel_on_error else Qt.Unchecked
         )
@@ -208,9 +186,6 @@ class GdxExporter(ProjectItem):
                 db = Database()
                 db.url = url
                 self._database_model.add(db)
-        for url in database_urls:
-            db = self._database_model.item(url)
-            db.available_scenarios = self._available_scenarios(url)
         if self._active:
             self._update_properties_tab()
         self._check_state()
@@ -224,7 +199,7 @@ class GdxExporter(ProjectItem):
             worker.thread.wait()
             worker.deleteLater()
         db = self._database_model.item(database_url)
-        worker = Worker(database_url, db.scenario, self._settings_pack.none_fallback, self._logger)
+        worker = Worker(database_url, self._settings_pack.none_fallback, self._logger)
         self._worker = worker
         worker.database_unavailable.connect(self._cancel_worker)
         worker.finished.connect(self._worker_finished)
@@ -367,32 +342,6 @@ class GdxExporter(ProjectItem):
     def _update_out_file_name(self, file_name, url):
         """Pushes a new UpdateExporterOutFileNameCommand to the toolbox undo stack."""
         self._toolbox.undo_stack.push(UpdateOutFileName(self, file_name, url))
-
-    @Slot(str, str)
-    def _update_scenario(self, scenario, database_url):
-        """
-        Updates the selected scenario.
-
-        Args:
-            scenario (str): selected scenario
-            database_url (str): database URL
-        """
-        if not scenario:
-            scenario = None
-        self._toolbox.undo_stack.push(UpdateScenario(self, scenario, database_url))
-
-    def set_scenario(self, scenario, database_url):
-        """
-        Sets the selected scenario in settings pack.
-
-        Args:
-            scenario (str, optional): selected scenario
-            database_url (str): database URL
-        """
-        self._database_model.item(database_url).scenario = scenario
-        if self._active:
-            export_list_item = self._export_list_items[database_url]
-            export_list_item.make_sure_this_scenario_is_shown_in_the_combo_box(scenario)
 
     @Slot()
     def _update_settings_from_settings_window(self):
@@ -547,46 +496,6 @@ class GdxExporter(ProjectItem):
         item_dict["settings_packs"] = new_settings_packs
         return item_dict
 
-    @Slot(set)
-    def _check_scenarios_after_rollback(self, db_maps):
-        """
-        Refreshes scenarios after database commit or rollback if database is connected to GdxExporter.
-
-        Args:
-            db_maps (set of DatabaseMappingBase): a database map
-        """
-        for db_map in db_maps:
-            url = db_map.sa_url
-            for db in self._database_model.items():
-                if url == make_url(clear_filter_configs(db.url)):
-                    self._read_scenarios(db_map)
-
-    def _available_scenarios(self, url):
-        """
-        Reads available scenarios from a database even when the database is not (yet) managed.
-
-        Args:
-            url (str): database URL
-
-        Returns:
-            dict: a mapping from scenario name to active flag
-        """
-        clean_url = clear_filter_configs(url)
-        db_map = self._project.db_mngr.db_map(clean_url)
-        if db_map is not None:
-            return self._read_scenarios(db_map)
-        else:
-            try:
-                db_map = DatabaseMapping(url, apply_filters=False)
-            except SpineDBAPIError:
-                return dict()
-            try:
-                return {row.name: row.active for row in db_map.query(db_map.scenario_sq).all()}
-            except SpineDBAPIError:
-                return dict()
-            finally:
-                db_map.connection.close()
-
 
 def _normalize_url(url):
     """
@@ -627,7 +536,6 @@ def _legacy_from_dict(name, item_dict, toolbox, project, logger):
             url = _normalize_url(url)
             db = Database()
             db.output_file_name = pack["output_file_name"]
-            db.scenario = pack.get("scenario")
             db.url = url if url_to_full_url is None else url_to_full_url[url]
             databases.append(db)
     cancel_on_error = item_dict.get("cancel_on_error", True)

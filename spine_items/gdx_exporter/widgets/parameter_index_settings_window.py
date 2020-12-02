@@ -21,9 +21,9 @@ from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
 from PySide2.QtGui import QStandardItem
 from PySide2.QtWidgets import QMessageBox, QWidget
 from spine_engine.spine_io.exporters import gdx
+from spinedb_api import DatabaseMapping
 from .parameter_index_settings import IndexSettingsState, ParameterIndexSettings
 from ..mvcmodels.indexing_domain_list_model import IndexingDomainListModel
-from ..db_utils import scenario_filtered_database_map
 
 _PARAMETER_ROLE = Qt.UserRole + 1
 _PARAMETER_NAME_ROLE = Qt.UserRole + 2
@@ -37,13 +37,12 @@ class ParameterIndexSettingsWindow(QWidget):
     settings_rejected = Signal()
     """Emitted when the settings have been rejected."""
 
-    def __init__(self, indexing_settings, set_settings, database_path, scenario, none_fallback, parent):
+    def __init__(self, indexing_settings, set_settings, database_path, none_fallback, parent):
         """
         Args:
             indexing_settings (dict): a map from parameter name to a dict of domain names and :class:`IndexingSetting`
             set_settings (SetSettings): export settings
             database_path (str): a database url
-            scenario (str, optional): scenario name
             none_fallback (NoneFallback): how to handle None values
             parent (QWidget): a parent widget
         """
@@ -51,7 +50,7 @@ class ParameterIndexSettingsWindow(QWidget):
 
         super().__init__(parent, f=Qt.Window)
         self._set_settings = set_settings
-        self._database_mapping = scenario_filtered_database_map(database_path, scenario) if database_path else None
+        self._database_mapping = DatabaseMapping(database_path) if database_path else None
         self._enable_domain_updates = True
         self._parameters = dict()
         if not self._read_parameters(none_fallback):

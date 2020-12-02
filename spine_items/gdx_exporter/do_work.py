@@ -17,8 +17,7 @@ GdxExporter's execute kernel (do_work), as target for a multiprocess.Process
 """
 import os
 from spine_engine.spine_io.exporters import gdx
-from spinedb_api import SpineDBAPIError
-from .db_utils import scenario_filtered_database_map
+from spinedb_api import DatabaseMapping, SpineDBAPIError
 
 
 def do_work(settings_pack, cancel_on_error, data_dir, gams_system_directory, databases, logger):
@@ -27,7 +26,7 @@ def do_work(settings_pack, cancel_on_error, data_dir, gams_system_directory, dat
         url = database.url
         out_path = os.path.join(data_dir, database.output_file_name)
         try:
-            database_map = scenario_filtered_database_map(url, database.scenario)
+            database_map = DatabaseMapping(url)
         except SpineDBAPIError as error:
             logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
             successes.append(False)

@@ -321,10 +321,9 @@ class GdxExportSettings(QWidget):
         """Shows the indexed parameter settings window."""
         if self._indexed_parameter_settings_window is None:
             url = self._ui.database_combo_box.currentText()
-            scenario = self._database_model.item(url).scenario if url else None
             indexing_settings = deepcopy(self._indexing_settings)
             self._indexed_parameter_settings_window = ParameterIndexSettingsWindow(
-                indexing_settings, self._set_settings, url, scenario, self._none_fallback, self
+                indexing_settings, self._set_settings, url, self._none_fallback, self
             )
             self._indexed_parameter_settings_window.settings_approved.connect(self._gather_parameter_indexing_settings)
             self._indexed_parameter_settings_window.settings_rejected.connect(

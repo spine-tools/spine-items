@@ -19,8 +19,6 @@ A worker based machinery to construct the settings data structures needed for gd
 from copy import deepcopy
 from PySide2.QtCore import QObject, QThread, Signal, Slot
 from spinedb_api import (
-    apply_scenario_filter_to_parameter_value_sq,
-    apply_alternative_filter_to_parameter_value_sq,
     DatabaseMapping,
     SpineDBAPIError,
 )
@@ -43,18 +41,16 @@ class Worker(QObject):
     finished = Signal(object)
     """Emitted when the worker has finished."""
 
-    def __init__(self, database_url, scenario, none_fallback, logger):
+    def __init__(self, database_url, none_fallback, logger):
         """
         Args:
             database_url (str): database's URL
-            scenario (str, optional): scenario name or None if 'Base' alternative should be used
             none_fallback (NoneFallback): how to handle None parameter values
             logger (LoggerInterface): a logger
         """
         super().__init__()
         self.thread = QThread()
         self.moveToThread(self.thread)
-        self._scenario = scenario
         self._none_fallback = none_fallback
         self.database_url = str(database_url)
         self._previous_settings = None
@@ -101,40 +97,22 @@ class Worker(QObject):
         self._previous_indexing_settings = previous_indexing_settings
         self._previous_merging_settings = previous_merging_settings
 
-    @staticmethod
-    def _read_scenarios(database_map):
-        scenario_rows = database_map.query(database_map.scenario_sq).all()
-        scenarios = {row.name: row.active for row in scenario_rows}
-        return scenarios
-
     def _read_settings(self):
         """Reads fresh gdx settings from the database."""
         try:
             database_map = DatabaseMapping(self.database_url)
         except SpineDBAPIError:
             self.database_unavailable.emit()
-            return None, None, None
-        try:
-            scenarios = self._read_scenarios(database_map)
-            if self._scenario is not None and self._scenario not in scenarios:
-                self.errored.emit(f"Scenario {self._scenario} not found.")
-                return None, None, None
-            if self._scenario is None:
-                apply_alternative_filter_to_parameter_value_sq(database_map, ["Base"])
-            else:
-                apply_scenario_filter_to_parameter_value_sq(database_map, self._scenario)
-        except SpineDBAPIError as error:
-            self.errored.emit(error)
-            return None, None, None
+            return None, None
         try:
             settings = gdx.make_set_settings(database_map)
             indexing_settings = gdx.make_indexing_settings(database_map, self._none_fallback, self._logger)
         except gdx.GdxExportException as error:
             self.errored.emit(error)
-            return None, None, None
+            return None, None
         finally:
             database_map.connection.close()
-        return settings, indexing_settings, scenarios
+        return settings, indexing_settings
 
     def _update_indexing_settings(self, new_indexing_settings):
         """Updates the parameter indexing settings according to changes in the database."""
@@ -170,17 +148,14 @@ class _Result:
         set_settings (gdx.SetSettings): gdx export settings
         indexing_settings (dict): parameter indexing settings
         merging_settings (dict): parameter merging settings
-        scenarios (dict): map from scenario name to boolean 'active' flag
     """
 
-    def __init__(self, set_settings, indexing_settings, scenarios):
+    def __init__(self, set_settings, indexing_settings):
         """
         Args:
             set_settings (gdx.SetSettings): gdx export settings
             indexing_settings (dict): parameter indexing settings
-            scenarios (dict): map from scenario name to boolean 'active' flag
         """
         self.set_settings = set_settings
         self.indexing_settings = indexing_settings
         self.merging_settings = dict()
-        self.scenarios = scenarios

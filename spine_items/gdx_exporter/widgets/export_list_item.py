@@ -20,16 +20,11 @@ from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QWidget
 
 
-_BASE_ALTERNATIVE_TEXT = "Export 'Base' alternative"
-
-
 class ExportListItem(QWidget):
     """A widget with few controls to select the output file name and open a settings window."""
 
     file_name_changed = Signal(str, str)
     """Emitted when the file name field is changed."""
-    scenario_changed = Signal(str, str)
-    """Emitted when selected scenario has changed."""
 
     def __init__(self, url, file_name, parent=None):
         """
@@ -48,7 +43,6 @@ class ExportListItem(QWidget):
         self._ui.url_field.setText(url)
         self._ui.out_file_name_edit.setText(file_name)
         self._ui.out_file_name_edit.editingFinished.connect(self._emit_file_name_changed)
-        self._ui.scenario_combo_box.currentTextChanged.connect(self._emit_scenario_changed)
 
     @property
     def out_file_name_edit(self):
@@ -60,40 +54,6 @@ class ExportListItem(QWidget):
         """Text in the database URL field."""
         return self._ui.url_field
 
-    def update_scenarios(self, scenarios, selected):
-        """
-        Updates the scenarios combo box.
-
-        Args:
-            scenarios (dict): a map from scenario name to boolean active flag
-            selected (str, optional): currently selected scenario, None for the 'Base' alternative
-        """
-        active = [_BASE_ALTERNATIVE_TEXT] + [_activate(name) for name, active in scenarios.items() if active]
-        inactive = [name for name, active in scenarios.items() if not active]
-        self._ui.scenario_combo_box.clear()
-        self._ui.scenario_combo_box.addItems(active)
-        self._ui.scenario_combo_box.addItems(inactive)
-        active = scenarios.get(selected)
-        if active is not None:
-            self._ui.scenario_combo_box.setCurrentText(_activate(selected) if active else selected)
-        else:
-            self._ui.scenario_combo_box.setCurrentIndex(0)
-
-    def make_sure_this_scenario_is_shown_in_the_combo_box(self, scenario):
-        """
-        Makes sure the given scenario is selected in the combo box.
-
-        Args:
-            scenario (str, optional): scenario name
-        """
-        if scenario is None:
-            scenario = _BASE_ALTERNATIVE_TEXT
-        if scenario == self._ui.scenario_combo_box.currentText():
-            return
-        self._ui.scenario_combo_box.blockSignals(True)
-        self._ui.scenario_combo_box.setCurrentText(scenario)
-        self._ui.scenario_combo_box.blockSignals(False)
-
     @Slot()
     def _emit_file_name_changed(self):
         """Emits file_name_changed signal."""
@@ -102,27 +62,3 @@ class ExportListItem(QWidget):
             return
         self._file_name = file_name
         self.file_name_changed.emit(file_name, self._url)
-
-    @Slot(str)
-    def _emit_scenario_changed(self, selected):
-        """Emits scenario_changed signal."""
-        if selected == _BASE_ALTERNATIVE_TEXT:
-            self.scenario_changed.emit(None, self._url)
-        else:
-            scenario_name, _, active = selected.rpartition(" ")
-            if active == "(active)":
-                selected = scenario_name
-            self.scenario_changed.emit(selected, self._url)
-
-
-def _activate(scenario):
-    """
-    Expands active scenario's name so it is recognizable as combo box label.
-
-    Args:
-        scenario (str): scenario name
-
-    Returns:
-        str: expanded name
-    """
-    return scenario + " (active)"
