@@ -127,20 +127,15 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        work_dir = self.basedir
         use_embedded_julia = self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2")
         if use_embedded_julia == "2":
             # Prepare Julia REPL command
-            work_dir = repr(work_dir).strip("'")
-            cmdline_args = self.tool_specification.cmdline_args + args
-            cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
             self.args = []
-            if work_dir:
-                self.args += [f'cd("{work_dir}");']
-            self.args += [
-                f"empty!(ARGS); append!(ARGS, {cmdline_args});",
-                f'include("{self.tool_specification.main_prgm}")',
-            ]
+            cmdline_args = self.tool_specification.cmdline_args + args
+            if cmdline_args:
+                cmdline_args = '["' + repr('", "'.join(self.args)).strip("'") + '"]'
+                self.args += [f"empty!(ARGS); append!(ARGS, {cmdline_args});"]
+            self.args += [f'include("{self.tool_specification.main_prgm}")']
         else:
             # Prepare command "julia --project={PROJECT_DIR} script.jl"
             julia_path = self._settings.value("appSettings/juliaPath", defaultValue="")
@@ -148,7 +143,7 @@ class JuliaToolInstance(ToolInstance):
                 julia_exe = julia_path
             else:
                 julia_exe = JULIA_EXECUTABLE
-            script_path = os.path.join(work_dir, self.tool_specification.main_prgm)
+            script_path = self.tool_specification.main_prgm
             julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
             self.program = julia_exe
             self.args.append(f"--project={julia_project_path}")
@@ -166,7 +161,7 @@ class JuliaToolInstance(ToolInstance):
         """
         kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
         self.exec_mngr = KernelExecutionManager(
-            self._logger, "julia", kernel_name, *self.args, group_id=self.owner.group_id
+            self._logger, "julia", kernel_name, *self.args, group_id=self.owner.group_id, workdir=self.basedir,
         )
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
@@ -181,8 +176,6 @@ class JuliaToolInstance(ToolInstance):
     def _cmd_line_execute(self):
         """Executes in command line.
         """
-        # On Julia the QProcess workdir must be set to the path where the main script is
-        # Otherwise it doesn't find input files in subdirectories
         self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
@@ -203,16 +196,12 @@ class PythonToolInstance(ToolInstance):
         work_dir = self.basedir
         use_embedded_python = self._settings.value("appSettings/useEmbeddedPython", defaultValue="0")
         if use_embedded_python == "2":
-            # Prepare a command list (FIFO queue) with two commands for Python Console
-            # 1st cmd: Change current work directory
-            # 2nd cmd: Run script with given args
-            cd_work_dir_cmd = f"%cd -q {work_dir}"  # -q: quiet
-            run_script_cmd = f'%run "{self.tool_specification.main_prgm}"'
+            # Prepare command
+            command = f'%run "{self.tool_specification.main_prgm}"'
             cmdline_args = self.tool_specification.cmdline_args + args
             if cmdline_args:
-                run_script_cmd = run_script_cmd + " " + '"' + '" "'.join(cmdline_args) + '"'
-            # Populate FIFO command queue
-            self.args = [cd_work_dir_cmd, run_script_cmd]
+                command += " " + '"' + '" "'.join(cmdline_args) + '"'
+            self.args = [command]
         else:
             # Prepare command "python <script.py> <script_arguments>"
             script_path = os.path.join(work_dir, self.tool_specification.main_prgm)
@@ -231,7 +220,7 @@ class PythonToolInstance(ToolInstance):
         """
         kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
         self.exec_mngr = KernelExecutionManager(
-            self._logger, "python", kernel_name, *self.args, group_id=self.owner.group_id
+            self._logger, "python", kernel_name, *self.args, group_id=self.owner.group_id, workdir=self.basedir
         )
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
