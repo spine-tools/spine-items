@@ -16,9 +16,11 @@ ImportMappings widget.
 :date:   1.6.2019
 """
 
+from copy import deepcopy
 from PySide2.QtCore import QObject, QItemSelectionModel, Signal, Slot
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
-from ..commands import CreateMapping, DeleteMapping, DuplicateMapping
+from .custom_menus import MappingListMenu
+from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
 
 SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "None")
 
@@ -35,40 +37,42 @@ class ImportMappings(QObject):
     about_to_undo = Signal(str)
     """Emitted before an undo/redo action."""
 
-    def __init__(self, ui, undo_stack):
+    def __init__(self, parent):
         """
         Args:
-            ui (QWidget): importer window's UI
-            undo_stack (QUndoStack): undo stack
+            parent (ImportEditorWindow): importer window's UI
         """
         super().__init__()
-        self._ui = ui
+        self._parent = parent
+        self._ui = parent._ui
         self._source_table = None
         self._mappings_model = None
-        self._undo_stack = undo_stack
+        self._copied_mappings = parent._copied_mappings
+        self._undo_stack = parent._undo_stack
         # initialize interface
         # NOTE: We make the delegate an attribute so it's never accidentally gc'ed
         self._src_type_delegate = ComboBoxDelegate(SOURCE_TYPES)
-        self._ui.table_view_mappings.setItemDelegateForColumn(1, self._src_type_delegate)
+        self._ui.mapping_spec_table.setItemDelegateForColumn(1, self._src_type_delegate)
 
         # connect signals
         self._ui.new_button.clicked.connect(self.new_mapping)
         self._ui.remove_button.clicked.connect(self.delete_selected_mapping)
         self._ui.duplicate_button.clicked.connect(self.duplicate_selected_mapping)
-        self.mapping_selection_changed.connect(self._update_table_view_mappings)
+        self._ui.mapping_list.customContextMenuRequested.connect(self._show_mapping_list_context_menu)
+        self.mapping_selection_changed.connect(self._update_mapping_spec_table)
 
     @Slot(object)
-    def _update_table_view_mappings(self, mapping_spec_model):
-        current_model = self._ui.table_view_mappings.model()
+    def _update_mapping_spec_table(self, mapping_spec_model):
+        current_model = self._ui.mapping_spec_table.model()
         if current_model is not None:
             current_model.modelReset.disconnect(self._resize_table_view_mappings_columns)
-        self._ui.table_view_mappings.setModel(mapping_spec_model)
+        self._ui.mapping_spec_table.setModel(mapping_spec_model)
         self._resize_table_view_mappings_columns()
         mapping_spec_model.modelReset.connect(self._resize_table_view_mappings_columns)
 
     @Slot()
     def _resize_table_view_mappings_columns(self):
-        self._ui.table_view_mappings.resizeColumnsToContents()
+        self._ui.mapping_spec_table.resizeColumnsToContents()
 
     @Slot(str, object)
     def set_mappings_model(self, source_table_name, model):
@@ -84,15 +88,15 @@ class ImportMappings(QObject):
         if self._mappings_model is not None:
             self._mappings_model.dataChanged.disconnect(self.data_changed)
         self._mappings_model = model
-        self._ui.list_view.setModel(model)
+        self._ui.mapping_list.setModel(model)
         for specification in self._mappings_model.mapping_specifications:
             specification.about_to_undo.connect(self.focus_on_changing_specification)
-        self._ui.list_view.selectionModel().currentChanged.connect(self.change_mapping)
+        self._ui.mapping_list.selectionModel().currentChanged.connect(self.change_mapping)
         self._mappings_model.dataChanged.connect(self.data_changed)
         if self._mappings_model.rowCount() > 0:
             self._select_row(0)
         else:
-            self._ui.list_view.clearSelection()
+            self._ui.mapping_list.clearSelection()
             self.mapping_selection_changed.emit(None)
 
     @Slot(str, str)
@@ -107,13 +111,13 @@ class ImportMappings(QObject):
         self.about_to_undo.emit(source_table_name)
         row = self._mappings_model.row_for_mapping(mapping_name)
         index = self._mappings_model.index(row, 0)
-        self._ui.list_view.selectionModel().setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+        self._ui.mapping_list.selectionModel().setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
 
     @Slot()
     def data_changed(self):
         """Emits the mappingDataChanged signal with the currently selected data mappings."""
         m = None
-        indexes = self._ui.list_view.selectedIndexes()
+        indexes = self._ui.mapping_list.selectedIndexes()
         if self._mappings_model and indexes:
             m = self._mappings_model.data_mapping(indexes[0])
         self.mapping_data_changed.emit(m)
@@ -157,7 +161,7 @@ class ImportMappings(QObject):
         """
         Pushes a DuplicateMapping command to the undo stack.
         """
-        selection_model = self._ui.list_view.selectionModel()
+        selection_model = self._ui.mapping_list.selectionModel()
         if self._mappings_model is None or not selection_model.hasSelection():
             return
         row = selection_model.currentIndex().row()
@@ -179,7 +183,7 @@ class ImportMappings(QObject):
         """
         Pushes a DeleteMapping command to the undo stack.
         """
-        selection_model = self._ui.list_view.selectionModel()
+        selection_model = self._ui.mapping_list.selectionModel()
         if self._mappings_model is None or not selection_model.hasSelection():
             return
         row = selection_model.currentIndex().row()
@@ -201,11 +205,11 @@ class ImportMappings(QObject):
             else:
                 self._select_row(row)
         else:
-            self._ui.list_view.clearSelection()
+            self._ui.mapping_list.clearSelection()
         return mapping_specification
 
     def _select_row(self, row):
-        selection_model = self._ui.list_view.selectionModel()
+        selection_model = self._ui.mapping_list.selectionModel()
         if selection_model.hasSelection():
             current_row = selection_model.currentIndex().row()
             if row == current_row:
@@ -213,10 +217,31 @@ class ImportMappings(QObject):
         selection_model.setCurrentIndex(self._mappings_model.index(row, 0), QItemSelectionModel.ClearAndSelect)
 
     @Slot(object, object)
-    def change_mapping(self, selected, deselected):
-        row = selected.row()
+    def change_mapping(self, current, previous):
+        row = current.row()
         index = self._mappings_model.index(row, 0)
         if index.isValid():
             self.mapping_selection_changed.emit(self._mappings_model.data_mapping(index))
         else:
             self.mapping_selection_changed.emit(None)
+
+    @Slot("QPoint")
+    def _show_mapping_list_context_menu(self, pos):
+        global_pos = self._ui.mapping_list.mapToGlobal(pos)
+        indexes = self._ui.mapping_list.selectionModel().selectedRows()
+        source_list_menu = MappingListMenu(self._ui.source_list, global_pos, bool(indexes), bool(self._copied_mappings))
+        option = source_list_menu.get_action()
+        source_list_menu.deleteLater()
+        if option == "Copy mapping(s)":
+            self._copied_mappings = self._copy_mappings()
+            return
+        if option == "Paste mapping(s)":
+            previous = self._copy_mappings()
+            self._undo_stack.push(PasteMappings(self._parent, self._source_table, self._copied_mappings, previous))
+
+    def _copy_mappings(self, indexes=None):
+        if indexes is None:
+            specs = self._mappings_model._mapping_specifications
+        else:
+            specs = [self._mappings_model.data_mapping(index) for index in indexes]
+        return {spec.mapping_name: deepcopy(spec.mapping) for spec in specs}

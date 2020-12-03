@@ -28,28 +28,28 @@ class _Id(IntEnum):
 class PasteMappings(QUndoCommand):
     """Command to paste copied mappings"""
 
-    def __init__(self, import_editor, source_table_name, copied_mappings, previous_mappings):
+    def __init__(self, import_editor_window, source_table_name, copied_mappings, previous_mappings):
         """
         Args:
-            import_editor (ImportEditor): import editor
+            import_editor (ImportEditorWindow): import editor
             source_table_name (src): name of the target source table
             copied_mappings (Iterable): mappings to paste
             previous_mappings (Iterable): mappings before pasting
         """
         text = "paste mappings"
         super().__init__(text)
-        self._import_editor = import_editor
+        self._import_editor_window = import_editor_window
         self._source_table_name = source_table_name
         self._mappings = copied_mappings
         self._previous_mappings = previous_mappings
 
     def redo(self):
         """Pastes the copied mappings"""
-        self._import_editor.paste_mappings(self._source_table_name, self._mappings)
+        self._import_editor_window.paste_mappings(self._source_table_name, self._mappings)
 
     def undo(self):
         """Restores mappings to their previous state."""
-        self._import_editor.paste_mappings(self._source_table_name, self._previous_mappings)
+        self._import_editor_window.paste_mappings(self._source_table_name, self._previous_mappings)
 
 
 class PasteOptions(QUndoCommand):

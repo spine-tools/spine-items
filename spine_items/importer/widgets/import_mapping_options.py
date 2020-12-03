@@ -52,16 +52,15 @@ class ImportMappingOptions(QObject):
 
     about_to_undo = Signal(str, str)
 
-    def __init__(self, ui, undo_stack):
+    def __init__(self, parent):
         """
         Args:
-            ui (QWidget): importer window's UI
-            undo_stack (QUndoStack): undo stack
+            parent (ImportEditorWindow): importer window's UIk
         """
         # state
         super().__init__()
-        self._ui = ui
-        self._undo_stack = undo_stack
+        self._ui = parent._ui
+        self._undo_stack = parent._undo_stack
         self._mapping_specification_model = None
         self._block_signals = False
         self._executing_command = False

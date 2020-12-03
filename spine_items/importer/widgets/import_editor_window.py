@@ -19,6 +19,7 @@ Contains ImportPreviewWindow class.
 import os
 import json
 import fnmatch
+from copy import deepcopy
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtGui import QGuiApplication, QKeySequence
 from PySide2.QtWidgets import (
@@ -80,6 +81,7 @@ class ImportEditorWindow(QMainWindow):
         self._app_settings = self._toolbox.qsettings()
         self._connection_manager = None
         self._memoized_connectors = {}
+        self._copied_mappings = {}
         self._editor = None
         self._undo_stack = QUndoStack()
         self._ui_error = QErrorMessage(self)
@@ -88,8 +90,8 @@ class ImportEditorWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self._insert_undo_redo_actions()
-        self._import_mappings = ImportMappings(self._ui, self._undo_stack)
-        self._import_mapping_options = ImportMappingOptions(self._ui, self._undo_stack)
+        self._import_mappings = ImportMappings(self)
+        self._import_mapping_options = ImportMappingOptions(self)
         self._import_mappings.mapping_selection_changed.connect(
             self._import_mapping_options.set_mapping_specification_model
         )
@@ -176,7 +178,7 @@ class ImportEditorWindow(QMainWindow):
         self._connection_manager = ConnectionManager(connector, connector_settings)
         self._connection_manager.source = filepath
         mapping = self._specification.mapping if self._specification else {}
-        self._editor = ImportEditor(self._ui, self._ui_error, self._undo_stack, self._connection_manager, mapping)
+        self._editor = ImportEditor(self, mapping)
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
         self._connection_manager.error.connect(self.show_error)
         self._ui.source_data_table.set_undo_stack(self._undo_stack, self._editor.select_table)
@@ -338,6 +340,22 @@ class ImportEditorWindow(QMainWindow):
             settings = self._editor.get_settings_dict()
             json.dump(settings, file_p)
         self._ui.statusbar.showMessage(f"Mapping saved to: {filename[0]}", 10000)
+
+    def paste_mappings(self, table, mappings):
+        """
+        Pastes mappings to given table
+
+        Args:
+            table (str): source table name
+            mappings (dict): mappings to paste
+        """
+        self._editor._table_mappings[table].reset(deepcopy(mappings), table)
+        index = self._ui.source_list.selectionModel().currentIndex()
+        current_table = index.data()
+        if table == current_table:
+            self._editor.source_table_selected.emit(table, self._editor._table_mappings[table])
+        else:
+            self._editor.select_table(table)
 
     def save_and_close(self):
         """Save spec and close window."""

@@ -75,6 +75,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.source_list = MultiCheckableTreeView(self.dockWidgetContents)
         self.source_list.setObjectName(u"source_list")
+        self.source_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.source_list.setTextElideMode(Qt.ElideLeft)
         self.source_list.setRootIsDecorated(True)
         self.source_list.setHeaderHidden(True)
@@ -111,6 +112,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.source_data_table = TableViewWithButtonHeader(self.table_page)
         self.source_data_table.setObjectName(u"source_data_table")
+        self.source_data_table.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.verticalLayout_3.addWidget(self.source_data_table)
 
@@ -175,10 +177,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_7.addLayout(self.button_layout)
 
-        self.list_view = QListView(self.dockWidgetContents_4)
-        self.list_view.setObjectName(u"list_view")
+        self.mapping_list = QListView(self.dockWidgetContents_4)
+        self.mapping_list.setObjectName(u"mapping_list")
+        self.mapping_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.mapping_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
-        self.verticalLayout_7.addWidget(self.list_view)
+        self.verticalLayout_7.addWidget(self.mapping_list)
 
         self.dockWidget_mappings.setWidget(self.dockWidgetContents_4)
         MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_mappings)
@@ -307,17 +311,17 @@ class Ui_MainWindow(object):
         self.verticalLayout_8.setSpacing(0)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
         self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
-        self.table_view_mappings = QTableView(self.dockWidgetContents_6)
-        self.table_view_mappings.setObjectName(u"table_view_mappings")
+        self.mapping_spec_table = QTableView(self.dockWidgetContents_6)
+        self.mapping_spec_table.setObjectName(u"mapping_spec_table")
 
-        self.verticalLayout_8.addWidget(self.table_view_mappings)
+        self.verticalLayout_8.addWidget(self.mapping_spec_table)
 
         self.dockWidget_mapping_spec.setWidget(self.dockWidgetContents_6)
         MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_mapping_spec)
         QWidget.setTabOrder(self.source_data_table, self.new_button)
         QWidget.setTabOrder(self.new_button, self.remove_button)
-        QWidget.setTabOrder(self.remove_button, self.list_view)
-        QWidget.setTabOrder(self.list_view, self.class_type_combo_box)
+        QWidget.setTabOrder(self.remove_button, self.mapping_list)
+        QWidget.setTabOrder(self.mapping_list, self.class_type_combo_box)
         QWidget.setTabOrder(self.class_type_combo_box, self.import_objects_check_box)
         QWidget.setTabOrder(self.import_objects_check_box, self.value_type_combo_box)
         QWidget.setTabOrder(self.value_type_combo_box, self.start_read_row_spin_box)
@@ -325,7 +329,7 @@ class Ui_MainWindow(object):
         QWidget.setTabOrder(self.ignore_columns_button, self.dimension_spin_box)
         QWidget.setTabOrder(self.dimension_spin_box, self.time_series_repeat_check_box)
         QWidget.setTabOrder(self.time_series_repeat_check_box, self.map_dimension_spin_box)
-        QWidget.setTabOrder(self.map_dimension_spin_box, self.table_view_mappings)
+        QWidget.setTabOrder(self.map_dimension_spin_box, self.mapping_spec_table)
 
         self.menubar.addAction(self.file_menu.menuAction())
         self.menubar.addAction(self.edit_menu.menuAction())
