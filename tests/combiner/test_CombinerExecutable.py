@@ -21,7 +21,6 @@ import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication, QEventLoop, QObject, QThread
 from spinedb_api import create_new_spine_database, DatabaseMapping, DiffDatabaseMapping, import_functions
-from spine_engine import ExecutionDirection
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_items.combiner.executable_item import ExecutableItem
 

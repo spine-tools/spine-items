@@ -17,18 +17,21 @@ Module for data store class.
 """
 
 import os
-from PySide2.QtCore import Slot
+from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QAction, QFileDialog, QApplication
 from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.helpers import create_dir
+from spine_engine import ExecutionDirection
 from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
+from ..commands import UpdateCancelOnErrorCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url, make_label
 
 
 class DataStore(ProjectItem):
-    def __init__(self, name, description, x, y, toolbox, project, logger, url):
+    def __init__(self, name, description, x, y, toolbox, project, logger, url, cancel_on_error=False):
         """Data Store class.
 
         Args:
@@ -40,9 +43,16 @@ class DataStore(ProjectItem):
             project (SpineToolboxProject): the project this item belongs to
             logger (LoggerInterface): a logger instance
             url (str or dict, optional): SQLAlchemy url
+            cancel_on_error (bool): if True, changes will be reverted on errors
         """
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
+        self.logs_dir = os.path.join(self.data_dir, "logs")
+        try:
+            create_dir(self.logs_dir)
+        except OSError:
+            self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
+        self.cancel_on_error = cancel_on_error
         self._actions.append(QAction("Open database editor..."))
         self._actions[-1].triggered.connect(self.open_ds_form)
         if url is None:
@@ -94,11 +104,13 @@ class DataStore(ProjectItem):
         s[self._properties_ui.lineEdit_host.editingFinished] = self.refresh_host
         s[self._properties_ui.lineEdit_port.editingFinished] = self.refresh_port
         s[self._properties_ui.lineEdit_database.editingFinished] = self.refresh_database
+        s[self._properties_ui.cancel_on_error_checkBox.stateChanged] = self._handle_cancel_on_error_changed
         return s
 
     def restore_selections(self):
         """Load url into selections."""
         self._properties_ui.label_ds_name.setText(self.name)
+        self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
         self.load_url_into_selections(self._url)
 
     def url(self):
@@ -209,6 +221,22 @@ class DataStore(ProjectItem):
     @Slot(str)
     def refresh_dialect(self, dialect):
         self.update_url(dialect=dialect)
+
+    @Slot(int)
+    def _handle_cancel_on_error_changed(self, _state):
+        cancel_on_error = self._properties_ui.cancel_on_error_checkBox.isChecked()
+        if self.cancel_on_error == cancel_on_error:
+            return
+        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel_on_error))
+
+    def set_cancel_on_error(self, cancel_on_error):
+        self.cancel_on_error = cancel_on_error
+        if not self._active:
+            return
+        check_state = Qt.Checked if self.cancel_on_error else Qt.Unchecked
+        self._properties_ui.cancel_on_error_checkBox.blockSignals(True)
+        self._properties_ui.cancel_on_error_checkBox.setCheckState(check_state)
+        self._properties_ui.cancel_on_error_checkBox.blockSignals(False)
 
     def enable_dialect(self, dialect):
         """Enable the given dialect in the item controls."""
@@ -330,6 +358,17 @@ class DataStore(ProjectItem):
         """Update Data Store tab name label. Used only when renaming project items."""
         self._properties_ui.label_ds_name.setText(self.name)
 
+    @Slot(object, object)
+    def handle_execution_successful(self, execution_direction, engine_state):
+        """Notifies Toolbox of successful database import."""
+        if execution_direction != ExecutionDirection.FORWARD:
+            return
+        url = self.sql_alchemy_url()
+        database_map = self._project.db_mngr.get_db_map(url, self._logger)
+        if database_map is not None:
+            cookie = self
+            self._project.db_mngr.session_committed.emit({database_map}, cookie)
+
     def _do_handle_dag_changed(self, resources, _):
         """See base class."""
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, logger=None)
@@ -345,6 +384,7 @@ class DataStore(ProjectItem):
         # If database key is a file, change the path to relative
         if d["url"]["dialect"] == "sqlite" and d["url"]["database"]:
             d["url"]["database"] = serialize_path(d["url"]["database"], self._project.project_dir)
+        d["cancel_on_error"] = self._properties_ui.cancel_on_error_checkBox.isChecked()
         return d
 
     @staticmethod
@@ -354,7 +394,8 @@ class DataStore(ProjectItem):
         url = item_dict["url"]
         if url and not isinstance(url["database"], str):
             url["database"] = deserialize_path(url["database"], project.project_dir)
-        return DataStore(name, description, x, y, toolbox, project, logger, url)
+        cancel_on_error = item_dict.get("cancel_on_error", False)
+        return DataStore(name, description, x, y, toolbox, project, logger, url, cancel_on_error)
 
     @staticmethod
     def upgrade_from_no_version_to_version_1(item_name, old_item_dict, old_project_dir):
@@ -408,7 +449,7 @@ class DataStore(ProjectItem):
                 f"Link established. Mapped data generated by <b>{source_item.name}</b> will be "
                 f"imported in <b>{self.name}</b> when executing."
             )
-        elif source_item.item_type() == "Combiner":
+        elif source_item.item_type() == "Data Store":
             self._logger.msg.emit(
                 "Link established. "
                 f"Data from <b>{source_item.name}</b> will be merged into <b>{self.name}'s upon execution</b>."
@@ -416,6 +457,11 @@ class DataStore(ProjectItem):
         elif source_item.item_type() in ["Data Connection", "Tool", "Gimlet"]:
             # Does this type of link do anything?
             self._logger.msg.emit("Link established")
+        elif source_item.item_type() == "Data Transformer":
+            self._logger.msg.emit(
+                "Link established. "
+                f"Data transformed by <b>{source_item.name}</b> will be merged into <b>{self.name}</b> upon execution."
+            )
         else:
             super().notify_destination(source_item)
 
