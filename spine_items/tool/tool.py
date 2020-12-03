@@ -310,9 +310,6 @@ class Tool(ProjectItem):
         """
         # TODO: Try to use self.execution_item()._output_resources_forward() to remove boilerplate
         if self.specification() is None:
-            self._logger.msg_error.emit(
-                f"Fail to determine <b>{self.name}</b> resources for direct successors. Tool specification is missing."
-            )
             return []
         resources = list()
         last_output_files = find_last_output_files(self.specification().outputfiles, self.output_dir)
