@@ -558,9 +558,9 @@ class ExecutableItem(ExecutableItemBase):
         Returns:
             list: a list of Tool's output resources
         """
-        resources = list()
+        resources = []
         if self._tool_specification is None:
-            return resources
+            return []
         last_output_files = find_last_output_files(self._tool_specification.outputfiles, self._output_dir)
         for out_file_label in self._tool_specification.outputfiles:
             latest_files = last_output_files.get(out_file_label, list())

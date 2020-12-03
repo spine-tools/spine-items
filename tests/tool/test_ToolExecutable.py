@@ -22,10 +22,9 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
-from spine_engine import ExecutionDirection
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
-from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
+from spine_items.tool.executable_item_qt_free import ExecutableItem, _count_files_and_dirs
+from spine_items.tool.tool_specifications_qt_free import ToolSpecification, PythonTool
 from spine_items.tool.utils import _LatestOutputFile
 from spinetoolbox.execution_managers import ConsoleExecutionManager
 
@@ -67,7 +66,6 @@ class TestToolExecutable(unittest.TestCase):
                 path=str(script_dir),
                 includes=script_files,
                 settings=mock_settings,
-                embedded_python_console=None,
                 logger=mock.MagicMock(),
                 execute_in_work=True,
             )
@@ -263,13 +261,14 @@ class TestToolExecutable(unittest.TestCase):
                 path=temp_dir,
                 includes=["script.py"],
                 settings=None,
-                embedded_python_console=None,
                 logger=mock.MagicMock(),
                 outputfiles=["results.gdx", "report.txt"],
             )
             output_dir = "tool/output_dir/"  # Latest output dir
             executable = ExecutableItem("name", temp_dir, output_dir, tool_specification, [], logger)
-            with mock.patch("spine_items.tool.executable_item.find_last_output_files") as mock_find_last_output_files:
+            with mock.patch(
+                "spine_items.tool.executable_item_qt_free.find_last_output_files"
+            ) as mock_find_last_output_files:
                 mock_find_last_output_files.return_value = {
                     "results.gdx": [_LatestOutputFile("label", os.path.join(temp_dir, "output_dir/results.gdx"))],
                     "report.txt": [_LatestOutputFile("label2", os.path.join(temp_dir, "output_dir/report.txt"))],
@@ -292,12 +291,13 @@ class TestToolExecutable(unittest.TestCase):
                 path=temp_dir,
                 includes=["script.py"],
                 settings=None,
-                embedded_python_console=None,
                 logger=mock.MagicMock(),
                 outputfiles=["results.gdx", "report.txt"],
             )
             executable = ExecutableItem("name", temp_dir, "", tool_specification, [], logger)
-            executable._tool_instance = executable._tool_specification.create_tool_instance(temp_dir)
+            executable._tool_instance = executable._tool_specification.create_tool_instance(
+                temp_dir, "name", mock.MagicMock()
+            )
             executable._tool_instance.exec_mngr = ConsoleExecutionManager(mock.MagicMock(), [], logger)
             executable.stop_execution()
             self.assertIsNone(executable._tool_instance)

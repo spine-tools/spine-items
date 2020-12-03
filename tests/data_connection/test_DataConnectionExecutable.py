@@ -56,13 +56,9 @@ class TestDataConnectionExecutable(unittest.TestCase):
             executable.stop_execution()
             mock_stop_execution.assert_called_once()
 
-    def test_execute_backward(self):
+    def test_execute(self):
         executable = ExecutableItem("name", [], [], mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.BACKWARD))
-
-    def test_execute_forward(self):
-        executable = ExecutableItem("name", [], [], mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
+        self.assertTrue(executable.execute([], []))
 
     def test_output_resources_backward(self):
         executable = ExecutableItem("name", ["file_reference"], ["data_file"], mock.MagicMock())

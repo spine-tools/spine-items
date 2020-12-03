@@ -26,7 +26,7 @@ from spinedb_api import create_new_spine_database, DiffDatabaseMapping, import_f
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_items.gdx_exporter.database import Database
 from spine_items.gdx_exporter.gdx_exporter import SettingsPack
-from spine_items.gdx_exporter.executable_item import ExecutableItem
+from spine_items.gdx_exporter.executable_item_qt_free import ExecutableItem
 from spine_items.gdx_exporter.settings_state import SettingsState
 from spine_engine.spine_io import gdx_utils
 from spine_engine.spine_io.exporters import gdx
@@ -115,17 +115,13 @@ class TestExporterExecutable(unittest.TestCase):
                 executable.stop_execution()
                 mock_stop_execution.assert_called_once()
 
-    def test_execute_backward(self):
+    @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
+    def test_execute_no_output(self):
         executable = ExecutableItem("name", SettingsPack(), [], False, "", "", mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.BACKWARD))
+        self.assertTrue(executable.execute([], []))
 
     @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
-    def test_execute_forward_no_output(self):
-        executable = ExecutableItem("name", SettingsPack(), [], False, "", "", mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
-
-    @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
-    def test_execute_forward_exports_simple_database_to_gdx(self):
+    def test_execute_exports_simple_database_to_gdx(self):
         with TemporaryDirectory() as tmp_dir_name:
             database_path = Path(tmp_dir_name).joinpath("test_execute_forward.sqlite")
             database_url = "sqlite:///" + str(database_path)
@@ -148,7 +144,7 @@ class TestExporterExecutable(unittest.TestCase):
             logger.__reduce__ = lambda _: (mock.MagicMock, ())
             executable = ExecutableItem("name", settings_pack, databases, False, tmp_dir_name, "", logger)
             resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
-            self.assertTrue(executable.execute(resources, ExecutionDirection.FORWARD))
+            self.assertTrue(executable.execute(resources, []))
             self.assertTrue(Path(tmp_dir_name, "output.gdx").exists())
             gams_directory = gdx.find_gams_directory()
             with GdxFile(str(Path(tmp_dir_name, "output.gdx")), "r", gams_directory) as gdx_file:

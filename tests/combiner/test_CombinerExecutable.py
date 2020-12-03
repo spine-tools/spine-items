@@ -22,7 +22,7 @@ from unittest import mock
 from PySide2.QtCore import QCoreApplication, QEventLoop, QObject, QThread
 from spinedb_api import create_new_spine_database, DatabaseMapping, DiffDatabaseMapping, import_functions
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_items.combiner.executable_item import ExecutableItem
+from spine_items.combiner.executable_item_qt_free import ExecutableItem
 
 
 class TestCombinerExecutable(unittest.TestCase):
@@ -48,21 +48,14 @@ class TestCombinerExecutable(unittest.TestCase):
 
     def test_stop_execution(self):
         executable = ExecutableItem("name", "", True, mock.MagicMock())
-        executable._loop = QEventLoop()
-        executable._worker = QObject()
-        executable._worker_thread = QThread()
         executable.stop_execution()
-        self.assertIsNone(executable._worker)
-        self.assertIsNone(executable._worker_thread)
-        self.assertIsNone(executable._loop)
+        self.assertIsNone(executable._process)
 
     def test_execute_simplest_case(self):
         executable = ExecutableItem("name", "", True, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
-        # Check that _loop, _worker, and _worker_thread are None after execution
-        self.assertIsNone(executable._worker)
-        self.assertIsNone(executable._worker_thread)
-        self.assertIsNone(executable._loop)
+        # Check that _process is None after execution
+        self.assertIsNone(executable._process)
 
     def test_execute_merge_two_dbs(self):
         """Creates two db's with some data and merges them to a third db."""
@@ -99,10 +92,8 @@ class TestCombinerExecutable(unittest.TestCase):
             ]
             output_db_resource = [ProjectItemResource(mock.Mock(), "database", db3_url)]
             self.assertTrue(executable.execute(input_db_resources, output_db_resource))
-            # Check that _loop, _worker, and _worker_thread are None after execution
-            self.assertIsNone(executable._worker)
-            self.assertIsNone(executable._worker_thread)
-            self.assertIsNone(executable._loop)
+            # Check that _process is None after execution
+            self.assertIsNone(executable._process)
             # Check output db
             output_db_map = DatabaseMapping(db3_url)
             class_list = output_db_map.object_class_list().all()

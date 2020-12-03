@@ -67,7 +67,7 @@ class ExecutableItem(ExecutableItemBase):
                 shell = SHELLS[shell_index]
             except IndexError:
                 logger.msg_error.emit(f"Error: Unsupported shell_index in project item {name}")
-                return None
+                shell = ""
         cmd_list = split_cmdline_args(item_dict["cmd"])
         cmd_line_args = item_dict["cmd_line_args"]
         cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
@@ -79,9 +79,10 @@ class ExecutableItem(ExecutableItemBase):
             app_work_dir = app_settings.value("appSettings/workDir")
             if not app_work_dir:
                 logger.msg_error.emit(f"Error: Work directory not set for project item {name}")
-                return None
-            unique_dir_name = shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
-            work_dir = os.path.join(app_work_dir, unique_dir_name)
+                work_dir = None
+            else:
+                unique_dir_name = shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
+                work_dir = os.path.join(app_work_dir, unique_dir_name)
         selected_files = deserialize_checked_states(item_dict.get("selections", list()), project_dir)
         selections = [path for path, boolean in selected_files.items() if boolean]  # List of selected paths
         return cls(name, logger, shell, cmd_list, work_dir, selections)

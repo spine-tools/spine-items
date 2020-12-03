@@ -21,9 +21,8 @@ import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication, QObject, QEventLoop, QThread
 from spinedb_api import create_new_spine_database, DatabaseMapping
-from spine_engine import ExecutionDirection
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_items.importer.executable_item import ExecutableItem
+from spine_items.importer.executable_item_qt_free import ExecutableItem
 from spine_items.importer.importer_specification import ImporterSpecification
 
 
@@ -85,21 +84,14 @@ class TestImporterExecutable(unittest.TestCase):
 
     def test_stop_execution(self):
         executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
-        executable._loop = QEventLoop()
-        executable._worker = QObject()
-        executable._worker_thread = QThread()
         executable.stop_execution()
-        self.assertIsNone(executable._worker)
-        self.assertIsNone(executable._worker_thread)
-        self.assertIsNone(executable._loop)
+        self.assertIsNone(executable._process)
 
     def test_execute_simplest_case(self):
         executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
-        # Check that _loop, _worker, and _worker_thread are None after execution
-        self.assertIsNone(executable._worker)
-        self.assertIsNone(executable._worker_thread)
-        self.assertIsNone(executable._loop)
+        # Check that _process is None after execution
+        self.assertIsNone(executable._process)
 
     def test_execute_import_small_file(self):
         with TemporaryDirectory() as temp_dir:
@@ -114,10 +106,8 @@ class TestImporterExecutable(unittest.TestCase):
             database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
             self.assertTrue(executable.execute(file_resources, database_resources))
-            # Check that _loop, _worker, and _worker_thread are None after execution
-            self.assertIsNone(executable._worker)
-            self.assertIsNone(executable._worker_thread)
-            self.assertIsNone(executable._loop)
+            # Check that _process is None after execution
+            self.assertIsNone(executable._process)
             database_map = DatabaseMapping(database_url)
             class_list = database_map.object_class_list().all()
             self.assertEqual(len(class_list), 1)
@@ -139,10 +129,8 @@ class TestImporterExecutable(unittest.TestCase):
             database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
             self.assertTrue(executable.execute(file_resources, database_resources))
-            # Check that _loop, _worker, and _worker_thread are None after execution
-            self.assertIsNone(executable._worker)
-            self.assertIsNone(executable._worker_thread)
-            self.assertIsNone(executable._loop)
+            # Check that _process is None after execution
+            self.assertIsNone(executable._process)
             database_map = DatabaseMapping(database_url)
             class_list = database_map.object_class_list().all()
             self.assertEqual(len(class_list), 0)

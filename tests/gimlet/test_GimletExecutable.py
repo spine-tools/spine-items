@@ -18,14 +18,12 @@ Unit tests for Gimlet ExecutableItem.
 import os
 import sys
 import unittest
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
 from spine_engine import ExecutionDirection
-from spine_items.gimlet.executable_item import ExecutableItem
-from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spinetoolbox.execution_managers import QProcessExecutionManager
+from spine_items.gimlet.executable_item_qt_free import ExecutableItem
+from spine_engine.execution_managers import StandardExecutionManager
 
 
 class TestGimletExecutable(unittest.TestCase):
@@ -134,9 +132,9 @@ class TestGimletExecutable(unittest.TestCase):
         prgm = "cmd.exe"
         cmd_list = ["dir"]
         executable = ExecutableItem("name", logger, prgm, cmd_list, "", selected_files=[])
-        executable._gimlet_process = QProcessExecutionManager(logger, prgm, cmd_list)
+        executable._exec_mngr = StandardExecutionManager(logger, prgm, *cmd_list)
         executable.stop_execution()
-        self.assertIsNone(executable._gimlet_process)
+        self.assertIsNone(executable._exec_mngr)
 
 
 class FakeProvider:
