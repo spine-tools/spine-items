@@ -71,11 +71,6 @@ class TestGimlet(unittest.TestCase):
         self.toolbox.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a <b>Importer</b> and a <b>Gimlet</b> has not been implemented yet."
         )
-        source_item.item_type = MagicMock(return_value="Combiner")
-        self.gimlet.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
-            "Link established. Files from <b>source name</b> are now available in <b>G</b>."
-        )
 
         source_item.item_type = MagicMock(return_value="Data Store")
         self.gimlet.notify_destination(source_item)

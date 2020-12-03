@@ -87,7 +87,7 @@ class ExecutableItem(ExecutableItemBase):
             target=do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, self._url, self._logger)
         )
         self._process.run_until_complete()
-        self._logger.msg_success.emit(f"Executing Combiner {self.name} finished")
+        self._logger.msg_success.emit(f"Executing Data Store {self.name} finished")
         self._process = None
         return True
 

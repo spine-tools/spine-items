@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Combiner's execute kernel (do_work), as target for a multiprocess.Process
+DataStore's execute kernel (do_work), as target for a multiprocess.Process
 
 :authors: M. Marin (KTH)
 :date:   6.11.2020
