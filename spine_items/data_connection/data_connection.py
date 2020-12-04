@@ -19,7 +19,6 @@ Module for data connection class.
 import os
 import shutil
 import logging
-import pathlib
 from PySide2.QtCore import Slot, Qt, QFileInfo
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
 from PySide2.QtWidgets import QFileDialog, QStyle, QFileIconProvider, QInputDialog, QMessageBox
@@ -29,11 +28,11 @@ from spinetoolbox.custom_file_system_watcher import CustomFileSystemWatcher
 from spinetoolbox.helpers import busy_effect, open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from spinetoolbox.widgets.spine_datapackage_widget import SpineDatapackageWidget, CustomPackage
-from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
+from .output_resources import scan_for_resources
 
 
 class DataConnection(ProjectItem):
@@ -468,7 +467,9 @@ class DataConnection(ProjectItem):
 
     def resources_for_direct_successors(self):
         """see base class"""
-        resources = self.execution_item()._output_resources_forward()
+        refs = self.file_references()
+        data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
+        resources = scan_for_resources(self, refs + data_files)
         for k, resource in enumerate(resources):
             updated_from = self._updated_from.pop(resource.path, None)
             if not updated_from:

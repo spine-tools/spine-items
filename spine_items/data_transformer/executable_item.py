@@ -15,15 +15,12 @@ Contains Data transformer's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:    2.10.2020
 """
-import json
 from pathlib import Path
-from spinedb_api import append_filter_config
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
 from .filter_config_path import filter_config_path
 from .item_info import ItemInfo
-from .utils import make_metadata
+from .output_resources import scan_for_resources
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -47,29 +44,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        if self._specification is None or self._specification.settings is None:
-            return [
-                ProjectItemResource(self, "database", url, metadata=metadata)
-                for url, metadata in self._url_metadata_iterator()
-            ]
-        if self._specification.settings.use_shorthand():
-            config = self._specification.settings.filter_config()
-            return [
-                ProjectItemResource(self, "database", append_filter_config(url, config), metadata=metadata)
-                for url, metadata in self._url_metadata_iterator()
-            ]
-        with open(self._filter_config_path, "w") as filter_config_file:
-            json.dump(self._specification.settings.filter_config(), filter_config_file)
-        return [
-            ProjectItemResource(
-                self, "database", append_filter_config(url, self._filter_config_path), metadata=metadata
-            )
-            for url, metadata in self._url_metadata_iterator()
-        ]
-
-    def _url_metadata_iterator(self):
-        for resource in self._db_resources:
-            yield resource.url, make_metadata(resource, self.name)
+        return scan_for_resources(self, self._specification, self._db_resources, self._filter_config_path)
 
     def execute(self, forward_resources, backward_resources):
         """See base class."""

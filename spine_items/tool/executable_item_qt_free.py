@@ -26,18 +26,16 @@ import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .utils import (
     file_paths_from_resources,
     find_file,
-    find_last_output_files,
     flatten_file_path_duplicates,
     is_pattern,
-    make_label,
 )
+from .output_resources import scan_for_resources
 from ..utils import labelled_resource_args
 
 
@@ -549,37 +547,8 @@ class ExecutableItem(ExecutableItemBase):
         return destination_paths
 
     def _output_resources_forward(self):
-        """
-        Returns a list of resources, i.e. the output files produced by the tool.
-
-        For each pattern or path in the tool specification's output files list, we try and find matches
-        in the results directory. For each match, we advertise a resource of type 'transient_file',
-        meaning that this file only became available after execution.
-
-        If no match, we advertise a resource with an empty url, where the 'label' key of the metadata
-        contains the non-found pattern or path. The type of this resource is either 'file_pattern'
-        or 'transient_file', depending on whether we were searching for a pattern or a path.
-
-        Returns:
-            list: a list of Tool's output resources
-        """
-        resources = []
-        if self._tool_specification is None:
-            return []
-        last_output_files = find_last_output_files(self._tool_specification.outputfiles, self._output_dir)
-        for out_file_label in self._tool_specification.outputfiles:
-            latest_files = last_output_files.get(out_file_label, list())
-            for out_file in latest_files:
-                file_url = pathlib.Path(out_file.path).as_uri()
-                metadata = {"label": make_label(out_file.label)}
-                resource = ProjectItemResource(self, "transient_file", url=file_url, metadata=metadata)
-                resources.append(resource)
-            if not latest_files:
-                metadata = {"label": make_label(out_file_label)}
-                type_ = "file_pattern" if is_pattern(out_file_label) else "transient_file"
-                resource = ProjectItemResource(self, type_, metadata=metadata)
-                resources.append(resource)
-        return resources
+        """See base class"""
+        return scan_for_resources(self, self._tool_specification, self._output_dir, False)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):

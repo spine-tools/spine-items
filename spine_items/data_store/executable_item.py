@@ -19,13 +19,13 @@ Contains Data Store's executable item as well as support utilities.
 import os
 import pathlib
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.helpers import shorten
 from .item_info import ItemInfo
-from .utils import convert_to_sqlalchemy_url, make_label
+from .utils import convert_to_sqlalchemy_url
 from .do_work import do_work
+from .output_resources import scan_for_resources
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -55,18 +55,14 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        if not self._url:
-            return list()
-        metadata = {"label": make_label(self.name)}
-        resource = ProjectItemResource(self, "database", url=str(self._url), metadata=metadata)
-        return [resource]
+        return scan_for_resources(self, self._url)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         if item_dict["url"]["dialect"] == "sqlite":
             item_dict["url"]["database"] = deserialize_path(item_dict["url"]["database"], project_dir)
-        url = convert_to_sqlalchemy_url(item_dict["url"], name, logger=None)
+        url = convert_to_sqlalchemy_url(item_dict["url"], name, logger)
         data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         logs_dir = os.path.join(data_dir, "logs")
         cancel_on_error = item_dict["cancel_on_error"]

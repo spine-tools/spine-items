@@ -28,6 +28,7 @@ from ..commands import UpdateCancelOnErrorCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url, make_label
+from .output_resources import scan_for_resources
 
 
 class DataStore(ProjectItem):
@@ -467,13 +468,14 @@ class DataStore(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        resources = self.execution_item()._output_resources_forward()
-        if self._additional_resource_metadata:
-            resources = [r.clone(additional_metadata=self._additional_resource_metadata) for r in resources]
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
+        resources = scan_for_resources(self, sa_url)
         if not resources:
             self.add_notification(
                 "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
             )
+        if self._additional_resource_metadata:
+            resources = [r.clone(additional_metadata=self._additional_resource_metadata) for r in resources]
         return resources
 
     def resources_for_direct_predecessors(self):

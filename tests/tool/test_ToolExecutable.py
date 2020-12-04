@@ -266,9 +266,7 @@ class TestToolExecutable(unittest.TestCase):
             )
             output_dir = "tool/output_dir/"  # Latest output dir
             executable = ExecutableItem("name", temp_dir, output_dir, tool_specification, [], logger)
-            with mock.patch(
-                "spine_items.tool.executable_item_qt_free.find_last_output_files"
-            ) as mock_find_last_output_files:
+            with mock.patch("spine_items.tool.output_resources.find_last_output_files") as mock_find_last_output_files:
                 mock_find_last_output_files.return_value = {
                     "results.gdx": [_LatestOutputFile("label", os.path.join(temp_dir, "output_dir/results.gdx"))],
                     "report.txt": [_LatestOutputFile("label2", os.path.join(temp_dir, "output_dir/report.txt"))],

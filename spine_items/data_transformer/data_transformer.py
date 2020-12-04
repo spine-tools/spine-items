@@ -23,6 +23,7 @@ from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
 from .widgets.specification_editor_window import SpecificationEditorWindow
 from .utils import make_metadata
+from .output_resources import scan_for_resources
 
 
 class DataTransformer(ProjectItem):
@@ -159,9 +160,7 @@ class DataTransformer(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        exec_item = self.execution_item()
-        exec_item._db_resources = self._db_resources
-        return exec_item._output_resources_forward()
+        return scan_for_resources(self, self.specification(), self._db_resources, filter_config_path(self.data_dir))
 
     def restore_selections(self):
         """See base class."""

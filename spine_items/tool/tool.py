@@ -16,14 +16,12 @@ Tool class.
 :date:   19.12.2017
 """
 import os
-import pathlib
 from collections import Counter
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spinetoolbox.widgets.spine_console_widget import SpineConsoleWidget
-from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.utils.serialization import serialize_path, deserialize_path
@@ -32,8 +30,9 @@ from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
 from .executable_item import ExecutableItem
-from .utils import flatten_file_path_duplicates, find_file, find_last_output_files, is_pattern, make_label
+from .utils import flatten_file_path_duplicates, find_file
 from ..models import ToolCommandLineArgsModel, InputFileListModel
+from .output_resources import scan_for_resources
 
 
 class Tool(ProjectItem):
@@ -296,7 +295,7 @@ class Tool(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class"""
-        return self.execution_item()._output_resources_forward()
+        return scan_for_resources(self, self.specification(), self.output_dir, True)
 
     @property
     def executable_class(self):

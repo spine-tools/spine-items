@@ -18,10 +18,10 @@ Contains Data Connection's executable item as well as support utilities.
 import os
 import pathlib
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
+from .output_resources import scan_for_resources
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -44,7 +44,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return [ProjectItemResource(self, "file", url=pathlib.Path(ref).as_uri()) for ref in self._files]
+        return scan_for_resources(self, self._files)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):

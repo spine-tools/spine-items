@@ -17,12 +17,10 @@ Gimlet class module.
 """
 
 import os
-import uuid
 from collections import Counter
 from PySide2.QtCore import Slot, Qt
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.config import GIMLET_WORK_DIR_NAME
-from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import (
     deserialize_checked_states,
     serialize_checked_states,
@@ -32,7 +30,6 @@ from spine_engine.utils.serialization import (
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
-from .utils import SHELLS
 from .commands import UpdateShellCheckBoxCommand, UpdateShellComboboxCommand, UpdatecmdCommand, UpdateWorkDirModeCommand
 from ..commands import ChangeItemSelectionCommand, UpdateCmdLineArgsCommand
 from ..models import GimletCommandLineArgsModel, InputFileListModel
