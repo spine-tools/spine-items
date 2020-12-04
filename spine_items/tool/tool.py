@@ -295,49 +295,8 @@ class Tool(ProjectItem):
         self._properties_ui.label_tool_name.setText(self.name)
 
     def resources_for_direct_successors(self):
-        """
-        Returns a list of resources, i.e. the outputs defined by the tool specification.
-
-        The output files are available only after tool has been executed,
-        therefore the resource type is 'transient_file' or 'file_pattern'.
-        A 'file_pattern' type resource is returned only if the pattern doesn't match any output file.
-        For 'transient_file' resources, the url attribute is set to an empty string if the file doesn't exist yet,
-        otherwise it points to a file from most recent execution.
-        The metadata attribute's label key gives the base name or file pattern of the output file.
-
-        Returns:
-            list: a list of Tool's output resources
-        """
-        # TODO: Try to use self.execution_item()._output_resources_forward() to remove boilerplate
-        if self.specification() is None:
-            return []
-        resources = list()
-        last_output_files = find_last_output_files(self.specification().outputfiles, self.output_dir)
-        for out_file_label in self.specification().outputfiles:
-            latest_files = last_output_files.get(out_file_label, list())
-            if is_pattern(out_file_label):
-                if not latest_files:
-                    metadata = {"label": make_label(out_file_label)}
-                    resource = ProjectItemResource(self, "file_pattern", metadata=metadata)
-                    resources.append(resource)
-                else:
-                    for out_file in latest_files:
-                        file_url = pathlib.Path(out_file.path).as_uri()
-                        metadata = {"label": make_label(out_file.label)}
-                        resource = ProjectItemResource(self, "transient_file", url=file_url, metadata=metadata)
-                        resources.append(resource)
-            else:
-                if not latest_files:
-                    metadata = {"label": make_label(out_file_label)}
-                    resource = ProjectItemResource(self, "transient_file", metadata=metadata)
-                    resources.append(resource)
-                else:
-                    latest_file = latest_files[0]  # Not a pattern; there should be only one element in the list.
-                    file_url = pathlib.Path(latest_file.path).as_uri()
-                    metadata = {"label": make_label(latest_file.label)}
-                    resource = ProjectItemResource(self, "transient_file", url=file_url, metadata=metadata)
-                    resources.append(resource)
-        return resources
+        """See base class"""
+        return self.execution_item()._output_resources_forward()
 
     @property
     def executable_class(self):

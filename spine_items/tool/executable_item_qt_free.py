@@ -552,8 +552,13 @@ class ExecutableItem(ExecutableItemBase):
         """
         Returns a list of resources, i.e. the output files produced by the tool.
 
-        Returns the files that were actually created during the execution.
-        The URL points to the archive directory.
+        For each pattern or path in the tool specification's output files list, we try and find matches
+        in the results directory. For each match, we advertise a resource of type 'transient_file',
+        meaning that this file only became available after execution.
+
+        If no match, we advertise a resource with an empty url, where the 'label' key of the metadata
+        contains the non-found pattern or path. The type of this resource is either 'file_pattern'
+        or 'transient_file', depending on whether we were searching for a pattern or a path.
 
         Returns:
             list: a list of Tool's output resources
@@ -568,6 +573,11 @@ class ExecutableItem(ExecutableItemBase):
                 file_url = pathlib.Path(out_file.path).as_uri()
                 metadata = {"label": make_label(out_file.label)}
                 resource = ProjectItemResource(self, "transient_file", url=file_url, metadata=metadata)
+                resources.append(resource)
+            if not latest_files:
+                metadata = {"label": make_label(out_file_label)}
+                type_ = "file_pattern" if is_pattern(out_file_label) else "transient_file"
+                resource = ProjectItemResource(self, type_, metadata=metadata)
                 resources.append(resource)
         return resources
 
