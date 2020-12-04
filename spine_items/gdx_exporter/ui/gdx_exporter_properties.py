@@ -64,8 +64,8 @@ class Ui_Form(object):
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
         self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 292, 348))
-        self.verticalLayout_21 = QVBoxLayout(self.scrollAreaWidgetContents_5)
-        self.verticalLayout_21.setObjectName(u"verticalLayout_21")
+        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents_5)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.settings_button = QPushButton(self.scrollAreaWidgetContents_5)
@@ -78,39 +78,39 @@ class Ui_Form(object):
         self.horizontalLayout_2.addItem(self.horizontalSpacer)
 
 
-        self.verticalLayout_21.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
         self.issues_label = QLabel(self.scrollAreaWidgetContents_5)
         self.issues_label.setObjectName(u"issues_label")
 
-        self.verticalLayout_21.addWidget(self.issues_label)
+        self.verticalLayout_2.addWidget(self.issues_label)
 
         self.databases_list_layout = QVBoxLayout()
         self.databases_list_layout.setObjectName(u"databases_list_layout")
 
-        self.verticalLayout_21.addLayout(self.databases_list_layout)
+        self.verticalLayout_2.addLayout(self.databases_list_layout)
 
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.verticalLayout_21.addItem(self.verticalSpacer)
+        self.verticalLayout_2.addItem(self.verticalSpacer)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.output_time_stamps_check_box = QCheckBox(self.scrollAreaWidgetContents_5)
+        self.output_time_stamps_check_box.setObjectName(u"output_time_stamps_check_box")
+
+        self.verticalLayout_2.addWidget(self.output_time_stamps_check_box)
+
         self.cancel_on_error_check_box = QCheckBox(self.scrollAreaWidgetContents_5)
         self.cancel_on_error_check_box.setObjectName(u"cancel_on_error_check_box")
         self.cancel_on_error_check_box.setChecked(True)
 
-        self.horizontalLayout.addWidget(self.cancel_on_error_check_box)
-
-
-        self.verticalLayout_21.addLayout(self.horizontalLayout)
+        self.verticalLayout_2.addWidget(self.cancel_on_error_check_box)
 
         self.line_6 = QFrame(self.scrollAreaWidgetContents_5)
         self.line_6.setObjectName(u"line_6")
         self.line_6.setFrameShape(QFrame.HLine)
         self.line_6.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_21.addWidget(self.line_6)
+        self.verticalLayout_2.addWidget(self.line_6)
 
         self.horizontalLayout_13 = QHBoxLayout()
         self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
@@ -134,7 +134,7 @@ class Ui_Form(object):
         self.horizontalLayout_13.addWidget(self.open_directory_button)
 
 
-        self.verticalLayout_21.addLayout(self.horizontalLayout_13)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_13)
 
         self.scrollArea_6.setWidget(self.scrollAreaWidgetContents_5)
 
@@ -151,6 +151,10 @@ class Ui_Form(object):
         self.item_name_label.setText(QCoreApplication.translate("Form", u"Name", None))
         self.settings_button.setText(QCoreApplication.translate("Form", u"Settings...", None))
         self.issues_label.setText("")
+#if QT_CONFIG(tooltip)
+        self.output_time_stamps_check_box.setToolTip(QCoreApplication.translate("Form", u"Checking this will add time stamps to output directory names.", None))
+#endif // QT_CONFIG(tooltip)
+        self.output_time_stamps_check_box.setText(QCoreApplication.translate("Form", u"Time stamp output directories", None))
         self.cancel_on_error_check_box.setText(QCoreApplication.translate("Form", u"Cancel export on error", None))
 #if QT_CONFIG(tooltip)
         self.open_directory_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this GdxExporter's project directory in file browser</p></body></html>", None))

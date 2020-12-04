@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Contains datastore list model and list items.
+Contains datastore list model.
 
 :authors: A. Soininen (VTT)
 :date:    19.10.2020

@@ -102,7 +102,7 @@
         <height>348</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_21">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
@@ -151,18 +151,24 @@
         </spacer>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QCheckBox" name="cancel_on_error_check_box">
-           <property name="text">
-            <string>Cancel export on error</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QCheckBox" name="output_time_stamps_check_box">
+         <property name="toolTip">
+          <string>Checking this will add time stamps to output directory names.</string>
+         </property>
+         <property name="text">
+          <string>Time stamp output directories</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cancel_on_error_check_box">
+         <property name="text">
+          <string>Cancel export on error</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="Line" name="line_6">

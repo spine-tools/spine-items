@@ -24,13 +24,15 @@ from spinedb_api import clear_filter_configs
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path, serialize_url
 from spine_engine.spine_io.exporters import gdx
-from .commands import UpdateOutFileName, UpdateSettings
+from .commands import UpdateOutFileName, UpdateOutputTimeStampsFlag, UpdateSettings
 from ..commands import UpdateCancelOnErrorCommand
 from .database import Database
 from .mvcmodels.database_list_model import DatabaseListModel
+from .mvcmodels.full_url_list_model import FullUrlListModel
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .notifications import Notifications
+from .output_resources import scan_for_resources
 from .settings_pack import SettingsPack
 from .settings_state import SettingsState
 from .widgets.gdx_export_settings import GdxExportSettings
@@ -54,6 +56,7 @@ class GdxExporter(ProjectItem):
         logger,
         settings_pack=None,
         databases=None,
+        output_time_stamps=False,
         cancel_on_error=True,
     ):
         """
@@ -67,12 +70,15 @@ class GdxExporter(ProjectItem):
             logger (LoggerInterface): a logger instance
             settings_pack (SettingsPack, optional): export settings
             databases (list, optional): a list of :class:`Database` instances
+            output_time_stamps (bool): True if time stamps should be appended to output directory names,
+                False otherwise
             cancel_on_error (bool): True if execution should fail on all export errors,
                 False to ignore certain error cases; optional to provide backwards compatibility
         """
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
         self._notifications = Notifications()
+        self._append_output_time_stamps = output_time_stamps
         self._cancel_on_error = cancel_on_error
         self._settings_pack = settings_pack if settings_pack is not None else SettingsPack()
         if databases is None:
@@ -83,6 +89,7 @@ class GdxExporter(ProjectItem):
         self._export_list_items = dict()
         self._settings_window = None
         self._worker = None
+        self._full_url_model = FullUrlListModel()
 
     @staticmethod
     def item_type():
@@ -124,6 +131,7 @@ class GdxExporter(ProjectItem):
         s = {
             self._properties_ui.settings_button.clicked: self.show_settings,
             self._properties_ui.open_directory_button.clicked: lambda _: self.open_directory(),
+            self._properties_ui.output_time_stamps_check_box.stateChanged: self._change_output_time_stamps_flag,
             self._properties_ui.cancel_on_error_check_box.stateChanged: self._cancel_on_error_option_changed,
         }
         return s
@@ -144,13 +152,17 @@ class GdxExporter(ProjectItem):
             item = self._export_list_items[db.url] = ExportListItem(db.url, db.output_file_name)
             database_list_storage.addWidget(item)
             item.file_name_changed.connect(self._update_out_file_name)
+        self._properties_ui.output_time_stamps_check_box.setCheckState(
+            Qt.Checked if self._append_output_time_stamps else Qt.Unchecked
+        )
         self._properties_ui.cancel_on_error_check_box.setCheckState(
             Qt.Checked if self._cancel_on_error else Qt.Unchecked
         )
 
     def _do_handle_dag_changed(self, resources, _):
         """See base class."""
-        database_urls = set(r.url for r in resources if r.type_ == "database")
+        full_urls = set(clear_filter_configs(r.url) for r in resources if r.type_ == "database")
+        database_urls = set(clear_filter_configs(url) for url in full_urls)
         old_urls = self._database_model.urls()
         if database_urls != old_urls:
             common = old_urls & database_urls
@@ -186,6 +198,7 @@ class GdxExporter(ProjectItem):
                 db = Database()
                 db.url = url
                 self._database_model.add(db)
+        self._full_url_model.set_urls(full_urls)
         if self._active:
             self._update_properties_tab()
         self._check_state()
@@ -319,7 +332,7 @@ class GdxExporter(ProjectItem):
                 merging_settings,
                 self._settings_pack.none_fallback,
                 self._settings_pack.none_export,
-                self._database_model,
+                self._full_url_model,
                 self.name,
                 self._toolbox,
             )
@@ -359,6 +372,28 @@ class GdxExporter(ProjectItem):
                 self._settings_window.none_export,
             )
         )
+
+    @Slot(int)
+    def _change_output_time_stamps_flag(self, checkbox_state):
+        """
+        Pushes a command that changes the output time stamps flag value.
+
+        Args:
+            checkbox_state (int): setting's checkbox state on properties tab
+        """
+        flag = checkbox_state == Qt.Checked
+        if flag == self._append_output_time_stamps:
+            return
+        self._toolbox.undo_stack.push(UpdateOutputTimeStampsFlag(self, flag))
+
+    def set_output_time_stamps_flag(self, flag):
+        """
+        Sets the output time stamps flag.
+
+        Args:
+            flag (bool): flag value
+        """
+        self._append_output_time_stamps = flag
 
     @Slot(int)
     def _cancel_on_error_option_changed(self, checkbox_state):
@@ -414,6 +449,7 @@ class GdxExporter(ProjectItem):
             db_dict["database_url"] = serialized_url
             databases.append(db_dict)
         d["databases"] = databases
+        d["output_time_stamps"] = self._append_output_time_stamps
         d["cancel_on_error"] = self._cancel_on_error
         return d
 
@@ -435,10 +471,23 @@ class GdxExporter(ProjectItem):
         databases = list()
         for db_dict in item_dict["databases"]:
             db = Database.from_dict(db_dict)
-            db.url = deserialize_path(db_dict["database_url"], project.project_dir)
+            db.url = clear_filter_configs(deserialize_path(db_dict["database_url"], project.project_dir))
             databases.append(db)
+        output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
-        return GdxExporter(name, description, x, y, toolbox, project, logger, settings_pack, databases, cancel_on_error)
+        return GdxExporter(
+            name,
+            description,
+            x,
+            y,
+            toolbox,
+            project,
+            logger,
+            settings_pack,
+            databases,
+            output_time_stamps,
+            cancel_on_error,
+        )
 
     def update_name_label(self):
         """See base class."""
@@ -461,7 +510,7 @@ class GdxExporter(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        return self.execution_item()._output_resources_forward()
+        return scan_for_resources(self, self._database_model.items(), self.data_dir, include_missing=True)
 
     def tear_down(self):
         """See base class."""

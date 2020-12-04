@@ -19,9 +19,10 @@ from spine_items.commands import SpineToolboxCommand
 
 
 class UpdateOutFileName(SpineToolboxCommand):
-    def __init__(self, exporter, file_name, database_path):
-        """Command to update GdxExporter output file name.
+    """Command to update GdxExporter output file name."""
 
+    def __init__(self, exporter, file_name, database_path):
+        """
         Args:
             exporter (GdxExporter): the GdxExporter
             file_name (str): the output filename
@@ -42,9 +43,10 @@ class UpdateOutFileName(SpineToolboxCommand):
 
 
 class UpdateSettings(SpineToolboxCommand):
-    def __init__(self, exporter, settings, indexing_settings, merging_settings, none_fallback, none_export):
-        """Command to update GdxExporter settings.
+    """Command to update GdxExporter settings."""
 
+    def __init__(self, exporter, settings, indexing_settings, merging_settings, none_fallback, none_export):
+        """
         Args:
             exporter (GdxExporter): the GdxExporter
             settings (SetSettings): gdx settings
@@ -65,3 +67,24 @@ class UpdateSettings(SpineToolboxCommand):
 
     def undo(self):
         self._exporter.undo_or_redo_settings(*self._undo_settings_tuple)
+
+
+class UpdateOutputTimeStampsFlag(SpineToolboxCommand):
+    """Command to set GdxExporter's output directory time stamps flag."""
+
+    def __init__(self, exporter, value):
+        """
+        Args:
+            exporter (GdxExporter): exporter item
+            value (bool): flag's new value
+        """
+        super().__init__()
+        self.setText(f"toggle output time stamps setting of {exporter.name}")
+        self._exporter = exporter
+        self._value = value
+
+    def redo(self):
+        self._exporter.set_output_time_stamps_flag(self._value)
+
+    def undo(self):
+        self._exporter.set_output_time_stamps_flag(not self._value)

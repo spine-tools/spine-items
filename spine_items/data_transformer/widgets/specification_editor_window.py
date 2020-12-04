@@ -19,18 +19,12 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QWidget
 from .entity_class_renaming_widget import EntityClassRenamingWidget
 from .parameter_renaming_widget import ParameterRenamingWidget
 from ..data_transformer_specification import DataTransformerSpecification
-from ..settings import (
-    EntityClassRenamingSettings,
-    ParameterRenamingSettings,
-)
+from ..settings import EntityClassRenamingSettings, ParameterRenamingSettings
 
 
 _DISPLAY_NAMES = ("No filter", "Rename entity classes", "Rename parameters")
 
-_SETTINGS_CLASSES = {
-    _DISPLAY_NAMES[1]: EntityClassRenamingSettings,
-    _DISPLAY_NAMES[2]: ParameterRenamingSettings,
-}
+_SETTINGS_CLASSES = {_DISPLAY_NAMES[1]: EntityClassRenamingSettings, _DISPLAY_NAMES[2]: ParameterRenamingSettings}
 
 _CLASSES_TO_DISPLAY_NAMES = {class_: name for name, class_ in _SETTINGS_CLASSES.items()}
 
@@ -145,10 +139,9 @@ class SpecificationEditorWindow(QWidget):
             return
         widget = self._filter_widgets.get(display_name)
         if widget is None:
-            widget = {
-                _DISPLAY_NAMES[1]: EntityClassRenamingWidget,
-                _DISPLAY_NAMES[2]: ParameterRenamingWidget,
-            }[display_name](self._specification.settings)
+            widget = {_DISPLAY_NAMES[1]: EntityClassRenamingWidget, _DISPLAY_NAMES[2]: ParameterRenamingWidget}[
+                display_name
+            ](self._specification.settings)
             self._filter_widgets[display_name] = widget
         layout = self._ui.filter_widget.layout()
         if layout is None:

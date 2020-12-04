@@ -8,7 +8,39 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-__version__ = "0.3.4"
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.13"
-REQUIRED_SPINE_ENGINE_VERSION = "0.8.8"
-REQUIRED_SPINEDB_API_VERSION = "0.9.10"
+
+"""
+Contains full URL list model.
+
+:authors: A. Soininen (VTT)
+:date:    3.12.2020
+"""
+
+from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
+
+
+class FullUrlListModel(QAbstractListModel):
+    def __init__(self):
+        super().__init__()
+        self._urls = list()
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return None
+        if role == Qt.DisplayRole:
+            return self._urls[index.row()]
+        return None
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self._urls)
+
+    def set_urls(self, urls):
+        """
+        Sets model's URLs.
+
+        Args:
+            urls (Iterable of str): URLs
+        """
+        self.beginResetModel()
+        self._urls = [url for url in urls]
+        self.endResetModel()

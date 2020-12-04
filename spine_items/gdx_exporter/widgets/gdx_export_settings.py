@@ -54,7 +54,7 @@ class GdxExportSettings(QWidget):
         merging_settings,
         none_fallback,
         none_export,
-        database_model,
+        url_model,
         exporter_name,
         parent,
     ):
@@ -65,7 +65,7 @@ class GdxExportSettings(QWidget):
             merging_settings (dict): parameter merging settings
             none_fallback (NoneFallback): fallback for None parameter values
             none_export (NoneExport): how to handle None values while exporting
-            database_model (DatabaseListModel): a mapping from URL to :class:`Database`
+            url_model (QAbstractListModel): model that provides database URLs
             exporter_name (str, optional): name of the GdxExporter item that opened the window
             parent (QWidget): a parent widget
         """
@@ -76,8 +76,8 @@ class GdxExportSettings(QWidget):
         self._ui.setupUi(self)
         self.setWindowTitle(f"Gdx Export settings    -- {exporter_name} --")
         self.setAttribute(Qt.WA_DeleteOnClose, True)
-        self._database_model = database_model
-        self._ui.database_combo_box.setModel(self._database_model)
+        self._url_model = url_model
+        self._ui.database_combo_box.setModel(url_model)
         self._ui.update_button.clicked.connect(self._request_settings_update)
         self._ui.button_box.accepted.connect(self._accept)
         self._ui.button_box.rejected.connect(self._reject)

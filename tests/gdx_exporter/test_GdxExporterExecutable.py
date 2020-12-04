@@ -32,7 +32,7 @@ from spine_engine.spine_io import gdx_utils
 from spine_engine.spine_io.exporters import gdx
 
 
-class TestExporterExecutable(unittest.TestCase):
+class TestGdxExporterExecutable(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(ExecutableItem.item_type(), "GdxExporter")
 
@@ -108,7 +108,7 @@ class TestExporterExecutable(unittest.TestCase):
         # TODO: Seems that there is no way to stop the Exporting process at the moment.
         # TODO: Implement this test when GdxExporter ExecutableItem stop_execution() method is implemented
         with TemporaryDirectory() as temp_data_dir:
-            executable = ExecutableItem("name", SettingsPack(), [], True, temp_data_dir, "", mock.MagicMock())
+            executable = ExecutableItem("name", SettingsPack(), [], False, True, temp_data_dir, "", mock.MagicMock())
             with mock.patch(
                 "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
             ) as mock_stop_execution:
@@ -117,7 +117,7 @@ class TestExporterExecutable(unittest.TestCase):
 
     @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
     def test_execute_no_output(self):
-        executable = ExecutableItem("name", SettingsPack(), [], False, "", "", mock.MagicMock())
+        executable = ExecutableItem("name", SettingsPack(), [], False, False, "", "", mock.MagicMock())
         self.assertTrue(executable.execute([], []))
 
     @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
@@ -142,7 +142,7 @@ class TestExporterExecutable(unittest.TestCase):
             databases[0].url = database_url
             logger = mock.MagicMock()
             logger.__reduce__ = lambda _: (mock.MagicMock, ())
-            executable = ExecutableItem("name", settings_pack, databases, False, tmp_dir_name, "", logger)
+            executable = ExecutableItem("name", settings_pack, databases, False, False, tmp_dir_name, "", logger)
             resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             self.assertTrue(executable.execute(resources, []))
             self.assertTrue(Path(tmp_dir_name, "output.gdx").exists())
@@ -159,12 +159,12 @@ class TestExporterExecutable(unittest.TestCase):
                     self.assertEqual(gams_record, expected_name)
 
     def test_output_resources_backward(self):
-        executable = ExecutableItem("name", SettingsPack(), [], False, "", "", mock.MagicMock())
+        executable = ExecutableItem("name", SettingsPack(), [], False, False, "", "", mock.MagicMock())
         self.assertEqual(executable.output_resources(ExecutionDirection.BACKWARD), [])
 
     def test_output_resources_forward(self):
         data_dir = gettempdir()
-        executable = ExecutableItem("name", SettingsPack(), [], False, data_dir, "", mock.MagicMock())
+        executable = ExecutableItem("name", SettingsPack(), [], False, False, data_dir, "", mock.MagicMock())
         resources = executable.output_resources(ExecutionDirection.FORWARD)
         self.assertEqual(len(resources), 0)
 

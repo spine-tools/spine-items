@@ -79,6 +79,7 @@ class TestGdxExporter(unittest.TestCase):
             "y": 0.0,
             "settings_pack": expected_settings_pack,
             "databases": [],
+            "output_time_stamps": True,
             "cancel_on_error": True,
         }
         self.assertEqual(d, expected)

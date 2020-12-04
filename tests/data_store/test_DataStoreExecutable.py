@@ -101,7 +101,9 @@ class TestDataStoreExecutable(unittest.TestCase):
             db3_path = Path(temp_dir).joinpath("db3.sqlite")
             db3_url = "sqlite:///" + str(db3_path)
             create_new_spine_database(db3_url)
-            executable = ExecutableItem("name", db3_url, temp_dir, True, mock.MagicMock())
+            logger = mock.MagicMock()
+            logger.__reduce__ = lambda _: (mock.MagicMock, ())
+            executable = ExecutableItem("name", db3_url, temp_dir, True, logger)
             input_db_resources = [
                 ProjectItemResource(mock.Mock(), "database", db1_url),
                 ProjectItemResource(mock.Mock(), "database", db2_url),

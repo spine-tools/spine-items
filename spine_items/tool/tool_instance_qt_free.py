@@ -161,7 +161,7 @@ class JuliaToolInstance(ToolInstance):
         """
         kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
         self.exec_mngr = KernelExecutionManager(
-            self._logger, "julia", kernel_name, *self.args, group_id=self.owner.group_id, workdir=self.basedir,
+            self._logger, "julia", kernel_name, *self.args, group_id=self.owner.group_id, workdir=self.basedir
         )
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:

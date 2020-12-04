@@ -102,7 +102,9 @@ class TestImporterExecutable(unittest.TestCase):
             database_url = "sqlite:///" + str(database_path)
             create_new_spine_database(database_url)
             gams_path = ""
-            executable = ExecutableItem("name", mapping, [str(data_file)], temp_dir, gams_path, True, mock.MagicMock())
+            logger = mock.MagicMock()
+            logger.__reduce__ = lambda _: (mock.MagicMock, ())
+            executable = ExecutableItem("name", mapping, [str(data_file)], temp_dir, gams_path, True, logger)
             database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
             file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
             self.assertTrue(executable.execute(file_resources, database_resources))
