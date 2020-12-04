@@ -76,7 +76,7 @@ class Gimlet(ProjectItem):
         super().__init__(name, description, x, y, project, logger)
         self._toolbox = toolbox
         self._file_model = InputFileListModel(header_label="Available resources")
-        self._toolbox_resources = list()  # ProjectItemResources for handling changes in the DAG on Design View
+        self._upstream_resources = list()  # ProjectItemResources for handling changes in the DAG on Design View
         self.use_shell = use_shell
         self.shell_index = shell_index
         self.cmd = cmd
@@ -283,12 +283,13 @@ class Gimlet(ProjectItem):
             upstream_resources (list): ProjectItemResources available from upstream
             downstream_resources (list): ProjectItemResources available from downstream
         """
-        self._toolbox_resources = upstream_resources + downstream_resources
-        self._file_model.update(self._toolbox_resources)
+        self._upstream_resources = upstream_resources + downstream_resources
+        all_resources = upstream_resources + downstream_resources
+        self._file_model.update(all_resources)
         self._notify_if_duplicate_file_paths()
         # Update cmdline args
         cmd_line_args = self.cmd_line_args.copy()
-        for resource in self._toolbox_resources:
+        for resource in all_resources:
             updated_from = resource.metadata.get("updated_from")
             try:
                 i = cmd_line_args.index(updated_from)
@@ -384,4 +385,4 @@ class Gimlet(ProjectItem):
         Returns:
             list: List of ProjectItemResources
         """
-        return self._toolbox_resources
+        return self._upstream_resources
