@@ -133,7 +133,7 @@ class JuliaToolInstance(ToolInstance):
             self.args = []
             cmdline_args = self.tool_specification.cmdline_args + args
             if cmdline_args:
-                cmdline_args = '["' + repr('", "'.join(self.args)).strip("'") + '"]'
+                cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
                 self.args += [f"empty!(ARGS); append!(ARGS, {cmdline_args});"]
             self.args += [f'include("{self.tool_specification.main_prgm}")']
         else:
