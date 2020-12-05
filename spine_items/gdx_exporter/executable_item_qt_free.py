@@ -108,8 +108,6 @@ class ExecutableItem(ExecutableItemBase):
         )
         success = self._process.run_until_complete()
         self._process = None
-        if success:
-            self._logger.msg_success.emit(f"Executing GdxExporter {self.name} finished")
         return success
 
     def _output_resources_forward(self):

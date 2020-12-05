@@ -104,7 +104,6 @@ class ExecutableItem(ExecutableItemBase):
             ),
         )
         success = self._process.run_until_complete()
-        self._logger.msg_success.emit(f"Executing Importer {self.name} {'finished' if success else 'failed'}")
         self._process = None
         return success
 

@@ -65,15 +65,6 @@ class ExecutableItem(ExecutableItemBase):
         """Returns the item's type identifier string."""
         return ItemInfo.item_type()
 
-    def handle_execution_finished(self, return_code, execution_dir):
-        """Handles things after execution has finished."""
-        if return_code == 0:
-            self._logger.msg_success.emit(f"Tool <b>{self._name}</b> execution finished")
-        else:
-            self._logger.msg_error.emit(f"Tool <b>{self._name}</b> execution failed")
-        self._handle_output_files(return_code, execution_dir)
-        self._tool_instance = None
-
     def stop_execution(self):
         """Stops executing this Tool."""
         super().stop_execution()
@@ -402,7 +393,8 @@ class ExecutableItem(ExecutableItemBase):
             return False
         self._logger.msg.emit(f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***")
         return_code = self._tool_instance.execute()
-        self.handle_execution_finished(return_code, execution_dir)
+        self._handle_output_files(return_code, execution_dir)
+        self._tool_instance = None
         return return_code == 0
 
     def _find_input_files(self, resources):

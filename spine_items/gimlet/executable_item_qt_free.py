@@ -152,11 +152,7 @@ class ExecutableItem(ExecutableItemBase):
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = forward_resources.copy()
         self._exec_mngr = None
-        if ret != 0:
-            self._logger.msg_error.emit(f"{self.name} execution failed")
-            return False
-        self._logger.msg_success.emit(f"Executing {self.name} finished")
-        return True
+        return ret == 0
 
     def _output_resources_forward(self):
         """Returns output resources for forward execution.

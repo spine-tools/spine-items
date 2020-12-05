@@ -31,16 +31,17 @@ def _get_db_map(url, logger):
     try:
         db_map = DatabaseMapping(url)
     except (SpineDBAPIError, SpineDBVersionError) as err:
-        logger.msg_error.emit(f"Skipping url <b>{url}</b>: {err}")
-        logger.msg_error.emit(f"Skipping url <b>{clear_filter_configs(url)}</b>: {err}")
+        logger.msg_warning.emit(f"Skipping url <b>{clear_filter_configs(url)}</b>: {err}")
         return None
     return db_map
 
 
 def do_work(cancel_on_error, logs_dir, from_urls, to_url, logger):
-    from_db_maps = [db_map for db_map in (_get_db_map(url, logger) for url in from_urls) if db_map]
+    from_db_maps = [_get_db_map(url, logger) for url in from_urls]
     to_db_map = _get_db_map(to_url, logger)
-    from_db_map_data = {from_db_map: export_data(from_db_map) for from_db_map in from_db_maps}
+    if to_db_map is None:
+        return False
+    from_db_map_data = {db_map: export_data(db_map) for db_map in from_db_maps if db_map is not None}
     all_errors = []
     for from_db_map, data in from_db_map_data.items():
         import_count, import_errors = import_data(to_db_map, **data)
@@ -55,8 +56,11 @@ def do_work(cancel_on_error, logs_dir, from_urls, to_url, logger):
                     import_count, len(import_errors), from_db_map.db_url, to_db_map.db_url
                 )
             )
-    for db_map in from_db_maps + [to_db_map]:
+        else:
+            logger.msg_warning.emit("No new data merged from {0} into {1}".format(from_db_map.db_url, to_db_map.db_url))
+    for db_map in from_db_map_data:
         db_map.connection.close()
+    to_db_map.connection.close()
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()
@@ -67,3 +71,4 @@ def do_work(cancel_on_error, logs_dir, from_urls, to_url, logger):
         # Make error log file anchor with path as tooltip
         logfile_anchor = f"<a style='color:#BB99FF;' title='{logfilepath}' href='file:///{logfilepath}'>error log</a>"
         logger.msg_error.emit("Import errors. Logfile: {0}".format(logfile_anchor))
+    return bool(from_db_map_data)

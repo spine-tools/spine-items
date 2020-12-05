@@ -80,12 +80,11 @@ class ExecutableItem(ExecutableItemBase):
         if not from_urls:
             return True
         self._process = ReturningProcess(
-            target=do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, self._url, self._logger)
+            target=do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, str(self._url), self._logger)
         )
-        self._process.run_until_complete()
-        self._logger.msg_success.emit(f"Executing Data Store {self.name} finished")
+        success = self._process.run_until_complete()
         self._process = None
-        return True
+        return success
 
     def stop_execution(self):
         """Stops executing this DS."""
