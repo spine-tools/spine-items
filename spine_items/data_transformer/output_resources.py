@@ -47,5 +47,5 @@ def scan_for_resources(provider, dt_specification, db_resources, filter_config_p
         json.dump(dt_specification.settings.filter_config(), filter_config_file)
     return [
         ProjectItemResource(provider, "database", append_filter_config(url, filter_config_path), metadata=metadata)
-        for url, metadata in url_metadata()
+        for url, metadata in url_metadata
     ]
