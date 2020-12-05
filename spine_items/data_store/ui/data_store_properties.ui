@@ -632,7 +632,7 @@
           <string>If there are any errors when trying to import data cancel the whole import.</string>
          </property>
          <property name="text">
-          <string>Cancel import on error</string>
+          <string>Cancel merges to this db on error</string>
          </property>
          <property name="checked">
           <bool>true</bool>

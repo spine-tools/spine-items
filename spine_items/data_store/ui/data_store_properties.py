@@ -398,7 +398,7 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setToolTip(QCoreApplication.translate("Form", u"If there are any errors when trying to import data cancel the whole import.", None))
 #endif // QT_CONFIG(tooltip)
-        self.cancel_on_error_checkBox.setText(QCoreApplication.translate("Form", u"Cancel import on error", None))
+        self.cancel_on_error_checkBox.setText(QCoreApplication.translate("Form", u"Cancel merges to this db on error", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_copy_url.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Copy current database url to clipboard.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
