@@ -76,11 +76,14 @@ class ParameterMergingSettingsWindow(QWidget):
     def _add_setting(self, parameter_name=None, merging_setting=None):
         """Inserts a new settings widget to the widget list."""
         if self._entity_class_infos is None:
-            db_map = DatabaseMapping(self._database_url)
-            try:
-                self._entity_class_infos = _gather_entity_class_infos(db_map)
-            finally:
-                db_map.connection.close()
+            if self._database_url:
+                db_map = DatabaseMapping(self._database_url)
+                try:
+                    self._entity_class_infos = _gather_entity_class_infos(db_map)
+                finally:
+                    db_map.connection.close()
+            else:
+                self._entity_class_infos = _rebuild_entity_class_infos(self._merging_settings)
         settings_widget = ParameterMergingSettings(
             self._entity_class_infos, self._set_settings, self, parameter_name, merging_setting
         )
@@ -152,28 +155,22 @@ class EntityClassInfo:
 
     Attributes:
         name (str): entity class' name
-        class_id (int): entity's database id
         domain_names (tuple of str): object classes that index the entities in this class; for object classes this list
             contains the entity's name only, for relationship classes the list contains the relationship's object
             classes
         parameter_names (list of str): entity's defined parameters
-        is_object_class (bool): True if the entity is a object_class, False if it is a relationship_class
     """
 
-    def __init__(self, name, class_id, domain_names, parameter_names, is_object_class):
+    def __init__(self, name, domain_names, parameter_names):
         """
         Args:
             name (str): entity class' name
-            class_id (int): entity's database id
             domain_names (tuple of str): object classes that index the entities in this class; for object classes it
                 contains the entity's name only, for relationship classes it contains the relationship's object
                 classes
             parameter_names (list of str): entity's defined parameters
-            is_object_class (bool): True if the entity is a object_class, False if it is a relationship_class
         """
         self.name = name
-        self.id = class_id
-        self.is_object_class = is_object_class
         self.domain_names = domain_names
         self.parameter_names = parameter_names
 
@@ -188,19 +185,36 @@ def _gather_entity_class_infos(db_map):
         list: a list of EntityClassInfo objects
     """
     infos = list()
-    for object_class in db_map.object_class_list().all():
+    for object_class in db_map.query(db_map.object_class_sq):
         class_id = object_class.id
-        parameter_definitions = db_map.parameter_definition_list(object_class_id=class_id).all()
+        parameter_definitions = db_map.query(db_map.parameter_definition_sq).filter_by(object_class_id=class_id)
         parameter_names = [definition.name for definition in parameter_definitions]
-        infos.append(
-            EntityClassInfo(object_class.name, class_id, (object_class.name,), parameter_names, is_object_class=True)
-        )
-    for relationship_class in db_map.wide_relationship_class_list().all():
+        infos.append(EntityClassInfo(object_class.name, (object_class.name,), parameter_names))
+    for relationship_class in db_map.query(db_map.wide_relationship_class_sq):
         class_id = relationship_class.id
-        parameter_definitions = db_map.parameter_definition_list(relationship_class_id=class_id).all()
+        parameter_definitions = db_map.query(db_map.parameter_definition_sq).filter_by(relationship_class_id=class_id)
         parameter_names = [definition.name for definition in parameter_definitions]
         domain_names = tuple(relationship_class.object_class_name_list.split(","))
-        infos.append(
-            EntityClassInfo(relationship_class.name, class_id, domain_names, parameter_names, is_object_class=False)
-        )
+        infos.append(EntityClassInfo(relationship_class.name, domain_names, parameter_names))
+    return infos
+
+
+def _rebuild_entity_class_infos(merging_settings):
+    """
+    Rebuilds entity class infos from given parameter merging settings.
+
+    Args:
+        merging_settings (dict): merging settings
+
+    Returns:
+        list of EntityClassInfo: entity class infos
+    """
+    infos = list()
+    for settings_list in merging_settings.values():
+        for merging_setting in settings_list:
+            infos.append(
+                EntityClassInfo(
+                    merging_setting.previous_set, merging_setting.previous_domain_names, merging_setting.parameter_names
+                )
+            )
     return infos

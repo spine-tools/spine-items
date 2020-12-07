@@ -27,7 +27,7 @@ _ERROR_MESSAGE = "<span style='color:#ff3333;white-space: pre-wrap;'>{}</span>"
 
 
 class ParameterMergingSettings(QWidget):
-    """A widget for configure parameter merging."""
+    """A widget for configuring parameter merging."""
 
     removal_requested = Signal("QVariant")
     """Emitted when the settings widget wants to get removed from the parent window."""
