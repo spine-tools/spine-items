@@ -29,12 +29,7 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
-from .utils import (
-    file_paths_from_resources,
-    find_file,
-    flatten_file_path_duplicates,
-    is_pattern,
-)
+from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern
 from .output_resources import scan_for_resources
 from ..utils import labelled_resource_args
 

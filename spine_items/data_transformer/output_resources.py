@@ -15,9 +15,9 @@ Contains utilities to scan for Tool's output resources.
 :date:    4.12.2020
 """
 
-import json
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spinedb_api import append_filter_config
+from spinedb_api.filters.tools import store_filter
 from .utils import make_metadata
 
 
@@ -44,7 +44,7 @@ def scan_for_resources(provider, dt_specification, db_resources, filter_config_p
             for url, metadata in url_metadata
         ]
     with open(filter_config_path, "w") as filter_config_file:
-        json.dump(dt_specification.settings.filter_config(), filter_config_file)
+        store_filter(dt_specification.settings.filter_config(), filter_config_file)
     return [
         ProjectItemResource(provider, "database", append_filter_config(url, filter_config_path), metadata=metadata)
         for url, metadata in url_metadata

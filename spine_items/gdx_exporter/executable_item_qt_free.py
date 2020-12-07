@@ -88,10 +88,12 @@ class ExecutableItem(ExecutableItemBase):
                     database = db
                     break
             if database is None:
-                self._logger.msg_error.emit(f"<b>{self.name}</b>: No settings for database {url}.")
+                self._logger.msg_warning.emit(f"<b>{self.name}</b>: No settings for database {url}. Skipping.")
                 continue
             if not database.output_file_name:
-                self._logger.msg_error.emit(f"<b>{self.name}</b>: No file name given to export database {url}.")
+                self._logger.msg_warning.emit(
+                    f"<b>{self.name}</b>: No file name given to export database {url}. Skipping."
+                )
                 continue
             databases[full_url] = database.output_file_name
         self._process = ReturningProcess(

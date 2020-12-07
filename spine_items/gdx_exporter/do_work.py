@@ -20,8 +20,7 @@ import os
 from time import time
 from spine_engine.spine_io.exporters import gdx
 from spinedb_api import DatabaseMapping, SpineDBAPIError
-from spinedb_api.filters.url_tools import ensure_filtering, filter_configs
-from spinedb_api.filters.filter_stacks import load_filters
+from spinedb_api.filters.tools import ensure_filtering, filter_configs, load_filters
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 
 
