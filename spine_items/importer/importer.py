@@ -19,7 +19,7 @@ Contains Importer project item class.
 from collections import Counter
 import os
 from PySide2.QtCore import QModelIndex, Qt, Slot
-from spinetoolbox.helpers import create_dir
+from spinetoolbox.helpers import create_dir, QuietLogger
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import serialize_path, deserialize_checked_states, serialize_checked_states
 from spine_engine.spine_io.importers.csv_reader import CSVConnector
@@ -98,13 +98,14 @@ class Importer(ProjectItem):
         """See base class."""
         return ItemInfo.item_category()
 
-    def execution_item(self):
+    def execution_item(self, silent=True):
         """Creates project item's execution counterpart."""
         mapping = self.specification().mapping if self.specification() is not None else dict()
         selected_files = [file_item.label for file_item in self._file_model.files if file_item.selected]
         gams_path = self._project.settings.value("appSettings/gamsPath", defaultValue=None)
+        logger = QuietLogger() if silent else self._logger
         executable = ExecutableItem(
-            self.name, mapping, selected_files, self.logs_dir, gams_path, self.cancel_on_error, self._logger
+            self.name, mapping, selected_files, self.logs_dir, gams_path, self.cancel_on_error, logger
         )
         return executable
 
