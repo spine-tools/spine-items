@@ -17,7 +17,7 @@ Tool class.
 """
 import os
 from collections import Counter
-from PySide2.QtCore import Slot
+from PySide2.QtCore import Slot, Signal
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
@@ -36,6 +36,10 @@ from .output_resources import scan_for_resources
 
 
 class Tool(ProjectItem):
+
+    _python_console_requested = Signal(str, str, str)
+    _julia_console_requested = Signal(str, str, str)
+
     def __init__(
         self,
         name,
@@ -90,8 +94,8 @@ class Tool(ProjectItem):
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_set_specification(self._specification)
         self.do_update_execution_mode(execute_in_work)
-        self.julia_console = SpineConsoleWidget(toolbox, "Julia Console", owner=name)
-        self.python_console = SpineConsoleWidget(toolbox, "Python Console", owner=name)
+        self._python_console_requested.connect(self._create_python_console)
+        self._julia_console_requested.connect(self._create_julia_console)
 
     @staticmethod
     def item_type():
@@ -432,6 +436,64 @@ class Tool(ProjectItem):
             )
         else:
             super().notify_destination(source_item)
+
+    @Slot(str, str, str)
+    def _create_python_console(self, filter_id, kernel_name, connection_file):
+        """Creates a python console, eventually for a filter execution.
+
+        Args:
+            filter_id (str): filter identifier
+            kernel_name (str): jupyter kernel name
+            connection_file (str): path to connection file
+        """
+        if not filter_id:
+            console = self.python_console = SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
+        elif filter_id not in self._filter_consoles:
+            console = self._filter_consoles.setdefault(filter_id, {})["python"] = SpineConsoleWidget(
+                self._toolbox, "Python Console", owner=self.name
+            )
+            if filter_id and self._active:
+                self._project._toolbox.ui.listView_executions.model().layoutChanged.emit()
+        console.connect_to_kernel(kernel_name, connection_file)
+
+    @Slot(str, str, str)
+    def _create_julia_console(self, filter_id, kernel_name, connection_file):
+        """Creates a julia console, eventually for a filter execution.
+
+        Args:
+            filter_id (str): filter identifier
+            kernel_name (str): jupyter kernel name
+            connection_file (str): path to connection file
+        """
+        if not filter_id:
+            console = self.julia_console = SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
+        elif filter_id not in self._filter_consoles:
+            console = self._filter_consoles.setdefault(filter_id, {})["julia"] = SpineConsoleWidget(
+                self._toolbox, "Julia Console", owner=self.name
+            )
+            if filter_id and self._active:
+                self._project._toolbox.ui.listView_executions.model().layoutChanged.emit()
+        console.connect_to_kernel(kernel_name, connection_file)
+
+    def start_python_console(self, filter_id, kernel_name, connection_file):
+        """Starts the python console.
+
+        Args:
+            filter_id (str): filter identifier
+            kernel_name (str): jupyter kernel name
+            connection_file (str): path to connection file
+        """
+        self._python_console_requested.emit(filter_id, kernel_name, connection_file)
+
+    def start_julia_console(self, filter_id, kernel_name, connection_file):
+        """Starts the julia console.
+
+        Args:
+            filter_id (str): filter identifier
+            kernel_name (str): jupyter kernel name
+            connection_file (str): path to connection file
+        """
+        self._julia_console_requested.emit(filter_id, kernel_name, connection_file)
 
     @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):
