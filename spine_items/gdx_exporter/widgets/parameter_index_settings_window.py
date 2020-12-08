@@ -52,10 +52,7 @@ class ParameterIndexSettingsWindow(QWidget):
         self._set_settings = set_settings
         self._database_mapping = DatabaseMapping(database_path) if database_path else None
         self._enable_domain_updates = True
-        self._parameters = dict()
-        if not self._read_parameters(none_fallback):
-            self.settings_rejected.emit()
-            return
+        self._parameters = gdx.indexed_parameters(self._database_mapping, none_fallback, logger=None)
         self._indexing_settings = self._fix_legacy_indexing_settings(indexing_settings)
         self._ui = Ui_Form()
         self._ui.setupUi(self)
@@ -383,24 +380,6 @@ class ParameterIndexSettingsWindow(QWidget):
             items.append(item)
         for item in sorted(items, key=lambda i: i.text()):
             model.appendRow(item)
-
-    def _read_parameters(self, none_fallback):
-        """
-        Collects parameters with indexed values from the database.
-
-        Args:
-            none_fallback (NoneFallback): none fallback option
-
-        Returns:
-            bool: True if the operation was successful, False otherwise
-        """
-        if self._database_mapping is not None:
-            try:
-                self._parameters = gdx.indexed_parameters(self._database_mapping, none_fallback, logger=None)
-            except gdx.GdxExportException as error:
-                QMessageBox.warning(self, "Failed to read database", str(error))
-                return False
-        return True
 
     def _fix_legacy_indexing_settings(self, indexing_settings):
         """

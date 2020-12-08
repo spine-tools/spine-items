@@ -322,9 +322,13 @@ class GdxExportSettings(QWidget):
         if self._indexed_parameter_settings_window is None:
             url = self._ui.database_combo_box.currentText()
             indexing_settings = deepcopy(self._indexing_settings)
-            self._indexed_parameter_settings_window = ParameterIndexSettingsWindow(
-                indexing_settings, self._set_settings, url, self._none_fallback, self
-            )
+            try:
+                self._indexed_parameter_settings_window = ParameterIndexSettingsWindow(
+                    indexing_settings, self._set_settings, url, self._none_fallback, self
+                )
+            except gdx.GdxExportException as error:
+                QMessageBox.warning(self, "Failed to open indexing settings", str(error))
+                return
             self._indexed_parameter_settings_window.settings_approved.connect(self._gather_parameter_indexing_settings)
             self._indexed_parameter_settings_window.settings_rejected.connect(
                 self._dispose_parameter_indexing_settings_window
