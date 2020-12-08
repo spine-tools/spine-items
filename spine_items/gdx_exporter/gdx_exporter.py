@@ -161,7 +161,7 @@ class GdxExporter(ProjectItem):
 
     def _do_handle_dag_changed(self, resources, _):
         """See base class."""
-        full_urls = set(clear_filter_configs(r.url) for r in resources if r.type_ == "database")
+        full_urls = set(r.url for r in resources if r.type_ == "database")
         database_urls = set(clear_filter_configs(url) for url in full_urls)
         old_urls = self._database_model.urls()
         if database_urls != old_urls:
