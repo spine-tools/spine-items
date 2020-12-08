@@ -211,7 +211,6 @@ class GdxExporter(ProjectItem):
             worker.thread.quit()
             worker.thread.wait()
             worker.deleteLater()
-        db = self._database_model.item(database_url)
         worker = Worker(database_url, self._settings_pack.none_fallback, self._logger)
         self._worker = worker
         worker.database_unavailable.connect(self._cancel_worker)
@@ -248,7 +247,7 @@ class GdxExporter(ProjectItem):
         """Clean up after a worker has failed fetching export settings."""
         if self._worker is None:
             return
-        database_url = self._worker.database_url
+        database_url = clear_filter_configs(self._worker.database_url)
         self._worker.thread.quit()
         self._worker.thread.wait()
         self._worker.deleteLater()
