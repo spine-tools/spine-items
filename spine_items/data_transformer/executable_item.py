@@ -15,9 +15,7 @@ Contains Data transformer's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:    2.10.2020
 """
-from pathlib import Path
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.utils.helpers import shorten
 from .filter_config_path import filter_config_path
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources

@@ -17,30 +17,24 @@ Contains the GdxExporter project item.
 """
 
 from copy import deepcopy
-from itertools import zip_longest
 import os.path
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtCore import Slot
 from spinedb_api import clear_filter_configs
 from spinetoolbox.project_item.project_item import ProjectItem
-from spine_engine.project_item.project_item_resource import transient_file_resource
-from spine_engine.utils.serialization import deserialize_path, serialize_url
+from spine_engine.utils.serialization import deserialize_path
 from spinedb_api.spine_io.exporters import gdx
-from .commands import UpdateOutFileName, UpdateOutputTimeStampsFlag, UpdateSettings
-from ..commands import UpdateCancelOnErrorCommand
-from .database import Database
-from .mvcmodels.database_list_model import DatabaseListModel
-from .mvcmodels.full_url_list_model import FullUrlListModel
+from ..utils import Database
+from ..item_base import ExporterBase
+from .commands import UpdateSettings
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
-from .notifications import Notifications
 from .settings_pack import SettingsPack
 from .settings_state import SettingsState
 from .widgets.gdx_export_settings import GdxExportSettings
-from .widgets.export_list_item import ExportListItem
 from .worker import Worker
 
 
-class GdxExporter(ProjectItem):
+class GdxExporter(ExporterBase):
     """
     This project item handles all functionality regarding exporting a database to a .gdx file.
     """
@@ -73,21 +67,10 @@ class GdxExporter(ProjectItem):
             cancel_on_error (bool): True if execution should fail on all export errors,
                 False to ignore certain error cases; optional to provide backwards compatibility
         """
-        super().__init__(name, description, x, y, project)
-        self._toolbox = toolbox
-        self._notifications = Notifications()
-        self._append_output_time_stamps = output_time_stamps
-        self._cancel_on_error = cancel_on_error
+        super().__init__(name, description, x, y, toolbox, project, databases, output_time_stamps, cancel_on_error)
         self._settings_pack = settings_pack if settings_pack is not None else SettingsPack()
-        if databases is None:
-            databases = list()
-        self._database_model = DatabaseListModel(databases)
-        self._providers = dict()
-        self._output_filenames = dict()
-        self._export_list_items = dict()
         self._settings_window = None
         self._worker = None
-        self._full_url_model = FullUrlListModel()
 
     @staticmethod
     def item_type():
@@ -112,94 +95,16 @@ class GdxExporter(ProjectItem):
         """
         return self._settings_pack
 
-    def database(self, url):
-        """
-        Returns database information for given URL.
-
-        Args:
-            url (str): database URL
-
-        Returns:
-            Database: database information
-        """
-        return self._database_model.item(url)
-
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers."""
-        s = {
-            self._properties_ui.settings_button.clicked: self.show_settings,
-            self._properties_ui.open_directory_button.clicked: lambda _: self.open_directory(),
-            self._properties_ui.output_time_stamps_check_box.stateChanged: self._change_output_time_stamps_flag,
-            self._properties_ui.cancel_on_error_check_box.stateChanged: self._cancel_on_error_option_changed,
-        }
+        s = super().make_signal_handler_dict()
+        s[self._properties_ui.settings_button.clicked] = self.show_settings
         return s
 
-    def restore_selections(self):
-        """Restores selections and connects signals."""
-        self._properties_ui.item_name_label.setText(self.name)
-        self._update_properties_tab()
-
-    def _update_properties_tab(self):
-        """Updates the database list in the properties tab."""
-        database_list_storage = self._properties_ui.databases_list_layout
-        while not database_list_storage.isEmpty():
-            widget_to_remove = database_list_storage.takeAt(0)
-            widget_to_remove.widget().deleteLater()
-        self._export_list_items.clear()
-        for db in self._database_model.items():
-            item = self._export_list_items[db.url] = ExportListItem(db.url, db.output_file_name)
-            database_list_storage.addWidget(item)
-            item.file_name_changed.connect(self._update_out_file_name)
-        self._properties_ui.output_time_stamps_check_box.setCheckState(
-            Qt.Checked if self._append_output_time_stamps else Qt.Unchecked
+    def _check_missing_specification(self):
+        self._notifications.missing_specification = (
+            self._database_model.rowCount() != 0 and self._settings_pack.settings is None
         )
-        self._properties_ui.cancel_on_error_check_box.setCheckState(
-            Qt.Checked if self._cancel_on_error else Qt.Unchecked
-        )
-
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
-        """See base class."""
-        full_urls = set(r.url for r in upstream_resources if r.type_ == "database")
-        database_urls = set(clear_filter_configs(url) for url in full_urls)
-        old_urls = self._database_model.urls()
-        if database_urls != old_urls:
-            common = old_urls & database_urls
-            old_urls_by_base = dict()
-            for url in old_urls:
-                if url not in common:
-                    old_urls_by_base.setdefault(clear_filter_configs(url), list()).append(url)
-            old_urls_by_base = {base: sorted(url_list) for base, url_list in old_urls_by_base.items()}
-            new_urls_by_base = dict()
-            for url in database_urls:
-                if url not in common:
-                    new_urls_by_base.setdefault(clear_filter_configs(url), list()).append(url)
-            new_urls_by_base = {base: sorted(url_list) for base, url_list in new_urls_by_base.items()}
-            useless_oldies = set()
-            homeless_new_urls = set()
-            for new_base, newbies in new_urls_by_base.items():
-                oldies = old_urls_by_base.get(new_base)
-                if oldies is None:
-                    homeless_new_urls |= set(newbies)
-                    continue
-                for oldie, newbie in zip_longest(oldies, newbies):
-                    if oldie is None:
-                        homeless_new_urls.add(newbie)
-                        continue
-                    if newbie is None:
-                        useless_oldies.add(oldie)
-                        continue
-                    self._database_model.update_url(oldie, newbie)
-            useless_oldies |= old_urls - database_urls
-            for url in useless_oldies:
-                self._database_model.remove(url)
-            for url in homeless_new_urls:
-                db = Database()
-                db.url = url
-                self._database_model.add(db)
-        self._full_url_model.set_urls(full_urls)
-        if self._active:
-            self._update_properties_tab()
-        self._check_state()
 
     def _start_worker(self, database_url, update_settings=False):
         """Starts fetching settings using a worker in another thread."""
@@ -269,52 +174,6 @@ class GdxExporter(ProjectItem):
         if self._settings_window is not None:
             self._settings_window.settings_reading_cancelled()
 
-    def _check_state(self):
-        """
-        Checks the status of database export settings.
-
-        Updates both the notification message (exclamation icon) and settings states.
-        """
-        self._check_missing_file_names()
-        self._check_duplicate_file_names()
-        self._check_missing_settings()
-        self._report_notifications()
-
-    def _check_missing_file_names(self):
-        """Checks the status of output file names."""
-        self._notifications.missing_output_file_name = not all(
-            bool(db.output_file_name) for db in self._database_model.items()
-        )
-
-    def _check_duplicate_file_names(self):
-        """Checks for duplicate output file names."""
-        self._notifications.duplicate_output_file_name = False
-        names = set()
-        for db in self._database_model.items():
-            if db.output_file_name in names:
-                self._notifications.duplicate_output_file_name = True
-                break
-            names.add(db.output_file_name)
-
-    def _check_missing_settings(self):
-        """Checks the status of parameter indexing settings."""
-        self._notifications.missing_settings = (
-            self._database_model.rowCount() != 0 and self._settings_pack.settings is None
-        )
-
-    @Slot()
-    def _report_notifications(self):
-        """Updates the exclamation icon and notifications labels."""
-        if self._icon is None:
-            return
-        self.clear_notifications()
-        if self._notifications.duplicate_output_file_name:
-            self.add_notification("Duplicate output file names.")
-        if self._notifications.missing_output_file_name:
-            self.add_notification("Output file name(s) missing.")
-        if self._notifications.missing_settings:
-            self.add_notification("Export settings missing.")
-
     @Slot(bool)
     def show_settings(self, _=True):
         """Opens the item's settings window."""
@@ -348,11 +207,6 @@ class GdxExporter(ProjectItem):
         """Deletes rejected export settings windows."""
         self._settings_window = None
 
-    @Slot(str, str)
-    def _update_out_file_name(self, file_name, url):
-        """Pushes a new UpdateExporterOutFileNameCommand to the toolbox undo stack."""
-        self._toolbox.undo_stack.push(UpdateOutFileName(self, file_name, url))
-
     @Slot()
     def _update_settings_from_settings_window(self):
         """Pushes a new UpdateExporterSettingsCommand to the toolbox undo stack."""
@@ -369,55 +223,6 @@ class GdxExporter(ProjectItem):
                 self._settings_window.none_export,
             )
         )
-
-    @Slot(int)
-    def _change_output_time_stamps_flag(self, checkbox_state):
-        """
-        Pushes a command that changes the output time stamps flag value.
-
-        Args:
-            checkbox_state (int): setting's checkbox state on properties tab
-        """
-        flag = checkbox_state == Qt.Checked
-        if flag == self._append_output_time_stamps:
-            return
-        self._toolbox.undo_stack.push(UpdateOutputTimeStampsFlag(self, flag))
-
-    def set_output_time_stamps_flag(self, flag):
-        """
-        Sets the output time stamps flag.
-
-        Args:
-            flag (bool): flag value
-        """
-        self._append_output_time_stamps = flag
-
-    @Slot(int)
-    def _cancel_on_error_option_changed(self, checkbox_state):
-        """Handles changes to the Cancel export on error option."""
-        cancel = checkbox_state == Qt.Checked
-        if self._cancel_on_error == cancel:
-            return
-        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel))
-
-    def set_cancel_on_error(self, cancel):
-        """Sets the Cancel export on error option."""
-        self._cancel_on_error = cancel
-        if not self._active:
-            return
-        # This does not trigger the stateChanged signal.
-        self._properties_ui.cancel_on_error_check_box.setCheckState(Qt.Checked if cancel else Qt.Unchecked)
-
-    def undo_redo_out_file_name(self, file_name, database_path):
-        """Updates the output file name for given database"""
-        if self._active:
-            export_list_item = self._export_list_items[database_path]
-            export_list_item.out_file_name_edit.setText(file_name)
-        self._database_model.item(database_path).output_file_name = file_name
-        self._notifications.missing_output_file_name = not file_name
-        self._check_duplicate_file_names()
-        self._report_notifications()
-        self.item_changed.emit()
 
     def undo_or_redo_settings(self, settings, indexing_settings, merging_settings, none_fallback, none_export):
         """Updates the export settings for given database."""
@@ -439,15 +244,6 @@ class GdxExporter(ProjectItem):
         """Returns a dictionary corresponding to this item's configuration."""
         d = super().item_dict()
         d["settings_pack"] = self._settings_pack.to_dict()
-        databases = list()
-        for db in self._database_model.items():
-            db_dict = db.to_dict()
-            serialized_url = serialize_url(db.url, self._project.project_dir)
-            db_dict["database_url"] = serialized_url
-            databases.append(db_dict)
-        d["databases"] = databases
-        d["output_time_stamps"] = self._append_output_time_stamps
-        d["cancel_on_error"] = self._cancel_on_error
         return d
 
     @staticmethod
@@ -476,10 +272,6 @@ class GdxExporter(ProjectItem):
             name, description, x, y, toolbox, project, settings_pack, databases, output_time_stamps, cancel_on_error
         )
 
-    def update_name_label(self):
-        """See base class."""
-        self._properties_ui.item_name_label.setText(self.name)
-
     def notify_destination(self, source_item):
         """See base class."""
         if source_item.item_type() == "Data Store":
@@ -494,14 +286,6 @@ class GdxExporter(ProjectItem):
             )
         else:
             super().notify_destination(source_item)
-
-    def resources_for_direct_successors(self):
-        """See base class."""
-        resources = list()
-        for db in self._database_model.items():
-            if db.output_file_name:
-                resources.append(transient_file_resource(self.name, label=db.output_file_name))
-        return resources
 
     def tear_down(self):
         """See base class."""

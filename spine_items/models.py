@@ -22,11 +22,11 @@ from collections import namedtuple
 from itertools import combinations, takewhile
 import json
 from pathlib import Path
-from PySide2.QtCore import QAbstractItemModel, QFileInfo, QModelIndex, Qt, Signal, QMimeData
+from PySide2.QtCore import QAbstractItemModel, QAbstractListModel, QFileInfo, QModelIndex, Qt, Signal, QMimeData
 from PySide2.QtWidgets import QFileIconProvider
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QPixmap, QPainter, QIcon
 from spine_engine.project_item.project_item_resource import extract_packs
-from .utils import CmdLineArg, LabelArg
+from .utils import CmdLineArg, Database, LabelArg
 
 
 class FileListModel(QAbstractItemModel):
@@ -464,3 +464,144 @@ class ToolCommandLineArgsModel(CommandLineArgsModel):
 
     def canDropMimeData(self, data, drop_action, row, column, parent):
         return parent.data() is not None and row >= 0
+
+
+class DatabaseListModel(QAbstractListModel):
+    """A model for exporter database lists."""
+
+    def __init__(self, databases):
+        """
+        Args:
+            databases (list of Database): databases to list
+        """
+        super().__init__()
+        self._databases = databases
+
+    def add(self, database):
+        """
+        Appends a database to the list.
+
+        Args:
+            database (Database): a database to add
+        """
+        row = len(self._databases)
+        self.beginInsertRows(QModelIndex(), row, row)
+        self._databases.append(database)
+        self.endInsertRows()
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return None
+        if role == Qt.DisplayRole:
+            return self._databases[index.row()].url
+        return None
+
+    def insertRows(self, row, count, parent=QModelIndex()):
+        self.beginInsertRows(parent, row, row + count - 1)
+        self._databases = self._databases[:row] + [Database() for _ in range(count)] + self._databases[row:]
+        self.endInsertRows()
+
+    def item(self, url):
+        """
+        Returns database item for given URL.
+
+        Args:
+            url (str): database URL
+
+        Returns:
+            Database: a database
+        """
+        for db in self._databases:
+            if db.url == url:
+                return db
+        raise RuntimeError(f"Database '{url}' not found.")
+
+    def items(self):
+        """
+        Returns a list of databases this model contains.
+
+        Returns:
+            list of Database: database
+        """
+        return self._databases
+
+    def remove(self, url):
+        """
+        Removes database item with given URL.
+
+        Args:
+            url (str): database URL
+        """
+        for row, db in enumerate(self._databases):
+            if db.url == url:
+                self.removeRows(row, 1)
+                break
+
+    def removeRows(self, row, count, parent=QModelIndex()):
+        self.beginRemoveRows(parent, row, row + count - 1)
+        self._databases = self._databases[:row] + self._databases[row + count :]
+        self.endRemoveRows()
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self._databases)
+
+    def update_url(self, old, new):
+        """
+        Updates a database URL.
+
+        Args:
+            old (str): old URL
+            new (str): new URL
+        """
+        for db in self._databases:
+            if old == db.url:
+                db.url = new
+                return
+
+    def urls(self):
+        """
+        Returns database URLs.
+
+        Returns:
+            set of str: database URLs
+        """
+        return {db.url for db in self._databases}
+
+
+class FullUrlListModel(QAbstractListModel):
+    def __init__(self):
+        super().__init__()
+        self._urls = list()
+
+    def append(self, url):
+        """
+        Appends a URL to the model.
+
+        Args:
+            url (str): URL to append
+        """
+        n = len(self._urls)
+        self.beginInsertRows(QModelIndex(), n, n)
+        self._urls.append(url)
+        self.endInsertRows()
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return None
+        if role == Qt.DisplayRole:
+            return self._urls[index.row()]
+        return None
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self._urls)
+
+    def set_urls(self, urls):
+        """
+        Sets model's URLs.
+
+        Args:
+            urls (Iterable of str): URLs
+        """
+        self.beginResetModel()
+        self._urls = list(urls)
+        self.endResetModel()

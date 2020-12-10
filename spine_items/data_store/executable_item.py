@@ -16,12 +16,9 @@ Contains Data Store's executable item as well as support utilities.
 :date:   1.4.2020
 """
 
-import os
-import pathlib
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
-from spine_engine.utils.helpers import shorten
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url
 from .do_work import do_work

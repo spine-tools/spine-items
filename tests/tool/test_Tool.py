@@ -87,8 +87,7 @@ class TestTool(unittest.TestCase):
         source_item.item_type = mock.MagicMock(return_value="GdxExporter")
         tool.notify_destination(source_item)
         tool.logger.msg.emit.assert_called_with(
-            "Link established. The file exported by <b>source name</b> will "
-            "be passed to Tool <b>T</b> when executing."
+            "Link established. The file exported by <b>source name</b> will be available in <b>T</b>."
         )
         source_item.item_type = mock.MagicMock(return_value="Tool")
         tool.notify_destination(source_item)

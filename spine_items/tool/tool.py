@@ -407,10 +407,10 @@ class Tool(ProjectItem):
                 f"Link established. Tool <b>{self.name}</b> will look for input "
                 f"files from <b>{source_item.name}</b>'s references and data directory."
             )
-        elif source_item.item_type() == "GdxExporter":
+        elif source_item.item_type() in ("GdxExporter", "Exporter"):
             self._logger.msg.emit(
                 f"Link established. The file exported by <b>{source_item.name}</b> will "
-                f"be passed to Tool <b>{self.name}</b> when executing."
+                f"be available in <b>{self.name}</b>."
             )
         elif source_item.item_type() in ["Data Transformer", "Tool"]:
             self._logger.msg.emit("Link established")

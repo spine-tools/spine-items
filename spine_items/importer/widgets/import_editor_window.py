@@ -276,19 +276,10 @@ class ImportEditorWindow(QMainWindow):
             dock.setFloating(False)
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
-    def begin_style_change(self):
-        """Begins a style change operation."""
-        self._size = self.size()
-        self.restore_dock_widgets()
-
-    def end_style_change(self):
-        """Ends a style change operation."""
-        qApp.processEvents()  # pylint: disable=undefined-variable
-        self.resize(self._size)
-
     def apply_classic_ui_style(self):
         """Applies the classic UI style."""
-        self.begin_style_change()
+        size = self.size()
+        self.restore_dock_widgets()
         docks = (self._ui.dockWidget_sources, self._ui.dockWidget_mappings)
         self.splitDockWidget(*docks, Qt.Horizontal)
         width = sum(d.size().width() for d in docks)
@@ -303,7 +294,8 @@ class ImportEditorWindow(QMainWindow):
         docks = (self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec)
         height = sum(d.size().height() for d in docks)
         self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
-        self.end_style_change()
+        qApp.processEvents()  # pylint: disable=undefined-variable
+        self.resize(size)
 
     @Slot()
     def import_mapping_from_file(self):

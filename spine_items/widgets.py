@@ -172,6 +172,8 @@ class SpecNameDescriptionToolbar(QToolBar):
 
         Args:
             parent (QMainWindow): QMainWindow instance
+            spec (ProjectItemSpecification): specification that is being edited
+            undo_stack (QUndoStack): an undo stack
         """
         super().__init__("Specification name and description", parent=parent)
         self._parent = parent
@@ -268,11 +270,11 @@ def prompt_to_save_changes(parent, save_callback):
 
     Args:
         parent (QWidget)
-        save_callback (function): A function that call if the user choses Save.
+        save_callback (Callable): A function to call if the user chooses Save.
             It must return True or False depending on the outcome of the 'saving'.
 
     Returns:
-        bool: False if the user choses to cancel, in which case we don't close the form.
+        bool: False if the user chooses to cancel, in which case we don't close the form.
     """
     msg = QMessageBox(parent)
     msg.setIcon(QMessageBox.Question)

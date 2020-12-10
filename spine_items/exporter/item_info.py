@@ -8,39 +8,22 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
 """
-Contains full URL list model.
+Exporter project item info.
 
 :authors: A. Soininen (VTT)
-:date:    3.12.2020
+:date:   10.12.2020
 """
+from spine_engine.project_item.project_item_info import ProjectItemInfo
 
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
 
+class ItemInfo(ProjectItemInfo):
+    @staticmethod
+    def item_category():
+        """See base class."""
+        return "Exporters"
 
-class FullUrlListModel(QAbstractListModel):
-    def __init__(self):
-        super().__init__()
-        self._urls = list()
-
-    def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid():
-            return None
-        if role == Qt.DisplayRole:
-            return self._urls[index.row()]
-        return None
-
-    def rowCount(self, parent=QModelIndex()):
-        return len(self._urls)
-
-    def set_urls(self, urls):
-        """
-        Sets model's URLs.
-
-        Args:
-            urls (Iterable of str): URLs
-        """
-        self.beginResetModel()
-        self._urls = list(urls)
-        self.endResetModel()
+    @staticmethod
+    def item_type():
+        """See base class."""
+        return "Exporter"

@@ -8,48 +8,40 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
 """
-Contains :class:`Database`.
+Functions to write export preview tables.
 
-:authors: A. Soininen (VTT)
-:date:    14.10.2020
+:author: A. Soininen (VTT)
+:date:   5.1.2021
 """
+from spinedb_api.spine_io.exporters.writer import Writer
 
 
-class Database:
-    """
-    Database specific export settings.
+class TableWriter(Writer):
+    """An export writer that writes to a Python dictionary."""
 
-    Attributes:
-        url (str): database URL
-        output_file_name (str): output file name (relative to item's data dir)
-    """
+    MAX_ROWS = 20
 
-    def __init__(self):
-        self.url = ""
-        self.output_file_name = ""
-
-    def to_dict(self):
+    def __init__(self, thread):
         """
-        Serializes :class:`Database` into a dictionary.
-
-        Returns:
-            dict: serialized :class:`Database`
-        """
-        return {"output_file_name": self.output_file_name}
-
-    @staticmethod
-    def from_dict(database_dict):
-        """
-        Deserializes :class:`Database` from a dictionary.
-
         Args:
-            database_dict (dict): serialized :class:`Database`
-
-        Returns:
-            Database: deserialized instance
+            thread (QThread): a thread instance; used to query if work should be interrupted
         """
-        db = Database()
-        db.output_file_name = database_dict["output_file_name"]
-        return db
+        self._tables = dict()
+        self._current_table = None
+        self._thread = thread
+
+    def finish_table(self):
+        self._current_table = None
+
+    def start_table(self, table_name):
+        self._current_table = self._tables.setdefault(table_name, list())
+
+    @property
+    def tables(self):
+        """A dictionary containing the tables."""
+        return self._tables
+
+    def write_row(self, row):
+        self._current_table.append(row)
+        return len(self._current_table) <= self.MAX_ROWS and not self._thread.isInterruptionRequested()

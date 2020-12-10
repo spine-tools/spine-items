@@ -10,15 +10,20 @@
 ######################################################################################################################
 
 """
-Contains utilities for all items.
+Contains utilities shared between project items.
 
 :authors: A. Soininen (VTT)
-:date:   1.4.2020
+:date:    1.4.2020
 """
 
+from datetime import datetime
+import os.path
+import pathlib
+import re
+from time import time
 from contextlib import contextmanager
 from spinedb_api.spine_db_server import start_spine_db_server, shutdown_spine_db_server
-from spine_engine.project_item.project_item_resource import extract_packs
+from spine_engine.project_item.project_item_resource import extract_packs, ProjectItemResource
 
 
 def labelled_resource_filepaths(resources):
@@ -79,6 +84,14 @@ def cmd_line_arg_from_dict(arg_dict):
 
 @contextmanager
 def labelled_resource_args(resources, use_db_server=False):
+    """
+    Args:
+        resources (Iterable of ProjectItemResource): resources to process
+        use_db_server (bool): if True, use database server
+
+    Yields:
+        dict: mapping from resource label to resource args.
+    """
     result = {}
     server_urls = []
     single_resources, pack_resources = extract_packs(resources)
@@ -135,3 +148,111 @@ def database_label(provider_name):
         str: resource label
     """
     return "db_url@" + provider_name
+
+
+def unique_name(prefix, existing):
+    """
+    Creates a unique name in the form "prefix X" where X is a number.
+
+    Args:
+        prefix (str): name prefix
+        existing (Iterable of str): existing names
+
+    Returns:
+        str: unique name
+    """
+    pattern = re.compile(fr"^{prefix} [0-9]+$")
+    reserved = set()
+    for name in existing:
+        if pattern.fullmatch(name) is not None:
+            _, _, number = name.partition(" ")
+            reserved.add(int(number))
+    free = len(reserved) + 1
+    for i in range(len(reserved)):
+        if i + 1 not in reserved:
+            free = i + 1
+            break
+    return f"{prefix} {free}"
+
+
+class Database:
+    """
+    Database specific export settings.
+
+    Attributes:
+        url (str): database URL
+        output_file_name (str): output file name (relative to item's data dir)
+    """
+
+    def __init__(self):
+        self.url = ""
+        self.output_file_name = ""
+
+    def to_dict(self):
+        """
+        Serializes :class:`Database` into a dictionary.
+
+        Returns:
+            dict: serialized :class:`Database`
+        """
+        return {"output_file_name": self.output_file_name}
+
+    @staticmethod
+    def from_dict(database_dict):
+        """
+        Deserializes :class:`Database` from a dictionary.
+
+        Args:
+            database_dict (dict): serialized :class:`Database`
+
+        Returns:
+            Database: deserialized instance
+        """
+        db = Database()
+        db.output_file_name = database_dict["output_file_name"]
+        return db
+
+
+class ExporterNotifications:
+    """
+    Holds flags for different exporter error conditions.
+
+    Attributes:
+        duplicate_output_file_name (bool): True if there are duplicate output file names
+        missing_output_file_name (bool): True if the output file name is missing
+        missing_specification (bool): True if export specification is missing
+    """
+
+    def __init__(self):
+        self.duplicate_output_file_name = False
+        self.missing_output_file_name = False
+        self.missing_specification = False
+
+
+def subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, fork):
+    """
+    Creates scenario/tool based output directory for forked workflow.
+
+    Args:
+        output_file_name (str): file name
+        data_dir (str): project item's data directory
+        output_time_stamps (bool): True if time stamp data should be included in the output path
+        fork (list of str): list of scenario and tool names
+
+    Returns:
+        str: absolute output path
+    """
+    if output_time_stamps:
+        stamp = datetime.fromtimestamp(time())
+        time_stamp = "run@" + stamp.isoformat(timespec="seconds").replace(":", ".")
+    else:
+        time_stamp = ""
+    fork_name = ".".join(fork)
+    if fork_name:
+        if time_stamp:
+            path = os.path.join(data_dir, fork_name + "_" + time_stamp, output_file_name)
+        else:
+            path = os.path.join(data_dir, fork_name, output_file_name)
+    else:
+        path = os.path.join(data_dir, time_stamp, output_file_name)
+    return path

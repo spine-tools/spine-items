@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Animation class for the GdxExporter and Importer items.
+Animation class for importers and exporters.
 
 :authors: M. Marin (KTH)
 :date:   12.11.2019

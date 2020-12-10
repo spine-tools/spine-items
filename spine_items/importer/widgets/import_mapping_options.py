@@ -189,7 +189,7 @@ class ImportMappingOptions(QObject):
         Args:
             new_type (str): item's new type
         """
-        if self._executing_command or self._block_signals:
+        if self._executing_command or self._block_signals or self._mapping_specification_model is None:
             return
         source_table_name = self._mapping_specification_model.source_table_name
         specification_name = self._mapping_specification_model.mapping_name

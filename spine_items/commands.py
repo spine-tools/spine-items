@@ -98,3 +98,74 @@ class ChangeSpecPropertyCommand(QUndoCommand):
 
     def undo(self):
         self._callback(self._old_value)
+
+
+class RenameMapping(QUndoCommand):
+    """A command to change the name of a mapping."""
+
+    def __init__(self, row, mapping_list_model, name):
+        """
+        Args:
+            row (int): row index
+            mapping_list_model (MappingListModel): model holding the mapping names
+            name (str): new name
+        """
+        text = "rename mapping"
+        super().__init__(text)
+        self._row = row
+        self._model = mapping_list_model
+        self._name = name
+        self._previous_name = self._model.index(self._row, 0).data()
+
+    def redo(self):
+        """Renames the mapping."""
+        self._model.rename_mapping(self._row, self._name)
+
+    def undo(self):
+        """Reverts renaming of the mapping."""
+        self._model.rename_mapping(self._row, self._previous_name)
+
+
+class UpdateOutFileName(SpineToolboxCommand):
+    """Command to update exporter's output file name."""
+
+    def __init__(self, exporter, file_name, database_path):
+        """
+        Args:
+            exporter (ExporterBase): exporter
+            file_name (str): the output filename
+            database_path (str): the associated db path
+        """
+        super().__init__()
+        self.exporter = exporter
+        self.redo_file_name = file_name
+        self.undo_file_name = self.exporter.database(database_path).output_file_name
+        self.database_path = database_path
+        self.setText(f"change output file in {exporter.name}")
+
+    def redo(self):
+        self.exporter.set_out_file_name(self.redo_file_name, self.database_path)
+
+    def undo(self):
+        self.exporter.set_out_file_name(self.undo_file_name, self.database_path)
+
+
+class UpdateOutputTimeStampsFlag(SpineToolboxCommand):
+    """Command to set exporter's output directory time stamps flag."""
+
+    def __init__(self, exporter, value):
+        """
+        Args:
+            exporter (ExporterBase): exporter item
+            value (bool): flag's new value
+        """
+        super().__init__()
+        self.setText(f"toggle output time stamps setting of {exporter.name}")
+        self._exporter = exporter
+        self._value = value
+
+    def redo(self):
+        self._exporter.set_output_time_stamps_flag(self._value)
+
+    def undo(self):
+        self._exporter.set_output_time_stamps_flag(not self._value)

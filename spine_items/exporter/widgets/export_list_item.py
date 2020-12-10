@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-A small widget to set up a database in GdxExporter properties tab.
+A small widget to set up a database in Exporter properties tab.
 
 :author: A. Soininen (VTT)
 :date:   10.9.2019

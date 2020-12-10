@@ -162,7 +162,7 @@ class ImportMappings(QObject):
     def create_mapping(self):
         if self._mappings_model is None:
             return
-        mapping_name = self._mappings_model.add_mapping()
+        mapping_name = self._mappings_model.insert_mapping()
         specification = self._mappings_model.mapping_specification(mapping_name)
         row = self._mappings_model.rowCount() - 1
 

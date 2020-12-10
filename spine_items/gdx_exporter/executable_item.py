@@ -13,26 +13,19 @@
 Contains GdxExporter's executable item as well as support utilities.
 
 :authors: A. Soininen (VTT)
-:date:   2.4.2020
+:date:    2.4.2020
 """
-import os.path
-import pathlib
-from spinedb_api.spine_io import gdx_utils
 from spinedb_api.spine_io.exporters import gdx
-from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
-from spinedb_api import clear_filter_configs, load_filters
-from spinedb_api.filters.tools import filter_configs, name_from_dict
-from .database import Database
+from spine_items.utils import Database
+from ..executable_item_base import ExporterExecutableItemBase
 from .do_work import do_work
 from .item_info import ItemInfo
-from .output_resources import scan_for_resources
 from .settings_pack import SettingsPack
 
 
-class ExecutableItem(ExecutableItemBase):
+class ExecutableItem(ExporterExecutableItemBase):
     def __init__(
         self, name, settings_pack, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
     ):
@@ -43,30 +36,17 @@ class ExecutableItem(ExecutableItemBase):
             databases (list of Database): database export settings
             output_time_stamps (bool): if True append output directories with time stamps
             cancel_on_error (bool): if True execution fails on all errors else some errors can be ignored
-            data_dir (str): absolute path to exporter's data directory
+            gams_path (str): GAMS path from Toolbox settings
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, project_dir, logger)
+        super().__init__(name, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger)
         self._settings_pack = settings_pack
-        self._databases = databases
-        self._output_time_stamps = output_time_stamps
-        self._cancel_on_error = cancel_on_error
-        self._gams_path = gams_path
-        self._forks = dict()
-        self._process = None
 
     @staticmethod
     def item_type():
         """Returns GdxExporter's type identifier string."""
         return ItemInfo.item_type()
-
-    def stop_execution(self):
-        """Stops executing this Gimlet."""
-        super().stop_execution()
-        if self._process is not None:
-            self._process.terminate()
-            self._process = None
 
     def execute(self, forward_resources, backward_resources):
         """See base class."""
@@ -80,8 +60,7 @@ class ExecutableItem(ExecutableItemBase):
         if gams_system_directory is None:
             self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")
             return False
-        databases, forks = self._databases_and_forks(database_urls)
-        self._forks.update(forks)
+        databases, self._forks = self._databases_and_forks(database_urls)
         self._process = ReturningProcess(
             target=do_work,
             args=(
@@ -95,50 +74,9 @@ class ExecutableItem(ExecutableItemBase):
                 self._logger,
             ),
         )
-        return_value = self._process.run_until_complete()
+        success, self._result_files = self._process.run_until_complete()
         self._process = None
-        return return_value[0]
-
-    def skip_execution(self, forward_resources, backward_resources):
-        """See base class."""
-        database_urls = [r.url for r in forward_resources if r.type_ == "database"]
-        _, forks = self._databases_and_forks(database_urls)
-        self._forks.update(forks)
-
-    def _databases_and_forks(self, database_urls):
-        databases = {}
-        forks = {}
-        for full_url in database_urls:
-            url = clear_filter_configs(full_url)
-            database = next((db for db in self._databases if db.url == url), None)
-            if database is None:
-                self._logger.msg_warning.emit(f"<b>{self.name}</b>: No settings for database {url}. Skipping.")
-                continue
-            if not database.output_file_name:
-                self._logger.msg_warning.emit(
-                    f"<b>{self.name}</b>: No file name given to export database {url}. Skipping."
-                )
-                continue
-            databases[full_url] = database.output_file_name
-            forks[url] = url_forks = set()
-            for config in load_filters(filter_configs(full_url)):
-                url_forks.add(name_from_dict(config))
-            if not url_forks:
-                url_forks.add(None)
-        return databases, forks
-
-    def _output_resources_forward(self):
-        """See base class."""
-        return scan_for_resources(self, self._databases, self._data_dir, self._forks)
-
-    def _resolve_gams_system_directory(self):
-        """Returns GAMS system path from Toolbox settings or None if GAMS default is to be used."""
-        path = self._gams_path
-        if not path:
-            path = gdx_utils.find_gams_directory()
-        if path is not None and os.path.isfile(path):
-            path = os.path.dirname(path)
-        return path
+        return success
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
