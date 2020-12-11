@@ -319,26 +319,6 @@ class Importer(ProjectItem):
             self.add_notification("Duplicate input files from upstream items:<br>{}".format("<br>".join(duplicates)))
 
     @staticmethod
-    def upgrade_from_no_version_to_version_1(item_name, old_item_dict, old_project_dir):
-        """Converts mappings to a list, where each element contains two dictionaries,
-        the serialized path dictionary and the mapping dictionary for the file in that
-        path."""
-        new_importer = dict(old_item_dict)
-        mappings = new_importer.get("mappings", {})
-        list_of_mappings = list()
-        paths = list(mappings.keys())
-        for path in paths:
-            mapping = mappings[path]
-            if "source_type" in mapping and mapping["source_type"] == "CSVConnector":
-                _fix_csv_connector_settings(mapping)
-            new_path = serialize_path(path, old_project_dir)
-            if new_path["relative"]:
-                new_path["path"] = os.path.join(".spinetoolbox", "items", new_path["path"])
-            list_of_mappings.append([new_path, mapping])
-        new_importer["mappings"] = list_of_mappings
-        return new_importer
-
-    @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):
         """Upgrades item's dictionary from v1 to v2.
 
