@@ -21,6 +21,7 @@ from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QAction, QFileDialog, QApplication
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
+from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
 from spine_engine import ExecutionDirection
 from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
@@ -60,6 +61,7 @@ class DataStore(ProjectItem):
             url = dict()
         self._url = self.parse_url(url)
         self._additional_resource_metadata = None
+        self._spine_db_editor = None
 
     @staticmethod
     def item_type():
@@ -322,7 +324,8 @@ class DataStore(ProjectItem):
             self._logger.msg_error.emit(f"<b>{self.name}</b> is not connected to a database.")
             return
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
-        self._project.db_mngr.show_spine_db_editor({sa_url: self.name}, self._logger)
+        self._spine_db_editor = MultiSpineDBEditor(self.project().db_mngr, {sa_url: self.name})
+        self._spine_db_editor.show()
 
     def data_files(self):
         """Return a list of files that are in this items data directory."""
@@ -353,7 +356,7 @@ class DataStore(ProjectItem):
             database = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
             self.update_url(dialect=dialect, database=database)
             sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
-        self._project.db_mngr.create_new_spine_database(sa_url)
+        self._project.db_mngr.create_new_spine_database(sa_url, self._logger)
 
     def update_name_label(self):
         """Update Data Store tab name label. Used only when renaming project items."""
@@ -365,10 +368,10 @@ class DataStore(ProjectItem):
         if execution_direction != ExecutionDirection.FORWARD:
             return
         url = self.sql_alchemy_url()
-        database_map = self._project.db_mngr.get_db_map(url, self._logger)
-        if database_map is not None:
+        db_map = self._project.db_mngr.db_map(url)
+        if db_map is not None:
             cookie = self
-            self._project.db_mngr.session_committed.emit({database_map}, cookie)
+            self._project.db_mngr.session_committed.emit({db_map}, cookie)
 
     def _do_handle_dag_changed(self, resources, _):
         """See base class."""

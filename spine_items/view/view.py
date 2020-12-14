@@ -21,6 +21,7 @@ from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
 from sqlalchemy.engine.url import URL, make_url
 from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 
@@ -42,6 +43,7 @@ class View(ProjectItem):
         self._references = dict()
         self.reference_model = QStandardItemModel()  # References to databases
         self._spine_ref_icon = QIcon(QPixmap(":/icons/Spine_db_ref_icon.png"))
+        self._spine_db_editor = None
 
     @staticmethod
     def item_type():
@@ -87,7 +89,8 @@ class View(ProjectItem):
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
-        self._project.db_mngr.show_spine_db_editor(db_url_codenames, self._logger)
+        self._spine_db_editor = MultiSpineDBEditor(self.project().db_mngr, db_url_codenames)
+        self._spine_db_editor.show()
 
     def populate_reference_list(self):
         """Populates reference list."""
