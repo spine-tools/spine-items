@@ -89,7 +89,7 @@ class View(ProjectItem):
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
-        self._spine_db_editor = MultiSpineDBEditor(self.project().db_mngr, db_url_codenames)
+        self._spine_db_editor = MultiSpineDBEditor(self._project.db_mngr, db_url_codenames)
         self._spine_db_editor.show()
 
     def populate_reference_list(self):
