@@ -38,4 +38,4 @@ class DataStoreIcon(ProjectItemIcon):
         """
         super().mouseDoubleClickEvent(e)
         item = self._toolbox.project_item_model.get_item(self._name)
-        item.project_item.open_ds_form()
+        item.project_item.open_db_editor()
