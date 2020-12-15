@@ -16,6 +16,7 @@ Classes for context menus used alongside the Importer project item.
 :date:   9.1.2018
 """
 
+from PySide2.QtCore import Qt, QPoint
 from PySide2.QtWidgets import QMenu
 from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu
 
