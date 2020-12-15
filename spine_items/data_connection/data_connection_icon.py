@@ -89,4 +89,4 @@ class DataConnectionIcon(ProjectItemIcon):
         self._drag_over = False
         self._toolbox.ui.graphicsView.scene().clearSelection()
         self.setSelected(True)
-        self.show_item_info()
+        self.select_item()
