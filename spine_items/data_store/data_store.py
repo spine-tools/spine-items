@@ -401,26 +401,6 @@ class DataStore(ProjectItem):
         cancel_on_error = item_dict.get("cancel_on_error", False)
         return DataStore(name, description, x, y, toolbox, project, logger, url, cancel_on_error)
 
-    @staticmethod
-    def upgrade_from_no_version_to_version_1(item_name, old_item_dict, old_project_dir):
-        """See base class."""
-        new_data_store = dict(old_item_dict)
-        if "reference" in new_data_store:
-            url_path = new_data_store["reference"]
-            url = {"dialect": "sqlite", "username": None, "host": None, "port": None}
-        else:
-            url = new_data_store["url"]
-            url_path = url["database"]
-        if not url_path:
-            url["database"] = None
-        else:
-            serialized_url_path = serialize_path(url_path, old_project_dir)
-            if serialized_url_path["relative"]:
-                serialized_url_path["path"] = os.path.join(".spinetoolbox", "items", serialized_url_path["path"])
-            url["database"] = serialized_url_path
-        new_data_store["url"] = url
-        return new_data_store
-
     def rename(self, new_name):
         """Rename this item.
 
