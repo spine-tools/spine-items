@@ -324,7 +324,7 @@ class DataStore(ProjectItem):
             self._logger.msg_error.emit(f"<b>{self.name}</b> is not connected to a database.")
             return
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
-        self._spine_db_editor = MultiSpineDBEditor(self.project().db_mngr, {sa_url: self.name})
+        self._spine_db_editor = MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name})
         self._spine_db_editor.show()
 
     def data_files(self):
@@ -356,7 +356,7 @@ class DataStore(ProjectItem):
             database = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
             self.update_url(dialect=dialect, database=database)
             sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
-        self._project.db_mngr.create_new_spine_database(sa_url, self._logger)
+        self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
 
     def update_name_label(self):
         """Update Data Store tab name label. Used only when renaming project items."""
@@ -368,10 +368,10 @@ class DataStore(ProjectItem):
         if execution_direction != ExecutionDirection.FORWARD:
             return
         url = self.sql_alchemy_url()
-        db_map = self._project.db_mngr.db_map(url)
+        db_map = self._toolbox.db_mngr.db_map(url)
         if db_map is not None:
             cookie = self
-            self._project.db_mngr.session_committed.emit({db_map}, cookie)
+            self._toolbox.db_mngr.session_committed.emit({db_map}, cookie)
 
     def _do_handle_dag_changed(self, resources, _):
         """See base class."""

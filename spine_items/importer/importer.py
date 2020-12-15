@@ -119,12 +119,12 @@ class Importer(ProjectItem):
         for successor in successors:
             if successor.item_type() == "Data Store":
                 url = successor.sql_alchemy_url()
-                db_map = self._project.db_mngr.db_map(url)
+                db_map = self._toolbox.db_mngr.db_map(url)
                 if db_map:
                     committed_db_maps.add(db_map)
         if committed_db_maps:
             cookie = self
-            self._project.db_mngr.session_committed.emit(committed_db_maps, cookie)
+            self._toolbox.db_mngr.session_committed.emit(committed_db_maps, cookie)
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.

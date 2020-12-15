@@ -120,13 +120,13 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(cb_dialect.currentText(), "")
         self.assertEqual(le_db.text(), "")
         # Click New Spine db button
-        self.project.db_mngr = MagicMock()
+        self.toolbox.db_mngr = MagicMock()
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
         expected_db_path = os.path.join(self.ds.data_dir, self.ds.name + ".sqlite")
         self.assertEqual(cb_dialect.currentText(), "sqlite")
         self.assertEqual(expected_db_path, le_db.text())
         expected_url = URL("sqlite", database=expected_db_path)
-        self.project.db_mngr.create_new_spine_database.assert_called_with(expected_url, self.toolbox)
+        self.toolbox.db_mngr.create_new_spine_database.assert_called_with(expected_url, self.toolbox)
 
     def test_create_new_empty_spine_database2(self):
         """Test that a new Spine database is created when clicking on 'New Spine db tool button'
@@ -207,12 +207,12 @@ class TestDataStore(unittest.TestCase):
             self.ds_properties_ui.toolButton_open_sqlite_file.click()
             mock_qfile_dialog.getOpenFileName.assert_called_once()
         # Open form
-        self.project.db_mngr = MagicMock()
+        self.toolbox.db_mngr = MagicMock()
         with mock.patch("spine_items.data_store.data_store.MultiSpineDBEditor") as mock_editor:
             self.ds_properties_ui.pushButton_ds_open_editor.click()
             sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
             self.assertIsNotNone(sa_url)
-            mock_editor.assert_called_with(self.project.db_mngr, {sa_url: 'DS'})
+            mock_editor.assert_called_with(self.toolbox.db_mngr, {sa_url: 'DS'})
 
     def test_open_db_editor2(self):
         """Test that selecting the 'sqlite' dialect, typing the path to an existing db file,
@@ -226,12 +226,12 @@ class TestDataStore(unittest.TestCase):
         self.ds_properties_ui.lineEdit_database.setText(temp_db_path)
         self.ds_properties_ui.lineEdit_database.editingFinished.emit()
         # Open form
-        self.project.db_mngr = MagicMock()
+        self.toolbox.db_mngr = MagicMock()
         with mock.patch("spine_items.data_store.data_store.MultiSpineDBEditor") as mock_editor:
             self.ds_properties_ui.pushButton_ds_open_editor.click()
             sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
             self.assertIsNotNone(sa_url)
-            mock_editor.assert_called_with(self.project.db_mngr, {sa_url: 'DS'})
+            mock_editor.assert_called_with(self.toolbox.db_mngr, {sa_url: 'DS'})
 
     def test_notify_destination(self):
         self.toolbox.msg = mock.NonCallableMagicMock()
