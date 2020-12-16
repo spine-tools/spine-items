@@ -55,7 +55,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1197, 27))
+        self.menubar.setGeometry(QRect(0, 0, 1197, 22))
         self.file_menu = QMenu(self.menubar)
         self.file_menu.setObjectName(u"file_menu")
         self.edit_menu = QMenu(self.menubar)
@@ -385,7 +385,7 @@ class Ui_MainWindow(object):
         self.class_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool feature", None))
         self.class_type_combo_box.setItemText(10, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
 
-        self.value_type_label.setText(QCoreApplication.translate("MainWindow", u"Default value type::", None))
+        self.value_type_label.setText(QCoreApplication.translate("MainWindow", u"Default value type:", None))
         self.value_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Single value", None))
         self.value_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Time series", None))
         self.value_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Time pattern", None))
