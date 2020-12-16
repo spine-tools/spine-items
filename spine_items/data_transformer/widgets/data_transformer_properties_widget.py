@@ -15,7 +15,6 @@ Data transformer properties widget.
 :author: A. Soininen
 :date:   2.10.2020
 """
-from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QWidget
 from ..item_info import ItemInfo
 
@@ -35,9 +34,5 @@ class DataTransformerPropertiesWidget(QWidget):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.toolbox.ui.tabWidget_item_properties.addTab(self, ItemInfo.item_type())
-        self.toolbox.specification_model_changed.connect(self._update_specification_model)
-
-    @Slot()
-    def _update_specification_model(self):
         model = self.toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
         self.ui.specification_combo_box.setModel(model)

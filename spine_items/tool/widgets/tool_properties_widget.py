@@ -39,13 +39,5 @@ class ToolPropertiesWidget(QWidget):
         self.ui.treeView_cmdline_args.setStyleSheet(TREEVIEW_HEADER_SS)
         self.ui.treeView_input_files.setStyleSheet(TREEVIEW_HEADER_SS)
         toolbox.ui.tabWidget_item_properties.addTab(self, "Tool")
-        self.connect_signals()
-
-    def connect_signals(self):
-        """Connect signals to slots."""
-        self._toolbox.specification_model_changed.connect(self.update_combo_box_tool_model)
-
-    @Slot()
-    def update_combo_box_tool_model(self):
         model = self._toolbox.filtered_spec_factory_models["Tool"]
         self.ui.comboBox_tool.setModel(model)

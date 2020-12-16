@@ -41,17 +41,13 @@ class ImporterPropertiesWidget(QWidget):
         toolbox.ui.tabWidget_item_properties.addTab(self, "Importer")
         # Class attributes
         self.files_context_menu = None
+        model = self._toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
+        self.ui.comboBox_specification.setModel(model)
         self.connect_signals()
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self._toolbox.specification_model_changed.connect(self._update_specification_model)
         self.ui.treeView_files.customContextMenuRequested.connect(self.show_files_context_menu)
-
-    @Slot()
-    def _update_specification_model(self):
-        model = self._toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
-        self.ui.comboBox_specification.setModel(model)
 
     @Slot("QPoint", name="show_di_files_context_menu")
     def show_files_context_menu(self, pos):
