@@ -18,7 +18,7 @@ Module for data store class.
 
 import os
 from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QAction, QFileDialog, QApplication
+from PySide2.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
@@ -55,13 +55,16 @@ class DataStore(ProjectItem):
         except OSError:
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         self.cancel_on_error = cancel_on_error
-        self._actions.append(QAction("Open database editor..."))
-        self._actions[-1].triggered.connect(self.open_db_editor)
+        self._actions.append(QAction("Open URL in Spine DB editor"))
+        self._actions[-1].triggered.connect(self.open_url_in_new_db_editor)
         if url is None:
             url = dict()
         self._url = self.parse_url(url)
         self._additional_resource_metadata = None
         self._spine_db_editor = None
+        self._open_db_editors = {}
+        self._open_url_menu = QMenu("Open URL in Spine DB editor", self._toolbox)
+        self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
 
     @staticmethod
     def item_type():
@@ -96,7 +99,7 @@ class DataStore(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_ds_open_dir.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_db_editor
+        s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_new_db_editor
         s[self._properties_ui.toolButton_open_sqlite_file.clicked] = self.open_sqlite_file
         s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
         s[self._properties_ui.toolButton_copy_url.clicked] = self.copy_url
@@ -317,15 +320,40 @@ class DataStore(ProjectItem):
         self._properties_ui.lineEdit_username.setEnabled(True)
         self._properties_ui.lineEdit_password.setEnabled(True)
 
-    @Slot(bool)
-    def open_db_editor(self, checked=False):
-        """Opens current url in the Spine database editor."""
-        if not self._url["database"]:
-            self._logger.msg_error.emit(f"<b>{self.name}</b> is not connected to a database.")
+    def actions(self):
+        self._open_db_editors = {x.name(): x for x in MultiSpineDBEditor.get_all_multi_spine_db_editors()}
+        if not self._open_db_editors:
+            return super().actions()
+        self._open_url_menu.clear()
+        self._open_url_menu.addAction("New window")
+        self._open_url_menu.addSeparator()
+        for name in self._open_db_editors:
+            self._open_url_menu.addAction(name)
+        return [self._open_url_menu.menuAction()]
+
+    @Slot(QAction)
+    def _handle_open_url_menu_triggered(self, action):
+        """Opens current url."""
+        if action.text() == "New window":
+            self.open_url_in_new_db_editor()
             return
-        sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
-        self._spine_db_editor = MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name})
-        self._spine_db_editor.show()
+        db_editor = self._open_db_editors[action.text()]
+        self._open_url_in_existing_db_editor(db_editor)
+
+    @Slot(bool)
+    def open_url_in_new_db_editor(self, checked=False):
+        """Opens current url in the Spine database editor."""
+        sa_url = self.sql_alchemy_url()
+        if sa_url is not None:
+            self._spine_db_editor = MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name})
+            self._spine_db_editor.show()
+
+    def _open_url_in_existing_db_editor(self, db_editor):
+        sa_url = self.sql_alchemy_url()
+        if sa_url is not None:
+            db_editor.add_new_tab({sa_url: self.name})
+            db_editor.raise_()
+            qApp.setActiveWindow(db_editor)
 
     def data_files(self):
         """Return a list of files that are in this items data directory."""
