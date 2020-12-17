@@ -56,7 +56,8 @@ class TestDataStore(unittest.TestCase):
         factory = DataStoreFactory()
         item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
         self.project = create_mock_project()
-        self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project, self.toolbox)
+        with mock.patch("spine_items.data_store.data_store.QMenu"):
+            self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project, self.toolbox)
         mock_finish_project_item_construction(factory, self.ds, self.toolbox)
         self.ds_properties_ui = self.ds._properties_ui
 

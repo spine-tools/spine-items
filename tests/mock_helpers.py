@@ -18,6 +18,7 @@ Classes and functions that can be shared among unit test modules.
 
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock
+from PySide2.QtGui import QStandardItemModel
 from PySide2.QtWidgets import QWidget
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
 
@@ -37,6 +38,7 @@ def create_mock_toolbox():
     mock_toolbox.msg_warning = MagicMock()
     mock_toolbox.msg_warning.attach_mock(MagicMock(), "emit")
     mock_toolbox.undo_stack.push.side_effect = lambda cmd: cmd.redo()
+    mock_toolbox.filtered_spec_factory_models.__getitem__.return_value = QStandardItemModel()
     return mock_toolbox
 
 
