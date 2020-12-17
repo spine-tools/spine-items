@@ -30,6 +30,7 @@ from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url, make_label
 from .output_resources import scan_for_resources
+from shutil import copyfile
 
 
 class DataStore(ProjectItem):
