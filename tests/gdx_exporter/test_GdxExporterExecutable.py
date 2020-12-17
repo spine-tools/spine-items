@@ -26,7 +26,7 @@ from spinedb_api import create_new_spine_database, DiffDatabaseMapping, import_f
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_items.gdx_exporter.database import Database
 from spine_items.gdx_exporter.gdx_exporter import SettingsPack
-from spine_items.gdx_exporter.executable_item_qt_free import ExecutableItem
+from spine_items.gdx_exporter.executable_item import ExecutableItem
 from spine_items.gdx_exporter.settings_state import SettingsState
 from spine_engine.spine_io import gdx_utils
 from spine_engine.spine_io.exporters import gdx

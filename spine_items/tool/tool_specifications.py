@@ -25,6 +25,7 @@ from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .item_info import ItemInfo
 from .tool_instance import GAMSToolInstance, JuliaToolInstance, PythonToolInstance, ExecutableToolInstance
 
+
 # Tool types
 TOOL_TYPES = ["Julia", "Python", "GAMS", "Executable"]
 
@@ -40,6 +41,45 @@ OPTIONAL_KEYS = [
     "execute_in_work",
 ]
 LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]  # These should be lists
+
+
+def make_specification(definition, app_settings, logger):
+    """
+    Deserializes and constructs a tool specification from definition.
+
+    Args:
+        definition (dict): a dictionary containing the serialized specification.
+        app_settings (QSettings): Toolbox settings
+        logger (LoggerInterface): a logger
+        embedded_julia_console (SpineConsoleWidget, optional): Julia console widget,
+            required if a Julia tool is to be run in the console
+        embedded_python_console (SpineConsoleWidget, optional): Python console widget,
+            required if a Python tool is to be run in the console
+    Returns:
+        ToolSpecification: a tool specification constructed from the given definition,
+            or None if there was an error
+    """
+    path = definition["includes_main_path"]
+    try:
+        _tooltype = definition["tooltype"].lower()
+    except KeyError:
+        logger.msg_error.emit(
+            "No tool type defined in tool definition file. Supported types "
+            "are 'python', 'gams', 'julia' and 'executable'"
+        )
+        return None
+    if _tooltype == "julia":
+        spec = JuliaTool.load(path, definition, app_settings, logger)
+    elif _tooltype == "python":
+        spec = PythonTool.load(path, definition, app_settings, logger)
+    elif _tooltype == "gams":
+        spec = GAMSTool.load(path, definition, app_settings, logger)
+    elif _tooltype == "executable":
+        spec = ExecutableTool.load(path, definition, app_settings, logger)
+    else:
+        logger.msg_warning.emit("Tool type <b>{}</b> not available".format(_tooltype))
+        return None
+    return spec
 
 
 class ToolSpecification(ProjectItemSpecification):
@@ -81,7 +121,7 @@ class ToolSpecification(ProjectItemSpecification):
         self._logger = logger
         self.tooltype = tooltype
         if not os.path.exists(path):
-            self.path = ""
+            pass
         else:
             self.path = path
         self.includes = includes
@@ -188,53 +228,19 @@ class ToolSpecification(ProjectItemSpecification):
                     pass
         return kwargs
 
-    def create_tool_instance(self, basedir):
-        """Returns an instance of the tool specification configured to run in the given directory.
-        Needs to be implemented in subclasses.
+    def create_tool_instance(self, basedir, logger, owner):
+        """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
-            basedir (str): Path to directory where the instance will run
+            basedir (str): the path to the directory where the instance will run
+            logger (LoggerInterface)
+            owner (ExecutableItemBase): The item that owns the instance
         """
+        return self.tool_instance_factory(self, basedir, self._settings, logger, owner)
+
+    @property
+    def tool_instance_factory(self):
         raise NotImplementedError
-
-    @staticmethod
-    def toolbox_load(definition, app_settings, logger, embedded_julia_console, embedded_python_console):
-        """
-        Deserializes and constructs a tool specification from definition.
-
-        Args:
-            definition (dict): a dictionary containing the serialized specification.
-            app_settings (QSettings): Toolbox settings
-            logger (LoggerInterface): a logger
-            embedded_julia_console (SpineConsoleWidget, optional): Julia console widget,
-                required if a Julia tool is to be run in the console
-            embedded_python_console (SpineConsoleWidget, optional): Python console widget,
-                required if a Python tool is to be run in the console
-        Returns:
-            ToolSpecification: a tool specification constructed from the given definition,
-                or None if there was an error
-        """
-        path = definition["includes_main_path"]
-        try:
-            _tooltype = definition["tooltype"].lower()
-        except KeyError:
-            logger.msg_error.emit(
-                "No tool type defined in tool definition file. Supported types "
-                "are 'python', 'gams', 'julia' and 'executable'"
-            )
-            return None
-        if _tooltype == "julia":
-            spec = JuliaTool.load(path, definition, app_settings, embedded_julia_console, logger)
-        elif _tooltype == "python":
-            spec = PythonTool.load(path, definition, app_settings, embedded_python_console, logger)
-        elif _tooltype == "gams":
-            spec = GAMSTool.load(path, definition, app_settings, logger)
-        elif _tooltype == "executable":
-            spec = ExecutableTool.load(path, definition, app_settings, logger)
-        else:
-            logger.msg_warning.emit("Tool type <b>{}</b> not available".format(_tooltype))
-            return None
-        return spec
 
     def get_main_program_file_path(self):
         """Returns this specification's main program file path."""
@@ -361,13 +367,9 @@ class GAMSTool(ToolSpecification):
             return GAMSTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir):
-        """Returns an instance of this tool specification that is configured to run in the given directory.
-
-        Args:
-            basedir (str): the path to the directory where the instance will run
-        """
-        return GAMSToolInstance(self, basedir, self._settings, self._logger)
+    @property
+    def tool_instance_factory(self):
+        return GAMSToolInstance
 
 
 class JuliaTool(ToolSpecification):
@@ -380,7 +382,6 @@ class JuliaTool(ToolSpecification):
         path,
         includes,
         settings,
-        embedded_julia_console,
         logger,
         description=None,
         inputfiles=None,
@@ -397,7 +398,6 @@ class JuliaTool(ToolSpecification):
             includes (list): List of files belonging to the tool (relative to 'path').  # TODO: Change to src_files
             First file in the list is the main Julia program.
             settings (QSettings): Toolbox settings
-            embedded_julia_console (SpineConsoleWidget): a Julia console widget for execution in the embedded console
             logger (LoggerInterface): A logger instance
             description (str): Julia Tool description
             inputfiles (list): List of required data files
@@ -419,7 +419,6 @@ class JuliaTool(ToolSpecification):
             cmdline_args,
             execute_in_work,
         )
-        self._embedded_console = embedded_julia_console
         main_file = includes[0]
         self.main_dir, self.main_prgm = os.path.split(main_file)
         self.julia_options = OrderedDict()
@@ -434,14 +433,13 @@ class JuliaTool(ToolSpecification):
         """
 
     @staticmethod
-    def load(path, data, settings, embedded_julia_console, logger):
+    def load(path, data, settings, logger):
         """Creates a JuliaTool according to a tool specification file.
 
         Args:
             path (str): Base path to tool files
             data (dict): Dictionary of tool definitions
             settings (QSetting): Toolbox settings
-            embedded_julia_console (SpineConsoleWidget): a Julia console for execution in the embedded console
             logger (LoggerInterface): A logger instance
 
         Returns:
@@ -450,18 +448,12 @@ class JuliaTool(ToolSpecification):
         kwargs = JuliaTool.check_definition(data, logger)
         if kwargs is not None:
             # Return an executable model instance
-            return JuliaTool(
-                path=path, settings=settings, embedded_julia_console=embedded_julia_console, logger=logger, **kwargs
-            )
+            return JuliaTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir):
-        """Returns an instance of this tool specification that is configured to run in the given directory.
-
-        Args:
-            basedir (str): the path to the directory where the instance will run
-        """
-        return JuliaToolInstance(self, basedir, self._settings, self._embedded_console, self._logger)
+    @property
+    def tool_instance_factory(self):
+        return JuliaToolInstance
 
 
 class PythonTool(ToolSpecification):
@@ -474,7 +466,6 @@ class PythonTool(ToolSpecification):
         path,
         includes,
         settings,
-        embedded_python_console,
         logger,
         description=None,
         inputfiles=None,
@@ -491,7 +482,6 @@ class PythonTool(ToolSpecification):
             path (str): Path to model main file
             includes (list): List of files belonging to the tool (relative to 'path').  # TODO: Change to src_files
             settings (QSettings): Toolbox settings
-            embedded_python_console (SpineConsoleWidget): a Python console widget for embedded console execution
             logger (LoggerInterface): A logger instance
             First file in the list is the main Python program.
             description (str): Python Tool description
@@ -514,7 +504,6 @@ class PythonTool(ToolSpecification):
             cmdline_args,
             execute_in_work,
         )
-        self._embedded_console = embedded_python_console
         main_file = includes[0]
         self.main_dir, self.main_prgm = os.path.split(main_file)
         self.python_options = OrderedDict()
@@ -529,14 +518,13 @@ class PythonTool(ToolSpecification):
         """
 
     @staticmethod
-    def load(path, data, settings, embedded_python_console, logger):
+    def load(path, data, settings, logger):
         """Creates a PythonTool according to a tool specification file.
 
         Args:
             path (str): Base path to tool files
             data (dict): Dictionary of tool definitions
             settings (QSettings): Toolbox settings
-            embedded_python_console (SpineConsoleWidget): Python console widget for execution in the embedded console
             logger (LoggerInterface): A logger instance
 
         Returns:
@@ -545,18 +533,12 @@ class PythonTool(ToolSpecification):
         kwargs = PythonTool.check_definition(data, logger)
         if kwargs is not None:
             # Return an executable model instance
-            return PythonTool(
-                path=path, settings=settings, embedded_python_console=embedded_python_console, logger=logger, **kwargs
-            )
+            return PythonTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir):
-        """Returns an instance of this tool specification that is configured to run in the given directory.
-
-        Args:
-            basedir (str): the path to the directory where the instance will run
-        """
-        return PythonToolInstance(self, basedir, self._settings, self._embedded_console, self._logger)
+    @property
+    def tool_instance_factory(self):
+        return PythonToolInstance
 
 
 class ExecutableTool(ToolSpecification):
@@ -632,10 +614,6 @@ class ExecutableTool(ToolSpecification):
             return ExecutableTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir):
-        """Returns an instance of this tool specification that is configured to run in the given directory.
-
-        Args:
-            basedir (str): the path to the directory where the instance will run
-        """
-        return ExecutableToolInstance(self, basedir, self._settings, self._logger)
+    @property
+    def tool_instance_factory(self):
+        return ExecutableToolInstance

@@ -24,21 +24,13 @@ import pathlib
 import shutil
 import time
 import uuid
-from PySide2.QtCore import QEventLoop, Slot
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
-from .utils import (
-    file_paths_from_resources,
-    find_file,
-    find_last_output_files,
-    flatten_file_path_duplicates,
-    is_pattern,
-    make_label,
-)
+from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern
+from .output_resources import scan_for_resources
 from ..utils import labelled_resource_args
 
 
@@ -62,24 +54,11 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
         self._tool_instance = None
-        self._last_return_code = None
 
     @staticmethod
     def item_type():
         """Returns the item's type identifier string."""
         return ItemInfo.item_type()
-
-    def execution_finished(self, execution_token, return_code, execution_dir):
-        """Handles things after execution has finished."""
-        self._last_return_code = return_code
-        # Disconnect instance finished signal
-        self._tool_instance.instance_finished.disconnect(execution_token.handle_execution_finished)
-        if return_code == 0:
-            self._logger.msg_success.emit(f"Tool <b>{self._name}</b> execution finished")
-        else:
-            self._logger.msg_error.emit(f"Tool <b>{self._name}</b> execution failed")
-        self._handle_output_files(return_code, execution_dir)
-        self._tool_instance = None
 
     def stop_execution(self):
         """Stops executing this Tool."""
@@ -395,7 +374,7 @@ class ExecutableItem(ExecutableItemBase):
         if not self._create_output_dirs(execution_dir):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
             return False
-        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir)
+        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         # Expand cmd_line_args from resources
         labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(self._cmd_line_args):
@@ -407,16 +386,11 @@ class ExecutableItem(ExecutableItemBase):
         except RuntimeError as error:
             self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
             return False
-        execution_token = _ExecutionToken(self, execution_dir)
-        self._tool_instance.instance_finished.connect(execution_token.handle_execution_finished)
         self._logger.msg.emit(f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***")
-        # Wait for finished right here
-        loop = QEventLoop()
-        self._tool_instance.instance_finished.connect(loop.quit)
-        self._tool_instance.execute()
-        if self._tool_instance.is_running():
-            loop.exec_()
-        return self._last_return_code == 0
+        return_code = self._tool_instance.execute()
+        self._handle_output_files(return_code, execution_dir)
+        self._tool_instance = None
+        return return_code == 0
 
     def _find_input_files(self, resources):
         """
@@ -560,27 +534,8 @@ class ExecutableItem(ExecutableItemBase):
         return destination_paths
 
     def _output_resources_forward(self):
-        """
-        Returns a list of resources, i.e. the output files produced by the tool.
-
-        Returns the files that were actually created during the execution.
-        The URL points to the archive directory.
-
-        Returns:
-            list: a list of Tool's output resources
-        """
-        resources = list()
-        if self._tool_specification is None:
-            return resources
-        last_output_files = find_last_output_files(self._tool_specification.outputfiles, self._output_dir)
-        for out_file_label in self._tool_specification.outputfiles:
-            latest_files = last_output_files.get(out_file_label, list())
-            for out_file in latest_files:
-                file_url = pathlib.Path(out_file.path).as_uri()
-                metadata = {"label": make_label(out_file.label)}
-                resource = ProjectItemResource(self, "transient_file", url=file_url, metadata=metadata)
-                resources.append(resource)
-        return resources
+        """See base class"""
+        return scan_for_resources(self, self._tool_specification, self._output_dir, False)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
@@ -674,28 +629,3 @@ def _find_files_in_pattern(pattern, available_file_paths):
 def _unique_dir_name(tool_specification):
     """Builds a unique name for Tool's work directory."""
     return tool_specification.short_name + "__" + uuid.uuid4().hex + "__toolbox"
-
-
-class _ExecutionToken:
-    """
-    A token that acts as a callback after the tool process has finished execution.
-    """
-
-    def __init__(self, tool_executable, execution_dir):
-        """
-        Args:
-            tool_executable (spine_items.tool.executable_item.ExecutableItem): the object that has initiated the execution
-            execution_dir (str): absolute path to the execution working directory
-        """
-        self._tool_executable = tool_executable
-        self._execution_dir = execution_dir
-
-    @Slot(int)
-    def handle_execution_finished(self, return_code):
-        """
-        Handles Tool specification execution finished.
-
-        Args:
-            return_code (int): Process exit code
-        """
-        self._tool_executable.execution_finished(self, return_code, self._execution_dir)

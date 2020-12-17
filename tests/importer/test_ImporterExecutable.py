@@ -19,10 +19,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from PySide2.QtCore import QCoreApplication, QObject, QEventLoop, QThread
+from PySide2.QtCore import QCoreApplication
 from spinedb_api import create_new_spine_database, DatabaseMapping
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_items.importer.executable_item_qt_free import ExecutableItem
+from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.importer_specification import ImporterSpecification
 
 

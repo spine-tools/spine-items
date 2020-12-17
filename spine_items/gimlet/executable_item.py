@@ -20,23 +20,18 @@ import os
 import sys
 import shutil
 import uuid
-from PySide2.QtCore import Signal, Slot, QObject, QEventLoop
-from spinetoolbox.execution_managers import QProcessExecutionManager
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.config import GIMLET_WORK_DIR_NAME
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_checked_states, deserialize_path
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spine_engine.config import GIMLET_WORK_DIR_NAME
+from spine_engine.execution_managers import StandardExecutionManager
 from .item_info import ItemInfo
 from .utils import SHELLS
 from ..utils import labelled_resource_filepaths, labelled_resource_args
 
 
-class ExecutableItem(ExecutableItemBase, QObject):
-
-    gimlet_finished = Signal()
-    """Emitted after the Gimlet process has finished."""
-
+class ExecutableItem(ExecutableItemBase):
     def __init__(self, name, logger, shell, cmd, work_dir, selected_files):
         """
 
@@ -48,15 +43,13 @@ class ExecutableItem(ExecutableItemBase, QObject):
             work_dir (str): Full path to work directory
             selected_files (list): List of file paths that were selected
         """
-        ExecutableItemBase.__init__(self, name, logger)
-        QObject.__init__(self)
+        super().__init__(name, logger)
         self.shell_name = shell
         self.cmd_list = cmd
         self._work_dir = work_dir
-        self._gimlet_process = None
-        self._gimlet_execution_succeeded = True
         self._resources = list()  # Predecessor resources
         self._selected_files = selected_files
+        self._exec_mngr = None
 
     @staticmethod
     def item_type():
@@ -97,9 +90,9 @@ class ExecutableItem(ExecutableItemBase, QObject):
     def stop_execution(self):
         """Stops executing this Gimlet."""
         super().stop_execution()
-        if self._gimlet_process is not None:
-            self._gimlet_process.stop_execution()
-            self._gimlet_process = None
+        if self._exec_mngr is not None:
+            self._exec_mngr.stop_execution()
+            self._exec_mngr = None
 
     def execute(self, forward_resources, backward_resources):
         """See base class."""
@@ -124,21 +117,19 @@ class ExecutableItem(ExecutableItemBase, QObject):
             arg = labelled_args.get(label)
             if arg is not None:
                 cmd_list[k] = arg
-        if not self.shell_name:
+        if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)
-            self._gimlet_process = QProcessExecutionManager(self._logger, prgm, cmd_list)
+            self._exec_mngr = StandardExecutionManager(self._logger, prgm, *cmd_list, workdir=self._work_dir)
         else:
             if self.shell_name == "cmd.exe":
                 shell_prgm = "cmd.exe"
                 cmd_list = ["/C"] + cmd_list
             elif self.shell_name == "powershell.exe":
                 shell_prgm = "powershell.exe"
-            elif self.shell_name == "bash":
-                shell_prgm = "sh"
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
                 return False
-            self._gimlet_process = QProcessExecutionManager(self._logger, shell_prgm, cmd_list)
+            self._exec_mngr = StandardExecutionManager(self._logger, shell_prgm, *cmd_list, workdir=self._work_dir)
         # Copy selected files to work_dir
         selected_files = self._selected_files.copy()
         labelled_filepaths = labelled_resource_filepaths(forward_resources + backward_resources)
@@ -157,21 +148,11 @@ class ExecutableItem(ExecutableItemBase, QObject):
             + "'>work directory</a>"
         )
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
-        self._gimlet_process.execution_finished.connect(self._handle_gimlet_process_finished)
-        self._gimlet_process.start_execution(workdir=self._work_dir)
-        loop = QEventLoop()
-        self.gimlet_finished.connect(loop.quit)
-        # Wait for finished right here
-        if self._gimlet_process._process is not None:
-            loop.exec_()
+        ret = self._exec_mngr.run_until_complete()
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = forward_resources.copy()
-        # This is executed after the gimlet process has finished
-        if not self._gimlet_execution_succeeded:
-            self._logger.msg_error.emit(f"{self.name} execution failed")
-            return False
-        self._logger.msg_success.emit(f"Executing {self.name} finished")
-        return True
+        self._exec_mngr = None
+        return ret == 0
 
     def _output_resources_forward(self):
         """Returns output resources for forward execution.
@@ -180,18 +161,6 @@ class ExecutableItem(ExecutableItemBase, QObject):
             (list) List of ProjectItemResources.
         """
         return self._resources
-
-    @Slot(int)
-    def _handle_gimlet_process_finished(self, ret_code):
-        """Handles clean up after Gimlet process has finished.
-        After clean up, emits a signal indicating that this
-        project item execution is done.
-        """
-        self._gimlet_process.execution_finished.disconnect()
-        self._gimlet_process.deleteLater()
-        self._gimlet_process = None
-        self._gimlet_execution_succeeded = ret_code == 0
-        self.gimlet_finished.emit()
 
     def _copy_files(self, files, work_dir):
         """Copies selected resources (files) to work directory.
@@ -211,7 +180,7 @@ class ExecutableItem(ExecutableItemBase, QObject):
             return False
         n_copied_files = 0
         for f in files:
-            src_dir, name = os.path.split(f)
+            name = os.path.basename(f)
             dst_file = os.path.abspath(os.path.join(work_dir, name))
             try:
                 # Copy file

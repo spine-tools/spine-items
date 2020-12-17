@@ -17,7 +17,7 @@ Tool's specification factory.
 """
 from spine_engine.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
 from .item_info import ItemInfo
-from .tool_specifications import ToolSpecification
+from .tool_specifications import make_specification
 
 
 class SpecificationFactory(ProjectItemSpecificationFactory):
@@ -29,8 +29,6 @@ class SpecificationFactory(ProjectItemSpecificationFactory):
         return ItemInfo.item_type()
 
     @staticmethod
-    def make_specification(definition, app_settings, logger, embedded_julia_console=None, embedded_python_console=None):
+    def make_specification(definition, app_settings, logger):
         """Returns a tool specifications."""
-        return ToolSpecification.toolbox_load(
-            definition, app_settings, logger, embedded_julia_console, embedded_python_console
-        )
+        return make_specification(definition, app_settings, logger)

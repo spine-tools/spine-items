@@ -23,10 +23,10 @@ import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
 from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_items.tool.executable_item_qt_free import ExecutableItem, _count_files_and_dirs
-from spine_items.tool.tool_specifications_qt_free import ToolSpecification, PythonTool
+from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
+from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
 from spine_items.tool.utils import _LatestOutputFile
-from spinetoolbox.execution_managers import ConsoleExecutionManager
+from spine_engine.execution_managers import KernelExecutionManager
 
 
 class TestToolExecutable(unittest.TestCase):
@@ -296,7 +296,7 @@ class TestToolExecutable(unittest.TestCase):
             executable._tool_instance = executable._tool_specification.create_tool_instance(
                 temp_dir, "name", mock.MagicMock()
             )
-            executable._tool_instance.exec_mngr = ConsoleExecutionManager(mock.MagicMock(), [], logger)
+            executable._tool_instance.exec_mngr = KernelExecutionManager(logger, "lang", "kn", [])
             executable.stop_execution()
             self.assertIsNone(executable._tool_instance)
 

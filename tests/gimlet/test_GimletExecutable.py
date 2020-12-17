@@ -22,7 +22,7 @@ from tempfile import TemporaryDirectory
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
 from spine_engine import ExecutionDirection
-from spine_items.gimlet.executable_item_qt_free import ExecutableItem
+from spine_items.gimlet.executable_item import ExecutableItem
 from spine_engine.execution_managers import StandardExecutionManager
 
 

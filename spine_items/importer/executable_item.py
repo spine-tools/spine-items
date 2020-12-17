@@ -15,23 +15,26 @@ Contains Importer's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:   1.4.2020
 """
+
 import os
 import pathlib
-from PySide2.QtCore import QObject, QEventLoop, Signal, Slot, QThread
+import spinedb_api
 from spine_engine.spine_io.gdx_utils import find_gams_directory
+from spine_engine.spine_io.importers.csv_reader import CSVConnector
+from spine_engine.spine_io.importers.excel_reader import ExcelConnector
+from spine_engine.spine_io.importers.gdx_connector import GdxConnector
+from spine_engine.spine_io.importers.json_reader import JSONConnector
+from spine_engine.spine_io.importers.datapackage_reader import DataPackageConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_checked_states
-from .importer_worker import ImporterWorker
+from spine_engine.utils.returning_process import ReturningProcess
 from .item_info import ItemInfo
+from .do_work import do_work
 from ..utils import labelled_resource_filepaths
 
 
-class ExecutableItem(ExecutableItemBase, QObject):
-
-    importing_finished = Signal()
-    """Emitted after import thread has finished."""
-
+class ExecutableItem(ExecutableItemBase):
     def __init__(self, name, mapping, selected_files, logs_dir, gams_path, cancel_on_error, logger):
         """
         Args:
@@ -43,17 +46,13 @@ class ExecutableItem(ExecutableItemBase, QObject):
             cancel_on_error (bool): if True, revert changes on error and quit
             logger (LoggerInterface): a logger
         """
-        ExecutableItemBase.__init__(self, name, logger)
-        QObject.__init__(self)
+        super().__init__(name, logger)
         self._mapping = mapping
         self._selected_files = selected_files
         self._logs_dir = logs_dir
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
-        self._worker = None
-        self._worker_thread = None
-        self._worker_succeeded = None
-        self._loop = None
+        self._process = None
 
     @staticmethod
     def item_type():
@@ -61,19 +60,11 @@ class ExecutableItem(ExecutableItemBase, QObject):
         return ItemInfo.item_type()
 
     def stop_execution(self):
-        """Stops execution."""
+        """Stops executing this Gimlet."""
         super().stop_execution()
-        if self._loop:
-            if self._loop.isRunning():
-                self._loop.exit(-1)
-            self._loop = None
-        if self._worker:
-            self._worker.deleteLater()
-            self._worker = None
-        if self._worker_thread:
-            self._worker_thread.quit()
-            self._worker_thread.wait()
-            self._worker_thread = None
+        if self._process is not None:
+            self._process.terminate()
+            self._process = None
 
     def execute(self, forward_resources, backward_resources):
         """See base class."""
@@ -87,56 +78,34 @@ class ExecutableItem(ExecutableItemBase, QObject):
             filepath = labelled_filepaths.get(label)
             if filepath is not None:
                 source_filepaths.append(filepath)
-        source_settings = {"GdxConnector": {"gams_directory": self._gams_system_directory()}}
-        self._destroy_current_worker()
-        self._loop = QEventLoop()
-        self._worker = ImporterWorker(
-            source_filepaths,
-            self._mapping,
-            source_settings,
-            [r.url for r in backward_resources if r.type_ == "database"],
-            self._logs_dir,
-            self._cancel_on_error,
-            self._logger,
-        )
-        self._worker_thread = QThread()
-        self._worker.moveToThread(self._worker_thread)
-        self._worker.import_finished.connect(self._handle_worker_finished)
-        self._worker.import_finished.connect(self._loop.quit)
-        self._worker_thread.started.connect(self._worker.do_work)
-        self._worker_thread.start()
-        loop_retval = self._loop.exec_()
-        if loop_retval:
-            # If retval is not 0, loop exited with nonzero return value. Should happen when
-            # user stops execution
-            self._logger.msg_error.emit(f"Importer {self.name} stopped")
-            self._worker_succeeded = -1
-            return self._worker_succeeded
-        if not self._worker_succeeded:
-            self._logger.msg_error.emit(f"Executing Importer {self.name} failed")
+        urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
+        source_type = self._mapping["source_type"]
+        if source_type == "GdxConnector":
+            source_settings = {"gams_directory": self._gams_system_directory()}
         else:
-            self._logger.msg_success.emit(f"Executing Importer {self.name} finished")
-        return self._worker_succeeded
-
-    @Slot(int)
-    def _handle_worker_finished(self, exit_code):
-        self._worker_succeeded = exit_code == 0
-        self._destroy_current_worker()
-
-    def _destroy_current_worker(self):
-        """Runs before starting execution and after worker finishes.
-        Destroys current worker and quits thread if present.
-        """
-        if self._loop:
-            self._loop.deleteLater()
-            self._loop = None
-        if self._worker:
-            self._worker.deleteLater()
-            self._worker = None
-        if self._worker_thread:
-            self._worker_thread.quit()
-            self._worker_thread.wait()
-            self._worker_thread = None
+            source_settings = None
+        connector = {
+            "CSVConnector": CSVConnector,
+            "ExcelConnector": ExcelConnector,
+            "GdxConnector": GdxConnector,
+            "JSONConnector": JSONConnector,
+            "DataPackageConnector": DataPackageConnector,
+        }[source_type](source_settings)
+        self._process = ReturningProcess(
+            target=do_work,
+            args=(
+                self._mapping,
+                self._cancel_on_error,
+                self._logs_dir,
+                source_filepaths,
+                connector,
+                urls_downstream,
+                self._logger,
+            ),
+        )
+        success = self._process.run_until_complete()
+        self._process = None
+        return success
 
     def _gams_system_directory(self):
         """Returns GAMS system path or None if GAMS default is to be used."""
