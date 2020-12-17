@@ -321,7 +321,7 @@ class DataStore(ProjectItem):
         self._properties_ui.lineEdit_password.setEnabled(True)
 
     def actions(self):
-        self._open_db_editors = {x.name(): x for x in MultiSpineDBEditor.get_all_multi_spine_db_editors()}
+        self._open_db_editors = {x.name(): x for x in self._toolbox.db_mngr.get_all_multi_spine_db_editors()}
         if not self._open_db_editors:
             return super().actions()
         self._open_url_menu.clear()
