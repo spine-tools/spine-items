@@ -71,12 +71,6 @@ class Tool(ProjectItem):
         self._toolbox = toolbox
         self.execute_in_work = None
         self.undo_execute_in_work = None
-        self._actions.append(QAction("Edit specification..."))
-        self._actions[-1].triggered.connect(lambda _: self._edit_specification())
-        self._actions.append(QAction("Open results directory..."))
-        self._actions[-1].triggered.connect(self._open_results_directory)
-        self._actions.append(QAction("Open main program file..."))
-        self._actions[-1].triggered.connect(lambda _: self._open_main_program_file())
         if cmd_line_args is None:
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
@@ -494,6 +488,16 @@ class Tool(ProjectItem):
             connection_file (str): path to connection file
         """
         self._julia_console_requested.emit(filter_id, kernel_name, connection_file)
+
+    def set_up(self):
+        """See base class."""
+        self._actions.clear()
+        self._actions.append(QAction("Edit specification..."))
+        self._actions[-1].triggered.connect(lambda _: self._edit_specification())
+        self._actions.append(QAction("Open results directory..."))
+        self._actions[-1].triggered.connect(self._open_results_directory)
+        self._actions.append(QAction("Open main program file..."))
+        self._actions[-1].triggered.connect(lambda _: self._open_main_program_file())
 
     @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):

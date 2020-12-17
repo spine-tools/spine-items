@@ -56,8 +56,6 @@ class DataStore(ProjectItem):
         except OSError:
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         self.cancel_on_error = cancel_on_error
-        self._actions.append(QAction("Open URL in Spine DB editor"))
-        self._actions[-1].triggered.connect(self.open_url_in_new_db_editor)
         if url is None:
             url = dict()
         self._url = self.parse_url(url)
@@ -80,6 +78,12 @@ class DataStore(ProjectItem):
     @property
     def executable_class(self):
         return ExecutableItem
+
+    def set_up(self):
+        """See base class."""
+        self._actions.clear()
+        self._actions.append(QAction("Open URL in Spine DB editor"))
+        self._actions[-1].triggered.connect(self.open_url_in_new_db_editor)
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
