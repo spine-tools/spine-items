@@ -17,6 +17,7 @@ Module for data store class.
 """
 
 import os
+from shutil import copyfile
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from spinetoolbox.project_item.project_item import ProjectItem
@@ -30,7 +31,6 @@ from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url, make_label
 from .output_resources import scan_for_resources
-from shutil import copyfile
 
 
 class DataStore(ProjectItem):
@@ -105,7 +105,7 @@ class DataStore(ProjectItem):
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_ds_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_new_db_editor
-        s[self._properties_ui.toolButton_open_sqlite_file.clicked] = self.open_sqlite_file
+        s[self._properties_ui.toolButton_select_sqlite_file.clicked] = self.select_sqlite_file
         s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
         s[self._properties_ui.toolButton_copy_url.clicked] = self.copy_url
         s[self._properties_ui.comboBox_dialect.activated[str]] = self.refresh_dialect
@@ -140,19 +140,21 @@ class DataStore(ProjectItem):
     def set_path_to_sqlite_file(self, file_path):
         """Set path to SQLite file."""
         abs_path = os.path.abspath(file_path)
-        self.update_url(database=abs_path)
+        self.update_url(dialect="sqlite", database=abs_path)
 
     @Slot(bool)
-    def open_sqlite_file(self, checked=False):
+    def select_sqlite_file(self, checked=False):
         """Open file browser where user can select the path to an SQLite
         file that they want to use."""
-        # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileName(self._toolbox, "Select SQLite file", self.data_dir)
+        candidate_path = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
+        answer = QFileDialog.getSaveFileName(
+            self._toolbox, "Select SQLite file", candidate_path, options=QFileDialog.DontConfirmOverwrite
+        )
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
-            return
-        # Update UI
+            return False
         self.set_path_to_sqlite_file(file_path)
+        return True
 
     def load_url_into_selections(self, url):
         """Load given url attribute into shared widget selections.
@@ -279,7 +281,7 @@ class DataStore(ProjectItem):
         """Adjust widget enabled status to default when no dialect is selected."""
         self._properties_ui.comboBox_dialect.setEnabled(True)
         self._properties_ui.comboBox_dsn.setEnabled(False)
-        self._properties_ui.toolButton_open_sqlite_file.setEnabled(False)
+        self._properties_ui.toolButton_select_sqlite_file.setEnabled(False)
         self._properties_ui.lineEdit_host.setEnabled(False)
         self._properties_ui.lineEdit_port.setEnabled(False)
         self._properties_ui.lineEdit_database.setEnabled(False)
@@ -289,7 +291,7 @@ class DataStore(ProjectItem):
     def enable_mssql(self):
         """Adjust controls to mssql connection specification."""
         self._properties_ui.comboBox_dsn.setEnabled(True)
-        self._properties_ui.toolButton_open_sqlite_file.setEnabled(False)
+        self._properties_ui.toolButton_select_sqlite_file.setEnabled(False)
         self._properties_ui.lineEdit_host.setEnabled(False)
         self._properties_ui.lineEdit_port.setEnabled(False)
         self._properties_ui.lineEdit_database.setEnabled(False)
@@ -303,7 +305,7 @@ class DataStore(ProjectItem):
         """Adjust controls to sqlite connection specification."""
         self._properties_ui.comboBox_dsn.setEnabled(False)
         self._properties_ui.comboBox_dsn.setCurrentIndex(-1)
-        self._properties_ui.toolButton_open_sqlite_file.setEnabled(True)
+        self._properties_ui.toolButton_select_sqlite_file.setEnabled(True)
         self._properties_ui.lineEdit_host.setEnabled(False)
         self._properties_ui.lineEdit_port.setEnabled(False)
         self._properties_ui.lineEdit_database.setEnabled(True)
@@ -318,7 +320,7 @@ class DataStore(ProjectItem):
         """Adjust controls to 'common' connection specification."""
         self._properties_ui.comboBox_dsn.setEnabled(False)
         self._properties_ui.comboBox_dsn.setCurrentIndex(-1)
-        self._properties_ui.toolButton_open_sqlite_file.setEnabled(False)
+        self._properties_ui.toolButton_select_sqlite_file.setEnabled(False)
         self._properties_ui.lineEdit_host.setEnabled(True)
         self._properties_ui.lineEdit_port.setEnabled(True)
         self._properties_ui.lineEdit_database.setEnabled(True)
@@ -382,12 +384,8 @@ class DataStore(ProjectItem):
         # Try to make an url from the current status
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         if not sa_url:
-            self._logger.msg_warning.emit(
-                f"Unable to generate URL from <b>{self.name}</b> selections. Defaults will be used..."
-            )
-            dialect = "sqlite"
-            database = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
-            self.update_url(dialect=dialect, database=database)
+            if not self.select_sqlite_file():
+                return
             sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
 

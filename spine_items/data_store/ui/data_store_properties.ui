@@ -143,7 +143,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="text">
@@ -175,7 +175,7 @@
                 </property>
                 <property name="font">
                  <font>
-                  <pointsize>8</pointsize>
+                  <pointsize>9</pointsize>
                  </font>
                 </property>
                </widget>
@@ -207,7 +207,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
              </widget>
@@ -242,7 +242,7 @@
                 </property>
                 <property name="font">
                  <font>
-                  <pointsize>8</pointsize>
+                  <pointsize>9</pointsize>
                  </font>
                 </property>
                 <property name="cursor">
@@ -257,7 +257,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QToolButton" name="toolButton_open_sqlite_file">
+               <widget class="QToolButton" name="toolButton_select_sqlite_file">
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
@@ -280,7 +280,7 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open SQLite file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select SQLite file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="icon">
                  <iconset resource="../../ui/resources/resources_icons.qrc">
@@ -306,7 +306,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="text">
@@ -324,7 +324,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="text">
@@ -357,7 +357,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="placeholderText">
@@ -378,7 +378,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="text">
@@ -411,7 +411,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="echoMode">
@@ -452,7 +452,7 @@
                 </property>
                 <property name="font">
                  <font>
-                  <pointsize>8</pointsize>
+                  <pointsize>9</pointsize>
                  </font>
                 </property>
                 <property name="placeholderText">
@@ -473,7 +473,7 @@
                 </property>
                 <property name="font">
                  <font>
-                  <pointsize>8</pointsize>
+                  <pointsize>9</pointsize>
                  </font>
                 </property>
                 <property name="text">
@@ -506,7 +506,7 @@
                 </property>
                 <property name="font">
                  <font>
-                  <pointsize>8</pointsize>
+                  <pointsize>9</pointsize>
                  </font>
                 </property>
                 <property name="inputMethodHints">
@@ -529,7 +529,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="text">
@@ -547,7 +547,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="text">
@@ -748,7 +748,7 @@
   <tabstop>lineEdit_host</tabstop>
   <tabstop>lineEdit_port</tabstop>
   <tabstop>lineEdit_database</tabstop>
-  <tabstop>toolButton_open_sqlite_file</tabstop>
+  <tabstop>toolButton_select_sqlite_file</tabstop>
   <tabstop>pushButton_create_new_spine_db</tabstop>
   <tabstop>pushButton_ds_open_editor</tabstop>
   <tabstop>toolButton_copy_url</tabstop>
