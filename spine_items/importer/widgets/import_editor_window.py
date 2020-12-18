@@ -362,6 +362,7 @@ class ImportEditorWindow(QMainWindow):
         name = self._spec_toolbar.name()
         if not name:
             self.show_error("Please enter a name for the specification.")
+            return
         mapping = self._editor.get_settings_dict() if self._editor else {}
         description = self._spec_toolbar.description()
         definition = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
