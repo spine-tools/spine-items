@@ -112,7 +112,7 @@ class TestDataStore(unittest.TestCase):
                     self.assertTrue(url_key in d[k], f"Key '{url_key}' not in dict {d[k]}")
 
     def test_create_new_empty_spine_database(self):
-        """Test that a new Spine database is created when clicking on 'New Spine db tool button'
+        """Test that a new Spine database is not created when clicking on 'New Spine db tool button'
         with an empty Data Store.
         """
         cb_dialect = self.ds_properties_ui.comboBox_dialect  # Dialect comboBox
@@ -123,11 +123,9 @@ class TestDataStore(unittest.TestCase):
         # Click New Spine db button
         self.toolbox.db_mngr = MagicMock()
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
-        expected_db_path = os.path.join(self.ds.data_dir, self.ds.name + ".sqlite")
-        self.assertEqual(cb_dialect.currentText(), "sqlite")
-        self.assertEqual(expected_db_path, le_db.text())
-        expected_url = URL("sqlite", database=expected_db_path)
-        self.toolbox.db_mngr.create_new_spine_database.assert_called_with(expected_url, self.toolbox)
+        self.assertEqual(cb_dialect.currentText(), "")
+        self.assertEqual(le_db.text(), "")
+        self.toolbox.db_mngr.create_new_spine_database.assert_not_called()
 
     def test_create_new_empty_spine_database2(self):
         """Test that a new Spine database is created when clicking on 'New Spine db tool button'
@@ -186,12 +184,14 @@ class TestDataStore(unittest.TestCase):
     def test_copy_db_url_to_clipboard(self):
         """Test that the database url from current selections is copied to clipboard."""
         QApplication.clipboard().clear()
-        self.ds.activate()
-        self.ds_properties_ui.pushButton_create_new_spine_db.click()
+        temp_path = self.create_temp_db()
+        url = dict(dialect="sqlite", database=temp_path)
+        self.ds._url = self.ds.parse_url(url)
+        self.ds.activate()  # This loads the url into properties UI widgets
         self.ds_properties_ui.toolButton_copy_url.click()
         # noinspection PyArgumentList
         clipboard_text = QApplication.clipboard().text()
-        expected_url = "sqlite:///" + os.path.join(self.ds.data_dir, "DS.sqlite")
+        expected_url = "sqlite:///" + os.path.join(self.ds.data_dir, "temp_db.sqlite")
         self.assertEqual(expected_url, clipboard_text.strip())
 
     def test_open_db_editor1(self):
@@ -204,9 +204,9 @@ class TestDataStore(unittest.TestCase):
         self.ds_properties_ui.comboBox_dialect.activated[str].emit("sqlite")
         # Browse to an existing db file
         with mock.patch("spine_items.data_store.data_store.QFileDialog") as mock_qfile_dialog:
-            mock_qfile_dialog.getOpenFileName.side_effect = lambda *args: [temp_db_path]
-            self.ds_properties_ui.toolButton_open_sqlite_file.click()
-            mock_qfile_dialog.getOpenFileName.assert_called_once()
+            mock_qfile_dialog.getSaveFileName.side_effect = lambda *args, **kwargs: [temp_db_path]
+            self.ds_properties_ui.toolButton_select_sqlite_file.click()
+            mock_qfile_dialog.getSaveFileName.assert_called_once()
         # Open form
         self.toolbox.db_mngr = MagicMock()
         with mock.patch("spine_items.data_store.data_store.MultiSpineDBEditor") as mock_editor:
@@ -269,12 +269,15 @@ class TestDataStore(unittest.TestCase):
         """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
         cb_dialect = self.ds_properties_ui.comboBox_dialect  # Dialect comboBox
         le_db = self.ds_properties_ui.lineEdit_database  # Database lineEdit
+        temp_path = self.create_temp_db()
+        url = dict(dialect="sqlite", database=temp_path)
+        self.ds._url = self.ds.parse_url(url)
         self.ds.activate()
         # Click New Spine db button
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
         # Check that DS is connected to an existing DS.sqlite file that is in data_dir
         self.assertEqual("sqlite", cb_dialect.currentText())
-        self.assertEqual(os.path.join(self.ds.data_dir, "DS.sqlite"), le_db.text())  # data_dir before rename
+        self.assertEqual(os.path.join(self.ds.data_dir, "temp_db.sqlite"), le_db.text())  # data_dir before rename
         self.assertTrue(os.path.exists(le_db.text()))
         expected_name = "ABC"
         expected_short_name = "abc"
@@ -288,7 +291,7 @@ class TestDataStore(unittest.TestCase):
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
         # Check that the database path in properties has been updated
-        expected_db_path = os.path.join(expected_data_dir, "DS.sqlite")
+        expected_db_path = os.path.join(expected_data_dir, "temp_db.sqlite")
         self.assertEqual(expected_db_path, le_db.text())
         # Check that the db file has actually been moved
         self.assertTrue(os.path.exists(le_db.text()))
