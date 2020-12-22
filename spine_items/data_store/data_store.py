@@ -437,13 +437,12 @@ class DataStore(ProjectItem):
         else:
             linked_db_path = original_db
         db_copy_destination = os.path.join(self.data_dir, os.path.basename(linked_db_path))
-        linked_db_project_dir = os.path.dirname(linked_db_path).split(".spinetoolbox")[0]
         if os.path.samefile(original_project_dir, self._project.project_dir):
             linked_db_dir = os.path.dirname(linked_db_path)
             if os.path.samefile(linked_db_dir, original_data_dir):
                 copyfile(linked_db_path, db_copy_destination)
                 self._url["database"] = db_copy_destination
-        elif os.path.samefile(original_project_dir, linked_db_project_dir):
+        elif os.path.samefile(os.path.commonpath([original_project_dir, linked_db_path]), original_project_dir):
             copyfile(linked_db_path, db_copy_destination)
             self._url["database"] = db_copy_destination
         return
