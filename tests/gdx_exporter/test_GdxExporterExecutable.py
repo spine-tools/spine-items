@@ -17,7 +17,7 @@ Unit tests for :class:`ExporterExecutable`.
 """
 
 from pathlib import Path
-from tempfile import gettempdir, TemporaryDirectory
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from gdx2py import GdxFile
@@ -163,10 +163,10 @@ class TestGdxExporterExecutable(unittest.TestCase):
         self.assertEqual(executable.output_resources(ExecutionDirection.BACKWARD), [])
 
     def test_output_resources_forward(self):
-        data_dir = gettempdir()
-        executable = ExecutableItem("name", SettingsPack(), [], False, False, data_dir, "", mock.MagicMock())
-        resources = executable.output_resources(ExecutionDirection.FORWARD)
-        self.assertEqual(len(resources), 0)
+        with TemporaryDirectory() as data_dir:
+            executable = ExecutableItem("name", SettingsPack(), [], False, False, data_dir, "", mock.MagicMock())
+            resources = executable.output_resources(ExecutionDirection.FORWARD)
+            self.assertEqual(len(resources), 0)
 
 
 class _MockSettings:
