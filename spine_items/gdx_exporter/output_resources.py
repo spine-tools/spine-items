@@ -18,7 +18,7 @@ import pathlib
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 
 
-def scan_for_resources(provider, databases, directory, include_missing):
+def scan_for_resources(provider, databases, directory, forks):
     """
     Creates transient file resources based on databases and which files can be found on disk.
 
@@ -26,7 +26,7 @@ def scan_for_resources(provider, databases, directory, include_missing):
         provider (ProjectItem or ExecutableItem): resource provider item
         databases (list of Database): exporter's databases
         directory (str): directory to scan for files
-        include_missing (bool): if True, include output files that have not yet been generated
+        forks (dict): mapping from full URL to set of scenario or tool names
 
     Returns:
         list of ProjectItemResource: output resources
@@ -35,36 +35,45 @@ def scan_for_resources(provider, databases, directory, include_missing):
     directory = pathlib.Path(directory)
     files = _scan_files(directory)
     for db in databases:
-        path = files.get(db.output_file_name)
-        if path is None and include_missing:
-            resources.append(ProjectItemResource(provider, "transient_file", "", {"label": db.output_file_name}))
-        elif path is not None:
-            resources.append(
-                ProjectItemResource(provider, "transient_file", path.as_uri(), {"label": db.output_file_name})
-            )
+        file_forks = files.get(db.output_file_name)
+        for fork in forks.get(db.url, list()):
+            path = file_forks.get(fork)
+            if path is not None:
+                resources.append(
+                    ProjectItemResource(provider, "transient_file", path.as_uri(), {"label": db.output_file_name})
+                )
     return resources
 
 
-def _scan_files(directory, scanned_files=None):
+def _scan_files(directory, is_root=True, scanned_files=None):
     """
-    Recursively scans a directory for latest versions of files.
+    Recursively scans a directory for output files.
 
     Args:
         directory (pathlib.Path): a directory to scan
+        is_root (bool): if True, treat ``directory`` as the project item's data directory
         scanned_files (dict, optional): already scanned files
 
     Returns:
-        dict: a mapping from file name to its full path
+        dict: a mapping from file name to a mapping from fork name to file's full path
     """
     if scanned_files is None:
         scanned_files = dict()
+    if not is_root:
+        fork, _, stamp = directory.name.partition("run@")
+        if fork and stamp:
+            # Remove extra underscore between fork name and '@run'.
+            fork = fork[:-1]
+        elif not fork:
+            # We have only time stamp, no fork.
+            fork = None
+    else:
+        fork = None
     for path in directory.iterdir():
         if path.is_dir():
-            _scan_files(path, scanned_files)
+            _scan_files(path, False, scanned_files)
         else:
-            existing = scanned_files.get(path.name)
-            if existing is None:
-                scanned_files[path.name] = path
-            elif path.stat().st_mtime_ns > existing.stat().st_mtime_ns:
-                scanned_files[path.name] = path
+            existing = scanned_files.setdefault(path.name, dict()).get(fork)
+            if existing is None or path.stat().st_mtime_ns > existing.stat().st_mtime_ns:
+                scanned_files[path.name][fork] = path
     return scanned_files

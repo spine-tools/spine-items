@@ -23,7 +23,8 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
-from spinedb_api import clear_filter_configs
+from spinedb_api import clear_filter_configs, load_filters
+from spinedb_api.filters.tools import filter_configs, name_from_dict
 from .database import Database
 from .do_work import do_work
 from .item_info import ItemInfo
@@ -53,6 +54,7 @@ class ExecutableItem(ExecutableItemBase):
         self._cancel_on_error = cancel_on_error
         self._data_dir = data_dir
         self._gams_path = gams_path
+        self._forks = dict()
         self._process = None
 
     @staticmethod
@@ -96,6 +98,11 @@ class ExecutableItem(ExecutableItemBase):
                 )
                 continue
             databases[full_url] = database.output_file_name
+            self._forks[url] = set()
+            for config in load_filters(filter_configs(full_url)):
+                self._forks[url].add(name_from_dict(config))
+            if not self._forks[url]:
+                self._forks[url] = {None}
         self._process = ReturningProcess(
             target=do_work,
             args=(
@@ -105,6 +112,7 @@ class ExecutableItem(ExecutableItemBase):
                 self._data_dir,
                 gams_system_directory,
                 databases,
+                self._forks,
                 self._logger,
             ),
         )
@@ -114,7 +122,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return scan_for_resources(self, self._databases, self._data_dir, include_missing=False)
+        return scan_for_resources(self, self._databases, self._data_dir, self._forks)
 
     def _resolve_gams_system_directory(self):
         """Returns GAMS system path from Toolbox settings or None if GAMS default is to be used."""

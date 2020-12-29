@@ -22,6 +22,7 @@ import os.path
 from PySide2.QtCore import Qt, Slot
 from spinedb_api import clear_filter_configs
 from spinetoolbox.project_item.project_item import ProjectItem
+from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.serialization import deserialize_path, serialize_url
 from spine_engine.spine_io.exporters import gdx
 from .commands import UpdateOutFileName, UpdateOutputTimeStampsFlag, UpdateSettings
@@ -32,7 +33,6 @@ from .mvcmodels.full_url_list_model import FullUrlListModel
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .notifications import Notifications
-from .output_resources import scan_for_resources
 from .settings_pack import SettingsPack
 from .settings_state import SettingsState
 from .widgets.gdx_export_settings import GdxExportSettings
@@ -509,7 +509,11 @@ class GdxExporter(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        return scan_for_resources(self, self._database_model.items(), self.data_dir, include_missing=True)
+        resources = list()
+        for db in self._database_model.items():
+            if db.output_file_name:
+                resources.append(ProjectItemResource(self, "transient_file", "", {"label": db.output_file_name}))
+        return resources
 
     def tear_down(self):
         """See base class."""
