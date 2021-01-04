@@ -49,7 +49,6 @@ class Importer(ProjectItem):
         y,
         toolbox,
         project,
-        logger,
         specification_name="",
         cancel_on_error=True,
         file_selection=None,
@@ -63,12 +62,11 @@ class Importer(ProjectItem):
             y (float): Initial icon scene Y coordinate
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
-            logger (LoggerInterface): a logger instance
             specification_name (str, optional): a spec name
             cancel_on_error (bool): if True the item's execution will stop on import error
             file_selection (dict): a map from label to a bool indicating if the file item is checked
        """
-        super().__init__(name, description, x, y, project, logger)
+        super().__init__(name, description, x, y, project)
         # Make logs subdirectory for this item
         self._toolbox = toolbox
         self.logs_dir = os.path.join(self.data_dir, "logs")
@@ -274,16 +272,14 @@ class Importer(ProjectItem):
         return d
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict.get("specification", "")
         cancel_on_error = item_dict.get("cancel_on_error", False)
         file_selection = item_dict.get("file_selection")
         file_selection = deserialize_checked_states(file_selection, project.project_dir)
-        return Importer(
-            name, description, x, y, toolbox, project, logger, specification_name, cancel_on_error, file_selection
-        )
+        return Importer(name, description, x, y, toolbox, project, specification_name, cancel_on_error, file_selection)
 
     def notify_destination(self, source_item):
         """See base class."""

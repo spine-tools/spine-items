@@ -41,8 +41,8 @@ class GimletFactory(ProjectItemFactory):
         return GimletIcon(toolbox, GimletFactory.icon())
 
     @staticmethod
-    def make_item(name, item_dict, toolbox, project, logger):
-        return Gimlet.from_dict(name, item_dict, toolbox, project, logger)
+    def make_item(name, item_dict, toolbox, project):
+        return Gimlet.from_dict(name, item_dict, toolbox, project)
 
     @staticmethod
     def make_properties_widget(toolbox):

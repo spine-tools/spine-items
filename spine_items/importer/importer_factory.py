@@ -51,8 +51,8 @@ class ImporterFactory(ProjectItemFactory):
         return ImporterIcon(toolbox, ImporterFactory.icon())
 
     @staticmethod
-    def make_item(name, item_dict, toolbox, project, logger):
-        return Importer.from_dict(name, item_dict, toolbox, project, logger)
+    def make_item(name, item_dict, toolbox, project):
+        return Importer.from_dict(name, item_dict, toolbox, project)
 
     @staticmethod
     def make_properties_widget(toolbox):

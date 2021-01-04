@@ -53,7 +53,6 @@ class GdxExporter(ProjectItem):
         y,
         toolbox,
         project,
-        logger,
         settings_pack=None,
         databases=None,
         output_time_stamps=False,
@@ -67,7 +66,6 @@ class GdxExporter(ProjectItem):
             y (float): initial Y coordinate of item icon
             toolbox (ToolboxUI): a ToolboxUI instance
             project (SpineToolboxProject): the project this item belongs to
-            logger (LoggerInterface): a logger instance
             settings_pack (SettingsPack, optional): export settings
             databases (list, optional): a list of :class:`Database` instances
             output_time_stamps (bool): True if time stamps should be appended to output directory names,
@@ -75,7 +73,7 @@ class GdxExporter(ProjectItem):
             cancel_on_error (bool): True if execution should fail on all export errors,
                 False to ignore certain error cases; optional to provide backwards compatibility
         """
-        super().__init__(name, description, x, y, project, logger)
+        super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self._notifications = Notifications()
         self._append_output_time_stamps = output_time_stamps
@@ -453,19 +451,19 @@ class GdxExporter(ProjectItem):
         return d
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         """See base class"""
         if "settings_pack" not in item_dict:
-            return _legacy_from_dict(name, item_dict, toolbox, project, logger)
+            return _legacy_from_dict(name, item_dict, toolbox, project)
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         settings_dict = item_dict.get("settings_pack")
         if settings_dict is None:
             settings_pack = SettingsPack()
         else:
             try:
-                settings_pack = SettingsPack.from_dict(settings_dict, logger)
+                settings_pack = SettingsPack.from_dict(settings_dict, toolbox)
             except gdx.GdxExportException as error:
-                logger.msg_error.emit(f"Failed to fully restore GdxExporter settings: {error}")
+                toolbox.msg_error.emit(f"Failed to fully restore GdxExporter settings: {error}")
                 settings_pack = SettingsPack()
         databases = list()
         for db_dict in item_dict["databases"]:
@@ -475,17 +473,7 @@ class GdxExporter(ProjectItem):
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         return GdxExporter(
-            name,
-            description,
-            x,
-            y,
-            toolbox,
-            project,
-            logger,
-            settings_pack,
-            databases,
-            output_time_stamps,
-            cancel_on_error,
+            name, description, x, y, toolbox, project, settings_pack, databases, output_time_stamps, cancel_on_error,
         )
 
     def update_name_label(self):
@@ -559,7 +547,7 @@ def _normalize_url(url):
     return "sqlite:///" + url[10:].replace("/", os.sep)
 
 
-def _legacy_from_dict(name, item_dict, toolbox, project, logger):
+def _legacy_from_dict(name, item_dict, toolbox, project):
     """
     Deserializes :class:`GdxExporter` from a legacy 0.5 item dict.
 
@@ -568,7 +556,6 @@ def _legacy_from_dict(name, item_dict, toolbox, project, logger):
         item_dict (dict): serialized GdxExporter
         toolbox (ToolboxUI): Toolbox main widget
         project (SpineToolboxProject): project
-        logger (LoggerInterface) a logger
     """
     description, x, y = ProjectItem.parse_item_dict(item_dict)
     settings_pack_dicts = item_dict.get("settings_packs")
@@ -577,9 +564,9 @@ def _legacy_from_dict(name, item_dict, toolbox, project, logger):
         settings_pack = SettingsPack()
     else:
         try:
-            settings_pack = SettingsPack.from_dict(settings_pack_dicts[0], logger)
+            settings_pack = SettingsPack.from_dict(settings_pack_dicts[0], toolbox)
         except gdx.GdxExportException as error:
-            logger.msg_error.emit(f"Failed to fully restore GdxExporter settings: {error}")
+            toolbox.msg_error.emit(f"Failed to fully restore GdxExporter settings: {error}")
             settings_pack = SettingsPack()
         url_to_full_url = item_dict.get("urls")
         for pack in settings_pack_dicts:
@@ -591,4 +578,4 @@ def _legacy_from_dict(name, item_dict, toolbox, project, logger):
             db.url = url if url_to_full_url is None else url_to_full_url[url]
             databases.append(db)
     cancel_on_error = item_dict.get("cancel_on_error", True)
-    return GdxExporter(name, description, x, y, toolbox, project, logger, settings_pack, databases, cancel_on_error)
+    return GdxExporter(name, description, x, y, toolbox, project, settings_pack, databases, cancel_on_error)

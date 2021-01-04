@@ -41,8 +41,8 @@ class DataConnectionFactory(ProjectItemFactory):
         return DataConnectionIcon(toolbox, DataConnectionFactory.icon())
 
     @staticmethod
-    def make_item(name, item_dict, toolbox, project, logger):
-        return DataConnection.from_dict(name, item_dict, toolbox, project, logger)
+    def make_item(name, item_dict, toolbox, project):
+        return DataConnection.from_dict(name, item_dict, toolbox, project)
 
     @staticmethod
     def make_properties_widget(toolbox):

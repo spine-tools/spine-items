@@ -36,7 +36,7 @@ from .output_resources import scan_for_resources
 
 
 class DataConnection(ProjectItem):
-    def __init__(self, name, description, x, y, toolbox, project, logger, references=None):
+    def __init__(self, name, description, x, y, toolbox, project, references=None):
         """Data Connection class.
 
         Args:
@@ -46,10 +46,9 @@ class DataConnection(ProjectItem):
             y (float): Initial Y coordinate of item icon
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
-            logger (LoggerInterface): a logger instance
             references (list, optional): a list of file paths
         """
-        super().__init__(name, description, x, y, project, logger)
+        super().__init__(name, description, x, y, project)
         if references is None:
             references = list()
         self._toolbox = toolbox
@@ -494,10 +493,10 @@ class DataConnection(ProjectItem):
         return d
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         references = [deserialize_path(r, project.project_dir) for r in item_dict.get("references", list())]
-        return DataConnection(name, description, x, y, toolbox, project, logger, references)
+        return DataConnection(name, description, x, y, toolbox, project, references)
 
     def rename(self, new_name):
         """Rename this item.

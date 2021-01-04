@@ -29,7 +29,7 @@ from .output_resources import scan_for_resources
 class DataTransformer(ProjectItem):
     """Data transformer project item."""
 
-    def __init__(self, name, description, x, y, toolbox, project, logger, specification_name=None):
+    def __init__(self, name, description, x, y, toolbox, project, specification_name=None):
         """
         Args:
             name (str): item's name
@@ -38,10 +38,9 @@ class DataTransformer(ProjectItem):
             y (float): Initial Y coordinate of item icon
             toolbox (QWidget): parent window
             project (SpineToolboxProject): the project this item belongs to
-            logger (LoggerInterface): a logger instance
             specification_name (str, optional): transformer specification
         """
-        super().__init__(name, description, x, y, project, logger)
+        super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self._specification_name = specification_name
         self._specification = self._toolbox.specification_model.find_specification(specification_name)
@@ -73,14 +72,11 @@ class DataTransformer(ProjectItem):
         return serialized
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict["specification"]
-        specification = toolbox.specification_model.find_specification(specification_name)
-        if specification_name and not specification:
-            logger.msg_error.emit(f"Data transformer <b>{name}</b> specification <b>{specification_name}</b> not found")
-        return DataTransformer(name, description, x, y, toolbox, project, logger, specification_name)
+        return DataTransformer(name, description, x, y, toolbox, project, specification_name)
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.

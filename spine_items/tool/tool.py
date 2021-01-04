@@ -48,7 +48,6 @@ class Tool(ProjectItem):
         y,
         toolbox,
         project,
-        logger,
         specification_name="",
         execute_in_work=True,
         cmd_line_args=None,
@@ -62,12 +61,11 @@ class Tool(ProjectItem):
             y (float): Initial Y coordinate of item icon
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
-            logger (LoggerInterface): a logger instance
             specification_name (str): Name of this Tool's Tool specification
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
         """
-        super().__init__(name, description, x, y, project, logger)
+        super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self.execute_in_work = None
         self.undo_execute_in_work = None
@@ -378,16 +376,14 @@ class Tool(ProjectItem):
         return d
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict.get("specification", "")
         execute_in_work = item_dict.get("execute_in_work", True)
         cmd_line_args = item_dict.get("cmd_line_args", [])
         cmd_line_args = [deserialize_path(arg, project.project_dir) for arg in cmd_line_args]
-        return Tool(
-            name, description, x, y, toolbox, project, logger, specification_name, execute_in_work, cmd_line_args
-        )
+        return Tool(name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args)
 
     def rename(self, new_name):
         """Rename this item.

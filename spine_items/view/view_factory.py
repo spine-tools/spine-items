@@ -41,8 +41,8 @@ class ViewFactory(ProjectItemFactory):
         return ViewIcon(toolbox, ViewFactory.icon())
 
     @staticmethod
-    def make_item(name, item_dict, toolbox, project, logger):
-        return View.from_dict(name, item_dict, toolbox, project, logger)
+    def make_item(name, item_dict, toolbox, project):
+        return View.from_dict(name, item_dict, toolbox, project)
 
     @staticmethod
     def make_properties_widget(toolbox):

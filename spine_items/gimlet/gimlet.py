@@ -46,7 +46,6 @@ class Gimlet(ProjectItem):
         y,
         toolbox,
         project,
-        logger,
         use_shell=True,
         shell_index=0,
         cmd="",
@@ -62,7 +61,6 @@ class Gimlet(ProjectItem):
             y (float): Initial Y coordinate of item icon
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): Project this item belongs to
-            logger (LoggerInterface): Logger instance
             use_shell (bool): Use shell flag
             shell_index (int): Selected shell as index
             cmd (str): Command that this Gimlet executes at run time
@@ -70,7 +68,7 @@ class Gimlet(ProjectItem):
             selections (dict, optional): A mapping from file label to boolean 'checked' flag
             work_dir_mode (bool): True uses Gimlet's default work dir, False uses a unique work dir on every execution
         """
-        super().__init__(name, description, x, y, project, logger)
+        super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self._file_model = InputFileListModel(header_label="Available resources")
         self._upstream_resources = list()  # ProjectItemResources for handling changes in the DAG on Design View
@@ -310,7 +308,7 @@ class Gimlet(ProjectItem):
         return d
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         use_shell = item_dict.get("use_shell", True)
@@ -327,7 +325,6 @@ class Gimlet(ProjectItem):
             y,
             toolbox,
             project,
-            logger,
             use_shell,
             shel_index,
             cmd,

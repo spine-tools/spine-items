@@ -34,7 +34,7 @@ from .output_resources import scan_for_resources
 
 
 class DataStore(ProjectItem):
-    def __init__(self, name, description, x, y, toolbox, project, logger, url, cancel_on_error=False):
+    def __init__(self, name, description, x, y, toolbox, project, url, cancel_on_error=False):
         """Data Store class.
 
         Args:
@@ -44,11 +44,10 @@ class DataStore(ProjectItem):
             y (float): Initial Y coordinate of item icon
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
-            logger (LoggerInterface): a logger instance
             url (str or dict, optional): SQLAlchemy url
             cancel_on_error (bool): if True, changes will be reverted on errors
         """
-        super().__init__(name, description, x, y, project, logger)
+        super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self.logs_dir = os.path.join(self.data_dir, "logs")
         try:
@@ -382,9 +381,9 @@ class DataStore(ProjectItem):
     def create_new_spine_database(self, checked=False):
         """Create new (empty) Spine database."""
         # Try to make an url from the current status
-        sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
         if not sa_url:
-            if not self.select_sqlite_file():
+            if self._url["dialect"] != "sqlite" or not self.select_sqlite_file():
                 return
             sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
@@ -448,14 +447,14 @@ class DataStore(ProjectItem):
         return
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         url = item_dict["url"]
         if url and not isinstance(url["database"], str):
             url["database"] = deserialize_path(url["database"], project.project_dir)
         cancel_on_error = item_dict.get("cancel_on_error", False)
-        return DataStore(name, description, x, y, toolbox, project, logger, url, cancel_on_error)
+        return DataStore(name, description, x, y, toolbox, project, url, cancel_on_error)
 
     def rename(self, new_name):
         """Rename this item.

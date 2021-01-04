@@ -27,7 +27,7 @@ from .executable_item import ExecutableItem
 
 
 class View(ProjectItem):
-    def __init__(self, name, description, x, y, toolbox, project, logger):
+    def __init__(self, name, description, x, y, toolbox, project):
         """
         View class.
 
@@ -37,9 +37,8 @@ class View(ProjectItem):
             x (float): Initial X coordinate of item icon
             y (float): Initial Y coordinate of item icon
             project (SpineToolboxProject): the project this item belongs to
-            logger (LoggerInterface): a logger instance
         """
-        super().__init__(name, description, x, y, project, logger)
+        super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self._references = dict()
         self.reference_model = QStandardItemModel()  # References to databases
@@ -61,10 +60,10 @@ class View(ProjectItem):
         return ExecutableItem
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
-        return View(name, description, x, y, toolbox, project, logger)
+        return View(name, description, x, y, toolbox, project)
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
