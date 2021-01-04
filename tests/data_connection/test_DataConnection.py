@@ -38,7 +38,7 @@ class TestDataConnection(unittest.TestCase):
         factory = DataConnectionFactory()
         item_dict = {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}
         self.project = create_mock_project()
-        self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project, self.toolbox)
+        self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
 
     @classmethod
@@ -188,29 +188,31 @@ class TestDataConnection(unittest.TestCase):
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
     def test_notify_destination(self):
+        self.data_connection.logger.msg = MagicMock()
+        self.data_connection.logger.msg_warning = MagicMock()
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Importer")
         self.data_connection.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with("Link established")
+        self.data_connection.logger.msg.emit.assert_called_with("Link established")
         source_item.item_type = MagicMock(return_value="Data Store")
         self.data_connection.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with("Link established")
+        self.data_connection.logger.msg.emit.assert_called_with("Link established")
         source_item.item_type = MagicMock(return_value="GdxExporter")
         self.data_connection.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.data_connection.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a <b>GdxExporter</b> and"
             " a <b>Data Connection</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Tool")
         self.data_connection.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        self.data_connection.logger.msg.emit.assert_called_with(
             "Link established. Tool <b>source name</b> output files"
             " will be passed as references to item <b>DC</b> after execution."
         )
         source_item.item_type = MagicMock(return_value="View")
         self.data_connection.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.data_connection.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a <b>View</b> and"
             " a <b>Data Connection</b> has not been implemented yet."
         )

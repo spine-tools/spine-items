@@ -35,7 +35,7 @@ class TestView(unittest.TestCase):
         factory = ViewFactory()
         item_dict = {"type": "View", "description": "", "x": 0, "y": 0}
         self.project = create_mock_project()
-        self.view = factory.make_item("V", item_dict, self.toolbox, self.project, self.toolbox)
+        self.view = factory.make_item("V", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.view, self.toolbox)
 
     @classmethod
@@ -62,32 +62,34 @@ class TestView(unittest.TestCase):
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
     def test_notify_destination(self):
+        self.view.logger.msg = MagicMock()
+        self.view.logger.msg_warning = MagicMock()
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Data Connection")
         self.view.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.view.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a <b>Data Connection</b> and"
             " a <b>View</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Importer")
         self.view.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.view.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a <b>Importer</b> and a <b>View</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Data Store")
         self.view.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        self.view.logger.msg.emit.assert_called_with(
             "Link established. You can visualize Data Store <b>source name</b> in View <b>V</b>."
         )
         source_item.item_type = MagicMock(return_value="GdxExporter")
         self.view.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.view.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a <b>GdxExporter</b> and a <b>View</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Tool")
         self.view.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        self.view.logger.msg.emit.assert_called_with(
             "Link established. You can visualize the output from Tool <b>source name</b> in View <b>V</b>."
         )
 

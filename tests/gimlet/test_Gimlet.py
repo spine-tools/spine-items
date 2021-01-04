@@ -49,7 +49,7 @@ class TestGimlet(unittest.TestCase):
             "y": 0,
         }
         self.project = create_mock_project()
-        self.gimlet = factory.make_item("G", item_dict, self.toolbox, self.project, self.toolbox)
+        self.gimlet = factory.make_item("G", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.gimlet, self.toolbox)
 
     def test_item_type(self):
@@ -59,34 +59,36 @@ class TestGimlet(unittest.TestCase):
         self.assertEqual(Gimlet.item_category(), ItemInfo.item_category())
 
     def test_notify_destination(self):
+        self.gimlet.logger.msg = MagicMock()
+        self.gimlet.logger.msg_warning = MagicMock()
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Data Connection")
         self.gimlet.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        self.gimlet.logger.msg.emit.assert_called_with(
             "Link established. Files from <b>source name</b> are now available in <b>G</b>."
         )
         source_item.item_type = MagicMock(return_value="Importer")
         self.gimlet.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.gimlet.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a <b>Importer</b> and a <b>Gimlet</b> has not been implemented yet."
         )
 
         source_item.item_type = MagicMock(return_value="Data Store")
         self.gimlet.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with("Link established")
+        self.gimlet.logger.msg.emit.assert_called_with("Link established")
 
         source_item.item_type = MagicMock(return_value="Data Transformer")
         self.gimlet.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with("Link established")
+        self.gimlet.logger.msg.emit.assert_called_with("Link established")
 
         source_item.item_type = MagicMock(return_value="GdxExporter")
         self.gimlet.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with("Link established")
+        self.gimlet.logger.msg.emit.assert_called_with("Link established")
 
         source_item.item_type = MagicMock(return_value="Tool")
         self.gimlet.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with("Link established")
+        self.gimlet.logger.msg.emit.assert_called_with("Link established")
 
     def test_rename(self):
         """Tests renaming a Gimlet."""

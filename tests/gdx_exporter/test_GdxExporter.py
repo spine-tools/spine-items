@@ -43,7 +43,7 @@ class TestGdxExporter(unittest.TestCase):
             "y": 0,
         }
         self.project = create_mock_project()
-        self.exporter = factory.make_item("E", item_dict, self.toolbox, self.project, self.toolbox)
+        self.exporter = factory.make_item("E", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.exporter, self.toolbox)
 
     @classmethod
@@ -85,35 +85,37 @@ class TestGdxExporter(unittest.TestCase):
         self.assertEqual(d, expected)
 
     def test_notify_destination(self):
+        self.exporter.logger.msg = MagicMock()
+        self.exporter.logger.msg_warning = MagicMock()
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Data Connection")
         self.exporter.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.exporter.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a "
             "<b>Data Connection</b> and a <b>GdxExporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Importer")
         self.exporter.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.exporter.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a "
             "<b>Importer</b> and a <b>GdxExporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Data Store")
         self.exporter.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        self.exporter.logger.msg.emit.assert_called_with(
             "Link established. Data Store <b>source name</b> will be "
             "exported to a .gdx file by <b>E</b> when executing."
         )
         source_item.item_type = MagicMock(return_value="Tool")
         self.exporter.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.exporter.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a "
             "<b>Tool</b> and a <b>GdxExporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="View")
         self.exporter.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.exporter.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a "
             "<b>View</b> and a <b>GdxExporter</b> has not been implemented yet."
         )
@@ -153,7 +155,7 @@ class TestGdxExporter(unittest.TestCase):
         self.exporter._start_worker = MagicMock()
         item_dict = {"type": "GdxExporter", "description": "", "settings_packs": None, "x": 0, "y": 0}
         factory = GdxExporterFactory()
-        exporter2 = factory.make_item("2nd exporter", item_dict, self.toolbox, self.project, self.toolbox)
+        exporter2 = factory.make_item("2nd exporter", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, exporter2, self.toolbox)
         exporter2._start_worker = MagicMock()
         resources = [

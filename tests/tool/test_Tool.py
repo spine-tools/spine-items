@@ -70,41 +70,39 @@ class TestTool(unittest.TestCase):
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
     def test_notify_destination(self):
-        self.toolbox.msg = mock.MagicMock()
-        self.toolbox.msg.attach_mock(mock.MagicMock(), "emit")
-        self.toolbox.msg_warning = mock.MagicMock()
-        self.toolbox.msg_warning.attach_mock(mock.MagicMock(), "emit")
         source_item = mock.NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = mock.MagicMock(return_value="Data Connection")
         tool = self._add_tool()
+        tool.logger.msg = mock.MagicMock()
+        tool.logger.msg_warning = mock.MagicMock()
         tool.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        tool.logger.msg.emit.assert_called_with(
             "Link established. Tool <b>T</b> will look for input "
             "files from <b>source name</b>'s references and data directory."
         )
         source_item.item_type = mock.MagicMock(return_value="Importer")
         tool.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        tool.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a " "<b>Importer</b> and a <b>Tool</b> has not been implemented yet."
         )
         source_item.item_type = mock.MagicMock(return_value="Data Store")
         tool.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        tool.logger.msg.emit.assert_called_with(
             "Link established. Data Store <b>source name</b> url will " "be passed to Tool <b>T</b> when executing."
         )
         source_item.item_type = mock.MagicMock(return_value="GdxExporter")
         tool.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        tool.logger.msg.emit.assert_called_with(
             "Link established. The file exported by <b>source name</b> will "
             "be passed to Tool <b>T</b> when executing."
         )
         source_item.item_type = mock.MagicMock(return_value="Tool")
         tool.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with("Link established")
+        tool.logger.msg.emit.assert_called_with("Link established")
         source_item.item_type = mock.MagicMock(return_value="View")
         tool.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        tool.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a " "<b>View</b> and a <b>Tool</b> has not been implemented yet."
         )
 
@@ -167,7 +165,7 @@ class TestTool(unittest.TestCase):
         factory = ToolFactory()
         self.project = create_mock_project()
         with mock.patch("spine_items.tool.tool.SpineConsoleWidget"):
-            tool = factory.make_item("T", item_dict, self.toolbox, self.project, self.toolbox)
+            tool = factory.make_item("T", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, tool, self.toolbox)
         # Set model for tool combo box
         tool._properties_ui.comboBox_tool.setModel(self.model)

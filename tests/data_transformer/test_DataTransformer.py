@@ -35,7 +35,7 @@ class TestDataTransformer(unittest.TestCase):
         factory = DataTransformerFactory()
         item_dict = {"type": "Data Transformer", "description": "", "specification": None, "x": 0, "y": 0}
         self.project = create_mock_project()
-        self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project, self.toolbox)
+        self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.transformer, self.toolbox)
 
     @classmethod
@@ -60,23 +60,25 @@ class TestDataTransformer(unittest.TestCase):
         self.assertEqual(d, {"description": "", "type": "Data Transformer", "x": 0.0, "y": 0.0, "specification": None})
 
     def test_notify_destination(self):
+        self.transformer.logger.msg = MagicMock()
+        self.transformer.logger.msg_warning = MagicMock()
         source_item = NonCallableMagicMock()
         source_item.name = "source name"
         source_item.item_type = MagicMock(return_value="Data Store")
         self.transformer.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        self.transformer.logger.msg.emit.assert_called_with(
             "Link established. You can now define transformations for Data Store "
             "<b>source name</b> in Data Transformer <b>T</b>."
         )
 
         source_item.item_type = MagicMock(return_value="Data Transformer")
         self.transformer.notify_destination(source_item)
-        self.toolbox.msg.emit.assert_called_with(
+        self.transformer.logger.msg.emit.assert_called_with(
             "Link established. You can now define additional transformations in Data Transformer <b>T</b>."
         )
         source_item.item_type = MagicMock(return_value="Data Connection")
         self.transformer.notify_destination(source_item)
-        self.toolbox.msg_warning.emit.assert_called_with(
+        self.transformer.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a "
             f"<b>{source_item.item_type()}</b> and a <b>{self.transformer.item_type()}</b> has not been "
             "implemented yet."
