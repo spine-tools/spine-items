@@ -23,12 +23,12 @@ from PySide2.QtCore import Slot, Qt, QFileInfo
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
 from PySide2.QtWidgets import QFileDialog, QStyle, QFileIconProvider, QInputDialog, QMessageBox
 from datapackage.exceptions import DataPackageException
+from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.custom_file_system_watcher import CustomFileSystemWatcher
 from spinetoolbox.helpers import busy_effect, open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from spinetoolbox.widgets.spine_datapackage_widget import SpineDatapackageWidget, CustomPackage
-from spine_engine.utils.serialization import deserialize_path, serialize_path
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo

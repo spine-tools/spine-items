@@ -359,7 +359,7 @@ class DataStore(ProjectItem):
         if sa_url is not None:
             db_editor.add_new_tab({sa_url: self.name})
             db_editor.raise_()
-            qApp.setActiveWindow(db_editor)
+            qApp.setActiveWindow(db_editor)  # pylint: disable=undefined-variable
 
     def data_files(self):
         """Return a list of files that are in this items data directory."""
@@ -403,7 +403,7 @@ class DataStore(ProjectItem):
             cookie = self
             self._toolbox.db_mngr.session_committed.emit({db_map}, cookie)
 
-    def _do_handle_dag_changed(self, resources, _):
+    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
         """See base class."""
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, logger=None)
         if sa_url is None:
