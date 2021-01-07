@@ -42,8 +42,7 @@ class TestDataTransformer(unittest.TestCase):
         item_dict = {"type": "Data Transformer", "description": "", "specification": None, "x": 0, "y": 0}
         self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
-        self.logger = MagicMock()
-        self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project, self.logger)
+        self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.transformer, self.toolbox)
 
     @classmethod
