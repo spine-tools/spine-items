@@ -16,7 +16,7 @@ Unit tests for Tool project item.
 :date:   4.10.2019
 """
 
-from tempfile import mkdtemp
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 import os
@@ -35,14 +35,10 @@ from ..mock_helpers import mock_finish_project_item_construction, create_mock_pr
 class TestTool(unittest.TestCase):
     def setUp(self):
         """Set up."""
-        self.basedir = mkdtemp()
+        self._temp_dir = TemporaryDirectory()
         self.toolbox = create_mock_toolbox()
-        self.project = create_mock_project()
-        self.model = self.toolbox.specification_model = _MockToolSpecModel(self.toolbox, self.basedir)
-
-    def tearDown(self):
-        """Clean up."""
-        shutil.rmtree(self.basedir)
+        self.project = create_mock_project(self._temp_dir.name)
+        self.model = self.toolbox.specification_model = _MockToolSpecModel(self.toolbox, self._temp_dir.name)
 
     @classmethod
     def setUpClass(cls):
@@ -163,7 +159,6 @@ class TestTool(unittest.TestCase):
         if item_dict is None:
             item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0}
         factory = ToolFactory()
-        self.project = create_mock_project()
         with mock.patch("spine_items.tool.tool.SpineConsoleWidget"):
             tool = factory.make_item("T", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, tool, self.toolbox)

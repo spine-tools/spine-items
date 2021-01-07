@@ -22,7 +22,6 @@ from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
 from .widgets.specification_editor_window import SpecificationEditorWindow
-from .utils import make_metadata
 from .output_resources import scan_for_resources
 
 
@@ -72,7 +71,7 @@ class DataTransformer(ProjectItem):
         return serialized
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project):
+    def from_dict(name, item_dict, toolbox, project, logger):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict["specification"]
@@ -149,10 +148,6 @@ class DataTransformer(ProjectItem):
     def _do_handle_dag_changed(self, resources, _):
         """See base class."""
         self._db_resources = [r for r in resources if r.type_ == "database"]
-
-    def _url_metadata_iterator(self):
-        for resource in self._db_resources:
-            yield resource.url, make_metadata(resource, self.name)
 
     def resources_for_direct_successors(self):
         """See base class."""

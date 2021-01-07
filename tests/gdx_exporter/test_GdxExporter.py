@@ -17,6 +17,7 @@ Unit tests for GdxExporter project item.
 """
 
 import os
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock, NonCallableMagicMock
@@ -42,7 +43,8 @@ class TestGdxExporter(unittest.TestCase):
             "x": 0,
             "y": 0,
         }
-        self.project = create_mock_project()
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
         self.exporter = factory.make_item("E", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.exporter, self.toolbox)
 

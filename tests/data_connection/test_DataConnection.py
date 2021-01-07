@@ -37,9 +37,13 @@ class TestDataConnection(unittest.TestCase):
         self.toolbox = create_mock_toolbox()
         factory = DataConnectionFactory()
         item_dict = {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}
-        self.project = create_mock_project()
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
         self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
+
+    def tearDown(self):
+        self.data_connection.tear_down()
 
     @classmethod
     def setUpClass(cls):

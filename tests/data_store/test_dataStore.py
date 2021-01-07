@@ -15,7 +15,7 @@ Unit tests for DataStore class.
 :author: M. Marin (KTH), P. Savolainen (VTT)
 :date:   6.12.2018
 """
-
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock
@@ -54,7 +54,8 @@ class TestDataStore(unittest.TestCase):
         self.toolbox = create_mock_toolbox()
         factory = DataStoreFactory()
         item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
-        self.project = create_mock_project()
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
         with mock.patch("spine_items.data_store.data_store.QMenu"):
             self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.ds, self.toolbox)

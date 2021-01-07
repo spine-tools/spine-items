@@ -473,7 +473,7 @@ class GdxExporter(ProjectItem):
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         return GdxExporter(
-            name, description, x, y, toolbox, project, settings_pack, databases, output_time_stamps, cancel_on_error,
+            name, description, x, y, toolbox, project, settings_pack, databases, output_time_stamps, cancel_on_error
         )
 
     def update_name_label(self):

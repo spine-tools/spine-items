@@ -17,6 +17,7 @@ Unit tests for Gimlet project item.
 """
 
 import os
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
@@ -48,7 +49,8 @@ class TestGimlet(unittest.TestCase):
             "x": 0,
             "y": 0,
         }
-        self.project = create_mock_project()
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
         self.gimlet = factory.make_item("G", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.gimlet, self.toolbox)
 

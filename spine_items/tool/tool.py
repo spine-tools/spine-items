@@ -41,16 +41,7 @@ class Tool(ProjectItem):
     _julia_console_requested = Signal(str, str, str)
 
     def __init__(
-        self,
-        name,
-        description,
-        x,
-        y,
-        toolbox,
-        project,
-        specification_name="",
-        execute_in_work=True,
-        cmd_line_args=None,
+        self, name, description, x, y, toolbox, project, specification_name="", execute_in_work=True, cmd_line_args=None
     ):
         """Tool class.
 

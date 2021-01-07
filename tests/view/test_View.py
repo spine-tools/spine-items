@@ -17,6 +17,7 @@ Unit tests for View project item.
 """
 
 import os
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
@@ -34,7 +35,8 @@ class TestView(unittest.TestCase):
         self.toolbox = create_mock_toolbox()
         factory = ViewFactory()
         item_dict = {"type": "View", "description": "", "x": 0, "y": 0}
-        self.project = create_mock_project()
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
         self.view = factory.make_item("V", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.view, self.toolbox)
 

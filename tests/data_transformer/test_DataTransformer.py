@@ -16,13 +16,19 @@ Contains unit tests for :class:`DataTransformer`.
 :date:    9.10.2020
 """
 import os.path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
+from spinedb_api import append_filter_config
+from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_items.data_transformer.data_transformer import DataTransformer
 from spine_items.data_transformer.data_transformer_factory import DataTransformerFactory
+from spine_items.data_transformer.data_transformer_specification import DataTransformerSpecification
 from spine_items.data_transformer.executable_item import ExecutableItem
+from spine_items.data_transformer.filter_config_path import filter_config_path
 from spine_items.data_transformer.item_info import ItemInfo
+from spine_items.data_transformer.settings import EntityClassRenamingSettings
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
@@ -34,8 +40,10 @@ class TestDataTransformer(unittest.TestCase):
         mock_spec_model.find_specification.side_effect = lambda x: None
         factory = DataTransformerFactory()
         item_dict = {"type": "Data Transformer", "description": "", "specification": None, "x": 0, "y": 0}
-        self.project = create_mock_project()
-        self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project)
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
+        self.logger = MagicMock()
+        self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project, self.logger)
         mock_finish_project_item_construction(factory, self.transformer, self.toolbox)
 
     @classmethod
@@ -83,6 +91,22 @@ class TestDataTransformer(unittest.TestCase):
             f"<b>{source_item.item_type()}</b> and a <b>{self.transformer.item_type()}</b> has not been "
             "implemented yet."
         )
+
+    def test_resources_for_direct_successors(self):
+        self.assertEqual(self.transformer.resources_for_direct_successors(), [])
+        provider = MagicMock()
+        provider.name = "resource provider"
+        db_resource = ProjectItemResource(provider, "database", "sqlite:///database.sqlite")
+        self.transformer.handle_dag_changed(0, [db_resource], [])
+        expected_resource = ProjectItemResource(self.transformer, "database", "sqlite:///database.sqlite")
+        self.assertEqual(self.transformer.resources_for_direct_successors(), [expected_resource])
+        settings = EntityClassRenamingSettings({})
+        specification = DataTransformerSpecification("specification", settings, "test specification")
+        self.transformer.do_set_specification(specification)
+        config_path = filter_config_path(self.transformer.data_dir)
+        filter_url = append_filter_config("sqlite:///database.sqlite", config_path)
+        expected_resource = ProjectItemResource(self.transformer, "database", filter_url)
+        self.assertEqual(self.transformer.resources_for_direct_successors(), [expected_resource])
 
     def test_rename(self):
         """Tests renaming a DT."""

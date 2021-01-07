@@ -17,6 +17,7 @@ Unit tests for Importer project item.
 """
 import collections
 import os
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtCore import Qt
@@ -48,7 +49,8 @@ class TestImporter(unittest.TestCase):
             "x": 0,
             "y": 0,
         }
-        self.project = create_mock_project()
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
         self.importer = factory.make_item("I", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.importer, self.toolbox)
 

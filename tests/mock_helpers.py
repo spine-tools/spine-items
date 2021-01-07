@@ -15,8 +15,7 @@ Classes and functions that can be shared among unit test modules.
 :author: M. Marin (KTH)
 :date:   30.9.2020
 """
-
-from tempfile import TemporaryDirectory
+import os.path
 from unittest.mock import MagicMock
 from PySide2.QtGui import QStandardItemModel
 from PySide2.QtWidgets import QWidget
@@ -42,12 +41,10 @@ def create_mock_toolbox():
     return mock_toolbox
 
 
-def create_mock_project():
+def create_mock_project(project_dir):
     mock_project = MagicMock()
-    with TemporaryDirectory() as items_dir:
-        mock_project.items_dir = items_dir
-    with TemporaryDirectory() as project_dir:
-        mock_project.project_dir = project_dir
+    mock_project.project_dir = project_dir
+    mock_project.items_dir = os.path.join(project_dir, ".spinetoolbox", "items")
     return mock_project
 
 
