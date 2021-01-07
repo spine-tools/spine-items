@@ -477,7 +477,7 @@ class DataConnection(ProjectItem):
             resources[k] = resource.clone(additional_metadata=additional_metadata)
         return resources
 
-    def _do_handle_dag_changed(self, resources, _):
+    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
         """See base class."""
         if not self.file_references() and not self.data_files():
             self.add_notification(

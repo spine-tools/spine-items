@@ -71,7 +71,7 @@ class DataTransformer(ProjectItem):
         return serialized
 
     @staticmethod
-    def from_dict(name, item_dict, toolbox, project, logger):
+    def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict["specification"]

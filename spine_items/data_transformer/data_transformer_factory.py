@@ -52,9 +52,9 @@ class DataTransformerFactory(ProjectItemFactory):
         return DataTransformerIcon(toolbox, DataTransformerFactory.icon())
 
     @staticmethod
-    def make_item(name, item_dict, toolbox, project, logger):
+    def make_item(name, item_dict, toolbox, project):
         """See base class."""
-        return DataTransformer.from_dict(name, item_dict, toolbox, project, logger)
+        return DataTransformer.from_dict(name, item_dict, toolbox, project)
 
     @staticmethod
     def make_properties_widget(toolbox):
