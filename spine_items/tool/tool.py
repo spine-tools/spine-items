@@ -428,12 +428,14 @@ class Tool(ProjectItem):
             connection_file (str): path to connection file
         """
         if not filter_id:
-            console = self.python_console = SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
-        elif filter_id not in self._filter_consoles:
-            console = self._filter_consoles.setdefault(filter_id, {})["python"] = SpineConsoleWidget(
-                self._toolbox, "Python Console", owner=self.name
+            if self.python_console is None:
+                self.python_console = SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
+            console = self.python_console
+        else:
+            console = self._filter_consoles.setdefault(filter_id, {}).setdefault(
+                "python", SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
             )
-            if filter_id and self._active:
+            if self._active:
                 self._project._toolbox.ui.listView_executions.model().layoutChanged.emit()
         console.connect_to_kernel(kernel_name, connection_file)
 
@@ -447,12 +449,14 @@ class Tool(ProjectItem):
             connection_file (str): path to connection file
         """
         if not filter_id:
-            console = self.julia_console = SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
-        elif filter_id not in self._filter_consoles:
-            console = self._filter_consoles.setdefault(filter_id, {})["julia"] = SpineConsoleWidget(
-                self._toolbox, "Julia Console", owner=self.name
+            if self.julia_console is None:
+                self.julia_console = SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
+            console = self.julia_console
+        else:
+            console = self._filter_consoles.setdefault(filter_id, {}).setdefault(
+                "julia", SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
             )
-            if filter_id and self._active:
+            if self._active:
                 self._project._toolbox.ui.listView_executions.model().layoutChanged.emit()
         console.connect_to_kernel(kernel_name, connection_file)
 
