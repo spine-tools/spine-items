@@ -21,7 +21,7 @@ import os
 from PySide2.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir, QuietLogger
 from spinetoolbox.project_item.project_item import ProjectItem
-from spine_engine.utils.serialization import serialize_path, deserialize_checked_states, serialize_checked_states
+from spine_engine.utils.serialization import deserialize_checked_states, serialize_checked_states
 from spine_engine.spine_io.importers.csv_reader import CSVConnector
 from spine_engine.spine_io.importers.excel_reader import ExcelConnector
 from spine_engine.spine_io.importers.gdx_connector import GdxConnector
@@ -95,6 +95,10 @@ class Importer(ProjectItem):
     def item_category():
         """See base class."""
         return ItemInfo.item_category()
+
+    @property
+    def executable_class(self):
+        return ExecutableItem
 
     def execution_item(self, silent=True):
         """Creates project item's execution counterpart."""
@@ -246,13 +250,13 @@ class Importer(ProjectItem):
         """Makes changes to file selection undoable."""
         self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self, selected, label))
 
-    def _do_handle_dag_changed(self, resources, _):
+    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
         """See base class."""
         if not self.specification():
             self.add_notification(
                 "This Importer does not have a specification. Set it in the Importer Properties Panel."
             )
-        self._file_model.update(resources)
+        self._file_model.update(upstream_resources)
         self._notify_if_duplicate_file_paths()
         if self._file_model.rowCount() == 0:
             self.add_notification(

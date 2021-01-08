@@ -64,7 +64,7 @@ class SpecificationEditorWindow(QWidget):
         if self._specification.description:
             self._ui.specification_description_edit.setText(self._specification.description)
         self._ui.filter_combo_box.addItem(_DISPLAY_NAMES[0])
-        self._ui.filter_combo_box.addItems([name for name in _SETTINGS_CLASSES])
+        self._ui.filter_combo_box.addItems(list(_SETTINGS_CLASSES))
         self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
         if self._specification.settings is not None:
             widget_name = _CLASSES_TO_DISPLAY_NAMES[type(self._specification.settings)]
@@ -147,7 +147,7 @@ class SpecificationEditorWindow(QWidget):
         if layout is None:
             layout = QVBoxLayout()
             self._ui.filter_widget.setLayout(layout)
-        for i in range(layout.count()):
+        for _ in range(layout.count()):
             removed = layout.takeAt(0)
             removed.widget().hide()
         layout.addWidget(widget)

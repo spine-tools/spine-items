@@ -59,6 +59,6 @@ class ToolFactory(ProjectItemFactory):
         return ToolSpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None):
+    def show_specification_widget(toolbox, specification=None, **kwargs):
         """See base class."""
         ToolSpecificationWidget(toolbox, specification).show()

@@ -29,11 +29,9 @@ from PySide2.QtWidgets import (
     QDialogButtonBox,
     QDockWidget,
     QUndoStack,
-    QDialogButtonBox,
     QDialog,
     QVBoxLayout,
     QListWidget,
-    QFileDialog,
 )
 from spinetoolbox.helpers import get_open_file_name_in_last_dir, ensure_window_is_on_screen
 from spinetoolbox.config import APPLICATION_PATH

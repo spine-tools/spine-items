@@ -15,7 +15,6 @@ Contains utilities for filter config paths.
 :authors: A. Soininen (VTT)
 :date:    2.10.2020
 """
-from hashlib import sha1
 from pathlib import Path
 
 

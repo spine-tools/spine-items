@@ -64,7 +64,7 @@ class DatabaseListModel(QAbstractListModel):
         Returns:
             Database: a database
         """
-        for row, db in enumerate(self._databases):
+        for db in self._databases:
             if db.url == url:
                 return db
         raise RuntimeError(f"Database '{url}' not found.")

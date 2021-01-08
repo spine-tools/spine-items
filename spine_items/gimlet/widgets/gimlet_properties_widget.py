@@ -30,7 +30,7 @@ class GimletPropertiesWidget(QWidget):
         Args:
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
-        from ..ui.gimlet_properties import Ui_Form
+        from ..ui.gimlet_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__()
         self._toolbox = toolbox

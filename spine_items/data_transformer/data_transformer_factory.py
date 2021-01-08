@@ -17,12 +17,12 @@ Contains the :class:`DataTransformerFactory` class.
 """
 
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
+from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from .data_transformer import DataTransformer
 from .data_transformer_icon import DataTransformerIcon
 from .widgets.data_transformer_properties_widget import DataTransformerPropertiesWidget
 from .widgets.specification_editor_window import SpecificationEditorWindow
 from .widgets.add_data_transformer_widget import AddDataTransformerWidget
-from .widgets.specification_menu import SpecificationMenu
 
 
 class DataTransformerFactory(ProjectItemFactory):
@@ -64,9 +64,9 @@ class DataTransformerFactory(ProjectItemFactory):
     @staticmethod
     def make_specification_menu(parent, index):
         """See base class."""
-        return SpecificationMenu(parent, index)
+        return ItemSpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None):
+    def show_specification_widget(toolbox, specification=None, **kwargs):
         """See base class."""
         SpecificationEditorWindow(toolbox, specification).show()

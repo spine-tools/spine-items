@@ -78,10 +78,7 @@ class SettingsPack:
             except gdx.GdxExportException as error:
                 logger.msg_error.emit(f"Failed to fully restore GdxExporter's indexing settings: {error}")
                 return pack
-        merging_settings_dict = pack_dict.get("merging_settings", dict())
-        pack.merging_settings = {
-            parameter_name: setting_list for parameter_name, setting_list in merging_settings_dict.items()
-        }
+        pack.merging_settings = pack_dict.get("merging_settings", dict())
         for name, setting_list in pack.merging_settings.items():
             # For 0.5 compatibility
             if not isinstance(setting_list, list):

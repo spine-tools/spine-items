@@ -18,7 +18,6 @@ Contains Importer's executable item as well as support utilities.
 
 import os
 import pathlib
-import spinedb_api
 from spine_engine.spine_io.gdx_utils import find_gams_directory
 from spine_engine.spine_io.importers.csv_reader import CSVConnector
 from spine_engine.spine_io.importers.excel_reader import ExcelConnector

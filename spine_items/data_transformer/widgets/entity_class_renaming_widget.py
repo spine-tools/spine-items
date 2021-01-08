@@ -29,7 +29,7 @@ class EntityClassRenamingWidget(QWidget):
             settings (EntityClassRenamingSettings): filter settings
         """
         super().__init__()
-        from ..ui.renamer_editor import Ui_Form
+        from ..ui.renamer_editor import Ui_Form  # pylint: disable=import-outside-toplevel
 
         self._ui = Ui_Form()
         self._ui.setupUi(self)

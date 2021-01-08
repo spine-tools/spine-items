@@ -63,7 +63,7 @@ class ImporterFactory(ProjectItemFactory):
         return SpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, filepath=None):
+    def show_specification_widget(toolbox, specification=None, **kwargs):
         """See base class."""
         key = specification.name if specification else None
         import_editor = _import_editors.get(key, None)
@@ -76,9 +76,10 @@ class ImporterFactory(ProjectItemFactory):
                 import_editor.raise_()
             return
         msg = "Opening Import editor"
+        filepath = kwargs.get("filepath")
         if specification:
             msg += f" for specification {specification.name}"
-            if filepath:
+            if filepath is not None:
                 msg += f" with working file {filepath}"
         toolbox.msg.emit(msg)
         import_editor = _import_editors[key] = ImportEditorWindow(toolbox, specification, filepath)

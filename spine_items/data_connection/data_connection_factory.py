@@ -54,6 +54,6 @@ class DataConnectionFactory(ProjectItemFactory):
         raise NotImplementedError()
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None):
+    def show_specification_widget(toolbox, specification=None, **kwargs):
         """See base class."""
         raise NotImplementedError()

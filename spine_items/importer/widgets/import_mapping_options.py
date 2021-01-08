@@ -31,6 +31,7 @@ from spinedb_api import (
     MapValueMapping,
     TimeSeriesValueMapping,
 )
+from spinetoolbox.widgets.custom_menus import SimpleFilterMenu
 from ..commands import (
     SetImportObjectsFlag,
     SetItemMappingDimension,
@@ -42,7 +43,6 @@ from ..commands import (
     SetReadStartRow,
     SetTimeSeriesRepeatFlag,
 )
-from spinetoolbox.widgets.custom_menus import SimpleFilterMenu
 
 
 class ImportMappingOptions(QObject):

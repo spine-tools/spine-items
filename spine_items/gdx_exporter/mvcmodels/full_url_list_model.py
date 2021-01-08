@@ -42,5 +42,5 @@ class FullUrlListModel(QAbstractListModel):
             urls (Iterable of str): URLs
         """
         self.beginResetModel()
-        self._urls = [url for url in urls]
+        self._urls = list(urls)
         self.endResetModel()
