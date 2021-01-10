@@ -19,6 +19,7 @@ Contains Tool's executable item and support functionality.
 import datetime
 import fnmatch
 import glob
+import os
 import os.path
 import pathlib
 import shutil
@@ -54,6 +55,17 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
         self._tool_instance = None
+
+    @ExecutableItemBase.filter_id.setter
+    def filter_id(self, filter_id):
+        self._filter_id = filter_id
+        self._logger.set_filter_id(filter_id)
+        filter_output_dir = os.path.join(self._output_dir, filter_id)
+        try:
+            os.makedirs(filter_output_dir, exist_ok=True)
+            self._output_dir = filter_output_dir
+        except OSError:
+            self._logger.msg_error.emit(f"[OSError] Creating directory <b>{filter_output_dir}</b> failed.")
 
     @staticmethod
     def item_type():
