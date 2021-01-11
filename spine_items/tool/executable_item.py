@@ -56,6 +56,17 @@ class ExecutableItem(ExecutableItemBase):
         self._cmd_line_args = cmd_line_args
         self._tool_instance = None
 
+    @ExecutableItemBase.filter_id.setter
+    def filter_id(self, filter_id):
+        self._filter_id = filter_id
+        self._logger.set_filter_id(filter_id)
+        filter_output_dir = os.path.join(self._output_dir, filter_id)
+        try:
+            os.makedirs(filter_output_dir, exist_ok=True)
+            self._output_dir = filter_output_dir
+        except OSError:
+            self._logger.msg_error.emit(f"[OSError] Creating directory <b>{filter_output_dir}</b> failed.")
+
     @staticmethod
     def item_type():
         """Returns the item's type identifier string."""
@@ -447,11 +458,9 @@ class ExecutableItem(ExecutableItemBase):
         output_dir_timestamp = _create_output_dir_timestamp()  # Get timestamp when tool finished
         # Create an output folder with timestamp and copy output directly there
         if return_code != 0:
-            result_path = os.path.abspath(
-                os.path.join(self._output_dir, "failed", output_dir_timestamp, self.filter_id)
-            )
+            result_path = os.path.abspath(os.path.join(self._output_dir, "failed", output_dir_timestamp))
         else:
-            result_path = os.path.abspath(os.path.join(self._output_dir, output_dir_timestamp, self.filter_id))
+            result_path = os.path.abspath(os.path.join(self._output_dir, output_dir_timestamp))
         try:
             os.makedirs(result_path, exist_ok=True)
         except OSError:
