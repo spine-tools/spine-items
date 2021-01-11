@@ -88,11 +88,9 @@ class DataStore(ProjectItem):
         """Return a complete url dictionary from the given dict or string"""
         base_url = dict(dialect="", username="", password="", host="", port="", database="")
         if isinstance(url, dict):
-            if "database" in url and url["database"] is not None:
-                if url["database"].lower().endswith(".sqlite"):
-                    # Convert relative database path back to absolute
-                    abs_path = os.path.abspath(os.path.join(self._project.project_dir, url["database"]))
-                    url["database"] = abs_path
+            if url.get("dialect") == "sqlite" and "database" in url and url["database"] is not None:
+                # Convert relative database path back to absolute
+                url["database"] = os.path.abspath(os.path.join(self._project.project_dir, url["database"]))
             for key, value in url.items():
                 if value is not None:
                     base_url[key] = value
@@ -179,7 +177,7 @@ class DataStore(ProjectItem):
         if port is not None:
             self._properties_ui.lineEdit_port.setText(str(port))
         if database is not None:
-            if database:
+            if dialect == "sqlite":
                 database = os.path.abspath(database)
             self._properties_ui.lineEdit_database.setText(database)
         if username is not None:

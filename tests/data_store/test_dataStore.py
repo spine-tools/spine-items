@@ -175,10 +175,7 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual("mysql", dialect)
         self.assertEqual("localhost", host)
         self.assertEqual("8080", port)
-        # This (expected_database) is not how it works in the app but makes the test pass.
-        # TODO: Needs a redo
-        expected_database = os.path.abspath(os.path.join(os.curdir, "foo"))
-        self.assertEqual(expected_database, database)
+        self.assertEqual("foo", database)
         self.assertEqual("bar", username)
 
     def test_copy_db_url_to_clipboard(self):
