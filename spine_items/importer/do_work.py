@@ -111,9 +111,9 @@ def _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger):
                 break
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
         all_import_num += import_num
-    if import_num:
+    if db_map.has_pending_changes():
         db_map.commit_session("Import data by Spine Toolbox Importer")
-        logger.msg_success.emit(f"Inserted {import_num} data with {len(import_errors)} errors into {url}")
+        logger.msg_success.emit(f"Inserted {all_import_num} data with {len(all_import_errors)} errors into {url}")
     else:
         logger.msg_warning.emit("No new data imported")
     db_map.connection.close()
