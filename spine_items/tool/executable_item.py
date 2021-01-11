@@ -391,8 +391,10 @@ class ExecutableItem(ExecutableItemBase):
         labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(self._cmd_line_args):
             arg = labelled_args.get(label)
-            if arg is not None:
-                self._cmd_line_args[k] = arg
+            if arg is None:
+                self._logger.msg_error.emit(f"The argument '{k}: {label}' does not match any available resources.")
+                return False
+            self._cmd_line_args[k] = arg
         try:
             self._tool_instance.prepare(self._cmd_line_args)
         except RuntimeError as error:

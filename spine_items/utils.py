@@ -18,7 +18,7 @@ Contains utilities for all items.
 
 
 def labelled_resource_filepaths(resources):
-    """Returns a dice mapping resource labels to filepaths available in given resources.
+    """Returns a dict mapping resource labels to filepaths available in given resources.
     The label acts as an identifier for a 'transient_file'.
     """
     return {resource.label: resource.path for resource in resources if resource.hasfilepath}

@@ -115,8 +115,10 @@ class ExecutableItem(ExecutableItemBase):
         labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(cmd_list):
             arg = labelled_args.get(label)
-            if arg is not None:
-                cmd_list[k] = arg
+            if arg is None:
+                self._logger.msg_error.emit(f"The argument '{k}: {label}' does not match any available resources.")
+                return False
+            cmd_list[k] = arg
         if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)
             self._exec_mngr = StandardExecutionManager(self._logger, prgm, *cmd_list, workdir=self._work_dir)
