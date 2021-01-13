@@ -47,7 +47,6 @@ class DataTransformer(ProjectItem):
             self._logger.msg_error.emit(
                 f"Data Transformer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
             )
-        self.do_set_specification(self._specification)
         self._db_resources = []
 
     @staticmethod

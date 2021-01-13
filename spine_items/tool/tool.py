@@ -65,8 +65,8 @@ class Tool(ProjectItem):
         self.cmd_line_args = cmd_line_args
         self._cmdline_args_model = ToolCommandLineArgsModel(self)
         self.specification_options_popup_menu = None
-        specification = self._toolbox.specification_model.find_specification(specification_name)
-        if not self.do_set_specification(specification):
+        self._specification = self._toolbox.specification_model.find_specification(specification_name)
+        if specification_name and not self._specification:
             self._logger.msg_error.emit(
                 f"Tool <b>{self.name}</b> should have a Tool specification <b>{specification_name}</b> but it was not found"
             )
@@ -75,7 +75,6 @@ class Tool(ProjectItem):
         self._input_file_model = InputFileListModel(header_label="Available resources", checkable=False)
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
-        self.do_set_specification(self._specification)
         self.do_update_execution_mode(execute_in_work)
         self._python_console_requested.connect(self._create_python_console)
         self._julia_console_requested.connect(self._create_julia_console)
@@ -482,6 +481,7 @@ class Tool(ProjectItem):
 
     def set_up(self):
         """See base class."""
+        super().set_up()
         self._actions.clear()
         self._actions.append(QAction("Edit specification..."))
         self._actions[-1].triggered.connect(lambda _: self._edit_specification())

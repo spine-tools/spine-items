@@ -80,7 +80,6 @@ class Importer(ProjectItem):
             self._logger.msg_error.emit(
                 f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
             )
-        self.do_set_specification(self._specification)
         self.cancel_on_error = cancel_on_error
         self._file_model = FileListModel(invalid_resource_types=("database",), header_label="Source files")
         self._file_model.set_initial_state(file_selection if file_selection is not None else dict())

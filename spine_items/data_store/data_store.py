@@ -80,6 +80,7 @@ class DataStore(ProjectItem):
 
     def set_up(self):
         """See base class."""
+        super().set_up()
         self._actions.clear()
         self._actions.append(QAction("Open URL in Spine DB editor"))
         self._actions[-1].triggered.connect(self.open_url_in_new_db_editor)

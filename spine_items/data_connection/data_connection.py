@@ -65,6 +65,7 @@ class DataConnection(ProjectItem):
         self._updated_from = {}
 
     def set_up(self):
+        super().set_up()
         self.file_system_watcher = CustomFileSystemWatcher(self)
         self.file_system_watcher.add_persistent_file_paths(self.references)
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
