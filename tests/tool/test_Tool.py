@@ -108,8 +108,7 @@ class TestTool(unittest.TestCase):
         tool.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        ret_val = tool.rename(expected_name)  # Do rename
-        self.assertTrue(ret_val)
+        tool.rename(expected_name)
         # Check name
         self.assertEqual(expected_name, tool.name)  # item name
         self.assertEqual(expected_name, tool._properties_ui.label_tool_name.text())  # name label in props

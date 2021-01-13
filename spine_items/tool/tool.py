@@ -384,11 +384,9 @@ class Tool(ProjectItem):
         Returns:
             bool: Boolean value depending on success
         """
-        if not super().rename(new_name):
-            return False
+        super().rename(new_name)
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.item_changed.emit()
-        return True
 
     def notify_destination(self, source_item):
         """See base class."""

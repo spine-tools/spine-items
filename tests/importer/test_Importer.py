@@ -112,8 +112,7 @@ class TestImporter(unittest.TestCase):
         self.importer.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        ret_val = self.importer.rename(expected_name)  # Do rename
-        self.assertTrue(ret_val)
+        self.importer.rename(expected_name)
         # Check name
         self.assertEqual(expected_name, self.importer.name)  # item name
         self.assertEqual(expected_name, self.importer._properties_ui.label_name.text())  # name label in props

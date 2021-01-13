@@ -112,8 +112,7 @@ class TestDataTransformer(unittest.TestCase):
         self.transformer.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        ret_val = self.transformer.rename(expected_name)
-        self.assertTrue(ret_val)
+        self.transformer.rename(expected_name)
         self.assertEqual(expected_name, self.transformer.name)
         self.assertEqual(expected_name, self.transformer._properties_ui.item_name_label.text())
         self.assertEqual(expected_name, self.transformer.get_icon().name_item.text())

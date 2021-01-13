@@ -508,12 +508,10 @@ class DataConnection(ProjectItem):
             bool: True if renaming succeeded, False otherwise
         """
         old_data_dir = self.data_dir
-        if not super().rename(new_name):
-            return False
+        super().rename(new_name)
         self.file_system_watcher.remove_persistent_dir_path(old_data_dir)
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.populate_data_list()
-        return True
 
     def tear_down(self):
         """Tears down this item. Called by toolbox just before closing.

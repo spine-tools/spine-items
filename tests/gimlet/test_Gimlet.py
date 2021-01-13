@@ -97,8 +97,7 @@ class TestGimlet(unittest.TestCase):
         self.gimlet.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        ret_val = self.gimlet.rename(expected_name)  # Do rename
-        self.assertTrue(ret_val)
+        self.gimlet.rename(expected_name)
         self.assertEqual(expected_name, self.gimlet.name)  # Item name
         self.assertEqual(expected_name, self.gimlet._properties_ui.label_gimlet_name.text())  # Name label in props
         self.assertEqual(expected_name, self.gimlet.get_icon().name_item.text())  # Name item on Design View

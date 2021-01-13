@@ -20,6 +20,7 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock
 import os
+import shutil
 import logging
 import sys
 from spinedb_api import create_new_spine_database
@@ -276,14 +277,14 @@ class TestDataStore(unittest.TestCase):
         self.assertTrue(os.path.exists(le_db.text()))
         expected_name = "ABC"
         expected_short_name = "abc"
-        ret_val = self.ds.rename(expected_name)  # Do rename
-        self.assertTrue(ret_val)
+        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
+        shutil.move(self.ds.data_dir, expected_data_dir)
+        self.ds.rename(expected_name)  # Do rename
         # Check name
         self.assertEqual(expected_name, self.ds.name)  # item name
         self.assertEqual(expected_name, self.ds_properties_ui.label_ds_name.text())  # name label in props
         self.assertEqual(expected_name, self.ds.get_icon().name_item.text())  # name item on Design View
         # Check data_dir and logs_dir
-        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
         # Check that the database path in properties has been updated
         expected_db_path = os.path.join(expected_data_dir, "temp_db.sqlite")

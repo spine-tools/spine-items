@@ -17,6 +17,7 @@ Unit tests for Data Connection project item.
 """
 
 import os
+import shutil
 from tempfile import TemporaryDirectory
 from pathlib import Path
 import unittest
@@ -226,14 +227,14 @@ class TestDataConnection(unittest.TestCase):
         self.data_connection.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        ret_val = self.data_connection.rename(expected_name)  # Do rename
-        self.assertTrue(ret_val)
+        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
+        shutil.move(self.data_connection.data_dir, expected_data_dir)
+        self.data_connection.rename(expected_name)  # Do rename
         # Check name
         self.assertEqual(expected_name, self.data_connection.name)  # item name
         self.assertEqual(expected_name, self.data_connection._properties_ui.label_dc_name.text())  # name label in props
         self.assertEqual(expected_name, self.data_connection.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
-        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.data_connection.data_dir)  # Check data dir
         # Check that file_system_watcher has one path (new data_dir)
         watched_dirs = self.data_connection.file_system_watcher.directories()

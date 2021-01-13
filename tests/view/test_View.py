@@ -100,8 +100,7 @@ class TestView(unittest.TestCase):
         self.view.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        ret_val = self.view.rename(expected_name)  # Do rename
-        self.assertTrue(ret_val)
+        self.view.rename(expected_name)
         # Check name
         self.assertEqual(expected_name, self.view.name)  # item name
         self.assertEqual(expected_name, self.view._properties_ui.label_view_name.text())  # name label in props
