@@ -108,15 +108,16 @@ class TestGimletExecutable(unittest.TestCase):
             self.assertIsInstance(item, ExecutableItem)
             self.assertEqual(item.shell_name, "")
 
-    @unittest.skipIf(sys.platform != "win32", "Windows test")
     def test_execute(self):
         with TemporaryDirectory() as temp_dir:
             # Test executing command 'cd' in cmd.exe.
             executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], temp_dir, selected_files=[])
-            self.assertTrue(executable.execute([], []))
-            # Test that bash shell execution fails on Windows.
+            expected_result = sys.platform == "win32"
+            self.assertEqual(expected_result, executable.execute([], []))
+            # Test that bash shell execution works on Linux.
             executable = ExecutableItem("name", mock.MagicMock(), "bash", ["ls"], temp_dir, selected_files=[])
-            self.assertFalse(executable.execute([], []))
+            expected_result = sys.platform == "linux"
+            self.assertEqual(expected_result, executable.execute([], []))
 
     def test_output_resources_backward(self):
         executable = ExecutableItem("name", mock.MagicMock(), "cmd.exe", ["cd"], "", selected_files=[])

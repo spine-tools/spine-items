@@ -32,7 +32,7 @@ from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern
 from .output_resources import scan_for_resources
-from ..utils import labelled_resource_args
+from ..utils import labelled_resource_args, is_label
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -391,9 +391,9 @@ class ExecutableItem(ExecutableItemBase):
         labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(self._cmd_line_args):
             arg = labelled_args.get(label)
-            if arg is None:
-                self._logger.msg_error.emit(f"The argument '{k}: {label}' does not match any available resources.")
-                return False
+            if arg is None and is_label(label):
+                self._logger.msg_warning.emit(f"The argument '{k}: {label}' does not match any available resources.")
+                continue
             self._cmd_line_args[k] = arg
         try:
             self._tool_instance.prepare(self._cmd_line_args)

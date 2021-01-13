@@ -26,3 +26,7 @@ def labelled_resource_filepaths(resources):
 
 def labelled_resource_args(resources):
     return {resource.label: resource.arg for resource in resources}
+
+
+def is_label(label):
+    return label[0] == "{" and label[-1] == "}"

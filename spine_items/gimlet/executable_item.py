@@ -28,7 +28,7 @@ from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.execution_managers import StandardExecutionManager
 from .item_info import ItemInfo
 from .utils import SHELLS
-from ..utils import labelled_resource_filepaths, labelled_resource_args
+from ..utils import labelled_resource_filepaths, labelled_resource_args, is_label
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -115,9 +115,9 @@ class ExecutableItem(ExecutableItemBase):
         labelled_args = labelled_resource_args(forward_resources + backward_resources)
         for k, label in enumerate(cmd_list):
             arg = labelled_args.get(label)
-            if arg is None:
-                self._logger.msg_error.emit(f"The argument '{k}: {label}' does not match any available resources.")
-                return False
+            if arg is None and is_label(label):
+                self._logger.msg_warning.emit(f"The argument '{k}: {label}' does not match any available resources.")
+                continue
             cmd_list[k] = arg
         if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)

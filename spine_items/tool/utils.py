@@ -132,11 +132,5 @@ class _LatestOutputFile:
         return _LatestOutputFile(label, path)
 
 
-def make_label(label):
-    """
-    Annotates a label so the user can distinguish it from a normal path.
-
-    Args:
-        label (str): A label to annotate
-    """
-    return "{" + label + "}"
+def make_label(name):
+    return "{" + name + "}"
