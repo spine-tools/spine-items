@@ -506,9 +506,10 @@ class DataConnection(ProjectItem):
         Returns:
             bool: True if renaming succeeded, False otherwise
         """
-        self.file_system_watcher.remove_persistent_dir_path(self.data_dir)
+        old_data_dir = self.data_dir
         if not super().rename(new_name):
             return False
+        self.file_system_watcher.remove_persistent_dir_path(old_data_dir)
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.populate_data_list()
         return True
