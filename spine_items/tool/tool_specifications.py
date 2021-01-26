@@ -68,6 +68,22 @@ def make_specification(definition, app_settings, logger):
             "are 'python', 'gams', 'julia' and 'executable'"
         )
         return None
+    if not os.path.isdir(os.path.abspath(path)):
+        try:
+            n = definition["name"]
+        except KeyError:
+            logger.msg_error.emit("Loading unnamed Tool specification failed")
+            return None
+        try:
+            main_program_file = definition["includes"][0]
+            logger.msg_error.emit(
+                f"Tool spec <b>{n}</b> main program directory does not exist. Fix this in "
+                f"Tool spec editor by adding path to the main program file <b>{main_program_file}</b> again.")
+        except IndexError:
+            logger.msg_error.emit(
+                f"Tool spec <b>{n}</b> main program directory and main program file are missing. Fix this in "
+                f"Tool spec editor by adding the path to the main program file again.")
+        path = None
     if _tooltype == "julia":
         spec = JuliaTool.load(path, definition, app_settings, logger)
     elif _tooltype == "python":
@@ -120,10 +136,7 @@ class ToolSpecification(ProjectItemSpecification):
         self._settings = settings
         self._logger = logger
         self.tooltype = tooltype
-        if not os.path.exists(path):
-            pass
-        else:
-            self.path = path
+        self.path = path
         self.includes = includes
         if cmdline_args is not None:
             if isinstance(cmdline_args, str):
@@ -244,11 +257,16 @@ class ToolSpecification(ProjectItemSpecification):
 
     def get_main_program_file_path(self):
         """Returns this specification's main program file path."""
+        if not self.path or not os.path.isdir(self.path):
+            self._logger.msg_error.emit(
+                f"Opening Tool spec main program file <b>{self.includes[0]}</b> failed. "
+                f"Main program directory does not exist."
+            )
+            return None
         file_path = os.path.join(self.path, self.includes[0])
-        # Check if file exists first. openUrl may return True even if file doesn't exist
-        # TODO: this could still fail if the file is deleted or renamed right after the check
+        # Check that file exists
         if not os.path.isfile(file_path):
-            self._logger.msg_error.emit("Tool main program file <b>{0}</b> not found.".format(file_path))
+            self._logger.msg_error.emit("Tool spec main program file <b>{0}</b> not found.".format(file_path))
             return None
         ext = os.path.splitext(os.path.split(file_path)[1])[1]
         if ext in [".bat", ".exe"]:

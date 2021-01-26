@@ -54,6 +54,9 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
     @Slot()
     def open_main_program_dir(self):
         tool_specification_path = self.parent().specification_model.specification(self.index.row()).path
+        if not tool_specification_path:
+            self.parent().msg_error.emit("Main program directory does not exist. Fix this in Tool spec editor.")
+            return
         path_url = "file:///" + tool_specification_path
         self.parent().open_anchor(QUrl(path_url, QUrl.TolerantMode))
 

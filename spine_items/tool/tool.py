@@ -312,12 +312,13 @@ class Tool(ProjectItem):
         """See base class."""
         if not self.specification():
             self.add_notification("This Tool does not have a specification. Set it in the Tool Properties Panel.")
+        if self.specification() is not None and not self.specification().path:
+            n = self.specification().name
+            self.add_notification(
+                f"Tool specification <b>{n}</b> path does not exist. Fix this in Tool specification editor."
+            )
         resources = upstream_resources + downstream_resources
         self._input_file_model.update(resources)
-        if not resources:
-            self.add_notification(
-                "This Tool does not have any input data. Connect Items to this Tool to use their data as input."
-            )
         self._notify_if_duplicate_file_paths()
         file_paths = self._find_input_files(resources)
         file_paths = flatten_file_path_duplicates(file_paths, self._logger)

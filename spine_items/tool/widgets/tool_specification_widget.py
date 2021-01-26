@@ -91,7 +91,8 @@ class ToolSpecificationWidget(QWidget):
         # Get first item from sourcefiles list as the main program file
         try:
             self.main_program_file = self.sourcefiles.pop(0)
-            self.ui.lineEdit_main_program.setText(os.path.join(self.program_path, self.main_program_file))
+            if self.program_path is not None:  # It's None if the path does not exist
+                self.ui.lineEdit_main_program.setText(os.path.join(self.program_path, self.main_program_file))
         except IndexError:
             pass  # sourcefiles list is empty
         # Populate lists (this will also create headers)
