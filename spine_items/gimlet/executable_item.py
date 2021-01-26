@@ -113,11 +113,12 @@ class ExecutableItem(ExecutableItemBase):
         cmd_list = self.cmd_list.copy()
         # Expand cmd_list from resources
         labelled_args = labelled_resource_args(forward_resources + backward_resources)
-        for k, label in enumerate(cmd_list):
-            arg = labelled_args.get(label)
-            if arg is None and is_label(label):
-                self._logger.msg_warning.emit(f"The argument '{k}: {label}' does not match any available resources.")
-                continue
+        for k, arg in enumerate(cmd_list):
+            if is_label(arg):
+                if arg not in labelled_args:
+                    self._logger.msg_warning.emit(f"The argument '{k}: {arg}' does not match any available resources.")
+                    continue
+                arg = labelled_args[arg]
             cmd_list[k] = arg
         if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)
