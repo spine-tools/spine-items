@@ -45,6 +45,9 @@ class ToolSpecificationWidget(QWidget):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.ui.widget_main_program.setVisible(False)
+        self.ui.textEdit_main_program.setStyleSheet(
+            "QTextEdit {background-color: #19232D; border: 1px solid #32414B; color: #F0F0F0; border-radius: 2px;}"
+        )
         # Class attributes
         self._toolbox = toolbox
         self._project = self._toolbox.project()
@@ -82,20 +85,17 @@ class ToolSpecificationWidget(QWidget):
             index = tool_types.index(specification.tooltype) + 1
             self.ui.comboBox_tooltype.setCurrentIndex(index)
         # Init lists
-        self.main_program_file = ""
         self.sourcefiles = list(specification.includes) if specification else list()
+        # Get first item from sourcefiles list as the main program file
+        try:
+            self.main_program_file = self.sourcefiles.pop(0)
+        except IndexError:
+            self.main_program_file = ""
         self.inputfiles = list(specification.inputfiles) if specification else list()
         self.inputfiles_opt = list(specification.inputfiles_opt) if specification else list()
         self.outputfiles = list(specification.outputfiles) if specification else list()
         self.program_path = specification.path if specification else None
         self.definition = dict(item_type=ItemInfo.item_type())
-        # Get first item from sourcefiles list as the main program file
-        try:
-            self.main_program_file = self.sourcefiles.pop(0)
-            if self.program_path is not None:  # It's None if the path does not exist
-                self.set_main_program_file(os.path.join(self.program_path, self.main_program_file))
-        except IndexError:
-            pass  # sourcefiles list is empty
         # Populate lists (this will also create headers)
         self.populate_sourcefile_list(self.sourcefiles)
         self.populate_inputfiles_list(self.inputfiles)
@@ -108,6 +108,8 @@ class ToolSpecificationWidget(QWidget):
         self.ui.toolButton_add_source_files.setStyleSheet("QToolButton::menu-indicator { image: none; }")
         self.ui.toolButton_add_source_files.setStyleSheet("QToolButton::menu-indicator { image: none; }")
         self.connect_signals()
+        if self.program_path is not None:  # It's None if the path does not exist
+            self.set_main_program_file(os.path.join(self.program_path, self.main_program_file))
 
     def connect_signals(self):
         """Connect signals to slots."""
@@ -231,6 +233,7 @@ class ToolSpecificationWidget(QWidget):
             with open(main_program, "w") as file:
                 file.write(self.ui.textEdit_main_program.toPlainText())
             self.ui.textEdit_main_program.document().setModified(False)
+            self.show_status_bar_msg(f"Main program file '{os.path.basename(main_program)}' saved successfully")
         except IOError as e:
             self.show_status_bar_msg(e)
 
