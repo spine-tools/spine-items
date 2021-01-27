@@ -27,7 +27,7 @@ from spinetoolbox.helpers import busy_effect, open_url
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from ..item_info import ItemInfo
 from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS
-from .custom_menus import AddIncludesPopupMenu, CreateMainProgramPopupMenu
+from .custom_menus import AddIncludesPopupMenu
 
 
 class ToolSpecificationWidget(QWidget):
@@ -44,6 +44,7 @@ class ToolSpecificationWidget(QWidget):
         # Setup UI from Qt Designer file
         self.ui = Ui_Form()
         self.ui.setupUi(self)
+        self.ui.widget_main_program.setVisible(False)
         # Class attributes
         self._toolbox = toolbox
         self._project = self._toolbox.project()
@@ -92,7 +93,7 @@ class ToolSpecificationWidget(QWidget):
         try:
             self.main_program_file = self.sourcefiles.pop(0)
             if self.program_path is not None:  # It's None if the path does not exist
-                self.ui.lineEdit_main_program.setText(os.path.join(self.program_path, self.main_program_file))
+                self.set_main_program_file(os.path.join(self.program_path, self.main_program_file))
         except IndexError:
             pass  # sourcefiles list is empty
         # Populate lists (this will also create headers)
@@ -101,14 +102,10 @@ class ToolSpecificationWidget(QWidget):
         self.populate_inputfiles_opt_list(self.inputfiles_opt)
         self.populate_outputfiles_list(self.outputfiles)
         self.ui.lineEdit_name.setFocus()
-        self.ui.label_mainpath.setText(self.program_path)
         # Add includes popup menu
         self.add_source_files_popup_menu = AddIncludesPopupMenu(self)
         self.ui.toolButton_add_source_files.setMenu(self.add_source_files_popup_menu)
         self.ui.toolButton_add_source_files.setStyleSheet("QToolButton::menu-indicator { image: none; }")
-        # Add create new or add existing main program popup menu
-        self.add_main_prgm_popup_menu = CreateMainProgramPopupMenu(self)
-        self.ui.toolButton_add_main_program.setMenu(self.add_main_prgm_popup_menu)
         self.ui.toolButton_add_source_files.setStyleSheet("QToolButton::menu-indicator { image: none; }")
         self.connect_signals()
 
@@ -116,9 +113,16 @@ class ToolSpecificationWidget(QWidget):
         """Connect signals to slots."""
         self.ui.toolButton_add_source_files.clicked.connect(self.show_add_source_files_dialog)
         self.ui.toolButton_add_source_dirs.clicked.connect(self.show_add_source_dirs_dialog)
-        self.ui.lineEdit_main_program.file_dropped.connect(self.set_main_program_path)
+        self.ui.lineEdit_main_program.file_dropped.connect(self.set_main_program_file)
+        self.ui.lineEdit_main_program.textChanged.connect(self.validate_main_program_file)
+        self.ui.textEdit_main_program.document().modificationChanged.connect(
+            self.ui.toolButton_save_main_program.setEnabled
+        )
         self.ui.treeView_sourcefiles.files_dropped.connect(self.add_dropped_includes)
         self.ui.treeView_sourcefiles.doubleClicked.connect(self.open_includes_file)
+        self.ui.toolButton_new_main_program.clicked.connect(self.new_main_program_file)
+        self.ui.toolButton_browse_main_program.clicked.connect(self.browse_main_program_file)
+        self.ui.toolButton_save_main_program.clicked.connect(self.save_main_program_file)
         self.ui.toolButton_minus_source_files.clicked.connect(self.remove_source_files)
         self.ui.toolButton_plus_inputfiles.clicked.connect(self.add_inputfiles)
         self.ui.toolButton_minus_inputfiles.clicked.connect(self.remove_inputfiles)
@@ -184,31 +188,59 @@ class ToolSpecificationWidget(QWidget):
                 self.outputfiles_model.appendRow(qitem)
 
     @Slot(bool)
-    def browse_main_program(self, checked=False):
+    def browse_main_program_file(self, checked=False):
         """Open file browser where user can select the path of the main program file."""
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileName(self, "Add existing main program file", self._project.project_dir, "*.*")
+        answer = QFileDialog.getOpenFileName(
+            self, "Select existing main program file", self._project.project_dir, "*.*"
+        )
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
             return
-        self.set_main_program_path(file_path)
+        self.set_main_program_file(file_path)
 
     @Slot("QString")
-    def set_main_program_path(self, file_path):
+    def set_main_program_file(self, file_path):
         """Set main program file and folder path."""
+        self.ui.lineEdit_main_program.setText(file_path)
+
+    @Slot(str)
+    def validate_main_program_file(self, file_path):
         folder_path = os.path.split(file_path)[0]
         self.program_path = os.path.abspath(folder_path)
         # Update UI
-        self.ui.lineEdit_main_program.setText(file_path)
         self.ui.label_mainpath.setText(self.program_path)
+        if not os.path.isfile(file_path):
+            self.show_status_bar_msg("Main program file is not valid")
+            self.ui.widget_main_program.setVisible(False)
+            return
+        self.ui.widget_main_program.setVisible(True)
+        # Load main program file into text edit
+        try:
+            with open(file_path, 'r') as file:
+                text = file.read()
+            self.ui.textEdit_main_program.setPlainText(text)
+        except IOError as e:
+            self.show_status_bar_msg(e)
 
-    @Slot()
-    def new_main_program_file(self):
+    @Slot(bool)
+    def save_main_program_file(self, _=False):
+        """Saves main program file."""
+        main_program = self.ui.lineEdit_main_program.text().strip()
+        try:
+            with open(main_program, "w") as file:
+                file.write(self.ui.textEdit_main_program.toPlainText())
+            self.ui.textEdit_main_program.document().setModified(False)
+        except IOError as e:
+            self.show_status_bar_msg(e)
+
+    @Slot(bool)
+    def new_main_program_file(self, _=False):
         """Creates a new blank main program file. Let's user decide the file name and path.
          Alternative version using only one getSaveFileName dialog.
          """
         # noinspection PyCallByClass
-        answer = QFileDialog.getSaveFileName(self, "Create new main program", self._project.project_dir)
+        answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._project.project_dir)
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
             return
@@ -225,11 +257,7 @@ class ToolSpecificationWidget(QWidget):
             # noinspection PyTypeChecker, PyArgumentList, PyCallByClass
             QMessageBox.information(self, "Creating file failed", msg)
             return
-        main_dir = os.path.dirname(file_path)
-        self.program_path = os.path.abspath(main_dir)
-        # Update UI
-        self.ui.lineEdit_main_program.setText(file_path)
-        self.ui.label_mainpath.setText(self.program_path)
+        self.set_main_program_file(file_path)
 
     @Slot()
     def new_source_file(self):

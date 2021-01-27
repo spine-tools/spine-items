@@ -75,18 +75,3 @@ class AddIncludesPopupMenu(CustomPopupMenu):
         self.add_action("New file", self._parent.new_source_file)
         self.addSeparator()
         self.add_action("Open files...", self._parent.show_add_source_files_dialog)
-
-
-class CreateMainProgramPopupMenu(CustomPopupMenu):
-    """Popup menu class for add main program QToolButton in Tool specification editor widget."""
-
-    def __init__(self, parent):
-        """
-        Args:
-            parent (QWidget): Parent widget (ToolSpecificationWidget)
-        """
-        super().__init__(parent)
-        self._parent = parent
-        # Open a tool specification file
-        self.add_action("Make new main program", self._parent.new_main_program_file)
-        self.add_action("Select existing main program", self._parent.browse_main_program)
