@@ -21,6 +21,7 @@ import os
 from PySide2.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir, QuietLogger
 from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from spine_engine.utils.serialization import deserialize_checked_states, serialize_checked_states
 from spine_engine.spine_io.importers.csv_reader import CSVConnector
 from spine_engine.spine_io.importers.excel_reader import ExcelConnector
@@ -99,17 +100,6 @@ class Importer(ProjectItem):
     def executable_class(self):
         return ExecutableItem
 
-    def execution_item(self, silent=True):
-        """Creates project item's execution counterpart."""
-        mapping = self.specification().mapping if self.specification() is not None else dict()
-        selected_files = [file_item.label for file_item in self._file_model.files if file_item.selected]
-        gams_path = self._project.settings.value("appSettings/gamsPath", defaultValue=None)
-        logger = QuietLogger() if silent else self._logger
-        executable = ExecutableItem(
-            self.name, mapping, selected_files, self.logs_dir, gams_path, self.cancel_on_error, logger
-        )
-        return executable
-
     @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
@@ -173,10 +163,17 @@ class Importer(ProjectItem):
         self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
         self._properties_ui.label_name.setText(self.name)
         self._properties_ui.treeView_files.setModel(self._file_model)
+        self._update_ui()
+
+    def _update_ui(self):
         if self._specification:
             self._properties_ui.comboBox_specification.setCurrentText(self._specification.name)
+            spec_model_index = self._toolbox.specification_model.specification_index(self._specification.name)
+            specification_options_popup_menu = ItemSpecificationMenu(self._toolbox, spec_model_index)
+            self._properties_ui.toolButton_edit_specification.setMenu(specification_options_popup_menu)
         else:
             self._properties_ui.comboBox_specification.setCurrentIndex(-1)
+            self._properties_ui.toolButton_edit_specification.setMenu(None)
 
     def save_selections(self):
         """Saves selections in shared widgets for this project item into instance variables."""
@@ -191,10 +188,9 @@ class Importer(ProjectItem):
         if not super().do_set_specification(specification):
             return False
         if self._active:
-            if specification is None:
-                self._properties_ui.comboBox_specification.setCurrentIndex(-1)
-                return True
-            self._properties_ui.comboBox_specification.setCurrentText(specification.name)
+            self._update_ui()
+        if specification is None:
+            return True
         self.item_changed.emit()
         return True
 

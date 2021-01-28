@@ -35,7 +35,7 @@ class SpecificationEditorWindow(QWidget):
     accepted = Signal(str)
     """Emitted when the specification has be accepted by the user."""
 
-    def __init__(self, toolbox, specification, urls=None, item_name=None):
+    def __init__(self, toolbox, specification=None, urls=None, item_name=None):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window

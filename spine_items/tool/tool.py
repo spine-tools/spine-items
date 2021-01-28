@@ -29,6 +29,7 @@ from .commands import UpdateToolExecuteInWorkCommand
 from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
+from .widgets.tool_specification_widget import ToolSpecificationWidget
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
 from ..models import ToolCommandLineArgsModel, InputFileListModel
@@ -64,7 +65,6 @@ class Tool(ProjectItem):
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
         self._cmdline_args_model = ToolCommandLineArgsModel(self)
-        self.specification_options_popup_menu = None
         self._specification = self._toolbox.specification_model.find_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
@@ -93,6 +93,7 @@ class Tool(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
+        s[self._properties_ui.toolButton_tool_specification.clicked] = self.show_specification_window
         s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda _: self.open_directory
         s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
@@ -109,6 +110,12 @@ class Tool(ProjectItem):
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
         self._update_tool_ui()
+
+    @Slot(bool)
+    def show_specification_window(self, _=True):
+        """Opens the settings window."""
+        specification_window = ToolSpecificationWidget(self._toolbox, None)
+        specification_window.show()
 
     @Slot(bool)
     def update_execution_mode(self, checked):
@@ -182,7 +189,8 @@ class Tool(ProjectItem):
         if not super().do_set_specification(specification):
             return False
         self._populate_cmdline_args_model()
-        self._update_tool_ui()
+        if self._active:
+            self._update_tool_ui()
         if self.undo_execute_in_work is None:
             self.undo_execute_in_work = self.execute_in_work
         if specification:
@@ -199,22 +207,15 @@ class Tool(ProjectItem):
     def _update_tool_ui(self):
         """Updates Tool UI to show Tool specification details. Used when Tool specification is changed.
         Overrides execution mode (work or source) with the specification default."""
-        if not self._active:
-            return
-        if not self._properties_ui:
-            return
         if not self.specification():
             self._properties_ui.comboBox_tool.setCurrentIndex(-1)
             self.do_update_execution_mode(True)
-            spec_model_index = None
-            self.do_update_execution_mode(True)
-            self._properties_ui.toolButton_tool_specification.setEnabled(False)
+            self._properties_ui.toolButton_tool_specification.setMenu(None)
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
             spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
-            self.specification_options_popup_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
-            self._properties_ui.toolButton_tool_specification.setEnabled(True)
-            self._properties_ui.toolButton_tool_specification.setMenu(self.specification_options_popup_menu)
+            specification_options_popup_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
+            self._properties_ui.toolButton_tool_specification.setMenu(specification_options_popup_menu)
 
     @Slot(bool)
     def _open_results_directory(self, _):

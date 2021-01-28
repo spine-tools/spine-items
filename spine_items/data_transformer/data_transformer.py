@@ -18,6 +18,7 @@ Contains the :class:`DataTransformer` project item.
 from json import dump
 from PySide2.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
@@ -89,13 +90,11 @@ class DataTransformer(ProjectItem):
         """see base class"""
         if not super().do_set_specification(specification):
             return False
-        if specification is None:
-            if self._active:
-                self._properties_ui.specification_combo_box.setCurrentIndex(-1)
-            return True
-        self._specification_name = specification.name
+        self._specification_name = specification.name if specification is not None else None
         if self._active:
-            self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
+            self._update_ui()
+        if specification is None:
+            return True
         # FIXME: Find a better place for saving the filter file
         path = filter_config_path(self.data_dir)
         if specification.settings is not None:
@@ -111,11 +110,9 @@ class DataTransformer(ProjectItem):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification = self._toolbox.specification_model.find_specification(self._specification_name)
         specification_window = SpecificationEditorWindow(
-            self._toolbox, specification, [r.url for r in self._db_resources], self.name
+            self._toolbox, specification=None, urls=[r.url for r in self._db_resources], item_name=self.name
         )
-        specification_window.accepted.connect(self._change_specification)
         specification_window.show()
 
     def notify_destination(self, source_item):
@@ -155,7 +152,14 @@ class DataTransformer(ProjectItem):
     def restore_selections(self):
         """See base class."""
         self._properties_ui.item_name_label.setText(self.name)
+        self._update_ui()
+
+    def _update_ui(self):
         if self._specification_name:
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
+            spec_model_index = self._toolbox.specification_model.specification_index(self._specification_name)
+            specification_options_popup_menu = ItemSpecificationMenu(self._toolbox, spec_model_index)
+            self._properties_ui.specification_button.setMenu(specification_options_popup_menu)
         else:
             self._properties_ui.specification_combo_box.setCurrentIndex(-1)
+            self._properties_ui.specification_button.setMenu(None)

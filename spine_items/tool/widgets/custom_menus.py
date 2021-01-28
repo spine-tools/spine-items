@@ -22,7 +22,7 @@ from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu, CustomPopup
 
 
 class ToolSpecificationMenu(ItemSpecificationMenu):
-    """Context menu class for Tool specifications."""
+    """Menu class for Tool specifications."""
 
     def __init__(self, parent, index):
         """
@@ -31,8 +31,8 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
             index (QModelIndex): the index from specification model
         """
         super().__init__(parent, index)
-        self.add_action("Edit main program file...", self.open_main_program_file)
-        self.add_action("Open main program directory...", self.open_main_program_dir)
+        self.add_action("Edit main program file", self.open_main_program_file)
+        self.add_action("Open main program directory", self.open_main_program_dir)
 
     @Slot()
     def open_main_program_file(self):
