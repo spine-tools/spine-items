@@ -22,7 +22,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>761</height>
+    <height>997</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,7 +32,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Edit Tool Specification</string>
+   <string>Tool Specification editor</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_6">
    <property name="spacing">
@@ -246,7 +246,7 @@
        <widget class="QWidget" name="widget_main_program" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <widget class="QTextEdit" name="textEdit_main_program">
+          <widget class="MainProgramTextEdit" name="textEdit_main_program">
            <property name="enabled">
             <bool>true</bool>
            </property>
@@ -1048,6 +1048,11 @@
    <class>SourcesTreeView</class>
    <extends>QTreeView</extends>
    <header>spinetoolbox/widgets/custom_qtreeview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MainProgramTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header>spine_items/tool/widgets/main_program_text_edit.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

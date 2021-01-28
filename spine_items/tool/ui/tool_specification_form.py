@@ -28,6 +28,7 @@ from PySide2.QtWidgets import *
 from spinetoolbox.widgets.custom_qlineedits import CustomQLineEdit
 from spinetoolbox.widgets.custom_qtreeview import CustomTreeView
 from spinetoolbox.widgets.custom_qtreeview import SourcesTreeView
+from spine_items.tool.widgets.main_program_text_edit import MainProgramTextEdit
 
 from spine_items import resources_icons_rc
 
@@ -36,7 +37,7 @@ class Ui_Form(object):
         if not Form.objectName():
             Form.setObjectName(u"Form")
         Form.setWindowModality(Qt.ApplicationModal)
-        Form.resize(600, 761)
+        Form.resize(600, 997)
         sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -138,7 +139,7 @@ class Ui_Form(object):
         self.widget_main_program.setObjectName(u"widget_main_program")
         self.verticalLayout_2 = QVBoxLayout(self.widget_main_program)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.textEdit_main_program = QTextEdit(self.widget_main_program)
+        self.textEdit_main_program = MainProgramTextEdit(self.widget_main_program)
         self.textEdit_main_program.setObjectName(u"textEdit_main_program")
         self.textEdit_main_program.setEnabled(True)
 
@@ -482,7 +483,7 @@ class Ui_Form(object):
     # setupUi
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QCoreApplication.translate("Form", u"Edit Tool Specification", None))
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Tool Specification editor", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_name.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification name (required)</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
