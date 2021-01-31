@@ -38,8 +38,8 @@ from .output_resources import scan_for_resources
 
 class Tool(ProjectItem):
 
-    _python_console_requested = Signal(str, str, str)
-    _julia_console_requested = Signal(str, str, str)
+    python_console_requested = Signal(str, str, str)
+    julia_console_requested = Signal(str, str, str)
 
     def __init__(
         self, name, description, x, y, toolbox, project, specification_name="", execute_in_work=True, cmd_line_args=None
@@ -76,8 +76,8 @@ class Tool(ProjectItem):
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_update_execution_mode(execute_in_work)
-        self._python_console_requested.connect(self._create_python_console)
-        self._julia_console_requested.connect(self._create_julia_console)
+        self.python_console_requested.connect(self._start_python_console)
+        self.julia_console_requested.connect(self._start_julia_console)
 
     @staticmethod
     def item_type():
@@ -418,66 +418,66 @@ class Tool(ProjectItem):
             super().notify_destination(source_item)
 
     @Slot(str, str, str)
-    def _create_python_console(self, filter_id, kernel_name, connection_file):
-        """Creates a python console, eventually for a filter execution.
+    def _start_python_console(self, filter_id, kernel_name, connection_file):
+        """Starts a python console, eventually for a filter execution.
 
         Args:
             filter_id (str): filter identifier
             kernel_name (str): jupyter kernel name
             connection_file (str): path to connection file
         """
+        self._get_python_console(filter_id).connect_to_kernel(kernel_name, connection_file)
+
+    def _get_python_console(self, filter_id):
         if not filter_id:
-            if self.python_console is None:
-                self.python_console = SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
-            console = self.python_console
-        else:
-            console = self._filter_consoles.setdefault(filter_id, {}).setdefault(
-                "python", SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
-            )
-            if self._active:
-                self._project._toolbox.ui.listView_executions.model().layoutChanged.emit()
-        console.connect_to_kernel(kernel_name, connection_file)
+            return self._get_main_python_console()
+        return self._get_filter_python_console(filter_id)
+
+    def _get_main_python_console(self):
+        if self.python_console is None:
+            self.python_console = SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
+        if self._active:
+            self._project.toolbox().override_python_console()
+        return self.python_console
+
+    def _get_filter_python_console(self, filter_id):
+        console = self._filter_consoles.setdefault(filter_id, {}).setdefault(
+            "python", SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
+        )
+        if self._active:
+            self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
+        return console
 
     @Slot(str, str, str)
-    def _create_julia_console(self, filter_id, kernel_name, connection_file):
-        """Creates a julia console, eventually for a filter execution.
+    def _start_julia_console(self, filter_id, kernel_name, connection_file):
+        """Starts a julia console, eventually for a filter execution.
 
         Args:
             filter_id (str): filter identifier
             kernel_name (str): jupyter kernel name
             connection_file (str): path to connection file
         """
+        self._get_julia_console(filter_id).connect_to_kernel(kernel_name, connection_file)
+
+    def _get_julia_console(self, filter_id):
         if not filter_id:
-            if self.julia_console is None:
-                self.julia_console = SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
-            console = self.julia_console
-        else:
-            console = self._filter_consoles.setdefault(filter_id, {}).setdefault(
-                "julia", SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
-            )
-            if self._active:
-                self._project._toolbox.ui.listView_executions.model().layoutChanged.emit()
-        console.connect_to_kernel(kernel_name, connection_file)
+            return self._get_main_julia_console()
+        return self._get_filter_julia_console(filter_id)
 
-    def start_python_console(self, filter_id, kernel_name, connection_file):
-        """Starts the python console.
+    def _get_main_julia_console(self):
+        if self.julia_console is None:
+            self.julia_console = SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
+        if self._active:
+            self._project.toolbox().override_julia_console()
+        return self.julia_console
 
-        Args:
-            filter_id (str): filter identifier
-            kernel_name (str): jupyter kernel name
-            connection_file (str): path to connection file
-        """
-        self._python_console_requested.emit(filter_id, kernel_name, connection_file)
-
-    def start_julia_console(self, filter_id, kernel_name, connection_file):
-        """Starts the julia console.
-
-        Args:
-            filter_id (str): filter identifier
-            kernel_name (str): jupyter kernel name
-            connection_file (str): path to connection file
-        """
-        self._julia_console_requested.emit(filter_id, kernel_name, connection_file)
+    def _get_filter_julia_console(self, filter_id):
+        console = self._filter_consoles.setdefault(filter_id, {}).setdefault(
+            "julia", SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
+        )
+        if self._active:
+            self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
+        return console
 
     def set_up(self):
         """See base class."""

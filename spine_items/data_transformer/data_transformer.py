@@ -95,7 +95,6 @@ class DataTransformer(ProjectItem):
             self._update_ui()
         if specification is None:
             return True
-        # FIXME: Find a better place for saving the filter file
         path = filter_config_path(self.data_dir)
         if specification.settings is not None:
             with open(path, "w") as filter_config_file:
