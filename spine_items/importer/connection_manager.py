@@ -22,9 +22,6 @@ from PySide2.QtWidgets import QFileDialog
 
 class ConnectionManager(QObject):
     """Class to manage data connections in another thread.
-
-    Args:
-        connection (class): A class derived from `SourceConnection`, e.g. `CSVConnector`
     """
 
     start_table_get = Signal()
@@ -58,8 +55,13 @@ class ConnectionManager(QObject):
     current_table_changed = Signal()
     """Emitted when the current table has changed."""
 
-    def __init__(self, connection, connection_settings, parent=None):
-        super().__init__(parent)
+    def __init__(self, connection, connection_settings):
+        """
+        Args:
+            connection (Type): A class derived from `SourceConnection`, e.g. `CSVConnector`
+            connection_settings (dict): connection specific settings
+        """
+        super().__init__()
         self._thread = None
         self._worker = None
         self._source = None
@@ -113,7 +115,6 @@ class ConnectionManager(QObject):
         Args:
             table (str): table name
         """
-        # check if table has options
         self._current_table = table
         self.current_table_changed.emit()
 
@@ -142,11 +143,9 @@ class ConnectionManager(QObject):
     def request_mapped_data(self, table_mappings, max_rows=-1):
         """Get mapped data from csv file
 
-        Arguments:
-            table_mappings {dict} -- dict with filename as key and a list of mappings as value
-
-        Keyword Arguments:
-            max_rows {int} -- number of rows to read, if -1 read all rows (default: {-1})
+        Args:
+            table_mappings (dict): dict with filename as key and a list of mappings as value
+            max_rows (int): number of rows to read, if -1 read all rows
         """
         if self.is_connected:
             options = {}
@@ -203,7 +202,7 @@ class ConnectionManager(QObject):
         self._is_connected = True
         self.connection_ready.emit()
 
-    @Slot("QVariant")
+    @Slot(object)
     def _handle_tables_ready(self, table_options):
         if isinstance(table_options, list):
             table_options = {name: {} for name in table_options}
@@ -306,7 +305,7 @@ class ConnectionWorker(QObject):
     error = Signal(str)
     # Signal that connection is ready to be read
     connectionReady = Signal()
-    # Signal when tables from source is ready, list of tablenames
+    # Signal when tables from source is ready, list of table names
     tablesReady = Signal(list)
     # Signal when data from a specific table in source is ready, list of data and list of headers
     dataReady = Signal(list, list)
@@ -318,6 +317,7 @@ class ConnectionWorker(QObject):
         self._source = source
         self._connection = connection(connection_settings)
 
+    @Slot()
     def init_connection(self):
         """
         Connect to data source
@@ -332,6 +332,7 @@ class ConnectionWorker(QObject):
         else:
             self.connectionFailed.emit("Connection has no source")
 
+    @Slot()
     def tables(self):
         try:
             tables = self._connection.get_tables()
@@ -340,6 +341,7 @@ class ConnectionWorker(QObject):
             self.error.emit(f"Could not get tables from source: {error}")
             raise error
 
+    @Slot(list, dict, int)
     def data(self, table, options, max_rows):
         try:
             data, header = self._connection.get_data(table, options, max_rows)
@@ -348,6 +350,7 @@ class ConnectionWorker(QObject):
             self.error.emit(f"Could not get data from source: {error}")
             raise error
 
+    @Slot(dict, dict, list, list, int)
     def mapped_data(self, table_mappings, options, types, table_row_types, max_rows):
         try:
             data, errors = self._connection.get_mapped_data(table_mappings, options, types, table_row_types, max_rows)
@@ -356,6 +359,7 @@ class ConnectionWorker(QObject):
             self.error.emit(f"Could not get mapped data from source: {error}")
             raise error
 
+    @Slot()
     def disconnect(self):
         try:
             self._connection.disconnect()

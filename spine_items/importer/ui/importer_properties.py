@@ -121,10 +121,6 @@ class Ui_Form(object):
 
         self.verticalLayout_21.addWidget(self.treeView_files)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.verticalLayout_21.addItem(self.verticalSpacer)
-
         self.cancel_on_error_checkBox = QCheckBox(self.scrollAreaWidgetContents_5)
         self.cancel_on_error_checkBox.setObjectName(u"cancel_on_error_checkBox")
         self.cancel_on_error_checkBox.setChecked(True)

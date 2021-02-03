@@ -40,6 +40,7 @@ from spine_engine.spine_io.importers.excel_reader import ExcelConnector
 from spine_engine.spine_io.importers.gdx_connector import GdxConnector
 from spine_engine.spine_io.importers.json_reader import JSONConnector
 from spine_engine.spine_io.importers.datapackage_reader import DataPackageConnector
+from spine_engine.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
 from spine_engine.spine_io.gdx_utils import find_gams_directory
 from ..connection_manager import ConnectionManager
 from ..commands import RestoreMappingsFromDict
@@ -55,6 +56,7 @@ _CONNECTOR_NAME_TO_CLASS = {
     "GdxConnector": GdxConnector,
     "JSONConnector": JSONConnector,
     "DataPackageConnector": DataPackageConnector,
+    "SqlAlchemyConnector": SqlAlchemyConnector,
 }
 
 
