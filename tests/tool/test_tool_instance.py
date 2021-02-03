@@ -25,24 +25,24 @@ class TestPythonToolInstance(unittest.TestCase):
     def test_prepare_with_cmd_line_arguments_in_embedded_console(self):
         instance = self._make_tool_instance(True)
         instance.prepare(["arg1", "arg2"])
-        self.assertEqual(instance.args, ['%run "main.py" "arg1" "arg2"'])
+        self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py" "arg1" "arg2"'])
 
     def test_prepare_with_empty_cmd_line_arguments_in_embedded_console(self):
         instance = self._make_tool_instance(True)
         instance.prepare([])
-        self.assertEqual(instance.args, ['%run "main.py"'])
+        self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py"'])
 
     def test_prepare_with_cmd_line_arguments(self):
         instance = self._make_tool_instance(False)
         instance.prepare(["arg1", "arg2"])
         self.assertEqual(instance.program, "python_path/python.exe")
-        self.assertEqual(instance.args, ["path/main.py", "arg1", "arg2"])
+        self.assertEqual(instance.args, ["main.py", "arg1", "arg2"])
 
     def test_prepare_without_cmd_line_arguments(self):
         instance = self._make_tool_instance(False)
         instance.prepare([])
         self.assertEqual(instance.program, "python_path/python.exe")
-        self.assertEqual(instance.args, ["path/main.py"])
+        self.assertEqual(instance.args, ["main.py"])
 
     @staticmethod
     def _make_tool_instance(execute_in_embedded_console):
