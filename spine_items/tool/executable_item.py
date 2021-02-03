@@ -30,7 +30,7 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
-from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern
+from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, can_use_db_server
 from .output_resources import scan_for_resources
 from ..utils import labelled_resource_args, is_label
 
@@ -388,21 +388,26 @@ class ExecutableItem(ExecutableItemBase):
             return False
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         # Expand cmd_line_args from resources
-        labelled_args = labelled_resource_args(forward_resources + backward_resources)
-        for k, arg in enumerate(self._cmd_line_args):
-            if is_label(arg):
-                if arg not in labelled_args:
-                    self._logger.msg_warning.emit(f"The argument '{k}: {arg}' does not match any available resources.")
-                    continue
-                arg = labelled_args[arg]
-            self._cmd_line_args[k] = arg
-        try:
-            self._tool_instance.prepare(self._cmd_line_args)
-        except RuntimeError as error:
-            self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
-            return False
-        self._logger.msg.emit(f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***")
-        return_code = self._tool_instance.execute()
+        use_db_server = can_use_db_server(self._tool_specification)
+        with labelled_resource_args(forward_resources + backward_resources, use_db_server) as labelled_args:
+            for k, arg in enumerate(self._cmd_line_args):
+                if is_label(arg):
+                    if arg not in labelled_args:
+                        self._logger.msg_warning.emit(
+                            f"The argument '{k}: {arg}' does not match any available resources."
+                        )
+                        continue
+                    arg = labelled_args[arg]
+                self._cmd_line_args[k] = arg
+            try:
+                self._tool_instance.prepare(self._cmd_line_args)
+            except RuntimeError as error:
+                self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
+                return False
+            self._logger.msg.emit(
+                f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***"
+            )
+            return_code = self._tool_instance.execute()
         self._handle_output_files(return_code, execution_dir)
         self._tool_instance = None
         return return_code == 0

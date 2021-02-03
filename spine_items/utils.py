@@ -16,6 +16,9 @@ Contains utilities for all items.
 :date:   1.4.2020
 """
 
+from contextlib import contextmanager
+from spinedb_api.spine_db_server import start_spine_db_server, shutdown_spine_db_server
+
 
 def labelled_resource_filepaths(resources):
     """Returns a dict mapping resource labels to filepaths available in given resources.
@@ -24,8 +27,24 @@ def labelled_resource_filepaths(resources):
     return {resource.label: resource.path for resource in resources if resource.hasfilepath}
 
 
-def labelled_resource_args(resources):
-    return {resource.label: resource.arg for resource in resources}
+@contextmanager
+def labelled_resource_args(resources, use_db_server=False):
+    result = {}
+    server_urls = []
+    for resource in resources:
+        if resource.type_ != "database":
+            result[resource.label] = resource.path
+            continue
+        if use_db_server:
+            server_url = result[resource.label] = start_spine_db_server(resource.url)
+            server_urls.append(server_url)
+            continue
+        result[resource.label] = resource.url
+    try:
+        yield result
+    finally:
+        for server_url in server_urls:
+            shutdown_spine_db_server(server_url)
 
 
 def is_label(label):

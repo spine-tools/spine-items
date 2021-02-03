@@ -17,6 +17,10 @@ Utility functions for the Tool project item.
 """
 import glob
 import os.path
+import subprocess
+import json
+from spine_engine.config import JULIA_EXECUTABLE
+from jupyter_client.kernelspec import find_kernel_specs
 
 
 def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):
@@ -134,3 +138,61 @@ class _LatestOutputFile:
 
 def make_label(name):
     return "{" + name + "}"
+
+
+def can_use_db_server(tool_spec):
+    """Whether or not the given tool spec supports db-server url advertising as replacement of the normal db url.
+    This is always True for non-julia tools, as well as for julia tools that definitely don't use SpineInterface.
+    For julia tools that *might* use SpineInterface (i.e., SpineInterface is found in the project),
+    we check SpineInterface version >= v"0.5.0", which is the version where we start supporting db servers.
+
+    Args:
+        tool_spec (ToolSpecification)
+
+    Returns:
+        bool
+    """
+    if tool_spec.tooltype != "julia":
+        return True
+    use_embedded_julia = tool_spec._settings.value("appSettings/useEmbeddedJulia", defaultValue="2") == "2"
+    if use_embedded_julia:
+        kernel_name = tool_spec._settings.value("appSettings/juliaKernel", defaultValue="")
+        resource_dir = find_kernel_specs().get(kernel_name)
+        if resource_dir is None:
+            return True
+        filepath = os.path.join(resource_dir, "kernel.json")
+        with open(filepath, "r") as fh:
+            try:
+                kernel_spec = json.load(fh)
+            except json.decoder.JSONDecodeError:
+                return True
+            julia = kernel_spec["argv"][0]
+            option = "--project="
+            project = next((arg for arg in kernel_spec["argv"] if arg.startswith(option)), None)
+            if project is None:
+                return True
+            project = project[len(option) :]
+    else:
+        julia = tool_spec._settings.value("appSettings/juliaPath", defaultValue="")
+        if julia == "":
+            julia = JULIA_EXECUTABLE
+        project = tool_spec._settings.value("appSettings/juliaProjectPath", defaultValue="")
+    try:
+        p = subprocess.run(
+            [
+                julia,
+                f"--project={project}",
+                "-e",
+                'import Pkg;'
+                'pkgs = Pkg.TOML.parsefile(joinpath(dirname(Base.active_project()), "Manifest.toml"));'
+                'spine_interface = get(pkgs, "SpineInterface", nothing);'
+                'if spine_interface == nothing println(true) '  # SpineInterface not found
+                'else println(VersionNumber(spine_interface[1]["version"]) >= v"0.5.0") '
+                'end',
+            ],
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        return True
+    return str(p.stdout, "utf-8").strip() == "true"
