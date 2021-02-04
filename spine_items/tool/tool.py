@@ -21,7 +21,6 @@ from PySide2.QtCore import Slot, Signal
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
-from spinetoolbox.widgets.spine_console_widget import SpineConsoleWidget
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.utils.serialization import serialize_path, deserialize_path
@@ -95,7 +94,7 @@ class Tool(ProjectItem):
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_tool_specification.clicked] = self.show_specification_window
         s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda _: self.open_directory
-        s[self._properties_ui.pushButton_tool_results.clicked] = self._show_results_directory
+        s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
         s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
@@ -214,11 +213,11 @@ class Tool(ProjectItem):
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
             spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
-            specification_options_popup_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
-            self._properties_ui.toolButton_tool_specification.setMenu(specification_options_popup_menu)
+            specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
+            self._properties_ui.toolButton_tool_specification.setMenu(specification_menu)
 
     @Slot(bool)
-    def _show_results_directory(self, _):
+    def _open_results_directory(self, _):
         """Open output directory in file browser."""
         if not os.path.exists(self.output_dir):
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no results. Click Execute to generate them.")
@@ -228,49 +227,6 @@ class Tool(ProjectItem):
         res = open_url(url)
         if not res:
             self._logger.msg_error.emit(f"Failed to open directory: {self.output_dir}")
-
-    @Slot()
-    def _edit_specification(self):
-        """Open Tool specification editor for the Tool specification attached to this Tool."""
-        if not self.specification():
-            return
-        index = self._toolbox.specification_model.specification_index(self.specification().name)
-        self._toolbox.edit_specification(index)
-
-    @Slot()
-    def open_specification_file(self):
-        """Open Tool specification file."""
-        if not self.specification():
-            return
-        index = self._toolbox.specification_model.specification_index(self.specification().name)
-        self._toolbox.open_specification_file(index)
-
-    @Slot()
-    def _edit_main_program_file(self):
-        """Open Tool specification main program file in an external text edit application."""
-        if not self.specification():
-            return
-        file_path = self.specification().get_main_program_file_path()
-        if file_path is None:
-            return
-        main_program_url = "file:///" + file_path
-        res = open_url(main_program_url)
-        if not res:
-            filename, file_extension = os.path.splitext(file_path)
-            self._logger.msg_error.emit(
-                "Unable to open Tool specification main program file {0}. "
-                "Make sure that <b>{1}</b> "
-                "files are associated with an editor. E.g. on Windows "
-                "10, go to Control Panel -> Default Programs to do this.".format(filename, file_extension)
-            )
-
-    @Slot()
-    def open_main_directory(self):
-        """Open directory where the Tool specification main program is located in file explorer."""
-        if not self.specification():
-            return
-        dir_url = "file:///" + self.specification().path
-        open_url(dir_url)
 
     def specification(self):
         """Returns Tool specification."""
@@ -470,17 +426,17 @@ class Tool(ProjectItem):
             self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
     def actions(self):
-        self._actions = []
         if self.specification() is not None:
-            self._actions.append(QAction("Edit specification..."))
-            self._actions[-1].triggered.connect(lambda _: self._edit_specification())
-            self._actions.append(QAction("Edit main program file..."))
-            self._actions[-1].triggered.connect(lambda _: self._edit_main_program_file())
+            spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
+            spec_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
+            actions = {a.text(): a for a in spec_menu.actions()}
+            self._actions = [actions["Edit specification"], actions["Open main program file"]]
         else:
-            self._actions.append(QAction("New specification..."))
-            self._actions[-1].triggered.connect(self.show_specification_window)
-        self._actions.append(QAction("Show results directory..."))
-        self._actions[-1].triggered.connect(self._show_results_directory)
+            action = QAction("New specification")
+            action.triggered.connect(self.show_specification_window)
+            self._actions = [action]
+        self._actions.append(QAction("Open results directory"))
+        self._actions[-1].triggered.connect(self._open_results_directory)
         return self._actions
 
     @staticmethod

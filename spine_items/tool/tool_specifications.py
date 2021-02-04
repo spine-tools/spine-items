@@ -68,24 +68,6 @@ def make_specification(definition, app_settings, logger):
             "are 'python', 'gams', 'julia' and 'executable'"
         )
         return None
-    if not os.path.isdir(os.path.abspath(path)):
-        try:
-            n = definition["name"]
-        except KeyError:
-            logger.msg_error.emit("Loading unnamed Tool specification failed")
-            return None
-        try:
-            main_program_file = definition["includes"][0]
-            logger.msg_error.emit(
-                f"Tool spec <b>{n}</b> main program directory does not exist. Fix this in "
-                f"Tool spec editor by adding path to the main program file <b>{main_program_file}</b> again."
-            )
-        except IndexError:
-            logger.msg_error.emit(
-                f"Tool spec <b>{n}</b> main program directory and main program file are missing. Fix this in "
-                f"Tool spec editor by adding the path to the main program file again."
-            )
-        path = None
     if _tooltype == "julia":
         spec = JuliaTool.load(path, definition, app_settings, logger)
     elif _tooltype == "python":

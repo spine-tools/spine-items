@@ -31,11 +31,11 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
             index (QModelIndex): the index from specification model
         """
         super().__init__(parent, index)
-        self.add_action("Edit main program file", self.open_main_program_file)
-        self.add_action("Open main program directory", self.open_main_program_dir)
+        self.add_action("Open main program file", self._open_main_program_file)
+        self.add_action("Open main program directory", self._open_main_program_dir)
 
     @Slot()
-    def open_main_program_file(self):
+    def _open_main_program_file(self):
         spec = self.parent().specification_model.specification(self.index.row())
         file_path = spec.get_main_program_file_path()
         if file_path is None:
@@ -52,7 +52,7 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
             )
 
     @Slot()
-    def open_main_program_dir(self):
+    def _open_main_program_dir(self):
         tool_specification_path = self.parent().specification_model.specification(self.index.row()).path
         if not tool_specification_path:
             self.parent().msg_error.emit("Main program directory does not exist. Fix this in Tool spec editor.")
