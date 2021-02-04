@@ -17,6 +17,7 @@ The ToolFactory class.
 """
 
 import os
+import uuid
 from PySide2.QtWidgets import QFileDialog
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .tool import Tool
@@ -76,14 +77,14 @@ class ToolFactory(ProjectItemFactory):
         filename = specification.includes[0]
         full_path = os.path.join(specification.path, filename)
         if not os.path.isfile(full_path):
+            url = str(uuid.uuid4())
             toolbox.register_anchor_callback(
-                full_path,
-                lambda t=toolbox, f=filename, s=specification: _find_main_program_file(t, filename, specification),
+                url, lambda t=toolbox, f=filename, s=specification: _find_main_program_file(t, filename, specification)
             )
             toolbox.msg_error.emit(
                 f"Tool spec <b>{specification.name}</b> won't work because "
                 f"main program file <b>{full_path}</b> doesn't exist. "
-                f"<a style='color:white;' href='{full_path}'><b>[find it]</b></a>"
+                f"<a style='color:white;' href='{url}'><b>[find it]</b></a>"
             )
 
 
