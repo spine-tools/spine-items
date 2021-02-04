@@ -166,33 +166,29 @@ def can_use_db_server(tool_spec):
                 kernel_spec = json.load(fh)
             except json.decoder.JSONDecodeError:
                 return True
-            julia = kernel_spec["argv"][0]
-            option = "--project="
-            project = next((arg for arg in kernel_spec["argv"] if arg.startswith(option)), None)
-            if project is None:
-                return True
-            project = project[len(option) :]
+            argv = [kernel_spec["argv"].pop(0)]
+            project_arg = next((arg for arg in kernel_spec["argv"] if arg.startswith("--project=")), None)
+            if project_arg is not None:
+                argv.append(project_arg)
     else:
         julia = tool_spec._settings.value("appSettings/juliaPath", defaultValue="")
         if julia == "":
             julia = JULIA_EXECUTABLE
+        argv = [julia]
         project = tool_spec._settings.value("appSettings/juliaProjectPath", defaultValue="")
+        if project:
+            argv.append(f"--project={project}")
+    argv += [
+        "-e",
+        'import Pkg; '
+        'pkgs = Pkg.TOML.parsefile(joinpath(dirname(Base.active_project()), "Manifest.toml")); '
+        'spine_interface = get(pkgs, "SpineInterface", nothing); '
+        'if spine_interface == nothing println(true) '  # SpineInterface not found
+        'else println(VersionNumber(spine_interface[1]["version"]) >= v"0.5.0") '
+        'end',
+    ]
     try:
-        p = subprocess.run(
-            [
-                julia,
-                f"--project={project}",
-                "-e",
-                'import Pkg;'
-                'pkgs = Pkg.TOML.parsefile(joinpath(dirname(Base.active_project()), "Manifest.toml"));'
-                'spine_interface = get(pkgs, "SpineInterface", nothing);'
-                'if spine_interface == nothing println(true) '  # SpineInterface not found
-                'else println(VersionNumber(spine_interface[1]["version"]) >= v"0.5.0") '
-                'end',
-            ],
-            capture_output=True,
-            check=True,
-        )
+        p = subprocess.run(argv, capture_output=True, check=True)
     except subprocess.CalledProcessError:
         return True
     return str(p.stdout, "utf-8").strip() == "true"
