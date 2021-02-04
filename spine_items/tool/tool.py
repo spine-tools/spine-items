@@ -95,7 +95,7 @@ class Tool(ProjectItem):
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_tool_specification.clicked] = self.show_specification_window
         s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda _: self.open_directory
-        s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
+        s[self._properties_ui.pushButton_tool_results.clicked] = self._show_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
         s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
@@ -218,7 +218,7 @@ class Tool(ProjectItem):
             self._properties_ui.toolButton_tool_specification.setMenu(specification_options_popup_menu)
 
     @Slot(bool)
-    def _open_results_directory(self, _):
+    def _show_results_directory(self, _):
         """Open output directory in file browser."""
         if not os.path.exists(self.output_dir):
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no results. Click Execute to generate them.")
@@ -246,7 +246,7 @@ class Tool(ProjectItem):
         self._toolbox.open_specification_file(index)
 
     @Slot()
-    def _open_main_program_file(self):
+    def _edit_main_program_file(self):
         """Open Tool specification main program file in an external text edit application."""
         if not self.specification():
             return
@@ -469,16 +469,19 @@ class Tool(ProjectItem):
         if self._active:
             self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
-    def set_up(self):
-        """See base class."""
-        super().set_up()
-        self._actions.clear()
-        self._actions.append(QAction("Edit specification..."))
-        self._actions[-1].triggered.connect(lambda _: self._edit_specification())
-        self._actions.append(QAction("Open results directory..."))
-        self._actions[-1].triggered.connect(self._open_results_directory)
-        self._actions.append(QAction("Open main program file..."))
-        self._actions[-1].triggered.connect(lambda _: self._open_main_program_file())
+    def actions(self):
+        self._actions = []
+        if self.specification() is not None:
+            self._actions.append(QAction("Edit specification..."))
+            self._actions[-1].triggered.connect(lambda _: self._edit_specification())
+            self._actions.append(QAction("Edit main program file..."))
+            self._actions[-1].triggered.connect(lambda _: self._edit_main_program_file())
+        else:
+            self._actions.append(QAction("New specification..."))
+            self._actions[-1].triggered.connect(self.show_specification_window)
+        self._actions.append(QAction("Show results directory..."))
+        self._actions[-1].triggered.connect(self._show_results_directory)
+        return self._actions
 
     @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):
