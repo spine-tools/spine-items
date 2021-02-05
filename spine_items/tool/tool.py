@@ -93,7 +93,7 @@ class Tool(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_tool_specification.clicked] = self.show_specification_window
-        s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda _: self.open_directory
+        s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
