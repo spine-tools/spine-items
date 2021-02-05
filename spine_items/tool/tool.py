@@ -389,15 +389,13 @@ class Tool(ProjectItem):
 
     def _setup_main_python_console(self, kernel_name, connection_file):
         self.python_console = self._toolbox.make_console("Python Console", self.name, kernel_name, connection_file)
-        if self._active:
-            self._project.toolbox().override_python_console()
+        self._project.toolbox().override_python_console()
 
     def _setup_filter_python_console(self, filter_id, kernel_name, connection_file):
         self._filter_consoles.setdefault(filter_id, {}).setdefault(
             "python", self._toolbox.make_console("Python Console", self.name, kernel_name, connection_file)
         )
-        if self._active:
-            self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
+        self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
     @Slot(str, str, str)
     def _setup_julia_console(self, filter_id, kernel_name, connection_file):
@@ -415,15 +413,13 @@ class Tool(ProjectItem):
 
     def _setup_main_julia_console(self, kernel_name, connection_file):
         self.julia_console = self._toolbox.make_console("Julia Console", self.name, kernel_name, connection_file)
-        if self._active:
-            self._project.toolbox().override_julia_console()
+        self._project.toolbox().override_julia_console()
 
     def _setup_filter_julia_console(self, filter_id, kernel_name, connection_file):
         self._filter_consoles.setdefault(filter_id, {}).setdefault(
             "julia", self._toolbox.make_console("Julia Console", self.name, kernel_name, connection_file)
         )
-        if self._active:
-            self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
+        self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
     def actions(self):
         if self.specification() is not None:
