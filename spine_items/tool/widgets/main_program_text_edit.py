@@ -8,7 +8,18 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-__version__ = "0.4.23"
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.5.29"
-REQUIRED_SPINE_ENGINE_VERSION = "0.9.7"
-REQUIRED_SPINEDB_API_VERSION = "0.10.8"
+
+"""
+Provides MainProgramTextEdit.
+
+:author: M. Marin (KTH)
+:date:   28.1.2020
+"""
+
+from PySide2.QtWidgets import QTextEdit
+
+
+class MainProgramTextEdit(QTextEdit):
+    def insertFromMimeData(self, source):
+        if source.hasText():
+            self.insertPlainText(source.text())

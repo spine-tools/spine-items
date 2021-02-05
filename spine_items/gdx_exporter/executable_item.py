@@ -81,28 +81,8 @@ class ExecutableItem(ExecutableItemBase):
         if gams_system_directory is None:
             self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")
             return False
-        databases = {}
-        for full_url in database_urls:
-            url = clear_filter_configs(full_url)
-            database = None
-            for db in self._databases:
-                if url == db.url:
-                    database = db
-                    break
-            if database is None:
-                self._logger.msg_warning.emit(f"<b>{self.name}</b>: No settings for database {url}. Skipping.")
-                continue
-            if not database.output_file_name:
-                self._logger.msg_warning.emit(
-                    f"<b>{self.name}</b>: No file name given to export database {url}. Skipping."
-                )
-                continue
-            databases[full_url] = database.output_file_name
-            self._forks[url] = set()
-            for config in load_filters(filter_configs(full_url)):
-                self._forks[url].add(name_from_dict(config))
-            if not self._forks[url]:
-                self._forks[url] = {None}
+        databases, forks = self._databases_and_forks(database_urls)
+        self._forks.update(forks)
         self._process = ReturningProcess(
             target=do_work,
             args=(
@@ -119,6 +99,34 @@ class ExecutableItem(ExecutableItemBase):
         success = self._process.run_until_complete()
         self._process = None
         return success
+
+    def skip_execution(self, forward_resources, backward_resources):
+        """See base class."""
+        database_urls = [r.url for r in forward_resources if r.type_ == "database"]
+        _, forks = self._databases_and_forks(database_urls)
+        self._forks.update(forks)
+
+    def _databases_and_forks(self, database_urls):
+        databases = {}
+        forks = {}
+        for full_url in database_urls:
+            url = clear_filter_configs(full_url)
+            database = next((db for db in self._databases if db.url == url), None)
+            if database is None:
+                self._logger.msg_warning.emit(f"<b>{self.name}</b>: No settings for database {url}. Skipping.")
+                continue
+            if not database.output_file_name:
+                self._logger.msg_warning.emit(
+                    f"<b>{self.name}</b>: No file name given to export database {url}. Skipping."
+                )
+                continue
+            databases[full_url] = database.output_file_name
+            forks[url] = url_forks = set()
+            for config in load_filters(filter_configs(full_url)):
+                url_forks.add(name_from_dict(config))
+            if not url_forks:
+                url_forks = {None}
+        return databases, forks
 
     def _output_resources_forward(self):
         """See base class."""

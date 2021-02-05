@@ -420,7 +420,7 @@ class DataStore(ProjectItem):
         d["cancel_on_error"] = self._properties_ui.cancel_on_error_checkBox.isChecked()
         return d
 
-    def copy_local_data(self, original_data_dir, original_url):
+    def copy_local_data(self, original_data_dir, original_url, duplicate_items):
         """See base class"""
         original_project_dir = original_data_dir.split(".spinetoolbox")[0]
         linked_db_dialect = original_url.get("dialect")
@@ -434,15 +434,12 @@ class DataStore(ProjectItem):
                 linked_db_path = original_db["path"]
         else:
             linked_db_path = original_db
-        db_copy_destination = os.path.join(self.data_dir, os.path.basename(linked_db_path))
-        if os.path.samefile(original_project_dir, self._project.project_dir):
-            linked_db_dir = os.path.dirname(linked_db_path)
-            if os.path.samefile(linked_db_dir, original_data_dir):
-                copyfile(linked_db_path, db_copy_destination)
-                self._url["database"] = db_copy_destination
-        elif os.path.samefile(os.path.commonpath([original_project_dir, linked_db_path]), original_project_dir):
+        if duplicate_items:
+            db_copy_destination = os.path.join(self.data_dir, os.path.basename(linked_db_path))
             copyfile(linked_db_path, db_copy_destination)
             self._url["database"] = db_copy_destination
+        else:
+            self._url["database"] = linked_db_path
         return
 
     @staticmethod

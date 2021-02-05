@@ -21,7 +21,6 @@ from PySide2.QtCore import Slot, Signal
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
-from spinetoolbox.widgets.spine_console_widget import SpineConsoleWidget
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.utils.serialization import serialize_path, deserialize_path
@@ -29,6 +28,7 @@ from .commands import UpdateToolExecuteInWorkCommand
 from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
+from .widgets.tool_specification_widget import ToolSpecificationWidget
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
 from ..models import ToolCommandLineArgsModel, InputFileListModel
@@ -37,8 +37,8 @@ from .output_resources import scan_for_resources
 
 class Tool(ProjectItem):
 
-    _python_console_requested = Signal(str, str, str)
-    _julia_console_requested = Signal(str, str, str)
+    python_console_requested = Signal(str, str, str)
+    julia_console_requested = Signal(str, str, str)
 
     def __init__(
         self, name, description, x, y, toolbox, project, specification_name="", execute_in_work=True, cmd_line_args=None
@@ -64,7 +64,6 @@ class Tool(ProjectItem):
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
         self._cmdline_args_model = ToolCommandLineArgsModel(self)
-        self.specification_options_popup_menu = None
         self._specification = self._toolbox.specification_model.find_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
@@ -76,8 +75,8 @@ class Tool(ProjectItem):
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_update_execution_mode(execute_in_work)
-        self._python_console_requested.connect(self._create_python_console)
-        self._julia_console_requested.connect(self._create_julia_console)
+        self.python_console_requested.connect(self._setup_python_console)
+        self.julia_console_requested.connect(self._setup_julia_console)
 
     @staticmethod
     def item_type():
@@ -93,7 +92,8 @@ class Tool(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda _: self.open_directory
+        s[self._properties_ui.toolButton_tool_specification.clicked] = self.show_specification_window
+        s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
@@ -109,6 +109,12 @@ class Tool(ProjectItem):
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
         self._update_tool_ui()
+
+    @Slot(bool)
+    def show_specification_window(self, _=True):
+        """Opens the settings window."""
+        specification_window = ToolSpecificationWidget(self._toolbox, None)
+        specification_window.show()
 
     @Slot(bool)
     def update_execution_mode(self, checked):
@@ -182,7 +188,8 @@ class Tool(ProjectItem):
         if not super().do_set_specification(specification):
             return False
         self._populate_cmdline_args_model()
-        self._update_tool_ui()
+        if self._active:
+            self._update_tool_ui()
         if self.undo_execute_in_work is None:
             self.undo_execute_in_work = self.execute_in_work
         if specification:
@@ -199,22 +206,15 @@ class Tool(ProjectItem):
     def _update_tool_ui(self):
         """Updates Tool UI to show Tool specification details. Used when Tool specification is changed.
         Overrides execution mode (work or source) with the specification default."""
-        if not self._active:
-            return
-        if not self._properties_ui:
-            return
         if not self.specification():
             self._properties_ui.comboBox_tool.setCurrentIndex(-1)
             self.do_update_execution_mode(True)
-            spec_model_index = None
-            self.do_update_execution_mode(True)
-            self._properties_ui.toolButton_tool_specification.setEnabled(False)
+            self._properties_ui.toolButton_tool_specification.setMenu(None)
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
             spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
-            self.specification_options_popup_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
-            self._properties_ui.toolButton_tool_specification.setEnabled(True)
-            self._properties_ui.toolButton_tool_specification.setMenu(self.specification_options_popup_menu)
+            specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
+            self._properties_ui.toolButton_tool_specification.setMenu(specification_menu)
 
     @Slot(bool)
     def _open_results_directory(self, _):
@@ -227,49 +227,6 @@ class Tool(ProjectItem):
         res = open_url(url)
         if not res:
             self._logger.msg_error.emit(f"Failed to open directory: {self.output_dir}")
-
-    @Slot()
-    def _edit_specification(self):
-        """Open Tool specification editor for the Tool specification attached to this Tool."""
-        if not self.specification():
-            return
-        index = self._toolbox.specification_model.specification_index(self.specification().name)
-        self._toolbox.edit_specification(index)
-
-    @Slot()
-    def open_specification_file(self):
-        """Open Tool specification file."""
-        if not self.specification():
-            return
-        index = self._toolbox.specification_model.specification_index(self.specification().name)
-        self._toolbox.open_specification_file(index)
-
-    @Slot()
-    def _open_main_program_file(self):
-        """Open Tool specification main program file in an external text edit application."""
-        if not self.specification():
-            return
-        file_path = self.specification().get_main_program_file_path()
-        if file_path is None:
-            return
-        main_program_url = "file:///" + file_path
-        res = open_url(main_program_url)
-        if not res:
-            filename, file_extension = os.path.splitext(file_path)
-            self._logger.msg_error.emit(
-                "Unable to open Tool specification main program file {0}. "
-                "Make sure that <b>{1}</b> "
-                "files are associated with an editor. E.g. on Windows "
-                "10, go to Control Panel -> Default Programs to do this.".format(filename, file_extension)
-            )
-
-    @Slot()
-    def open_main_directory(self):
-        """Open directory where the Tool specification main program is located in file explorer."""
-        if not self.specification():
-            return
-        dir_url = "file:///" + self.specification().path
-        open_url(dir_url)
 
     def specification(self):
         """Returns Tool specification."""
@@ -312,12 +269,13 @@ class Tool(ProjectItem):
         """See base class."""
         if not self.specification():
             self.add_notification("This Tool does not have a specification. Set it in the Tool Properties Panel.")
+        if self.specification() is not None and not self.specification().path:
+            n = self.specification().name
+            self.add_notification(
+                f"Tool specification <b>{n}</b> path does not exist. Fix this in Tool specification editor."
+            )
         resources = upstream_resources + downstream_resources
         self._input_file_model.update(resources)
-        if not resources:
-            self.add_notification(
-                "This Tool does not have any input data. Connect Items to this Tool to use their data as input."
-            )
         self._notify_if_duplicate_file_paths()
         file_paths = self._find_input_files(resources)
         file_paths = flatten_file_path_duplicates(file_paths, self._logger)
@@ -416,8 +374,8 @@ class Tool(ProjectItem):
             super().notify_destination(source_item)
 
     @Slot(str, str, str)
-    def _create_python_console(self, filter_id, kernel_name, connection_file):
-        """Creates a python console, eventually for a filter execution.
+    def _setup_python_console(self, filter_id, kernel_name, connection_file):
+        """Sets up python console, eventually for a filter execution.
 
         Args:
             filter_id (str): filter identifier
@@ -425,20 +383,23 @@ class Tool(ProjectItem):
             connection_file (str): path to connection file
         """
         if not filter_id:
-            if self.python_console is None:
-                self.python_console = SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
-            console = self.python_console
+            self._setup_main_python_console(kernel_name, connection_file)
         else:
-            console = self._filter_consoles.setdefault(filter_id, {}).setdefault(
-                "python", SpineConsoleWidget(self._toolbox, "Python Console", owner=self.name)
-            )
-            if self._active:
-                self._project._toolbox.ui.listView_executions.model().layoutChanged.emit()
-        console.connect_to_kernel(kernel_name, connection_file)
+            self._setup_filter_python_console(filter_id, kernel_name, connection_file)
+
+    def _setup_main_python_console(self, kernel_name, connection_file):
+        self.python_console = self._toolbox.make_console("Python Console", self.name, kernel_name, connection_file)
+        self._project.toolbox().override_python_console()
+
+    def _setup_filter_python_console(self, filter_id, kernel_name, connection_file):
+        self._filter_consoles.setdefault(filter_id, {}).setdefault(
+            "python", self._toolbox.make_console("Python Console", self.name, kernel_name, connection_file)
+        )
+        self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
     @Slot(str, str, str)
-    def _create_julia_console(self, filter_id, kernel_name, connection_file):
-        """Creates a julia console, eventually for a filter execution.
+    def _setup_julia_console(self, filter_id, kernel_name, connection_file):
+        """Sets up julia console, eventually for a filter execution.
 
         Args:
             filter_id (str): filter identifier
@@ -446,47 +407,33 @@ class Tool(ProjectItem):
             connection_file (str): path to connection file
         """
         if not filter_id:
-            if self.julia_console is None:
-                self.julia_console = SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
-            console = self.julia_console
+            self._setup_main_julia_console(kernel_name, connection_file)
         else:
-            console = self._filter_consoles.setdefault(filter_id, {}).setdefault(
-                "julia", SpineConsoleWidget(self._toolbox, "Julia Console", owner=self.name)
-            )
-            if self._active:
-                self._project._toolbox.ui.listView_executions.model().layoutChanged.emit()
-        console.connect_to_kernel(kernel_name, connection_file)
+            self._setup_filter_julia_console(filter_id, kernel_name, connection_file)
 
-    def start_python_console(self, filter_id, kernel_name, connection_file):
-        """Starts the python console.
+    def _setup_main_julia_console(self, kernel_name, connection_file):
+        self.julia_console = self._toolbox.make_console("Julia Console", self.name, kernel_name, connection_file)
+        self._project.toolbox().override_julia_console()
 
-        Args:
-            filter_id (str): filter identifier
-            kernel_name (str): jupyter kernel name
-            connection_file (str): path to connection file
-        """
-        self._python_console_requested.emit(filter_id, kernel_name, connection_file)
+    def _setup_filter_julia_console(self, filter_id, kernel_name, connection_file):
+        self._filter_consoles.setdefault(filter_id, {}).setdefault(
+            "julia", self._toolbox.make_console("Julia Console", self.name, kernel_name, connection_file)
+        )
+        self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
-    def start_julia_console(self, filter_id, kernel_name, connection_file):
-        """Starts the julia console.
-
-        Args:
-            filter_id (str): filter identifier
-            kernel_name (str): jupyter kernel name
-            connection_file (str): path to connection file
-        """
-        self._julia_console_requested.emit(filter_id, kernel_name, connection_file)
-
-    def set_up(self):
-        """See base class."""
-        super().set_up()
-        self._actions.clear()
-        self._actions.append(QAction("Edit specification..."))
-        self._actions[-1].triggered.connect(lambda _: self._edit_specification())
-        self._actions.append(QAction("Open results directory..."))
+    def actions(self):
+        if self.specification() is not None:
+            spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
+            spec_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
+            actions = {a.text(): a for a in spec_menu.actions()}
+            self._actions = [actions["Edit specification"], actions["Open main program file"]]
+        else:
+            action = QAction("New specification")
+            action.triggered.connect(self.show_specification_window)
+            self._actions = [action]
+        self._actions.append(QAction("Open results directory"))
         self._actions[-1].triggered.connect(self._open_results_directory)
-        self._actions.append(QAction("Open main program file..."))
-        self._actions[-1].triggered.connect(lambda _: self._open_main_program_file())
+        return self._actions
 
     @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):

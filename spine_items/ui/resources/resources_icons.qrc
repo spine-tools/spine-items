@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/icons">
+    <file>save.svg</file>
     <file>Spine_symbol.png</file>
     <file>copy.svg</file>
     <file>datapkg.png</file>

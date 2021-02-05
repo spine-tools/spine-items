@@ -22,7 +22,7 @@ from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu, CustomPopup
 
 
 class ToolSpecificationMenu(ItemSpecificationMenu):
-    """Context menu class for Tool specifications."""
+    """Menu class for Tool specifications."""
 
     def __init__(self, parent, index):
         """
@@ -31,11 +31,11 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
             index (QModelIndex): the index from specification model
         """
         super().__init__(parent, index)
-        self.add_action("Edit main program file...", self.open_main_program_file)
-        self.add_action("Open main program directory...", self.open_main_program_dir)
+        self.add_action("Open main program file", self._open_main_program_file)
+        self.add_action("Open main program directory", self._open_main_program_dir)
 
     @Slot()
-    def open_main_program_file(self):
+    def _open_main_program_file(self):
         spec = self.parent().specification_model.specification(self.index.row())
         file_path = spec.get_main_program_file_path()
         if file_path is None:
@@ -52,8 +52,11 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
             )
 
     @Slot()
-    def open_main_program_dir(self):
+    def _open_main_program_dir(self):
         tool_specification_path = self.parent().specification_model.specification(self.index.row()).path
+        if not tool_specification_path:
+            self.parent().msg_error.emit("Main program directory does not exist. Fix this in Tool spec editor.")
+            return
         path_url = "file:///" + tool_specification_path
         self.parent().open_anchor(QUrl(path_url, QUrl.TolerantMode))
 
@@ -72,18 +75,3 @@ class AddIncludesPopupMenu(CustomPopupMenu):
         self.add_action("New file", self._parent.new_source_file)
         self.addSeparator()
         self.add_action("Open files...", self._parent.show_add_source_files_dialog)
-
-
-class CreateMainProgramPopupMenu(CustomPopupMenu):
-    """Popup menu class for add main program QToolButton in Tool specification editor widget."""
-
-    def __init__(self, parent):
-        """
-        Args:
-            parent (QWidget): Parent widget (ToolSpecificationWidget)
-        """
-        super().__init__(parent)
-        self._parent = parent
-        # Open a tool specification file
-        self.add_action("Make new main program", self._parent.new_main_program_file)
-        self.add_action("Select existing main program", self._parent.browse_main_program)

@@ -296,7 +296,7 @@ class TestToolExecutable(unittest.TestCase):
             executable._tool_instance = executable._tool_specification.create_tool_instance(
                 temp_dir, "name", mock.MagicMock()
             )
-            executable._tool_instance.exec_mngr = KernelExecutionManager(logger, "lang", "kn", [])
+            executable._tool_instance.exec_mngr = mock.MagicMock()
             executable.stop_execution()
             self.assertIsNone(executable._tool_instance)
 

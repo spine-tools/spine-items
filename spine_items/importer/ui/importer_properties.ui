@@ -204,19 +204,6 @@
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
         <widget class="QCheckBox" name="cancel_on_error_checkBox">
          <property name="toolTip">
           <string>If there are any errors when trying to import data cancel the whole import.</string>

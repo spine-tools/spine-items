@@ -21,7 +21,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QApplication
+from PySide2.QtWidgets import QApplication, QMenu
 from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.executable_item import ExecutableItem
@@ -109,7 +109,9 @@ class TestImporter(unittest.TestCase):
 
     def test_rename(self):
         """Tests renaming an Importer."""
-        self.importer.activate()
+        with unittest.mock.patch("spine_items.importer.importer.ItemSpecificationMenu") as mock_spec_menu:
+            mock_spec_menu.return_value = QMenu()
+            self.importer.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
         self.importer.rename(expected_name)
@@ -123,7 +125,9 @@ class TestImporter(unittest.TestCase):
 
     def test_handle_dag_changed(self):
         """Tests that upstream resource files are listed in the Importer view."""
-        self.importer.activate()
+        with unittest.mock.patch("spine_items.importer.importer.ItemSpecificationMenu") as mock_spec_menu:
+            mock_spec_menu.return_value = QMenu()
+            self.importer.activate()
         item = NonCallableMagicMock()
         expected_file_list = ["url1", "url2"]
         resources = [ProjectItemResource(item, "file", url) for url in expected_file_list]
@@ -137,7 +141,9 @@ class TestImporter(unittest.TestCase):
         self.assertTrue(all(selected))
 
     def test_handle_dag_changed_updates_previous_list_items(self):
-        self.importer.activate()
+        with unittest.mock.patch("spine_items.importer.importer.ItemSpecificationMenu") as mock_spec_menu:
+            mock_spec_menu.return_value = QMenu()
+            self.importer.activate()
         item = NonCallableMagicMock()
         resources = [ProjectItemResource(item, "file", url) for url in ["url1", "url2"]]
         rank = 0
