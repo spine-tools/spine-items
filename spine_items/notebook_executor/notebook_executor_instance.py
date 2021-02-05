@@ -10,22 +10,19 @@
 ######################################################################################################################
 
 """
-Contains ToolInstance class.
+Contains NoteBookExecutorInstance class.
 
-:authors: P. Savolainen (VTT), E. Rinne (VTT)
-:date:   1.2.2018
+:authors: P. Savolainen (VTT), E. Rinne (VTT), R. Brady (UCD)
+:date:   05.02.2021
 """
-import json
 import os
-import sys
-import shutil
 import papermill as pm
 from spine_engine.utils.helpers import python_interpreter
 from spine_engine.execution_managers import StandardExecutionManager, KernelExecutionManager
 
 
 class NoteBookExecutorInstance:
-    """Tool instance base class."""
+    """Notebook Executor instance base class."""
 
     def __init__(self, notebook_specification, basedir, settings, logger, owner):
         """
@@ -42,12 +39,13 @@ class NoteBookExecutorInstance:
         self._settings = settings
         self._logger = logger
         self._owner = owner
+        self._input_vars = self.notebook_specification.input_vars
+        self._output_vars = self.notebook_specification.output_vars
         self.exec_manager = None
         self.program = None
         self._nb_path = None
         self._nb_out_path = None
-        self._valid_nb_output_path = None
-        self._nb_parameters = None
+        self._nb_parameters = {}
         self.args = list()  # List of command line arguments for the program
 
     @property
@@ -58,32 +56,26 @@ class NoteBookExecutorInstance:
         return self.exec_manager is not None
 
     def terminate_instance(self):
-        """Terminates Tool instance execution."""
+        """Terminates Notebook instance execution."""
         if not self.exec_manager:
             return
         self.exec_manager.stop_execution()
         self.exec_manager = None
 
-    def prepare(self, nb_src_dst_mapping):
+    def prepare(self, nb_src_dst_mapping, args):
         """See base class."""
-        # FIXME handle usage of nb_src_dst_mapping better
-        # print("nb_src_dst_mapping: {}".format(nb_src_dst_mapping))
         if nb_src_dst_mapping:
             nb_src_name = self.notebook_specification.includes[0]
             self._nb_path = nb_src_dst_mapping[nb_src_name]
         else:
             self._nb_path = self.notebook_specification.includes[0]
-        # print(pm.inspect_notebook(self._nb_path))
-        self._nb_parameters = {
-            k: nb_src_dst_mapping[v] for k in pm.inspect_notebook(self._nb_path) for v in self.notebook_specification.input_files
-        }
-
-        # print("parameters")
-        # print(self._nb_parameters)
-        # print(self.basedir)
-        self._nb_out_path = os.path.join(self.basedir, self.notebook_specification.output_files[0])
-        if len(self.notebook_specification.output_files) > 1:
-            self._valid_nb_output_path = os.path.join(self.basedir, self.notebook_specification.output_files[1])
+        for i, name in enumerate(self._input_vars):
+            self._nb_parameters[name] = args[i]
+        self._nb_out_path = os.path.join(self.basedir, self.notebook_specification.output_files.pop(0))
+        if len(self.notebook_specification.output_files) > 0:
+            for i, name in enumerate(self._output_vars):
+                filename = self.notebook_specification.output_files[i]
+                self._nb_parameters[name] = os.path.join(self.basedir, filename)
 
     def execute(self):
         """Executes a prepared instance."""
@@ -95,35 +87,14 @@ class NoteBookExecutorInstance:
         """Executes in console.
         """
         kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-        new_book = pm.execute_notebook(
+
+        pm.execute_notebook(
             self._nb_path,
             self._nb_out_path,
             kernel_name=kernel_name,
             parameters=self._nb_parameters
         )
-        # check if notebook output is valid python expression using eval()
-        # try:
-        #     nb_output_text = new_book['cells'][-1]['outputs'][0]['data']['text/plain']
-        # except NameError as NE:
-        #     self._logger.error(f"[NameError] {NE} while retrieving nb output data text/plain")
-        #     return 1
-        # try:
-        #     self._valid_nb_output = eval(nb_output_text)
-        # except SyntaxError as SE:
-        #     self._logger.error(f"[SyntaxError] {SE} While evaluating notebook output. Check last cell for valid "
-        #                        f"output")
-        #     return 1
-        # if isinstance(self._valid_nb_output, list):
-        #     if Ellipsis in self._valid_nb_output:
-        #         self._valid_nb_output.remove(Ellipsis)
-        # with open(self._nb_out_path, "w") as f:
-        #     try:
-        #         json.dump(self._valid_nb_output, f, indent=4)
-        #         return 0
-        #     except ValueError:
-        #         self._logger.msg_error.emit(
-        #             "Saving Notebook output json failed. Path: {0}".format(self._valid_nb_output_path)
-        #         )
+        # inspect new_book for
         return 0
 
     def _cmd_line_execute(self):
