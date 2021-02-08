@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Utility functions for the Tool project item.
+Utility functions for the Notebook project item.
 
 :author: A. Soininen (VTT)
 :date:   1.4.2020
@@ -140,3 +140,7 @@ def make_label(label):
         label (str): A label to annotate
     """
     return "{" + label + "}"
+
+
+def labelled_resource_args(resources):
+    return {resource.label: resource.arg for resource in resources}

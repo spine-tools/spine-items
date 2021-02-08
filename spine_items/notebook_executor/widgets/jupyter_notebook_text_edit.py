@@ -1,5 +1,5 @@
 ######################################################################################################################
-# Copyright (C) 2017-2020 Spine project consortium
+# Copyright (C) 2017-2021 Spine project consortium
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -10,25 +10,16 @@
 ######################################################################################################################
 
 """
-Tool's specification factory.
+Provides MainProgramTextEdit.
 
-:authors: A. Soininen (VTT)
-:date:   6.5.2020
+:author: M. Marin (KTH)
+:date:   28.1.2020
 """
-from spine_engine.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
-from .item_info import ItemInfo
-from .notebook_specifications import make_specification
+
+from PySide2.QtWidgets import QTextEdit
 
 
-class SpecificationFactory(ProjectItemSpecificationFactory):
-    """A factory to make Notebook specifications."""
-
-    @staticmethod
-    def item_type():
-        """See base class."""
-        return ItemInfo.item_type()
-
-    @staticmethod
-    def make_specification(definition, app_settings, logger, embedded_julia_console=None, embedded_python_console=None):
-        """Returns a Notebook specification."""
-        return make_specification(definition, app_settings, logger)
+class JupyterNotebookTextEdit(QTextEdit):
+    def insertFromMimeData(self, source):
+        if source.hasText():
+            self.insertPlainText(source.text())

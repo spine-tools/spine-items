@@ -22,9 +22,9 @@ class ItemInfo(ProjectItemInfo):
     @staticmethod
     def item_category():
         """See base class."""
-        return "Tools"
+        return "Notebooks"
 
     @staticmethod
     def item_type():
         """See base class."""
-        return "Notebook Executor"
+        return "Notebook"

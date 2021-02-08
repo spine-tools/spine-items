@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Contains Notebook Executor specification classes.
+Contains Notebook specification classes.
 
 :authors: P. Savolainen (VTT), E. Rinne (VTT), M. Marin (KTH), R. Brady (UCD)
 :date:   05.02.2021
@@ -21,9 +21,11 @@ import json
 
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from .item_info import ItemInfo
-from .notebook_executor_instance import NoteBookExecutorInstance
+from .notebook_instance import NotebookInstance
 
-REQUIRED_KEYS = ["name", "includes"]
+NOTEBOOK_TYPES = ["Julia", "Python"]
+
+REQUIRED_KEYS = ["name", "notebook_type", "includes"]
 OPTIONAL_KEYS = [
     "description",
     "short_name",
@@ -31,33 +33,35 @@ OPTIONAL_KEYS = [
     "input_vars",
     "output_vars",
     "cmdline_args",
-    "output_files"
+    "output_files",
+    "execute_in_work",
 ]
 LIST_REQUIRED_KEYS = ["includes", "input_files", "output_files"]  # These should be lists
 
 
 def make_specification(definition, app_settings, logger):
     """
-    Deserializes and constructs a Notebook Executor specification from definition.
+    Deserializes and constructs a Notebook specification from definition.
 
     Args:
         definition (dict): a dictionary containing the serialized specification.
         app_settings (QSettings): Toolbox settings
         logger (LoggerInterface): a logger
     Returns:
-        NotebookExecutorSpecification: a Notebook Executor specification constructed from the given definition,
+        NotebookSpecification: a Notebook specification constructed from the given definition,
             or None if there was an error
     """
     path = definition["includes_main_path"]
 
-    return NotebookExecutorSpecification.load(path, definition, app_settings, logger)
+    return NotebookSpecification.load(path, definition, app_settings, logger)
 
 
-class NotebookExecutorSpecification(ProjectItemSpecification):
-    """notebook executors specification"""
+class NotebookSpecification(ProjectItemSpecification):
+    """notebooks specification"""
     def __init__(
             self,
             name,
+            notebook_type,
             path,
             includes,
             settings,
@@ -67,18 +71,19 @@ class NotebookExecutorSpecification(ProjectItemSpecification):
             output_vars=None,
             cmdline_args=None,
             input_files=None,
-            output_files=None
+            output_files=None,
+            execute_in_work=True,
     ):
         """
         Args:
 
-            name (str): Notebook Executor name
+            name (str): Notebook name
             path (str): Path to main script file
-            includes (list): List of files belonging to the notebook executor (relative to 'path').
+            includes (list): List of files belonging to the notebook (relative to 'path').
             First file in the list is the .ipynb file.
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): A logger instance
-            description (str): Notebook Executor description
+            description (str): Notebook description
             input_vars (str): Name of variables in parameter tagged cell of .ipynb file corresponding to inputs
             output_vars (str): Name of variables in parameter tagged cell of .ipynb file corresponding to outputs
             input_files (list): List of required data files
@@ -87,6 +92,7 @@ class NotebookExecutorSpecification(ProjectItemSpecification):
         super().__init__(name, description, item_type=ItemInfo.item_type(), item_category=ItemInfo.item_category())
         self._settings = settings
         self._logger = logger
+        self.notebook_type = notebook_type
         if not os.path.exists(path):
             pass
         else:
@@ -99,10 +105,12 @@ class NotebookExecutorSpecification(ProjectItemSpecification):
         self.input_files = list(input_files) if input_files else list()
         self.output_files = list(output_files) if output_files else list()
         self.cmdline_args = cmdline_args
+        self.execute_in_work = execute_in_work
 
     def to_dict(self):
         return {
             "name": self.name,
+            "notebook_type": self.notebook_type,
             "includes": self.includes,
             "description": self.description,
             "input_vars": self.input_vars,
@@ -110,20 +118,21 @@ class NotebookExecutorSpecification(ProjectItemSpecification):
             "cmdline_args": self.cmdline_args,
             "input_files": self.input_files,
             "output_files": self.output_files,
+            "execute_in_work": self.execute_in_work,
             "includes_main_path": self.path.replace(os.sep, "/"),
         }
 
     @staticmethod
     def check_definition(data, logger):
-        """Checks that a Notebook Executor specification contains
+        """Checks that a Notebook specification contains
         the required keys and that it is in correct format.
 
         Args:
-            data (dict): Notebook Executor specification
+            data (dict): Notebook specification
             logger (LoggerInterface): A logger instance
 
         Returns:
-            Dictionary or None if there was a problem in the Notebook Executor definition.
+            Dictionary or None if there was a problem in the Notebook definition.
         """
         kwargs = dict()
         for p in REQUIRED_KEYS + OPTIONAL_KEYS:
@@ -151,44 +160,44 @@ class NotebookExecutorSpecification(ProjectItemSpecification):
                 return True
             except ValueError:
                 self._logger.msg_error.emit(
-                    "Saving Notebook Executor specification file failed. Path:{0}".format(self.definition_file_path)
+                    "Saving Notebook specification file failed. Path:{0}".format(self.definition_file_path)
                 )
                 return False
 
     @staticmethod
     def load(path, data, settings, logger):
-        """Creates a PythonTool according to a Notebook Executor specification file.
+        """Creates a PythonTool according to a Notebook specification file.
         Args:
-            path (str): Base path to Notebook Executor files
-            data (dict): Dictionary of Notebook Executor definitions
+            path (str): Base path to Notebook files
+            data (dict): Dictionary of Notebook definitions
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): A logger instance
 
         Returns:
-            Notebook Executor instance or None if there was a problem in the Notebook Executor definition file.
+            Notebook instance or None if there was a problem in the Notebook definition file.
         """
-        kwargs = NotebookExecutorSpecification.check_definition(data, logger)
+        kwargs = NotebookSpecification.check_definition(data, logger)
         if kwargs is not None:
             # Return an executable model instance
-            return NotebookExecutorSpecification(path=path, settings=settings, logger=logger, **kwargs)
+            return NotebookSpecification(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
     def create_instance(self, basedir, logger, owner):
-        """Returns an instance of this Notebook Executor specification that is configured to run in the given directory.
+        """Returns an instance of this Notebook specification that is configured to run in the given directory.
 
         Args:
             basedir (str): the path to the directory where the instance will run
             logger (LoggerInterface)
             owner (ExecutableItemBase): The item that owns the instance
         """
-        return NoteBookExecutorInstance(self, basedir, self._settings, logger, owner)
+        return NotebookInstance(self, basedir, self._settings, logger, owner)
 
     def is_equivalent(self, other):
         """Checks if this spec is equivalent to the given definition dictionary.
-        Used by the Notebook Executor spec widget when updating specs.
+        Used by the Notebook spec widget when updating specs.
 
         Args:
-            other (NotebookExecutorSpecification)
+            other (NotebookSpecification)
 
         Returns:
             bool: True if equivalent
@@ -201,3 +210,25 @@ class NotebookExecutorSpecification(ProjectItemSpecification):
                 if self.__dict__[k] != v:
                     return False
         return True
+
+    def get_jupyter_notebook_path(self):
+        """Returns this specification's main program file path."""
+        if not self.path or not os.path.isdir(self.path):
+            self._logger.msg_error.emit(
+                f"Opening Notebook spec Jupyter notebook <b>{self.includes[0]}</b> failed. "
+                f"Jupyter notebook directory does not exist."
+            )
+            return None
+        file_path = os.path.join(self.path, self.includes[0])
+        # Check that file exists
+        if not os.path.isfile(file_path):
+            self._logger.msg_error.emit("Notebook spec Jupyter notebook <b>{0}</b> not found.".format(file_path))
+            return None
+        ext = os.path.splitext(os.path.split(file_path)[1])[1]
+        if ext != ".ipynb":
+            self._logger.msg_warning.emit(
+                "Sorry, opening files with extension <b>{0}</b> not supported. "
+                "Please open the file manually.".format(ext)
+            )
+            return None
+        return file_path

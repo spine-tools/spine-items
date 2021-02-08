@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Contains NoteBookExecutorInstance class.
+Contains NotebookInstance class.
 
 :authors: P. Savolainen (VTT), E. Rinne (VTT), R. Brady (UCD)
 :date:   05.02.2021
@@ -21,14 +21,14 @@ from spine_engine.utils.helpers import python_interpreter
 from spine_engine.execution_managers import StandardExecutionManager, KernelExecutionManager
 
 
-class NoteBookExecutorInstance:
-    """Notebook Executor instance base class."""
+class NotebookInstance:
+    """Notebook instance base class."""
 
     def __init__(self, notebook_specification, basedir, settings, logger, owner):
         """
 
         Args:
-            notebook_specification (NotebookExecutorSpecification): the notebook specification for this instance
+            notebook_specification (NotebookSpecification): the notebook specification for this instance
             basedir (str): the path to the directory where this instance should run
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): a logger instance
@@ -64,6 +64,7 @@ class NoteBookExecutorInstance:
 
     def prepare(self, nb_src_dst_mapping, args):
         """See base class."""
+        print(f"args {args}, nb_src_dst_mapping {nb_src_dst_mapping}")
         if nb_src_dst_mapping:
             nb_src_name = self.notebook_specification.includes[0]
             self._nb_path = nb_src_dst_mapping[nb_src_name]

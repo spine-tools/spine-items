@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Contains Notebook Executor's executable item and support functionality.
+Contains Notebook's executable item and support functionality.
 
 :authors: A. Soininen (VTT), R. Brady (UCD)
 :date:   05.02.2021
@@ -28,7 +28,7 @@ from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from ..utils import labelled_resource_args
+from .utils import labelled_resource_args
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -39,7 +39,7 @@ class ExecutableItem(ExecutableItemBase):
             work_dir (str): an absolute path to Spine Toolbox work directory
                 or None if the Notebook should not execute in work directory
             output_dir (str): path to the directory where output files should be archived
-            notebook_specification (NotebookExecutorSpecification): a notebook specification
+            notebook_specification (NotebookSpecification): a notebook specification
             logger (LoggerInterface): a logger
         """
         super().__init__(name, logger)
@@ -125,7 +125,7 @@ class ExecutableItem(ExecutableItemBase):
                 self._cmd_line_args[k] = arg
 
     def execute(self, forward_resources, backward_resources):
-        """Setup and execute the Notebook Executor instance
+        """Setup and execute the Notebook instance
         Returns:
             bool: True for success, False otherwise.
         """
@@ -133,9 +133,9 @@ class ExecutableItem(ExecutableItemBase):
         if not super().execute(forward_resources, backward_resources):
             return False
         if self._notebook_specification is None:
-            self._logger.msg_warning.emit(f"Notebook executor <b>{self.name}</b> has no Notebook specification to "
+            self._logger.msg_warning.emit(f"Notebook <b>{self.name}</b> has no Notebook specification to "
                                           f"execute")
-            print(f"Notebook executor <b>{self.name}</b> has no Notebook specification to execute")
+            print(f"Notebook <b>{self.name}</b> has no Notebook specification to execute")
             return False
         execution_dir = _execution_directory(self._work_dir, self._notebook_specification)
         if execution_dir is None:
@@ -144,7 +144,7 @@ class ExecutableItem(ExecutableItemBase):
         if self._work_dir is not None:
             work_or_source = "work"
             self._logger.msg.emit(
-                f"*** Copying Notebook executor specification <b>{self._notebook_specification.name}"
+                f"*** Copying Notebook specification <b>{self._notebook_specification.name}"
                 f"</b> source files to {anchor} ***"
             )
             if not self._map_program_files(execution_dir):
