@@ -20,7 +20,6 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 import os
-import shutil
 from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QApplication, QMenu
 from spine_items.tool.item_info import ItemInfo
@@ -158,8 +157,7 @@ class TestTool(unittest.TestCase):
         if item_dict is None:
             item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0}
         factory = ToolFactory()
-        with mock.patch("spine_items.tool.tool.SpineConsoleWidget"):
-            tool = factory.make_item("T", item_dict, self.toolbox, self.project)
+        tool = factory.make_item("T", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, tool, self.toolbox)
         # Set model for tool combo box
         tool._properties_ui.comboBox_tool.setModel(self.model)
