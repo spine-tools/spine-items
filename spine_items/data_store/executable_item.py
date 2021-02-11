@@ -82,9 +82,9 @@ class ExecutableItem(ExecutableItemBase):
         self._process = ReturningProcess(
             target=do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, str(self._url), self._logger)
         )
-        success = self._process.run_until_complete()
+        return_value = self._process.run_until_complete()
         self._process = None
-        return success
+        return return_value[0]
 
     def stop_execution(self):
         """Stops executing this DS."""

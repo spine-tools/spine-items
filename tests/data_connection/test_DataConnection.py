@@ -45,6 +45,7 @@ class TestDataConnection(unittest.TestCase):
 
     def tearDown(self):
         self.data_connection.tear_down()
+        self._temp_dir.cleanup()
 
     @classmethod
     def setUpClass(cls):

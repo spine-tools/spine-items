@@ -61,7 +61,7 @@ def do_work(
                 database_map.connection.close()
             logger.msg_success.emit(f"File <b>{out_path}</b> written")
             successes.append(True)
-    return all(successes)
+    return (all(successes),)
 
 
 def _out_file_paths(output_file_name, data_dir, output_time_stamps, forks):

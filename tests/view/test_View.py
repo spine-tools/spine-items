@@ -40,6 +40,9 @@ class TestView(unittest.TestCase):
         self.view = factory.make_item("V", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.view, self.toolbox)
 
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     @classmethod
     def setUpClass(cls):
         if not QApplication.instance():

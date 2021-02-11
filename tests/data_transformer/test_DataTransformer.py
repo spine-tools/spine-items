@@ -45,6 +45,9 @@ class TestDataTransformer(unittest.TestCase):
         self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.transformer, self.toolbox)
 
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     @classmethod
     def setUpClass(cls):
         if not QApplication.instance():

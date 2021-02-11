@@ -96,9 +96,9 @@ class ExecutableItem(ExecutableItemBase):
                 self._logger,
             ),
         )
-        success = self._process.run_until_complete()
+        return_value = self._process.run_until_complete()
         self._process = None
-        return success
+        return return_value[0]
 
     def skip_execution(self, forward_resources, backward_resources):
         """See base class."""
@@ -125,7 +125,7 @@ class ExecutableItem(ExecutableItemBase):
             for config in load_filters(filter_configs(full_url)):
                 url_forks.add(name_from_dict(config))
             if not url_forks:
-                url_forks = {None}
+                url_forks.add(None)
         return databases, forks
 
     def _output_resources_forward(self):

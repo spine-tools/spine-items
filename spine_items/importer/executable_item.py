@@ -104,9 +104,9 @@ class ExecutableItem(ExecutableItemBase):
                 self._logger,
             ),
         )
-        success = self._process.run_until_complete()
+        return_value = self._process.run_until_complete()
         self._process = None
-        return success
+        return return_value[0]
 
     def _gams_system_directory(self):
         """Returns GAMS system path or None if GAMS default is to be used."""

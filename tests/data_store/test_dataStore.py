@@ -78,6 +78,7 @@ class TestDataStore(unittest.TestCase):
                 os.remove(temp_db_path)
             except OSError as os_e:
                 logging.error("Failed to remove %s. Error: %s", temp_db_path, os_e)
+        self._temp_dir.cleanup()
 
     def create_temp_db(self):
         """Let's create a real db to more easily test complicated stuff (such as opening a tree view)."""

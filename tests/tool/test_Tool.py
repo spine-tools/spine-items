@@ -39,6 +39,9 @@ class TestTool(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.model = self.toolbox.specification_model = _MockToolSpecModel(self.toolbox, self._temp_dir.name)
 
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     @classmethod
     def setUpClass(cls):
         if not QApplication.instance():

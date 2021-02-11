@@ -54,6 +54,9 @@ class TestGimlet(unittest.TestCase):
         self.gimlet = factory.make_item("G", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.gimlet, self.toolbox)
 
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     def test_item_type(self):
         self.assertEqual(Gimlet.item_type(), ItemInfo.item_type())
 
