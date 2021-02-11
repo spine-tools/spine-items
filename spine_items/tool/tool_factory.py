@@ -38,10 +38,6 @@ class ToolFactory(ProjectItemFactory):
         return ":/icons/item_icons/hammer.svg"
 
     @staticmethod
-    def supports_specifications():
-        return True
-
-    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddToolWidget(toolbox, x, y, specification)
 

@@ -37,11 +37,6 @@ class DataTransformerFactory(ProjectItemFactory):
         return ":/icons/item_icons/paint-brush-solid.svg"
 
     @staticmethod
-    def supports_specifications():
-        """See base class."""
-        return True
-
-    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         """See base class."""
         return AddDataTransformerWidget(toolbox, x, y, specification)
