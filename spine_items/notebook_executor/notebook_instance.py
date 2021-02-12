@@ -64,7 +64,6 @@ class NotebookInstance:
 
     def prepare(self, nb_src_dst_mapping, args):
         """See base class."""
-        print(f"args {args}, nb_src_dst_mapping {nb_src_dst_mapping}")
         if nb_src_dst_mapping:
             nb_src_name = self.notebook_specification.includes[0]
             self._nb_path = nb_src_dst_mapping[nb_src_name]

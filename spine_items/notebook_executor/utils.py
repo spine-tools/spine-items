@@ -141,6 +141,3 @@ def make_label(label):
     """
     return "{" + label + "}"
 
-
-def labelled_resource_args(resources):
-    return {resource.label: resource.arg for resource in resources}

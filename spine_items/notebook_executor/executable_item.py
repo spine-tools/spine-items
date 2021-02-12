@@ -17,8 +17,10 @@ Contains Notebook's executable item and support functionality.
 """
 
 import datetime
+import glob
 import os
 import pathlib
+import shutil
 import time
 import uuid
 
@@ -28,7 +30,8 @@ from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from .utils import labelled_resource_args
+from .utils import is_pattern
+from ..utils import labelled_resource_args, is_label
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -110,19 +113,67 @@ class ExecutableItem(ExecutableItemBase):
                 return False
         return True
 
+    def _copy_output_files(self, target_dir, execution_dir):
+        """Copies Tool specification output files from work directory to given target directory.
+
+        Args:
+            target_dir (str): Destination directory for Tool specification output files
+            execution_dir (str): path to the execution directory
+
+        Returns:
+            tuple: Contains two lists. The first list contains paths to successfully
+            copied files. The second list contains paths (or patterns) of Tool specification
+            output files that were not found.
+
+        Raises:
+            OSError: If creating a directory fails.
+        """
+        failed_files = list()
+        saved_files = list()
+        for pattern in self._notebook_specification.output_files:
+            # Create subdirectories if necessary
+            dst_subdir, fname_pattern = os.path.split(pattern)
+            target = os.path.abspath(os.path.join(target_dir, dst_subdir))
+            if not os.path.exists(target):
+                try:
+                    os.makedirs(target, exist_ok=True)
+                except OSError:
+                    self._logger.msg_error.emit(f"[OSError] Creating directory <b>{target}</b> failed.")
+                    continue
+                self._logger.msg.emit(f"\tCreated result subdirectory <b>{os.path.sep}{dst_subdir}</b>")
+            # Check for wildcards in pattern
+            if is_pattern(pattern):
+                for fname_path in glob.glob(os.path.abspath(os.path.join(execution_dir, pattern))):
+                    # fname_path is a full path
+                    fname = os.path.split(fname_path)[1]  # File name (no path)
+                    dst = os.path.abspath(os.path.join(target, fname))
+                    full_fname = os.path.join(dst_subdir, fname)
+                    try:
+                        shutil.copyfile(fname_path, dst)
+                        saved_files.append((full_fname, dst))
+                    except OSError:
+                        self._logger.msg_error.emit(f"[OSError] Copying pattern {fname_path} to {dst} failed")
+                        failed_files.append(full_fname)
+            else:
+                output_file = os.path.abspath(os.path.join(execution_dir, pattern))
+                if not os.path.isfile(output_file):
+                    failed_files.append(pattern)
+                    continue
+                dst = os.path.abspath(os.path.join(target, fname_pattern))
+                try:
+                    shutil.copyfile(output_file, dst)
+                    saved_files.append((pattern, dst))
+                except OSError:
+                    self._logger.msg_error.emit(f"[OSError] Copying output file {output_file} to {dst} failed")
+                    failed_files.append(pattern)
+        return saved_files, failed_files
+
     def _output_resources_forward(self):
         """See base class."""
         return scan_for_resources(self, self._notebook_specification, self._output_dir, False)
 
     def stop_execution(self):
         return NotImplementedError
-
-    def expand_cmd_line_args(self, forward_resources, backward_resources):
-        labelled_args = labelled_resource_args(forward_resources + backward_resources)
-        for k, label in enumerate(self._cmd_line_args):
-            arg = labelled_args.get(label)
-            if arg is not None:
-                self._cmd_line_args[k] = arg
 
     def execute(self, forward_resources, backward_resources):
         """Setup and execute the Notebook instance
@@ -135,7 +186,6 @@ class ExecutableItem(ExecutableItemBase):
         if self._notebook_specification is None:
             self._logger.msg_warning.emit(f"Notebook <b>{self.name}</b> has no Notebook specification to "
                                           f"execute")
-            print(f"Notebook <b>{self.name}</b> has no Notebook specification to execute")
             return False
         execution_dir = _execution_directory(self._work_dir, self._notebook_specification)
         if execution_dir is None:
@@ -149,7 +199,6 @@ class ExecutableItem(ExecutableItemBase):
             )
             if not self._map_program_files(execution_dir):
                 self._logger.msg_error.emit("Copying program files to work directory failed.")
-                print("Copying program files to work directory failed.")
                 return False
         else:
             work_or_source = "source"
@@ -161,39 +210,83 @@ class ExecutableItem(ExecutableItemBase):
         self._logger.msg.emit(
             f"*** Executing Notebook specification <b>{self._notebook_specification.name}</b> in {anchor} ***"
         )
-        print(f"*** Executing Notebook specification <b>{self._notebook_specification.name}</b> in {anchor} ***")
         if not self._create_output_dirs(execution_dir):
             self._logger.msg_error.emit("Creating output subdirectories failed. Notebook execution aborted.")
-            print("Creating output subdirectories failed. Notebook execution aborted.")
             return False
         self._notebook_instance = self._notebook_specification.create_instance(execution_dir, self._logger, self)
-        self.expand_cmd_line_args(forward_resources, backward_resources)
-        self._nb_io_path_mapping["source_output_dir"] = self._create_source_output_dir()
-        try:
-            self._notebook_instance.prepare(self._nb_io_path_mapping, self._cmd_line_args)
-        except RuntimeError as error:
-            self._logger.msg_error.emit(f"Failed to prepare notebook instance: {error}")
-            print(f"Failed to prepare notebook instance: {error}")
-            return False
-        self._logger.msg.emit(
-            f"*** Starting instance of Notebook specification <b>{self._notebook_specification.name}</b> ***")
-        print(f"*** Starting instance of Notebook specification <b>{self._notebook_specification.name}</b> ***")
-        return_code = self._notebook_instance.execute()
+        with labelled_resource_args(forward_resources + backward_resources, False) as labelled_args:
+            for k, arg in enumerate(self._cmd_line_args):
+                if is_label(arg):
+                    if arg not in labelled_args:
+                        self._logger.msg_warning.emit(
+                            f"The argument '{k}: {arg}' does not match any available resources."
+                        )
+                        continue
+                    arg = labelled_args[arg]
+                self._cmd_line_args[k] = arg
+            try:
+                self._notebook_instance.prepare(self._nb_io_path_mapping, self._cmd_line_args)
+            except RuntimeError as error:
+                self._logger.msg_error.emit(f"Failed to prepare notebook instance: {error}")
+                return False
+            self._logger.msg.emit(
+                f"*** Starting instance of Notebook specification <b>{self._notebook_specification.name}</b> ***")
+            return_code = self._notebook_instance.execute()
+        self._handle_output_files(return_code, execution_dir)
         self._notebook_instance = None
         return return_code == 0
 
-    def _create_source_output_dir(self):
-        """Generates output directory in source
+    def _handle_output_files(self, return_code, execution_dir):
+        """Copies Tool specification output files from work directory to result directory.
+
+        Args:
+            return_code (int): Tool specification process return value
+            execution_dir (str): path to the execution directory
         """
-        output_dir_timestamp = _create_output_dir_timestamp()  # Get timestamp when Notebook finished
-        # Create an output folder with timestamp
-        result_path = os.path.abspath(os.path.join(self._output_dir, output_dir_timestamp))
+        output_dir_timestamp = _create_output_dir_timestamp()  # Get timestamp when tool finished
+        # Create an output folder with timestamp and copy output directly there
+        if return_code != 0:
+            result_path = os.path.abspath(os.path.join(self._output_dir, "failed", output_dir_timestamp))
+        else:
+            result_path = os.path.abspath(os.path.join(self._output_dir, output_dir_timestamp))
         try:
             os.makedirs(result_path, exist_ok=True)
         except OSError:
-            self._logger.msg_error.emit("\tError creating timestamped output directory.")
-            return None
-        return result_path
+            self._logger.msg_error.emit(
+                "\tError creating timestamped output directory. "
+                "Tool specification output files not copied. Please check directory permissions."
+            )
+            return
+        # Make link to output folder
+        result_anchor = (
+            f"<a style='color:#BB99FF;' title='{result_path}'" f"href='file:///{result_path}'>results directory</a>"
+        )
+        self._logger.msg.emit(f"*** Archiving output files to {result_anchor} ***")
+        if self._notebook_specification.output_files:
+            saved_files, failed_files = self._copy_output_files(result_path, execution_dir)
+            if not saved_files:
+                # If no files were saved
+                self._logger.msg_error.emit("\tNo files saved")
+            else:
+                # If there are saved files
+                # Split list into filenames and their paths
+                filenames, _ = zip(*saved_files)
+                self._logger.msg.emit("\tThe following output files were saved to results directory")
+                for filename in filenames:
+                    self._logger.msg.emit(f"\t\t<b>{filename}</b>")
+            if failed_files:
+                # If saving some or all files failed
+                self._logger.msg_warning.emit("\tThe following output files were not found")
+                for failed_file in failed_files:
+                    failed_fname = os.path.split(failed_file)[1]
+                    self._logger.msg_warning.emit(f"\t\t<b>{failed_fname}</b>")
+        else:
+            tip_anchor = (
+                "<a style='color:#99CCFF;' title='When you add output files to the Tool specification,\n "
+                "they will be archived into results directory. Also, output files are passed to\n "
+                "subsequent project items.' href='#'>Tip</a>"
+            )
+            self._logger.msg_warning.emit(f"\tNo output files defined for this Tool specification. {tip_anchor}")
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
@@ -243,13 +336,11 @@ def _execution_directory(work_dir, notebook_specification):
     Returns:
         str: a full path to next basedir
     """
-    # print(notebook_specification.path)
     if work_dir is not None:
         basedir = os.path.join(work_dir, _unique_dir_name(notebook_specification))
         try:
             os.makedirs(basedir, exist_ok=True)
         except OSError:
-            print(f"Creating execution directory '{basedir}' failed")
             return None
         return basedir
     return notebook_specification.path
