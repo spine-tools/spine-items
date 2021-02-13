@@ -17,6 +17,7 @@ Contains Tool specification classes.
 """
 
 from collections import OrderedDict
+import copy
 import logging
 import os
 import json
@@ -51,10 +52,6 @@ def make_specification(definition, app_settings, logger):
         definition (dict): a dictionary containing the serialized specification.
         app_settings (QSettings): Toolbox settings
         logger (LoggerInterface): a logger
-        embedded_julia_console (SpineConsoleWidget, optional): Julia console widget,
-            required if a Julia tool is to be run in the console
-        embedded_python_console (SpineConsoleWidget, optional): Python console widget,
-            required if a Python tool is to be run in the console
     Returns:
         ToolSpecification: a tool specification constructed from the given definition,
             or None if there was an error
@@ -135,6 +132,9 @@ class ToolSpecification(ProjectItemSpecification):
         self.outputfiles = set(outputfiles) if outputfiles else set()
         self.return_codes = {}
         self.execute_in_work = execute_in_work
+
+    def clone(self):
+        return make_specification(copy.deepcopy(self.to_dict()), self._settings, self._logger)
 
     def to_dict(self):
         return {
@@ -238,28 +238,6 @@ class ToolSpecification(ProjectItemSpecification):
     @property
     def tool_instance_factory(self):
         raise NotImplementedError
-
-    def get_main_program_file_path(self):
-        """Returns this specification's main program file path."""
-        if not self.path or not os.path.isdir(self.path):
-            self._logger.msg_error.emit(
-                f"Opening Tool spec main program file <b>{self.includes[0]}</b> failed. "
-                f"Main program directory does not exist."
-            )
-            return None
-        file_path = os.path.join(self.path, self.includes[0])
-        # Check that file exists
-        if not os.path.isfile(file_path):
-            self._logger.msg_error.emit("Tool spec main program file <b>{0}</b> not found.".format(file_path))
-            return None
-        ext = os.path.splitext(os.path.split(file_path)[1])[1]
-        if ext in [".bat", ".exe"]:
-            self._logger.msg_warning.emit(
-                "Sorry, opening files with extension <b>{0}</b> not supported. "
-                "Please open the file manually.".format(ext)
-            )
-            return None
-        return file_path
 
 
 class GAMSTool(ToolSpecification):

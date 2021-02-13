@@ -93,6 +93,7 @@ class Ui_Form(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.comboBox_tool.sizePolicy().hasHeightForWidth())
         self.comboBox_tool.setSizePolicy(sizePolicy2)
+        self.comboBox_tool.setFont(font1)
 
         self.horizontalLayout_9.addWidget(self.comboBox_tool)
 
@@ -110,6 +111,11 @@ class Ui_Form(object):
 
 
         self.verticalLayout_17.addLayout(self.horizontalLayout_9)
+
+        self.horizontalLayout_options = QHBoxLayout()
+        self.horizontalLayout_options.setObjectName(u"horizontalLayout_options")
+
+        self.verticalLayout_17.addLayout(self.horizontalLayout_options)
 
         self.splitter = QSplitter(self.scrollAreaWidgetContents_3)
         self.splitter.setObjectName(u"splitter")
@@ -194,7 +200,7 @@ class Ui_Form(object):
         sizePolicy4.setHeightForWidth(self.pushButton_tool_results.sizePolicy().hasHeightForWidth())
         self.pushButton_tool_results.setSizePolicy(sizePolicy4)
         self.pushButton_tool_results.setMinimumSize(QSize(75, 23))
-        self.pushButton_tool_results.setMaximumSize(QSize(75, 23))
+        self.pushButton_tool_results.setMaximumSize(QSize(16777215, 23))
 
         self.horizontalLayout_11.addWidget(self.pushButton_tool_results)
 
@@ -235,7 +241,7 @@ class Ui_Form(object):
         self.toolButton_tool_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_tool_open_dir.setMaximumSize(QSize(22, 22))
         icon3 = QIcon()
-        icon3.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon3.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_tool_open_dir.setIcon(icon3)
 
         self.horizontalLayout_15.addWidget(self.toolButton_tool_open_dir)

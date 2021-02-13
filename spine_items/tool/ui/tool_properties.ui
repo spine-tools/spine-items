@@ -143,6 +143,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tool specification for this Tool&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -181,6 +186,9 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_options"/>
        </item>
        <item>
         <widget class="QSplitter" name="splitter">
@@ -362,7 +370,7 @@
            </property>
            <property name="maximumSize">
             <size>
-             <width>75</width>
+             <width>16777215</width>
              <height>23</height>
             </size>
            </property>
@@ -441,7 +449,7 @@
            </property>
            <property name="icon">
             <iconset resource="../../ui/resources/resources_icons.qrc">
-             <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+             <normaloff>:/icons/folder-open-regular.svg</normaloff>:/icons/folder-open-regular.svg</iconset>
            </property>
           </widget>
          </item>

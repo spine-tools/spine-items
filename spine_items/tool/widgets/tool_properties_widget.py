@@ -21,14 +21,14 @@ from spinetoolbox.config import TREEVIEW_HEADER_SS
 
 
 class ToolPropertiesWidget(QWidget):
-    """Widget for the Tool Item Properties.
-
-    Args:
-        toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
-    """
+    """Widget for the Tool Item Properties."""
 
     def __init__(self, toolbox):
-        """Init class."""
+        """Init class.
+
+        Args:
+            toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
+        """
         from ..ui.tool_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__()
