@@ -232,7 +232,7 @@
   <customwidget>
    <class>ReferencesTreeView</class>
    <extends>QTreeView</extends>
-   <header>spinetoolbox/widgets/custom_qtreeview.h</header>
+   <header>spine_items/widgets.h</header>
   </customwidget>
  </customwidgets>
  <resources>
