@@ -162,11 +162,11 @@ class JuliaToolInstance(ToolInstance):
             self.args.append(f"--project={julia_project_path}")
             if os.path.isfile(sysimage):
                 self.args.append(f"--sysimage={sysimage}")
-            self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
             if script_path:
                 # NOTE: This means we support script-less julia system prompt tools...!!!
                 self.args.append(script_path)
             self.append_cmdline_args(args)
+            self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
