@@ -55,17 +55,25 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.lineEdit_sysimage)
 
+        self.toolButton_abort_sysimage = QToolButton(Form)
+        self.toolButton_abort_sysimage.setObjectName(u"toolButton_abort_sysimage")
+
+        self.horizontalLayout.addWidget(self.toolButton_abort_sysimage)
+
         self.toolButton_new_sysimage = QToolButton(Form)
         self.toolButton_new_sysimage.setObjectName(u"toolButton_new_sysimage")
+        icon = QIcon()
+        icon.addFile(u":/icons/file.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_new_sysimage.setIcon(icon)
         self.toolButton_new_sysimage.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
         self.horizontalLayout.addWidget(self.toolButton_new_sysimage)
 
         self.toolButton_open_sysimage = QToolButton(Form)
         self.toolButton_open_sysimage.setObjectName(u"toolButton_open_sysimage")
-        icon = QIcon()
-        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_open_sysimage.setIcon(icon)
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_open_sysimage.setIcon(icon1)
 
         self.horizontalLayout.addWidget(self.toolButton_open_sysimage)
 
@@ -78,9 +86,16 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.label_sysimage.setText(QCoreApplication.translate("Form", u"Sysimage", None))
+#if QT_CONFIG(tooltip)
+        self.toolButton_abort_sysimage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Abort sysimage creation process</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.toolButton_abort_sysimage.setText(QCoreApplication.translate("Form", u"...", None))
+#if QT_CONFIG(tooltip)
+        self.toolButton_new_sysimage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Create Julia <a href=\"https://julialang.github.io/PackageCompiler.jl/dev/sysimages/\"><span style=\" text-decoration: underline; color:#0000ff;\">sysimage</span></a><a href=\"https://julialang.github.io/PackageCompiler.jl/dev/sysimages/\"><span style=\" color:#000000;\"> for this Tool</span></a></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.toolButton_new_sysimage.setText(QCoreApplication.translate("Form", u"...", None))
 #if QT_CONFIG(tooltip)
-        self.toolButton_open_sysimage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select Julia Sysimage for this Tool</p></body></html>", None))
+        self.toolButton_open_sysimage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open Julia sysimage for this Tool</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_open_sysimage.setText(QCoreApplication.translate("Form", u"...", None))
     # retranslateUi

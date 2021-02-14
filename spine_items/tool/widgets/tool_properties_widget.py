@@ -40,3 +40,4 @@ class ToolPropertiesWidget(QWidget):
         toolbox.ui.tabWidget_item_properties.addTab(self, "Tool")
         model = self._toolbox.filtered_spec_factory_models["Tool"]
         self.ui.comboBox_tool.setModel(model)
+        self.ui.options_widgets = {}

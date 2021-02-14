@@ -90,7 +90,6 @@ class Tool(ProjectItem):
         self.python_console_requested.connect(self._setup_python_console)
         self.julia_console_requested.connect(self._setup_julia_console)
         self._specification_menu = None
-        self._options_widgets = {}
         self._options = options if options is not None else {}
 
     def _get_options_widget(self):
@@ -106,9 +105,10 @@ class Tool(ProjectItem):
         constructor = constructors.get(tooltype)
         if constructor is None:
             return None
-        if tooltype not in self._options_widgets:
-            self._options_widgets[tooltype] = constructor(self, self._project, self._project._settings, self._logger)
-        options_widget = self._options_widgets[tooltype]
+        if tooltype not in self._properties_ui.options_widgets:
+            self._properties_ui.options_widgets[tooltype] = constructor()
+        options_widget = self._properties_ui.options_widgets[tooltype]
+        options_widget.set_tool(self)
         options_widget.do_update_options(self._options)
         return options_widget
 
@@ -248,9 +248,8 @@ class Tool(ProjectItem):
             options (dict): The new options dictionary, must include *ALL* the options, not only changed ones.
         """
         self._options = options
-        options_widget = self._get_options_widget()
-        if options_widget:
-            options_widget.do_update_options(self._options)
+        if self._active:
+            _ = self._get_options_widget()
 
     def _update_tool_ui(self):
         """Updates Tool UI to show Tool specification details. Used when Tool specification is changed.

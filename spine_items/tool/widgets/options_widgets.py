@@ -28,41 +28,49 @@ from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine
 
 
 class OptionsWidget(QWidget):
-    def __init__(self, tool, project, settings, logger):
+    def __init__(self):
         super().__init__()
-        self._tool = tool
-        self._project = project
-        self._settings = settings
-        self._logger = logger
+        self._tool = None
 
-
-class JuliaOptionsWidget(OptionsWidget):
-    def __init__(self, tool, project, settings, logger):
+    def set_tool(self, tool):
         """Init class.
 
         Args:
             tool (Tool)
-            project (SpineToolboxProject)
-            settings (QSettings)
-            logger (LoggerInterface)
         """
+        self._tool = tool
+
+    @property
+    def _project(self):
+        return self._tool._project
+
+    @property
+    def _settings(self):
+        return self._project._settings
+
+    @property
+    def _logger(self):
+        return self._tool._logger
+
+
+class JuliaOptionsWidget(OptionsWidget):
+    def __init__(self):
+        """Init class."""
         from ..ui.julia_options import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__(tool, project, settings, logger)
+        super().__init__()
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self._last_sysimage_path = None
-        self._sysimage_path = None
-        self._sysimage_worker = None
-        self._icon_new = QIcon(CharIconEngine("\uf15b"))
-        self._icon_stop = QIcon(CharIconEngine("\uf04d", Qt.red))
-        self._tool_tip_new = "<html>Create Julia Sysimage for this Tool</html>"
-        self._tool_tip_stop = "<html>Stop Sysimage creation process</html>"
+        self._last_sysimage_paths = {}
+        self._sysimage_paths = {}
+        self._sysimage_workers = {}
         self._work_animation = self._make_work_animation()
-        self.ui.toolButton_new_sysimage.setIcon(self._icon_new)
-        self.ui.toolButton_new_sysimage.setToolTip(self._tool_tip_new)
-        self.ui.toolButton_new_sysimage.clicked.connect(self._create_or_stop_sysimage)
+        icon_abort = QIcon(CharIconEngine("\uf057", Qt.red))
+        self.ui.toolButton_abort_sysimage.setIcon(icon_abort)
+        self.ui.toolButton_new_sysimage.clicked.connect(self._create_sysimage)
         self.ui.toolButton_open_sysimage.clicked.connect(self._open_sysimage)
+        self.ui.toolButton_abort_sysimage.clicked.connect(self._abort_sysimage)
+        self.ui.toolButton_abort_sysimage.setVisible(False)
         self.ui.lineEdit_sysimage.editingFinished.connect(self._handle_le_sysimage_editing_finished)
 
     def _make_work_animation(self):
@@ -78,6 +86,34 @@ class JuliaOptionsWidget(OptionsWidget):
         animation.valueChanged.connect(self._handle_work_animation_value_changed)
         animation.finished.connect(self._handle_work_animation_finished)
         return animation
+
+    @property
+    def sysimage_path(self):
+        return self._sysimage_paths.get(self._tool)
+
+    @sysimage_path.setter
+    def sysimage_path(self, sysimage_path):
+        self._sysimage_paths[self._tool] = sysimage_path
+
+    @property
+    def sysimage_worker(self):
+        return self._sysimage_workers.get(self._tool)
+
+    @sysimage_worker.setter
+    def sysimage_worker(self, sysimage_worker):
+        self._sysimage_workers[self._tool] = sysimage_worker
+
+    @property
+    def last_sysimage_path(self):
+        return self._last_sysimage_paths.get(self._tool)
+
+    @last_sysimage_path.setter
+    def last_sysimage_path(self, last_sysimage_path):
+        self._last_sysimage_paths[self._tool] = last_sysimage_path
+
+    @property
+    def sysimage_basename(self):
+        return os.path.basename(self.sysimage_path)
 
     @Slot()
     def _handle_work_animation_finished(self):
@@ -102,34 +138,36 @@ class JuliaOptionsWidget(OptionsWidget):
         palette.setBrush(QPalette.Base, QBrush(gradient))
         self.ui.lineEdit_sysimage.setPalette(palette)
 
-    def _begin_create_sysimage(self):
-        self._work_animation.start()
-        self.ui.toolButton_new_sysimage.setIcon(self._icon_stop)
-        self.ui.toolButton_new_sysimage.setToolTip(self._tool_tip_stop)
-        self.ui.toolButton_open_sysimage.setEnabled(False)
-        self.ui.lineEdit_sysimage.setEnabled(False)
-        self.ui.lineEdit_sysimage.setPlaceholderText(self._sysimage_path)
-        self.ui.lineEdit_sysimage.setText(None)
+    def set_tool(self, tool):
+        super().set_tool(tool)
+        self._update_ui()
 
-    def _end_create_sysimage(self):
-        self._work_animation.stop()
-        self.ui.toolButton_new_sysimage.setIcon(self._icon_new)
-        self.ui.toolButton_new_sysimage.setToolTip(self._tool_tip_new)
-        self.ui.toolButton_open_sysimage.setEnabled(True)
-        self.ui.lineEdit_sysimage.setEnabled(True)
-        self.ui.lineEdit_sysimage.setPlaceholderText(None)
-        if self._sysimage_path != self._last_sysimage_path:
-            self._tool.update_options({"julia_sysimage": self._sysimage_path})
+    def _update_ui(self):
+        if self.sysimage_worker is not None:
+            self._set_ui_at_work()
         else:
-            self.ui.lineEdit_sysimage.setText(self._last_sysimage_path)
+            self._set_ui_at_rest()
+
+    def _set_ui_at_work(self):
+        self._work_animation.start()
+        self.ui.toolButton_abort_sysimage.setVisible(True)
+        self.ui.toolButton_new_sysimage.setVisible(False)
+        self.ui.toolButton_open_sysimage.setVisible(False)
+        self.ui.lineEdit_sysimage.setEnabled(False)
+        self.ui.lineEdit_sysimage.setText(self.sysimage_path)
+
+    def _set_ui_at_rest(self):
+        self._work_animation.stop()
+        self.ui.toolButton_abort_sysimage.setVisible(False)
+        self.ui.toolButton_new_sysimage.setVisible(True)
+        self.ui.toolButton_open_sysimage.setVisible(True)
+        self.ui.lineEdit_sysimage.setEnabled(True)
+        if self.sysimage_path is None:
+            self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
 
     def do_update_options(self, options):
-        self._last_sysimage_path = options.get("julia_sysimage")
-        self.ui.lineEdit_sysimage.setText(self._last_sysimage_path)
-
-    @property
-    def _sysimage_basename(self):
-        return os.path.basename(self._sysimage_path)
+        self.last_sysimage_path = options.get("julia_sysimage")
+        self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
 
     @Slot()
     def _handle_le_sysimage_editing_finished(self):
@@ -153,18 +191,11 @@ class JuliaOptionsWidget(OptionsWidget):
         self._tool.update_options({"julia_sysimage": sysimage_path})
 
     @Slot(bool)
-    def _create_or_stop_sysimage(self, _checked=False):
-        """Creates or stops the process that creates the julia sysimage."""
-        if self._sysimage_worker is not None:
-            self._stop_sysimage()
-        else:
-            self._create_sysimage()
-
-    def _stop_sysimage(self):
-        if isinstance(self._sysimage_worker, SpineEngineWorker):
-            self._sysimage_worker.stop_engine()
-        elif isinstance(self._sysimage_worker, QProcessExecutionManager):
-            self._sysimage_worker.stop_execution()
+    def _abort_sysimage(self, _checked=False):
+        if isinstance(self.sysimage_worker, SpineEngineWorker):
+            self.sysimage_worker.stop_engine()
+        elif isinstance(self.sysimage_worker, QProcessExecutionManager):
+            self.sysimage_worker.stop_execution()
 
     def _get_sysimage_path(self):
         ext = "dll" if sys.platform == "win32" else "so"
@@ -177,11 +208,14 @@ class JuliaOptionsWidget(OptionsWidget):
             return None
         return file_path
 
-    def _create_sysimage(self):
-        """Creates a Julia system image for the specification associated with this tool.
-        The process consists of two steps:
-            (i) executing the Tool to collect necessary arguments for ``PackageCompiler.create_sysimage()``, and
-            (ii) running a process that calls that function.
+    @Slot(bool)
+    def _create_sysimage(self, _checked=False):
+        """Creates a Julia sysimage for the specification associated with this tool.
+
+        Executes a workflow with a modified version of this tool spec, and all its dependencies.
+        See ``self._make_sysimage_spec()`` for details about the modified spec.
+
+        The results of the workflow are used by ``self._do_create_sysimage()` to finally create the sysimage.
         """
         if self._tool.specification() is None or self._tool.specification().tooltype.lower() != "julia":
             self._logger.msg_error.emit(
@@ -195,15 +229,15 @@ class JuliaOptionsWidget(OptionsWidget):
         node_successors = self._project.get_node_successors(dag, dag_identifier)
         if node_successors is None:
             return
-        self._sysimage_path = self._get_sysimage_path()
-        if self._sysimage_path is None:
+        self.sysimage_path = self._get_sysimage_path()
+        if self.sysimage_path is None:
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
         settings = self._project.make_settings_dict()
         settings["appSettings/useEmbeddedJulia"] = "1"  # Don't use repl
-        self._sysimage_worker = self._project.create_engine_worker(dag, execution_permits, dag_identifier, settings)
+        self.sysimage_worker = self._project.create_engine_worker(dag, execution_permits, dag_identifier, settings)
         # Use the modified spec
-        engine_data = self._sysimage_worker.get_engine_data()
+        engine_data = self.sysimage_worker.get_engine_data()
         spec_names = {spec["name"] for type_specs in engine_data["specifications"].values() for spec in type_specs}
         spec = self._make_sysimage_spec(spec_names)
         item_dict = engine_data["items"][self._tool.name]
@@ -212,19 +246,27 @@ class JuliaOptionsWidget(OptionsWidget):
         if options:
             options["julia_sysimage"] = ""  # Don't use any previous sysimages
         engine_data["specifications"].setdefault(self._tool.item_type(), list()).append(spec.to_dict())
-        self._sysimage_worker.set_engine_data(engine_data)
-        self._sysimage_worker.finished.connect(self._do_create_sysimage)
-        self._begin_create_sysimage()
-        self._sysimage_worker.start(silent=True)
+        self.sysimage_worker.set_engine_data(engine_data)
+        self.sysimage_worker.finished.connect(lambda tool=self._tool: self._do_create_sysimage(tool))
+        self._update_ui()
+        self.sysimage_worker.start(silent=True)
         self._logger.msg_success.emit(
-            f"Process to create <b>{self._sysimage_basename}</b> sucessfully started.\n"
+            f"Process to create <b>{self.sysimage_basename}</b> sucessfully started.\n"
             "The process might take a long time, but you can keep using Spine Toolbox as normal while it runs."
             "You will see a notification here whenever it's done."
         )
 
+    def _get_precompile_statements_filepath(self):
+        return os.path.join(self._tool.data_dir, "precompile_statements_file.jl")
+
+    def _get_loaded_modules_filepath(self):
+        return os.path.join(self._tool.data_dir, "loaded_modules.txt")
+
     def _make_sysimage_spec(self, spec_names):
-        """Returns a tool specification that collects information about the *actual* tool spec.
-        This spec writes two files to the item's data dir:
+        """Returns a modified version of this tool specification that collects necessary information
+        for creating the sysimage.
+
+        This information is written into two files in the item's data dir:
             - one containing a single line with the Julia modules that are loaded by the tool
             - the other containing precompile statements collected by the option `--trace-compile`
 
@@ -259,18 +301,29 @@ class JuliaOptionsWidget(OptionsWidget):
                 break
         return spec
 
-    @Slot()
-    def _do_create_sysimage(self):
-        self._sysimage_worker.clean_up()
-        state = self._sysimage_worker.engine_final_state()
+    def _do_create_sysimage(self, tool):
+        """Runs when the workflow started by ``self._create_sysimage()`` has completed.
+
+        Launches a julia process that calls ``PackageCompiler.create_sysimage()`` using the info
+        collected by the referred workflow.
+
+        Args:
+            tool (Tool): The Tool that started the sysimage creation process.
+                It may be different than the Tool currently using the widget.
+        """
+        # Replace self._tool while we run this method
+        self._tool, current_tool = tool, self._tool
+        self.sysimage_worker.clean_up()
+        state = self.sysimage_worker.engine_final_state()
         if state != "COMPLETED":
             user_stopped = state == "USER_STOPPED"
-            errors = "\n".join(self._sysimage_worker.process_messages.get("msg_error", []))
+            errors = "\n".join(self.sysimage_worker.process_messages.get("msg_error", []))
             msg = self._make_failure_message(user_stopped, errors)
             self._logger.msg_error.emit(msg)
-            self._sysimage_worker = None
-            self._sysimage_path = self._last_sysimage_path
-            self._end_create_sysimage()
+            self.sysimage_worker = None
+            self.sysimage_path = None
+            if tool == current_tool:
+                self._update_ui()
             return
         julia_command = get_julia_command(self._settings)
         loaded_modules_file = self._get_loaded_modules_filepath()
@@ -283,32 +336,49 @@ class JuliaOptionsWidget(OptionsWidget):
             using PackageCompiler;
             PackageCompiler.create_sysimage(
                 Symbol.(split("{modules}", " "));
-                sysimage_path="{self._sysimage_path}",
+                sysimage_path="{self.sysimage_path}",
                 precompile_statements_file="{precompile_statements_file}"
             )
         """
         julia, *args = julia_command
         args += ["-e", code]
-        self._sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=True)
-        self._sysimage_worker.execution_finished.connect(self._handle_sysimage_process_finished)
-        self._sysimage_worker.start_execution()
+        self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=True)
+        self.sysimage_worker.execution_finished.connect(
+            lambda ret, tool=tool: self._handle_sysimage_process_finished(ret, tool)
+        )
+        self.sysimage_worker.start_execution()
+        # Restore the current self._tool
+        self._tool = current_tool
 
-    @Slot(int)
-    def _handle_sysimage_process_finished(self, ret):
-        user_stopped = self._sysimage_worker.user_stopped
-        error = self._sysimage_worker.error_output
-        self._sysimage_worker.deleteLater()
-        self._sysimage_worker = None
+    def _handle_sysimage_process_finished(self, ret, tool):
+        """Runs when the Julia process started by ``self._do_create_sysimage()`` finishes.
+        Wraps up everything.
+
+        Args:
+            ret (int): The return code of the process, 0 indicates success.
+            tool (Tool): The Tool that started the sysimage creation process.
+                It may be different than the Tool currently using the widget.
+        """
+        # Replace self._tool while we run this method
+        self._tool, current_tool = tool, self._tool
+        user_stopped = self.sysimage_worker.user_stopped
+        error = self.sysimage_worker.error_output
+        self.sysimage_worker.deleteLater()
+        self.sysimage_worker = None
         if ret != 0:
             msg = self._make_failure_message(user_stopped, error)
             self._logger.msg_error.emit(msg)
-            self._sysimage_path = self._last_sysimage_path
+            self.sysimage_path = None
         else:
-            self._logger.msg_success.emit(f"<b>{self._sysimage_basename}</b> created successfully.\n")
-        self._end_create_sysimage()
+            self._tool.update_options({"julia_sysimage": self.sysimage_path})
+            self._logger.msg_success.emit(f"<b>{self.sysimage_basename}</b> created successfully.\n")
+        if tool == current_tool:
+            self._update_ui()
+        # Restore the current self._tool
+        self._tool = current_tool
 
     def _make_failure_message(self, user_stopped, errors):
-        msg = f"Process to create <b>{self._sysimage_basename}</b> "
+        msg = f"Process to create <b>{self.sysimage_basename}</b> "
         if user_stopped:
             msg += "stopped by the user"
         else:
@@ -316,9 +386,3 @@ class JuliaOptionsWidget(OptionsWidget):
             if errors:
                 msg += f" with the following error(s):\n{errors}"
         return msg
-
-    def _get_precompile_statements_filepath(self):
-        return os.path.join(self._tool.data_dir, "precompile_statements_file.jl")
-
-    def _get_loaded_modules_filepath(self):
-        return os.path.join(self._tool.data_dir, "loaded_modules.txt")
