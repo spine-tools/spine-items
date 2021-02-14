@@ -332,7 +332,7 @@ class JuliaOptionsWidget(OptionsWidget):
             modules = f.read()
         code = f"""
             using Pkg;
-            pkg"add PackageCompiler {modules}";
+            pkg"add PackageCompiler";
             using PackageCompiler;
             PackageCompiler.create_sysimage(
                 Symbol.(split("{modules}", " "));
