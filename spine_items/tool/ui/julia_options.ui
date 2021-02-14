@@ -87,7 +87,7 @@
    <item>
     <widget class="QToolButton" name="toolButton_new_sysimage">
      <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create Julia &lt;a href=&quot;https://julialang.github.io/PackageCompiler.jl/dev/sysimages/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;sysimage&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;https://julialang.github.io/PackageCompiler.jl/dev/sysimages/&quot;&gt;&lt;span style=&quot; color:#000000;&quot;&gt; for this Tool&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create Julia sysimage for this Tool&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="text">
       <string>...</string>

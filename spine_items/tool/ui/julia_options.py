@@ -91,7 +91,7 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.toolButton_abort_sysimage.setText(QCoreApplication.translate("Form", u"...", None))
 #if QT_CONFIG(tooltip)
-        self.toolButton_new_sysimage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Create Julia <a href=\"https://julialang.github.io/PackageCompiler.jl/dev/sysimages/\"><span style=\" text-decoration: underline; color:#0000ff;\">sysimage</span></a><a href=\"https://julialang.github.io/PackageCompiler.jl/dev/sysimages/\"><span style=\" color:#000000;\"> for this Tool</span></a></p></body></html>", None))
+        self.toolButton_new_sysimage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Create Julia sysimage for this Tool</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_new_sysimage.setText(QCoreApplication.translate("Form", u"...", None))
 #if QT_CONFIG(tooltip)
