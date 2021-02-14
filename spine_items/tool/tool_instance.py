@@ -139,8 +139,7 @@ class JuliaToolInstance(ToolInstance):
                 self.args += [f"empty!(ARGS); append!(ARGS, {cmdline_args});"]
             self.args += [f'include("{self.tool_specification.main_prgm}")']
             kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
-            if os.path.isfile(sysimage):
-                extra_switches = [f"--sysimage={sysimage}"]
+            extra_switches = [f"--sysimage={sysimage}"] if os.path.isfile(sysimage) else None
             self.exec_mngr = KernelExecutionManager(
                 self._logger,
                 "julia",
