@@ -39,6 +39,6 @@ setup(
     zip_safe=False,
     keywords="",
     classifiers=[],
-    python_requires=">=3.6, <=3.8",
+    python_requires=">=3.6, <3.9",
     test_suite="tests",
 )
