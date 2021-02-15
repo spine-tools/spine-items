@@ -35,8 +35,8 @@ from PySide2.QtWidgets import (
 )
 from spinedb_api import DateTime, Duration, ParameterValueFormatError
 from spinetoolbox.helpers import CharIconEngine
-from spine_engine.spine_io.io_api import TYPE_STRING_TO_CLASS
-from spine_engine.spine_io.type_conversion import IntegerSequenceDateTimeConvertSpec, value_to_convert_spec
+from spinedb_api.spine_io.io_api import TYPE_STRING_TO_CLASS
+from spinedb_api.spine_io.type_conversion import IntegerSequenceDateTimeConvertSpec, value_to_convert_spec
 from ..commands import SetColumnOrRowType
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
 

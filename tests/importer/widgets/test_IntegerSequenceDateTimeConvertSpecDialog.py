@@ -19,7 +19,7 @@ import unittest
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication
 from spinedb_api import DateTime, Duration
-from spine_engine.spine_io.type_conversion import IntegerSequenceDateTimeConvertSpec
+from spinedb_api.spine_io.type_conversion import IntegerSequenceDateTimeConvertSpec
 from spine_items.importer.widgets.table_view_with_button_header import IntegerSequenceDateTimeConvertSpecDialog
 
 

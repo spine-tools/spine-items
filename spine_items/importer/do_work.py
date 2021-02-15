@@ -18,7 +18,7 @@ Importer's execute kernel (do_work), as target for a multiprocess.Process
 
 import os
 import spinedb_api
-from spine_engine.spine_io.type_conversion import value_to_convert_spec
+from spinedb_api.spine_io.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 

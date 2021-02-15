@@ -21,7 +21,7 @@ import enum
 from PySide2.QtCore import QItemSelection, Qt, Signal, Slot
 from PySide2.QtWidgets import QDialogButtonBox, QMessageBox, QWidget
 from spinedb_api import SpineDBAPIError
-import spine_engine.spine_io.exporters.gdx as gdx
+import spinedb_api.spine_io.exporters.gdx as gdx
 from ..list_utils import move_selected_elements_by
 from ..mvcmodels.record_list_model import RecordListModel
 from ..mvcmodels.set_list_model import SetListModel

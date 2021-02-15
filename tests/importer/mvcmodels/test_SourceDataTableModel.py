@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 from PySide2.QtCore import Qt
 from spine_items.importer.mvcmodels.mapping_specification_model import MappingSpecificationModel
 from spine_items.importer.mvcmodels.source_data_table_model import SourceDataTableModel
-from spine_engine.spine_io.type_conversion import value_to_convert_spec
+from spinedb_api.spine_io.type_conversion import value_to_convert_spec
 from spinedb_api import item_mapping_from_dict
 
 

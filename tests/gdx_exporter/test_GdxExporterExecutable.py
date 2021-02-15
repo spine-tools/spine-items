@@ -28,8 +28,8 @@ from spine_items.gdx_exporter.database import Database
 from spine_items.gdx_exporter.gdx_exporter import SettingsPack
 from spine_items.gdx_exporter.executable_item import ExecutableItem
 from spine_items.gdx_exporter.settings_state import SettingsState
-from spine_engine.spine_io import gdx_utils
-from spine_engine.spine_io.exporters import gdx
+from spinedb_api.spine_io import gdx_utils
+from spinedb_api.spine_io.exporters import gdx
 
 
 class TestGdxExporterExecutable(unittest.TestCase):
