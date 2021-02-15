@@ -83,7 +83,7 @@ class ImportEditorWindow(QMainWindow):
         self._memoized_connectors = {}
         self._copied_mappings = {}
         self._editor = None
-        self._undo_stack = QUndoStack()
+        self._undo_stack = QUndoStack(self)
         self._ui_error = QErrorMessage(self)
         self._ui_error.setWindowTitle("Error")
         self._ui_error.setWindowFlag(Qt.WindowContextHelpButtonHint, False)

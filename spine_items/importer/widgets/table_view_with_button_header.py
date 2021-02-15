@@ -28,13 +28,16 @@ from PySide2.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QVBoxLayout,
+    QHBoxLayout,
+    QFormLayout,
     QSpinBox,
     QDateTimeEdit,
     QLineEdit,
-    QFormLayout,
+    QWidget,
 )
 from spinedb_api import DateTime, Duration, ParameterValueFormatError
 from spinetoolbox.helpers import CharIconEngine
+from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
 from spinedb_api.spine_io.io_api import TYPE_STRING_TO_CLASS
 from spinedb_api.spine_io.type_conversion import IntegerSequenceDateTimeConvertSpec, value_to_convert_spec
 from ..commands import SetColumnOrRowType
@@ -207,6 +210,69 @@ class TableViewWithButtonHeader(QTableView):
         self._vertical_header.about_to_undo.connect(about_to_undo_slot)
 
 
+def _make_type_button(parent, menu, font):
+    button = QToolButton(parent=parent)
+    button.setMenu(menu)
+    button.setPopupMode(QToolButton.InstantPopup)
+    button.setFont(font)
+    button.setCursor(Qt.ArrowCursor)
+    return button
+
+
+class LineEditWithTypeButton(QWidget):
+
+    reference_changed = Signal(object, object)
+    convert_spec_changed = Signal(object, object)
+
+    def __init__(self, component_mapping, parent=None):
+        """
+        Args:
+            component_mapping (ConstantMapping)
+            parent (QWidget, optional)
+        """
+        super().__init__(parent)
+        self._component_mapping = None
+        layout = QHBoxLayout(self)
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self._font = QFont('Font Awesome 5 Free Solid')
+        self._menu = _create_allowed_types_menu(self, self._menu_pressed)
+        self._line_edit = PropertyQLineEdit(self)
+        self._button = _make_type_button(self, self._menu, self._font)
+        layout.addWidget(self._line_edit)
+        layout.addWidget(self._button)
+        self.setAutoFillBackground(True)
+        self._line_edit.editingFinished.connect(self._emit_reference_changed)
+
+    def set_component_mapping(self, component_mapping):
+        self._component_mapping = component_mapping
+        convert_spec = component_mapping.convert_spec
+        font_str = _TYPE_TO_FONT_AWESOME_ICON[convert_spec.DISPLAY_NAME]
+        self._button.setText(font_str)
+        self._line_edit.setText(component_mapping.reference)
+
+    @Slot()
+    def _emit_reference_changed(self):
+        self.reference_changed.emit(self._line_edit.text(), self._component_mapping.reference)
+
+    @Slot(QAction)
+    def _menu_pressed(self, action):
+        """Sets the data type of a row or column according to menu action."""
+        previous_convert_spec = self._component_mapping.convert_spec
+        type_str = action.text()
+        if type_str == "integer sequence datetime":
+            previous_spec = (
+                previous_convert_spec if isinstance(previous_convert_spec, IntegerSequenceDateTimeConvertSpec) else None
+            )
+            dialog = IntegerSequenceDateTimeConvertSpecDialog(previous_spec, self)
+            if not dialog.exec_():
+                return
+            convert_spec = dialog.get_spec()
+        else:
+            convert_spec = value_to_convert_spec(type_str)
+        self.convert_spec_changed.emit(convert_spec, previous_convert_spec)
+
+
 class HeaderWithButton(QHeaderView):
     """Class that reimplements the QHeaderView section paint event to draw a button
     that is used to display and change the type of that column or row.
@@ -233,11 +299,7 @@ class HeaderWithButton(QHeaderView):
 
         self._menu = _create_allowed_types_menu(self, self._menu_pressed)
 
-        self._button = QToolButton(parent=self)
-        self._button.setMenu(self._menu)
-        self._button.setPopupMode(QToolButton.InstantPopup)
-        self._button.setFont(self._font)
-        self._button.setCursor(Qt.ArrowCursor)
+        self._button = _make_type_button(self, self._menu, self._font)
         self._button.hide()
 
         self._render_button = QToolButton(parent=self)

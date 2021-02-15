@@ -19,7 +19,9 @@ ImportMappings widget.
 from copy import deepcopy
 from PySide2.QtCore import QObject, QItemSelectionModel, Signal, Slot
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
+from spinedb_api import ConstantMapping
 from .custom_menus import MappingListMenu
+from .table_view_with_button_header import LineEditWithTypeButton
 from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
 
 SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "None")
@@ -69,6 +71,29 @@ class ImportMappings(QObject):
         self._ui.mapping_spec_table.setModel(mapping_spec_model)
         self._resize_table_view_mappings_columns()
         mapping_spec_model.modelReset.connect(self._resize_table_view_mappings_columns)
+        self._set_line_edit_with_type_button()
+        mapping_spec_model.mapping_changed.connect(self._set_line_edit_with_type_button)
+
+    @Slot()
+    def _set_line_edit_with_type_button(self):
+        """Sets a LineEditWithTypeButton for the value mapping index if it's a constant mapping.
+        This is so the user can set the convert_spec for that mapping.
+        """
+        model = self._ui.mapping_spec_table.model()
+        index = model.value_mapping_index()
+        if not index.isValid():
+            return
+        component_mapping = model.component_mapping_from_index(index)
+        if isinstance(component_mapping, ConstantMapping):
+            widget = self._ui.mapping_spec_table.indexWidget(index)
+            if widget is None:
+                widget = LineEditWithTypeButton(self._ui.mapping_spec_table)
+                widget.reference_changed.connect(model.change_constant_value_reference)
+                widget.convert_spec_changed.connect(model.change_constant_value_convert_spec)
+            widget.set_component_mapping(component_mapping)
+        else:
+            widget = None
+        self._ui.mapping_spec_table.setIndexWidget(index, widget)
 
     @Slot()
     def _resize_table_view_mappings_columns(self):
