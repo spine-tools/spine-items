@@ -16,7 +16,7 @@ Contains :class:`IndexingDomainListModel`.
 :date:   25.8.2020
 """
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
-from spine_engine.spine_io.exporters import gdx
+from spinedb_api.spine_io.exporters import gdx
 
 
 class IndexingDomainListItem:

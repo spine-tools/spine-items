@@ -17,8 +17,8 @@ Contains GdxExporter's executable item as well as support utilities.
 """
 import os.path
 import pathlib
-from spine_engine.spine_io import gdx_utils
-from spine_engine.spine_io.exporters import gdx
+from spinedb_api.spine_io import gdx_utils
+from spinedb_api.spine_io.exporters import gdx
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path

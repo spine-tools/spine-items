@@ -19,7 +19,7 @@ from contextlib import contextmanager
 import enum
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QWidget
-from spine_engine.spine_io.exporters import gdx
+from spinedb_api.spine_io.exporters import gdx
 from ..mvcmodels.indexing_table_model import IndexingTableModel
 
 

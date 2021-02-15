@@ -18,7 +18,7 @@ GdxExporter's execute kernel (do_work), as target for a multiprocess.Process
 from datetime import datetime
 import os
 from time import time
-from spine_engine.spine_io.exporters import gdx
+from spinedb_api.spine_io.exporters import gdx
 from spinedb_api import clear_filter_configs, DatabaseMapping, SpineDBAPIError
 from spinedb_api.filters.tools import ensure_filtering
 
