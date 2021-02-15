@@ -24,27 +24,43 @@ from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu, CustomPopup
 class ToolSpecificationMenu(ItemSpecificationMenu):
     """Menu class for Tool specifications."""
 
-    def __init__(self, parent, index):
+    def __init__(self, toolbox, index):
         """
         Args:
-            parent (QWidget): Parent for menu widget (ToolboxUI)
+            toolbox (ToolboxUI): the toolbox that request this menu
             index (QModelIndex): the index from specification model
         """
-        super().__init__(parent, index)
+        super().__init__(toolbox, index)
+        self.addSeparator()
         self.add_action("Open main program file", self._open_main_program_file)
         self.add_action("Open main program directory", self._open_main_program_dir)
 
     @Slot()
     def _open_main_program_file(self):
         spec = self.parent().specification_model.specification(self.index.row())
-        file_path = spec.get_main_program_file_path()
-        if file_path is None:
+        if not spec.path or not os.path.isdir(spec.path):
+            self._toolbox.msg_error.emit(
+                f"Opening Tool spec main program file <b>{spec.includes[0]}</b> failed. "
+                f"Main program directory does not exist."
+            )
+            return
+        file_path = os.path.join(spec.path, spec.includes[0])
+        # Check that file exists
+        if not os.path.isfile(file_path):
+            self._toolbox.msg_error.emit("Tool spec main program file <b>{0}</b> not found.".format(file_path))
+            return
+        ext = os.path.splitext(os.path.split(file_path)[1])[1]
+        if ext in [".bat", ".exe"]:
+            self._toolbox.msg_warning.emit(
+                "Sorry, opening files with extension <b>{0}</b> not supported. "
+                "Please open the file manually.".format(ext)
+            )
             return
         main_program_url = "file:///" + file_path
         res = open_url(main_program_url)
         if not res:
             filename, file_extension = os.path.splitext(file_path)
-            self.parent().msg_error.emit(
+            self._toolbox.msg_error.emit(
                 "Unable to open Tool specification main program file {0}. "
                 "Make sure that <b>{1}</b> "
                 "files are associated with an editor. E.g. on Windows "
@@ -53,12 +69,12 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
 
     @Slot()
     def _open_main_program_dir(self):
-        tool_specification_path = self.parent().specification_model.specification(self.index.row()).path
+        tool_specification_path = self._toolbox.specification_model.specification(self.index.row()).path
         if not tool_specification_path:
-            self.parent().msg_error.emit("Main program directory does not exist. Fix this in Tool spec editor.")
+            self._toolbox.msg_error.emit("Main program directory does not exist. Fix this in Tool spec editor.")
             return
         path_url = "file:///" + tool_specification_path
-        self.parent().open_anchor(QUrl(path_url, QUrl.TolerantMode))
+        self._toolbox.open_anchor(QUrl(path_url, QUrl.TolerantMode))
 
 
 class AddIncludesPopupMenu(CustomPopupMenu):

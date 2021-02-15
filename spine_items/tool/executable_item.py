@@ -38,7 +38,7 @@ from ..utils import labelled_resource_args, is_label
 class ExecutableItem(ExecutableItemBase):
     """Tool project item's executable parts."""
 
-    def __init__(self, name, work_dir, output_dir, tool_specification, cmd_line_args, logger):
+    def __init__(self, name, work_dir, output_dir, tool_specification, cmd_line_args, options, logger):
         """
         Args:
             name (str): item's name
@@ -47,6 +47,7 @@ class ExecutableItem(ExecutableItemBase):
             output_dir (str): path to the directory where output files should be archived
             tool_specification (ToolSpecification): a tool specification
             cmd_line_args (list): a list of command line argument to pass to the tool instance
+            options (dict): misc tool options. See ``Tool`` for details.
             logger (LoggerInterface): a logger
         """
         super().__init__(name, logger)
@@ -54,7 +55,12 @@ class ExecutableItem(ExecutableItemBase):
         self._output_dir = output_dir
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
+        self._options = options
         self._tool_instance = None
+
+    @property
+    def options(self):
+        return self._options
 
     @ExecutableItemBase.filter_id.setter
     def filter_id(self, filter_id):
@@ -225,12 +231,6 @@ class ExecutableItem(ExecutableItemBase):
     def _copy_program_files(self, execution_dir):
         """Copies Tool specification source files to base directory."""
         # Make work directory anchor with path as tooltip
-        work_anchor = "<a style='color:#99CCFF;' title='{0}' href='file:///{0}'>work directory</a>".format(
-            execution_dir
-        )
-        self._logger.msg.emit(
-            f"*** Copying Tool specification <b>{self._tool_specification.name}</b> program files to {work_anchor} ***"
-        )
         n_copied_files = 0
         for source_pattern in self._tool_specification.includes:
             dir_name, file_pattern = os.path.split(source_pattern)
@@ -336,7 +336,7 @@ class ExecutableItem(ExecutableItemBase):
             )
             self._logger.msg.emit(
                 f"*** Copying Tool specification <b>{self._tool_specification.name}"
-                f"</b> source files to {work_anchor} ***"
+                f"</b> program files to {work_anchor} ***"
             )
             if not self._copy_program_files(execution_dir):
                 self._logger.msg_error.emit("Copying program files to work directory failed.")
@@ -576,7 +576,8 @@ class ExecutableItem(ExecutableItemBase):
         )
         cmd_line_args = item_dict["cmd_line_args"]
         cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
-        return cls(name, work_dir, output_dir, specification, cmd_line_args, logger)
+        options = item_dict.get("options", {})
+        return cls(name, work_dir, output_dir, specification, cmd_line_args, options, logger)
 
 
 def _count_files_and_dirs(paths):

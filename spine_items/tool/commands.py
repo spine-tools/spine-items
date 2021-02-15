@@ -15,6 +15,7 @@ Undo/redo commands for the Tool project item.
 :authors: M. Marin (KTH)
 :date:   5.5.2020
 """
+import copy
 from spine_items.commands import SpineToolboxCommand
 
 
@@ -36,3 +37,26 @@ class UpdateToolExecuteInWorkCommand(SpineToolboxCommand):
 
     def undo(self):
         self.tool.do_update_execution_mode(not self.execute_in_work)
+
+
+class UpdateToolOptionsCommand(SpineToolboxCommand):
+    def __init__(self, tool, options):
+        """Command to update Tool options.
+
+        Args:
+            tool (Tool): the Tool
+            options (dict): The options that change
+        """
+        super().__init__()
+        self.tool = tool
+        self.old_options = copy.deepcopy(self.tool._options)
+        self.new_options = copy.deepcopy(self.tool._options)
+        self.new_options.update(options)
+        self.setText(f"change options of {tool.name}")
+
+    def redo(self):
+        self.tool.do_set_options(self.new_options)
+        self.setObsolete(self.old_options == self.new_options)
+
+    def undo(self):
+        self.tool.do_set_options(self.old_options)

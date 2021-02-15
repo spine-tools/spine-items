@@ -215,7 +215,7 @@ class Ui_Form(object):
         self.toolButton_dc_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_dc_open_dir.setMaximumSize(QSize(22, 22))
         icon4 = QIcon()
-        icon4.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon4.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_dc_open_dir.setIcon(icon4)
 
         self.horizontalLayout_7.addWidget(self.toolButton_dc_open_dir)

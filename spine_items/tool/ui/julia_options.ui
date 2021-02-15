@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+######################################################################################################################
+# Copyright (C) 2017-2021 Spine project consortium
+# This file is part of Spine Items.
+# Spine Items is free software: you can redistribute it and\/or modify it under the terms of the GNU Lesser General
+# Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+# Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
+# this program. If not, see <http:\/\/www.gnu.org\/licenses\/>.
+######################################################################################################################
+-->
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>282</width>
+    <height>47</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QLabel" name="label_sysimage">
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Sysimage</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="PropertyQLineEdit" name="lineEdit_sysimage">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>24</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolButton" name="toolButton_abort_sysimage">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Abort sysimage creation process&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolButton" name="toolButton_new_sysimage">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create Julia sysimage for this Tool&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../../ui/resources/resources_icons.qrc">
+       <normaloff>:/icons/file.svg</normaloff>:/icons/file.svg</iconset>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonIconOnly</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolButton" name="toolButton_open_sysimage">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open Julia sysimage for this Tool&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../../ui/resources/resources_icons.qrc">
+       <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PropertyQLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>spinetoolbox/widgets/custom_qlineedits.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../../ui/resources/resources_icons.qrc"/>
+ </resources>
+ <connections/>
+</ui>
