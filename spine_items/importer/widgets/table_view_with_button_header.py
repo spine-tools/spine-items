@@ -221,7 +221,7 @@ def _make_type_button(parent, menu, font):
 
 class LineEditWithTypeButton(QWidget):
 
-    reference_changed = Signal(object, object)
+    reference_changed = Signal(str)
     convert_spec_changed = Signal(object, object)
 
     def __init__(self, component_mapping, parent=None):
@@ -236,13 +236,23 @@ class LineEditWithTypeButton(QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self._font = QFont('Font Awesome 5 Free Solid')
-        self._menu = _create_allowed_types_menu(self, self._menu_pressed)
+        self._menu = _create_allowed_types_menu(self, self._handle_menu_triggered)
         self._line_edit = PropertyQLineEdit(self)
+        self._line_edit.setWindowOpacity(0)
         self._button = _make_type_button(self, self._menu, self._font)
         layout.addWidget(self._line_edit)
         layout.addWidget(self._button)
         self.setAutoFillBackground(True)
         self._line_edit.editingFinished.connect(self._emit_reference_changed)
+
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        self._line_edit.setFixedHeight(self.height())
+        self._button.setFixedHeight(self.height())
+
+    def set_background_color(self, color):
+        background = "transparent" if color is None else color.name()
+        self.setStyleSheet(f"QLineEdit{{background: {background}; border: 0px}}")
 
     def set_component_mapping(self, component_mapping):
         self._component_mapping = component_mapping
@@ -253,10 +263,11 @@ class LineEditWithTypeButton(QWidget):
 
     @Slot()
     def _emit_reference_changed(self):
-        self.reference_changed.emit(self._line_edit.text(), self._component_mapping.reference)
+        if self._line_edit.text() != self._component_mapping.reference:
+            self.reference_changed.emit(self._line_edit.text())
 
     @Slot(QAction)
-    def _menu_pressed(self, action):
+    def _handle_menu_triggered(self, action):
         """Sets the data type of a row or column according to menu action."""
         previous_convert_spec = self._component_mapping.convert_spec
         type_str = action.text()

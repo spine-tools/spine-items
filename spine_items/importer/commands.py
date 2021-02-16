@@ -134,7 +134,13 @@ class SetComponentMappingType(QUndoCommand):
     """Sets the type of a component mapping."""
 
     def __init__(
-        self, component_display_name, mapping_specification_model, mapping_type, previous_type, previous_reference
+        self,
+        component_display_name,
+        mapping_specification_model,
+        mapping_type,
+        previous_type,
+        previous_reference,
+        previous_convert_spec,
     ):
         """
         Args:
@@ -143,6 +149,7 @@ class SetComponentMappingType(QUndoCommand):
             mapping_type (str): name of the new type
             previous_type (str): name of the original type
             previous_reference (str or int): original mapping's reference
+            previous_convert_spec (ConvertSpec): original mapping's convert spec if any
         """
         text = "change source mapping"
         super().__init__(text)
@@ -151,6 +158,7 @@ class SetComponentMappingType(QUndoCommand):
         self._new_type = mapping_type
         self._previous_type = previous_type
         self._previous_reference = previous_reference
+        self._previous_convert_spec = previous_convert_spec
         if self._new_type == self._previous_type:
             self.setObsolete(True)
 
@@ -162,6 +170,8 @@ class SetComponentMappingType(QUndoCommand):
         """Restores component mapping's original type."""
         self._model.set_type(self._component_display_name, self._previous_type)
         self._model.set_value(self._component_display_name, self._previous_reference)
+        if self._previous_convert_spec is not None:
+            self._model.set_convert_spec(self._component_display_name, self._previous_convert_spec)
 
 
 class SetComponentMappingReference(QUndoCommand):

@@ -489,9 +489,14 @@ class MappingSpecificationModel(QAbstractTableModel):
         previous_reference = component_mapping.reference
         if isinstance(previous_reference, int):
             previous_reference += 1
+        previous_convert_spec = (
+            component_mapping.convert_spec if isinstance(component_mapping, ConstantMapping) else None
+        )
         if column == 1:
             previous_type = _MAP_TYPE_DISPLAY_NAME[type(component_mapping)]
-            self._undo_stack.push(SetComponentMappingType(name, self, value, previous_type, previous_reference))
+            self._undo_stack.push(
+                SetComponentMappingType(name, self, value, previous_type, previous_reference, previous_convert_spec)
+            )
         elif column == 2:
             self._undo_stack.push(
                 SetComponentMappingReference(
@@ -499,12 +504,6 @@ class MappingSpecificationModel(QAbstractTableModel):
                 )
             )
         return False
-
-    @Slot(object, object)
-    def change_constant_value_reference(self, reference, previous_reference):
-        self._undo_stack.push(
-            SetComponentMappingReference(self.value_mapping.main_value_name, self, reference, previous_reference, False)
-        )
 
     @Slot(object, object)
     def change_constant_value_convert_spec(self, convert_spec, previous_convert_spec):
@@ -525,9 +524,14 @@ class MappingSpecificationModel(QAbstractTableModel):
         """
         row = self._row_for_component_name(component_name)
         component_mapping = self._component_mappings[row]
-        previous_reference = component_mapping.reference
         previous_type_name = _MAP_TYPE_DISPLAY_NAME[type(component_mapping)]
-        type_cmd = SetComponentMappingType(component_name, self, type_name, previous_type_name, previous_reference)
+        previous_reference = component_mapping.reference
+        previous_convert_spec = (
+            component_mapping.convert_spec if isinstance(component_mapping, ConstantMapping) else None
+        )
+        type_cmd = SetComponentMappingType(
+            component_name, self, type_name, previous_type_name, previous_reference, previous_convert_spec
+        )
         ref_cmd = SetComponentMappingReference(
             component_name, self, reference, previous_reference, isinstance(component_mapping, NoneMapping)
         )
@@ -578,8 +582,6 @@ class MappingSpecificationModel(QAbstractTableModel):
         """
         self.about_to_undo.emit(self._table_name, self._mapping_name)
         mapping = self._get_component_mapping_from_name(name)
-        if isinstance(mapping, NoneMapping):
-            mapping = ConstantMapping()
         try:
             mapping.reference = value
         except TypeError:
