@@ -770,7 +770,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         Returns:
             MappingSpecificationModel: mapping specification
         """
-        mapping_name = specification_dict.pop("mapping_name", "")
+        mapping_name = specification_dict.get("mapping_name", "")
         mapping = item_mapping_from_dict(specification_dict)
         return MappingSpecificationModel(table_name, mapping_name, mapping, undo_stack)
 
