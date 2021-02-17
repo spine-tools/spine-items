@@ -35,32 +35,33 @@ def do_work(
             logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
             successes.append(False)
             continue
-        export_logger = logger if not cancel_on_error else None
-        for out_path in out_paths:
-            try:
-                os.mkdir(os.path.dirname(out_path))
-            except FileExistsError:
-                pass
-            try:
-                gdx.to_gdx_file(
-                    database_map,
-                    out_path,
-                    settings_pack.settings,
-                    settings_pack.indexing_settings,
-                    settings_pack.merging_settings,
-                    settings_pack.none_fallback,
-                    settings_pack.none_export,
-                    gams_system_directory,
-                    export_logger,
-                )
-            except gdx.GdxExportException as error:
-                logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
-                successes.append(False)
-                continue
-            finally:
-                database_map.connection.close()
-            logger.msg_success.emit(f"File <b>{out_path}</b> written")
-            successes.append(True)
+        try:
+            export_logger = logger if not cancel_on_error else None
+            for out_path in out_paths:
+                try:
+                    os.mkdir(os.path.dirname(out_path))
+                except FileExistsError:
+                    pass
+                try:
+                    gdx.to_gdx_file(
+                        database_map,
+                        out_path,
+                        settings_pack.settings,
+                        settings_pack.indexing_settings,
+                        settings_pack.merging_settings,
+                        settings_pack.none_fallback,
+                        settings_pack.none_export,
+                        gams_system_directory,
+                        export_logger,
+                    )
+                except gdx.GdxExportException as error:
+                    logger.msg_error.emit(f"Failed to export <b>{url}</b> to .gdx: {error}")
+                    successes.append(False)
+                    continue
+                logger.msg_success.emit(f"File <b>{out_path}</b> written")
+                successes.append(True)
+        finally:
+            database_map.connection.close()
     return (all(successes),)
 
 
