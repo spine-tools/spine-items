@@ -331,14 +331,25 @@ class JuliaOptionsWidget(OptionsWidget):
         with open(loaded_modules_file, 'r') as f:
             modules = f.read()
         code = f"""
+            active_project_dir = dirname(Base.active_project());
+            temp_project_dir = mktempdir()
+            cp(joinpath(active_project_dir, "Project.toml"), joinpath(temp_project_dir, "Project.toml"));
+            cp(joinpath(active_project_dir, "Manifest.toml"), joinpath(temp_project_dir, "Manifest.toml"));
             using Pkg;
-            pkg"add PackageCompiler";
+            Pkg.activate(temp_project_dir);
+            modules = split("{modules}", " ");
+            Pkg.add(modules);
+            Pkg.add("PackageCompiler");
             using PackageCompiler;
-            PackageCompiler.create_sysimage(
-                Symbol.(split("{modules}", " "));
-                sysimage_path="{self.sysimage_path}",
-                precompile_statements_file="{precompile_statements_file}"
-            )
+            try
+                PackageCompiler.create_sysimage(
+                    Symbol.(modules);
+                    sysimage_path="{self.sysimage_path}",
+                    precompile_statements_file="{precompile_statements_file}"
+                )
+            finally
+                rm(temp_project_dir; force=true, recursive=true)
+            end
         """
         julia, *args = julia_command
         args += ["-e", code]
