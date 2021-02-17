@@ -45,18 +45,18 @@ LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]
 
 
 def make_specification(definition, app_settings, logger):
-    """
-    Deserializes and constructs a tool specification from definition.
+    """De-serializes and constructs a tool specification from definition.
 
     Args:
         definition (dict): a dictionary containing the serialized specification.
         app_settings (QSettings): Toolbox settings
         logger (LoggerInterface): a logger
+
     Returns:
         ToolSpecification: a tool specification constructed from the given definition,
             or None if there was an error
     """
-    path = definition["includes_main_path"]
+    path = definition.setdefault("includes_main_path", ".")
     try:
         _tooltype = definition["tooltype"].lower()
     except KeyError:
