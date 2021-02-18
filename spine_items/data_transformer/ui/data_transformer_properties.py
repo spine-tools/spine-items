@@ -130,7 +130,7 @@ class Ui_Form(object):
         self.open_dir_button.setMinimumSize(QSize(22, 22))
         self.open_dir_button.setMaximumSize(QSize(22, 22))
         icon1 = QIcon()
-        icon1.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.open_dir_button.setIcon(icon1)
 
         self.horizontalLayout_16.addWidget(self.open_dir_button)

@@ -40,7 +40,7 @@ def do_work(cancel_on_error, logs_dir, from_urls, to_url, logger):
     from_db_maps = [_get_db_map(url, logger) for url in from_urls]
     to_db_map = _get_db_map(to_url, logger)
     if to_db_map is None:
-        return False
+        return (False,)
     from_db_map_data = {db_map: export_data(db_map) for db_map in from_db_maps if db_map is not None}
     all_errors = []
     for from_db_map, data in from_db_map_data.items():
@@ -71,4 +71,4 @@ def do_work(cancel_on_error, logs_dir, from_urls, to_url, logger):
         # Make error log file anchor with path as tooltip
         logfile_anchor = f"<a style='color:#BB99FF;' title='{logfilepath}' href='file:///{logfilepath}'>error log</a>"
         logger.msg_error.emit("Import errors. Logfile: {0}".format(logfile_anchor))
-    return bool(from_db_map_data)
+    return (bool(from_db_map_data),)

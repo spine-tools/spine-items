@@ -24,12 +24,14 @@ from spine_items.tool.tool_specifications import PythonTool
 class TestPythonToolInstance(unittest.TestCase):
     def test_prepare_with_cmd_line_arguments_in_embedded_console(self):
         instance = self._make_tool_instance(True)
-        instance.prepare(["arg1", "arg2"])
+        with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager"):
+            instance.prepare(["arg1", "arg2"])
         self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py" "arg1" "arg2"'])
 
     def test_prepare_with_empty_cmd_line_arguments_in_embedded_console(self):
         instance = self._make_tool_instance(True)
-        instance.prepare([])
+        with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager"):
+            instance.prepare([])
         self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py"'])
 
     def test_prepare_with_cmd_line_arguments(self):
@@ -62,7 +64,7 @@ class TestPythonToolInstance(unittest.TestCase):
         source_files = ["main.py"]
         specification = PythonTool("specification name", "python", path, source_files, settings, logger)
         base_directory = "path/"
-        return specification.create_tool_instance(base_directory, logger, None)
+        return specification.create_tool_instance(base_directory, logger, mock.Mock())
 
 
 if __name__ == '__main__':

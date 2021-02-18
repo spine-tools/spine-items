@@ -17,7 +17,7 @@ Contains :class:`SetListModel`
 """
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
 from PySide2.QtGui import QColor
-from spine_engine.spine_io.exporters import gdx
+from spinedb_api.spine_io.exporters import gdx
 from ..list_utils import move_list_elements
 
 

@@ -35,13 +35,13 @@ from PySide2.QtWidgets import (
 )
 from spinetoolbox.helpers import get_open_file_name_in_last_dir, ensure_window_is_on_screen
 from spinetoolbox.config import APPLICATION_PATH
-from spine_engine.spine_io.importers.csv_reader import CSVConnector
-from spine_engine.spine_io.importers.excel_reader import ExcelConnector
-from spine_engine.spine_io.importers.gdx_connector import GdxConnector
-from spine_engine.spine_io.importers.json_reader import JSONConnector
-from spine_engine.spine_io.importers.datapackage_reader import DataPackageConnector
-from spine_engine.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
-from spine_engine.spine_io.gdx_utils import find_gams_directory
+from spinedb_api.spine_io.importers.csv_reader import CSVConnector
+from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
+from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
+from spinedb_api.spine_io.importers.json_reader import JSONConnector
+from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
+from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
+from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from ..connection_manager import ConnectionManager
 from ..commands import RestoreMappingsFromDict
 from .import_editor import ImportEditor
@@ -83,7 +83,7 @@ class ImportEditorWindow(QMainWindow):
         self._memoized_connectors = {}
         self._copied_mappings = {}
         self._editor = None
-        self._undo_stack = QUndoStack()
+        self._undo_stack = QUndoStack(self)
         self._ui_error = QErrorMessage(self)
         self._ui_error.setWindowTitle("Error")
         self._ui_error.setWindowFlag(Qt.WindowContextHelpButtonHint, False)

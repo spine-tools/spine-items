@@ -34,10 +34,9 @@ class MappingListModel(QAbstractListModel):
             undo_stack (QUndoStack): undo stack
         """
         super().__init__()
-        self._mapping_specifications = []
+        self._mapping_specifications = mapping_specifications.copy()
         self._table_name = table_name
         self._undo_stack = undo_stack
-        self._mapping_specifications = mapping_specifications.copy()
         self._names = [m.mapping_name for m in self._mapping_specifications]
         for k, m in enumerate(self._mapping_specifications):
             if not m.mapping_name:

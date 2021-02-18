@@ -106,11 +106,11 @@ class GAMSToolInstance(ToolInstance):
         self.args.append(self.basedir)
         self.args.append("logoption=3")  # TODO: This should be an option in Settings
         self.append_cmdline_args(args)
+        # TODO: Check if the below sets the curDir argument. Is the curDir arg now useless?
+        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
-        # TODO: Check if the below sets the curDir argument. Is the curDir arg now useless?
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:
@@ -127,6 +127,7 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
+        sysimage = self._owner.options.get("julia_sysimage", "")
         use_embedded_julia = self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2")
         if use_embedded_julia == "2":
             # Prepare Julia REPL command
@@ -137,6 +138,16 @@ class JuliaToolInstance(ToolInstance):
                 cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
                 self.args += [f"empty!(ARGS); append!(ARGS, {cmdline_args});"]
             self.args += [f'include("{self.tool_specification.main_prgm}")']
+            kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
+            extra_switches = [f"--sysimage={sysimage}"] if os.path.isfile(sysimage) else None
+            self.exec_mngr = KernelExecutionManager(
+                self._logger,
+                "julia",
+                kernel_name,
+                *self.args,
+                group_id=self.owner.group_id,
+                extra_switches=extra_switches,
+            )
         else:
             # Prepare command "julia --project={PROJECT_DIR} script.jl"
             julia_path = self._settings.value("appSettings/juliaPath", defaultValue="")
@@ -148,36 +159,16 @@ class JuliaToolInstance(ToolInstance):
             julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
             self.program = julia_exe
             self.args.append(f"--project={julia_project_path}")
-            self.args.append(script_path)
+            if os.path.isfile(sysimage):
+                self.args.append(f"--sysimage={sysimage}")
+            if script_path:
+                # NOTE: This means we support script-less julia system prompt tools...!!!
+                self.args.append(script_path)
             self.append_cmdline_args(args)
+            self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
-        if self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2") == "2":
-            return self._console_execute()
-        return self._cmd_line_execute()
-
-    def _console_execute(self):
-        """Executes in console.
-        """
-        kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
-        self.exec_mngr = KernelExecutionManager(
-            self._logger, "julia", kernel_name, *self.args, group_id=self.owner.group_id
-        )
-        ret = self.exec_mngr.run_until_complete()
-        if ret != 0:
-            try:
-                return_msg = self.tool_specification.return_codes[ret]
-                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
-            except KeyError:
-                self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
-        self.exec_mngr = None
-        return ret
-
-    def _cmd_line_execute(self):
-        """Executes in command line.
-        """
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:
@@ -204,40 +195,20 @@ class PythonToolInstance(ToolInstance):
             if cmdline_args:
                 main_command += " " + '"' + '" "'.join(cmdline_args) + '"'
             self.args = [cd_command, main_command]
+            kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
+            self.exec_mngr = KernelExecutionManager(
+                self._logger, "python", kernel_name, *self.args, group_id=self.owner.group_id
+            )
         else:
             # Prepare command "python <script.py> <script_arguments>"
             script_path = self.tool_specification.main_prgm
             self.program = python_interpreter(self._settings)
             self.args.append(script_path)  # First argument for the Python interpreter is path to the tool script
             self.append_cmdline_args(args)
+            self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
-        if self._settings.value("appSettings/useEmbeddedPython", defaultValue="0") == "2":
-            return self._console_execute()
-        return self._cmd_line_execute()
-
-    def _console_execute(self):
-        """Executes in console.
-        """
-        kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-        self.exec_mngr = KernelExecutionManager(
-            self._logger, "python", kernel_name, *self.args, group_id=self.owner.group_id
-        )
-        ret = self.exec_mngr.run_until_complete()
-        if ret != 0:
-            try:
-                return_msg = self.tool_specification.return_codes[ret]
-                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
-            except KeyError:
-                self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
-        self.exec_mngr = None
-        return ret
-
-    def _cmd_line_execute(self):
-        """Executes in cmd line
-        """
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:
@@ -261,10 +232,10 @@ class ExecutableToolInstance(ToolInstance):
         else:
             self.program = batch_path
         self.append_cmdline_args(args)
+        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
         ret = self.exec_mngr.run_until_complete()
         if ret != 0:
             try:

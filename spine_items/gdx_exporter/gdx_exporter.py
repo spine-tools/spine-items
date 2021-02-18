@@ -24,7 +24,7 @@ from spinedb_api import clear_filter_configs
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.serialization import deserialize_path, serialize_url
-from spine_engine.spine_io.exporters import gdx
+from spinedb_api.spine_io.exporters import gdx
 from .commands import UpdateOutFileName, UpdateOutputTimeStampsFlag, UpdateSettings
 from ..commands import UpdateCancelOnErrorCommand
 from .database import Database

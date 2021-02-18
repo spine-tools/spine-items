@@ -16,7 +16,7 @@ Contains the mapping specification model.
 :date:   1.6.2019
 """
 from distutils.util import strtobool
-from PySide2.QtCore import QModelIndex, Qt, QAbstractTableModel, Signal
+from PySide2.QtCore import QModelIndex, Qt, QAbstractTableModel, Signal, Slot, QTimer
 from PySide2.QtGui import QColor
 from spinedb_api import (
     NoneMapping,
@@ -46,8 +46,8 @@ from spinedb_api import (
     TimePatternValueMapping,
     TimeSeriesValueMapping,
 )
-from spine_engine.spine_io.type_conversion import DateTimeConvertSpec, FloatConvertSpec, StringConvertSpec
-from ..commands import SetComponentMappingReference, SetComponentMappingType
+from spinedb_api.spine_io.type_conversion import DateTimeConvertSpec, FloatConvertSpec, StringConvertSpec
+from ..commands import SetComponentMappingReference, SetComponentMappingType, SetComponentMappingConvertSpec
 from ..mapping_colors import ERROR_COLOR
 
 _MAP_TYPE_DISPLAY_NAME = {
@@ -88,6 +88,9 @@ class MappingSpecificationModel(QAbstractTableModel):
     """Emitted when all but given columns should be of given type."""
     about_to_undo = Signal(str, str)
     """Emitted before an undo/redo action."""
+    mapping_changed = Signal()
+    """Emitted whenever the user changes the mapping.
+    Used to setup an index widget where the user can specify the type"""
 
     def __init__(self, table_name, mapping_name, mapping, undo_stack):
         """
@@ -353,6 +356,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         self._component_names = self._item_mapping.component_names()
         self._component_mappings = self._item_mapping.component_mappings()
         self._colors = self._make_colors()
+        QTimer.singleShot(0, self.mapping_changed)
 
     def _make_colors(self):
         component_count = len(self._component_mappings)
@@ -485,9 +489,14 @@ class MappingSpecificationModel(QAbstractTableModel):
         previous_reference = component_mapping.reference
         if isinstance(previous_reference, int):
             previous_reference += 1
+        previous_convert_spec = (
+            component_mapping.convert_spec if isinstance(component_mapping, ConstantMapping) else None
+        )
         if column == 1:
             previous_type = _MAP_TYPE_DISPLAY_NAME[type(component_mapping)]
-            self._undo_stack.push(SetComponentMappingType(name, self, value, previous_type, previous_reference))
+            self._undo_stack.push(
+                SetComponentMappingType(name, self, value, previous_type, previous_reference, previous_convert_spec)
+            )
         elif column == 2:
             self._undo_stack.push(
                 SetComponentMappingReference(
@@ -495,6 +504,14 @@ class MappingSpecificationModel(QAbstractTableModel):
                 )
             )
         return False
+
+    @Slot(object, object)
+    def change_constant_value_convert_spec(self, convert_spec, previous_convert_spec):
+        self._undo_stack.push(
+            SetComponentMappingConvertSpec(
+                self.value_mapping.main_value_name, self, convert_spec, previous_convert_spec
+            )
+        )
 
     def change_component_mapping(self, component_name, type_name, reference):
         """
@@ -505,19 +522,24 @@ class MappingSpecificationModel(QAbstractTableModel):
             type_name (str): name of the new type
             reference (str or int): component mapping reference
         """
-        row = self._component_names.index(component_name)
+        row = self._row_for_component_name(component_name)
         component_mapping = self._component_mappings[row]
+        previous_type_name = _MAP_TYPE_DISPLAY_NAME[type(component_mapping)]
         previous_reference = component_mapping.reference
-        previous_type = _MAP_TYPE_DISPLAY_NAME[type(component_mapping)]
-        self._undo_stack.beginMacro("mapping type change")
-        self._undo_stack.push(
-            SetComponentMappingType(component_name, self, type_name, previous_type, previous_reference)
+        previous_convert_spec = (
+            component_mapping.convert_spec if isinstance(component_mapping, ConstantMapping) else None
         )
-        self._undo_stack.push(
-            SetComponentMappingReference(
-                component_name, self, reference, previous_reference, isinstance(component_mapping, NoneMapping)
-            )
+        type_cmd = SetComponentMappingType(
+            component_name, self, type_name, previous_type_name, previous_reference, previous_convert_spec
         )
+        ref_cmd = SetComponentMappingReference(
+            component_name, self, reference, previous_reference, isinstance(component_mapping, NoneMapping)
+        )
+        if type_cmd.isObsolete() and ref_cmd.isObsolete():
+            return
+        self._undo_stack.beginMacro("mapping type and reference change")
+        self._undo_stack.push(type_cmd)
+        self._undo_stack.push(ref_cmd)
         self._undo_stack.endMacro()
 
     def set_type(self, name, value):
@@ -560,14 +582,33 @@ class MappingSpecificationModel(QAbstractTableModel):
         """
         self.about_to_undo.emit(self._table_name, self._mapping_name)
         mapping = self._get_component_mapping_from_name(name)
-        if isinstance(mapping, NoneMapping):
-            mapping = ConstantMapping()
         try:
             mapping.reference = value
         except TypeError:
             return False
         if isinstance(mapping.reference, int):
             mapping.reference = mapping.reference - 1
+        return self._set_component_mapping_from_name(name, mapping)
+
+    def set_convert_spec(self, name, convert_spec):
+        """
+        Sets the convert spec for given mapping.
+
+        Args:
+            name (str): name of the mapping
+            convert_spec (ConvertSpec): a new convert spec
+
+        Returns:
+            bool: True if the convert spec was modified successfully, False otherwise.
+        """
+        self.about_to_undo.emit(self._table_name, self._mapping_name)
+        mapping = self._get_component_mapping_from_name(name)
+        if not isinstance(mapping, ConstantMapping):
+            return False
+        try:
+            mapping.convert_spec = convert_spec
+        except TypeError:
+            return False
         return self._set_component_mapping_from_name(name, mapping)
 
     def _get_component_mapping_from_name(self, name):
@@ -598,6 +639,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             self._recommend_float_type_for_non_pivoted_columns(mapping)
         else:
             self._recommend_string_type(mapping)
+        self.mapping_changed.emit()
         return True
 
     def _recommend_float_type_for_non_pivoted_columns(self, mapping):
@@ -608,6 +650,18 @@ class MappingSpecificationModel(QAbstractTableModel):
         ):
             non_pivoted_columns = self._item_mapping.non_pivoted_columns()
             self.multi_column_type_recommendation_changed.emit(non_pivoted_columns, FloatConvertSpec())
+
+    def value_mapping_index(self):
+        if self.value_mapping is None:
+            return QModelIndex()
+        try:
+            row = self._row_for_component_name(self.value_mapping.main_value_name)
+        except ValueError:
+            return QModelIndex()
+        return self.index(row, 2)
+
+    def component_mapping_from_index(self, index):
+        return self._component_mappings[index.row()]
 
     def _row_for_component_name(self, name):
         return self._component_names.index(name)
@@ -716,7 +770,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         Returns:
             MappingSpecificationModel: mapping specification
         """
-        mapping_name = specification_dict.pop("mapping_name", "")
+        mapping_name = specification_dict.get("mapping_name", "")
         mapping = item_mapping_from_dict(specification_dict)
         return MappingSpecificationModel(table_name, mapping_name, mapping, undo_stack)
 

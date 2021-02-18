@@ -19,7 +19,7 @@ Tests for ParameterIndexSettings widget and its models.
 import unittest
 from PySide2.QtWidgets import QApplication
 from spinedb_api.parameter_value import Map
-import spine_engine.spine_io.exporters.gdx as gdx
+import spinedb_api.spine_io.exporters.gdx as gdx
 from spine_items.gdx_exporter.widgets.parameter_index_settings import IndexSettingsState, ParameterIndexSettings
 
 

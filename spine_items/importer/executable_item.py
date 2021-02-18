@@ -18,13 +18,13 @@ Contains Importer's executable item as well as support utilities.
 
 import os
 import pathlib
-from spine_engine.spine_io.gdx_utils import find_gams_directory
-from spine_engine.spine_io.importers.csv_reader import CSVConnector
-from spine_engine.spine_io.importers.excel_reader import ExcelConnector
-from spine_engine.spine_io.importers.gdx_connector import GdxConnector
-from spine_engine.spine_io.importers.json_reader import JSONConnector
-from spine_engine.spine_io.importers.datapackage_reader import DataPackageConnector
-from spine_engine.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
+from spinedb_api.spine_io.gdx_utils import find_gams_directory
+from spinedb_api.spine_io.importers.csv_reader import CSVConnector
+from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
+from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
+from spinedb_api.spine_io.importers.json_reader import JSONConnector
+from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
+from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_checked_states
@@ -104,9 +104,9 @@ class ExecutableItem(ExecutableItemBase):
                 self._logger,
             ),
         )
-        success = self._process.run_until_complete()
+        return_value = self._process.run_until_complete()
         self._process = None
-        return success
+        return return_value[0]
 
     def _gams_system_directory(self):
         """Returns GAMS system path or None if GAMS default is to be used."""

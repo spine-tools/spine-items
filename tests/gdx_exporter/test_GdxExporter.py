@@ -48,6 +48,9 @@ class TestGdxExporter(unittest.TestCase):
         self.exporter = factory.make_item("E", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.exporter, self.toolbox)
 
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     @classmethod
     def setUpClass(cls):
         if not QApplication.instance():

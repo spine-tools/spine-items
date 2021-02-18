@@ -18,7 +18,7 @@ Importer's execute kernel (do_work), as target for a multiprocess.Process
 
 import os
 import spinedb_api
-from spine_engine.spine_io.type_conversion import value_to_convert_spec
+from spinedb_api.spine_io.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 
@@ -46,7 +46,7 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
             connector.connect_to_source(path)
         except IOError as error:
             logger.msg_error.emit(f"Failed to connect to source: {error}")
-            return False
+            return (False,)
         try:
             data, errors = connector.get_mapped_data(
                 table_mappings, table_options, table_types, table_row_types, max_rows=-1
@@ -55,7 +55,7 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
             logger.msg_error.emit(f"Failed to import '{path}': {error}")
             if cancel_on_error:
                 logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
-                return False
+                return (False,)
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
             continue
         if not errors:
@@ -80,14 +80,14 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
         logger.msg_error.emit(logfile_anchor)
         if cancel_on_error:
             logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
-            return False
+            return (False,)
         logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
     if all_data:
         for url in urls_downstream:
             success = _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger)
             if not success and cancel_on_error:
-                return False
-    return True
+                return (False,)
+    return (True,)
 
 
 def _import_data_to_url(cancel_on_error, logs_dir, all_data, url, logger):

@@ -24,10 +24,11 @@ from spinetoolbox.helpers import open_url
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.utils.serialization import serialize_path, deserialize_path
-from .commands import UpdateToolExecuteInWorkCommand
+from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
 from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
+from .widgets.options_widgets import JuliaOptionsWidget
 from .widgets.tool_specification_widget import ToolSpecificationWidget
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
@@ -41,7 +42,17 @@ class Tool(ProjectItem):
     julia_console_requested = Signal(str, str, str)
 
     def __init__(
-        self, name, description, x, y, toolbox, project, specification_name="", execute_in_work=True, cmd_line_args=None
+        self,
+        name,
+        description,
+        x,
+        y,
+        toolbox,
+        project,
+        specification_name="",
+        execute_in_work=True,
+        cmd_line_args=None,
+        options=None,
     ):
         """Tool class.
 
@@ -55,6 +66,7 @@ class Tool(ProjectItem):
             specification_name (str): Name of this Tool's Tool specification
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
+            options (dict, optional): misc tool options. At the moment it just holds the location of the julia sysimage
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -77,6 +89,28 @@ class Tool(ProjectItem):
         self.do_update_execution_mode(execute_in_work)
         self.python_console_requested.connect(self._setup_python_console)
         self.julia_console_requested.connect(self._setup_julia_console)
+        self._specification_menu = None
+        self._options = options if options is not None else {}
+
+    def _get_options_widget(self):
+        """Returns a widget to specify the options for this tool.
+        It is embeded in the ui in ``self._update_tool_ui()``.
+
+        Returns:
+            OptionsWidget
+        """
+        # At the moment only Julia has options, but the code is made generic
+        constructors = {"julia": JuliaOptionsWidget}  # Add others as needed
+        tooltype = self.specification().tooltype
+        constructor = constructors.get(tooltype)
+        if constructor is None:
+            return None
+        if tooltype not in self._properties_ui.options_widgets:
+            self._properties_ui.options_widgets[tooltype] = constructor()
+        options_widget = self._properties_ui.options_widgets[tooltype]
+        options_widget.set_tool(self)
+        options_widget.do_update_options(self._options)
+        return options_widget
 
     @staticmethod
     def item_type():
@@ -203,9 +237,26 @@ class Tool(ProjectItem):
         self.do_update_execution_mode(self.undo_execute_in_work)
         self.undo_execute_in_work = None
 
+    def update_options(self, options):
+        """Pushes a new UpdateToolOptionsCommand to the toolbox stack."""
+        self._toolbox.undo_stack.push(UpdateToolOptionsCommand(self, options))
+
+    def do_set_options(self, options):
+        """Sets options for this tool.
+
+        Args:
+            options (dict): The new options dictionary, must include *ALL* the options, not only changed ones.
+        """
+        self._options = options
+        if self._active:
+            _ = self._get_options_widget()
+
     def _update_tool_ui(self):
         """Updates Tool UI to show Tool specification details. Used when Tool specification is changed.
         Overrides execution mode (work or source) with the specification default."""
+        options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
+        if options_widget:
+            options_widget.widget().hide()
         if not self.specification():
             self._properties_ui.comboBox_tool.setCurrentIndex(-1)
             self.do_update_execution_mode(True)
@@ -213,8 +264,13 @@ class Tool(ProjectItem):
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
             spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
-            specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
-            self._properties_ui.toolButton_tool_specification.setMenu(specification_menu)
+            self._specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
+            self._specification_menu.setTitle("Specification...")
+            self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
+            options_widget = self._get_options_widget()
+            if options_widget:
+                self._properties_ui.horizontalLayout_options.addWidget(options_widget)
+                options_widget.show()
 
     @Slot(bool)
     def _open_results_directory(self, _):
@@ -321,6 +377,8 @@ class Tool(ProjectItem):
         cmd_line_args = [f'"{arg}"' for arg in self.cmd_line_args]
         cmd_line_args = split_cmdline_args(" ".join(cmd_line_args))
         d["cmd_line_args"] = [serialize_path(arg, self._project.project_dir) for arg in cmd_line_args]
+        if self._options:
+            d["options"] = self._options
         return d
 
     @staticmethod
@@ -331,7 +389,10 @@ class Tool(ProjectItem):
         execute_in_work = item_dict.get("execute_in_work", True)
         cmd_line_args = item_dict.get("cmd_line_args", [])
         cmd_line_args = [deserialize_path(arg, project.project_dir) for arg in cmd_line_args]
-        return Tool(name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args)
+        options = item_dict.get("options", {})
+        return Tool(
+            name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options
+        )
 
     def rename(self, new_name):
         """Rename this item.
@@ -423,10 +484,7 @@ class Tool(ProjectItem):
 
     def actions(self):
         if self.specification() is not None:
-            spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
-            spec_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
-            actions = {a.text(): a for a in spec_menu.actions()}
-            self._actions = [actions["Edit specification"], actions["Open main program file"]]
+            self._actions = [self._specification_menu.menuAction()]
         else:
             action = QAction("New specification")
             action.triggered.connect(self.show_specification_window)

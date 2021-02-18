@@ -20,7 +20,7 @@ from copy import deepcopy
 from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
 from PySide2.QtGui import QStandardItem
 from PySide2.QtWidgets import QMessageBox, QWidget
-from spine_engine.spine_io.exporters import gdx
+from spinedb_api.spine_io.exporters import gdx
 from spinedb_api import DatabaseMapping
 from .parameter_index_settings import IndexSettingsState, ParameterIndexSettings
 from ..mvcmodels.indexing_domain_list_model import IndexingDomainListModel

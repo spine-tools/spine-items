@@ -18,9 +18,7 @@ Utility functions for the Tool project item.
 import glob
 import os.path
 import subprocess
-import json
-from spine_engine.config import JULIA_EXECUTABLE
-from jupyter_client.kernelspec import find_kernel_specs
+from spine_engine.utils.helpers import get_julia_command
 
 
 def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):
@@ -154,31 +152,10 @@ def can_use_db_server(tool_spec):
     """
     if tool_spec.tooltype != "julia":
         return True
-    use_embedded_julia = tool_spec._settings.value("appSettings/useEmbeddedJulia", defaultValue="2") == "2"
-    if use_embedded_julia:
-        kernel_name = tool_spec._settings.value("appSettings/juliaKernel", defaultValue="")
-        resource_dir = find_kernel_specs().get(kernel_name)
-        if resource_dir is None:
-            return True
-        filepath = os.path.join(resource_dir, "kernel.json")
-        with open(filepath, "r") as fh:
-            try:
-                kernel_spec = json.load(fh)
-            except json.decoder.JSONDecodeError:
-                return True
-            argv = [kernel_spec["argv"].pop(0)]
-            project_arg = next((arg for arg in kernel_spec["argv"] if arg.startswith("--project=")), None)
-            if project_arg is not None:
-                argv.append(project_arg)
-    else:
-        julia = tool_spec._settings.value("appSettings/juliaPath", defaultValue="")
-        if julia == "":
-            julia = JULIA_EXECUTABLE
-        argv = [julia]
-        project = tool_spec._settings.value("appSettings/juliaProjectPath", defaultValue="")
-        if project:
-            argv.append(f"--project={project}")
-    argv += [
+    cmd = get_julia_command(tool_spec._settings)
+    if cmd is None:
+        return True
+    cmd += [
         "-e",
         'import Pkg; '
         'pkgs = Pkg.TOML.parsefile(joinpath(dirname(Base.active_project()), "Manifest.toml")); '
@@ -188,7 +165,7 @@ def can_use_db_server(tool_spec):
         'end',
     ]
     try:
-        p = subprocess.run(argv, capture_output=True, check=True)
+        p = subprocess.run(cmd, capture_output=True, check=True)
     except subprocess.CalledProcessError:
         return True
     return str(p.stdout, "utf-8").strip() == "true"

@@ -54,6 +54,9 @@ class TestImporter(unittest.TestCase):
         self.importer = factory.make_item("I", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.importer, self.toolbox)
 
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     @classmethod
     def setUpClass(cls):
         if not QApplication.instance():

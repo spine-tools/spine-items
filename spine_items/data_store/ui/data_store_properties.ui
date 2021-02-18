@@ -284,7 +284,7 @@
                 </property>
                 <property name="icon">
                  <iconset resource="../../ui/resources/resources_icons.qrc">
-                  <normaloff>:/icons/folder-open-regular.svg</normaloff>:/icons/folder-open-regular.svg</iconset>
+                  <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
                 </property>
                </widget>
               </item>
@@ -715,7 +715,7 @@
            </property>
            <property name="icon">
             <iconset resource="../../ui/resources/resources_icons.qrc">
-             <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+             <normaloff>:/icons/folder-open-regular.svg</normaloff>:/icons/folder-open-regular.svg</iconset>
            </property>
           </widget>
          </item>
