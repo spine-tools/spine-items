@@ -133,10 +133,6 @@ class ToolSpecification(ProjectItemSpecification):
         self.return_codes = {}
         self.execute_in_work = execute_in_work
 
-    @property
-    def includes_main_path(self):
-        return os.path.relpath(self.path, os.path.dirname(self.definition_file_path)).replace(os.sep, "/")
-
     def clone(self):
         return make_specification(copy.deepcopy(self.to_dict()), self._settings, self._logger)
 
@@ -151,7 +147,7 @@ class ToolSpecification(ProjectItemSpecification):
             "outputfiles": list(self.outputfiles),
             "cmdline_args": self.cmdline_args,
             "execute_in_work": self.execute_in_work,
-            "includes_main_path": self.includes_main_path,
+            "includes_main_path": self.path.replace(os.sep, "/"),
         }
 
     def save(self):
