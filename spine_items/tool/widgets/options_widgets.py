@@ -24,7 +24,7 @@ from PySide2.QtWidgets import QWidget, QFileDialog
 from PySide2.QtGui import QIcon, QLinearGradient, QPalette, QBrush
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
 from spinetoolbox.execution_managers import QProcessExecutionManager
-from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine
+from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine, make_settings_dict_for_engine
 
 
 class OptionsWidget(QWidget):
@@ -233,7 +233,7 @@ class JuliaOptionsWidget(OptionsWidget):
         if self.sysimage_path is None:
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
-        settings = self._project.make_settings_dict()
+        settings = make_settings_dict_for_engine(self._settings)
         settings["appSettings/useEmbeddedJulia"] = "1"  # Don't use repl
         self.sysimage_worker = self._project.create_engine_worker(dag, execution_permits, dag_identifier, settings)
         # Use the modified spec
