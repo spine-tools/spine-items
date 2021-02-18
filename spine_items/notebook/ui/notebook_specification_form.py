@@ -18,7 +18,7 @@ from PySide2.QtWidgets import *
 from spinetoolbox.widgets.custom_qlineedits import CustomQLineEdit
 from spinetoolbox.widgets.custom_qtreeview import CustomTreeView
 from spinetoolbox.widgets.custom_qtreeview import SourcesTreeView
-from spine_items.notebook_executor.widgets.jupyter_notebook_text_edit import JupyterNotebookTextEdit
+from spine_items.notebook.widgets.jupyter_notebook_text_edit import JupyterNotebookTextEdit
 
 from spine_items import resources_icons_rc
 

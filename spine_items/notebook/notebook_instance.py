@@ -64,6 +64,7 @@ class NotebookInstance:
 
     def prepare(self, nb_src_dst_mapping, args):
         """See base class."""
+        append_out = "_out"
         if nb_src_dst_mapping:
             nb_src_name = self.notebook_specification.includes[0]
             self._nb_path = nb_src_dst_mapping[nb_src_name]
@@ -71,7 +72,9 @@ class NotebookInstance:
             self._nb_path = self.notebook_specification.includes[0]
         for i, name in enumerate(self._input_vars):
             self._nb_parameters[name] = args[i]
-        self._nb_out_path = os.path.join(self.basedir, self.notebook_specification.output_files.pop(0))
+        nb_filename_split = os.path.splitext(self.notebook_specification.includes[0])
+        nb_out_filename = nb_filename_split[0] + append_out + nb_filename_split[1]
+        self._nb_out_path = os.path.join(self.basedir, nb_out_filename)
         if len(self.notebook_specification.output_files) > 0:
             for i, name in enumerate(self._output_vars):
                 filename = self.notebook_specification.output_files[i]
