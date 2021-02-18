@@ -65,10 +65,6 @@ class ToolFactory(ProjectItemFactory):
     @staticmethod
     def repair_specification(toolbox, specification):
         """See base class."""
-        if not os.path.isabs(specification.path):
-            specification.path = os.path.normpath(
-                os.path.join(os.path.dirname(specification.definition_file_path), specification.path)
-            )
         # Check that main program file exists. If not, log a message with an anchor to find it
         filename = specification.includes[0]
         full_path = os.path.join(specification.path, filename)

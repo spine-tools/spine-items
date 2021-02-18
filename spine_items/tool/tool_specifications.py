@@ -57,6 +57,9 @@ def make_specification(definition, app_settings, logger):
             or None if there was an error
     """
     path = definition.setdefault("includes_main_path", ".")
+    if not os.path.isabs(path):
+        definition_file_path = definition["definition_file_path"]
+        path = os.path.normpath(os.path.join(os.path.dirname(definition_file_path), path))
     try:
         _tooltype = definition["tooltype"].lower()
     except KeyError:
@@ -133,6 +136,9 @@ class ToolSpecification(ProjectItemSpecification):
         self.return_codes = {}
         self.execute_in_work = execute_in_work
 
+    def _includes_main_path_relative(self):
+        return os.path.relpath(self.path, os.path.dirname(self.definition_file_path)).replace(os.sep, "/")
+
     def clone(self):
         return make_specification(copy.deepcopy(self.to_dict()), self._settings, self._logger)
 
@@ -147,7 +153,7 @@ class ToolSpecification(ProjectItemSpecification):
             "outputfiles": list(self.outputfiles),
             "cmdline_args": self.cmdline_args,
             "execute_in_work": self.execute_in_work,
-            "includes_main_path": self.path.replace(os.sep, "/"),
+            "includes_main_path": self._includes_main_path_relative(),
         }
 
     def save(self):
