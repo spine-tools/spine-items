@@ -51,6 +51,7 @@ class TestGimlet(unittest.TestCase):
         }
         self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         self.gimlet = factory.make_item("G", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.gimlet, self.toolbox)
 
@@ -100,7 +101,7 @@ class TestGimlet(unittest.TestCase):
         self.gimlet.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        self.gimlet.rename(expected_name)
+        self.gimlet.rename(expected_name, "")
         self.assertEqual(expected_name, self.gimlet.name)  # Item name
         self.assertEqual(expected_name, self.gimlet._properties_ui.label_gimlet_name.text())  # Name label in props
         self.assertEqual(expected_name, self.gimlet.get_icon().name_item.text())  # Name item on Design View

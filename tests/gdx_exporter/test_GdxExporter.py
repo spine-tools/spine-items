@@ -45,6 +45,7 @@ class TestGdxExporter(unittest.TestCase):
         }
         self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         self.exporter = factory.make_item("E", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.exporter, self.toolbox)
 
@@ -130,7 +131,7 @@ class TestGdxExporter(unittest.TestCase):
         self.exporter.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        self.exporter.rename(expected_name)
+        self.exporter.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.exporter.name)  # item name
         self.assertEqual(expected_name, self.exporter._properties_ui.item_name_label.text())  # name label in props

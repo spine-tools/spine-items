@@ -37,6 +37,7 @@ class TestTool(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self.toolbox = create_mock_toolbox()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         self.model = self.toolbox.specification_model = _MockToolSpecModel(self.toolbox, self._temp_dir.name)
 
     def tearDown(self):
@@ -110,7 +111,7 @@ class TestTool(unittest.TestCase):
         tool.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        tool.rename(expected_name)
+        tool.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, tool.name)  # item name
         self.assertEqual(expected_name, tool._properties_ui.label_tool_name.text())  # name label in props

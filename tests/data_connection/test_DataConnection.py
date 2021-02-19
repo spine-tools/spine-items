@@ -40,6 +40,7 @@ class TestDataConnection(unittest.TestCase):
         item_dict = {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}
         self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
 
@@ -229,8 +230,7 @@ class TestDataConnection(unittest.TestCase):
         expected_name = "ABC"
         expected_short_name = "abc"
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
-        shutil.move(self.data_connection.data_dir, expected_data_dir)
-        self.data_connection.rename(expected_name)  # Do rename
+        self.data_connection.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.data_connection.name)  # item name
         self.assertEqual(expected_name, self.data_connection._properties_ui.label_dc_name.text())  # name label in props

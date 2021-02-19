@@ -394,16 +394,9 @@ class Tool(ProjectItem):
             name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options
         )
 
-    def rename(self, new_name):
-        """Rename this item.
-
-        Args:
-            new_name (str): New name
-
-        Returns:
-            bool: Boolean value depending on success
-        """
-        super().rename(new_name)
+    def rename(self, new_name, rename_data_dir_message):
+        """See base class."""
+        super().rename(new_name, rename_data_dir_message)
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.item_changed.emit()
 
