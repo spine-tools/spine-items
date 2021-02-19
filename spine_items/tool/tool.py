@@ -396,9 +396,11 @@ class Tool(ProjectItem):
 
     def rename(self, new_name, rename_data_dir_message):
         """See base class."""
-        super().rename(new_name, rename_data_dir_message)
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.item_changed.emit()
+        return True
 
     def notify_destination(self, source_item):
         """See base class."""
@@ -442,12 +444,13 @@ class Tool(ProjectItem):
             self._setup_filter_python_console(filter_id, kernel_name, connection_file)
 
     def _setup_main_python_console(self, kernel_name, connection_file):
-        self.python_console = self._toolbox.make_console("Python Console", self.name, kernel_name, connection_file)
+        # pylint: disable=attribute-defined-outside-init
+        self.python_console = self._toolbox.make_console("Python Console", self, kernel_name, connection_file)
         self._project.toolbox().override_python_console()
 
     def _setup_filter_python_console(self, filter_id, kernel_name, connection_file):
         self._filter_consoles.setdefault(filter_id, {}).setdefault(
-            "python", self._toolbox.make_console("Python Console", self.name, kernel_name, connection_file)
+            "python", self._toolbox.make_console("Python Console", self, kernel_name, connection_file)
         )
         self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
@@ -466,16 +469,18 @@ class Tool(ProjectItem):
             self._setup_filter_julia_console(filter_id, kernel_name, connection_file)
 
     def _setup_main_julia_console(self, kernel_name, connection_file):
-        self.julia_console = self._toolbox.make_console("Julia Console", self.name, kernel_name, connection_file)
+        # pylint: disable=attribute-defined-outside-init
+        self.julia_console = self._toolbox.make_console("Julia Console", self, kernel_name, connection_file)
         self._project.toolbox().override_julia_console()
 
     def _setup_filter_julia_console(self, filter_id, kernel_name, connection_file):
         self._filter_consoles.setdefault(filter_id, {}).setdefault(
-            "julia", self._toolbox.make_console("Julia Console", self.name, kernel_name, connection_file)
+            "julia", self._toolbox.make_console("Julia Console", self, kernel_name, connection_file)
         )
         self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
     def actions(self):
+        # pylint: disable=attribute-defined-outside-init
         if self.specification() is not None:
             self._actions = [self._specification_menu.menuAction()]
         else:
