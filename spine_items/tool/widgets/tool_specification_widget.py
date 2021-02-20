@@ -51,7 +51,7 @@ class ToolSpecificationWidget(QWidget):
         # Class attributes
         self._toolbox = toolbox
         self._project = self._toolbox.project()
-        self._original_specification = specification
+        self._original_spec_name = None if specification is None else specification.name
         # init models
         self.sourcefiles_model = QStandardItemModel()
         self.inputfiles_model = QStandardItemModel()
@@ -561,27 +561,12 @@ class ToolSpecificationWidget(QWidget):
 
     def call_add_tool_specification(self):
         """Adds or updates Tool specification according to user's selections.
-        If the name is the same as an existing tool specification, it is updated and
-        auto-saved to the definition file. (User is editing an existing
-        tool specification.) If the name is not in the tool specification model, creates
-        a new tool specification and offers to save the definition file. (User is
-        creating a new tool specification from scratch or spawning from an existing one).
         """
         new_spec = self._make_tool_specification()
         if not new_spec:
             return False
-        if self._original_specification is not None and new_spec.is_equivalent(self._original_specification):
-            # Nothing changed
-            return True
-        if self._original_specification is None or self.definition["name"] != self._original_specification.name:
-            # The user is creating a new spec, either from scratch (no original spec)
-            # or by changing the name of an existing one
-            self._toolbox.add_specification(new_spec)
-        else:
-            # The user is modifying an existing spec, while conserving the name
-            new_spec.definition_file_path = self._original_specification.definition_file_path
-            self._toolbox.update_specification(new_spec)
-        return True
+        update_existing = new_spec.name == self._original_spec_name
+        return self._toolbox.add_specification(new_spec, update_existing, self)
 
     def keyPressEvent(self, e):
         """Close Setup form when escape key is pressed.

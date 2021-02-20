@@ -157,11 +157,7 @@ class ToolSpecification(ProjectItemSpecification):
         }
 
     def save(self):
-        """Saves this specification to a .json file in the definition path.
-
-        Returns:
-            bool: How it went
-        """
+        """See base class."""
         definition = self.to_dict()
         with open(self.definition_file_path, "w") as fp:
             try:
@@ -174,15 +170,7 @@ class ToolSpecification(ProjectItemSpecification):
                 return False
 
     def is_equivalent(self, other):
-        """Checks if this spec is equivalent to the given definition dictionary.
-        Used by the tool spec widget when updating specs.
-
-        Args:
-            definition (ToolSpecification)
-
-        Returns:
-            bool: True if equivalent
-        """
+        """See base class."""
         for k, v in other.__dict__.items():
             if k in LIST_REQUIRED_KEYS:
                 if set(self.__dict__[k]) != set(v):

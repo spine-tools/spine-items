@@ -40,24 +40,11 @@ class DataTransformerSpecification(ProjectItemSpecification):
         self.settings = settings
 
     def is_equivalent(self, other):
-        """
-        Returns True if two specifications are essentially the same.
-
-        Args:
-            other (DataTransformerSpecification): specification to compare to
-
-        Returns:
-            bool: True if the specifications are equivalent, False otherwise
-        """
+        """See base class."""
         return self.name == other.name and self.description == other.description and self.settings == other.settings
 
     def to_dict(self):
-        """
-        Serializes specification into a dict.
-
-        Returns:
-            dict: serialized specification
-        """
+        """See base class."""
         filter_dict = (
             {"type": self.settings.type(), "settings": self.settings.to_dict()} if self.settings is not None else None
         )

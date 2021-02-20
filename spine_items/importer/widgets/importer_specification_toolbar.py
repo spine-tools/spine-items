@@ -16,22 +16,27 @@ Contains ImporterSpecificationToolbar class.
 :date:    25.10.2020
 """
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QToolBar, QLabel, QLineEdit, QHBoxLayout, QWidget
+from PySide2.QtCore import Qt, Slot
+from PySide2.QtWidgets import QToolBar, QLabel, QHBoxLayout, QWidget
+from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
+from ..commands import SetSpecName, SetSpecDescription
 
 
 class ImporterSpecificationToolbar(QToolBar):
     """A QToolBar to let users set name and description for an Importer Spec."""
 
-    def __init__(self, parent):
+    def __init__(self, parent, undo_stack):
         """
 
         Args:
             parent (ImportEditorWindow): QMainWindow instance
         """
         super().__init__(parent=parent)
-        self._line_edit_name = QLineEdit()
-        self._line_edit_description = QLineEdit()
+        self._undo_stack = undo_stack
+        self._current_name = ""
+        self._current_description = ""
+        self._line_edit_name = PropertyQLineEdit()
+        self._line_edit_description = PropertyQLineEdit()
         self._line_edit_name.setPlaceholderText("Enter specification name here...")
         self._line_edit_description.setPlaceholderText("Enter specification description here...")
         self.setAllowedAreas(Qt.TopToolBarArea)
@@ -52,13 +57,25 @@ class ImporterSpecificationToolbar(QToolBar):
         self.setObjectName("ImporterSpecificationToolbar")
         spec = parent._specification
         if spec:
-            self.set_name(spec.name)
-            self.set_description(spec.description)
+            self.do_set_name(spec.name)
+            self.do_set_description(spec.description)
+        self._line_edit_name.editingFinished.connect(self._set_name)
+        self._line_edit_description.editingFinished.connect(self._set_description)
 
-    def set_name(self, name):
+    @Slot()
+    def _set_name(self):
+        self._undo_stack.push(SetSpecName(self, self.name(), self._current_name))
+
+    @Slot()
+    def _set_description(self):
+        self._undo_stack.push(SetSpecDescription(self, self.description(), self._current_description))
+
+    def do_set_name(self, name):
+        self._current_name = name
         self._line_edit_name.setText(name)
 
-    def set_description(self, description):
+    def do_set_description(self, description):
+        self._current_description = description
         self._line_edit_description.setText(description)
 
     def name(self):

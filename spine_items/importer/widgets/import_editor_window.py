@@ -32,6 +32,7 @@ from PySide2.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QListWidget,
+    QMessageBox,
 )
 from spinetoolbox.helpers import get_open_file_name_in_last_dir, ensure_window_is_on_screen
 from spinetoolbox.config import APPLICATION_PATH
@@ -64,7 +65,6 @@ class ImportEditorWindow(QMainWindow):
     """A QMainWindow to let users define Mappings for an Importer item."""
 
     connection_failed = Signal(str)
-    specification_updated = Signal(dict)
 
     def __init__(self, toolbox, specification, filepath=None):
         """
@@ -77,6 +77,7 @@ class ImportEditorWindow(QMainWindow):
 
         super().__init__(parent=toolbox, flags=Qt.Window)
         self._toolbox = toolbox
+        self._original_spec_name = None if specification is None else specification.name
         self._specification = specification
         self._app_settings = self._toolbox.qsettings()
         self._connection_manager = None
@@ -98,10 +99,10 @@ class ImportEditorWindow(QMainWindow):
         self._import_mapping_options.about_to_undo.connect(self._import_mappings.focus_on_changing_specification)
         self._size = None
         self.takeCentralWidget()
-        self._spec_toolbar = ImporterSpecificationToolbar(self)
+        self._spec_toolbar = ImporterSpecificationToolbar(self, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowTitle("Import Editor")
+        self.setWindowTitle("Import Editor[*]")
         self.settings_group = "mappingPreviewWindow"
         self.apply_classic_ui_style()
         self.restore_ui()
@@ -110,16 +111,20 @@ class ImportEditorWindow(QMainWindow):
         self._ui.statusbar.addPermanentWidget(self._button_box)
         self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
-        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.close)
+        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
-        self._ui.close_action.triggered.connect(self.close)
         self.connection_failed.connect(self.show_error)
-        self.specification_updated.connect(self._add_or_update_specification)
         self._ui.actionLoad_file.triggered.connect(self._show_open_file_dialog)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
+        self._ui.actionSaveAndClose.triggered.connect(self.save_and_close)
+        self._undo_stack.cleanChanged.connect(self._update_window_modified)
         if filepath:
             self.start_ui(filepath)
+
+    @Slot(bool)
+    def _update_window_modified(self, clean):
+        self.setWindowModified(not clean)
 
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):
@@ -239,22 +244,10 @@ class ImportEditorWindow(QMainWindow):
         connector = self._memoized_connectors[filepath] = connector_list[row]
         return connector
 
-    @Slot(dict)
-    def _add_or_update_specification(self, definition):
-        new_specification = self._toolbox.load_specification(definition)
-        if new_specification is None:
-            # Happens when toolbox doesn't find the spec factory (should never happen)
-            return
-        if self._specification is not None and new_specification.is_equivalent(self._specification):
-            # Nothing changed
-            return
-        if self._specification is None or new_specification.name != self._specification.name:
-            # The user is creating a new spec, either from scratch or by changing the name of an existing one
-            self._toolbox.add_specification(new_specification)
-        else:
-            # The user is modifying an existing spec, while conserving the name
-            new_specification.definition_file_path = self._specification.definition_file_path
-            self._toolbox.update_specification(new_specification)
+    def _call_add_specification(self, spec_dict):
+        new_specification = self._toolbox.load_specification(spec_dict)
+        update_existing = new_specification.name == self._original_spec_name
+        return self._toolbox.add_specification(new_specification, update_existing, self)
 
     def _insert_undo_redo_actions(self):
         undo_action = self._undo_stack.createUndoAction(self)
@@ -357,16 +350,28 @@ class ImportEditorWindow(QMainWindow):
         else:
             self._editor.select_table(table)
 
-    def save_and_close(self):
-        """Save spec and close window."""
+    def _save(self):
+        """Saves changes."""
         name = self._spec_toolbar.name()
         if not name:
             self.show_error("Please enter a name for the specification.")
-            return
+            return False
         mapping = self._editor.get_settings_dict() if self._editor else {}
         description = self._spec_toolbar.description()
-        definition = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
-        self.specification_updated.emit(definition)
+        spec_dict = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
+        if not self._call_add_specification(spec_dict):
+            return False
+        self._undo_stack.setClean()
+        return True
+
+    def save_and_close(self):
+        """Saves changes and close window."""
+        if self._save():
+            self.close()
+
+    def discard_and_close(self):
+        """Discards changes and close window."""
+        self._undo_stack.setClean()
         self.close()
 
     def restore_ui(self):
@@ -400,8 +405,12 @@ class ImportEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
+        if not self._undo_stack.isClean() and not self._prompt_to_save_changes():
+            event.ignore()
+            return
         if self._editor:
             self._editor.close_connection()
+        self._undo_stack.cleanChanged.disconnect(self._update_window_modified)
         app_settings = self._app_settings
         app_settings.beginGroup(self.settings_group)
         app_settings.setValue("windowSize", self.size())
@@ -412,6 +421,24 @@ class ImportEditorWindow(QMainWindow):
         app_settings.endGroup()
         if event:
             event.accept()
+
+    def _prompt_to_save_changes(self):
+        """Prompts to save changes.
+
+        Returns:
+            bool: False if the user choses to cancel, in which case we don't close the form.
+        """
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowTitle(self.windowTitle())
+        msg.setText("Do you want to save your changes to the specification?")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+        answer = msg.exec_()
+        if answer == QMessageBox.Cancel:
+            return False
+        if answer == QMessageBox.Yes:
+            return self._save()
+        return True
 
 
 def _gams_system_directory(toolbox):

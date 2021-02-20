@@ -25,6 +25,56 @@ class _Id(IntEnum):
     SET_OPTION = auto()
 
 
+class SetSpecName(QUndoCommand):
+    """Command to set spec name."""
+
+    def __init__(self, toolbar, new_name, old_name):
+        """
+        Args:
+            toolbar (ImporterSpecificationToolbar): import spec toolbar
+            new_name (str): new name
+            old_name (str): old name
+        """
+        text = "set specification name"
+        super().__init__(text)
+        self._toolbar = toolbar
+        self._new_name = new_name
+        self._old_name = old_name
+        if self._new_name == self._old_name:
+            self.setObsolete(True)
+
+    def redo(self):
+        self._toolbar.do_set_name(self._new_name)
+
+    def undo(self):
+        self._toolbar.do_set_name(self._old_name)
+
+
+class SetSpecDescription(QUndoCommand):
+    """Command to set spec description."""
+
+    def __init__(self, toolbar, new_description, old_description):
+        """
+        Args:
+            toolbar (ImporterSpecificationToolbar): import spec toolbar
+            new_description (str): new description
+            old_description (str): old description
+        """
+        text = "set specification description"
+        super().__init__(text)
+        self._toolbar = toolbar
+        self._new_description = new_description
+        self._old_description = old_description
+        if self._new_description == self._old_description:
+            self.setObsolete(True)
+
+    def redo(self):
+        self._toolbar.do_set_description(self._new_description)
+
+    def undo(self):
+        self._toolbar.do_set_description(self._old_description)
+
+
 class PasteMappings(QUndoCommand):
     """Command to paste copied mappings"""
 

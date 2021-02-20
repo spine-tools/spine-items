@@ -48,6 +48,7 @@ class SpecificationEditorWindow(QWidget):
         super().__init__(parent=toolbox, f=Qt.Window)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self._toolbox = toolbox
+        self._original_spec_name = None if specification is None else specification.name
         if specification is None:
             specification = DataTransformerSpecification(name="")
         self._specification = specification
@@ -114,17 +115,8 @@ class SpecificationEditorWindow(QWidget):
         Returns:
             bool: True if the operation was successful, False otherwise
         """
-        row = self._toolbox.specification_model.specification_row(self._specification.name)
-        if row >= 0:
-            old_specification = self._toolbox.specification_model.specification(row)
-            if old_specification.is_equivalent(self._specification):
-                return True
-            self._specification.definition_file_path = old_specification.definition_file_path
-            self._toolbox.update_specification(self._specification)
-            return True
-        self._toolbox.add_specification(self._specification)
-        self._specification.save()
-        return True
+        update_existing = self._specification.name == self._original_spec_name
+        return self._toolbox.add_specification(self._specification, update_existing, self)
 
     @Slot(str)
     def _change_filter_widget(self, display_name):
