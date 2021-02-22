@@ -140,7 +140,9 @@ class ToolSpecification(ProjectItemSpecification):
         return os.path.relpath(self.path, os.path.dirname(self.definition_file_path)).replace(os.sep, "/")
 
     def clone(self):
-        return make_specification(copy.deepcopy(self.to_dict()), self._settings, self._logger)
+        spec_dict = copy.deepcopy(self.to_dict())
+        spec_dict["definition_file_path"] = self.definition_file_path
+        return make_specification(spec_dict, self._settings, self._logger)
 
     def to_dict(self):
         return {
