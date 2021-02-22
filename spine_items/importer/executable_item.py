@@ -35,21 +35,20 @@ from ..utils import labelled_resource_filepaths
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, mapping, selected_files, logs_dir, gams_path, cancel_on_error, logger):
+    def __init__(self, name, mapping, selected_files, gams_path, cancel_on_error, project_dir, logger):
         """
         Args:
             name (str): Importer's name
             mapping (dict): import mapping
             selected_files (list): selected_files
-            logs_dir (str): path to the directory where logs should be stored
             gams_path (str): path to system's GAMS executable or empty string for the default path
             cancel_on_error (bool): if True, revert changes on error and quit
+            project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, logger)
+        super().__init__(name, project_dir, logger)
         self._mapping = mapping
         self._selected_files = selected_files
-        self._logs_dir = logs_dir
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
         self._process = None
@@ -128,8 +127,6 @@ class ExecutableItem(ExecutableItemBase):
         file_selection = item_dict.get("file_selection")
         file_selection = deserialize_checked_states(file_selection, project_dir)
         selected_files = [filepath for filepath, selected in file_selection.items() if selected]
-        data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
-        logs_dir = os.path.join(data_dir, "logs")
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
-        return cls(name, mapping, selected_files, logs_dir, gams_path, cancel_on_error, logger)
+        return cls(name, mapping, selected_files, gams_path, cancel_on_error, project_dir, logger)

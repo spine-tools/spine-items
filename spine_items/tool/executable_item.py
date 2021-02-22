@@ -45,21 +45,21 @@ from ..utils import labelled_resource_args, is_label
 class ExecutableItem(ExecutableItemBase):
     """Tool project item's executable parts."""
 
-    def __init__(self, name, work_dir, output_dir, tool_specification, cmd_line_args, options, logger):
+    def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, project_dir, logger):
         """
         Args:
             name (str): item's name
             work_dir (str): an absolute path to Spine Toolbox work directory
                 or None if the Tool should not execute in work directory
-            output_dir (str): path to the directory where output files should be archived
             tool_specification (ToolSpecification): a tool specification
             cmd_line_args (list): a list of command line argument to pass to the tool instance
             options (dict): misc tool options. See ``Tool`` for details.
+            project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, logger)
+        super().__init__(name, project_dir, logger)
         self._work_dir = work_dir
-        self._output_dir = output_dir
+        self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR))
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
         self._options = options
@@ -586,8 +586,6 @@ class ExecutableItem(ExecutableItemBase):
                 work_dir = None
         else:
             work_dir = None
-        data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
-        output_dir = pathlib.Path(data_dir, TOOL_OUTPUT_DIR)
         specification_name = item_dict["specification"]
         specification = ExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
@@ -595,7 +593,7 @@ class ExecutableItem(ExecutableItemBase):
         cmd_line_args = item_dict["cmd_line_args"]
         cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
         options = item_dict.get("options", {})
-        return cls(name, work_dir, output_dir, specification, cmd_line_args, options, logger)
+        return cls(name, work_dir, specification, cmd_line_args, options, project_dir, logger)
 
 
 def _count_files_and_dirs(paths):

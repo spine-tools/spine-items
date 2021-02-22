@@ -34,7 +34,7 @@ from .settings_pack import SettingsPack
 
 class ExecutableItem(ExecutableItemBase):
     def __init__(
-        self, name, settings_pack, databases, output_time_stamps, cancel_on_error, data_dir, gams_path, logger
+        self, name, settings_pack, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
     ):
         """
         Args:
@@ -44,15 +44,14 @@ class ExecutableItem(ExecutableItemBase):
             output_time_stamps (bool): if True append output directories with time stamps
             cancel_on_error (bool): if True execution fails on all errors else some errors can be ignored
             data_dir (str): absolute path to exporter's data directory
-            gams_path (str): GAMS path from Toolbox settings
+            project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, logger)
+        super().__init__(name, project_dir, logger)
         self._settings_pack = settings_pack
         self._databases = databases
         self._output_time_stamps = output_time_stamps
         self._cancel_on_error = cancel_on_error
-        self._data_dir = data_dir
         self._gams_path = gams_path
         self._forks = dict()
         self._process = None
@@ -156,8 +155,7 @@ class ExecutableItem(ExecutableItemBase):
             databases.append(db)
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
-        data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         return cls(
-            name, settings_pack, databases, output_time_stamps, cancel_on_error, str(data_dir), gams_path, logger
+            name, settings_pack, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
         )

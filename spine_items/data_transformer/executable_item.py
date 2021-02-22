@@ -24,18 +24,18 @@ from .output_resources import scan_for_resources
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, specification, config_path, logger):
+    def __init__(self, name, specification, project_dir, logger):
         """
         Args:
             name (str): item's name
             specification (DataTransformerSpecification, optional): item's specification
-            config_path (str): path to the filter's configuration file
+            project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, logger)
+        super().__init__(name, project_dir, logger)
         self._db_resources = list()
         self._specification = specification
-        self._filter_config_path = config_path
+        self._filter_config_path = filter_config_path(self._data_dir)
 
     @staticmethod
     def item_type():
@@ -65,6 +65,4 @@ class ExecutableItem(ExecutableItemBase):
         specification = ExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
-        data_dir = str(Path(project_dir, ".spinetoolbox", "items", shorten(name)))
-        path = filter_config_path(data_dir)
-        return cls(name, specification, path, logger)
+        return cls(name, specification, project_dir, logger)
