@@ -23,7 +23,7 @@ from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .tool import Tool
 from .tool_icon import ToolIcon
 from .widgets.tool_properties_widget import ToolPropertiesWidget
-from .widgets.tool_specification_widget import ToolSpecificationWidget
+from .widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from .widgets.add_tool_widget import AddToolWidget
 from .widgets.custom_menus import ToolSpecificationMenu
 
@@ -60,11 +60,12 @@ class ToolFactory(ProjectItemFactory):
     @staticmethod
     def show_specification_widget(toolbox, specification=None, **kwargs):
         """See base class."""
-        ToolSpecificationWidget(toolbox, specification).show()
+        ToolSpecificationEditorWindow(toolbox, specification).show()
 
     @staticmethod
     def repair_specification(toolbox, specification):
         """See base class."""
+        ProjectItemFactory.repair_specification(toolbox, specification)
         # Check that main program file exists. If not, log a message with an anchor to find it
         filename = specification.includes[0]
         full_path = os.path.join(specification.path, filename)

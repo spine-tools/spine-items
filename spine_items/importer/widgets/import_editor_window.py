@@ -45,10 +45,10 @@ from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnec
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from ..connection_manager import ConnectionManager
 from ..commands import RestoreMappingsFromDict
+from ...widgets import SpecNameDescriptionToolbar
 from .import_editor import ImportEditor
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
-from .importer_specification_toolbar import ImporterSpecificationToolbar
 
 
 _CONNECTOR_NAME_TO_CLASS = {
@@ -99,7 +99,7 @@ class ImportEditorWindow(QMainWindow):
         self._import_mapping_options.about_to_undo.connect(self._import_mappings.focus_on_changing_specification)
         self._size = None
         self.takeCentralWidget()
-        self._spec_toolbar = ImporterSpecificationToolbar(self, self._undo_stack)
+        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Import Editor[*]")

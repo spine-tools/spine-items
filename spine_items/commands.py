@@ -16,6 +16,7 @@ Undo/redo commands that can be used by multiple project items.
 :date:   5.5.2020
 """
 
+from PySide2.QtWidgets import QUndoCommand
 from spinetoolbox.project_commands import SpineToolboxCommand
 
 
@@ -82,3 +83,53 @@ class UpdateCmdLineArgsCommand(SpineToolboxCommand):
 
     def undo(self):
         self.item.update_cmd_line_args(self.undo_cmd_line_args)
+
+
+class SetSpecName(QUndoCommand):
+    """Command to set spec name."""
+
+    def __init__(self, toolbar, new_name, old_name):
+        """
+        Args:
+            toolbar (SpecNameDescriptionToolbar): import spec toolbar
+            new_name (str): new name
+            old_name (str): old name
+        """
+        text = "set specification name"
+        super().__init__(text)
+        self._toolbar = toolbar
+        self._new_name = new_name
+        self._old_name = old_name
+        if self._new_name == self._old_name:
+            self.setObsolete(True)
+
+    def redo(self):
+        self._toolbar.do_set_name(self._new_name)
+
+    def undo(self):
+        self._toolbar.do_set_name(self._old_name)
+
+
+class SetSpecDescription(QUndoCommand):
+    """Command to set spec description."""
+
+    def __init__(self, toolbar, new_description, old_description):
+        """
+        Args:
+            toolbar (SpecNameDescriptionToolbar): import spec toolbar
+            new_description (str): new description
+            old_description (str): old description
+        """
+        text = "set specification description"
+        super().__init__(text)
+        self._toolbar = toolbar
+        self._new_description = new_description
+        self._old_description = old_description
+        if self._new_description == self._old_description:
+            self.setObsolete(True)
+
+    def redo(self):
+        self._toolbar.do_set_description(self._new_description)
+
+    def undo(self):
+        self._toolbar.do_set_description(self._old_description)

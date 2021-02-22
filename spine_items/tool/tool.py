@@ -29,7 +29,7 @@ from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
 from .widgets.options_widgets import JuliaOptionsWidget
-from .widgets.tool_specification_widget import ToolSpecificationWidget
+from .widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
 from ..models import ToolCommandLineArgsModel, InputFileListModel
@@ -147,7 +147,7 @@ class Tool(ProjectItem):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification_window = ToolSpecificationWidget(self._toolbox, None)
+        specification_window = ToolSpecificationEditorWindow(self._toolbox, None)
         specification_window.show()
 
     @Slot(bool)
