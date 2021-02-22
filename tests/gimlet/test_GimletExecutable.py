@@ -86,7 +86,8 @@ class TestGimletExecutable(unittest.TestCase):
         self.assertEqual("g__", work_dir_name[0:3])  # work dir name must start with 'g__'
         self.assertEqual("__toolbox", work_dir_name[-9:])  # work dir name must end with '__toolbox'
         self.assertEqual(
-            [os.path.abspath(os.path.join(self._temp_dir.name, ".spinetoolbox", "items", "input_files", "a.txt"))], item._selected_files
+            [os.path.abspath(os.path.join(self._temp_dir.name, ".spinetoolbox", "items", "input_files", "a.txt"))],
+            item._selected_files,
         )
         # Modify item_dict
         item_dict["use_shell"] = True

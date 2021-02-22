@@ -60,11 +60,6 @@ class TestDataTransformer(unittest.TestCase):
     def test_item_category(self):
         self.assertEqual(DataTransformer.item_category(), ItemInfo.item_category())
 
-    def test_execution_item(self):
-        """Tests that the ExecutableItem counterpart is created successfully."""
-        exec_item = self.transformer.execution_item()
-        self.assertIsInstance(exec_item, ExecutableItem)
-
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.transformer.item_dict()

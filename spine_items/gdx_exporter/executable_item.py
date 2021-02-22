@@ -156,6 +156,4 @@ class ExecutableItem(ExecutableItemBase):
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
-        return cls(
-            name, settings_pack, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
-        )
+        return cls(name, settings_pack, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger)

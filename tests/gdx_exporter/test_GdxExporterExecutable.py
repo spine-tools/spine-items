@@ -90,20 +90,26 @@ class TestGdxExporterExecutable(unittest.TestCase):
             "cancel_on_error": True,
         }
         logger = mock.MagicMock()
-        item = ExecutableItem.from_dict(item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger)
+        item = ExecutableItem.from_dict(
+            item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger
+        )
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("GdxExporter", item.item_type())
         self.assertIsInstance(item._settings_pack, SettingsPack)
         # Make SettingsPack.from_dict raise gdx.GdxExportException
         with mock.patch("spine_items.gdx_exporter.executable_item.SettingsPack.from_dict") as mocksetfromdict:
             mocksetfromdict.side_effect = gdx.GdxExportException("hello")
-            item = ExecutableItem.from_dict(item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger)
+            item = ExecutableItem.from_dict(
+                item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger
+            )
             self.assertIsInstance(item, ExecutableItem)
             self.assertEqual("GdxExporter", item.item_type())
             self.assertIsInstance(item._settings_pack, SettingsPack)
         # Modify item_dict
         item_dict.pop("cancel_on_error")
-        item = ExecutableItem.from_dict(item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger)
+        item = ExecutableItem.from_dict(
+            item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger
+        )
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("GdxExporter", item.item_type())
         self.assertTrue(item._cancel_on_error)

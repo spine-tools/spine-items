@@ -149,14 +149,7 @@ class TestToolExecutable(unittest.TestCase):
         app_settings = _MockSettings()
         logger = mock.MagicMock()
         tool_specification = PythonTool(
-            "Python tool",
-            "Python",
-            str(script_dir),
-            script_files,
-            app_settings,
-            None,
-            logger,
-            outputfiles=output_files,
+            "Python tool", "Python", str(script_dir), script_files, app_settings, None, logger, outputfiles=output_files
         )
         work_dir = pathlib.Path(self._temp_dir.name, "work")
         work_dir.mkdir()
@@ -247,9 +240,7 @@ class TestToolExecutable(unittest.TestCase):
             ProjectItemResource(mock.Mock(), "file", optional_file2.as_uri()),
         ]
         file_paths = executable._find_optional_input_files(resources)
-        self.assertEqual(
-            file_paths, {"subdir/*.txt": [str(optional_file1)], "subdir/data.dat": [str(optional_file2)]}
-        )
+        self.assertEqual(file_paths, {"subdir/*.txt": [str(optional_file1)], "subdir/data.dat": [str(optional_file2)]})
 
     def test_output_resources_forward(self):
         logger = mock.MagicMock()
@@ -262,7 +253,9 @@ class TestToolExecutable(unittest.TestCase):
             logger=mock.MagicMock(),
             outputfiles=["results.gdx", "report.txt"],
         )
-        executable = ExecutableItem("name", self._temp_dir.name, tool_specification, [], {}, self._temp_dir.name, logger)
+        executable = ExecutableItem(
+            "name", self._temp_dir.name, tool_specification, [], {}, self._temp_dir.name, logger
+        )
         output_dir = pathlib.Path(executable._data_dir, "output")
         with mock.patch("spine_items.tool.output_resources.find_last_output_files") as mock_find_last_output_files:
             mock_find_last_output_files.return_value = {
@@ -289,7 +282,9 @@ class TestToolExecutable(unittest.TestCase):
             logger=mock.MagicMock(),
             outputfiles=["results.gdx", "report.txt"],
         )
-        executable = ExecutableItem("name", self._temp_dir.name, tool_specification, [], {}, self._temp_dir.name, logger)
+        executable = ExecutableItem(
+            "name", self._temp_dir.name, tool_specification, [], {}, self._temp_dir.name, logger
+        )
         executable._tool_instance = executable._tool_specification.create_tool_instance(
             self._temp_dir.name, "name", mock.MagicMock()
         )

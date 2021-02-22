@@ -54,12 +54,6 @@ class TestTool(unittest.TestCase):
     def test_item_category(self):
         self.assertEqual(Tool.item_category(), ItemInfo.item_category())
 
-    def test_execution_item(self):
-        """Tests that the ExecutableItem counterpart is created successfully."""
-        tool = self._add_tool()
-        exec_item = tool.execution_item()
-        self.assertIsInstance(exec_item, ExecutableItem)
-
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         tool = self._add_tool()

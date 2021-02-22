@@ -60,9 +60,7 @@ class TestDataConnection(unittest.TestCase):
     def test_add_references(self):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
-        with mock.patch(
-            "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
-        ) as mock_filenames:
+        with mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames:
             a = Path(temp_dir, "a.txt")
             a.touch()
             b = Path(temp_dir, "b.txt")
