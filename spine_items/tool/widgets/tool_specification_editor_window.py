@@ -141,6 +141,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(self.ui.actionSaveAndClose)
         self.ui.menubar.hide()
+        self.addAction(self._spec_toolbar.menu_action)
 
     def populate_programfile_list(self, items):
         """List program files in QTreeView.

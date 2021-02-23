@@ -201,7 +201,7 @@ class SpecNameDescriptionToolbar(QToolBar):
         layout.setStretchFactor(self._line_edit_name, 1)
         layout.setStretchFactor(self._line_edit_description, 3)
         self.addWidget(widget)
-        self.menu = self._make_main_menu()
+        self.menu, self.menu_action = self._make_main_menu()
         self.setObjectName("SpecNameDescriptionToolbar")
         if spec:
             self.do_set_name(spec.name)
@@ -223,7 +223,7 @@ class SpecNameDescriptionToolbar(QToolBar):
         action.setShortcuts(keys)
         keys_str = ", ".join([key.toString() for key in keys])
         menu_button.setToolTip(f"<p>Main menu ({keys_str})</p>")
-        return menu
+        return menu, action
 
     @Slot()
     def _set_name(self):
@@ -288,7 +288,13 @@ def prompt_to_save_changes(parent, save_callback):
 
 
 def restore_ui(window, app_settings, settings_group):
-    """Restores UI state from previous session."""
+    """Restores UI state from previous session.
+
+    Args:
+        window (QMainWindow)
+        app_settings (QSettings)
+        settings_group (str)
+    """
     app_settings.beginGroup(settings_group)
     window_size = app_settings.value("windowSize")
     window_pos = app_settings.value("windowPosition")
@@ -313,7 +319,13 @@ def restore_ui(window, app_settings, settings_group):
 
 
 def save_ui(window, app_settings, settings_group):
-    """Saves UI state for next session."""
+    """Saves UI state for next session.
+
+    Args:
+        window (QMainWindow)
+        app_settings (QSettings)
+        settings_group (str)
+    """
     app_settings.beginGroup(settings_group)
     app_settings.setValue("windowSize", window.size())
     app_settings.setValue("windowPosition", window.pos())

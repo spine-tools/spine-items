@@ -17,17 +17,20 @@ Contains the :class:`RenameTableModel` class.
 """
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide2.QtGui import QFont
+from ...commands import ChangeSpecPropertyCommand
 
 
 class RenameTableModel(QAbstractTableModel):
     """A table model for database item renaming tables."""
 
-    def __init__(self, renaming):
+    def __init__(self, undo_stack, renaming):
         """
         Args:
+            undo_stack (QUndoStack)
             renaming (dict): renaming settings
         """
         super().__init__()
+        self._undo_stack = undo_stack
         self._table = [[original, renamed] for original, renamed in renaming.items()]
 
     def columnCount(self, parent=QModelIndex()):
@@ -77,9 +80,17 @@ class RenameTableModel(QAbstractTableModel):
         Args:
             names (set): new original names
         """
-        self.beginResetModel()
         old_settings = self.renaming_settings()
-        self._table = [[name, old_settings.get(name, name)] for name in names]
+        new_settings = {name: old_settings.get(name, name) for name in names}
+        if old_settings == new_settings:
+            return
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(self._do_reset_originals, new_settings, old_settings, "reload filter")
+        )
+
+    def _do_reset_originals(self, settings):
+        self.beginResetModel()
+        self._table = [[original, renamed] for original, renamed in settings.items()]
         self._table.sort(key=lambda row: row[0])
         self.endResetModel()
 
@@ -94,7 +105,14 @@ class RenameTableModel(QAbstractTableModel):
         if not index.isValid():
             return False
         if role == Qt.EditRole and index.column() == 1:
-            self._table[index.row()][1] = value
-            self.dataChanged.emit(index, index, [Qt.DisplayRole])
+            old_value = self._table[index.row()][1]
+            callback = lambda value, index=index: self._do_set_data(index, value)
+            if value == old_value:
+                return False
+            self._undo_stack.push(ChangeSpecPropertyCommand(callback, value, old_value, "change filter"))
             return True
         return False
+
+    def _do_set_data(self, index, value):
+        self._table[index.row()][1] = value
+        self.dataChanged.emit(index, index, [Qt.DisplayRole])

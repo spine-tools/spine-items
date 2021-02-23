@@ -136,6 +136,7 @@ class ImportEditorWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(self._ui.actionSaveAndClose)
         self._ui.menubar.hide()
+        self.addAction(self._spec_toolbar.menu_action)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
