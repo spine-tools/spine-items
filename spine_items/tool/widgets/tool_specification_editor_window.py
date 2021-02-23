@@ -61,9 +61,9 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.setWindowTitle("Tool Specification Editor[*]")
         restore_ui(self, self._app_settings, self.settings_group)
         self._undo_stack = QUndoStack(self)
-        self._insert_undo_redo_actions()
         self._spec_toolbar = SpecNameDescriptionToolbar(self, specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
+        self._populate_main_menu()
         self.ui.textEdit_main_program.setEnabled(False)
         self.ui.textEdit_main_program.setStyleSheet(
             "QTextEdit {background-color: #19232D; border: 1px solid #32414B; color: #F0F0F0; border-radius: 2px;}"
@@ -131,6 +131,17 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self.connect_signals()
 
+    def _populate_main_menu(self):
+        menu = self._spec_toolbar.menu
+        undo_action = self._undo_stack.createUndoAction(self)
+        redo_action = self._undo_stack.createRedoAction(self)
+        undo_action.setShortcuts(QKeySequence.Undo)
+        redo_action.setShortcuts(QKeySequence.Redo)
+        menu.addActions([redo_action, undo_action])
+        menu.addSeparator()
+        menu.addAction(self.ui.actionSaveAndClose)
+        self.ui.menubar.hide()
+
     def populate_programfile_list(self, items):
         """List program files in QTreeView.
         """
@@ -176,16 +187,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
             qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
             self.outputfiles_model.appendRow(qitem)
 
-    def _insert_undo_redo_actions(self):
-        undo_action = self._undo_stack.createUndoAction(self)
-        redo_action = self._undo_stack.createRedoAction(self)
-        undo_action.setShortcuts(QKeySequence.Undo)
-        redo_action.setShortcuts(QKeySequence.Redo)
-        actions = self.ui.menuEdit.actions()
-        before = actions[0] if actions else None
-        self.ui.menuEdit.insertAction(before, undo_action)
-        self.ui.menuEdit.insertAction(before, redo_action)
-
     def connect_signals(self):
         """Connect signals to slots."""
         self.ui.toolButton_add_program_files.clicked.connect(self.show_add_program_files_dialog)
@@ -221,6 +222,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.lineEdit_args.textChanged.connect(self._change_args_timer.start)
         self._change_args_timer.timeout.connect(self._push_change_args_command)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
+        self.ui.actionSaveAndClose.triggered.connect(self.save_and_close)
 
     @Slot(bool)
     def _update_window_modified(self, clean):

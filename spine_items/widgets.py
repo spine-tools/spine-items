@@ -18,10 +18,20 @@ Contains common & shared (Q)widgets.
 
 import os
 from PySide2.QtCore import Qt, Signal, Slot, QUrl, QMimeData, QTimer
-from PySide2.QtWidgets import QApplication, QWidget, QTreeView, QToolBar, QLabel, QHBoxLayout, QMessageBox
-from PySide2.QtGui import QDrag, QGuiApplication
+from PySide2.QtWidgets import (
+    QApplication,
+    QWidget,
+    QTreeView,
+    QToolBar,
+    QLabel,
+    QHBoxLayout,
+    QMessageBox,
+    QAction,
+    QMenu,
+)
+from PySide2.QtGui import QDrag, QGuiApplication, QKeySequence, QIcon
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
-from spinetoolbox.helpers import ensure_window_is_on_screen
+from spinetoolbox.helpers import ensure_window_is_on_screen, CharIconEngine
 from .commands import ChangeSpecPropertyCommand
 
 
@@ -164,6 +174,7 @@ class SpecNameDescriptionToolbar(QToolBar):
             parent (QMainWindow): QMainWindow instance
         """
         super().__init__("Specification name and description", parent=parent)
+        self._parent = parent
         self._undo_stack = undo_stack
         self._current_name = ""
         self._current_description = ""
@@ -190,6 +201,7 @@ class SpecNameDescriptionToolbar(QToolBar):
         layout.setStretchFactor(self._line_edit_name, 1)
         layout.setStretchFactor(self._line_edit_description, 3)
         self.addWidget(widget)
+        self.menu = self._make_main_menu()
         self.setObjectName("SpecNameDescriptionToolbar")
         if spec:
             self.do_set_name(spec.name)
@@ -198,6 +210,20 @@ class SpecNameDescriptionToolbar(QToolBar):
         self._line_edit_description.textEdited.connect(self._timer_set_description.start)
         self._timer_set_name.timeout.connect(self._set_name)
         self._timer_set_description.timeout.connect(self._set_description)
+
+    def _make_main_menu(self):
+        menu = QMenu(self)
+        menu_action = self.addAction(QIcon(CharIconEngine("\uf0c9")), "")
+        menu_action.setMenu(menu)
+        menu_button = self.widgetForAction(menu_action)
+        menu_button.setPopupMode(menu_button.InstantPopup)
+        action = QAction(self)
+        action.triggered.connect(menu_button.showMenu)
+        keys = [QKeySequence(Qt.ALT + Qt.Key_F), QKeySequence(Qt.ALT + Qt.Key_E)]
+        action.setShortcuts(keys)
+        keys_str = ", ".join([key.toString() for key in keys])
+        menu_button.setToolTip(f"<p>Main menu ({keys_str})</p>")
+        return menu
 
     @Slot()
     def _set_name(self):

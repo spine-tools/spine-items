@@ -79,17 +79,21 @@ class ImportEditorWindow(QMainWindow):
         self._original_spec_name = None if specification is None else specification.name
         self._specification = specification
         self._app_settings = self._toolbox.qsettings()
-        self._connection_manager = None
-        self._memoized_connectors = {}
-        self._copied_mappings = {}
-        self._editor = None
+        self.settings_group = "mappingPreviewWindow"
         self._undo_stack = QUndoStack(self)
         self._ui_error = QErrorMessage(self)
         self._ui_error.setWindowTitle("Error")
         self._ui_error.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
-        self._insert_undo_redo_actions()
+        self.takeCentralWidget()
+        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
+        self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
+        self._populate_main_menu()
+        self._editor = None
+        self._connection_manager = None
+        self._memoized_connectors = {}
+        self._copied_mappings = {}
         self._import_mappings = ImportMappings(self)
         self._import_mapping_options = ImportMappingOptions(self)
         self._import_mappings.mapping_selection_changed.connect(
@@ -97,14 +101,10 @@ class ImportEditorWindow(QMainWindow):
         )
         self._import_mapping_options.about_to_undo.connect(self._import_mappings.focus_on_changing_specification)
         self._size = None
-        self.takeCentralWidget()
-        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
-        self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowTitle("Import Editor[*]")
-        self.settings_group = "mappingPreviewWindow"
         self.apply_classic_ui_style()
         self.restore_ui()
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowTitle("Import Editor[*]")
         self._button_box = QDialogButtonBox(self)
         self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
@@ -112,15 +112,30 @@ class ImportEditorWindow(QMainWindow):
         self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
         self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
-        self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
-        self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
-        self.connection_failed.connect(self.show_error)
         self._ui.actionLoad_file.triggered.connect(self._show_open_file_dialog)
+        self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
+        self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
         self._ui.actionSaveAndClose.triggered.connect(self.save_and_close)
+        self.connection_failed.connect(self.show_error)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
         if filepath:
             self.start_ui(filepath)
+
+    def _populate_main_menu(self):
+        menu = self._spec_toolbar.menu
+        menu.addActions([self._ui.actionLoad_file, self._ui.actionSwitch_connector])
+        menu.addSeparator()
+        menu.addActions([self._ui.import_mappings_action, self._ui.export_mappings_action])
+        menu.addSeparator()
+        undo_action = self._undo_stack.createUndoAction(self)
+        redo_action = self._undo_stack.createRedoAction(self)
+        undo_action.setShortcuts(QKeySequence.Undo)
+        redo_action.setShortcuts(QKeySequence.Redo)
+        menu.addActions([redo_action, undo_action])
+        menu.addSeparator()
+        menu.addAction(self._ui.actionSaveAndClose)
+        self._ui.menubar.hide()
 
     @Slot(bool)
     def _update_window_modified(self, clean):
@@ -248,16 +263,6 @@ class ImportEditorWindow(QMainWindow):
         new_specification = self._toolbox.load_specification(spec_dict)
         update_existing = new_specification.name == self._original_spec_name
         return self._toolbox.add_specification(new_specification, update_existing, self)
-
-    def _insert_undo_redo_actions(self):
-        undo_action = self._undo_stack.createUndoAction(self)
-        redo_action = self._undo_stack.createRedoAction(self)
-        undo_action.setShortcuts(QKeySequence.Undo)
-        redo_action.setShortcuts(QKeySequence.Redo)
-        actions = self._ui.edit_menu.actions()
-        before = actions[0] if actions else None
-        self._ui.edit_menu.insertAction(before, undo_action)
-        self._ui.edit_menu.insertAction(before, redo_action)
 
     @Slot(str)
     def show_error(self, message):

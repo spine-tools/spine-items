@@ -38,6 +38,8 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(991, 545)
         MainWindow.setDockNestingEnabled(True)
+        self.actionSaveAndClose = QAction(MainWindow)
+        self.actionSaveAndClose.setObjectName(u"actionSaveAndClose")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         MainWindow.setCentralWidget(self.centralwidget)
@@ -46,6 +48,8 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QRect(0, 0, 991, 27))
         self.menuEdit = QMenu(self.menubar)
         self.menuEdit.setObjectName(u"menuEdit")
+        self.menuFile = QMenu(self.menubar)
+        self.menuFile.setObjectName(u"menuFile")
         MainWindow.setMenuBar(self.menubar)
         self.dockWidget_type_and_program = QDockWidget(MainWindow)
         self.dockWidget_type_and_program.setObjectName(u"dockWidget_type_and_program")
@@ -409,7 +413,9 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
+        self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
+        self.menuFile.addAction(self.actionSaveAndClose)
 
         self.retranslateUi(MainWindow)
 
@@ -418,7 +424,12 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Tool Specification Editor", None))
+        self.actionSaveAndClose.setText(QCoreApplication.translate("MainWindow", u"Save and close", None))
+#if QT_CONFIG(shortcut)
+        self.actionSaveAndClose.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Return", None))
+#endif // QT_CONFIG(shortcut)
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
+        self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.dockWidget_type_and_program.setWindowTitle(QCoreApplication.translate("MainWindow", u"Type and program", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Tool type", None))
 #if QT_CONFIG(tooltip)
