@@ -18,10 +18,11 @@ Contains common & shared (Q)widgets.
 
 import os
 from PySide2.QtCore import Qt, Signal, Slot, QUrl, QMimeData, QTimer
-from PySide2.QtWidgets import QApplication, QWidget, QTreeView, QToolBar, QLabel, QHBoxLayout
-from PySide2.QtGui import QDrag
+from PySide2.QtWidgets import QApplication, QWidget, QTreeView, QToolBar, QLabel, QHBoxLayout, QMessageBox
+from PySide2.QtGui import QDrag, QGuiApplication
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
-from .commands import SetSpecName, SetSpecDescription
+from spinetoolbox.helpers import ensure_window_is_on_screen
+from .commands import ChangeSpecPropertyCommand
 
 
 class ArgsTreeView(QTreeView):
@@ -162,7 +163,7 @@ class SpecNameDescriptionToolbar(QToolBar):
         Args:
             parent (QMainWindow): QMainWindow instance
         """
-        super().__init__(parent=parent)
+        super().__init__("Specification name and description", parent=parent)
         self._undo_stack = undo_stack
         self._current_name = ""
         self._current_description = ""
@@ -201,12 +202,25 @@ class SpecNameDescriptionToolbar(QToolBar):
     @Slot()
     def _set_name(self):
         self._timer_set_name.stop()
-        self._undo_stack.push(SetSpecName(self, self.name(), self._current_name))
+        if self.name() == self._current_name:
+            return
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(self.do_set_name, self.name(), self._current_name, "change specification name")
+        )
 
     @Slot()
     def _set_description(self):
         self._timer_set_description.stop()
-        self._undo_stack.push(SetSpecDescription(self, self.description(), self._current_description))
+        if self.description() == self._current_description:
+            return
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(
+                self.do_set_description,
+                self.description(),
+                self._current_description,
+                "change specification description",
+            )
+        )
 
     def do_set_name(self, name):
         self._current_name = name
@@ -221,3 +235,63 @@ class SpecNameDescriptionToolbar(QToolBar):
 
     def description(self):
         return self._line_edit_description.text()
+
+
+def prompt_to_save_changes(parent, save_callback):
+    """Prompts to save changes.
+
+    Args:
+        parent (QWidget)
+        save_callback (function): A function that call if the user choses Save.
+            It must return True or False depending on the outcome of the 'saving'.
+
+    Returns:
+        bool: False if the user choses to cancel, in which case we don't close the form.
+    """
+    msg = QMessageBox(parent)
+    msg.setIcon(QMessageBox.Question)
+    msg.setWindowTitle(parent.windowTitle())
+    msg.setText("Do you want to save your changes to the specification?")
+    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+    answer = msg.exec_()
+    if answer == QMessageBox.Cancel:
+        return False
+    if answer == QMessageBox.Yes:
+        return save_callback()
+    return True
+
+
+def restore_ui(window, app_settings, settings_group):
+    """Restores UI state from previous session."""
+    app_settings.beginGroup(settings_group)
+    window_size = app_settings.value("windowSize")
+    window_pos = app_settings.value("windowPosition")
+    window_state = app_settings.value("windowState")
+    window_maximized = app_settings.value("windowMaximized", defaultValue='false')
+    n_screens = app_settings.value("n_screens", defaultValue=1)
+    app_settings.endGroup()
+    original_size = window.size()
+    if window_size:
+        window.resize(window_size)
+    if window_pos:
+        window.move(window_pos)
+    if window_state:
+        window.restoreState(window_state, version=1)  # Toolbar and dockWidget positions
+    # noinspection PyArgumentList
+    if len(QGuiApplication.screens()) < int(n_screens):
+        # There are less screens available now than on previous application startup
+        window.move(0, 0)  # Move this widget to primary screen position (0,0)
+    ensure_window_is_on_screen(window, original_size)
+    if window_maximized == 'true':
+        window.setWindowState(Qt.WindowMaximized)
+
+
+def save_ui(window, app_settings, settings_group):
+    """Saves UI state for next session."""
+    app_settings.beginGroup(settings_group)
+    app_settings.setValue("windowSize", window.size())
+    app_settings.setValue("windowPosition", window.pos())
+    app_settings.setValue("windowState", window.saveState(version=1))
+    app_settings.setValue("windowMaximized", window.windowState() == Qt.WindowMaximized)
+    app_settings.setValue("n_screens", len(QGuiApplication.screens()))
+    app_settings.endGroup()

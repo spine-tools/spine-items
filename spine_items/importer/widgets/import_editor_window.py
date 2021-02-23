@@ -21,7 +21,7 @@ import json
 import fnmatch
 from copy import deepcopy
 from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtGui import QGuiApplication, QKeySequence
+from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import (
     QMainWindow,
     QErrorMessage,
@@ -32,10 +32,9 @@ from PySide2.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QListWidget,
-    QMessageBox,
 )
-from spinetoolbox.helpers import get_open_file_name_in_last_dir, ensure_window_is_on_screen
-from spinetoolbox.config import APPLICATION_PATH
+from spinetoolbox.helpers import get_open_file_name_in_last_dir
+from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
 from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
@@ -45,7 +44,7 @@ from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnec
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from ..connection_manager import ConnectionManager
 from ..commands import RestoreMappingsFromDict
-from ...widgets import SpecNameDescriptionToolbar
+from ...widgets import SpecNameDescriptionToolbar, prompt_to_save_changes, save_ui, restore_ui
 from .import_editor import ImportEditor
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
@@ -108,6 +107,7 @@ class ImportEditorWindow(QMainWindow):
         self.restore_ui()
         self._button_box = QDialogButtonBox(self)
         self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self._ui.statusbar.addPermanentWidget(self._button_box)
         self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
@@ -376,28 +376,7 @@ class ImportEditorWindow(QMainWindow):
 
     def restore_ui(self):
         """Restore UI state from previous session."""
-        app_settings = self._app_settings
-        app_settings.beginGroup(self.settings_group)
-        window_size = app_settings.value("windowSize")
-        window_pos = app_settings.value("windowPosition")
-        window_state = app_settings.value("windowState")
-        window_maximized = app_settings.value("windowMaximized", defaultValue='false')
-        n_screens = app_settings.value("n_screens", defaultValue=1)
-        app_settings.endGroup()
-        original_size = self.size()
-        if window_size:
-            self.resize(window_size)
-        if window_pos:
-            self.move(window_pos)
-        if window_state:
-            self.restoreState(window_state, version=1)  # Toolbar and dockWidget positions
-        # noinspection PyArgumentList
-        if len(QGuiApplication.screens()) < int(n_screens):
-            # There are less screens available now than on previous application startup
-            self.move(0, 0)  # Move this widget to primary screen position (0,0)
-        ensure_window_is_on_screen(self, original_size)
-        if window_maximized == 'true':
-            self.setWindowState(Qt.WindowMaximized)
+        restore_ui(self, self._app_settings, self.settings_group)
 
     def closeEvent(self, event=None):
         """Handles close window.
@@ -405,40 +384,15 @@ class ImportEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
-        if not self._undo_stack.isClean() and not self._prompt_to_save_changes():
+        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
             event.ignore()
             return
         if self._editor:
             self._editor.close_connection()
         self._undo_stack.cleanChanged.disconnect(self._update_window_modified)
-        app_settings = self._app_settings
-        app_settings.beginGroup(self.settings_group)
-        app_settings.setValue("windowSize", self.size())
-        app_settings.setValue("windowPosition", self.pos())
-        app_settings.setValue("windowState", self.saveState(version=1))
-        app_settings.setValue("windowMaximized", self.windowState() == Qt.WindowMaximized)
-        app_settings.setValue("n_screens", len(QGuiApplication.screens()))
-        app_settings.endGroup()
+        save_ui(self, self._app_settings, self.settings_group)
         if event:
             event.accept()
-
-    def _prompt_to_save_changes(self):
-        """Prompts to save changes.
-
-        Returns:
-            bool: False if the user choses to cancel, in which case we don't close the form.
-        """
-        msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Question)
-        msg.setWindowTitle(self.windowTitle())
-        msg.setText("Do you want to save your changes to the specification?")
-        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
-        answer = msg.exec_()
-        if answer == QMessageBox.Cancel:
-            return False
-        if answer == QMessageBox.Yes:
-            return self._save()
-        return True
 
 
 def _gams_system_directory(toolbox):

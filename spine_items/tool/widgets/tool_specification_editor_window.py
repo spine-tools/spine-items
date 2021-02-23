@@ -31,13 +31,13 @@ from PySide2.QtWidgets import (
     QUndoStack,
 )
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer
-from spinetoolbox.config import TREEVIEW_HEADER_SS
+from spinetoolbox.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
 from spinetoolbox.helpers import busy_effect, open_url
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from ...widgets import SpecNameDescriptionToolbar
+from ...widgets import SpecNameDescriptionToolbar, prompt_to_save_changes, save_ui, restore_ui
+from ...commands import ChangeSpecPropertyCommand
 from ..item_info import ItemInfo
 from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS
-from ..commands import ChangeToolSpecPropertyCommand
 from .custom_menus import AddProgramFilesPopupMenu
 
 
@@ -52,10 +52,14 @@ class ToolSpecificationEditorWindow(QMainWindow):
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent=toolbox)  # Inherit stylesheet from ToolboxUI
+        self._app_settings = toolbox.qsettings()
+        self.settings_group = "toolSpecificationEditorWindow"
         # Setup UI from Qt Designer file
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.takeCentralWidget()
+        self.setWindowTitle("Tool Specification Editor[*]")
+        restore_ui(self, self._app_settings, self.settings_group)
         self._undo_stack = QUndoStack(self)
         self._insert_undo_redo_actions()
         self._spec_toolbar = SpecNameDescriptionToolbar(self, specification, self._undo_stack)
@@ -124,6 +128,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         self.ui.statusbar.addPermanentWidget(self._button_box)
         self.ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
+        self.ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self.connect_signals()
 
     def populate_programfile_list(self, items):
@@ -201,8 +206,8 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.toolButton_minus_inputfiles_opt.clicked.connect(self.remove_inputfiles_opt)
         self.ui.toolButton_plus_outputfiles.clicked.connect(self.add_outputfiles)
         self.ui.toolButton_minus_outputfiles.clicked.connect(self.remove_outputfiles)
-        self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.handle_ok_clicked)
-        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.close)
+        self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
+        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
         # Enable removing items from QTreeViews by pressing the Delete key
         self.ui.treeView_programfiles.del_key_pressed.connect(self.remove_program_files_with_del)
         self.ui.treeView_inputfiles.del_key_pressed.connect(self.remove_inputfiles_with_del)
@@ -215,6 +220,11 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self._change_main_program_file_timer.timeout.connect(self._push_change_main_program_file_command)
         self.ui.lineEdit_args.textChanged.connect(self._change_args_timer.start)
         self._change_args_timer.timeout.connect(self._push_change_args_command)
+        self._undo_stack.cleanChanged.connect(self._update_window_modified)
+
+    @Slot(bool)
+    def _update_window_modified(self, clean):
+        self.setWindowModified(not clean)
 
     @Slot(int)
     def _push_change_tooltype_command(self, index):
@@ -222,7 +232,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         old_type = self.spec_dict.get("tooltype", "")
         if new_type == old_type:
             return
-        self._undo_stack.push(ChangeToolSpecPropertyCommand(self._set_tooltype, new_type, old_type, "change tooltype"))
+        self._undo_stack.push(ChangeSpecPropertyCommand(self._set_tooltype, new_type, old_type, "change tooltype"))
 
     def _set_tooltype(self, value):
         value = value.lower()
@@ -236,7 +246,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         if new_value == old_value:
             return
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(self._set_execute_in_work, new_value, old_value, "change tooltype")
+            ChangeSpecPropertyCommand(self._set_execute_in_work, new_value, old_value, "change tooltype")
         )
 
     def _set_execute_in_work(self, value):
@@ -250,7 +260,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         if new_value == old_value:
             return
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(self._set_cmdline_args, new_value, old_value, "change command line args")
+            ChangeSpecPropertyCommand(self._set_cmdline_args, new_value, old_value, "change command line args")
         )
 
     def _set_cmdline_args(self, value):
@@ -273,7 +283,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         elif new_value:
             new_program_files.append(new_value)
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(
+            ChangeSpecPropertyCommand(
                 self._set_program_files, new_program_files, old_program_files, "change main program file"
             )
         )
@@ -291,7 +301,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         for file in program_files[1:]:
             common_prefix = os.path.commonprefix([os.path.abspath(self.includes_main_path), os.path.abspath(file)])
             if common_prefix != self.includes_main_path:
-                self.show_status_bar_msg(f"Program file '{file}' not in main directory")
+                self.show_status_bar_msg(f"Program file '{os.path.basename(file)}' not in main directory")
                 continue
             additional_program_files.append(os.path.relpath(file, self.includes_main_path))
         self._set_main_program_file(main_program_file)
@@ -422,7 +432,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
         new_program_files = old_program_files.copy() + list(new_files)
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(
+            ChangeSpecPropertyCommand(
                 self._set_program_files, new_program_files, old_program_files, "add program files"
             )
         )
@@ -446,7 +456,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
             new_program_files = [os.path.join(self.includes_main_path, f) for f in new_program_files]
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(
+            ChangeSpecPropertyCommand(
                 self._set_program_files, new_program_files, old_program_files, "remove program files"
             )
         )
@@ -494,7 +504,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         old_files = self.spec_dict.get("inputfiles", [])
         new_files = old_files + [file_name]
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(self.populate_inputfiles_list, new_files, old_files, "add input file")
+            ChangeSpecPropertyCommand(self.populate_inputfiles_list, new_files, old_files, "add input file")
         )
 
     @Slot()
@@ -515,7 +525,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         old_files = self.spec_dict.get("inputfiles", [])
         new_files = [f for f in old_files if f not in removed_files]
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(self.populate_inputfiles_list, new_files, old_files, "remove input files")
+            ChangeSpecPropertyCommand(self.populate_inputfiles_list, new_files, old_files, "remove input files")
         )
 
     @Slot(bool)
@@ -540,7 +550,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         old_files = self.spec_dict.get("inputfiles_opt", [])
         new_files = old_files + [file_name]
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(
+            ChangeSpecPropertyCommand(
                 self.populate_inputfiles_opt_list, new_files, old_files, "add optional input file"
             )
         )
@@ -563,7 +573,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         old_files = self.spec_dict.get("inputfiles_opt", [])
         new_files = [f for f in old_files if f not in removed_files]
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(
+            ChangeSpecPropertyCommand(
                 self.populate_inputfiles_opt_list, new_files, old_files, "remove optional input files"
             )
         )
@@ -588,7 +598,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         old_files = self.spec_dict.get("outputfiles", [])
         new_files = old_files + [file_name]
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(self.populate_outputfiles_list, new_files, old_files, "add output file")
+            ChangeSpecPropertyCommand(self.populate_outputfiles_list, new_files, old_files, "add output file")
         )
 
     @Slot()
@@ -609,16 +619,27 @@ class ToolSpecificationEditorWindow(QMainWindow):
         old_files = self.spec_dict.get("outputfiles", [])
         new_files = [f for f in old_files if f not in removed_files]
         self._undo_stack.push(
-            ChangeToolSpecPropertyCommand(self.populate_outputfiles_list, new_files, old_files, "remove output files")
+            ChangeSpecPropertyCommand(self.populate_outputfiles_list, new_files, old_files, "remove output files")
         )
 
-    @Slot()
-    def handle_ok_clicked(self):
-        """Checks that everything is valid, creates Tool spec definition dictionary and adds Tool spec to project."""
+    @Slot(bool)
+    def discard_and_close(self, _=False):
+        """Discards changes and close window."""
+        self._undo_stack.setClean()
+        self.close()
+
+    @Slot(bool)
+    def save_and_close(self, _=False):
+        """Saves changes and close window."""
+        if self._save():
+            self.close()
+
+    def _save(self):
+        """Checks that everything is valid, creates Tool spec dictionary and adds Tool spec to project."""
         # Check that tool type is selected
         if self.ui.comboBox_tooltype.currentIndex() == 0:
             self.show_status_bar_msg("Tool type not selected")
-            return
+            return False
         new_spec_dict = {}
         new_spec_dict["name"] = self._spec_toolbar.name()
         new_spec_dict["description"] = self._spec_toolbar.description()
@@ -628,7 +649,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         main_program = self.ui.lineEdit_main_program.text().strip()
         if not os.path.isfile(main_program):
             self.show_status_bar_msg("Main program file is not valid")
-            return
+            return False
         # Fix for issue #241
         folder_path, file_path = os.path.split(main_program)
         self.includes_main_path = os.path.abspath(folder_path)
@@ -643,13 +664,15 @@ class ToolSpecificationEditorWindow(QMainWindow):
         new_spec_dict["cmdline_args"] = split_cmdline_args(self.ui.lineEdit_args.text())
         for k in REQUIRED_KEYS:
             if not self.spec_dict[k]:
-                self.show_status_bar_msg(f"{k} missing")
-                return
+                self.show_status_bar_msg(f"Missing mandatory field '{k}'")
+                return False
         # Create new Tool specification
         new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/")
         new_spec = self._make_tool_specification(new_spec_dict)
-        if self.call_add_tool_specification(new_spec):
-            self.close()
+        if not self.call_add_tool_specification(new_spec):
+            return False
+        self._undo_stack.setClean()
+        return True
 
     def _make_tool_specification(self, new_spec_dict):
         """Returns a ToolSpecification from current form settings.
@@ -694,6 +717,11 @@ class ToolSpecificationEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
+        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
+            event.ignore()
+            return
+        self._undo_stack.cleanChanged.disconnect(self._update_window_modified)
+        save_ui(self, self._app_settings, self.settings_group)
         if event:
             event.accept()
 
