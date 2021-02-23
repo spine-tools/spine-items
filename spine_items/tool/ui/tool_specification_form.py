@@ -76,6 +76,10 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.comboBox_tooltype)
 
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout.addItem(self.horizontalSpacer_2)
+
         self.checkBox_execute_in_work = QCheckBox(self.dockWidgetContents)
         self.checkBox_execute_in_work.setObjectName(u"checkBox_execute_in_work")
         self.checkBox_execute_in_work.setChecked(True)

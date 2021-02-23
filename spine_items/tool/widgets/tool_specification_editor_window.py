@@ -298,7 +298,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
         """
         main_program_file = program_files[0] if program_files else ""
         self.includes_main_path = os.path.dirname(next(iter(f for f in program_files if f), ""))
-        self.ui.label_mainpath.setText(self.includes_main_path)
         additional_program_files = []
         for file in program_files[1:]:
             common_prefix = os.path.commonprefix([os.path.abspath(self.includes_main_path), os.path.abspath(file)])
@@ -317,6 +316,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
             file_path (str): absolute path
         """
         self.ui.lineEdit_main_program.setText(file_path)
+        self.ui.label_mainpath.setText(self.includes_main_path)
         # Update UI
         if not os.path.isfile(file_path):
             self.show_status_bar_msg("Main program file is not valid")
