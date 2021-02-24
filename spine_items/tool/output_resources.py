@@ -50,11 +50,11 @@ def scan_for_resources(provider, tool_specification, output_dir, include_missing
         for out_file in latest_files:
             file_url = pathlib.Path(out_file.path).as_uri()
             metadata = {"label": make_label(out_file.label)}
-            resource = ProjectItemResource(provider, "transient_file", url=file_url, metadata=metadata)
+            resource = ProjectItemResource(provider.name, "transient_file", url=file_url, metadata=metadata)
             resources.append(resource)
         if not latest_files and include_missing:
             metadata = {"label": make_label(out_file_label)}
             type_ = "file_pattern" if is_pattern(out_file_label) else "transient_file"
-            resource = ProjectItemResource(provider, type_, metadata=metadata)
+            resource = ProjectItemResource(provider.name, type_, metadata=metadata)
             resources.append(resource)
     return resources

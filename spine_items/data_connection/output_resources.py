@@ -29,4 +29,4 @@ def scan_for_resources(provider, files):
     Returns:
         list of ProjectItemResource: output resources
     """
-    return [ProjectItemResource(provider, "file", url=pathlib.Path(ref).as_uri()) for ref in files]
+    return [ProjectItemResource(provider.name, "file", url=pathlib.Path(ref).as_uri()) for ref in files]

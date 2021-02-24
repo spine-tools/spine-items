@@ -108,8 +108,8 @@ class TestDataStoreExecutable(unittest.TestCase):
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem("name", db3_url, True, self._temp_dir.name, logger)
         input_db_resources = [
-            ProjectItemResource(mock.Mock(), "database", db1_url),
-            ProjectItemResource(mock.Mock(), "database", db2_url),
+            ProjectItemResource("provider", "database", db1_url),
+            ProjectItemResource("provider", "database", db2_url),
         ]
         self.assertTrue(executable.execute(input_db_resources, []))
         # Check output db

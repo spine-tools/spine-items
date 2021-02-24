@@ -58,7 +58,7 @@ class FileListItem:
         """
         label = resource.label
         is_pattern = resource.type_ == "file_pattern"
-        return cls(label, resource.path if resource.url else "", resource.provider.name, is_pattern)
+        return cls(label, resource.path if resource.url else "", resource.provider_name, is_pattern)
 
     def exists(self):
         """Returns True if the file exists, False otherwise."""
@@ -71,7 +71,7 @@ class FileListItem:
             resource (ProjectItemResource): A fresh file resource
         """
         self.path = resource.path if resource.url else ""
-        self.provider_name = resource.provider.name
+        self.provider_name = resource.provider_name
         self.is_pattern = resource.type_ == "file_pattern"
 
 

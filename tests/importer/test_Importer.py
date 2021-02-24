@@ -127,9 +127,8 @@ class TestImporter(unittest.TestCase):
         with unittest.mock.patch("spine_items.importer.importer.ItemSpecificationMenu") as mock_spec_menu:
             mock_spec_menu.return_value = QMenu()
             self.importer.activate()
-        item = NonCallableMagicMock()
         expected_file_list = ["url1", "url2"]
-        resources = [ProjectItemResource(item, "file", url) for url in expected_file_list]
+        resources = [ProjectItemResource("provider", "file", url) for url in expected_file_list]
         rank = 0
         self.importer.handle_dag_changed(rank, resources, [])
         model = self.importer._properties_ui.treeView_files.model()
@@ -143,8 +142,7 @@ class TestImporter(unittest.TestCase):
         with unittest.mock.patch("spine_items.importer.importer.ItemSpecificationMenu") as mock_spec_menu:
             mock_spec_menu.return_value = QMenu()
             self.importer.activate()
-        item = NonCallableMagicMock()
-        resources = [ProjectItemResource(item, "file", url) for url in ["url1", "url2"]]
+        resources = [ProjectItemResource("provider", "file", url) for url in ["url1", "url2"]]
         rank = 0
         # Add initial files
         self.importer.handle_dag_changed(rank, resources, [])
@@ -153,7 +151,7 @@ class TestImporter(unittest.TestCase):
             index = model.index(row, 0)
             model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
         # Update with one existing, one new file
-        resources = [ProjectItemResource(item, "file", url) for url in ["url2", "url3"]]
+        resources = [ProjectItemResource("provider", "file", url) for url in ["url2", "url3"]]
         self.importer.handle_dag_changed(rank, resources, [])
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(file_list, ["url2", "url3"])

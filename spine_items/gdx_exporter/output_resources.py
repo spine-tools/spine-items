@@ -40,7 +40,7 @@ def scan_for_resources(provider, databases, directory, forks):
             path = file_forks.get(fork)
             if path is not None:
                 resources.append(
-                    ProjectItemResource(provider, "transient_file", path.as_uri(), {"label": db.output_file_name})
+                    ProjectItemResource(provider.name, "transient_file", path.as_uri(), {"label": db.output_file_name})
                 )
     return resources
 

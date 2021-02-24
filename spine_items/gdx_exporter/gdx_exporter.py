@@ -500,7 +500,7 @@ class GdxExporter(ProjectItem):
         resources = list()
         for db in self._database_model.items():
             if db.output_file_name:
-                resources.append(ProjectItemResource(self, "transient_file", "", {"label": db.output_file_name}))
+                resources.append(ProjectItemResource(self.name, "transient_file", "", {"label": db.output_file_name}))
         return resources
 
     def tear_down(self):

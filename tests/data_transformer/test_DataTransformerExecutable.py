@@ -41,21 +41,17 @@ class TestDataTransformerExecutable(unittest.TestCase):
     def test_execute(self):
         logger = MagicMock()
         item = ExecutableItem("T", None, self._temp_dir.name, logger)
-        provider = MagicMock()
-        provider.name = "provider"
-        db_resource = ProjectItemResource(provider, "database", "sqlite:///db.sqlite")
+        db_resource = ProjectItemResource("provider", "database", "sqlite:///db.sqlite")
         self.assertTrue(item.execute([db_resource], []))
-        expected_resource = ProjectItemResource(item, "database", "sqlite:///db.sqlite")
+        expected_resource = ProjectItemResource(item.name, "database", "sqlite:///db.sqlite")
         self.assertEqual(item.output_resources(ExecutionDirection.FORWARD), [expected_resource])
 
     def test_skip_execution(self):
         logger = MagicMock()
         item = ExecutableItem("T", None, self._temp_dir.name, logger)
-        provider = MagicMock()
-        provider.name = "provider"
-        db_resource = ProjectItemResource(provider, "database", "sqlite:///db.sqlite")
+        db_resource = ProjectItemResource("provider", "database", "sqlite:///db.sqlite")
         item.skip_execution([db_resource], [])
-        expected_resource = ProjectItemResource(item, "database", "sqlite:///db.sqlite")
+        expected_resource = ProjectItemResource(item.name, "database", "sqlite:///db.sqlite")
         self.assertEqual(item.output_resources(ExecutionDirection.FORWARD), [expected_resource])
 
     def test_execute_with_specification(self):
@@ -63,12 +59,10 @@ class TestDataTransformerExecutable(unittest.TestCase):
         specification = DataTransformerSpecification("specification", settings, "test specification")
         logger = MagicMock()
         transformer = ExecutableItem("T", specification, self._temp_dir.name, logger)
-        provider = MagicMock()
-        provider.name = "provider"
-        db_resource = ProjectItemResource(provider, "database", "sqlite:///db.sqlite")
+        db_resource = ProjectItemResource("provider", "database", "sqlite:///db.sqlite")
         self.assertTrue(transformer.execute([db_resource], []))
         filter_url = append_filter_config("sqlite:///db.sqlite", transformer._filter_config_path)
-        expected_resource = ProjectItemResource(transformer, "database", filter_url)
+        expected_resource = ProjectItemResource(transformer.name, "database", filter_url)
         self.assertEqual(transformer.output_resources(ExecutionDirection.FORWARD), [expected_resource])
 
     def test_skip_execution_with_specification(self):
@@ -76,12 +70,10 @@ class TestDataTransformerExecutable(unittest.TestCase):
         specification = DataTransformerSpecification("specification", settings, "test specification")
         logger = MagicMock()
         transformer = ExecutableItem("T", specification, self._temp_dir.name, logger)
-        provider = MagicMock()
-        provider.name = "provider"
-        db_resource = ProjectItemResource(provider, "database", "sqlite:///db.sqlite")
+        db_resource = ProjectItemResource("provider", "database", "sqlite:///db.sqlite")
         transformer.skip_execution([db_resource], [])
         filter_url = append_filter_config("sqlite:///db.sqlite", transformer._filter_config_path)
-        expected_resource = ProjectItemResource(transformer, "database", filter_url)
+        expected_resource = ProjectItemResource(transformer.name, "database", filter_url)
         self.assertEqual(transformer.output_resources(ExecutionDirection.FORWARD), [expected_resource])
 
 

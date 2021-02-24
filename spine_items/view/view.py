@@ -120,12 +120,12 @@ class View(ProjectItem):
         for resource in resources_upstream:
             if resource.type_ == "database" and resource.scheme == "sqlite":
                 url = make_url(resource.url)
-                self._references[url.database] = (url, resource.provider.name)
+                self._references[url.database] = (url, resource.provider_name)
             elif resource.type_ == "file":
                 filepath = resource.path
                 if os.path.splitext(filepath)[1] == ".sqlite":
                     url = URL("sqlite", database=filepath)
-                    self._references[url.database] = (url, resource.provider.name)
+                    self._references[url.database] = (url, resource.provider_name)
         self.populate_reference_list()
 
     def _selected_indexes(self):

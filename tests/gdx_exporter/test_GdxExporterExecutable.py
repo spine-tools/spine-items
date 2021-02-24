@@ -152,7 +152,7 @@ class TestGdxExporterExecutable(unittest.TestCase):
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem("name", settings_pack, databases, False, False, "", self._temp_dir.name, logger)
-        resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
+        resources = [ProjectItemResource("provider", "database", database_url)]
         self.assertTrue(executable.execute(resources, []))
         self.assertTrue(Path(executable._data_dir, "output.gdx").exists())
         gams_directory = gdx.find_gams_directory()

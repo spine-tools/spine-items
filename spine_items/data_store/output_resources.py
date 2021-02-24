@@ -32,5 +32,5 @@ def scan_for_resources(provider, url):
     if not url:
         return list()
     metadata = {"label": make_label(provider.name)}
-    resource = ProjectItemResource(provider, "database", url=str(url), metadata=metadata)
+    resource = ProjectItemResource(provider.name, "database", url=str(url), metadata=metadata)
     return [resource]

@@ -94,16 +94,16 @@ class TestDataTransformer(unittest.TestCase):
         self.assertEqual(self.transformer.resources_for_direct_successors(), [])
         provider = MagicMock()
         provider.name = "resource provider"
-        db_resource = ProjectItemResource(provider, "database", "sqlite:///database.sqlite")
+        db_resource = ProjectItemResource(provider.name, "database", "sqlite:///database.sqlite")
         self.transformer.handle_dag_changed(0, [db_resource], [])
-        expected_resource = ProjectItemResource(self.transformer, "database", "sqlite:///database.sqlite")
+        expected_resource = ProjectItemResource(self.transformer.name, "database", "sqlite:///database.sqlite")
         self.assertEqual(self.transformer.resources_for_direct_successors(), [expected_resource])
         settings = EntityClassRenamingSettings({})
         specification = DataTransformerSpecification("specification", settings, "test specification")
         self.transformer.do_set_specification(specification)
         config_path = filter_config_path(self.transformer.data_dir)
         filter_url = append_filter_config("sqlite:///database.sqlite", config_path)
-        expected_resource = ProjectItemResource(self.transformer, "database", filter_url)
+        expected_resource = ProjectItemResource(self.transformer.name, "database", filter_url)
         self.assertEqual(self.transformer.resources_for_direct_successors(), [expected_resource])
 
     def test_rename(self):

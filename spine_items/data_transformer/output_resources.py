@@ -36,16 +36,18 @@ def scan_for_resources(provider, dt_specification, db_resources, filter_config_p
     """
     url_metadata = [(resource.url, make_metadata(resource, provider.name)) for resource in db_resources]
     if dt_specification is None or dt_specification.settings is None:
-        return [ProjectItemResource(provider, "database", url, metadata=metadata) for url, metadata in url_metadata]
+        return [
+            ProjectItemResource(provider.name, "database", url, metadata=metadata) for url, metadata in url_metadata
+        ]
     if dt_specification.settings.use_shorthand():
         config = dt_specification.settings.filter_config()
         return [
-            ProjectItemResource(provider, "database", append_filter_config(url, config), metadata=metadata)
+            ProjectItemResource(provider.name, "database", append_filter_config(url, config), metadata=metadata)
             for url, metadata in url_metadata
         ]
     with open(filter_config_path, "w") as filter_config_file:
         store_filter(dt_specification.settings.filter_config(), filter_config_file)
     return [
-        ProjectItemResource(provider, "database", append_filter_config(url, filter_config_path), metadata=metadata)
+        ProjectItemResource(provider.name, "database", append_filter_config(url, filter_config_path), metadata=metadata)
         for url, metadata in url_metadata
     ]
