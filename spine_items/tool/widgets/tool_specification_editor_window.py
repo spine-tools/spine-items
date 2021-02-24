@@ -640,19 +640,19 @@ class ToolSpecificationEditorWindow(QMainWindow):
     def _save(self):
         """Checks that everything is valid, creates Tool spec dictionary and adds Tool spec to project."""
         # Check that tool type is selected
-        if self.ui.comboBox_tooltype.currentIndex() == 0:
+        if self.ui.comboBox_tooltype.currentIndex() == -1:
             self.show_status_bar_msg("Tool type not selected")
             return False
-        new_spec_dict = {}
-        new_spec_dict["name"] = self._spec_toolbar.name()
-        new_spec_dict["description"] = self._spec_toolbar.description()
-        new_spec_dict["tooltype"] = self.ui.comboBox_tooltype.currentText().lower()
         flags = Qt.MatchContains
         # Check that path of main program file is valid before saving it
         main_program = self.ui.lineEdit_main_program.text().strip()
         if not os.path.isfile(main_program):
             self.show_status_bar_msg("Main program file is not valid")
             return False
+        new_spec_dict = {}
+        new_spec_dict["name"] = self._spec_toolbar.name()
+        new_spec_dict["description"] = self._spec_toolbar.description()
+        new_spec_dict["tooltype"] = self.ui.comboBox_tooltype.currentText().lower()
         # Fix for issue #241
         folder_path, file_path = os.path.split(main_program)
         self.includes_main_path = os.path.abspath(folder_path)
