@@ -93,5 +93,6 @@ def _find_main_program_file(toolbox, filename, specification):
     answer = QFileDialog.getOpenFileName(toolbox, f"Select {filename}", toolbox._project.project_dir)
     if answer[0] == "":  # Cancel button clicked
         return
+    specification = specification.clone()
     specification.path, specification.includes[0] = os.path.split(answer[0])
-    toolbox.update_specification(specification)
+    toolbox.add_specification(specification, update_existing=True)
