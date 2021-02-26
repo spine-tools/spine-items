@@ -15,7 +15,6 @@ Undo/redo commands that can be used by multiple project items.
 :authors: M. Marin (KTH), P. Savolainen (VTT)
 :date:   5.5.2020
 """
-
 from PySide2.QtWidgets import QUndoCommand
 from spinetoolbox.project_commands import SpineToolboxCommand
 
@@ -42,26 +41,26 @@ class UpdateCancelOnErrorCommand(SpineToolboxCommand):
 
 
 class ChangeItemSelectionCommand(SpineToolboxCommand):
-    def __init__(self, project_item, selected, label):
+    def __init__(self, item_name, model, index, selected):
         """Command to change file item's selection status.
-        Used by Importers and Gimlets.
 
         Args:
-            project_item (ProjectItem): Item
+            item_name (str): project item's name
+            model (FileListModel): File model
+            index (QModelIndex): Index to file model
             selected (bool): True if the item is selected, False otherwise
-            label (str): File label
         """
         super().__init__()
-        self._item = project_item
+        self._model = model
+        self._index = index
         self._selected = selected
-        self._label = label
-        self.setText(f"change {project_item.name} file selection")
+        self.setText(f"change {item_name} file selection")
 
     def redo(self):
-        self._item.set_file_selected(self._label, self._selected)
+        self._model.set_checked(self._index, self._selected)
 
     def undo(self):
-        self._item.set_file_selected(self._label, not self._selected)
+        self._model.set_checked(self._index, not self._selected)
 
 
 class UpdateCmdLineArgsCommand(SpineToolboxCommand):
@@ -70,7 +69,7 @@ class UpdateCmdLineArgsCommand(SpineToolboxCommand):
 
         Args:
             item (ProjectItemBase): the item
-            cmd_line_args (list): list of str args
+            cmd_line_args (list): list of command line args
         """
         super().__init__()
         self.item = item

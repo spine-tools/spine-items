@@ -20,7 +20,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spinedb_api import create_new_spine_database, DatabaseMapping
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import database_resource, file_resource
 from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.importer_specification import ImporterSpecification
 
@@ -98,8 +98,8 @@ class TestImporterExecutable(unittest.TestCase):
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem("name", mapping, [str(data_file)], gams_path, True, self._temp_dir.name, logger)
-        database_resources = [ProjectItemResource("provider", "database", database_url)]
-        file_resources = [ProjectItemResource("provider", "file", data_file.as_uri())]
+        database_resources = [database_resource("provider", database_url)]
+        file_resources = [file_resource("provider", str(data_file))]
         self.assertTrue(executable.execute(file_resources, database_resources))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
@@ -120,8 +120,8 @@ class TestImporterExecutable(unittest.TestCase):
         create_new_spine_database(database_url)
         gams_path = ""
         executable = ExecutableItem("name", {}, [], gams_path, True, self._temp_dir.name, mock.MagicMock())
-        database_resources = [ProjectItemResource("provider", "database", database_url)]
-        file_resources = [ProjectItemResource("provider", "file", data_file.as_uri())]
+        database_resources = [database_resource("provider", database_url)]
+        file_resources = [file_resource("provider", str(data_file))]
         self.assertTrue(executable.execute(file_resources, database_resources))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)

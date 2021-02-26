@@ -24,9 +24,8 @@ from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication, QMenu
 from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
-from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.item_info import ItemInfo
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import transient_file_resource
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
@@ -127,8 +126,8 @@ class TestImporter(unittest.TestCase):
         with unittest.mock.patch("spine_items.importer.importer.ItemSpecificationMenu") as mock_spec_menu:
             mock_spec_menu.return_value = QMenu()
             self.importer.activate()
-        expected_file_list = ["url1", "url2"]
-        resources = [ProjectItemResource("provider", "file", url) for url in expected_file_list]
+        expected_file_list = ["file1", "file2"]
+        resources = [transient_file_resource("provider", label=file_name) for file_name in expected_file_list]
         rank = 0
         self.importer.handle_dag_changed(rank, resources, [])
         model = self.importer._properties_ui.treeView_files.model()
@@ -142,7 +141,7 @@ class TestImporter(unittest.TestCase):
         with unittest.mock.patch("spine_items.importer.importer.ItemSpecificationMenu") as mock_spec_menu:
             mock_spec_menu.return_value = QMenu()
             self.importer.activate()
-        resources = [ProjectItemResource("provider", "file", url) for url in ["url1", "url2"]]
+        resources = [transient_file_resource("provider", label=name) for name in ["file1", "file2"]]
         rank = 0
         # Add initial files
         self.importer.handle_dag_changed(rank, resources, [])
@@ -151,10 +150,10 @@ class TestImporter(unittest.TestCase):
             index = model.index(row, 0)
             model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
         # Update with one existing, one new file
-        resources = [ProjectItemResource("provider", "file", url) for url in ["url2", "url3"]]
+        resources = [transient_file_resource("provider", label=name) for name in ["file2", "file3"]]
         self.importer.handle_dag_changed(rank, resources, [])
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
-        self.assertEqual(file_list, ["url2", "url3"])
+        self.assertEqual(file_list, ["file2", "file3"])
         checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]
         selected = [check == Qt.Checked for check in checked]
         self.assertEqual(selected, [False, True])

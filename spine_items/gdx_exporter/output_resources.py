@@ -15,7 +15,7 @@ Contains utilities to scan for GdxExporter's output resources.
 :date:    4.12.2020
 """
 import pathlib
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import transient_file_resource
 
 
 def scan_for_resources(provider, databases, directory, forks):
@@ -39,9 +39,7 @@ def scan_for_resources(provider, databases, directory, forks):
         for fork in forks.get(db.url, list()):
             path = file_forks.get(fork)
             if path is not None:
-                resources.append(
-                    ProjectItemResource(provider.name, "transient_file", path.as_uri(), {"label": db.output_file_name})
-                )
+                resources.append(transient_file_resource(provider.name, file_path=path))
     return resources
 
 

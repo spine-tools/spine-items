@@ -215,7 +215,7 @@ class ImportEditorWindow(QMainWindow):
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
         self._connection_manager.init_connection()
 
-    @Slot(bool)
+    @Slot()
     def _handle_connection_ready(self):
         self._ui.export_mappings_action.setEnabled(True)
         self._ui.import_mappings_action.setEnabled(True)
@@ -305,6 +305,7 @@ class ImportEditorWindow(QMainWindow):
         self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
         self.end_style_change()
 
+    @Slot()
     def import_mapping_from_file(self):
         """Imports mapping spec from a user selected .json file to the preview window."""
         start_dir = self._toolbox.project().project_dir
@@ -326,6 +327,7 @@ class ImportEditorWindow(QMainWindow):
         self._undo_stack.push(RestoreMappingsFromDict(self._editor, settings))
         self._ui.statusbar.showMessage(f"Mapping loaded from {filename[0]}", 10000)
 
+    @Slot()
     def export_mapping_to_file(self):
         """Exports all mapping specs in current preview window to .json file."""
         start_dir = self._toolbox.project().project_dir
@@ -371,6 +373,7 @@ class ImportEditorWindow(QMainWindow):
         self._undo_stack.setClean()
         return True
 
+    @Slot()
     def save_and_close(self):
         """Saves changes and close window."""
         if not self._save():
@@ -379,6 +382,7 @@ class ImportEditorWindow(QMainWindow):
             self._item.set_specification(self._specification)
         self.close()
 
+    @Slot()
     def discard_and_close(self):
         """Discards changes and close window."""
         self._undo_stack.setClean()

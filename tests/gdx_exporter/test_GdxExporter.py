@@ -19,13 +19,11 @@ Unit tests for GdxExporter project item.
 import os
 from tempfile import TemporaryDirectory
 import unittest
-from unittest import mock
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.gdx_exporter.gdx_exporter import GdxExporter
 from spine_items.gdx_exporter.gdx_exporter_factory import GdxExporterFactory
-from spine_items.gdx_exporter.executable_item import ExecutableItem
 from spine_items.gdx_exporter.item_info import ItemInfo
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
@@ -138,8 +136,8 @@ class TestGdxExporter(unittest.TestCase):
     def test_activation_populates_properties_tab(self):
         self.exporter._start_worker = MagicMock()
         resources = [
-            ProjectItemResource("provider", "database", "first url to database"),
-            ProjectItemResource("provider", "database", "second url to database"),
+            database_resource("provider", "first url to database"),
+            database_resource("provider", "second url to database"),
         ]
         self.exporter.handle_dag_changed(0, resources, [])
         self.exporter.activate()
@@ -159,8 +157,8 @@ class TestGdxExporter(unittest.TestCase):
         mock_finish_project_item_construction(factory, exporter2, self.toolbox)
         exporter2._start_worker = MagicMock()
         resources = [
-            ProjectItemResource("provider", "database", "first url to database"),
-            ProjectItemResource("provider", "database", "second url to database"),
+            database_resource("provider", "first url to database"),
+            database_resource("provider", "second url to database"),
         ]
         self.exporter.handle_dag_changed(0, resources, [])
         self.exporter.activate()
@@ -171,7 +169,7 @@ class TestGdxExporter(unittest.TestCase):
         self.assertEqual(len(urls_in_properties_tab), 2)
         self.assertTrue("first url to database" in urls_in_properties_tab)
         self.assertTrue("second url to database" in urls_in_properties_tab)
-        resources = [ProjectItemResource("provider", "database", "url to a database in the clouds")]
+        resources = [database_resource("provider", "url to a database in the clouds")]
         exporter2.handle_dag_changed(1, resources, [])
         exporter2.activate()
         self.assertEqual(exporter2._properties_ui.databases_list_layout.count(), 1)

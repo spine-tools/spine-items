@@ -16,14 +16,11 @@ Tool class.
 :date:   19.12.2017
 """
 import os
-from collections import Counter
 from PySide2.QtCore import Slot, Signal
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
 from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
@@ -32,7 +29,8 @@ from .widgets.options_widgets import JuliaOptionsWidget
 from .widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
-from ..models import ToolCommandLineArgsModel, InputFileListModel
+from ..utils import CmdLineArg, cmd_line_arg_from_dict
+from ..models import ToolCommandLineArgsModel, FileListModel
 from .output_resources import scan_for_resources
 
 
@@ -83,7 +81,7 @@ class Tool(ProjectItem):
             )
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
-        self._input_file_model = InputFileListModel(header_label="Available resources", checkable=False)
+        self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_update_execution_mode(execute_in_work)
@@ -94,7 +92,7 @@ class Tool(ProjectItem):
 
     def _get_options_widget(self):
         """Returns a widget to specify the options for this tool.
-        It is embeded in the ui in ``self._update_tool_ui()``.
+        It is embedded in the ui in ``self._update_tool_ui()``.
 
         Returns:
             OptionsWidget
@@ -213,7 +211,7 @@ class Tool(ProjectItem):
         self._populate_cmdline_args_model()
 
     def _populate_cmdline_args_model(self):
-        spec_args = self.specification().cmdline_args if self.specification() else []
+        spec_args = [CmdLineArg(arg) for arg in self._specification.cmdline_args] if self._specification else []
         tool_args = self.cmd_line_args
         self._cmdline_args_model.reset_model(spec_args, tool_args)
         if self._active:
@@ -299,7 +297,7 @@ class Tool(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class"""
-        return scan_for_resources(self, self.specification(), self.output_dir, True)
+        return scan_for_resources(self, self.specification(), self.output_dir)
 
     @property
     def executable_class(self):
@@ -359,14 +357,7 @@ class Tool(ProjectItem):
 
     def _notify_if_duplicate_file_paths(self):
         """Adds a notification if file_list contains duplicate entries."""
-        labels = list()
-        for item in self._input_file_model.files:
-            labels.append(item.label)
-        file_counter = Counter(labels)
-        duplicates = list()
-        for label, count in file_counter.items():
-            if count > 1:
-                duplicates.append(label)
+        duplicates = self._input_file_model.duplicate_paths()
         if duplicates:
             self.add_notification("Duplicate input files:<br>{}".format("<br>".join(duplicates)))
 
@@ -378,10 +369,7 @@ class Tool(ProjectItem):
         else:
             d["specification"] = self.specification().name
         d["execute_in_work"] = self.execute_in_work
-        # NOTE: We enclose the arguments in quotes because that preserves the args that have spaces
-        cmd_line_args = [f'"{arg}"' for arg in self.cmd_line_args]
-        cmd_line_args = split_cmdline_args(" ".join(cmd_line_args))
-        d["cmd_line_args"] = [serialize_path(arg, self._project.project_dir) for arg in cmd_line_args]
+        d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
         if self._options:
             d["options"] = self._options
         return d
@@ -393,7 +381,7 @@ class Tool(ProjectItem):
         specification_name = item_dict.get("specification", "")
         execute_in_work = item_dict.get("execute_in_work", True)
         cmd_line_args = item_dict.get("cmd_line_args", [])
-        cmd_line_args = [deserialize_path(arg, project.project_dir) for arg in cmd_line_args]
+        cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in cmd_line_args]
         options = item_dict.get("options", {})
         return Tool(
             name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options

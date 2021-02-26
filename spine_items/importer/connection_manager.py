@@ -198,11 +198,12 @@ class ConnectionManager(QObject):
         self._thread.started.connect(self._worker.init_connection)
         self._thread.start()
 
+    @Slot()
     def _handle_connection_ready(self):
         self._is_connected = True
         self.connection_ready.emit()
 
-    @Slot(object)
+    @Slot(dict)
     def _handle_tables_ready(self, table_options):
         if isinstance(table_options, list):
             table_options = {name: {} for name in table_options}
@@ -231,7 +232,7 @@ class ConnectionManager(QObject):
         if self._current_table in self._table_options:
             self.current_table_changed.emit()
 
-    @Slot()
+    @Slot(dict)
     def update_options(self, options):
         if not self._current_table:
             return

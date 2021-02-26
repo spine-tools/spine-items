@@ -83,11 +83,11 @@ class TestDataConnectionExecutable(unittest.TestCase):
         self.assertEqual(len(output_resources), 2)
         resource = output_resources[0]
         self.assertEqual(resource.type_, "file")
-        self.assertEqual(resource.path, str(file_reference))
+        self.assertTrue(pathlib.Path(resource.path).samefile(file_reference))
         self.assertEqual(resource.metadata, {})
         resource = output_resources[1]
         self.assertEqual(resource.type_, "file")
-        self.assertEqual(resource.path, str(temp_file_path))
+        self.assertTrue(pathlib.Path(resource.path).samefile(temp_file_path))
         self.assertEqual(resource.metadata, {})
 
 

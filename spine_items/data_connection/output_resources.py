@@ -14,8 +14,7 @@ Contains utilities to scan for Data Connection's output resources.
 :authors: A. Soininen (VTT)
 :date:    4.12.2020
 """
-import pathlib
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import file_resource
 
 
 def scan_for_resources(provider, files):
@@ -29,4 +28,4 @@ def scan_for_resources(provider, files):
     Returns:
         list of ProjectItemResource: output resources
     """
-    return [ProjectItemResource(provider.name, "file", url=pathlib.Path(ref).as_uri()) for ref in files]
+    return [file_resource(provider.name, ref) for ref in files]

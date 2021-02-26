@@ -16,7 +16,7 @@ Importer properties widget.
 :date:   12.9.2019
 """
 
-from PySide2.QtCore import Slot
+from PySide2.QtCore import QPoint, Slot
 from PySide2.QtWidgets import QWidget
 from spinetoolbox.config import TREEVIEW_HEADER_SS
 from .custom_menus import FilesContextMenu
@@ -49,7 +49,7 @@ class ImporterPropertiesWidget(QWidget):
         """Connect signals to slots."""
         self.ui.treeView_files.customContextMenuRequested.connect(self.show_files_context_menu)
 
-    @Slot("QPoint", name="show_di_files_context_menu")
+    @Slot(QPoint)
     def show_files_context_menu(self, pos):
         """Create and show a context-menu in Importer properties source files view.
 

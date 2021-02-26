@@ -29,7 +29,7 @@ from .commands import UpdateDSURLCommand
 from ..commands import UpdateCancelOnErrorCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
-from .utils import convert_to_sqlalchemy_url, make_label
+from .utils import convert_to_sqlalchemy_url
 from .output_resources import scan_for_resources
 
 
@@ -455,11 +455,11 @@ class DataStore(ProjectItem):
     def rename(self, new_name, rename_data_dir_message):
         """See base class."""
         old_data_dir = os.path.abspath(self.data_dir)  # Old data_dir before rename
-        old_name = self.name
         if not super().rename(new_name, rename_data_dir_message):
             return False
         # If dialect is sqlite and db line edit refers to a file in the old data_dir, db line edit needs updating
         if self._url["dialect"] == "sqlite":
+            old_url = self._url["database"]
             db_dir, db_filename = os.path.split(os.path.abspath(self._url["database"].strip()))
             if db_dir == old_data_dir:
                 database = os.path.join(self.data_dir, db_filename)  # NOTE: data_dir has been updated at this point
@@ -467,7 +467,7 @@ class DataStore(ProjectItem):
                 if os.path.exists(database):
                     self._url.update(database=database)
                     self.load_url_into_selections(self._url)
-        self._additional_resource_metadata = {"updated_from": make_label(old_name)}
+            self._additional_resource_metadata = {"updated_from": old_url}
         self.item_changed.emit()
         return True
 

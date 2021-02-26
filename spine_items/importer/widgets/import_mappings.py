@@ -17,7 +17,7 @@ ImportMappings widget.
 """
 
 from copy import deepcopy
-from PySide2.QtCore import QObject, QItemSelectionModel, Signal, Slot, Qt
+from PySide2.QtCore import QObject, QPoint, QItemSelectionModel, Signal, Slot, Qt
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
 from spinedb_api import ConstantMapping
 from .custom_menus import MappingListMenu
@@ -251,7 +251,7 @@ class ImportMappings(QObject):
         else:
             self.mapping_selection_changed.emit(None)
 
-    @Slot("QPoint")
+    @Slot(QPoint)
     def _show_mapping_list_context_menu(self, pos):
         global_pos = self._ui.mapping_list.mapToGlobal(pos)
         indexes = self._ui.mapping_list.selectionModel().selectedRows()

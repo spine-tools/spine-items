@@ -474,8 +474,7 @@ class DataConnection(ProjectItem):
             updated_from = self._updated_from.pop(resource.path, None)
             if not updated_from:
                 continue
-            additional_metadata = {"updated_from": updated_from}
-            resources[k] = resource.clone(additional_metadata=additional_metadata)
+            resources[k] = resource.clone(additional_metadata={"updated_from": updated_from})
         return resources
 
     def _do_handle_dag_changed(self, upstream_resources, downstream_resources):

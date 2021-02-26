@@ -91,6 +91,7 @@ class ImporterExporterAnimation:
             for cube in self.cubes:
                 cube.hide()
 
+    @Slot()
     def start(self):
         """Starts the animation."""
         if self.time_line.state() == QTimeLine.Running:
@@ -101,6 +102,7 @@ class ImporterExporterAnimation:
     def percent(value):
         raise NotImplementedError()
 
+    @Slot()
     def stop(self):
         """Stops the animation"""
         self.time_line.stop()

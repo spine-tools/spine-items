@@ -703,7 +703,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         Returns:
             bool
         """
-        if not self._new_spec:
+        if self._new_spec is None:
             return False
         update_existing = self._new_spec.name == self._original_spec_name
         return self._toolbox.add_specification(self._new_spec, update_existing, self)

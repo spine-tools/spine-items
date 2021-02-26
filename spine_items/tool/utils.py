@@ -49,8 +49,8 @@ def file_paths_from_resources(resources):
     for resource in resources:
         if resource.hasfilepath:
             file_paths += glob.glob(resource.path)
-        elif resource.type_ == "transient_file":
-            file_paths.append(resource.metadata["label"])
+        elif resource.type_ == "file":
+            file_paths.append(resource.label)
     return file_paths
 
 
@@ -132,10 +132,6 @@ class _LatestOutputFile:
         """Constructs a _LatestOutputFile object from an absolute path and archive directory."""
         label = os.path.relpath(path, archive_dir)
         return _LatestOutputFile(label, path)
-
-
-def make_label(name):
-    return "{" + name + "}"
 
 
 def get_spine_interface_version(tool_spec):

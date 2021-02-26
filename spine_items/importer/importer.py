@@ -16,16 +16,14 @@ Contains Importer project item class.
 :date:   10.6.2019
 """
 
-from collections import Counter
 import os
 from PySide2.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
-from spine_engine.utils.serialization import deserialize_checked_states, serialize_checked_states
 from spine_engine import ExecutionDirection
 from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand
-from ..models import FileListModel
+from ..models import CheckableFileListModel
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 
@@ -71,9 +69,9 @@ class Importer(ProjectItem):
                 f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
             )
         self.cancel_on_error = cancel_on_error
-        self._file_model = FileListModel(invalid_resource_types=("database",), header_label="Source files")
+        self._file_model = CheckableFileListModel(header_label="Source files")
         self._file_model.set_initial_state(file_selection if file_selection is not None else dict())
-        self._file_model.selected_state_changed.connect(self._push_file_selection_change_to_undo_stack)
+        self._file_model.checked_state_changed.connect(self._push_file_selection_change_to_undo_stack)
 
     @staticmethod
     def item_type():
@@ -110,7 +108,7 @@ class Importer(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.toolButton_open_dir.clicked] = lambda checked=False: self.open_directory()
+        s[self._properties_ui.toolButton_open_dir.clicked] = lambda _: self.open_directory()
         s[self._properties_ui.toolButton_edit_specification.clicked] = self.edit_specification
         s[self._properties_ui.treeView_files.doubleClicked] = self._handle_files_double_clicked
         s[self._properties_ui.comboBox_specification.textActivated] = self._change_specification
@@ -136,6 +134,11 @@ class Importer(ProjectItem):
         self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel_on_error))
 
     def set_cancel_on_error(self, cancel_on_error):
+        """Sets cancel on error setting.
+
+        Args:
+            cancel_on_error (bool): cancel on error flag
+        """
         self.cancel_on_error = cancel_on_error
         if not self._active:
             return
@@ -143,9 +146,6 @@ class Importer(ProjectItem):
         self._properties_ui.cancel_on_error_checkBox.blockSignals(True)
         self._properties_ui.cancel_on_error_checkBox.setCheckState(check_state)
         self._properties_ui.cancel_on_error_checkBox.blockSignals(False)
-
-    def set_file_selected(self, label, selected):
-        self._file_model.set_selected(label, selected)
 
     def restore_selections(self):
         """Restores selections into shared widgets when this project item is selected."""
@@ -187,12 +187,8 @@ class Importer(ProjectItem):
     def edit_specification(self, checked=False):
         """Opens Import editor for the file selected in list view."""
         index = self._properties_ui.treeView_files.currentIndex()
-        if not index.isValid():
-            for row, item in enumerate(self._file_model.files):
-                if item.exists():
-                    index = self._file_model.index(row, 0)
-                    self._properties_ui.treeView_files.setCurrentIndex(index)
-                    break
+        if not index.isValid() or not self._file_model.is_checked(index):
+            index = self._file_model.index_with_file_path()
         self.open_import_editor(index)
 
     @Slot(QModelIndex)
@@ -202,20 +198,18 @@ class Importer(ProjectItem):
 
     def open_import_editor(self, index):
         """Opens Import editor for the given index."""
-        label = index.data()
-        if label is None:
-            filepath = None
-        else:
-            file_item = self._file_model.find_file(label)
-            filepath = file_item.path
-            if not file_item.exists():
-                self._logger.msg_error.emit("File does not exist yet.")
-                self._file_model.mark_as_nonexistent(index)
-                filepath = None
-            elif not os.path.exists(filepath):
-                self._logger.msg_error.emit(f"Cannot find file '{filepath}'.")
-                self._file_model.mark_as_nonexistent(index)
-                filepath = None
+        filepath = None
+        if index.isValid():
+            resource = self._file_model.resource(index)
+            if resource is not None:
+                if not resource.hasfilepath:
+                    self._logger.msg_error.emit("File does not exist yet.")
+                    filepath = None
+                else:
+                    filepath = resource.path
+                    if not os.path.exists(filepath):
+                        self._logger.msg_error.emit(f"Cannot find file '{filepath}'.")
+                        filepath = None
         self._toolbox.show_specification_form(self.item_type(), self.specification(), filepath=filepath)
 
     def select_connector_type(self, index):
@@ -229,10 +223,15 @@ class Importer(ProjectItem):
         settings = self.get_settings(importee)
         settings["source_type"] = connector.__name__
 
-    @Slot(bool, str)
-    def _push_file_selection_change_to_undo_stack(self, selected, label):
-        """Makes changes to file selection undoable."""
-        self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self, selected, label))
+    @Slot(QModelIndex, bool)
+    def _push_file_selection_change_to_undo_stack(self, index, checked):
+        """Makes changes to file selection undoable.
+
+        Args:
+            index (QModelIndex): index to file model
+            checked (bool): True if item was checked, False otherwise
+        """
+        self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self.name, self._file_model, index, checked))
 
     def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
         """See base class."""
@@ -240,7 +239,7 @@ class Importer(ProjectItem):
             self.add_notification(
                 "This Importer does not have a specification. Set it in the Importer Properties Panel."
             )
-        self._file_model.update(upstream_resources)
+        self._file_model.update(r for r in upstream_resources if r.type_ != "database")
         self._notify_if_duplicate_file_paths()
         if self._file_model.rowCount() == 0:
             self.add_notification(
@@ -256,7 +255,11 @@ class Importer(ProjectItem):
         else:
             d["specification"] = self.specification().name
         d["cancel_on_error"] = self.cancel_on_error
-        d["file_selection"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
+        selections = list()
+        for row in range(self._file_model.rowCount()):
+            label, selected = self._file_model.checked_data(self._file_model.index(row, 0))
+            selections.append([label, selected])
+        d["file_selection"] = selections
         return d
 
     @staticmethod
@@ -265,8 +268,7 @@ class Importer(ProjectItem):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict.get("specification", "")
         cancel_on_error = item_dict.get("cancel_on_error", False)
-        file_selection = item_dict.get("file_selection")
-        file_selection = deserialize_checked_states(file_selection, project.project_dir)
+        file_selection = {label: selected for label, selected in item_dict.get("file_selection", list())}
         return Importer(name, description, x, y, toolbox, project, specification_name, cancel_on_error, file_selection)
 
     def notify_destination(self, source_item):
@@ -293,14 +295,7 @@ class Importer(ProjectItem):
 
     def _notify_if_duplicate_file_paths(self):
         """Adds a notification if file_list contains duplicate entries."""
-        labels = list()
-        for item in self._file_model.files:
-            labels.append(item.label)
-        file_counter = Counter(labels)
-        duplicates = list()
-        for label, count in file_counter.items():
-            if count > 1:
-                duplicates.append(label)
+        duplicates = self._file_model.duplicate_paths()
         if duplicates:
             self.add_notification("Duplicate input files from upstream items:<br>{}".format("<br>".join(duplicates)))
 

@@ -21,8 +21,9 @@ import unittest
 from tempfile import TemporaryDirectory
 from unittest import mock
 from spine_engine import ExecutionDirection
-from spine_items.gimlet.executable_item import ExecutableItem
 from spine_engine.execution_managers import StandardExecutionManager
+from spine_items.gimlet.executable_item import ExecutableItem
+from spine_items.utils import CmdLineArg
 
 
 class TestGimletExecutable(unittest.TestCase):
@@ -36,10 +37,7 @@ class TestGimletExecutable(unittest.TestCase):
         self.assertEqual(ExecutableItem.item_type(), "Gimlet")
 
     def test_from_dict(self):
-        selections = [
-            [{"type": "path", "relative": True, "path": ".spinetoolbox/items/input_files/a.txt"}, True],
-            [{"type": "path", "relative": True, "path": ".spinetoolbox/items/input_files/b.txt"}, False],
-        ]
+        selections = [[".spinetoolbox/items/input_files/a.txt", True], [".spinetoolbox/items/input_files/b.txt", False]]
         item_dict = {
             "type": "Gimlet",
             "x": 0,
@@ -48,8 +46,8 @@ class TestGimletExecutable(unittest.TestCase):
             "use_shell": True,
             "shell_index": 0,
             "cmd": "dir",
-            "selections": selections,
-            "cmd_line_args": ["--show-hidden"],
+            "file_selection": selections,
+            "cmd_line_args": [{"type": "literal", "arg": "--show-hidden"}],
             "work_dir_mode": True,
         }
         mock_settings = _MockSettings()
@@ -66,7 +64,7 @@ class TestGimletExecutable(unittest.TestCase):
         self.assertEqual("cmd.exe", item.shell_name)
         self.assertTrue(os.path.join(self._temp_dir.name, "g", "work"), item._work_dir)
         self.assertIsInstance(item._selected_files, list)
-        self.assertEqual(item.cmd_list, ["dir", "--show-hidden"])
+        self.assertEqual(item.cmd_list, [CmdLineArg("dir"), CmdLineArg("--show-hidden")])
         # Modify item_dict
         item_dict["use_shell"] = False
         item_dict["work_dir_mode"] = False
@@ -85,10 +83,7 @@ class TestGimletExecutable(unittest.TestCase):
         self.assertEqual("some_path", prefix)
         self.assertEqual("g__", work_dir_name[0:3])  # work dir name must start with 'g__'
         self.assertEqual("__toolbox", work_dir_name[-9:])  # work dir name must end with '__toolbox'
-        self.assertEqual(
-            [os.path.abspath(os.path.join(self._temp_dir.name, ".spinetoolbox", "items", "input_files", "a.txt"))],
-            item._selected_files,
-        )
+        self.assertEqual([".spinetoolbox/items/input_files/a.txt"], item._selected_files)
         # Modify item_dict
         item_dict["use_shell"] = True
         item_dict["shell_index"] = 99  # Unsupported shell
