@@ -20,7 +20,7 @@ is filled with all the information from the specification being edited.
 
 import os
 from copy import deepcopy
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QKeySequence
+from PySide2.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QFontDatabase, QFontMetrics
 from PySide2.QtWidgets import (
     QMainWindow,
     QDialogButtonBox,
@@ -42,16 +42,19 @@ from .custom_menus import AddProgramFilesPopupMenu
 
 
 class ToolSpecificationEditorWindow(QMainWindow):
-    def __init__(self, toolbox, specification=None):
+    def __init__(self, toolbox, specification=None, item=None):
         """A widget to query user's preferences for a new tool specification.
 
         Args:
             toolbox (ToolboxUI): QMainWindow instance
-            specification (ToolSpecification): If given, the form is pre-filled with this specification
+            specification (ToolSpecification, optional): If given, the form is pre-filled with this specification
+            item (ProjectItem, optional): Sets the spec for this item if accepted
         """
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent=toolbox)  # Inherit stylesheet from ToolboxUI
+        self._item = item
+        self._new_spec = None
         self._app_settings = toolbox.qsettings()
         self.settings_group = "toolSpecificationEditorWindow"
         # Setup UI from Qt Designer file
@@ -64,6 +67,10 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self._spec_toolbar = SpecNameDescriptionToolbar(self, specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
+        # Customize text edit main program
+        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        self.ui.textEdit_main_program.setFont(font)
+        self.ui.textEdit_main_program.setTabStopDistance(QFontMetrics(font).horizontalAdvance(4 * " "))
         self.ui.textEdit_main_program.setEnabled(False)
         self.ui.textEdit_main_program.setStyleSheet(
             "QTextEdit {background-color: #19232D; border: 1px solid #32414B; color: #F0F0F0; border-radius: 2px;}"
@@ -634,8 +641,11 @@ class ToolSpecificationEditorWindow(QMainWindow):
     @Slot(bool)
     def save_and_close(self, _=False):
         """Saves changes and close window."""
-        if self._save():
-            self.close()
+        if not self._save():
+            return
+        if self._item:
+            self._item.set_specification(self._new_spec)
+        self.close()
 
     def _save(self):
         """Checks that everything is valid, creates Tool spec dictionary and adds Tool spec to project."""
@@ -666,13 +676,13 @@ class ToolSpecificationEditorWindow(QMainWindow):
         # Strip whitespace from args before saving it to JSON
         new_spec_dict["cmdline_args"] = split_cmdline_args(self.ui.lineEdit_args.text())
         for k in REQUIRED_KEYS:
-            if not self.spec_dict[k]:
+            if not new_spec_dict[k]:
                 self.show_status_bar_msg(f"Missing mandatory field '{k}'")
                 return False
         # Create new Tool specification
         new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/")
-        new_spec = self._make_tool_specification(new_spec_dict)
-        if not self.call_add_tool_specification(new_spec):
+        self._new_spec = self._make_tool_specification(new_spec_dict)
+        if not self.call_add_tool_specification():
             return False
         self._undo_stack.setClean()
         return True
@@ -686,24 +696,21 @@ class ToolSpecificationEditorWindow(QMainWindow):
         Returns:
             ToolSpecification
         """
-        tool = self._toolbox.load_specification(new_spec_dict)
-        if not tool:
-            self.show_status_bar_msg("Adding Tool specification failed")
-        return tool
+        tool_spec = self._toolbox.load_specification(new_spec_dict)
+        if not tool_spec:
+            self.show_status_bar_msg("Creating Tool specification failed")
+        return tool_spec
 
-    def call_add_tool_specification(self, new_spec):
-        """Adds Tool specification according to user's selections.
-
-        Args:
-            new_spec (ToolSpecification)
+    def call_add_tool_specification(self):
+        """Adds new Tool specification to project.
 
         Returns:
             bool
         """
-        if not new_spec:
+        if not self._new_spec:
             return False
-        update_existing = new_spec.name == self._original_spec_name
-        return self._toolbox.add_specification(new_spec, update_existing, self)
+        update_existing = self._new_spec.name == self._original_spec_name
+        return self._toolbox.add_specification(self._new_spec, update_existing, self)
 
     def keyPressEvent(self, e):
         """Close Setup form when escape key is pressed.

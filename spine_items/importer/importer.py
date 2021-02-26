@@ -158,7 +158,7 @@ class Importer(ProjectItem):
         if self._specification:
             self._properties_ui.comboBox_specification.setCurrentText(self._specification.name)
             spec_model_index = self._toolbox.specification_model.specification_index(self._specification.name)
-            specification_options_popup_menu = ItemSpecificationMenu(self._toolbox, spec_model_index)
+            specification_options_popup_menu = ItemSpecificationMenu(self._toolbox, spec_model_index, self)
             self._properties_ui.toolButton_edit_specification.setMenu(specification_options_popup_menu)
         else:
             self._properties_ui.comboBox_specification.setCurrentIndex(-1)

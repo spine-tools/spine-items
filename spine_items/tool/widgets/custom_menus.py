@@ -24,13 +24,14 @@ from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu, CustomPopup
 class ToolSpecificationMenu(ItemSpecificationMenu):
     """Menu class for Tool specifications."""
 
-    def __init__(self, toolbox, index):
+    def __init__(self, toolbox, index, item=None):
         """
         Args:
             toolbox (ToolboxUI): the toolbox that request this menu
             index (QModelIndex): the index from specification model
+            item (Tool, optional): The item that owns the menu
         """
-        super().__init__(toolbox, index)
+        super().__init__(toolbox, index, item)
         self.addSeparator()
         self.add_action("Open main program file", self._open_main_program_file)
         self.add_action("Open main program directory", self._open_main_program_dir)

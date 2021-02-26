@@ -65,7 +65,7 @@ class ImportEditorWindow(QMainWindow):
 
     connection_failed = Signal(str)
 
-    def __init__(self, toolbox, specification, filepath=None):
+    def __init__(self, toolbox, specification, item=None, filepath=None):
         """
         Args:
             toolbox (QMainWindow): ToolboxUI class
@@ -78,6 +78,7 @@ class ImportEditorWindow(QMainWindow):
         self._toolbox = toolbox
         self._original_spec_name = None if specification is None else specification.name
         self._specification = specification
+        self._item = item
         self._app_settings = self._toolbox.qsettings()
         self.settings_group = "mappingPreviewWindow"
         self._undo_stack = QUndoStack(self)
@@ -260,10 +261,9 @@ class ImportEditorWindow(QMainWindow):
         connector = self._memoized_connectors[filepath] = connector_list[row]
         return connector
 
-    def _call_add_specification(self, spec_dict):
-        new_specification = self._toolbox.load_specification(spec_dict)
-        update_existing = new_specification.name == self._original_spec_name
-        return self._toolbox.add_specification(new_specification, update_existing, self)
+    def _call_add_specification(self):
+        update_existing = self._specification.name == self._original_spec_name
+        return self._toolbox.add_specification(self._specification, update_existing, self)
 
     @Slot(str)
     def show_error(self, message):
@@ -365,15 +365,19 @@ class ImportEditorWindow(QMainWindow):
         mapping = self._editor.get_settings_dict() if self._editor else {}
         description = self._spec_toolbar.description()
         spec_dict = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
-        if not self._call_add_specification(spec_dict):
+        self._specification = self._toolbox.load_specification(spec_dict)
+        if not self._call_add_specification():
             return False
         self._undo_stack.setClean()
         return True
 
     def save_and_close(self):
         """Saves changes and close window."""
-        if self._save():
-            self.close()
+        if not self._save():
+            return
+        if self._item:
+            self._item.set_specification(self._specification)
+        self.close()
 
     def discard_and_close(self):
         """Discards changes and close window."""

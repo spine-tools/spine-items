@@ -36,10 +36,7 @@ _CLASSES_TO_DISPLAY_NAMES = {class_: name for name, class_ in _SETTINGS_CLASSES.
 class SpecificationEditorWindow(QMainWindow):
     """Data transformer's specification editor."""
 
-    accepted = Signal(str)
-    """Emitted when the specification has been accepted by the user."""
-
-    def __init__(self, toolbox, specification=None, urls=None, item_name=None):
+    def __init__(self, toolbox, specification=None, urls=None, item=None):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window
@@ -50,6 +47,7 @@ class SpecificationEditorWindow(QMainWindow):
         from ..ui.specification_editor_widget import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent=toolbox)
+        self._item = item
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self._toolbox = toolbox
         self._original_spec_name = None if specification is None else specification.name
@@ -73,8 +71,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         title = "Data transformer specification editor[*]"
-        if item_name is not None:
-            title = title + f"    -- {item_name} --"
+        if item is not None:
+            title = title + f"    -- {item.name} --"
         self.setWindowTitle(title)
         self._ui.filter_combo_box.addItems(_FILTER_NAMES)
         if self._specification.settings is not None:
@@ -158,10 +156,12 @@ class SpecificationEditorWindow(QMainWindow):
 
     @Slot(bool)
     def save_and_close(self, _=False):
-        """Stores the specification to Toolbox' specification list, emits the accepted signal and closes the window."""
-        if self._save():
-            self.accepted.emit(self._specification.name)
-            self.close()
+        """Stores the specification to Toolbox' specification list, sets the spec for the item, and closes the window."""
+        if not self._save():
+            return
+        if self._item:
+            self._item.set_specification(self._specification)
+        self.close()
 
     def _save(self):
         specification_name = self._spec_toolbar.name()

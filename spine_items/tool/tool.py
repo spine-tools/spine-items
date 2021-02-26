@@ -147,7 +147,7 @@ class Tool(ProjectItem):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification_window = ToolSpecificationEditorWindow(self._toolbox, None)
+        specification_window = ToolSpecificationEditorWindow(self._toolbox, specification=None, item=self)
         specification_window.show()
 
     @Slot(bool)
@@ -264,7 +264,7 @@ class Tool(ProjectItem):
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
             spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
-            self._specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
+            self._specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index, self)
             self._specification_menu.setTitle("Specification...")
             self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
             options_widget = self._get_options_widget()

@@ -62,6 +62,6 @@ class DataTransformerFactory(ProjectItemFactory):
         return ItemSpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, **kwargs):
+    def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
-        SpecificationEditorWindow(toolbox, specification).show()
+        SpecificationEditorWindow(toolbox, specification, item=item).show()
