@@ -375,7 +375,7 @@ class JuliaOptionsWidget(OptionsWidget):
         # Replace self._tool while we run this method
         self._tool, current_tool = tool, self._tool
         user_stopped = self.sysimage_worker.user_stopped
-        error = self.sysimage_worker.error_output
+        error = self.sysimage_worker.process_error
         self.sysimage_worker.deleteLater()
         self.sysimage_worker = None
         if ret != 0:

@@ -27,7 +27,6 @@ import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .utils import (
@@ -396,7 +395,9 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         # Find out SpineInterface version, and whether or not we can use DB server
         spine_iface_ver = get_spine_interface_version(self._tool_specification)
-        spine_iface_outdated = spine_iface_ver and spine_iface_ver.split(".") < REQ_SPINE_IFACE_VER.split(".")
+        spine_iface_outdated = spine_iface_ver and (
+            [int(x) for x in spine_iface_ver.split(".")] < [int(x) for x in REQ_SPINE_IFACE_VER.split(".")]
+        )
         use_db_server = not spine_iface_outdated
         # Expand cmd_line_args from resources
         with labelled_resource_args(forward_resources + backward_resources, use_db_server) as labelled_args:
