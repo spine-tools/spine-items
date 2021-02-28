@@ -155,7 +155,8 @@ def get_spine_interface_version(tool_spec):
     cmd += [
         "-e",
         'import Pkg; '
-        'pkgs = Pkg.TOML.parsefile(joinpath(dirname(Base.active_project()), "Manifest.toml")); '
+        'manifest = joinpath(dirname(Base.active_project()), "Manifest.toml");'
+        'pkgs = isfile(manifest) ? Pkg.TOML.parsefile(manifest) : Dict(); '
         'spine_interface = get(pkgs, "SpineInterface", nothing); '
         'if spine_interface != nothing println(spine_interface[1]["version"]) end',
     ]
