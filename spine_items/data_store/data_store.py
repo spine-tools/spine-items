@@ -452,17 +452,12 @@ class DataStore(ProjectItem):
         cancel_on_error = item_dict.get("cancel_on_error", False)
         return DataStore(name, description, x, y, toolbox, project, url, cancel_on_error)
 
-    def rename(self, new_name):
-        """Rename this item.
-
-        Args:
-            new_name (str): New name
-        Returns:
-            bool: True if renaming succeeded, False otherwise
-        """
+    def rename(self, new_name, rename_data_dir_message):
+        """See base class."""
         old_data_dir = os.path.abspath(self.data_dir)  # Old data_dir before rename
         old_name = self.name
-        super().rename(new_name)
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
         # If dialect is sqlite and db line edit refers to a file in the old data_dir, db line edit needs updating
         if self._url["dialect"] == "sqlite":
             db_dir, db_filename = os.path.split(os.path.abspath(self._url["database"].strip()))
@@ -474,6 +469,7 @@ class DataStore(ProjectItem):
                     self.load_url_into_selections(self._url)
         self._additional_resource_metadata = {"updated_from": make_label(old_name)}
         self.item_changed.emit()
+        return True
 
     def notify_destination(self, source_item):
         """See base class."""

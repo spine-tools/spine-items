@@ -15,6 +15,7 @@ Unit tests for ViewExecutable.
 :author: A. Soininen (VTT)
 :date:   6.4.2020
 """
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spine_engine import ExecutionDirection
@@ -22,18 +23,24 @@ from spine_items.view.executable_item import ExecutableItem
 
 
 class TestViewExecutable(unittest.TestCase):
+    def setUp(self):
+        self._temp_dir = TemporaryDirectory()
+
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     def test_item_type(self):
         self.assertEqual(ExecutableItem.item_type(), "View")
 
     def test_from_dict(self):
         logger = mock.MagicMock()
         item_dict = {"type": "View", "description": "", "x": 0, "y": 0}
-        item = ExecutableItem.from_dict(item_dict, "Viewer", "", None, dict(), logger)
+        item = ExecutableItem.from_dict(item_dict, "Viewer", self._temp_dir.name, None, dict(), logger)
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("View", item.item_type())
 
     def test_stop_execution(self):
-        executable = ExecutableItem(name="Viewer", logger=mock.MagicMock())
+        executable = ExecutableItem(name="Viewer", project_dir=self._temp_dir.name, logger=mock.MagicMock())
         with mock.patch(
             "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
         ) as mock_stop_execution:
@@ -41,19 +48,19 @@ class TestViewExecutable(unittest.TestCase):
             mock_stop_execution.assert_called_once()
 
     def test_execute_backward(self):
-        executable = ExecutableItem("name", mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.BACKWARD))
+        executable = ExecutableItem("name", self._temp_dir.name, mock.MagicMock())
+        self.assertTrue(executable.execute([], []))
 
     def test_execute_forward(self):
-        executable = ExecutableItem("name", mock.MagicMock())
-        self.assertTrue(executable.execute([], ExecutionDirection.FORWARD))
+        executable = ExecutableItem("name", self._temp_dir.name, mock.MagicMock())
+        self.assertTrue(executable.execute([], []))
 
     def test_output_resources_backward(self):
-        executable = ExecutableItem("name", mock.MagicMock())
+        executable = ExecutableItem("name", self._temp_dir.name, mock.MagicMock())
         self.assertEqual(executable.output_resources(ExecutionDirection.BACKWARD), [])
 
     def test_output_resources_forward(self):
-        executable = ExecutableItem("name", mock.MagicMock())
+        executable = ExecutableItem("name", self._temp_dir.name, mock.MagicMock())
         self.assertEqual(executable.output_resources(ExecutionDirection.FORWARD), [])
 
 

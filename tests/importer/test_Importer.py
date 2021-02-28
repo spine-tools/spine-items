@@ -51,6 +51,7 @@ class TestImporter(unittest.TestCase):
         }
         self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         self.importer = factory.make_item("I", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.importer, self.toolbox)
 
@@ -67,11 +68,6 @@ class TestImporter(unittest.TestCase):
 
     def test_item_category(self):
         self.assertEqual(Importer.item_category(), ItemInfo.item_category())
-
-    def test_execution_item(self):
-        """Tests that the ExecutableItem counterpart is created successfully."""
-        exec_item = self.importer.execution_item()
-        self.assertIsInstance(exec_item, ExecutableItem)
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -117,7 +113,7 @@ class TestImporter(unittest.TestCase):
             self.importer.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        self.importer.rename(expected_name)
+        self.importer.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.importer.name)  # item name
         self.assertEqual(expected_name, self.importer._properties_ui.label_name.text())  # name label in props

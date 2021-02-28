@@ -24,7 +24,7 @@ from PySide2.QtWidgets import QWidget, QFileDialog
 from PySide2.QtGui import QIcon, QLinearGradient, QPalette, QBrush
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
 from spinetoolbox.execution_managers import QProcessExecutionManager
-from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine
+from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine, make_settings_dict_for_engine
 
 
 class OptionsWidget(QWidget):
@@ -233,7 +233,7 @@ class JuliaOptionsWidget(OptionsWidget):
         if self.sysimage_path is None:
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
-        settings = self._project.make_settings_dict()
+        settings = make_settings_dict_for_engine(self._settings)
         settings["appSettings/useEmbeddedJulia"] = "1"  # Don't use repl
         self.sysimage_worker = self._project.create_engine_worker(dag, execution_permits, dag_identifier, settings)
         # Use the modified spec
@@ -245,7 +245,9 @@ class JuliaOptionsWidget(OptionsWidget):
         options = item_dict.get("options")
         if options:
             options["julia_sysimage"] = ""  # Don't use any previous sysimages
-        engine_data["specifications"].setdefault(self._tool.item_type(), list()).append(spec.to_dict())
+        spec_dict = spec.to_dict()
+        spec_dict["definition_file_path"] = spec.definition_file_path
+        engine_data["specifications"].setdefault(self._tool.item_type(), list()).append(spec_dict)
         self.sysimage_worker.set_engine_data(engine_data)
         self.sysimage_worker.finished.connect(lambda tool=self._tool: self._do_create_sysimage(tool))
         self._update_ui()
@@ -291,7 +293,9 @@ class JuliaOptionsWidget(OptionsWidget):
                 val
             end
         end
-        @loaded_modules begin {original_code} end
+        @loaded_modules begin 
+            {original_code}
+        end
         """
         spec.includes.insert(0, "")
         spec.cmdline_args += [f"--trace-compile={precompile_statements_file}", "-e", new_code]
@@ -331,24 +335,22 @@ class JuliaOptionsWidget(OptionsWidget):
         with open(loaded_modules_file, 'r') as f:
             modules = f.read()
         code = f"""
-            active_project_dir = dirname(Base.active_project());
-            temp_project_dir = mktempdir()
-            cp(joinpath(active_project_dir, "Project.toml"), joinpath(temp_project_dir, "Project.toml"));
-            cp(joinpath(active_project_dir, "Manifest.toml"), joinpath(temp_project_dir, "Manifest.toml"));
             using Pkg;
-            Pkg.activate(temp_project_dir);
-            modules = split("{modules}", " ");
-            Pkg.add(modules);
-            Pkg.add("PackageCompiler");
-            using PackageCompiler;
-            try
-                PackageCompiler.create_sysimage(
+            mktempdir() do temp_project_dir
+                active_project_dir = dirname(Base.active_project());
+                cp(joinpath(active_project_dir, "Project.toml"), joinpath(temp_project_dir, "Project.toml"));
+                cp(joinpath(active_project_dir, "Manifest.toml"), joinpath(temp_project_dir, "Manifest.toml"));
+                Pkg.activate(temp_project_dir);
+                modules = split("{modules}", " ");
+                Pkg.add(modules);
+                Pkg.add("PackageCompiler");
+                @eval import PackageCompiler
+                Base.invokelatest(
+                    PackageCompiler.create_sysimage,
                     Symbol.(modules);
                     sysimage_path="{self.sysimage_path}",
                     precompile_statements_file="{precompile_statements_file}"
                 )
-            finally
-                rm(temp_project_dir; force=true, recursive=true)
             end
         """
         julia, *args = julia_command
@@ -373,7 +375,7 @@ class JuliaOptionsWidget(OptionsWidget):
         # Replace self._tool while we run this method
         self._tool, current_tool = tool, self._tool
         user_stopped = self.sysimage_worker.user_stopped
-        error = self.sysimage_worker.error_output
+        error = self.sysimage_worker.process_error
         self.sysimage_worker.deleteLater()
         self.sysimage_worker = None
         if ret != 0:

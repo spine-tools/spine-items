@@ -138,34 +138,30 @@ def make_label(name):
     return "{" + name + "}"
 
 
-def can_use_db_server(tool_spec):
-    """Whether or not the given tool spec supports db-server url advertising as replacement of the normal db url.
-    This is always True for non-julia tools, as well as for julia tools that definitely don't use SpineInterface.
-    For julia tools that *might* use SpineInterface (i.e., SpineInterface is found in the project),
-    we check SpineInterface version >= v"0.5.0", which is the version where we start supporting db servers.
+def get_spine_interface_version(tool_spec):
+    """Returns the SpineInterface version, if any, seen by the given tool specification.
 
     Args:
         tool_spec (ToolSpecification)
 
     Returns:
-        bool
+        str
     """
     if tool_spec.tooltype != "julia":
-        return True
+        return ""
     cmd = get_julia_command(tool_spec._settings)
     if cmd is None:
-        return True
+        return ""
     cmd += [
         "-e",
         'import Pkg; '
-        'pkgs = Pkg.TOML.parsefile(joinpath(dirname(Base.active_project()), "Manifest.toml")); '
+        'manifest = joinpath(dirname(Base.active_project()), "Manifest.toml");'
+        'pkgs = isfile(manifest) ? Pkg.TOML.parsefile(manifest) : Dict(); '
         'spine_interface = get(pkgs, "SpineInterface", nothing); '
-        'if spine_interface == nothing println(true) '  # SpineInterface not found
-        'else println(VersionNumber(spine_interface[1]["version"]) >= v"0.5.0") '
-        'end',
+        'if spine_interface != nothing println(spine_interface[1]["version"]) end',
     ]
     try:
         p = subprocess.run(cmd, capture_output=True, check=True)
     except subprocess.CalledProcessError:
-        return True
-    return str(p.stdout, "utf-8").strip() == "true"
+        return ""
+    return str(p.stdout, "utf-8").strip()

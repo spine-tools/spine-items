@@ -83,7 +83,7 @@ class DataTransformer(ProjectItem):
         s = super().make_signal_handler_dict()
         s[self._properties_ui.open_dir_button.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.specification_button.clicked] = self.show_specification_window
-        s[self._properties_ui.specification_combo_box.currentTextChanged] = self._change_specification
+        s[self._properties_ui.specification_combo_box.textActivated] = self._change_specification
         return s
 
     def do_set_specification(self, specification):
@@ -110,7 +110,7 @@ class DataTransformer(ProjectItem):
     def show_specification_window(self, _=True):
         """Opens the settings window."""
         specification_window = SpecificationEditorWindow(
-            self._toolbox, specification=None, urls=[r.url for r in self._db_resources], item_name=self.name
+            self._toolbox, specification=None, urls=[r.url for r in self._db_resources], item=self
         )
         specification_window.show()
 
@@ -157,7 +157,7 @@ class DataTransformer(ProjectItem):
         if self._specification_name:
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
             spec_model_index = self._toolbox.specification_model.specification_index(self._specification_name)
-            specification_options_popup_menu = ItemSpecificationMenu(self._toolbox, spec_model_index)
+            specification_options_popup_menu = ItemSpecificationMenu(self._toolbox, spec_model_index, self)
             self._properties_ui.specification_button.setMenu(specification_options_popup_menu)
         else:
             self._properties_ui.specification_combo_box.setCurrentIndex(-1)

@@ -29,18 +29,18 @@ from .output_resources import scan_for_resources
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, url, logs_dir, cancel_on_error, logger):
+    def __init__(self, name, url, cancel_on_error, project_dir, logger):
         """
         Args:
             name (str): item's name
             url (str): database's URL
             logs_dir (str): path to the directory where logs should be stored
             cancel_on_error (bool): if True, revert changes on error and move on
+            project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, logger)
+        super().__init__(name, project_dir, logger)
         self._url = url
-        self._logs_dir = logs_dir
         self._cancel_on_error = cancel_on_error
         self._process = None
 
@@ -63,10 +63,8 @@ class ExecutableItem(ExecutableItemBase):
         if item_dict["url"]["dialect"] == "sqlite":
             item_dict["url"]["database"] = deserialize_path(item_dict["url"]["database"], project_dir)
         url = convert_to_sqlalchemy_url(item_dict["url"], name, logger)
-        data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
-        logs_dir = os.path.join(data_dir, "logs")
         cancel_on_error = item_dict["cancel_on_error"]
-        return cls(name, url, logs_dir, cancel_on_error, logger)
+        return cls(name, url, cancel_on_error, project_dir, logger)
 
     @staticmethod
     def _urls_from_resources(resources):

@@ -16,22 +16,23 @@ Unit tests for :class:`RenameTableModel`.
 """
 import unittest
 from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QUndoStack
 from spine_items.data_transformer.mvcmodels.rename_table_model import RenameTableModel
 
 
 class TestRenameTableModel(unittest.TestCase):
     def test_columnCount_always_two(self):
-        model = RenameTableModel({})
+        model = RenameTableModel(QUndoStack(), {})
         self.assertEqual(model.columnCount(), 2)
 
     def test_rowCount(self):
-        model = RenameTableModel({})
+        model = RenameTableModel(QUndoStack(), {})
         self.assertEqual(model.rowCount(), 0)
-        model = RenameTableModel({"a": "A", "b": "B"})
+        model = RenameTableModel(QUndoStack(), {"a": "A", "b": "B"})
         self.assertEqual(model.rowCount(), 2)
 
     def test_data(self):
-        model = RenameTableModel({"a": "A", "b": "b"})
+        model = RenameTableModel(QUndoStack(), {"a": "A", "b": "b"})
         self.assertEqual(model.index(0, 0).data(), "a")
         self.assertIsNone(model.index(0, 0).data(Qt.FontRole))
         self.assertEqual(model.index(0, 1).data(), "A")
@@ -42,27 +43,27 @@ class TestRenameTableModel(unittest.TestCase):
         self.assertIsNone(model.index(1, 1).data(Qt.FontRole))
 
     def test_second_column_only_is_editable(self):
-        model = RenameTableModel({"a": "A"})
+        model = RenameTableModel(QUndoStack(), {"a": "A"})
         self.assertFalse(model.index(0, 0).flags() & Qt.ItemIsEditable)
         self.assertTrue(model.index(0, 1).flags() & Qt.ItemIsEditable)
 
     def test_headers(self):
-        model = RenameTableModel({"a": "A"})
+        model = RenameTableModel(QUndoStack(), {"a": "A"})
         self.assertIsNone(model.headerData(0, Qt.Vertical))
         self.assertEqual(model.headerData(0, Qt.Horizontal), "Original")
         self.assertEqual(model.headerData(1, Qt.Horizontal), "Renamed")
 
     def test_renaming_settings(self):
-        model = RenameTableModel({"a": "A", "b": "b", "c": ""})
+        model = RenameTableModel(QUndoStack(), {"a": "A", "b": "b", "c": ""})
         self.assertEqual(model.renaming_settings(), {"a": "A", "b": "b"})
 
     def test_reset_originals(self):
-        model = RenameTableModel({"a": "A", "b": "B", "c": "c", "d": "d"})
+        model = RenameTableModel(QUndoStack(), {"a": "A", "b": "B", "c": "c", "d": "d"})
         model.reset_originals({"a", "c", "e"})
         self.assertEqual(model.renaming_settings(), {"a": "A", "c": "c", "e": "e"})
 
     def test_setData(self):
-        model = RenameTableModel({"a": "A"})
+        model = RenameTableModel(QUndoStack(), {"a": "A"})
         self.assertTrue(model.setData(model.index(0, 1), "B"))
         self.assertEqual(model.renaming_settings(), {"a": "B"})
 

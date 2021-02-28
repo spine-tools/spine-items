@@ -33,6 +33,12 @@ from spinedb_api.spine_io.exporters import gdx
 
 
 class TestGdxExporterExecutable(unittest.TestCase):
+    def setUp(self):
+        self._temp_dir = TemporaryDirectory()
+
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     def test_item_type(self):
         self.assertEqual(ExecutableItem.item_type(), "GdxExporter")
 
@@ -84,89 +90,91 @@ class TestGdxExporterExecutable(unittest.TestCase):
             "cancel_on_error": True,
         }
         logger = mock.MagicMock()
-        with TemporaryDirectory() as temp_dir:
-            item = ExecutableItem.from_dict(item_dict, "GdxExporter 1", temp_dir, _MockSettings(), dict(), logger)
+        item = ExecutableItem.from_dict(
+            item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger
+        )
+        self.assertIsInstance(item, ExecutableItem)
+        self.assertEqual("GdxExporter", item.item_type())
+        self.assertIsInstance(item._settings_pack, SettingsPack)
+        # Make SettingsPack.from_dict raise gdx.GdxExportException
+        with mock.patch("spine_items.gdx_exporter.executable_item.SettingsPack.from_dict") as mocksetfromdict:
+            mocksetfromdict.side_effect = gdx.GdxExportException("hello")
+            item = ExecutableItem.from_dict(
+                item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger
+            )
             self.assertIsInstance(item, ExecutableItem)
             self.assertEqual("GdxExporter", item.item_type())
             self.assertIsInstance(item._settings_pack, SettingsPack)
-            # Make SettingsPack.from_dict raise gdx.GdxExportException
-            with mock.patch("spine_items.gdx_exporter.executable_item.SettingsPack.from_dict") as mocksetfromdict:
-                mocksetfromdict.side_effect = gdx.GdxExportException("hello")
-                item = ExecutableItem.from_dict(item_dict, "GdxExporter 1", temp_dir, _MockSettings(), dict(), logger)
-                self.assertIsInstance(item, ExecutableItem)
-                self.assertEqual("GdxExporter", item.item_type())
-                self.assertIsInstance(item._settings_pack, SettingsPack)
-            # Modify item_dict
-            item_dict.pop("cancel_on_error")
-            item = ExecutableItem.from_dict(item_dict, "GdxExporter 1", temp_dir, _MockSettings(), dict(), logger)
-            self.assertIsInstance(item, ExecutableItem)
-            self.assertEqual("GdxExporter", item.item_type())
-            self.assertTrue(item._cancel_on_error)
-            self.assertIsInstance(item._settings_pack, SettingsPack)
+        # Modify item_dict
+        item_dict.pop("cancel_on_error")
+        item = ExecutableItem.from_dict(
+            item_dict, "GdxExporter 1", self._temp_dir.name, _MockSettings(), dict(), logger
+        )
+        self.assertIsInstance(item, ExecutableItem)
+        self.assertEqual("GdxExporter", item.item_type())
+        self.assertTrue(item._cancel_on_error)
+        self.assertIsInstance(item._settings_pack, SettingsPack)
 
     def test_stop_execution(self):
         # TODO: Seems that there is no way to stop the Exporting process at the moment.
         # TODO: Implement this test when GdxExporter ExecutableItem stop_execution() method is implemented
-        with TemporaryDirectory() as temp_data_dir:
-            executable = ExecutableItem("name", SettingsPack(), [], False, True, temp_data_dir, "", mock.MagicMock())
-            with mock.patch(
-                "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
-            ) as mock_stop_execution:
-                executable.stop_execution()
-                mock_stop_execution.assert_called_once()
+        executable = ExecutableItem("name", SettingsPack(), [], False, True, "", self._temp_dir.name, mock.MagicMock())
+        with mock.patch(
+            "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
+        ) as mock_stop_execution:
+            executable.stop_execution()
+            mock_stop_execution.assert_called_once()
 
     @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
     def test_execute_no_output(self):
-        executable = ExecutableItem("name", SettingsPack(), [], False, False, "", "", mock.MagicMock())
+        executable = ExecutableItem("name", SettingsPack(), [], False, False, "", self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
 
     @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
     def test_execute_exports_simple_database_to_gdx(self):
-        with TemporaryDirectory() as tmp_dir_name:
-            database_path = Path(tmp_dir_name).joinpath("test_execute_forward.sqlite")
-            database_url = "sqlite:///" + str(database_path)
-            create_new_spine_database(database_url)
-            database_map = DiffDatabaseMapping(database_url)
-            import_functions.import_object_classes(database_map, ["domain"])
-            import_functions.import_objects(database_map, [("domain", "record")])
-            settings_pack = SettingsPack()
-            settings_pack.settings = gdx.make_set_settings(database_map)
-            settings_pack.indexing_settings = gdx.make_indexing_settings(
-                database_map, gdx.NoneFallback.USE_IT, logger=mock.MagicMock()
-            )
-            settings_pack.state = SettingsState.OK
-            database_map.commit_session("Add an entity_class and an entity for unit tests.")
-            database_map.connection.close()
-            databases = [Database()]
-            databases[0].output_file_name = "output.gdx"
-            databases[0].url = database_url
-            logger = mock.MagicMock()
-            logger.__reduce__ = lambda _: (mock.MagicMock, ())
-            executable = ExecutableItem("name", settings_pack, databases, False, False, tmp_dir_name, "", logger)
-            resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
-            self.assertTrue(executable.execute(resources, []))
-            self.assertTrue(Path(tmp_dir_name, "output.gdx").exists())
-            gams_directory = gdx.find_gams_directory()
-            with GdxFile(str(Path(tmp_dir_name, "output.gdx")), "r", gams_directory) as gdx_file:
-                self.assertEqual(len(gdx_file), 1)
-                expected_symbol_names = ["domain"]
-                for gams_symbol, expected_name in zip(gdx_file.keys(), expected_symbol_names):
-                    self.assertEqual(gams_symbol, expected_name)
-                gams_set = gdx_file["domain"]
-                self.assertEqual(len(gams_set), 1)
-                expected_records = ["record"]
-                for gams_record, expected_name in zip(gams_set, expected_records):
-                    self.assertEqual(gams_record, expected_name)
+        database_path = Path(self._temp_dir.name).joinpath("test_execute_forward.sqlite")
+        database_url = "sqlite:///" + str(database_path)
+        create_new_spine_database(database_url)
+        database_map = DiffDatabaseMapping(database_url)
+        import_functions.import_object_classes(database_map, ["domain"])
+        import_functions.import_objects(database_map, [("domain", "record")])
+        settings_pack = SettingsPack()
+        settings_pack.settings = gdx.make_set_settings(database_map)
+        settings_pack.indexing_settings = gdx.make_indexing_settings(
+            database_map, gdx.NoneFallback.USE_IT, logger=mock.MagicMock()
+        )
+        settings_pack.state = SettingsState.OK
+        database_map.commit_session("Add an entity_class and an entity for unit tests.")
+        database_map.connection.close()
+        databases = [Database()]
+        databases[0].output_file_name = "output.gdx"
+        databases[0].url = database_url
+        logger = mock.MagicMock()
+        logger.__reduce__ = lambda _: (mock.MagicMock, ())
+        executable = ExecutableItem("name", settings_pack, databases, False, False, "", self._temp_dir.name, logger)
+        resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
+        self.assertTrue(executable.execute(resources, []))
+        self.assertTrue(Path(executable._data_dir, "output.gdx").exists())
+        gams_directory = gdx.find_gams_directory()
+        with GdxFile(str(Path(executable._data_dir, "output.gdx")), "r", gams_directory) as gdx_file:
+            self.assertEqual(len(gdx_file), 1)
+            expected_symbol_names = ["domain"]
+            for gams_symbol, expected_name in zip(gdx_file.keys(), expected_symbol_names):
+                self.assertEqual(gams_symbol, expected_name)
+            gams_set = gdx_file["domain"]
+            self.assertEqual(len(gams_set), 1)
+            expected_records = ["record"]
+            for gams_record, expected_name in zip(gams_set, expected_records):
+                self.assertEqual(gams_record, expected_name)
 
     def test_output_resources_backward(self):
-        executable = ExecutableItem("name", SettingsPack(), [], False, False, "", "", mock.MagicMock())
+        executable = ExecutableItem("name", SettingsPack(), [], False, False, "", self._temp_dir.name, mock.MagicMock())
         self.assertEqual(executable.output_resources(ExecutionDirection.BACKWARD), [])
 
     def test_output_resources_forward(self):
-        with TemporaryDirectory() as data_dir:
-            executable = ExecutableItem("name", SettingsPack(), [], False, False, data_dir, "", mock.MagicMock())
-            resources = executable.output_resources(ExecutionDirection.FORWARD)
-            self.assertEqual(len(resources), 0)
+        executable = ExecutableItem("name", SettingsPack(), [], False, False, "", self._temp_dir.name, mock.MagicMock())
+        resources = executable.output_resources(ExecutionDirection.FORWARD)
+        self.assertEqual(len(resources), 0)
 
 
 class _MockSettings:

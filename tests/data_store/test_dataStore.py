@@ -57,6 +57,7 @@ class TestDataStore(unittest.TestCase):
         item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
         self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         with mock.patch("spine_items.data_store.data_store.QMenu"):
             self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.ds, self.toolbox)
@@ -96,11 +97,6 @@ class TestDataStore(unittest.TestCase):
     def test_item_category(self):
         """Tests that the item category is correct."""
         self.assertEqual(DataStore.item_category(), ItemInfo.item_category())
-
-    def test_execution_item(self):
-        """Tests that the ExecutableItem counterpart is created successfully."""
-        exec_item = self.ds.execution_item()
-        self.assertIsInstance(exec_item, ExecutableItem)
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -279,8 +275,7 @@ class TestDataStore(unittest.TestCase):
         expected_name = "ABC"
         expected_short_name = "abc"
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
-        shutil.move(self.ds.data_dir, expected_data_dir)
-        self.ds.rename(expected_name)  # Do rename
+        self.ds.rename(expected_name, "")  # Do rename
         # Check name
         self.assertEqual(expected_name, self.ds.name)  # item name
         self.assertEqual(expected_name, self.ds_properties_ui.label_ds_name.text())  # name label in props

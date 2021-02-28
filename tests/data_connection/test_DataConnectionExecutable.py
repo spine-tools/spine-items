@@ -15,7 +15,6 @@ Unit tests for DataConnectionExecutable.
 :author: A. Soininen (VTT)
 :date:   6.4.2020
 """
-import os
 import pathlib
 import tempfile
 import unittest
@@ -25,6 +24,12 @@ from spine_items.data_connection.executable_item import ExecutableItem
 
 
 class TestDataConnectionExecutable(unittest.TestCase):
+    def setUp(self):
+        self._temp_dir = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        self._temp_dir.cleanup()
+
     def test_item_type(self):
         self.assertEqual(ExecutableItem.item_type(), "Data Connection")
 
@@ -37,19 +42,17 @@ class TestDataConnectionExecutable(unittest.TestCase):
             "y": 0,
             "references": [{"type": "path", "relative": True, "path": "/temp/temp1.txt"}],
         }
-        with tempfile.TemporaryDirectory() as temp_dir:
-            dc_data_dir = pathlib.Path(temp_dir, ".spinetoolbox", "items", "dc")
-            dc_data_dir.mkdir(parents=True)
-            temp_file_path = pathlib.Path(dc_data_dir, "file.txt")
-            with open(temp_file_path, "w") as file:
-                file.write("abc.txt")
-            item = ExecutableItem.from_dict(item_dict, "DC", temp_dir, None, dict(), logger)
-            self.assertIsInstance(item, ExecutableItem)
-            self.assertEqual("Data Connection", item.item_type())
-            self.assertEqual(2, len(item._files))
+        dc_data_dir = pathlib.Path(self._temp_dir.name, ".spinetoolbox", "items", "dc")
+        dc_data_dir.mkdir(parents=True)
+        temp_file_path = pathlib.Path(dc_data_dir, "file.txt")
+        temp_file_path.touch()
+        item = ExecutableItem.from_dict(item_dict, "DC", self._temp_dir.name, None, dict(), logger)
+        self.assertIsInstance(item, ExecutableItem)
+        self.assertEqual("Data Connection", item.item_type())
+        self.assertEqual(2, len(item._files))
 
     def test_stop_execution(self):
-        executable = ExecutableItem("name", [], [], mock.MagicMock())
+        executable = ExecutableItem("name", [], self._temp_dir.name, mock.MagicMock())
         with mock.patch(
             "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
         ) as mock_stop_execution:
@@ -57,26 +60,34 @@ class TestDataConnectionExecutable(unittest.TestCase):
             mock_stop_execution.assert_called_once()
 
     def test_execute(self):
-        executable = ExecutableItem("name", [], [], mock.MagicMock())
+        executable = ExecutableItem("name", [], self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
 
     def test_output_resources_backward(self):
-        executable = ExecutableItem("name", ["file_reference"], ["data_file"], mock.MagicMock())
+        dc_data_dir = pathlib.Path(self._temp_dir.name, ".spinetoolbox", "items", "name")
+        dc_data_dir.mkdir(parents=True)
+        temp_file_path = pathlib.Path(dc_data_dir, "file.txt")
+        temp_file_path.touch()
+        executable = ExecutableItem("name", ["file_reference"], self._temp_dir.name, mock.MagicMock())
         self.assertEqual(executable.output_resources(ExecutionDirection.BACKWARD), [])
 
     def test_output_resources_forward(self):
-        file_reference = os.path.join(tempfile.gettempdir(), "file_reference")
-        data_file = os.path.join(tempfile.gettempdir(), "data_file")
-        executable = ExecutableItem("name", [file_reference], [data_file], mock.MagicMock())
+        file_reference = pathlib.Path(self._temp_dir.name, "file_reference")
+        file_reference.touch()
+        dc_data_dir = pathlib.Path(self._temp_dir.name, ".spinetoolbox", "items", "name")
+        dc_data_dir.mkdir(parents=True)
+        temp_file_path = pathlib.Path(dc_data_dir, "data_file")
+        temp_file_path.touch()
+        executable = ExecutableItem("name", [str(file_reference)], self._temp_dir.name, mock.MagicMock())
         output_resources = executable.output_resources(ExecutionDirection.FORWARD)
         self.assertEqual(len(output_resources), 2)
         resource = output_resources[0]
         self.assertEqual(resource.type_, "file")
-        self.assertEqual(resource.path, file_reference)
+        self.assertEqual(resource.path, str(file_reference))
         self.assertEqual(resource.metadata, {})
         resource = output_resources[1]
         self.assertEqual(resource.type_, "file")
-        self.assertEqual(resource.path, data_file)
+        self.assertEqual(resource.path, str(temp_file_path))
         self.assertEqual(resource.metadata, {})
 
 

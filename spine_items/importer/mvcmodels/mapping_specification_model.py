@@ -17,7 +17,7 @@ Contains the mapping specification model.
 """
 from distutils.util import strtobool
 from PySide2.QtCore import QModelIndex, Qt, QAbstractTableModel, Signal, Slot, QTimer
-from PySide2.QtGui import QColor
+from spinetoolbox.helpers import color_from_index
 from spinedb_api import (
     NoneMapping,
     ConstantMapping,
@@ -360,13 +360,7 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     def _make_colors(self):
         component_count = len(self._component_mappings)
-        return [self._color_from_index(i, component_count).lighter() for i in range(component_count)]
-
-    @staticmethod
-    def _color_from_index(i, count):
-        golden_ratio = 0.618033988749895
-        h = golden_ratio * (360 / count) * i
-        return QColor.fromHsv(h, 255, 255, 255)
+        return [color_from_index(i, component_count).lighter() for i in range(component_count)]
 
     def get_map_type_display(self, mapping, name):
         if name == "Parameter values" and self._item_mapping.is_pivoted():

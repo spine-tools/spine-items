@@ -54,6 +54,6 @@ class GdxExporterFactory(ProjectItemFactory):
         raise NotImplementedError()
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, **kwargs):
+    def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
         raise NotImplementedError()

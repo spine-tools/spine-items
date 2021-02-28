@@ -17,7 +17,6 @@ Unit tests for Data Connection project item.
 """
 
 import os
-import shutil
 from tempfile import TemporaryDirectory
 from pathlib import Path
 import unittest
@@ -27,7 +26,6 @@ from PySide2.QtWidgets import QApplication
 from PySide2.QtGui import QStandardItemModel, Qt
 from spine_items.data_connection.data_connection import DataConnection
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
-from spine_items.data_connection.executable_item import ExecutableItem
 from spine_items.data_connection.item_info import ItemInfo
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
@@ -40,6 +38,7 @@ class TestDataConnection(unittest.TestCase):
         item_dict = {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}
         self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
 
@@ -58,16 +57,10 @@ class TestDataConnection(unittest.TestCase):
     def test_item_category(self):
         self.assertEqual(DataConnection.item_category(), ItemInfo.item_category())
 
-    def test_execution_item(self):
-        """Tests that the ExecutableItem counterpart is created successfully."""
-        with mock.patch("spine_items.data_connection.data_connection.os.scandir"):
-            exec_item = self.data_connection.execution_item()
-        self.assertIsInstance(exec_item, ExecutableItem)
-
     def test_add_references(self):
-        with TemporaryDirectory() as temp_dir, mock.patch(
-            "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
-        ) as mock_filenames:
+        temp_dir = Path(self._temp_dir.name, "references")
+        temp_dir.mkdir()
+        with mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames:
             a = Path(temp_dir, "a.txt")
             a.touch()
             b = Path(temp_dir, "b.txt")
@@ -107,11 +100,11 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(5, mock_filenames.call_count)
             self.assertEqual(2, len(self.data_connection.file_references()))
             self.assertEqual(2, self.data_connection.reference_model.rowCount())
-            # self.data_connection.references = list()
-            # self.data_connection.reference_model = QStandardItemModel()
 
     def test_remove_references(self):
-        with TemporaryDirectory() as temp_dir, mock.patch(
+        temp_dir = Path(self._temp_dir.name, "references")
+        temp_dir.mkdir()
+        with mock.patch(
             "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
         ) as mock_filenames, mock.patch.object(
             self.data_connection._properties_ui.treeView_dc_references, "selectedIndexes"
@@ -229,8 +222,7 @@ class TestDataConnection(unittest.TestCase):
         expected_name = "ABC"
         expected_short_name = "abc"
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
-        shutil.move(self.data_connection.data_dir, expected_data_dir)
-        self.data_connection.rename(expected_name)  # Do rename
+        self.data_connection.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.data_connection.name)  # item name
         self.assertEqual(expected_name, self.data_connection._properties_ui.label_dc_name.text())  # name label in props

@@ -23,9 +23,10 @@ from ..settings import ParameterRenamingSettings
 class ParameterRenamingWidget(QWidget):
     """Widget for entity class renamer settings."""
 
-    def __init__(self, settings=None):
+    def __init__(self, undo_stack, settings=None):
         """
         Args:
+            undo_stack (QUndoStack)
             settings (ParameterRenamingSettings): filter settings
         """
         super().__init__()
@@ -34,7 +35,7 @@ class ParameterRenamingWidget(QWidget):
         self._ui = Ui_Form()
         self._ui.setupUi(self)
         name_map = settings.name_map if isinstance(settings, ParameterRenamingSettings) else {}
-        self._rename_table_model = RenameTableModel(name_map)
+        self._rename_table_model = RenameTableModel(undo_stack, name_map)
         self._ui.renaming_table.setModel(self._rename_table_model)
 
     def load_data(self, url):

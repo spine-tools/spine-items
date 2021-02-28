@@ -32,22 +32,28 @@ from ..utils import labelled_resource_filepaths, labelled_resource_args, is_labe
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, logger, shell, cmd, work_dir, selected_files):
+    def __init__(self, name, shell, cmd, work_dir, selected_files, project_dir, logger):
         """
 
         Args:
             name (str): Project item name
-            logger (LoggerInterface): Logger instance
             shell (str): Shell name or empty string if no shell should be used
             cmd (list): Command to execute
-            work_dir (str): Full path to work directory
+            work_dir (str, optional): Full path to work directory
             selected_files (list): List of file paths that were selected
+            project_dir (str): Absolute path to project directory
+            logger (LoggerInterface): Logger instance
         """
-        super().__init__(name, logger)
+        super().__init__(name, project_dir, logger)
         self.shell_name = shell
         self.cmd_list = cmd
+        if work_dir is None:
+            work_dir = os.path.join(self._data_dir, GIMLET_WORK_DIR_NAME)
+        else:
+            unique_dir_name = shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
+            work_dir = os.path.join(work_dir, unique_dir_name)
         self._work_dir = work_dir
-        self._resources = list()  # Predecessor resources
+        self._resources = list()
         self._selected_files = selected_files
         self._exec_mngr = None
 
@@ -72,20 +78,16 @@ class ExecutableItem(ExecutableItemBase):
         cmd_line_args = item_dict["cmd_line_args"]
         cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
         cmd_list += cmd_line_args
-        data_dir = os.path.join(project_dir, ".spinetoolbox", "items", shorten(name))
-        if item_dict["work_dir_mode"]:  # Use 'default' work dir. i.e. data_dir/work
-            work_dir = os.path.join(data_dir, GIMLET_WORK_DIR_NAME)
-        else:  # Make unique work dir
-            app_work_dir = app_settings.value("appSettings/workDir")
-            if not app_work_dir:
+        if item_dict["work_dir_mode"]:
+            work_dir = None
+        else:
+            work_dir = app_settings.value("appSettings/workDir")
+            if not work_dir:
                 logger.msg_error.emit(f"Error: Work directory not set for project item {name}")
                 work_dir = None
-            else:
-                unique_dir_name = shorten(name) + "__" + uuid.uuid4().hex + "__toolbox"
-                work_dir = os.path.join(app_work_dir, unique_dir_name)
         selected_files = deserialize_checked_states(item_dict.get("selections", list()), project_dir)
         selections = [path for path, boolean in selected_files.items() if boolean]  # List of selected paths
-        return cls(name, logger, shell, cmd_list, work_dir, selections)
+        return cls(name, shell, cmd_list, work_dir, selections, project_dir, logger)
 
     def stop_execution(self):
         """Stops executing this Gimlet."""

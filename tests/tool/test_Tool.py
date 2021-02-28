@@ -37,6 +37,7 @@ class TestTool(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self.toolbox = create_mock_toolbox()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         self.model = self.toolbox.specification_model = _MockToolSpecModel(self.toolbox, self._temp_dir.name)
 
     def tearDown(self):
@@ -52,12 +53,6 @@ class TestTool(unittest.TestCase):
 
     def test_item_category(self):
         self.assertEqual(Tool.item_category(), ItemInfo.item_category())
-
-    def test_execution_item(self):
-        """Tests that the ExecutableItem counterpart is created successfully."""
-        tool = self._add_tool()
-        exec_item = tool.execution_item()
-        self.assertIsInstance(exec_item, ExecutableItem)
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -110,7 +105,7 @@ class TestTool(unittest.TestCase):
         tool.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        tool.rename(expected_name)
+        tool.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, tool.name)  # item name
         self.assertEqual(expected_name, tool._properties_ui.label_tool_name.text())  # name label in props

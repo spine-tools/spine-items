@@ -27,10 +27,16 @@ import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
-from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, can_use_db_server
+from .utils import (
+    file_paths_from_resources,
+    find_file,
+    flatten_file_path_duplicates,
+    is_pattern,
+    get_spine_interface_version,
+)
+from spinedb_api.spine_db_server import REQUIRED_SPINE_INTERFACE_VERSION as REQ_SPINE_IFACE_VER
 from .output_resources import scan_for_resources
 from ..utils import labelled_resource_args, is_label
 
@@ -38,21 +44,21 @@ from ..utils import labelled_resource_args, is_label
 class ExecutableItem(ExecutableItemBase):
     """Tool project item's executable parts."""
 
-    def __init__(self, name, work_dir, output_dir, tool_specification, cmd_line_args, options, logger):
+    def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, project_dir, logger):
         """
         Args:
             name (str): item's name
             work_dir (str): an absolute path to Spine Toolbox work directory
                 or None if the Tool should not execute in work directory
-            output_dir (str): path to the directory where output files should be archived
             tool_specification (ToolSpecification): a tool specification
             cmd_line_args (list): a list of command line argument to pass to the tool instance
             options (dict): misc tool options. See ``Tool`` for details.
+            project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, logger)
+        super().__init__(name, project_dir, logger)
         self._work_dir = work_dir
-        self._output_dir = output_dir
+        self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR))
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
         self._options = options
@@ -387,8 +393,13 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
             return False
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
+        # Find out SpineInterface version, and whether or not we can use DB server
+        spine_iface_ver = get_spine_interface_version(self._tool_specification)
+        spine_iface_outdated = spine_iface_ver and (
+            [int(x) for x in spine_iface_ver.split(".")] < [int(x) for x in REQ_SPINE_IFACE_VER.split(".")]
+        )
+        use_db_server = not spine_iface_outdated
         # Expand cmd_line_args from resources
-        use_db_server = can_use_db_server(self._tool_specification)
         with labelled_resource_args(forward_resources + backward_resources, use_db_server) as labelled_args:
             for k, arg in enumerate(self._cmd_line_args):
                 if is_label(arg):
@@ -410,6 +421,14 @@ class ExecutableItem(ExecutableItemBase):
             return_code = self._tool_instance.execute()
         self._handle_output_files(return_code, execution_dir)
         self._tool_instance = None
+        if spine_iface_outdated:
+            self._logger.msg_warning.emit(
+                "<p>SpineInterface is outdated.</p>"
+                f"<p>Current version is <b>{spine_iface_ver}</b>, whereas <b>{REQ_SPINE_IFACE_VER}</b> is required. "
+                "This may result in errors while using SpineInterface "
+                "or any packages that depend on it, including SpineOpt.</p>"
+                f'<p>Please run `import Pkg; Pkg.update("SpineInterface")` from the julia prompt to update SpineInterface.</p>'
+            )
         return return_code == 0
 
     def _find_input_files(self, resources):
@@ -568,8 +587,6 @@ class ExecutableItem(ExecutableItemBase):
                 work_dir = None
         else:
             work_dir = None
-        data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
-        output_dir = pathlib.Path(data_dir, TOOL_OUTPUT_DIR)
         specification_name = item_dict["specification"]
         specification = ExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
@@ -577,7 +594,7 @@ class ExecutableItem(ExecutableItemBase):
         cmd_line_args = item_dict["cmd_line_args"]
         cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
         options = item_dict.get("options", {})
-        return cls(name, work_dir, output_dir, specification, cmd_line_args, options, logger)
+        return cls(name, work_dir, specification, cmd_line_args, options, project_dir, logger)
 
 
 def _count_files_and_dirs(paths):

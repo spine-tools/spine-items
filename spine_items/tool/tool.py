@@ -29,7 +29,7 @@ from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
 from .widgets.options_widgets import JuliaOptionsWidget
-from .widgets.tool_specification_widget import ToolSpecificationWidget
+from .widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
 from ..models import ToolCommandLineArgsModel, InputFileListModel
@@ -147,7 +147,7 @@ class Tool(ProjectItem):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification_window = ToolSpecificationWidget(self._toolbox, None)
+        specification_window = ToolSpecificationEditorWindow(self._toolbox, specification=None, item=self)
         specification_window.show()
 
     @Slot(bool)
@@ -264,7 +264,7 @@ class Tool(ProjectItem):
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
             spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
-            self._specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index)
+            self._specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index, self)
             self._specification_menu.setTitle("Specification...")
             self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
             options_widget = self._get_options_widget()
@@ -394,18 +394,13 @@ class Tool(ProjectItem):
             name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options
         )
 
-    def rename(self, new_name):
-        """Rename this item.
-
-        Args:
-            new_name (str): New name
-
-        Returns:
-            bool: Boolean value depending on success
-        """
-        super().rename(new_name)
+    def rename(self, new_name, rename_data_dir_message):
+        """See base class."""
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.item_changed.emit()
+        return True
 
     def notify_destination(self, source_item):
         """See base class."""
@@ -449,12 +444,13 @@ class Tool(ProjectItem):
             self._setup_filter_python_console(filter_id, kernel_name, connection_file)
 
     def _setup_main_python_console(self, kernel_name, connection_file):
-        self.python_console = self._toolbox.make_console("Python Console", self.name, kernel_name, connection_file)
+        # pylint: disable=attribute-defined-outside-init
+        self.python_console = self._toolbox.make_console("Python Console", self, kernel_name, connection_file)
         self._project.toolbox().override_python_console()
 
     def _setup_filter_python_console(self, filter_id, kernel_name, connection_file):
         self._filter_consoles.setdefault(filter_id, {}).setdefault(
-            "python", self._toolbox.make_console("Python Console", self.name, kernel_name, connection_file)
+            "python", self._toolbox.make_console("Python Console", self, kernel_name, connection_file)
         )
         self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
@@ -473,16 +469,18 @@ class Tool(ProjectItem):
             self._setup_filter_julia_console(filter_id, kernel_name, connection_file)
 
     def _setup_main_julia_console(self, kernel_name, connection_file):
-        self.julia_console = self._toolbox.make_console("Julia Console", self.name, kernel_name, connection_file)
+        # pylint: disable=attribute-defined-outside-init
+        self.julia_console = self._toolbox.make_console("Julia Console", self, kernel_name, connection_file)
         self._project.toolbox().override_julia_console()
 
     def _setup_filter_julia_console(self, filter_id, kernel_name, connection_file):
         self._filter_consoles.setdefault(filter_id, {}).setdefault(
-            "julia", self._toolbox.make_console("Julia Console", self.name, kernel_name, connection_file)
+            "julia", self._toolbox.make_console("Julia Console", self, kernel_name, connection_file)
         )
         self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
     def actions(self):
+        # pylint: disable=attribute-defined-outside-init
         if self.specification() is not None:
             self._actions = [self._specification_menu.menuAction()]
         else:

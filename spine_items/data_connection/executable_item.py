@@ -27,14 +27,20 @@ from .output_resources import scan_for_resources
 class ExecutableItem(ExecutableItemBase):
     """The executable parts of Data Connection."""
 
-    def __init__(self, name, file_references, data_files, logger):
+    def __init__(self, name, file_references, project_dir, logger):
         """
         Args:
             name (str): item's name
             file_references (list): a list of absolute paths to connected files
-            data_files (list): a list of absolute paths to files in data connection's data directory
+            project_dir (str): absolute path to project directory
+            logger (LoggerInterface): a logger
         """
-        super().__init__(name, logger)
+        super().__init__(name, project_dir, logger)
+        data_files = list()
+        with os.scandir(self._data_dir) as scan_iterator:
+            for entry in scan_iterator:
+                if entry.is_file():
+                    data_files.append(entry.path)
         self._files = file_references + data_files
 
     @staticmethod
@@ -51,10 +57,4 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         references = item_dict["references"]
         file_references = [deserialize_path(r, project_dir) for r in references]
-        data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
-        data_files = list()
-        with os.scandir(data_dir) as scan_iterator:
-            for entry in scan_iterator:
-                if entry.is_file():
-                    data_files.append(entry.path)
-        return cls(name, file_references, data_files, logger)
+        return cls(name, file_references, project_dir, logger)

@@ -38,24 +38,11 @@ class ImporterSpecification(ProjectItemSpecification):
         return self._mapping
 
     def is_equivalent(self, other):
-        """
-        Returns True if two specifications are essentially the same.
-
-        Args:
-            other (ImporterSpecification): specification to compare to
-
-        Returns:
-            bool: True if the specifications are equivalent, False otherwise
-        """
+        """See base class."""
         return self.name == other.name and self.description == other.description and self.mapping == other.mapping
 
     def to_dict(self):
-        """
-        Serializes specification into a dict.
-
-        Returns:
-            dict: serialized specification
-        """
+        """See base class."""
         return {
             "name": self.name,
             "item_type": ItemInfo.item_type(),

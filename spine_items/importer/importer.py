@@ -113,7 +113,7 @@ class Importer(ProjectItem):
         s[self._properties_ui.toolButton_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.toolButton_edit_specification.clicked] = self._edit_specification
         s[self._properties_ui.treeView_files.doubleClicked] = self._handle_files_double_clicked
-        s[self._properties_ui.comboBox_specification.currentTextChanged] = self._change_specification
+        s[self._properties_ui.comboBox_specification.textActivated] = self._change_specification
         s[self._properties_ui.cancel_on_error_checkBox.stateChanged] = self._handle_cancel_on_error_changed
         return s
 
@@ -158,7 +158,7 @@ class Importer(ProjectItem):
         if self._specification:
             self._properties_ui.comboBox_specification.setCurrentText(self._specification.name)
             spec_model_index = self._toolbox.specification_model.specification_index(self._specification.name)
-            specification_options_popup_menu = ItemSpecificationMenu(self._toolbox, spec_model_index)
+            specification_options_popup_menu = ItemSpecificationMenu(self._toolbox, spec_model_index, self)
             self._properties_ui.toolButton_edit_specification.setMenu(specification_options_popup_menu)
         else:
             self._properties_ui.comboBox_specification.setCurrentIndex(-1)

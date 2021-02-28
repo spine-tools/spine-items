@@ -23,7 +23,7 @@ from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .tool import Tool
 from .tool_icon import ToolIcon
 from .widgets.tool_properties_widget import ToolPropertiesWidget
-from .widgets.tool_specification_widget import ToolSpecificationWidget
+from .widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from .widgets.add_tool_widget import AddToolWidget
 from .widgets.custom_menus import ToolSpecificationMenu
 
@@ -36,10 +36,6 @@ class ToolFactory(ProjectItemFactory):
     @staticmethod
     def icon():
         return ":/icons/item_icons/hammer.svg"
-
-    @staticmethod
-    def supports_specifications():
-        return True
 
     @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
@@ -62,17 +58,14 @@ class ToolFactory(ProjectItemFactory):
         return ToolSpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, **kwargs):
+    def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
-        ToolSpecificationWidget(toolbox, specification).show()
+        ToolSpecificationEditorWindow(toolbox, specification, item).show()
 
     @staticmethod
     def repair_specification(toolbox, specification):
         """See base class."""
-        if not os.path.isabs(specification.path):
-            specification.path = os.path.normpath(
-                os.path.join(os.path.dirname(specification.definition_file_path), specification.path)
-            )
+        ProjectItemFactory.repair_specification(toolbox, specification)
         # Check that main program file exists. If not, log a message with an anchor to find it
         filename = specification.includes[0]
         full_path = os.path.join(specification.path, filename)
@@ -100,5 +93,6 @@ def _find_main_program_file(toolbox, filename, specification):
     answer = QFileDialog.getOpenFileName(toolbox, f"Select {filename}", toolbox._project.project_dir)
     if answer[0] == "":  # Cancel button clicked
         return
+    specification = specification.clone()
     specification.path, specification.includes[0] = os.path.split(answer[0])
-    toolbox.update_specification(specification)
+    toolbox.add_specification(specification, update_existing=True)

@@ -499,19 +499,15 @@ class DataConnection(ProjectItem):
         references = [deserialize_path(r, project.project_dir) for r in item_dict.get("references", list())]
         return DataConnection(name, description, x, y, toolbox, project, references)
 
-    def rename(self, new_name):
-        """Rename this item.
-
-        Args:
-            new_name (str): New name
-        Returns:
-            bool: True if renaming succeeded, False otherwise
-        """
+    def rename(self, new_name, rename_data_dir_message):
+        """See base class."""
         old_data_dir = self.data_dir
-        super().rename(new_name)
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
         self.file_system_watcher.remove_persistent_dir_path(old_data_dir)
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.populate_data_list()
+        return True
 
     def tear_down(self):
         """Tears down this item. Called by toolbox just before closing.

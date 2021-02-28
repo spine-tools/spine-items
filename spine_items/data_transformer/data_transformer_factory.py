@@ -37,11 +37,6 @@ class DataTransformerFactory(ProjectItemFactory):
         return ":/icons/item_icons/paint-brush-solid.svg"
 
     @staticmethod
-    def supports_specifications():
-        """See base class."""
-        return True
-
-    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         """See base class."""
         return AddDataTransformerWidget(toolbox, x, y, specification)
@@ -67,6 +62,6 @@ class DataTransformerFactory(ProjectItemFactory):
         return ItemSpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, **kwargs):
+    def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
-        SpecificationEditorWindow(toolbox, specification).show()
+        SpecificationEditorWindow(toolbox, specification, item=item).show()

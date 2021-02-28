@@ -42,6 +42,7 @@ class TestDataTransformer(unittest.TestCase):
         item_dict = {"type": "Data Transformer", "description": "", "specification": None, "x": 0, "y": 0}
         self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
         self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project)
         mock_finish_project_item_construction(factory, self.transformer, self.toolbox)
 
@@ -58,11 +59,6 @@ class TestDataTransformer(unittest.TestCase):
 
     def test_item_category(self):
         self.assertEqual(DataTransformer.item_category(), ItemInfo.item_category())
-
-    def test_execution_item(self):
-        """Tests that the ExecutableItem counterpart is created successfully."""
-        exec_item = self.transformer.execution_item()
-        self.assertIsInstance(exec_item, ExecutableItem)
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -115,7 +111,7 @@ class TestDataTransformer(unittest.TestCase):
         self.transformer.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        self.transformer.rename(expected_name)
+        self.transformer.rename(expected_name, "")
         self.assertEqual(expected_name, self.transformer.name)
         self.assertEqual(expected_name, self.transformer._properties_ui.item_name_label.text())
         self.assertEqual(expected_name, self.transformer.get_icon().name_item.text())

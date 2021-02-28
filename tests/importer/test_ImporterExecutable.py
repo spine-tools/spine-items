@@ -19,7 +19,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from PySide2.QtCore import QCoreApplication
 from spinedb_api import create_new_spine_database, DatabaseMapping
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_items.importer.executable_item import ExecutableItem
@@ -27,15 +26,11 @@ from spine_items.importer.importer_specification import ImporterSpecification
 
 
 class TestImporterExecutable(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        if not QCoreApplication.instance():
-            QCoreApplication()
-        else:
-            # Undo stack's cleanChanged signals might still be on their way if we're running all Toolbox's tests.
-            # Here they cause trouble because they try to invoke a method in non-existent ToolboxUI object.
-            # To remedy the situation we purge all events from the event queue here.
-            QCoreApplication.removePostedEvents(None)
+    def setUp(self):
+        self._temp_dir = TemporaryDirectory()
+
+    def tearDown(self):
+        self._temp_dir.cleanup()
 
     def test_item_type(self):
         self.assertEqual(ExecutableItem.item_type(), "Importer")
@@ -77,66 +72,63 @@ class TestImporterExecutable(unittest.TestCase):
         }
         logger = mock.MagicMock()
         specs = {"Importer": {"importer_spec": ImporterSpecification.from_dict(spec_dict, logger)}}
-        with TemporaryDirectory() as temp_dir:
-            item = ExecutableItem.from_dict(item_dict, "name", temp_dir, _MockSettings(), specs, logger)
-            self.assertIsInstance(item, ExecutableItem)
-            self.assertEqual("Importer", item.item_type())
+        item = ExecutableItem.from_dict(item_dict, "name", self._temp_dir.name, _MockSettings(), specs, logger)
+        self.assertIsInstance(item, ExecutableItem)
+        self.assertEqual("Importer", item.item_type())
 
     def test_stop_execution(self):
-        executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
+        executable = ExecutableItem("name", {}, [], "", True, self._temp_dir.name, mock.MagicMock())
         executable.stop_execution()
         self.assertIsNone(executable._process)
 
     def test_execute_simplest_case(self):
-        executable = ExecutableItem("name", {}, [], "", "", True, mock.MagicMock())
+        executable = ExecutableItem("name", {}, [], "", True, self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
 
     def test_execute_import_small_file(self):
-        with TemporaryDirectory() as temp_dir:
-            data_file = Path(temp_dir, "data.dat")
-            self._write_simple_data(data_file)
-            mapping = self._simple_input_data_mapping()
-            database_path = Path(temp_dir).joinpath("database.sqlite")
-            database_url = "sqlite:///" + str(database_path)
-            create_new_spine_database(database_url)
-            gams_path = ""
-            logger = mock.MagicMock()
-            logger.__reduce__ = lambda _: (mock.MagicMock, ())
-            executable = ExecutableItem("name", mapping, [str(data_file)], temp_dir, gams_path, True, logger)
-            database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
-            file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
-            self.assertTrue(executable.execute(file_resources, database_resources))
-            # Check that _process is None after execution
-            self.assertIsNone(executable._process)
-            database_map = DatabaseMapping(database_url)
-            class_list = database_map.object_class_list().all()
-            self.assertEqual(len(class_list), 1)
-            self.assertEqual(class_list[0].name, "class")
-            object_list = database_map.object_list(class_id=class_list[0].id).all()
-            self.assertEqual(len(object_list), 1)
-            self.assertEqual(object_list[0].name, "entity")
-            database_map.connection.close()
+        data_file = Path(self._temp_dir.name, "data.dat")
+        self._write_simple_data(data_file)
+        mapping = self._simple_input_data_mapping()
+        database_path = Path(self._temp_dir.name, "database.sqlite")
+        database_url = "sqlite:///" + str(database_path)
+        create_new_spine_database(database_url)
+        gams_path = ""
+        logger = mock.MagicMock()
+        logger.__reduce__ = lambda _: (mock.MagicMock, ())
+        executable = ExecutableItem("name", mapping, [str(data_file)], gams_path, True, self._temp_dir.name, logger)
+        database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
+        file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
+        self.assertTrue(executable.execute(file_resources, database_resources))
+        # Check that _process is None after execution
+        self.assertIsNone(executable._process)
+        database_map = DatabaseMapping(database_url)
+        class_list = database_map.object_class_list().all()
+        self.assertEqual(len(class_list), 1)
+        self.assertEqual(class_list[0].name, "class")
+        object_list = database_map.object_list(class_id=class_list[0].id).all()
+        self.assertEqual(len(object_list), 1)
+        self.assertEqual(object_list[0].name, "entity")
+        database_map.connection.close()
 
     def test_execute_skip_deselected_file(self):
-        with TemporaryDirectory() as temp_dir:
-            data_file = Path(temp_dir, "data.dat")
-            self._write_simple_data(data_file)
-            database_path = Path(temp_dir).joinpath("database.sqlite")
-            database_url = "sqlite:///" + str(database_path)
-            create_new_spine_database(database_url)
-            gams_path = ""
-            executable = ExecutableItem("name", {}, [], temp_dir, gams_path, True, mock.MagicMock())
-            database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
-            file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
-            self.assertTrue(executable.execute(file_resources, database_resources))
-            # Check that _process is None after execution
-            self.assertIsNone(executable._process)
-            database_map = DatabaseMapping(database_url)
-            class_list = database_map.object_class_list().all()
-            self.assertEqual(len(class_list), 0)
-            database_map.connection.close()
+        data_file = Path(self._temp_dir.name, "data.dat")
+        self._write_simple_data(data_file)
+        database_path = Path(self._temp_dir.name, "database.sqlite")
+        database_url = "sqlite:///" + str(database_path)
+        create_new_spine_database(database_url)
+        gams_path = ""
+        executable = ExecutableItem("name", {}, [], gams_path, True, self._temp_dir.name, mock.MagicMock())
+        database_resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
+        file_resources = [ProjectItemResource(mock.Mock(), "file", data_file.as_uri())]
+        self.assertTrue(executable.execute(file_resources, database_resources))
+        # Check that _process is None after execution
+        self.assertIsNone(executable._process)
+        database_map = DatabaseMapping(database_url)
+        class_list = database_map.object_class_list().all()
+        self.assertEqual(len(class_list), 0)
+        database_map.connection.close()
 
     @staticmethod
     def _write_simple_data(file_name):
