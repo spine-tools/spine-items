@@ -64,6 +64,7 @@ class NotebookInstance:
 
     def prepare(self, nb_src_dst_mapping, args):
         """See base class."""
+        # TODO refactor into separate methods for testing
         append_out = "_out"
         if nb_src_dst_mapping:
             nb_src_name = self.notebook_specification.includes[0]
@@ -90,7 +91,7 @@ class NotebookInstance:
         """Executes in console.
         """
         kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-
+        # TODO add try/catch and return 0 if success 1 otherwise!
         pm.execute_notebook(
             self._nb_path,
             self._nb_out_path,

@@ -19,8 +19,9 @@ is filled with all the information from the specification being edited.
 """
 
 import os
-from PySide2.QtGui import QStandardItemModel, QStandardItem
-from PySide2.QtWidgets import QWidget, QStatusBar, QInputDialog, QFileDialog, QFileIconProvider, QMessageBox
+from PySide2.QtGui import QStandardItemModel, QStandardItem, QFontDatabase, QFontMetrics, QKeySequence
+from PySide2.QtWidgets import QMainWindow, QStatusBar, QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, \
+    QUndoStack
 from PySide2.QtCore import Slot, Qt, QFileInfo
 from spinetoolbox.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
 from spinetoolbox.helpers import busy_effect, open_url
@@ -28,23 +29,40 @@ from spine_engine.utils.command_line_arguments import split_cmdline_args
 from ..item_info import ItemInfo
 from ..notebook_specifications import NOTEBOOK_TYPES, REQUIRED_KEYS
 from .custom_menus import AddIncludesPopupMenu
+from ...widgets import restore_ui, SpecNameDescriptionToolbar
 
 
-class NotebookSpecificationWidget(QWidget):
-    def __init__(self, toolbox, specification=None):
+class NotebookSpecificationEditorWindow(QMainWindow):
+    def __init__(self, toolbox, specification=None, item=None):
         """A widget to query user's preferences for a new tool specification.
 
         Args:
             toolbox (ToolboxUI): QMainWindow instance
-            specification (ToolSpecification): If given, the form is pre-filled with this specification
+            specification (NotebookSpecification): If given, the form is pre-filled with this specification
+            item (ProjectItem, optional): Sets the spec for this item if accepted
         """
         from ..ui.notebook_specification_form import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__(parent=toolbox, f=Qt.Window)  # Inherit stylesheet from ToolboxUI
+        super().__init__(parent=toolbox)  # Inherit stylesheet from ToolboxUI
+        self._item = item
+        self._new_spec = None
+        self._app_settings = toolbox.qsettings()
+        self.settings_group = "notebookSpecificationEditorWindow"
         # Setup UI from Qt Designer file
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.widget_main_program.setVisible(False)
+        self.takeCentralWidget()
+        self.setWindowTitle("Notebook Specification Editor[*]")
+        restore_ui(self, self._app_settings, self.settings_group)
+        self._undo_stack = QUndoStack(self)
+        self._spec_toolbar = SpecNameDescriptionToolbar(self, specification, self._undo_stack)
+        self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
+        self._populate_main_menu()
+        # Customize text edit main program
+        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        self.ui.textEdit_jupyter_notebook.setFont(font)
+        self.ui.textEdit_jupyter_notebook.setTabStopDistance(QFontMetrics(font).horizontalAdvance(4 * " "))
+        self.ui.textEdit_jupyter_notebook.setEnabled(False)
         self.ui.textEdit_jupyter_notebook.setStyleSheet(
             "QTextEdit {background-color: #19232D; border: 1px solid #32414B; color: #F0F0F0; border-radius: 2px;}"
         )
@@ -106,6 +124,16 @@ class NotebookSpecificationWidget(QWidget):
         self.connect_signals()
         if self.program_path is not None:  # It's None if the path does not exist
             self.set_jupyter_notebook_file(os.path.join(self.program_path, self.jupyter_notebook_file))
+
+    def _populate_main_menu(self):
+        menu = self._spec_toolbar.menu
+        undo_action = self._undo_stack.createUndoAction(self)
+        redo_action = self._undo_stack.createRedoAction(self)
+        undo_action.setShortcuts(QKeySequence.Undo)
+        redo_action.setShortcuts(QKeySequence.Redo)
+        menu.addActions([redo_action, undo_action])
+        menu.addSeparator()
+        self.addAction(self._spec_toolbar.menu_action)
 
     def connect_signals(self):
         """Connect signals to slots."""

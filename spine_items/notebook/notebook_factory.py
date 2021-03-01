@@ -23,7 +23,7 @@ from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .notebook import Notebook
 from .notebook_icon import NotebookIcon
 from .widgets.notebook_properties_widget import NotebookPropertiesWidget
-from .widgets.notebook_specification_widget import NotebookSpecificationWidget
+from .widgets.notebook_specification_editor_window import NotebookSpecificationEditorWindow
 from .widgets.add_notebook_widget import AddNotebookWidget
 from .widgets.custom_menus import NotebookSpecificationMenu
 
@@ -62,9 +62,9 @@ class NotebookFactory(ProjectItemFactory):
         return NotebookSpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, **kwargs):
+    def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
-        NotebookSpecificationWidget(toolbox, specification).show()
+        NotebookSpecificationEditorWindow(toolbox, specification, item).show()
 
     @staticmethod
     def repair_specification(toolbox, specification):

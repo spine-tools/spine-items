@@ -36,7 +36,7 @@ OPTIONAL_KEYS = [
     "output_files",
     "execute_in_work",
 ]
-LIST_REQUIRED_KEYS = ["includes", "input_files", "output_files"]  # These should be lists
+LIST_REQUIRED_KEYS = ["includes", "input_files", "output_files", "input_vars", "output_vars"]  # These should be lists
 
 
 def make_specification(definition, app_settings, logger):
@@ -84,8 +84,8 @@ class NotebookSpecification(ProjectItemSpecification):
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): A logger instance
             description (str): Notebook description
-            input_vars (str): Name of variables in parameter tagged cell of .ipynb file corresponding to inputs
-            output_vars (str): Name of variables in parameter tagged cell of .ipynb file corresponding to outputs
+            input_vars (list(str)): Name of variables in parameter tagged cell of .ipynb file corresponding to inputs
+            output_vars (list(str)): Name of variables in parameter tagged cell of .ipynb file corresponding to outputs
             input_files (list): List of required data files
             output_files (list, optional): List of output files (wildcards may be used)
         """
@@ -215,7 +215,7 @@ class NotebookSpecification(ProjectItemSpecification):
         """Returns this specification's main program file path."""
         if not self.path or not os.path.isdir(self.path):
             self._logger.msg_error.emit(
-                f"Opening Notebook spec Jupyter notebook <b>{self.includes[0]}</b> failed. "
+                f"Opening Notebook spec for Jupyter notebook <b>{self.includes[0]}</b> failed. "
                 f"Jupyter notebook directory does not exist."
             )
             return None

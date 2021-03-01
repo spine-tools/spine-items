@@ -34,6 +34,10 @@ from .utils import is_pattern
 from ..utils import labelled_resource_args, is_label
 
 
+# TODO fix spec ui, add kernel support, add julia and R support
+#   in spec ui choose nb type, then drop down menu will fill with available kernels
+#   hover over selected kernel to get tooltip with kernel details like abs path etc.
+#   need way to open jupyter in toolbox
 class ExecutableItem(ExecutableItemBase):
     def __init__(self, name, work_dir, output_dir, notebook_specification, cmd_line_args, logger):
         """
@@ -45,7 +49,7 @@ class ExecutableItem(ExecutableItemBase):
             notebook_specification (NotebookSpecification): a notebook specification
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, logger)
+        super().__init__(name, work_dir, logger)
         self._name = name
         self._work_dir = work_dir
         self._output_dir = output_dir

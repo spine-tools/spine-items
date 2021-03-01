@@ -28,7 +28,7 @@ from .commands import UpdateToolExecuteInWorkCommand
 from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import NotebookSpecificationMenu
-from .widgets.notebook_specification_widget import NotebookSpecificationWidget
+from .widgets.notebook_specification_editor_window import NotebookSpecificationEditorWindow
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
 from ..models import ToolCommandLineArgsModel, InputFileListModel
@@ -63,6 +63,7 @@ class Notebook(ProjectItem):
         if cmd_line_args is None:
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
+        # TODO Figure this shit out
         self._cmdline_args_model = ToolCommandLineArgsModel(self)
         self._specification = self._toolbox.specification_model.find_specification(specification_name)
         if specification_name and not self._specification:
@@ -73,8 +74,9 @@ class Notebook(ProjectItem):
         self._populate_cmdline_args_model()
         self._input_file_model = InputFileListModel(header_label="Available resources", checkable=False)
         # Make directory for results
-        self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
+        self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)  # TODO set Notebook out dir
         self.do_update_execution_mode(execute_in_work)
+        # TODO figure out what to do with these
         self.python_console_requested.connect(self._setup_python_console)
         self.julia_console_requested.connect(self._setup_julia_console)
 
@@ -113,7 +115,7 @@ class Notebook(ProjectItem):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification_window = NotebookSpecificationWidget(self._toolbox, None)
+        specification_window = NotebookSpecificationEditorWindow(self._toolbox, None)
         specification_window.show()
 
     @Slot(bool)
@@ -333,18 +335,20 @@ class Notebook(ProjectItem):
         cmd_line_args = [deserialize_path(arg, project.project_dir) for arg in cmd_line_args]
         return Notebook(name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args)
 
-    def rename(self, new_name):
+    def rename(self, new_name, rename_data_dir_message):
         """Rename this item.
 
         Args:
             new_name (str): New name
-
+            rename_data_dir_message (str):
         Returns:
             bool: Boolean value depending on success
         """
-        super().rename(new_name)
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.item_changed.emit()
+        return True
 
     def notify_destination(self, source_item):
         """See base class."""
