@@ -263,14 +263,17 @@ class Tool(ProjectItem):
             self._properties_ui.toolButton_tool_specification.setMenu(None)
         else:
             self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
-            spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
-            self._specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index, self)
-            self._specification_menu.setTitle("Specification...")
+            self._update_specification_menu()
             self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
             options_widget = self._get_options_widget()
             if options_widget:
                 self._properties_ui.horizontalLayout_options.addWidget(options_widget)
                 options_widget.show()
+
+    def _update_specification_menu(self):
+        spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
+        self._specification_menu = ToolSpecificationMenu(self._toolbox, spec_model_index, self)
+        self._specification_menu.setTitle("Specification...")
 
     @Slot(bool)
     def _open_results_directory(self, _):
@@ -482,6 +485,8 @@ class Tool(ProjectItem):
     def actions(self):
         # pylint: disable=attribute-defined-outside-init
         if self.specification() is not None:
+            if self._specification_menu is None:
+                self._update_specification_menu()
             self._actions = [self._specification_menu.menuAction()]
         else:
             action = QAction("New specification")
