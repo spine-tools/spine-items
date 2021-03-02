@@ -315,18 +315,6 @@
        </property>
        <item>
         <widget class="SourcesTreeView" name="treeView_programfiles">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>200</height>
-          </size>
-         </property>
          <property name="font">
           <font>
            <pointsize>10</pointsize>
@@ -482,18 +470,6 @@
        </property>
        <item>
         <widget class="CustomTreeView" name="treeView_inputfiles">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>500</height>
-          </size>
-         </property>
          <property name="font">
           <font>
            <pointsize>10</pointsize>
@@ -626,12 +602,6 @@
        </property>
        <item>
         <widget class="CustomTreeView" name="treeView_outputfiles">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>500</height>
-          </size>
-         </property>
          <property name="font">
           <font>
            <pointsize>10</pointsize>
@@ -758,12 +728,6 @@
        </property>
        <item>
         <widget class="CustomTreeView" name="treeView_inputfiles_opt">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>500</height>
-          </size>
-         </property>
          <property name="font">
           <font>
            <pointsize>10</pointsize>

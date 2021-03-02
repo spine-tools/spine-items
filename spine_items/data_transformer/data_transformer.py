@@ -67,7 +67,10 @@ class DataTransformer(ProjectItem):
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()
-        serialized["specification"] = self._specification_name
+        if not self.specification():
+            serialized["specification"] = ""
+        else:
+            serialized["specification"] = self._specification_name
         return serialized
 
     @staticmethod
