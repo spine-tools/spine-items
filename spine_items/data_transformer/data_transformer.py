@@ -29,7 +29,7 @@ from .output_resources import scan_for_resources
 class DataTransformer(ProjectItem):
     """Data transformer project item."""
 
-    def __init__(self, name, description, x, y, toolbox, project, specification_name=None):
+    def __init__(self, name, description, x, y, toolbox, project, specification_name=""):
         """
         Args:
             name (str): item's name
@@ -67,10 +67,7 @@ class DataTransformer(ProjectItem):
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()
-        if not self.specification():
-            serialized["specification"] = ""
-        else:
-            serialized["specification"] = self._specification_name
+        serialized["specification"] = self._specification_name
         return serialized
 
     @staticmethod
@@ -93,7 +90,7 @@ class DataTransformer(ProjectItem):
         """see base class"""
         if not super().do_set_specification(specification):
             return False
-        self._specification_name = specification.name if specification is not None else None
+        self._specification_name = specification.name if specification is not None else ""
         if self._active:
             self._update_ui()
         if specification is None:
