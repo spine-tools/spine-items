@@ -63,7 +63,7 @@ class TestDataTransformer(unittest.TestCase):
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.transformer.item_dict()
-        self.assertEqual(d, {"description": "", "type": "Data Transformer", "x": 0.0, "y": 0.0, "specification": None})
+        self.assertEqual(d, {"description": "", "type": "Data Transformer", "x": 0.0, "y": 0.0, "specification": ""})
 
     def test_notify_destination(self):
         self.transformer.logger.msg = MagicMock()
