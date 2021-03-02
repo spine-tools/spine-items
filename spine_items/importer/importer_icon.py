@@ -43,4 +43,4 @@ class ImporterIcon(ProjectItemIcon):
         """
         super().mouseDoubleClickEvent(e)
         item = self._toolbox.project_item_model.get_item(self._name)
-        item.project_item._edit_specification()
+        item.project_item.edit_specification()

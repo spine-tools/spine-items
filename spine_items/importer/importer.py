@@ -111,7 +111,7 @@ class Importer(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_open_dir.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.toolButton_edit_specification.clicked] = self._edit_specification
+        s[self._properties_ui.toolButton_edit_specification.clicked] = self.edit_specification
         s[self._properties_ui.treeView_files.doubleClicked] = self._handle_files_double_clicked
         s[self._properties_ui.comboBox_specification.textActivated] = self._change_specification
         s[self._properties_ui.cancel_on_error_checkBox.stateChanged] = self._handle_cancel_on_error_changed
@@ -184,7 +184,7 @@ class Importer(ProjectItem):
         return True
 
     @Slot(bool)
-    def _edit_specification(self, checked=False):
+    def edit_specification(self, checked=False):
         """Opens Import editor for the file selected in list view."""
         index = self._properties_ui.treeView_files.currentIndex()
         if not index.isValid():

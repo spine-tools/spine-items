@@ -77,3 +77,13 @@ class ToolIcon(ProjectItemIcon):
         if self.time_line.state() != QTimeLine.Running:
             return
         self.time_line.stop()
+
+    def mouseDoubleClickEvent(self, e):
+        """Opens Tool Specification editor when this Tool icon is double-clicked.
+
+        Args:
+            e (QGraphicsSceneMouseEvent): Event
+        """
+        super().mouseDoubleClickEvent(e)
+        item = self._toolbox.project_item_model.get_item(self._name)
+        item.project_item.show_specification_window()

@@ -147,7 +147,9 @@ class Tool(ProjectItem):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification_window = ToolSpecificationEditorWindow(self._toolbox, specification=None, item=self)
+        specification_window = ToolSpecificationEditorWindow(
+            self._toolbox, specification=self.specification(), item=self
+        )
         specification_window.show()
 
     @Slot(bool)

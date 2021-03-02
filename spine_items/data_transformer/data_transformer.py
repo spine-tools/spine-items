@@ -110,7 +110,7 @@ class DataTransformer(ProjectItem):
     def show_specification_window(self, _=True):
         """Opens the settings window."""
         specification_window = SpecificationEditorWindow(
-            self._toolbox, specification=None, urls=[r.url for r in self._db_resources], item=self
+            self._toolbox, specification=self.specification(), urls=[r.url for r in self._db_resources], item=self
         )
         specification_window.show()
 
