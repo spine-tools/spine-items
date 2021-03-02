@@ -20,7 +20,7 @@ is filled with all the information from the specification being edited.
 
 import os
 from copy import deepcopy
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QFontDatabase, QFontMetrics
+from PySide2.QtGui import QStandardItemModel, QStandardItem, QKeySequence
 from PySide2.QtWidgets import (
     QMainWindow,
     QDialogButtonBox,
@@ -68,13 +68,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
         # Customize text edit main program
-        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        self.ui.textEdit_main_program.setFont(font)
-        self.ui.textEdit_main_program.setTabStopDistance(QFontMetrics(font).horizontalAdvance(4 * " "))
         self.ui.textEdit_main_program.setEnabled(False)
-        self.ui.textEdit_main_program.setStyleSheet(
-            "QTextEdit {background-color: #19232D; border: 1px solid #32414B; color: #F0F0F0; border-radius: 2px;}"
-        )
         # Class attributes
         self._toolbox = toolbox
         self._project = self._toolbox.project()
@@ -102,6 +96,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
             tooltype = specification.tooltype.lower()
             index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == tooltype), -1)
             self.ui.comboBox_tooltype.setCurrentIndex(index)
+            self.ui.textEdit_main_program.set_lexer_name(tooltype.lower())
         # Init lists
         programfiles = list(specification.includes) if specification else list()
         # Get first item from programfiles list as the main program file
@@ -247,6 +242,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
     def _set_tooltype(self, value):
         value = value.lower()
         self.spec_dict["tooltype"] = value
+        self.ui.textEdit_main_program.set_lexer_name(value)
         index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == value), -1)
         self.ui.comboBox_tooltype.setCurrentIndex(index)
 

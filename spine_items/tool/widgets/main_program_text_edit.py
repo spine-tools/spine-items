@@ -16,10 +16,58 @@ Provides MainProgramTextEdit.
 :date:   28.1.2020
 """
 
+from pygments.styles import get_style_by_name
+from pygments.lexers import get_lexer_by_name
 from PySide2.QtWidgets import QTextEdit
+from PySide2.QtGui import QSyntaxHighlighter, QTextCharFormat, QBrush, QColor, QFontMetrics, QFontDatabase, QFont
+
+
+class CustomSyntaxHighlighter(QSyntaxHighlighter):
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
+        self.lexer = None
+        self._formats = {}
+
+    def set_style(self, style):
+        self._formats.clear()
+        for ttype, tstyle in style:
+            text_format = self._formats[ttype] = QTextCharFormat()
+            if tstyle['color']:
+                brush = QBrush(QColor("#" + tstyle['color']))
+                text_format.setForeground(brush)
+            if tstyle['bgcolor']:
+                brush = QBrush(QColor("#" + tstyle['bgcolor']))
+                text_format.setBackground(brush)
+            if tstyle['bold']:
+                text_format.setFontWeight(QFont.Bold)
+            if tstyle['italic']:
+                text_format.setFontItalic(True)
+            if tstyle['underline']:
+                text_format.setFontUnderline(True)
+
+    def highlightBlock(self, text):
+        for start, ttype, subtext in self.lexer.get_tokens_unprocessed(text):
+            while ttype not in self._formats:
+                ttype = ttype.parent
+            text_format = self._formats.get(ttype, QTextCharFormat())
+            self.setFormat(start, len(subtext), text_format)
 
 
 class MainProgramTextEdit(QTextEdit):
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
+        self._highlighter = CustomSyntaxHighlighter(self.document())
+        style = get_style_by_name("monokai")
+        self._highlighter.set_style(style)
+        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        self.setFont(font)
+        self.setTabStopDistance(QFontMetrics(font).horizontalAdvance(4 * " "))
+        self.setStyleSheet(f"QTextEdit {{background-color: {style.background_color};}}")
+
     def insertFromMimeData(self, source):
         if source.hasText():
             self.insertPlainText(source.text())
+
+    def set_lexer_name(self, lexer_name):
+        self._highlighter.lexer = get_lexer_by_name(lexer_name)
+        self._highlighter.rehighlight()
