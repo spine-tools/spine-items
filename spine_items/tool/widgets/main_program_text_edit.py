@@ -18,6 +18,7 @@ Provides MainProgramTextEdit.
 
 from pygments.styles import get_style_by_name
 from pygments.lexers import get_lexer_by_name
+from pygments.util import ClassNotFound
 from PySide2.QtWidgets import QTextEdit
 from PySide2.QtGui import QSyntaxHighlighter, QTextCharFormat, QBrush, QColor, QFontMetrics, QFontDatabase, QFont
 
@@ -69,5 +70,9 @@ class MainProgramTextEdit(QTextEdit):
             self.insertPlainText(source.text())
 
     def set_lexer_name(self, lexer_name):
-        self._highlighter.lexer = get_lexer_by_name(lexer_name)
-        self._highlighter.rehighlight()
+        try:
+            self._highlighter.lexer = get_lexer_by_name(lexer_name)
+            self._highlighter.rehighlight()
+        except ClassNotFound:
+            # No lexer for aliases 'gams' nor 'executable'
+            pass
