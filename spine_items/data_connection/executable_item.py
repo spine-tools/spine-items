@@ -48,7 +48,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return scan_for_resources(self, self._files)
+        return scan_for_resources(self, self._files, self._project_dir)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):

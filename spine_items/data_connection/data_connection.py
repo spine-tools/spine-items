@@ -469,7 +469,7 @@ class DataConnection(ProjectItem):
         """see base class"""
         refs = self.file_references()
         data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
-        resources = scan_for_resources(self, refs + data_files)
+        resources = scan_for_resources(self, refs + data_files, self._project.project_dir)
         for k, resource in enumerate(resources):
             updated_from = self._updated_from.pop(resource.path, None)
             if not updated_from:
