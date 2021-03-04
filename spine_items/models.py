@@ -74,8 +74,6 @@ class FileListModel(QAbstractItemModel):
             if pack_label is None:
                 if row < len(self._single_resources):
                     resource = self._single_resources[row].resource
-                    if resource.hasfilepath:
-                        return resource.path
                     return resource.label
                 return self._pack_resources[row - len(self._single_resources)].label
             return self._pack_resources[self._pack_index(pack_label)].resources[row].path
@@ -101,6 +99,8 @@ class FileListModel(QAbstractItemModel):
                     return None
             else:
                 resource = self._pack_resources[self._pack_index(pack_label)].resources[row]
+            if resource.type_ == "database":
+                return resource.url
             return (
                 resource.path
                 if resource.hasfilepath
