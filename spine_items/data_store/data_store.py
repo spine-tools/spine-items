@@ -83,7 +83,7 @@ class DataStore(ProjectItem):
         super().set_up()
         self._actions.clear()
         self._actions.append(QAction("Open URL in Spine DB editor"))
-        self._actions[-1].triggered.connect(self.open_url_in_new_db_editor)
+        self._actions[-1].triggered.connect(self.open_url_in_spine_db_editor)
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
@@ -102,7 +102,7 @@ class DataStore(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_ds_open_dir.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_new_db_editor
+        s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_spine_db_editor
         s[self._properties_ui.toolButton_select_sqlite_file.clicked] = self.select_sqlite_file
         s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
         s[self._properties_ui.toolButton_copy_url.clicked] = self.copy_url
@@ -340,14 +340,21 @@ class DataStore(ProjectItem):
     def _handle_open_url_menu_triggered(self, action):
         """Opens current url."""
         if action.text() == "New window":
-            self.open_url_in_new_db_editor()
+            self._open_url_in_new_db_editor()
             return
         db_editor = self._open_db_editors[action.text()]
         self._open_url_in_existing_db_editor(db_editor)
 
     @Slot(bool)
-    def open_url_in_new_db_editor(self, checked=False):
+    def open_url_in_spine_db_editor(self, checked=False):
         """Opens current url in the Spine database editor."""
+        db_editor = next(self._toolbox.db_mngr.get_all_multi_spine_db_editors(), None)
+        if db_editor is None:
+            self._open_url_in_new_db_editor()
+            return
+        self._open_url_in_existing_db_editor(db_editor)
+
+    def _open_url_in_new_db_editor(self, checked=False):
         sa_url = self.sql_alchemy_url()
         if sa_url is not None:
             self._spine_db_editor = MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name})
