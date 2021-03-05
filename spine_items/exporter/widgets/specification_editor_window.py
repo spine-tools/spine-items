@@ -105,7 +105,7 @@ class SpecificationEditorWindow(QMainWindow):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window
-            specification (ProjectItemSpecification, optional): transformer specification
+            specification (ProjectItemSpecification, optional): exporter specification
             url_model (QAbstractListModel): model that provides URLs of connected databases
             item_name (str, optional): invoking project item's name, if window was opened from its properties tab
         """

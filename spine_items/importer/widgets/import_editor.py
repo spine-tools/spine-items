@@ -17,7 +17,7 @@ Contains ImportEditor widget and SourceDataTableMenu.
 """
 
 from copy import deepcopy
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QPoint, Qt, Signal, Slot
+from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QPoint, Qt, Signal, Slot, QPersistentModelIndex
 from spinedb_api import ObjectClassMapping
 from spinedb_api.spine_io.type_conversion import value_to_convert_spec
 from .custom_menus import SourceListMenu, SourceDataTableMenu
@@ -72,6 +72,7 @@ class ImportEditor(QObject):
 
         # connect signals
         self._ui_options_widget.about_to_undo.connect(self.select_table)
+        self._ui_options_widget.load_default_mapping_requested.connect(self._load_default_mapping)
         self._ui.source_list.customContextMenuRequested.connect(self.show_source_list_context_menu)
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_selected_table)
         self._ui.source_data_table.customContextMenuRequested.connect(self._ui_source_data_table_menu.request_menu)
@@ -81,6 +82,7 @@ class ImportEditor(QObject):
         self._connector.data_ready.connect(self.update_preview_data)
         self._connector.tables_ready.connect(self.update_tables)
         self._connector.mapped_data_ready.connect(self.mapped_data_ready.emit)
+        self._connector.default_mapping_ready.connect(self.import_mappings)
         # when data is ready set loading status to False.
         self._connector.connection_ready.connect(lambda: self.set_loading_status(False))
         self._connector.data_ready.connect(lambda: self.set_loading_status(False))
@@ -121,6 +123,10 @@ class ImportEditor(QObject):
         self._ui.dockWidget_mappings.setDisabled(status)
         self._ui.dockWidget_mapping_options.setDisabled(status)
         self._ui.dockWidget_mapping_spec.setDisabled(status)
+
+    @Slot()
+    def _load_default_mapping(self):
+        self._connector.request_default_mapping()
 
     @Slot()
     def request_new_tables_from_connector(self):
@@ -266,7 +272,7 @@ class ImportEditor(QObject):
         Args:
             mapping (dict): mapping
         """
-        current = self._ui.source_list.selectionModel().currentIndex()
+        current = QPersistentModelIndex(self._ui.source_list.selectionModel().currentIndex())
         self._restore_mapping(mapping)
         self._ui.source_list.selectionModel().setCurrentIndex(current, QItemSelectionModel.ClearAndSelect)
 

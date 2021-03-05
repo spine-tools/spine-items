@@ -303,7 +303,7 @@ class ImportEditorWindow(QMainWindow):
         start_dir = self._toolbox.project().project_dir
         # noinspection PyCallByClass
         filename = QFileDialog.getOpenFileName(
-            self, "Import mapping specification", start_dir, "Mapping options (*.json)"
+            self, "Import mapping specification", start_dir, "Import mapping (*.json)"
         )
         if not filename[0]:
             return
@@ -315,7 +315,7 @@ class ImportEditorWindow(QMainWindow):
                 return
         expected_options = ("table_mappings", "table_types", "table_row_types", "table_options", "selected_tables")
         if not isinstance(settings, dict) or not any(key in expected_options for key in settings.keys()):
-            self._ui.statusbar.showMessage(f"{filename[0]} does not contain mapping options", 10000)
+            self._ui.statusbar.showMessage(f"{filename[0]} does not contain and import mapping", 10000)
         self._undo_stack.push(RestoreMappingsFromDict(self._editor, settings))
         self._ui.statusbar.showMessage(f"Mapping loaded from {filename[0]}", 10000)
 
@@ -325,7 +325,7 @@ class ImportEditorWindow(QMainWindow):
         start_dir = self._toolbox.project().project_dir
         # noinspection PyCallByClass
         filename = QFileDialog.getSaveFileName(
-            self, "Export mapping spec to a file", start_dir, "Mapping options (*.json)"
+            self, "Export mapping spec to a file", start_dir, "Import mapping (*.json)"
         )
         if not filename[0]:
             return
