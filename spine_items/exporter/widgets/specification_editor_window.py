@@ -690,7 +690,7 @@ def _add_fixed_table_name(mapping_root):
     """
     for mapping in mapping_root.flatten():
         if mapping.position == Position.table_name:
-            mapping.position = None
+            mapping.position = Position.hidden
     new_root = FixedValueMapping(Position.table_name, "table")
     new_root.child = mapping_root
     return new_root

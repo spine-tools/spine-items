@@ -196,10 +196,7 @@ class MappingTableModel(QAbstractTableModel):
             position = mapping.position
             if position in (Position.hidden, Position.table_name, Position.single_row):
                 position = 0
-            if value == Qt.Checked:
-                new_position = -position - 1
-            else:
-                new_position = -position - 1
+            new_position = -position - 1
             command = SetMappingPosition(self, self._mapping_name, row, new_position, mapping.position)
             self._undo_stack.push(command)
             return True
