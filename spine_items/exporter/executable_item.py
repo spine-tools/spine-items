@@ -69,7 +69,11 @@ class ExecutableItem(ExporterExecutableItemBase):
                 self._logger,
             ),
         )
-        success, self._result_files = self._process.run_until_complete()
+        result = self._process.run_until_complete()
+        success = result[0]
+        # result contains only the success flag if execution was forcibly stopped.
+        if len(result) > 1:
+            self._result_files = result[1]
         self._process = None
         return success
 
