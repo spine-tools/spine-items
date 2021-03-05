@@ -132,7 +132,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.setWindowTitle(
-            "Exporter specification editor" + (f"   -- {item_name} --" if item_name is not None else "")
+            "Exporter specification editor[*]" + (f"   -- {item_name} --" if item_name is not None else "")
         )
         central_widget = self.takeCentralWidget()
         central_widget.deleteLater()
@@ -184,6 +184,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.save_and_close_action.triggered.connect(self._save_and_close)
         self._button_box.accepted.connect(self._save_and_close)
         self._button_box.rejected.connect(self.close)
+        self._undo_stack.cleanChanged.connect(lambda clean: self.setWindowModified(not clean))
 
     def _restore_dock_widgets(self):
         """Docks all floating and or hidden QDockWidgets back to the window."""
