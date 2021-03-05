@@ -14,6 +14,7 @@ Functions to write export preview tables.
 :author: A. Soininen (VTT)
 :date:   5.1.2021
 """
+import numpy
 from spinedb_api.spine_io.exporters.writer import Writer
 
 
@@ -43,5 +44,21 @@ class TableWriter(Writer):
         return self._tables
 
     def write_row(self, row):
-        self._current_table.append(row)
+        self._current_table.append([_sanitize(cell) for cell in row])
         return len(self._current_table) <= self.MAX_ROWS and not self._thread.isInterruptionRequested()
+
+
+def _sanitize(x):
+    """Converts special parameter value types to strings.
+
+    Args:
+        x (Any): parameter value
+
+    Returns:
+        float, int, str: sanitized value
+    """
+    if isinstance(x, numpy.float_):
+        return float(x)
+    if not isinstance(x, (float, str, int)) and x is not None:
+        return str(x)
+    return x
