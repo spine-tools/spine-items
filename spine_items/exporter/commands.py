@@ -178,28 +178,31 @@ class SetMappingPosition(QUndoCommand):
         self._mapping_table_model.set_position(self._previous_position, self._row, self._mapping_name)
 
 
-class SetMappingHeader(QUndoCommand):
-    def __init__(self, model, mapping_name, row, header, previous_header):
+class SetMappingProperty(QUndoCommand):
+    def __init__(self, command_name, setter, mapping_name, row, value, previous_value):
         """
+        Sets either ``header`` or ``filter_re``.
+
         Args:
-            model (MappingTableModel): mapping model
+            command_name (str)
+            setter (function): setter function
             mapping_name (str): mapping's name
             row (int): model row
-            header (str): mapping's new header
-            previous_header (str): previous header
+            value (str): mapping's new value for the property
+            previous_value (str): previous value
         """
-        super().__init__("change mapping position")
-        self._mapping_table_model = model
+        super().__init__(command_name)
+        self._setter = setter
         self._mapping_name = mapping_name
         self._row = row
-        self._header = header
-        self._previous_header = previous_header
+        self._value = value
+        self._previous_value = previous_value
 
     def redo(self):
-        self._mapping_table_model.set_header(self._header, self._row, self._mapping_name)
+        self._setter(self._value, self._row, self._mapping_name)
 
     def undo(self):
-        self._mapping_table_model.set_header(self._previous_header, self._row, self._mapping_name)
+        self._setter(self._previous_value, self._row, self._mapping_name)
 
 
 class SetExportFormat(QUndoCommand):
