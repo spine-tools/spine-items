@@ -19,6 +19,7 @@ from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide2.QtGui import QColor, QFont
 from spinedb_api.export_mapping import is_pivoted, is_regular, Position
 from spinedb_api.export_mapping.item_export_mapping import (
+    AlternativeDescriptionMapping,
     AlternativeMapping,
     FixedValueMapping,
     ExpandedParameterValueMapping,
@@ -41,6 +42,8 @@ from spinedb_api.export_mapping.item_export_mapping import (
     RelationshipObjectMapping,
     ScenarioActiveFlagMapping,
     ScenarioAlternativeMapping,
+    ScenarioBeforeAlternativeMapping,
+    ScenarioDescriptionMapping,
     ScenarioMapping,
     ToolFeatureEntityClassMapping,
     ToolFeatureMethodEntityClassMapping,
@@ -272,6 +275,7 @@ class MappingTableModel(QAbstractTableModel):
 
 
 _names = {
+    AlternativeDescriptionMapping: "Alternatives description",
     AlternativeMapping: "Alternatives",
     ExpandedParameterDefaultValueMapping: "Default values",
     ExpandedParameterValueMapping: "Parameter values",
@@ -293,6 +297,8 @@ _names = {
     RelationshipObjectMapping: "Objects",
     ScenarioActiveFlagMapping: "Active flags",
     ScenarioAlternativeMapping: "Alternatives",
+    ScenarioBeforeAlternativeMapping: "Before alternatives",
+    ScenarioDescriptionMapping: "Scenarios description",
     ScenarioMapping: "Scenarios",
     ToolFeatureEntityClassMapping: "Entity classes",
     ToolFeatureMethodEntityClassMapping: "Entity classes",
