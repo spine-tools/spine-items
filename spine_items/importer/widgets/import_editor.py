@@ -22,7 +22,7 @@ from spinedb_api import ObjectClassMapping
 from spinedb_api.spine_io.type_conversion import value_to_convert_spec
 from .custom_menus import SourceListMenu, SourceDataTableMenu
 from .options_widget import OptionsWidget
-from ..commands import PasteMappings, PasteOptions
+from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict
 from ..mvcmodels.mapping_list_model import MappingListModel
 from ..mvcmodels.mapping_specification_model import MappingSpecificationModel
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
@@ -82,7 +82,7 @@ class ImportEditor(QObject):
         self._connector.data_ready.connect(self.update_preview_data)
         self._connector.tables_ready.connect(self.update_tables)
         self._connector.mapped_data_ready.connect(self.mapped_data_ready.emit)
-        self._connector.default_mapping_ready.connect(self.import_mappings)
+        self._connector.default_mapping_ready.connect(self._set_default_mapping)
         # when data is ready set loading status to False.
         self._connector.connection_ready.connect(lambda: self.set_loading_status(False))
         self._connector.data_ready.connect(lambda: self.set_loading_status(False))
@@ -127,6 +127,10 @@ class ImportEditor(QObject):
     @Slot()
     def _load_default_mapping(self):
         self._connector.request_default_mapping()
+
+    @Slot(dict)
+    def _set_default_mapping(self, mapping):
+        self._undo_stack.push(RestoreMappingsFromDict(self, mapping))
 
     @Slot()
     def request_new_tables_from_connector(self):
