@@ -205,6 +205,7 @@ class TestDataStore(unittest.TestCase):
         # Open form
         self.toolbox.db_mngr = MagicMock()
         with mock.patch("spine_items.data_store.data_store.MultiSpineDBEditor") as mock_editor:
+            self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
             self.ds_properties_ui.pushButton_ds_open_editor.click()
             sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
             self.assertIsNotNone(sa_url)
@@ -224,6 +225,7 @@ class TestDataStore(unittest.TestCase):
         # Open form
         self.toolbox.db_mngr = MagicMock()
         with mock.patch("spine_items.data_store.data_store.MultiSpineDBEditor") as mock_editor:
+            self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
             self.ds_properties_ui.pushButton_ds_open_editor.click()
             sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
             self.assertIsNotNone(sa_url)
