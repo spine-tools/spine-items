@@ -178,6 +178,30 @@ class SetMappingPosition(QUndoCommand):
         self._mapping_table_model.set_position(self._previous_position, self._row, self._mapping_name)
 
 
+class SetMappingHeader(QUndoCommand):
+    def __init__(self, model, mapping_name, row, header, previous_header):
+        """
+        Args:
+            model (MappingTableModel): mapping model
+            mapping_name (str): mapping's name
+            row (int): model row
+            header (str): mapping's new header
+            previous_header (str): previous header
+        """
+        super().__init__("change mapping position")
+        self._mapping_table_model = model
+        self._mapping_name = mapping_name
+        self._row = row
+        self._header = header
+        self._previous_header = previous_header
+
+    def redo(self):
+        self._mapping_table_model.set_header(self._header, self._row, self._mapping_name)
+
+    def undo(self):
+        self._mapping_table_model.set_header(self._previous_header, self._row, self._mapping_name)
+
+
 class SetExportFormat(QUndoCommand):
     def __init__(self, editor, export_format, previous_format):
         """

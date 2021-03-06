@@ -53,7 +53,7 @@ from spinedb_api.export_mapping.item_export_mapping import (
     ToolFeatureRequiredFlagMapping,
     ToolMapping,
 )
-from ..commands import SetFixedTitle, SetMappingPosition
+from ..commands import SetFixedTitle, SetMappingPosition, SetMappingHeader
 
 
 class MappingTableModel(QAbstractTableModel):
@@ -73,19 +73,18 @@ class MappingTableModel(QAbstractTableModel):
         self._mapping_provider = mapping_provider
 
     def columnCount(self, paren=QModelIndex()):
-        return 3
+        return 4
 
     def data(self, index, role=Qt.DisplayRole):
         column = index.column()
         if role == Qt.DisplayRole:
+            row = index.row()
             if column == 0:
-                row = index.row()
                 mapping = self._mappings[row]
                 if row == 0 and isinstance(mapping, FixedValueMapping):
                     return mapping.value
                 return _names[type(mapping)]
             if column == 1:
-                row = index.row()
                 if row == self._value_row() and self._non_leaf_mapping_is_pivoted:
                     return "in pivot"
                 position = self._mappings[row].position
@@ -98,6 +97,8 @@ class MappingTableModel(QAbstractTableModel):
                     Position.table_name: "table name",
                     Position.single_row: "single row",
                 }.get(position, "unrecognized")
+            if column == 3:
+                return self._mappings[row].header
         elif role == Qt.CheckStateRole and index.column() == 2:
             if is_pivoted(self._mappings[index.row()].position):
                 return Qt.Checked
@@ -129,7 +130,7 @@ class MappingTableModel(QAbstractTableModel):
             return super().flags(index) & ~Qt.ItemIsEnabled
         if index.column() == 0:
             return super().flags(index) & ~Qt.ItemIsSelectable
-        if index.column() == 1:
+        if index.column() in (1, 3):
             return super().flags(index) | Qt.ItemIsEditable
         if index.column() == 2:
             return super().flags(index) | Qt.ItemIsUserCheckable
@@ -145,7 +146,7 @@ class MappingTableModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return {0: "Mapping type", 1: "Map to", 2: "Pivoted"}[section]
+            return dict(enumerate(["Mapping type", "Map to", "Pivoted", "Header"]))[section]
         return None
 
     def root_mapping(self):
@@ -191,6 +192,13 @@ class MappingTableModel(QAbstractTableModel):
                 if value == mapping.position:
                     return False
                 command = SetMappingPosition(self, self._mapping_name, row, value, previous_value)
+                self._undo_stack.push(command)
+                return True
+            if column == 3:
+                if value == mapping.header:
+                    return False
+                previous_header = mapping.header
+                command = SetMappingHeader(self, self._mapping_name, row, value, previous_header)
                 self._undo_stack.push(command)
                 return True
         elif role == Qt.CheckStateRole:
@@ -240,6 +248,21 @@ class MappingTableModel(QAbstractTableModel):
             self._non_leaf_mapping_is_pivoted = non_leaf_pivoted
             index = self.index(self._value_row(), 1)
             self.dataChanged.emit(index, index, [Qt.DisplayRole])
+
+    def set_header(self, header, row, mapping_name):
+        """
+        Sets mapping header for given row.
+
+        Args:
+            header (str): mapping header
+            row (int): row index
+            mapping_name (str): mapping's name
+        """
+        if mapping_name != self._mapping_name:
+            self._mapping_provider.show_on_table(mapping_name)
+        self._mappings[row].header = header
+        index = self.index(row, 3)
+        self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
     def set_fixed_title(self, title):
         """
