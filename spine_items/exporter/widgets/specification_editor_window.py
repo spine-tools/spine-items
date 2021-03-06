@@ -183,7 +183,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.status_bar.layout().setContentsMargins(6, 6, 6, 6)
         self._ui.save_and_close_action.triggered.connect(self._save_and_close)
         self._button_box.accepted.connect(self._save_and_close)
-        self._button_box.rejected.connect(self.close)
+        self._button_box.rejected.connect(self._discard_and_close)
         self._undo_stack.cleanChanged.connect(lambda clean: self.setWindowModified(not clean))
 
     def _restore_dock_widgets(self):
@@ -578,6 +578,12 @@ class SpecificationEditorWindow(QMainWindow):
         """Stores the specification to Toolbox' specification list and closes the window."""
         if not self._save():
             return
+        self.close()
+
+    @Slot()
+    def _discard_and_close(self):
+        """Discards changes and close window."""
+        self._undo_stack.setClean()
         self.close()
 
     def _save(self):
