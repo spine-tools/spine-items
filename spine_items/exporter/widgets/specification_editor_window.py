@@ -15,8 +15,8 @@ Contains :class:`SpecificationEditorWindow`.
 :date:   11.12.2020
 """
 from copy import deepcopy
-from PySide2.QtCore import QModelIndex, Qt, Signal, Slot
-from PySide2.QtGui import QGuiApplication, QKeySequence
+from PySide2.QtCore import QModelIndex, Qt, Slot
+from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QAction, QDialogButtonBox, QHeaderView, QMainWindow, QMessageBox, QUndoStack
 from spinedb_api.export_mapping import (
     alternative_export,

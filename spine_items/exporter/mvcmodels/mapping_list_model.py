@@ -17,7 +17,7 @@ Contains the :class:`MappingListModel` model.
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.item_export_mapping import (
     ParameterDefaultValueIndexMapping,
-    ParameterIndexMapping,
+    ParameterValueIndexMapping,
     RelationshipClassObjectClassMapping,
 )
 from spine_items.utils import unique_name
@@ -84,7 +84,7 @@ class MappingListModel(QAbstractListModel):
             if role == self.USE_FIXED_TABLE_NAME_FLAG_ROLE:
                 return spec.use_fixed_table_name_flag
             if role == self.PARAMETER_DIMENSIONS_ROLE:
-                dimensions = _instance_occurrences(spec.root, ParameterIndexMapping)
+                dimensions = _instance_occurrences(spec.root, ParameterValueIndexMapping)
                 if dimensions == 0:
                     return _instance_occurrences(spec.root, ParameterDefaultValueIndexMapping)
                 return dimensions

@@ -19,6 +19,7 @@ from PySide2.QtCore import QModelIndex, QObject, Qt, QThread, QTimer, Signal, Sl
 from PySide2.QtWidgets import QFileDialog
 from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping
+from spinetoolbox.helpers import busy_effect
 from ...models import FullUrlListModel
 from ..mvcmodels.preview_tree_model import PreviewTreeModel
 from ..mvcmodels.preview_table_model import PreviewTableModel
@@ -322,6 +323,7 @@ class _Worker(QObject):
         self.thread = QThread()
         self.thread.started.connect(self._load_data)
 
+    @busy_effect
     @Slot()
     def _load_data(self):
         """Exports data to tabular form and emits ``finished``."""
