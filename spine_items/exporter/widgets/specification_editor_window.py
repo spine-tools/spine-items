@@ -41,6 +41,11 @@ from spinedb_api.export_mapping.settings import (
     set_relationship_dimensions,
 )
 from spinedb_api.export_mapping.item_export_mapping import FixedValueMapping, Position
+from spinedb_api.export_mapping.group_functions import (
+    GROUP_FUNCTION_DISPLAY_NAMES,
+    group_function_name_from_display,
+    group_function_display_from_name,
+)
 from ...commands import RenameMapping
 from ...widgets import prompt_to_save_changes, restore_ui, save_ui, SpecNameDescriptionToolbar
 from .preview_updater import PreviewUpdater
@@ -163,6 +168,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.mapping_list.addAction(self._add_mapping_action)
         self._ui.mapping_list.addAction(self._remove_mapping_action)
         self._ui.mapping_list.setModel(self._mapping_list_model)
+        self._ui.group_fn_combo_box.addItems(GROUP_FUNCTION_DISPLAY_NAMES)
         self._ui.mapping_list.selectionModel().currentChanged.connect(self.change_current_mapping)
         self._ui.item_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
@@ -170,6 +176,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.export_objects_check_box.stateChanged.connect(self._change_export_objects_flag)
         self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
+        self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
         self._ui.mapping_table_view.setModel(self._mapping_model)
         self._position_edit_delegate = PositionEditDelegate()
         self._ui.mapping_table_view.setItemDelegateForColumn(1, self._position_edit_delegate)
@@ -302,7 +309,9 @@ class SpecificationEditorWindow(QMainWindow):
         else:
             self._set_parameter_dimensions_silently(0)
         self._set_use_fixed_table_name_flag_silently(current.data(MappingListModel.USE_FIXED_TABLE_NAME_FLAG_ROLE))
-        self._mapping_model.set_mapping(current.data(Qt.DisplayRole), current.data(MappingListModel.MAPPING_ROOT_ROLE))
+        root_mapping = current.data(MappingListModel.MAPPING_ROOT_ROLE)
+        self._set_root_mapping_group_fn_silently(group_function_display_from_name(root_mapping.group_fn))
+        self._mapping_model.set_mapping(current.data(Qt.DisplayRole), root_mapping)
         self._enable_relationship_controls()
         self._enable_parameter_controls()
 
@@ -322,12 +331,12 @@ class SpecificationEditorWindow(QMainWindow):
             self._ui.mapping_list.setCurrentIndex(top_left)
             return
         if MappingListModel.MAPPING_ROOT_ROLE in roles:
-            self._mapping_model.set_mapping(
-                top_left.data(Qt.DisplayRole), top_left.data(MappingListModel.MAPPING_ROOT_ROLE)
-            )
+            root_mapping = top_left.data(MappingListModel.MAPPING_ROOT_ROLE)
+            self._mapping_model.set_mapping(top_left.data(Qt.DisplayRole), root_mapping)
             self._set_export_objects_flag_silently(top_left.data(MappingListModel.EXPORT_OBJECTS_FLAG_ROLE))
             self._set_relationship_dimensions_silently(top_left.data(MappingListModel.RELATIONSHIP_DIMENSIONS_ROLE))
             self._set_parameter_dimensions_silently(top_left.data(MappingListModel.PARAMETER_DIMENSIONS_ROLE))
+            self._set_root_mapping_group_fn_silently(group_function_display_from_name(root_mapping.group_fn))
         if MappingListModel.MAPPING_TYPE_ROLE in roles:
             mapping_type = top_left.data(MappingListModel.MAPPING_TYPE_ROLE)
             self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
@@ -549,6 +558,36 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.fix_table_name_check_box.stateChanged.disconnect(self._change_fix_table_name_flag)
         self._ui.fix_table_name_check_box.setCheckState(Qt.Checked if flag else Qt.Unchecked)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
+
+    @Slot(str)
+    def _change_root_mapping_group_fn(self, text):
+        """
+        Pushes commands to undo stack to change group function of root mapping.
+
+        Args:
+            text (str): combo box text
+        """
+        index = self._ui.mapping_list.currentIndex()
+        if not index.isValid():
+            return
+        self._undo_stack.beginMacro("change mapping's group function")
+        mapping = index.data(MappingListModel.MAPPING_ROOT_ROLE)
+        mapping = deepcopy(mapping)
+        mapping.group_fn = group_function_name_from_display(text)
+        self._undo_stack.push(SetMapping(index, mapping))
+        self._undo_stack.endMacro()
+
+    def _set_root_mapping_group_fn_silently(self, group_fn):
+        """
+        Sets group function in combo box without emitting signals.
+
+        Args:
+            group_fn (str): group function name
+        """
+        if group_fn != self._ui.group_fn_combo_box.currentText():
+            self._ui.group_fn_combo_box.currentTextChanged.disconnect(self._change_root_mapping_group_fn)
+            self._ui.group_fn_combo_box.setCurrentText(group_fn)
+            self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
 
     @Slot(int)
     def _change_relationship_dimensions(self, dimensions):
