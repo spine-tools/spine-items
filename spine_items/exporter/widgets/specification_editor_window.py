@@ -56,7 +56,7 @@ from ..commands import (
 from ..mvcmodels.mapping_list_model import MappingListModel
 from ..mvcmodels.mapping_table_model import MappingTableModel
 from ..specification import MappingSpecification, MappingType, OutputFormat, Specification
-from .position_edit import PositionEditDelegate
+from .position_edit import PositionEditDelegate, position_section_width
 
 
 mapping_type_to_combo_box_label = {
@@ -175,6 +175,9 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.mapping_table_view.setItemDelegateForColumn(1, self._position_edit_delegate)
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        self._ui.mapping_table_view.horizontalHeader().setMinimumSectionSize(position_section_width())
         if self._mapping_list_model.rowCount() > 0:
             self._ui.mapping_list.setCurrentIndex(self._mapping_list_model.index(0, 0))
         self._button_box = QDialogButtonBox(self)

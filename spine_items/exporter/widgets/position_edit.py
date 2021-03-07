@@ -15,10 +15,19 @@ Contains mapping position editor.
 :date:   5.1.2021
 """
 from PySide2.QtCore import QTimer, Slot
-from PySide2.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate
+from PySide2.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
 
 
 _positions = ["hidden", "table name", "single row"]
+
+
+def position_section_width():
+    # pylint: disable=undefined-variable
+    fm = qApp.fontMetrics()
+    style = qApp.style()
+    option = QStyleOptionComboBox()
+    rect = style.subControlRect(QStyle.CC_ComboBox, option, QStyle.SC_ComboBoxArrow)
+    return max(fm.horizontalAdvance(pos) for pos in _positions) + rect.width()
 
 
 class PositionEditDelegate(QStyledItemDelegate):
