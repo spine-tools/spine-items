@@ -67,13 +67,15 @@ class PreviewUpdater:
         self._ui.preview_tree_view.setModel(self._preview_tree_model)
         self._ui.preview_tree_view.selectionModel().currentChanged.connect(self._change_table)
         self._ui.preview_table_view.setModel(self._preview_table_model)
-        self._ui.load_data_button.clicked.connect(self._enable_current_url)
+        self._ui.database_url_combo_box.currentTextChanged.connect(self._reload_preview)
+        self._ui.live_preview_check_box.clicked.connect(self._reload_preview)
+        self._ui.max_preview_rows_spin_box.valueChanged.connect(self._reload_preview)
+        self._ui.max_preview_tables_spin_box.valueChanged.connect(self._reload_preview)
         self._ui.load_url_from_fs_button.clicked.connect(self._load_url_from_filesystem)
         self._enable_controls()
 
-    @Slot(bool)
-    def _enable_current_url(self, _=True):
-        """Reads the URL from the combo box and enables live updates."""
+    def _reload_preview(self):
+        """Sets the current url and reloads preview."""
         self._current_url = self._ui.database_url_combo_box.currentText()
         for worker in self._workers.values():
             worker.thread.requestInterruption()
@@ -220,23 +222,28 @@ class PreviewUpdater:
 
     def _enable_controls(self):
         """Enables and disables widgets as needed."""
-        self._ui.load_data_button.setEnabled(self._url_model.rowCount() > 0)
+        urls_available = self._url_model.rowCount() > 0
+        self._ui.live_preview_check_box.setEnabled(urls_available)
+        self._ui.max_preview_rows_spin_box.setEnabled(urls_available)
+        self._ui.max_preview_tables_spin_box.setEnabled(urls_available)
 
     def _load_preview_data(self, mapping_name):
         """
-        Loads preview data from database to be shown on the preview table.
+        Loads preview data from database into the preview tables if the url is set and live previews are enabled.
 
         Args:
             mapping_name (str): mapping's name
         """
         self._update_timer.stop()
-        if self._current_url is None:
+        if self._current_url is None or not self._ui.live_preview_check_box.isChecked():
             return
         existing_worker = self._workers.pop((self._current_url, mapping_name), None)
         if existing_worker is not None:
             existing_worker.thread.requestInterruption()
         mapping = self._mapping_list_model.mapping(mapping_name)
-        worker = _Worker(self._current_url, mapping_name, deepcopy(mapping))
+        max_tables = self._ui.max_preview_tables_spin_box.value()
+        max_rows = self._ui.max_preview_rows_spin_box.value()
+        worker = _Worker(self._current_url, mapping_name, deepcopy(mapping), max_tables, max_rows)
         self._workers[(self._current_url, mapping_name)] = worker
         worker.table_written.connect(self._add_or_update_data)
         worker.finished.connect(self._tear_down_worker)
@@ -309,7 +316,7 @@ class _Worker(QObject):
     finished = Signal(QObject)
     """Emitted when worker finishes."""
 
-    def __init__(self, url, mapping_name, mapping):
+    def __init__(self, url, mapping_name, mapping, max_tables=20, max_rows=20):
         """
         Args:
             url (str): database URL
@@ -320,6 +327,8 @@ class _Worker(QObject):
         self._url = url
         self._mapping_name = mapping_name
         self._mapping = mapping
+        self._max_tables = max_tables
+        self._max_rows = max_rows
         self.thread = QThread()
         self.thread.started.connect(self._load_data)
 
@@ -329,7 +338,7 @@ class _Worker(QObject):
         """Exports data to tabular form and emits ``finished``."""
         db_map = DatabaseMapping(self._url)
         try:
-            writer = TableWriter(self.thread)
+            writer = TableWriter(self.thread, self._max_tables, self._max_rows)
             write(db_map, writer, self._mapping)
             self.table_written.emit(self, self._url, self._mapping_name, writer.tables)
         finally:

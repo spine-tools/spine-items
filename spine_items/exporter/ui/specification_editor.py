@@ -243,7 +243,7 @@ class Ui_MainWindow(object):
         self.label_9 = QLabel(self.dockWidgetContents_4)
         self.label_9.setObjectName(u"label_9")
         font = QFont()
-        font.setPointSize(8)
+        font.setPointSize(9)
         self.label_9.setFont(font)
 
         self.horizontalLayout_3.addWidget(self.label_9)
@@ -268,14 +268,40 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.load_data_button = QCheckBox(self.dockWidgetContents_4)
-        self.load_data_button.setObjectName(u"load_data_button")
+        self.live_preview_check_box = QCheckBox(self.dockWidgetContents_4)
+        self.live_preview_check_box.setObjectName(u"live_preview_check_box")
 
-        self.horizontalLayout.addWidget(self.load_data_button)
+        self.horizontalLayout.addWidget(self.live_preview_check_box)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.horizontalLayout.addItem(self.horizontalSpacer)
+        self.horizontalLayout.addItem(self.horizontalSpacer_3)
+
+        self.label_3 = QLabel(self.dockWidgetContents_4)
+        self.label_3.setObjectName(u"label_3")
+
+        self.horizontalLayout.addWidget(self.label_3)
+
+        self.max_preview_tables_spin_box = QSpinBox(self.dockWidgetContents_4)
+        self.max_preview_tables_spin_box.setObjectName(u"max_preview_tables_spin_box")
+        self.max_preview_tables_spin_box.setMaximum(16777215)
+        self.max_preview_tables_spin_box.setSingleStep(10)
+        self.max_preview_tables_spin_box.setValue(20)
+
+        self.horizontalLayout.addWidget(self.max_preview_tables_spin_box)
+
+        self.label_2 = QLabel(self.dockWidgetContents_4)
+        self.label_2.setObjectName(u"label_2")
+
+        self.horizontalLayout.addWidget(self.label_2)
+
+        self.max_preview_rows_spin_box = QSpinBox(self.dockWidgetContents_4)
+        self.max_preview_rows_spin_box.setObjectName(u"max_preview_rows_spin_box")
+        self.max_preview_rows_spin_box.setMaximum(16777215)
+        self.max_preview_rows_spin_box.setSingleStep(10)
+        self.max_preview_rows_spin_box.setValue(20)
+
+        self.horizontalLayout.addWidget(self.max_preview_rows_spin_box)
 
 
         self.verticalLayout_6.addLayout(self.horizontalLayout)
@@ -338,6 +364,8 @@ class Ui_MainWindow(object):
         self.load_url_from_fs_button.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Browse file system</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.load_url_from_fs_button.setText(QCoreApplication.translate("MainWindow", u"...", None))
-        self.load_data_button.setText(QCoreApplication.translate("MainWindow", u"Show preview", None))
+        self.live_preview_check_box.setText(QCoreApplication.translate("MainWindow", u"Live preview", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Max. tables", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Max. content rows:", None))
     # retranslateUi
 
