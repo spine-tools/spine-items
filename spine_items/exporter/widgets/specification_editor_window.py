@@ -188,24 +188,46 @@ class SpecificationEditorWindow(QMainWindow):
 
     def _restore_dock_widgets(self):
         """Docks all floating and or hidden QDockWidgets back to the window."""
-        areas = {
-            self._ui.format_options_dock: Qt.LeftDockWidgetArea,
-            self._ui.mapping_options_dock: Qt.LeftDockWidgetArea,
-            self._ui.preview_dock: Qt.RightDockWidgetArea,
+        docks = {
+            Qt.LeftDockWidgetArea: (
+                self._ui.export_options_dock,
+                self._ui.mappings_dock,
+                self._ui.mapping_options_dock,
+                self._ui.mapping_spec_dock,
+            ),
+            Qt.RightDockWidgetArea: (
+                self._ui.preview_tables_dock,
+                self._ui.preview_contents_dock,
+                self._ui.preview_controls_dock,
+            ),
         }
-        for dock, area in areas.items():
-            dock.setVisible(True)
-            dock.setFloating(False)
-            self.addDockWidget(area, dock)
+        for area, area_docks in docks.items():
+            for dock in area_docks:
+                dock.setVisible(True)
+                dock.setFloating(False)
+                self.addDockWidget(area, dock)
 
     def _apply_default_dock_layout(self):
         """Applies default layout for dock windows."""
         size = self.size()
         self._restore_dock_widgets()
-        docks = (self._ui.format_options_dock, self._ui.mapping_options_dock)
-        self.splitDockWidget(*docks, Qt.Vertical)
-        height = sum(d.height() for d in docks)
-        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
+        # Left side
+        self.splitDockWidget(self._ui.export_options_dock, self._ui.mappings_dock, Qt.Vertical)
+        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_spec_dock, Qt.Vertical)
+        some_docks = (self._ui.mappings_dock, self._ui.mapping_options_dock, self._ui.mapping_spec_dock)
+        height = sum(d.height() for d in some_docks)
+        self.resizeDocks(some_docks, [height * x for x in (0.1, 0.3, 0.6)], Qt.Vertical)
+        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_options_dock, Qt.Horizontal)
+        # Right side
+        some_docks = (self._ui.preview_tables_dock, self._ui.preview_controls_dock)
+        self.splitDockWidget(*some_docks, Qt.Vertical)
+        height = sum(d.height() for d in some_docks)
+        self.resizeDocks(some_docks, [height * x for x in (0.9, 0.1)], Qt.Vertical)
+        some_docks = (self._ui.preview_tables_dock, self._ui.preview_contents_dock)
+        self.splitDockWidget(*some_docks, Qt.Horizontal)
+        width = sum(d.width() for d in some_docks)
+        self.resizeDocks(some_docks, [width * x for x in (0.3, 0.7)], Qt.Horizontal)
+
         qApp.processEvents()  # pylint: disable=undefined-variable
         self.resize(size)
 
