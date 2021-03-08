@@ -393,6 +393,10 @@
          <property name="text">
           <string>...</string>
          </property>
+         <property name="icon">
+          <iconset resource="../../ui/resources/resources_icons.qrc">
+           <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+         </property>
         </widget>
        </item>
       </layout>
@@ -496,6 +500,8 @@
    <header>spinetoolbox/widgets/custom_combobox.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../ui/resources/resources_icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

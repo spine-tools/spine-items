@@ -27,6 +27,7 @@ from PySide2.QtWidgets import *
 
 from spinetoolbox.widgets.custom_combobox import ElidedCombobox
 
+from spine_items import resources_icons_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -270,6 +271,9 @@ class Ui_MainWindow(object):
 
         self.load_url_from_fs_button = QToolButton(self.dockWidgetContents_4)
         self.load_url_from_fs_button.setObjectName(u"load_url_from_fs_button")
+        icon = QIcon()
+        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.load_url_from_fs_button.setIcon(icon)
 
         self.horizontalLayout_3.addWidget(self.load_url_from_fs_button)
 
