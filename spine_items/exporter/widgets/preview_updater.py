@@ -73,6 +73,7 @@ class PreviewUpdater:
         self._ui.max_preview_tables_spin_box.valueChanged.connect(self._reload_preview)
         self._ui.load_url_from_fs_button.clicked.connect(self._load_url_from_filesystem)
         self._enable_controls()
+        self._reload_preview()
 
     def _reload_preview(self):
         """Sets the current url and reloads preview."""

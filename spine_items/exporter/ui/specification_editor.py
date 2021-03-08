@@ -284,6 +284,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.live_preview_check_box = QCheckBox(self.dockWidgetContents_4)
         self.live_preview_check_box.setObjectName(u"live_preview_check_box")
+        self.live_preview_check_box.setChecked(True)
 
         self.horizontalLayout.addWidget(self.live_preview_check_box)
 
