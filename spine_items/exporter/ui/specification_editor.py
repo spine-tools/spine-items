@@ -42,7 +42,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1108, 27))
+        self.menubar.setGeometry(QRect(0, 0, 1108, 21))
         MainWindow.setMenuBar(self.menubar)
         self.status_bar = QStatusBar(MainWindow)
         self.status_bar.setObjectName(u"status_bar")
@@ -81,21 +81,21 @@ class Ui_MainWindow(object):
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mappings_dock)
         self.mapping_options_dock = QDockWidget(MainWindow)
         self.mapping_options_dock.setObjectName(u"mapping_options_dock")
-        self.dockWidgetContents_2 = QWidget()
-        self.dockWidgetContents_2.setObjectName(u"dockWidgetContents_2")
-        self.gridLayout = QGridLayout(self.dockWidgetContents_2)
+        self.mapping_options_contents = QWidget()
+        self.mapping_options_contents.setObjectName(u"mapping_options_contents")
+        self.gridLayout = QGridLayout(self.mapping_options_contents)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.label_10 = QLabel(self.dockWidgetContents_2)
+        self.label_10 = QLabel(self.mapping_options_contents)
         self.label_10.setObjectName(u"label_10")
 
         self.gridLayout.addWidget(self.label_10, 4, 0, 1, 1)
 
-        self.parameter_dimensions_spin_box = QSpinBox(self.dockWidgetContents_2)
+        self.parameter_dimensions_spin_box = QSpinBox(self.mapping_options_contents)
         self.parameter_dimensions_spin_box.setObjectName(u"parameter_dimensions_spin_box")
 
         self.gridLayout.addWidget(self.parameter_dimensions_spin_box, 4, 1, 1, 1)
 
-        self.parameter_type_combo_box = QComboBox(self.dockWidgetContents_2)
+        self.parameter_type_combo_box = QComboBox(self.mapping_options_contents)
         self.parameter_type_combo_box.addItem("")
         self.parameter_type_combo_box.addItem("")
         self.parameter_type_combo_box.addItem("")
@@ -103,38 +103,38 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.parameter_type_combo_box, 3, 1, 1, 1)
 
-        self.export_objects_check_box = QCheckBox(self.dockWidgetContents_2)
+        self.export_objects_check_box = QCheckBox(self.mapping_options_contents)
         self.export_objects_check_box.setObjectName(u"export_objects_check_box")
 
         self.gridLayout.addWidget(self.export_objects_check_box, 1, 1, 1, 1)
 
-        self.relationship_dimensions_spin_box = QSpinBox(self.dockWidgetContents_2)
+        self.relationship_dimensions_spin_box = QSpinBox(self.mapping_options_contents)
         self.relationship_dimensions_spin_box.setObjectName(u"relationship_dimensions_spin_box")
         self.relationship_dimensions_spin_box.setMinimum(1)
 
         self.gridLayout.addWidget(self.relationship_dimensions_spin_box, 2, 1, 1, 1)
 
-        self.fix_table_name_check_box = QCheckBox(self.dockWidgetContents_2)
+        self.fix_table_name_check_box = QCheckBox(self.mapping_options_contents)
         self.fix_table_name_check_box.setObjectName(u"fix_table_name_check_box")
 
         self.gridLayout.addWidget(self.fix_table_name_check_box, 5, 1, 1, 1)
 
-        self.label_4 = QLabel(self.dockWidgetContents_2)
+        self.label_4 = QLabel(self.mapping_options_contents)
         self.label_4.setObjectName(u"label_4")
 
         self.gridLayout.addWidget(self.label_4, 0, 0, 1, 1)
 
-        self.label_5 = QLabel(self.dockWidgetContents_2)
+        self.label_5 = QLabel(self.mapping_options_contents)
         self.label_5.setObjectName(u"label_5")
 
         self.gridLayout.addWidget(self.label_5, 3, 0, 1, 1)
 
-        self.label_8 = QLabel(self.dockWidgetContents_2)
+        self.label_8 = QLabel(self.mapping_options_contents)
         self.label_8.setObjectName(u"label_8")
 
         self.gridLayout.addWidget(self.label_8, 2, 0, 1, 1)
 
-        self.item_type_combo_box = QComboBox(self.dockWidgetContents_2)
+        self.item_type_combo_box = QComboBox(self.mapping_options_contents)
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
@@ -150,25 +150,25 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.item_type_combo_box, 0, 1, 1, 1)
 
-        self.label_6 = QLabel(self.dockWidgetContents_2)
+        self.label_6 = QLabel(self.mapping_options_contents)
         self.label_6.setObjectName(u"label_6")
 
         self.gridLayout.addWidget(self.label_6, 6, 0, 1, 1)
 
-        self.group_fn_combo_box = QComboBox(self.dockWidgetContents_2)
+        self.group_fn_combo_box = QComboBox(self.mapping_options_contents)
         self.group_fn_combo_box.setObjectName(u"group_fn_combo_box")
 
         self.gridLayout.addWidget(self.group_fn_combo_box, 6, 1, 1, 1)
 
-        self.mapping_options_dock.setWidget(self.dockWidgetContents_2)
+        self.mapping_options_dock.setWidget(self.mapping_options_contents)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mapping_options_dock)
         self.mapping_spec_dock = QDockWidget(MainWindow)
         self.mapping_spec_dock.setObjectName(u"mapping_spec_dock")
-        self.dockWidgetContents_3 = QWidget()
-        self.dockWidgetContents_3.setObjectName(u"dockWidgetContents_3")
-        self.verticalLayout_2 = QVBoxLayout(self.dockWidgetContents_3)
+        self.mapping_spec_contents = QWidget()
+        self.mapping_spec_contents.setObjectName(u"mapping_spec_contents")
+        self.verticalLayout_2 = QVBoxLayout(self.mapping_spec_contents)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.mapping_table_view = QTableView(self.dockWidgetContents_3)
+        self.mapping_table_view = QTableView(self.mapping_spec_contents)
         self.mapping_table_view.setObjectName(u"mapping_table_view")
         self.mapping_table_view.setSelectionMode(QAbstractItemView.SingleSelection)
         self.mapping_table_view.horizontalHeader().setStretchLastSection(True)
@@ -176,7 +176,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.mapping_table_view)
 
-        self.mapping_spec_dock.setWidget(self.dockWidgetContents_3)
+        self.mapping_spec_dock.setWidget(self.mapping_spec_contents)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mapping_spec_dock)
         self.preview_tables_dock = QDockWidget(MainWindow)
         self.preview_tables_dock.setObjectName(u"preview_tables_dock")

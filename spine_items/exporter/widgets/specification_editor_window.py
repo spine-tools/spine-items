@@ -129,6 +129,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._activated_mapping_name = None
         self._mapping_list_model = MappingListModel(self._specification.mapping_specifications())
         self._mapping_list_model.dataChanged.connect(self._update_ui_after_mapping_change)
+        self._mapping_list_model.rowsInserted.connect(self._select_inserted_row)
+        self._mapping_list_model.rowsRemoved.connect(self._check_for_empty_mappings_list)
         self._mapping_list_model.rename_requested.connect(self._rename_mapping)
         self._mapping_model = MappingTableModel("", None, self._undo_stack, self)
 
@@ -185,6 +187,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self._ui.mapping_table_view.horizontalHeader().setMinimumSectionSize(position_section_width())
+        self._enable_mapping_specification_editing()
         if self._mapping_list_model.rowCount() > 0:
             self._ui.mapping_list.setCurrentIndex(self._mapping_list_model.index(0, 0))
         self._button_box = QDialogButtonBox(self)
@@ -355,6 +358,19 @@ class SpecificationEditorWindow(QMainWindow):
         mapping_specification = _new_mapping_specification(type_)
         self._undo_stack.push(NewMapping(self._mapping_list_model, mapping_specification))
 
+    @Slot(QModelIndex, int, int)
+    def _select_inserted_row(self, parent_index, first_row, last_row):
+        """
+        Selects newly inserted mapping.
+
+        Args:
+            parent_index (QModelIndex): ignored
+            first_row (int): index of first inserted row
+            last_row (int): index of last inserted row
+        """
+        self._ui.mapping_list.setCurrentIndex(self._mapping_list_model.index(first_row, 0))
+        self._enable_mapping_specification_editing()
+
     @Slot()
     def _delete_mapping(self):
         """Pushes remove mapping commands for selected mappings to undo stack."""
@@ -369,6 +385,18 @@ class SpecificationEditorWindow(QMainWindow):
             for index in indexes:
                 self._undo_stack.push(RemoveMapping(index.row(), self._mapping_list_model))
             self._undo_stack.endMacro()
+
+    @Slot(QModelIndex, int, int)
+    def _check_for_empty_mappings_list(self, parent_index, first_row, last_row):
+        """
+        Checks if mappings list has become empty and disables controls accordingly.
+
+        Args:
+            parent_index (QModelIndex): ignored
+            first_row (int): first removed row
+            last_row (int): last removed row
+        """
+        self._enable_mapping_specification_editing()
 
     @Slot(int, str)
     def _rename_mapping(self, row, new_name):
@@ -616,6 +644,13 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.relationship_dimensions_spin_box.valueChanged.disconnect(self._change_relationship_dimensions)
         self._ui.relationship_dimensions_spin_box.setValue(dimensions)
         self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
+
+    def _enable_mapping_specification_editing(self):
+        """Enables and disables mapping specification editing controls."""
+        have_mappings = self._mapping_list_model.rowCount() > 0
+        self._ui.mapping_options_contents.setEnabled(have_mappings)
+        self._ui.mapping_spec_contents.setEnabled(have_mappings)
+        self._ui.remove_mapping_button.setEnabled(have_mappings)
 
     def _enable_relationship_controls(self):
         """Enables and disables controls related to relationship export."""
