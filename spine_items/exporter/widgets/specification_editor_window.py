@@ -165,6 +165,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.add_mapping_button.clicked.connect(self._add_mapping_action.trigger)
         self._remove_mapping_action = QAction("Remove mappings")
         self._remove_mapping_action.setShortcut(QKeySequence(QKeySequence.Delete))
+        self._remove_mapping_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         self._remove_mapping_action.triggered.connect(self._delete_mapping)
         self._ui.remove_mapping_button.clicked.connect(self._remove_mapping_action.trigger)
         self._ui.mapping_list.addAction(self._add_mapping_action)
