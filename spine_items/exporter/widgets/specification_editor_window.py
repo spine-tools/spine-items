@@ -197,6 +197,9 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.save_and_close_action.triggered.connect(self._save_and_close)
         self._button_box.accepted.connect(self._save_and_close)
         self._button_box.rejected.connect(self._discard_and_close)
+        if specification is None:
+            self._ui.add_mapping_button.click()
+            self._undo_stack.clear()
         self._undo_stack.cleanChanged.connect(lambda clean: self.setWindowModified(not clean))
 
     def _restore_dock_widgets(self):
