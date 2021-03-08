@@ -22,7 +22,6 @@ from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
-from .widgets.specification_editor_window import SpecificationEditorWindow
 from .output_resources import scan_for_resources
 
 
@@ -109,10 +108,9 @@ class DataTransformer(ProjectItem):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification_window = SpecificationEditorWindow(
-            self._toolbox, specification=self.specification(), urls=[r.url for r in self._db_resources], item=self
+        self._toolbox.show_specification_form(
+            self.item_type(), self.specification(), item=self, urls=[r.url for r in self._db_resources]
         )
-        specification_window.show()
 
     def notify_destination(self, source_item):
         """See base class."""

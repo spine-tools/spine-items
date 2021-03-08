@@ -14,7 +14,7 @@ Contains :class:`SpecificationEditorWindow`.
 :author: A. Soininen (VTT)
 :date:   2.10.2020
 """
-from PySide2.QtCore import Qt, Signal, Slot
+from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QMainWindow, QDialogButtonBox, QUndoStack
 from spinetoolbox.config import STATUSBAR_SS
@@ -36,13 +36,13 @@ _CLASSES_TO_DISPLAY_NAMES = {class_: name for name, class_ in _SETTINGS_CLASSES.
 class SpecificationEditorWindow(QMainWindow):
     """Data transformer's specification editor."""
 
-    def __init__(self, toolbox, specification=None, urls=None, item=None):
+    def __init__(self, toolbox, specification=None, item=None, urls=None):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window
             specification (ProjectItemSpecification, optional): transformer specification
+            item (ProjectItem, optional): invoking project item, if window was opened from its properties tab
             urls (dict, optional): a mapping from provider name to database URL
-            item_name (str, optional): invoking project item's name, if window was opened from its properties tab
         """
         from ..ui.specification_editor_widget import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 

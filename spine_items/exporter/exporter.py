@@ -23,7 +23,6 @@ from spine_items.utils import Database
 from ..item_base import ExporterBase
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
-from .widgets.specification_editor_window import SpecificationEditorWindow
 
 
 class Exporter(ExporterBase):
@@ -137,9 +136,7 @@ class Exporter(ExporterBase):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification = self._toolbox.specification_model.find_specification(self._specification_name)
-        specification_window = SpecificationEditorWindow(self._toolbox, specification, self._full_url_model, self.name)
-        specification_window.show()
+        self._toolbox.show_specification_form(self.item_type(), self.specification(), self)
 
     def notify_destination(self, source_item):
         """See base class."""

@@ -106,19 +106,21 @@ class SpecificationEditorWindow(QMainWindow):
 
     _APP_SETTINGS_GROUP = "exportSpecificationEditorWindow"
 
-    def __init__(self, toolbox, specification, url_model=None, item_name=None):
+    def __init__(self, toolbox, specification=None, item=None, url_model=None):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window
             specification (ProjectItemSpecification, optional): exporter specification
+            item (ProjectItem, optional): invoking project item, if window was opened from its properties tab
             url_model (QAbstractListModel): model that provides URLs of connected databases
-            item_name (str, optional): invoking project item's name, if window was opened from its properties tab
         """
         super().__init__(parent=toolbox)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         self._toolbox = toolbox
+        self._original_spec_name = None if specification is None else specification.name
         self._specification = deepcopy(specification) if specification is not None else Specification()
+        self._item = item
         self._undo_stack = QUndoStack()
         self._undo_action = self._undo_stack.createUndoAction(self)
         self._undo_action.setShortcut(QKeySequence.Undo)
@@ -138,9 +140,7 @@ class SpecificationEditorWindow(QMainWindow):
 
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
-        self.setWindowTitle(
-            "Exporter specification editor[*]" + (f"   -- {item_name} --" if item_name is not None else "")
-        )
+        self.setWindowTitle("Exporter specification editor[*]" + (f"   -- {item.name} --" if item is not None else ""))
         central_widget = self.takeCentralWidget()
         central_widget.deleteLater()
         self._preview_updater = PreviewUpdater(
@@ -681,6 +681,8 @@ class SpecificationEditorWindow(QMainWindow):
         """Stores the specification to Toolbox' specification list and closes the window."""
         if not self._save():
             return
+        if self._item:
+            self._item.set_specification(self._specification)
         self.close()
 
     @Slot()
@@ -700,23 +702,12 @@ class SpecificationEditorWindow(QMainWindow):
         if not specification_name:
             QMessageBox.information(self, "Specification name missing", "Please enter a name for the specification.")
             return False
-        existing = self._toolbox.specification_model.find_specification(specification_name)
-        if existing is not None:
-            # Specification names are case insensitive. Make sure we use the correct casing.
-            specification_name = existing.name
-            self._specification_toolbar.do_set_name(specification_name)
         description = self._specification_toolbar.description()
         self._specification.name = specification_name
         self._specification.description = description
-        row = self._toolbox.specification_model.specification_row(self._specification.name)
-        if row >= 0:
-            old_specification = self._toolbox.specification_model.specification(row)
-            if not old_specification.is_equivalent(self._specification):
-                self._specification.definition_file_path = old_specification.definition_file_path
-                self._toolbox.update_specification(row, self._specification)
-        else:
-            self._toolbox.add_specification(self._specification)
-            self._specification.save()
+        update_existing = self._specification.name == self._original_spec_name
+        if not self._toolbox.add_specification(self._specification, update_existing, self):
+            return False
         self._undo_stack.setClean()
         return True
 

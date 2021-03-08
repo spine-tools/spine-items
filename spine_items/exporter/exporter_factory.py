@@ -23,6 +23,9 @@ from .widgets.exporter_properties import ExporterProperties
 from .widgets.specification_editor_window import SpecificationEditorWindow
 from .widgets.add_exporter_widget import AddExporterWidget
 from .widgets.specification_menu import SpecificationMenu
+from ..widgets import SpecEditorManager
+
+_export_editor_manager = SpecEditorManager(SpecificationEditorWindow)
 
 
 class ExporterFactory(ProjectItemFactory):
@@ -69,6 +72,10 @@ class ExporterFactory(ProjectItemFactory):
     @staticmethod
     def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
-        item_name = item.name if item is not None else None
         url_model = item.full_url_model() if item is not None else None
-        SpecificationEditorWindow(toolbox, specification, url_model, item_name).show()
+        _export_editor_manager.create_editor(toolbox, specification, item, url_model)
+
+    @staticmethod
+    def tear_down():
+        """Closes all preview widgets."""
+        _export_editor_manager.close_all_editors()

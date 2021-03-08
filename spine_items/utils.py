@@ -18,12 +18,11 @@ Contains utilities shared between project items.
 
 from datetime import datetime
 import os.path
-import pathlib
 import re
 from time import time
 from contextlib import contextmanager
 from spinedb_api.spine_db_server import start_spine_db_server, shutdown_spine_db_server
-from spine_engine.project_item.project_item_resource import extract_packs, ProjectItemResource
+from spine_engine.project_item.project_item_resource import extract_packs
 
 
 def labelled_resource_filepaths(resources):

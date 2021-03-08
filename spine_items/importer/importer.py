@@ -210,7 +210,7 @@ class Importer(ProjectItem):
                     if not os.path.exists(filepath):
                         self._logger.msg_error.emit(f"Cannot find file '{filepath}'.")
                         filepath = None
-        self._toolbox.show_specification_form(self.item_type(), self.specification(), filepath=filepath)
+        self._toolbox.show_specification_form(self.item_type(), self.specification(), self, filepath=filepath)
 
     def select_connector_type(self, index):
         """Opens dialog to select connector type for the given index."""
