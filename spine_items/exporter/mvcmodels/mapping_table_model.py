@@ -77,7 +77,7 @@ class MappingTableModel(QAbstractTableModel):
 
     def data(self, index, role=Qt.DisplayRole):
         column = index.column()
-        if role == Qt.DisplayRole:
+        if role in (Qt.DisplayRole, Qt.EditRole):
             row = index.row()
             if column == 0:
                 mapping = self._mappings[row]
