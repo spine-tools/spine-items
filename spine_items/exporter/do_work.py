@@ -31,7 +31,7 @@ def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databas
     Exports databases using given specification as export mapping.
 
     Args:
-        specification (Specification): export specification
+        specification (dict): export specification dictionary
         output_time_stamps (bool): if True, puts output files into time stamped subdirectories
         cancel_on_error (bool): if True, bails out on non-fatal errors
         out_dir (str): base output directory
@@ -42,6 +42,7 @@ def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databas
     Returns:
         tuple: boolean success flag, dictionary of output files
     """
+    specification = Specification.from_dict(specification)
     successes = list()
     written_files = dict()
     for url, output_file_name in databases.items():

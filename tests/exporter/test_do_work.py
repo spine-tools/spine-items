@@ -46,12 +46,12 @@ class TestWithCsvWriter(unittest.TestCase):
         databases = {self._url: "test_export_database.csv"}
         logger = MagicMock()
         self.assertTrue(
-            do_work(specification, False, False, self._temp_dir.name, databases, {self._url: set()}, logger)
+            do_work(specification.to_dict(), False, False, self._temp_dir.name, databases, {self._url: set()}, logger)
         )
         out_path = os.path.join(self._temp_dir.name, "test_export_database.csv")
         self.assertTrue(os.path.exists(out_path))
-        with open(out_path) as input:
-            csv_reader = reader(input)
+        with open(out_path) as input_:
+            csv_reader = reader(input_)
             table = [row for row in csv_reader]
         expected = [["oc1", "o11"], ["oc1", "o12"], ["oc2", "o21"], ["oc2", "o22"], ["oc2", "o23"]]
         self.assertEqual(table, expected)

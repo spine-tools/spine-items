@@ -17,8 +17,7 @@ Contains Exporter's executable item as well as support utilities.
 """
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.serialization import deserialize_path
-from spinedb_api import clear_filter_configs, load_filters
-from spinedb_api.filters.tools import filter_configs, name_from_dict
+from spinedb_api import clear_filter_configs
 from spine_items.utils import Database
 from .do_work import do_work
 from ..executable_item_base import ExporterExecutableItemBase
@@ -60,7 +59,7 @@ class ExecutableItem(ExporterExecutableItemBase):
         self._process = ReturningProcess(
             target=do_work,
             args=(
-                self._specification,
+                self._specification.to_dict(),
                 self._output_time_stamps,
                 self._cancel_on_error,
                 self._data_dir,
