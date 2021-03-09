@@ -35,6 +35,7 @@ from PySide2.QtWidgets import (
 )
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
+from spinetoolbox.widgets.notification import ChangeNotifier
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
 from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
@@ -82,6 +83,7 @@ class ImportEditorWindow(QMainWindow):
         self._app_settings = self._toolbox.qsettings()
         self.settings_group = "mappingPreviewWindow"
         self._undo_stack = QUndoStack(self)
+        self._change_notifier = ChangeNotifier(self._undo_stack, self)
         self._ui_error = QErrorMessage(self)
         self._ui_error.setWindowTitle("Error")
         self._ui_error.setWindowFlag(Qt.WindowContextHelpButtonHint, False)

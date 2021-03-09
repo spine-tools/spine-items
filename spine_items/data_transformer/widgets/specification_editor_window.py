@@ -18,6 +18,7 @@ from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QMainWindow, QDialogButtonBox, QUndoStack
 from spinetoolbox.config import STATUSBAR_SS
+from spinetoolbox.widgets.notification import ChangeNotifier
 from .entity_class_renaming_widget import EntityClassRenamingWidget
 from .parameter_renaming_widget import ParameterRenamingWidget
 from ..data_transformer_specification import DataTransformerSpecification
@@ -62,6 +63,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self._undo_stack = QUndoStack(self)
+        self._change_notifier = ChangeNotifier(self._undo_stack, self)
         self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()

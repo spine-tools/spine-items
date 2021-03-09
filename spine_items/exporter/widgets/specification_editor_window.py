@@ -47,6 +47,7 @@ from spinedb_api.export_mapping.group_functions import (
     group_function_name_from_display,
     group_function_display_from_name,
 )
+from spinetoolbox.widgets.notification import ChangeNotifier
 from ...commands import RenameMapping
 from ...widgets import prompt_to_save_changes, restore_ui, save_ui, SpecNameDescriptionToolbar
 from .preview_updater import PreviewUpdater
@@ -124,7 +125,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._original_spec_name = None if specification is None else specification.name
         self._specification = deepcopy(specification) if specification is not None else Specification()
         self._item = item
-        self._undo_stack = QUndoStack()
+        self._undo_stack = QUndoStack(self)
+        self._change_notifier = ChangeNotifier(self._undo_stack, self)
         self._undo_action = self._undo_stack.createUndoAction(self)
         self._undo_action.setShortcut(QKeySequence.Undo)
         self.addAction(self._undo_action)

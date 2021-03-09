@@ -33,6 +33,7 @@ from PySide2.QtWidgets import (
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer
 from spinetoolbox.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
 from spinetoolbox.helpers import busy_effect, open_url
+from spinetoolbox.widgets.notification import ChangeNotifier
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from ...widgets import SpecNameDescriptionToolbar, prompt_to_save_changes, save_ui, restore_ui
 from ...commands import ChangeSpecPropertyCommand
@@ -64,6 +65,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.setWindowTitle("Tool Specification Editor[*]")
         restore_ui(self, self._app_settings, self.settings_group)
         self._undo_stack = QUndoStack(self)
+        self._change_notifier = ChangeNotifier(self._undo_stack, self)
         self._spec_toolbar = SpecNameDescriptionToolbar(self, specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
@@ -252,7 +254,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         if new_value == old_value:
             return
         self._undo_stack.push(
-            ChangeSpecPropertyCommand(self._set_execute_in_work, new_value, old_value, "change tooltype")
+            ChangeSpecPropertyCommand(self._set_execute_in_work, new_value, old_value, "change execute in work")
         )
 
     def _set_execute_in_work(self, value):

@@ -106,5 +106,5 @@ class SelectingLineEdit(QLineEdit):
     """Line editor that selects all text when focussed."""
 
     def focusInEvent(self, e):
+        self.selectAll()
         super().focusInEvent(e)
-        QTimer.singleShot(0, self.selectAll)
