@@ -297,7 +297,6 @@ class _Worker(QRunnable):
         self.signals = self.Signals()
 
     def run(self):
-        self.signals.moveToThread(QThread.currentThread())
         db_map = DatabaseMapping(self._url)
         try:
             writer = TableWriter(self._max_tables, self._max_rows)
