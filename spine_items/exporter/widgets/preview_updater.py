@@ -16,10 +16,11 @@ Contains :class:`PreviewUpdater`.
 """
 from copy import deepcopy
 from time import monotonic
-from PySide2.QtCore import QModelIndex, QObject, QRunnable, Qt, QThread, QThreadPool, Signal, Slot
-from PySide2.QtWidgets import QApplication, QFileDialog
+from PySide2.QtCore import QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide2.QtWidgets import QFileDialog
 from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping
+from spinetoolbox.helpers import busy_effect
 from ...models import FullUrlListModel
 from ..mvcmodels.preview_tree_model import PreviewTreeModel
 from ..mvcmodels.preview_table_model import PreviewTableModel
@@ -296,6 +297,7 @@ class _Worker(QRunnable):
         self._stamp = stamp
         self.signals = self.Signals()
 
+    @busy_effect
     def run(self):
         db_map = DatabaseMapping(self._url)
         try:
