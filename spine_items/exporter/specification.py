@@ -29,6 +29,7 @@ class MappingType(Enum):
     features = "features"
     objects = "objects"
     object_groups = "object_groups"
+    object_group_parameter_values = "object_group_parameter_values"
     object_parameter_default_values = "object_default_parameter_values"
     object_parameter_values = "object_parameter_values"
     parameter_value_lists = "parameter_value_lists"

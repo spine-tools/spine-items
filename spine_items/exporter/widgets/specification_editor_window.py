@@ -23,6 +23,7 @@ from spinedb_api.export_mapping import (
     feature_export,
     object_export,
     object_group_export,
+    object_group_parameter_export,
     object_parameter_default_value_export,
     object_parameter_export,
     parameter_value_list_export,
@@ -69,6 +70,7 @@ mapping_type_to_combo_box_label = {
     MappingType.features: "Feature",
     MappingType.objects: "Object class",
     MappingType.object_groups: "Object group",
+    MappingType.object_group_parameter_values: "Object group",
     MappingType.object_parameter_default_values: "Object class",
     MappingType.object_parameter_values: "Object class",
     MappingType.parameter_value_lists: "Parameter value list",
@@ -87,6 +89,7 @@ mapping_type_to_parameter_type_label = {
     MappingType.features: "None",
     MappingType.objects: "None",
     MappingType.object_groups: "None",
+    MappingType.object_group_parameter_values: "Value",
     MappingType.object_parameter_default_values: "Default value",
     MappingType.object_parameter_values: "Value",
     MappingType.parameter_value_lists: "None",
@@ -440,9 +443,13 @@ class SpecificationEditorWindow(QMainWindow):
                 mapping_type = MappingType.relationship_parameter_values
             else:
                 mapping_type = MappingType.relationship_parameter_default_values
+        elif type_label == "Object group":
+            if parameter_type_label == "None":
+                mapping_type = MappingType.object_groups
+            else:
+                mapping_type = MappingType.object_group_parameter_values
         else:
             mapping_type = {
-                "Object group": MappingType.object_groups,
                 "Alternative": MappingType.alternatives,
                 "Scenario": MappingType.scenarios,
                 "Scenario alternative": MappingType.scenario_alternatives,
@@ -669,8 +676,15 @@ class SpecificationEditorWindow(QMainWindow):
 
     def _enable_parameter_controls(self):
         """Enables and disables controls related to relationship export."""
-        if self._ui.item_type_combo_box.currentText() in ("Object class", "Relationship class"):
+        mapping_type = self._ui.item_type_combo_box.currentText()
+        if mapping_type in ("Object class", "Object group", "Relationship class"):
             self._ui.parameter_type_combo_box.setEnabled(True)
+            model = self._ui.parameter_type_combo_box.model()
+            default_value_item = model.item(1)
+            if mapping_type == "Object group":
+                default_value_item.setFlags(default_value_item.flags() & ~Qt.ItemIsEnabled)
+            else:
+                default_value_item.setFlags(default_value_item.flags() | Qt.ItemIsEnabled)
             self._ui.parameter_dimensions_spin_box.setEnabled(self._ui.parameter_type_combo_box.currentText() != "None")
         else:
             self._ui.parameter_type_combo_box.setEnabled(False)
@@ -744,6 +758,10 @@ def _new_mapping_specification(mapping_type):
         return MappingSpecification(mapping_type, False, False, object_export(0, 1))
     if mapping_type == MappingType.object_groups:
         return MappingSpecification(mapping_type, False, False, object_group_export(0, 2, 1))
+    if mapping_type == MappingType.object_group_parameter_values:
+        return MappingSpecification(
+            mapping_type, False, False, object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, 5)
+        )
     if mapping_type == MappingType.object_parameter_default_values:
         return MappingSpecification(mapping_type, False, False, object_parameter_default_value_export(0, 1, 2))
     if mapping_type == MappingType.object_parameter_values:
