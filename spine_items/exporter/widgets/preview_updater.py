@@ -332,6 +332,7 @@ class _Worker(QObject):
         self._max_tables = max_tables
         self._max_rows = max_rows
         self.thread = QThread()
+        self.moveToThread(self.thread)
         self.thread.started.connect(self._load_data)
 
     @busy_effect
