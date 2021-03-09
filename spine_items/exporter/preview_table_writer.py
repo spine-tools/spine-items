@@ -21,14 +21,14 @@ from spinedb_api.spine_io.exporters.writer import Writer
 class TableWriter(Writer):
     """An export writer that writes to a Python dictionary."""
 
-    def __init__(self, thread, max_tables=20, max_rows=20):
+    def __init__(self, max_tables=20, max_rows=20):
         """
         Args:
-            thread (QThread): a thread instance; used to query if work should be interrupted
+            max_tables (int): maximum number of tables to write
+            max_rows (int): maximum number of row to write for each table
         """
         self._tables = dict()
         self._current_table = None
-        self._thread = thread
         self._max_tables = max_tables
         self._max_rows = max_rows
         self._table_count = 0
@@ -48,7 +48,7 @@ class TableWriter(Writer):
 
     def write_row(self, row):
         self._current_table.append([_sanitize(cell) for cell in row])
-        return len(self._current_table) <= self._max_rows and not self._thread.isInterruptionRequested()
+        return len(self._current_table) <= self._max_rows
 
 
 def _sanitize(x):

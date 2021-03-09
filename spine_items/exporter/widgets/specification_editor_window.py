@@ -740,6 +740,7 @@ class SpecificationEditorWindow(QMainWindow):
         if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
             event.ignore()
             return
+        self._preview_updater.tear_down()
         save_ui(self, self._toolbox.qsettings(), self._APP_SETTINGS_GROUP)
         event.accept()
 

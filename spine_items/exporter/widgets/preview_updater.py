@@ -15,11 +15,11 @@ Contains :class:`PreviewUpdater`.
 :date:   5.1.2021
 """
 from copy import deepcopy
-from PySide2.QtCore import QModelIndex, QObject, Qt, QThread, QTimer, Signal, Slot
-from PySide2.QtWidgets import QFileDialog
+from time import monotonic
+from PySide2.QtCore import QModelIndex, QObject, QRunnable, Qt, QThread, QThreadPool, Signal, Slot
+from PySide2.QtWidgets import QApplication, QFileDialog
 from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping
-from spinetoolbox.helpers import busy_effect
 from ...models import FullUrlListModel
 from ..mvcmodels.preview_tree_model import PreviewTreeModel
 from ..mvcmodels.preview_table_model import PreviewTableModel
@@ -37,10 +37,6 @@ class PreviewUpdater:
             mapping_table_model (MappingTableModel): mapping table model
             project_dir (str): path to initial directory from which to load databases
         """
-        self._update_timer = QTimer()
-        self._update_timer.setSingleShot(True)
-        self._update_timer.setInterval(100)
-        self._update_timer.timeout.connect(self._start_workers)
         self._current_url = None
         self._window = window
         self._ui = ui
@@ -62,7 +58,8 @@ class PreviewUpdater:
         self._preview_tree_model.dataChanged.connect(self._expand_tree_after_table_change)
         self._preview_tree_model.rowsInserted.connect(self._expand_tree_after_table_insert)
         self._preview_table_model = PreviewTableModel()
-        self._workers = dict()
+        self._stamps = dict()
+        self._thread_pool = QThreadPool()
         self._mapping_tables = dict()
         self._ui.preview_tree_view.setModel(self._preview_tree_model)
         self._ui.preview_tree_view.selectionModel().currentChanged.connect(self._change_table)
@@ -79,9 +76,7 @@ class PreviewUpdater:
     def _reload_preview(self):
         """Sets the current url and reloads preview."""
         self._current_url = self._ui.database_url_combo_box.currentText()
-        for worker in self._workers.values():
-            worker.thread.requestInterruption()
-        self._workers.clear()
+        self._stamps.clear()
         for row in range(self._mapping_list_model.rowCount()):
             index = self._mapping_list_model.index(row, 0)
             self._load_preview_data(index.data())
@@ -171,9 +166,7 @@ class PreviewUpdater:
         for row in range(first, last + 1):
             removed_name = self._mapping_list_model.index(row, 0).data()
             self._preview_tree_model.remove_mapping(removed_name)
-            worker = self._workers.pop((self._current_url, removed_name), None)
-            if worker is not None:
-                worker.thread.requestInterruption()
+            self._stamps.pop((self._current_url, removed_name), None)
 
     @Slot(QModelIndex, int, int)
     def _add_mappings(self, parent, first, last):
@@ -207,10 +200,7 @@ class PreviewUpdater:
         make_index = mapping_list_model.index
         names = [make_index(row, 0).data() for row in range(mapping_list_model.rowCount())]
         old_name, new_name = self._preview_tree_model.rename_mappings(names)
-        worker = self._workers.pop((self._current_url, old_name), None)
-        if worker is not None:
-            worker.thread.requestInterruption()
-            self._load_preview_data(new_name)
+        self._stamps.pop((self._current_url, old_name), None)
 
     def _reload_current_mapping(self):
         """Reloads mapping that is currently selected on mapping list."""
@@ -236,55 +226,35 @@ class PreviewUpdater:
         Args:
             mapping_name (str): mapping's name
         """
-        self._update_timer.stop()
         if self._current_url is None or not self._ui.live_preview_check_box.isChecked():
             return
-        existing_worker = self._workers.pop((self._current_url, mapping_name), None)
-        if existing_worker is not None:
-            existing_worker.thread.requestInterruption()
         mapping = self._mapping_list_model.mapping(mapping_name)
         max_tables = self._ui.max_preview_tables_spin_box.value()
         max_rows = self._ui.max_preview_rows_spin_box.value()
-        worker = _Worker(self._current_url, mapping_name, deepcopy(mapping), max_tables, max_rows)
-        self._workers[(self._current_url, mapping_name)] = worker
-        worker.table_written.connect(self._add_or_update_data)
-        worker.finished.connect(self._tear_down_worker)
-        self._update_timer.start()
+        id_ = (self._current_url, mapping_name)
+        stamp = monotonic()
+        self._stamps[id_] = stamp
+        worker = _Worker(self._current_url, mapping_name, deepcopy(mapping), stamp, max_tables, max_rows)
+        worker.signals.table_written.connect(self._add_or_update_data)
+        self._thread_pool.start(worker)
 
-    @Slot()
-    def _start_workers(self):
-        """Starts worker threads."""
-        for worker in self._workers.values():
-            if not worker.thread.isRunning():
-                worker.thread.start()
-
-    @Slot(QObject, str, str, dict)
-    def _add_or_update_data(self, worker, url, mapping_name, data):
+    @Slot(tuple, str, dict, float)
+    def _add_or_update_data(self, worker_id, mapping_name, data, stamp):
         """
         Sets preview data.
 
         Args:
-            worker (QObject): a worker
-            url (str): database url
+            worker_id (tuple): a worker identifier
             mapping_name (str): mapping's name
             data (dict): mapping from table name to table
+            stamp (float): worker's time stamp
         """
-        if (url, mapping_name) not in self._workers or worker is not self._workers[(url, mapping_name)]:
+        current_stamp = self._stamps.pop(worker_id, None)
+        if stamp != current_stamp:
+            if current_stamp is not None:
+                self._stamps[worker_id] = current_stamp
             return
-        del self._workers[(url, mapping_name)]
         self._preview_tree_model.add_or_update_tables(mapping_name, data)
-
-    @Slot(QObject)
-    def _tear_down_worker(self, worker):
-        """Cleans up worker thread.
-
-        Args:
-            worker (_Worker): worker to clean up
-        """
-        worker.thread.quit()
-        worker.thread.wait()
-        worker.thread.deleteLater()
-        worker.deleteLater()
 
     @Slot(bool)
     def _load_url_from_filesystem(self, _):
@@ -307,43 +277,34 @@ class PreviewUpdater:
 
     def tear_down(self):
         """Stops all workers."""
-        for worker in self._workers:
-            worker.thread.requestInterruption()
+        self._stamps.clear()
+        self._thread_pool.clear()
+        self._thread_pool.deleteLater()
 
 
-class _Worker(QObject):
+class _Worker(QRunnable):
+    class Signals(QObject):
+        table_written = Signal(tuple, str, dict, float)
 
-    table_written = Signal(QObject, str, str, dict)
-    """Emitted with exported tables when worker has written them."""
-    finished = Signal(QObject)
-    """Emitted when worker finishes."""
-
-    def __init__(self, url, mapping_name, mapping, max_tables=20, max_rows=20):
-        """
-        Args:
-            url (str): database URL
-            mapping_name (str): mapping's name
-            mapping (Mapping): export mapping
-        """
+    def __init__(self, url, mapping_name, mapping, stamp, max_tables=20, max_rows=20):
         super().__init__()
         self._url = url
         self._mapping_name = mapping_name
         self._mapping = mapping
         self._max_tables = max_tables
         self._max_rows = max_rows
-        self.thread = QThread()
-        self.moveToThread(self.thread)
-        self.thread.started.connect(self._load_data)
+        self._stamp = stamp
+        self.signals = self.Signals()
 
-    @busy_effect
-    @Slot()
-    def _load_data(self):
-        """Exports data to tabular form and emits ``finished``."""
+    def run(self):
+        self.signals.moveToThread(QThread.currentThread())
         db_map = DatabaseMapping(self._url)
         try:
-            writer = TableWriter(self.thread, self._max_tables, self._max_rows)
+            writer = TableWriter(self._max_tables, self._max_rows)
             write(db_map, writer, self._mapping)
-            self.table_written.emit(self, self._url, self._mapping_name, writer.tables)
+            self.signals.table_written.emit(
+                (self._url, self._mapping_name), self._mapping_name, writer.tables, self._stamp
+            )
         finally:
             db_map.connection.close()
-        self.finished.emit(self)
+            self.signals.deleteLater()
