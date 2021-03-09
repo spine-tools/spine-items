@@ -17,10 +17,12 @@ Contains base class for project items.
 """
 
 from itertools import zip_longest
+from json import dump, load
+from pathlib import Path
 from PySide2.QtCore import Qt, Slot
 from spinedb_api import clear_filter_configs
 from spinetoolbox.project_item.project_item import ProjectItem
-from spine_engine.project_item.project_item_resource import transient_file_resource
+from spine_engine.project_item.project_item_resource import transient_file_resource, file_resource_in_pack
 from spine_engine.utils.serialization import serialize_url
 from spine_items.models import DatabaseListModel
 from spine_items.utils import Database
@@ -61,6 +63,7 @@ class ExporterBase(ProjectItem):
         self._output_filenames = dict()
         self._export_list_items = dict()
         self._full_url_model = FullUrlListModel()
+        self._exported_files = None
 
     @staticmethod
     def item_type():
@@ -295,8 +298,71 @@ class ExporterBase(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
+        manifests = self._collect_execution_manifests()
+        exported_file_path = Path(self.data_dir, "exported.json")
+        if manifests is not None:
+            self._update_exported_files_file(exported_file_path, manifests)
+            self._exported_files = manifests
+        elif self._exported_files is None and exported_file_path.exists():
+            self._exported_files = self._read_exported_files(exported_file_path)
         resources = list()
-        for db in self._database_model.items():
-            if db.output_file_name:
-                resources.append(transient_file_resource(self.name, db.output_file_name))
+        if self._exported_files is not None:
+            for db in self._database_model.items():
+                if db.output_file_name:
+                    files = [f for f in self._exported_files.get(db.output_file_name, []) if Path(f).exists()]
+                    if files:
+                        resources = [file_resource_in_pack(self.name, db.output_file_name, f) for f in files]
+                    else:
+                        resources.append(transient_file_resource(self.name, db.output_file_name))
+        else:
+            for db in self._database_model.items():
+                if db.output_file_name:
+                    resources.append(transient_file_resource(self.name, db.output_file_name))
         return resources
+
+    def _collect_execution_manifests(self):
+        """Collects output file names from manifest files written by exporter's executable item.
+
+        Deletes the manifest files after reading their contents.
+
+        Returns:
+            dict: mapping from output label to list of file paths, or None if no manifest files were found
+        """
+        manifests = None
+        for path in Path(self.data_dir).iterdir():
+            if path.name.startswith("__export-manifest") and path.suffix == ".json":
+                with open(path) as manifest_file:
+                    manifest = load(manifest_file)
+                path.unlink()
+                for out_file_name, paths in manifest.items():
+                    if manifests is None:
+                        manifests = dict()
+                    path_list = manifests.setdefault(out_file_name, list())
+                    path_list += paths
+        return manifests
+
+    def _update_exported_files_file(self, file_path, manifests):
+        """Writes manifests to the exported files file.
+
+        Args:
+            file_path (Path): path to the exported files file
+            manifests (dict): collected execution manifests
+        """
+        relative_path_manifests = dict()
+        for out_file_name, paths in manifests.items():
+            relative_path_manifests[out_file_name] = [str(Path(p).relative_to(self.data_dir)) for p in paths]
+        with open(file_path, "w") as manifests_file:
+            dump(relative_path_manifests, manifests_file)
+
+    def _read_exported_files(self, file_path):
+        """Reads manifests from the exported files file.
+
+        Args:
+            file_path (Path): path to the exported files file
+
+        Returns:
+            dict: collected execution manifests
+        """
+        with open(file_path) as manifests_file:
+            relative_path_manifests = load(manifests_file)
+        return {name: [str(Path(self.data_dir, p)) for p in paths] for name, paths in relative_path_manifests.items()}

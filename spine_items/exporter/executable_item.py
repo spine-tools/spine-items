@@ -15,6 +15,8 @@ Contains Exporter's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:    11.12.2020
 """
+from json import dump
+from pathlib import Path
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
@@ -56,13 +58,14 @@ class ExecutableItem(ExporterExecutableItemBase):
             return True
         database_urls = [r.url for r in forward_resources if r.type_ == "database"]
         databases, self._forks = self._databases_and_forks(database_urls)
+        out_dir = Path(self._data_dir, "output")
         self._process = ReturningProcess(
             target=do_work,
             args=(
                 self._specification.to_dict(),
                 self._output_time_stamps,
                 self._cancel_on_error,
-                self._data_dir,
+                str(out_dir),
                 databases,
                 self._forks,
                 self._logger,
@@ -73,6 +76,9 @@ class ExecutableItem(ExporterExecutableItemBase):
         # result contains only the success flag if execution was forcibly stopped.
         if len(result) > 1:
             self._result_files = result[1]
+            file_name = "__export-manifest-" + self.filter_id + ".json" if self.filter_id else "__export-manifest.json"
+            with open(Path(self._data_dir, file_name), "w") as manifest:
+                dump(self._result_files, manifest)
         self._process = None
         return success
 

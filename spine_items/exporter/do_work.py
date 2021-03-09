@@ -16,7 +16,6 @@ Exporter's execute kernel (do_work), as target for a multiprocess.Process
 :date:    14.12.2020
 """
 from copy import copy
-import os
 from pathlib import Path
 from spinedb_api.spine_io.exporters.writer import write, WriterException
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
@@ -59,11 +58,8 @@ def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databas
             continue
         try:
             try:
-                os.mkdir(os.path.dirname(out_path))
-            except FileExistsError:
-                pass
-            try:
                 file = Path(out_path)
+                file.parent.mkdir(parents=True, exist_ok=True)
                 if file.exists():
                     file.unlink()
                 writer = make_writer(specification.output_format, out_path)
@@ -104,6 +100,6 @@ def make_writer(output_format, out_path):
         Writer: a writer
     """
     if output_format == OutputFormat.CSV:
-        path, file_name = os.path.split(out_path)
-        return CsvWriter(path, file_name)
+        path = Path(out_path)
+        return CsvWriter(path.parent, path.name)
     return ExcelWriter(out_path)

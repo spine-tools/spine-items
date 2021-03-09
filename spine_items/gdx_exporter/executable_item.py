@@ -15,6 +15,8 @@ Contains GdxExporter's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:    2.4.2020
 """
+from json import dump
+from pathlib import Path
 from spinedb_api.spine_io.exporters import gdx
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
@@ -79,6 +81,9 @@ class ExecutableItem(ExporterExecutableItemBase):
         # result contains only the success flag if execution was forcibly stopped.
         if len(result) > 1:
             self._result_files = result[1]
+            file_name = "__export-manifest-" + self.filter_id + ".json" if self.filter_id else "__export-manifest.json"
+            with open(Path(self._data_dir, file_name), "w") as manifest:
+                dump(self._result_files, manifest)
         self._process = None
         return success
 
