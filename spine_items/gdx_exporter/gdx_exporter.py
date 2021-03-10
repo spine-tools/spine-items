@@ -237,7 +237,7 @@ class GdxExporter(ExporterBase):
                 self._settings_pack.indexing_settings,
                 self._settings_pack.merging_settings,
             )
-        self._check_missing_settings()
+        self._check_missing_specification()
         self._report_notifications()
 
     def item_dict(self):
