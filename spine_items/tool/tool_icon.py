@@ -54,7 +54,7 @@ class ToolIcon(ProjectItemIcon):
         delta = QPointF(self._anim_delta_x_factor * value, delta_y)
         self.svg_item.setPos(self._svg_item_pos + delta)
 
-    @Slot("QTimeLine::State")
+    @Slot(int)
     def _handle_time_line_state_changed(self, new_state):
         if new_state == QTimeLine.Running:
             self.svg_item.setTransformOriginPoint(0, self._anim_transformation_origin_point_y)

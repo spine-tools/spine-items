@@ -719,6 +719,10 @@ class ToolSpecificationEditorWindow(QMainWindow):
         if e.key() == Qt.Key_Escape:
             self.close()
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._undo_stack.cleanChanged.connect(self._update_window_modified)
+
     def closeEvent(self, event=None):
         """Handle close window.
 

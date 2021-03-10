@@ -376,7 +376,7 @@ class SpecEditorManager:
             editor.setWindowState(editor.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
             editor.activateWindow()
         else:
-            editor.raise_()
+            editor.show()
 
     def close_all_editors(self):
         """Closes all editors."""
