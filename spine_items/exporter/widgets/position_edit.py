@@ -14,7 +14,7 @@ Contains mapping position editor.
 :author: A. Soininen (VTT)
 :date:   5.1.2021
 """
-from PySide2.QtCore import QTimer, Slot
+from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
 
 

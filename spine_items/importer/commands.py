@@ -17,7 +17,8 @@ Contains undo and redo commands for Import editor.
 from enum import auto, IntEnum, unique
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QUndoCommand
-from spinedb_api import parameter_mapping_from_dict
+
+# FIXME from spinedb_api import parameter_mapping_from_dict
 
 
 @unique

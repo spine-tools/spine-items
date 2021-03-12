@@ -18,8 +18,8 @@ Contains ImportEditor widget and SourceDataTableMenu.
 
 from copy import deepcopy
 from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QPoint, Qt, Signal, Slot, QPersistentModelIndex
-from spinedb_api import ObjectClassMapping
-from spinedb_api.spine_io.type_conversion import value_to_convert_spec
+from spinedb_api.import_mapping.import_mapping import ObjectClassMapping
+from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from .custom_menus import SourceListMenu, SourceDataTableMenu
 from .options_widget import OptionsWidget
 from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict

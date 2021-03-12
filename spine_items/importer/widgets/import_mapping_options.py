@@ -16,21 +16,23 @@ ImportMappingOptions widget.
 :date:   12.5.2020
 """
 from PySide2.QtCore import QObject, Qt, Signal, Slot
-from spinedb_api import (
-    RelationshipClassMapping,
-    ObjectClassMapping,
-    ObjectGroupMapping,
-    AlternativeMapping,
-    ScenarioMapping,
-    ScenarioAlternativeMapping,
-    ParameterValueListMapping,
-    FeatureMapping,
-    ToolMapping,
-    ToolFeatureMapping,
-    ToolFeatureMethodMapping,
-    MapValueMapping,
-    TimeSeriesValueMapping,
-)
+from spinedb_api.import_mapping.import_mapping import RelationshipClassMapping
+
+# from spinedb_api import (
+#    RelationshipClassMapping,
+#    ObjectClassMapping,
+#    ObjectGroupMapping,
+#    AlternativeMapping,
+#    ScenarioMapping,
+#    ScenarioAlternativeMapping,
+#    ParameterValueListMapping,
+#    FeatureMapping,
+#    ToolMapping,
+#    ToolFeatureMapping,
+#    ToolFeatureMethodMapping,
+#    MapValueMapping,
+#    TimeSeriesValueMapping,
+# )
 from spinetoolbox.widgets.custom_menus import SimpleFilterMenu
 from ..commands import (
     SetImportObjectsFlag,
@@ -43,6 +45,7 @@ from ..commands import (
     SetReadStartRow,
     SetTimeSeriesRepeatFlag,
 )
+from ..mvcmodels.mapping_specification_model import MappingType as MappingType
 
 
 class ImportMappingOptions(QObject):
@@ -120,31 +123,31 @@ class ImportMappingOptions(QObject):
         self._ui.dockWidget_mapping_options.show()
         self._block_signals = True
         class_type_index = [
-            ObjectClassMapping,
-            RelationshipClassMapping,
-            ObjectGroupMapping,
-            AlternativeMapping,
-            ScenarioMapping,
-            ScenarioAlternativeMapping,
-            ParameterValueListMapping,
-            FeatureMapping,
-            ToolMapping,
-            ToolFeatureMapping,
-            ToolFeatureMethodMapping,
+            MappingType.ObjectClass,
+            MappingType.RelationshipClass,
+            MappingType.ObjectGroup,
+            MappingType.Alternative,
+            MappingType.Scenario,
+            MappingType.ScenarioAlternative,
+            MappingType.ParameterValueList,
+            MappingType.Feature,
+            MappingType.Tool,
+            MappingType.ToolFeature,
+            MappingType.ToolFeatureMethod,
         ].index(self._mapping_specification_model.map_type)
         self._ui.class_type_combo_box.setCurrentIndex(class_type_index)
 
         # update item mapping settings
-        if self._mapping_specification_model.map_type in (RelationshipClassMapping, ObjectGroupMapping):
+        if self._mapping_specification_model.mapping_can_import_objects():
             self._ui.import_objects_check_box.show()
-            check_state = Qt.Checked if self._mapping_specification_model.mapping.import_objects else Qt.Unchecked
+            check_state = Qt.Checked if self._mapping_specification_model.import_objects else Qt.Unchecked
             self._ui.import_objects_check_box.setCheckState(check_state)
         else:
             self._ui.import_objects_check_box.hide()
-        if self._mapping_specification_model.map_type == RelationshipClassMapping:
+        if isinstance(self._mapping_specification_model.mapping, RelationshipClassMapping):
             self._ui.dimension_label.show()
             self._ui.dimension_spin_box.show()
-            self._ui.dimension_spin_box.setValue(len(self._mapping_specification_model.mapping.objects))
+            self._ui.dimension_spin_box.setValue(self._mapping_specification_model.dimension)
         else:
             self._ui.dimension_label.hide()
             self._ui.dimension_spin_box.hide()
@@ -517,8 +520,9 @@ class ImportMappingOptions(QObject):
         if value_mapping is None:
             self._ui.time_series_repeat_check_box.setEnabled(False)
             return
-        is_time_series = isinstance(value_mapping, TimeSeriesValueMapping)
+        is_time_series = self._mapping_specification_model.value_type == "time_series"
         self._ui.time_series_repeat_check_box.setEnabled(is_time_series)
+        # FIXME: options
         self._ui.time_series_repeat_check_box.setCheckState(
             Qt.Checked if is_time_series and value_mapping.options.repeat else Qt.Unchecked
         )
@@ -531,7 +535,7 @@ class ImportMappingOptions(QObject):
         if value_mapping is None:
             self._ui.map_dimension_spin_box.setEnabled(False)
             return
-        is_map = isinstance(value_mapping, MapValueMapping)
+        is_map = self._mapping_specification_model.value_type == "map"
         self._ui.map_dimension_spin_box.setEnabled(is_map)
         self._ui.map_dimension_spin_box.setValue(len(value_mapping.extra_dimensions) if is_map else 1)
         self._ui.map_compression_check_box.setEnabled(is_map)

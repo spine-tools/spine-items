@@ -16,7 +16,7 @@ Contains the mapping list model.
 :date:   1.6.2019
 """
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
-from spinedb_api import ObjectClassMapping
+from spinedb_api.import_mapping.import_mapping import ObjectClassMapping
 from spine_items.commands import RenameMapping
 from spine_items.utils import unique_name
 from .mapping_specification_model import MappingSpecificationModel

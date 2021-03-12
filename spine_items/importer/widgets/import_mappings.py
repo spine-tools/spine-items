@@ -19,7 +19,8 @@ ImportMappings widget.
 from copy import deepcopy
 from PySide2.QtCore import QObject, QPoint, QItemSelectionModel, Signal, Slot, Qt
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
-from spinedb_api import ConstantMapping
+
+# from spinedb_api import ConstantMapping
 from .custom_menus import MappingListMenu
 from .table_view_with_button_header import LineEditWithTypeButton
 from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
@@ -83,14 +84,14 @@ class ImportMappings(QObject):
         index = model.value_mapping_index()
         if not index.isValid():
             return
-        component_mapping = model.component_mapping_from_index(index)
-        if isinstance(component_mapping, ConstantMapping):
+        m = model.component_mapping_from_index(index)
+        if m.is_constant():
             widget = self._ui.mapping_spec_table.indexWidget(index)
             if widget is None:
                 widget = LineEditWithTypeButton(self._ui.mapping_spec_table)
                 widget.reference_changed.connect(lambda ref: model.setData(index, ref))
                 widget.convert_spec_changed.connect(model.change_constant_value_convert_spec)
-            widget.set_component_mapping(component_mapping)
+            widget.set_component_mapping(m)
             widget.set_background_color(index.data(Qt.BackgroundRole))
         else:
             widget = None

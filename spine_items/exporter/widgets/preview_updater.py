@@ -200,7 +200,7 @@ class PreviewUpdater:
         mapping_list_model = self._ui.mapping_list.model()
         make_index = mapping_list_model.index
         names = [make_index(row, 0).data() for row in range(mapping_list_model.rowCount())]
-        old_name, new_name = self._preview_tree_model.rename_mappings(names)
+        old_name, _new_name = self._preview_tree_model.rename_mappings(names)
         self._stamps.pop((self._current_url, old_name), None)
 
     def _reload_current_mapping(self):

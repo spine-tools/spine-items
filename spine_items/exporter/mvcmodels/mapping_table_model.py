@@ -18,7 +18,7 @@ from itertools import takewhile
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide2.QtGui import QColor, QFont
 from spinedb_api.export_mapping import is_pivoted, is_regular, Position
-from spinedb_api.export_mapping.item_export_mapping import (
+from spinedb_api.export_mapping.export_mapping import (
     AlternativeDescriptionMapping,
     AlternativeMapping,
     FixedValueMapping,

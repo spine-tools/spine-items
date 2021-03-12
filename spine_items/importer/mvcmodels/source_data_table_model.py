@@ -15,18 +15,19 @@ Contains the source data table model.
 :date:   1.6.2019
 """
 from PySide2.QtCore import Qt, Signal, Slot
-from spinedb_api import (
-    EntityClassMapping,
-    ParameterValueMapping,
-    SingleMappingBase,
-    ColumnHeaderMapping,
-    ColumnMapping,
-    RowMapping,
-    ParameterValueFormatError,
-    mapping_non_pivoted_columns,
-)
+
+# from spinedb_api import (
+#    EntityClassMapping,
+#    ParameterValueMapping,
+#    SingleMappingBase,
+#    ColumnHeaderMapping,
+#    ColumnMapping,
+#    RowMapping,
+#    ParameterValueFormatError,
+# )
+from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel
-from spinedb_api.spine_io.type_conversion import ConvertSpec
+from spinedb_api.import_mapping.type_conversion import ConvertSpec
 from ..mapping_colors import ERROR_COLOR
 
 
@@ -70,6 +71,18 @@ class SourceDataTableModel(MinimalTableModel):
         self._row_types = {}
         self._converted_data = {}
         super().reset_model(main_data)
+        self._polish_mapping()
+
+    def _polish_mapping(self):
+        if (
+            not self.rowCount()
+            or not self.columnCount()
+            or self._mapping_specification is None
+            or self._mapping_specification.mapping is None
+        ):
+            return
+        header = [self.headerData(j) for j in range(self.columnCount())]
+        self._mapping_specification.mapping.polish("tablename", header)  # FIXME
 
     def set_mapping(self, mapping):
         """Set mapping to display colors from
@@ -89,6 +102,7 @@ class SourceDataTableModel(MinimalTableModel):
             self._mapping_specification.mapping_read_start_row_changed.connect(self._mapping_data_changed)
             self._mapping_specification.row_or_column_type_recommendation_changed.connect(self.set_type)
             self._mapping_specification.multi_column_type_recommendation_changed.connect(self.set_all_column_types)
+        self._polish_mapping()
         self._mapping_data_changed()
 
     def validate(self, section, orientation=Qt.Horizontal):
@@ -208,10 +222,8 @@ class SourceDataTableModel(MinimalTableModel):
             if index.row() <= last_pivoted_row:
                 if (
                     index.column()
-                    not in mapping_non_pivoted_columns(
-                        self._mapping_specification.mapping, self.columnCount(), self.header
-                    )
-                    and index.column() not in self._mapping_specification.skip_columns
+                    not in self._mapping_specification.mapping.non_pivoted_columns()
+                    + self._mapping_specification.skip_columns
                 ):
                     error = self._row_type_errors.get((index.row(), index.column()))
                     if error is not None:
@@ -244,10 +256,9 @@ class SourceDataTableModel(MinimalTableModel):
         return None
 
     def index_below_last_pivot_row(self, mapping, index):
-        if not isinstance(mapping, EntityClassMapping):
-            return False
-        if not isinstance(mapping.parameters, ParameterValueMapping):
-            return False
+        # FIXME?
+        # if not any(isinstance(m, (ParameterValueMapping, ExpandedParameterValueMapping)) for m in mapping.flatten()):
+        #    return False
         if not mapping.is_pivoted():
             return False
         last_row = max(mapping.last_pivot_row(), mapping.read_start_row - 1)
@@ -260,34 +271,21 @@ class SourceDataTableModel(MinimalTableModel):
         Checks if index is in mapping
 
         Args:
-            mapping (SingleMappingBase): mapping
+            mapping (ImportMapping): mapping component
             index (QModelIndex): index
 
         Returns:
             bool: True if mapping is in index
         """
-        if not isinstance(mapping, SingleMappingBase):
+        if not isinstance(mapping.position, int):
             return False
-        if isinstance(mapping, ColumnHeaderMapping):
-            # column header can't be in data
+        if mapping.position < 0:
+            if index.column() in set(mapping.non_pivoted_columns() + mapping.skip_cols):
+                return False
+            return index.row() == -(mapping.position + 1)
+        if index.row() < max(mapping.read_start_row, mapping.last_pivot_row()):
             return False
-        if isinstance(mapping, ColumnMapping):
-            if index.column() == self._reference_from_header(mapping.reference):
-                if self._mapping_specification.mapping.is_pivoted():
-                    # only rows below pivoted rows
-                    last_row = max(
-                        self._mapping_specification.mapping.last_pivot_row(),
-                        self._mapping_specification.read_start_row - 1,
-                    )
-                    if last_row is not None and index.row() > last_row:
-                        return True
-                elif index.row() >= self._mapping_specification.read_start_row:
-                    return True
-        if isinstance(mapping, RowMapping):
-            if index.row() == mapping.reference:
-                if index.column() not in self.mapping_column_ref_int_list():
-                    return True
-        return False
+        return index.column() == mapping.position
 
     def mapping_column_ref_int_list(self):
         """Returns a list of column indexes that are not pivoted
@@ -323,12 +321,14 @@ class SourceDataTableModel(MinimalTableModel):
         if self._mapping_specification is None:
             return super().headerData(section, orientation, role)
         for k, component_mapping in enumerate(self._mapping_specification._component_mappings):
-            if self.section_in_mapping(component_mapping, section):
+            if self.section_in_mapping(component_mapping, section, orientation):
                 return self._mapping_specification._colors[k]
 
-    def section_in_mapping(self, mapping, section):
-        if isinstance(mapping, ColumnHeaderMapping):
-            return section == self._reference_from_header(mapping.reference)
-        if isinstance(mapping, RowMapping):
-            return mapping.reference == -1
-        return False
+    def section_in_mapping(self, mapping, section, orientation):
+        if orientation == Qt.Horizontal:
+            return mapping.position == Position.header and mapping.value in (
+                section,
+                self.headerData(section, orientation),
+            )
+        # Mapping from header has this particular combination of position and value
+        return mapping.position == Position.header and mapping.value is None

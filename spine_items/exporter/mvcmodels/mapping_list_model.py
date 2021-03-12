@@ -15,7 +15,7 @@ Contains the :class:`MappingListModel` model.
 :date:    30.12.2020
 """
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
-from spinedb_api.export_mapping.item_export_mapping import (
+from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
     RelationshipClassObjectClassMapping,

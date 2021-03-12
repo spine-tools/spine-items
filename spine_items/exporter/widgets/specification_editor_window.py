@@ -41,7 +41,7 @@ from spinedb_api.export_mapping.settings import (
     set_parameter_default_value_dimensions,
     set_relationship_dimensions,
 )
-from spinedb_api.export_mapping.item_export_mapping import FixedValueMapping, Position
+from spinedb_api.export_mapping.export_mapping import FixedValueMapping, Position
 from spinedb_api.export_mapping.group_functions import (
     GROUP_FUNCTION_DISPLAY_NAMES,
     group_function_name_from_display,

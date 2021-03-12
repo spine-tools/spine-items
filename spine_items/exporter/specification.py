@@ -18,8 +18,8 @@ Contains Exporter's specifications.
 from enum import Enum, unique
 import json
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
-from spinedb_api.export_mapping.item_export_mapping import to_dict as mapping_to_dict
-from spinedb_api.export_mapping.item_export_mapping import from_dict as mapping_from_dict
+from spinedb_api.export_mapping.export_mapping import to_dict as mapping_to_dict
+from spinedb_api.export_mapping.export_mapping import from_dict as mapping_from_dict
 from .item_info import ItemInfo
 
 
