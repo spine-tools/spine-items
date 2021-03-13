@@ -33,11 +33,11 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
         for name, options in mapping.get("table_options", {}).items()
         if name in mapping["selected_tables"]
     }
-    table_types = {
+    table_column_convert_specs = {
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_types", {}).items()
     }
-    table_row_types = {
+    table_row_convert_specs = {
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_row_types", {}).items()
     }
@@ -49,7 +49,7 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
             return (False,)
         try:
             data, errors = connector.get_mapped_data(
-                table_mappings, table_options, table_types, table_row_types, max_rows=-1
+                table_mappings, table_options, table_column_convert_specs, table_row_convert_specs, max_rows=-1
             )
         except spinedb_api.InvalidMapping as error:
             logger.msg_error.emit(f"Failed to import '{path}': {error}")

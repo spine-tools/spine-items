@@ -17,12 +17,9 @@ ImportMappings widget.
 """
 
 from copy import deepcopy
-from PySide2.QtCore import QObject, QPoint, QItemSelectionModel, Signal, Slot, Qt
+from PySide2.QtCore import QObject, QPoint, QItemSelectionModel, Signal, Slot
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
-
-# from spinedb_api import ConstantMapping
 from .custom_menus import MappingListMenu
-from .table_view_with_button_header import LineEditWithTypeButton
 from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
 
 SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "None")
@@ -78,30 +75,6 @@ class ImportMappings(QObject):
         if mapping_spec_model is None:
             return
         mapping_spec_model.modelReset.connect(self._resize_table_view_mappings_columns)
-        self._set_line_edit_with_type_button()
-        mapping_spec_model.mapping_changed.connect(self._set_line_edit_with_type_button)
-
-    @Slot()
-    def _set_line_edit_with_type_button(self):
-        """Sets a LineEditWithTypeButton for the value mapping index if it's a constant mapping.
-        This is so the user can set the convert_spec for that mapping.
-        """
-        model = self._ui.mapping_spec_table.model()
-        index = model.value_mapping_index()
-        if not index.isValid():
-            return
-        m = model.component_mapping_from_index(index)
-        if m.is_constant():
-            widget = self._ui.mapping_spec_table.indexWidget(index)
-            if widget is None:
-                widget = LineEditWithTypeButton(self._ui.mapping_spec_table)
-                widget.reference_changed.connect(lambda ref: model.setData(index, ref))
-                widget.convert_spec_changed.connect(model.change_constant_value_convert_spec)
-            widget.set_component_mapping(m)
-            widget.set_background_color(index.data(Qt.BackgroundRole))
-        else:
-            widget = None
-        self._ui.mapping_spec_table.setIndexWidget(index, widget)
 
     @Slot()
     def _resize_table_view_mappings_columns(self):
@@ -183,11 +156,11 @@ class ImportMappings(QObject):
         self._select_row(row)
         return mapping_name
 
-    def insert_mapping_specification(self, source_table_name, name, row, mapping_specification):
+    def insert_mapping(self, source_table_name, name, row, mapping_specification):
         self.about_to_undo.emit(source_table_name)
         if self._mappings_model is None:
             return
-        self._mappings_model.insert_mapping_specification(name, row, mapping_specification)
+        self._mappings_model.insert_mapping(name, row, mapping_specification)
         self._select_row(row)
 
     @Slot()
@@ -207,9 +180,9 @@ class ImportMappings(QObject):
             return
         spec = self._mappings_model.mapping_specifications[row]
         dup_spec = spec.duplicate(source_table_name, self._undo_stack)
-        prefix = self._mappings_model.mapping_name_at(row) + "--"
-        name = self._mappings_model._make_new_mapping_name(prefix)
-        self.insert_mapping_specification(source_table_name, name, row + 1, dup_spec)
+        prefix = self._mappings_model.mapping_name_at(row)
+        name = self._mappings_model.unique_name(prefix)
+        self.insert_mapping(source_table_name, name, row + 1, dup_spec)
         return name
 
     @Slot()

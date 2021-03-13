@@ -18,7 +18,7 @@ Contains the mapping specification model.
 
 from enum import Enum, unique
 from distutils.util import strtobool
-from PySide2.QtCore import QModelIndex, Qt, QAbstractTableModel, Signal, Slot, QTimer
+from PySide2.QtCore import Qt, QAbstractTableModel, Signal, Slot, QTimer
 from spinetoolbox.helpers import color_from_index
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.mapping import Position
@@ -54,7 +54,7 @@ from spinedb_api.import_mapping.import_mapping import (
     ParameterDefaultValueIndexMapping,
 )
 from spinedb_api.import_mapping.type_conversion import DateTimeConvertSpec, FloatConvertSpec, StringConvertSpec
-from ..commands import SetComponentMappingReference, SetComponentMappingType, SetComponentMappingConvertSpec
+from ..commands import SetComponentMappingReference, SetComponentMappingType
 from ..mapping_colors import ERROR_COLOR
 
 
@@ -84,36 +84,38 @@ VALUE_TYPES = {
 DISPLAY_VALUE_TYPES = {v: k for k, v in VALUE_TYPES.items()}
 
 DISPLAY_MAPPING_NAMES = {
-    "ObjectClass": "object class names",
-    "Object": "object names",
-    "ObjectGroup": "member names",
-    "RelationshipClass": "relationship class names",
-    "RelationshipClassObjectClass": "object class names",
+    "ObjectClass": "Object class names",
+    "Object": "Object names",
+    "ObjectGroup": "Member names",
+    "RelationshipClass": "Relationship class names",
+    "RelationshipClassObjectClass": "Object class names",
     "Relationship": None,
-    "RelationshipObject": "object names",
-    "Alternative": "alternative names",
-    "Scenario": "scenario names",
-    "ScenarioAlternative": "alternative names",
-    "ScenarioBeforeAlternative": "before alternative names",
-    "ParameterValueList": "value list names",
-    "ParameterValueListValue": "list values",
-    "FeatureEntityClass": "feature class names",
-    "FeatureParameterDefinition": "feature parameter names",
-    "Tool": "tool names",
-    "ToolFeatureEntityClass": "feature class names",
-    "ToolFeatureParameterDefinition": "feature parameter names",
-    "ToolFeatureMethodEntityClass": "feature class names",
-    "ToolFeatureMethodParameterDefinition": "feature parameter names",
-    "ToolFeatureMethodMethod": "feature methods",
-    "ParameterDefinition": "parameter names",
-    "ParameterValue": "parameter values",
+    "RelationshipObject": "Object names",
+    "Alternative": "Alternative names",
+    "Scenario": "Scenario names",
+    "ScenarioActiveFlag": "Scenario active flags",
+    "ScenarioAlternative": "Alternative names",
+    "ScenarioBeforeAlternative": "Before alternative names",
+    "ParameterValueList": "Value list names",
+    "ParameterValueListValue": "Parameter values",
+    "FeatureEntityClass": "Entity class names",
+    "FeatureParameterDefinition": "Parameter names",
+    "Tool": "Tool names",
+    "ToolFeatureEntityClass": "Entity class names",
+    "ToolFeatureParameterDefinition": "Parameter names",
+    "ToolFeatureRequiredFlag": "Tool feature required flags",
+    "ToolFeatureMethodEntityClass": "Entity class names",
+    "ToolFeatureMethodParameterDefinition": "Parameter names",
+    "ToolFeatureMethodMethod": "Tool feature methods",
+    "ParameterDefinition": "Parameter names",
+    "ParameterValue": "Parameter values",
     "ParameterValueType": None,
-    "ParameterValueIndex": "parameter indexes",
-    "ExpandedValue": "parameter values",
-    "ParameterDefaultValue": "parameter default values",
+    "ParameterValueIndex": "Parameter indexes",
+    "ExpandedValue": "Parameter values",
+    "ParameterDefaultValue": "Parameter default values",
     "ParameterDefaultValueType": None,
-    "ParameterDefaultValueIndex": "parameter indexes",
-    "ExpandedDefaultValue": "parameter default values",
+    "ParameterDefaultValueIndex": "Parameter indexes",
+    "ExpandedDefaultValue": "Parameter default values",
 }
 
 
@@ -124,9 +126,9 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     mapping_read_start_row_changed = Signal(int)
     """Emitted after mapping's read start row has been changed."""
-    row_or_column_type_recommendation_changed = Signal(int, object, object)
+    row_or_column_type_recommended = Signal(int, object, object)
     """Emitted when a change in mapping prompts for change in column or row type."""
-    multi_column_type_recommendation_changed = Signal(object, object)
+    multi_column_type_recommended = Signal(object, object)
     """Emitted when all but given columns should be of given type."""
     about_to_undo = Signal(str, str)
     """Emitted before an undo/redo action."""
@@ -204,12 +206,8 @@ class MappingSpecificationModel(QAbstractTableModel):
             return MappingType.ToolFeatureMethod
         return MappingType.Nothing
 
-    @property
     def last_pivot_row(self):
-        last_row = self._root_mapping.last_pivot_row()
-        if last_row is None:
-            last_row = 0
-        return last_row
+        return self._root_mapping.last_pivot_row()
 
     def dimension_count(self):
         if self._root_mapping is None:
@@ -402,7 +400,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             "Tool feature method": "ToolFeatureMethod",
         }[new_type]
         self._root_mapping = import_mapping_from_dict({"map_type": map_type})
-        # FIXME: Keep recycling fields from one mapping to another?
+        # FIXME MAYBE: try to recycle fields from one mapping to another
         self.update_display_table()
         self.endResetModel()
 
@@ -497,8 +495,8 @@ class MappingSpecificationModel(QAbstractTableModel):
         if name.endswith("values") and self._root_mapping.is_pivoted():
             return "Pivoted values"
         if mapping.position == Position.hidden:
-            if mapping.value is None:
-                return ""
+            if name.endswith("flags") and not isinstance(mapping.value, bool):
+                return bool(strtobool(mapping.value))
             return mapping.value
         if mapping.position == Position.header:
             if mapping.value is None:
@@ -509,8 +507,6 @@ class MappingSpecificationModel(QAbstractTableModel):
         if mapping.position >= 0:
             return mapping.position + 1
         return -(mapping.position + 1) + 1
-
-        # FIXME: active and required flags -. bool(strtobool(mapping_ref))
 
     def data(self, index, role=Qt.DisplayRole):
         column = index.column()
@@ -551,7 +547,7 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     def _mapping_issues(self, row):
         """Returns a message string if given row contains issues, or an empty string if everything is OK."""
-        # probably FIXME
+        # FIXME MAYBE
         m = self._component_mappings[self._logical_row[row]]
         if m.position == Position.hidden and m.value is None:
             return "Position or value not set for mapping"
@@ -607,24 +603,13 @@ class MappingSpecificationModel(QAbstractTableModel):
         name = self._component_names[row]
         previous_type = self.index(row, 1).data()
         previous_reference = self.index(row, 2).data()
-        previous_convert_spec = None  # FIXME:
         if column == 1:
-            self._undo_stack.push(
-                SetComponentMappingType(name, self, value, previous_type, previous_reference, previous_convert_spec)
-            )
+            self._undo_stack.push(SetComponentMappingType(name, self, value, previous_type, previous_reference))
         elif column == 2:
             self._undo_stack.push(
                 SetComponentMappingReference(name, self, previous_type, value, previous_type, previous_reference)
             )
         return False
-
-    @Slot(object, object)
-    def change_constant_value_convert_spec(self, convert_spec, previous_convert_spec):
-        self._undo_stack.push(
-            SetComponentMappingConvertSpec(
-                self.value_mapping.main_value_name, self, convert_spec, previous_convert_spec
-            )
-        )
 
     def change_component_mapping(self, component_name, new_type, new_ref):
         """
@@ -638,10 +623,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         row = self._visual_row_from_component_name(component_name)
         previous_type = self.index(row, 1).data()
         previous_ref = self.index(row, 2).data()
-        previous_convert_spec = None  # FIXME
-        type_cmd = SetComponentMappingType(
-            component_name, self, new_type, previous_type, previous_ref, previous_convert_spec
-        )
+        type_cmd = SetComponentMappingType(component_name, self, new_type, previous_type, previous_ref)
         ref_cmd = SetComponentMappingReference(component_name, self, new_type, new_ref, previous_type, previous_ref)
         if type_cmd.isObsolete() and ref_cmd.isObsolete():
             return
@@ -680,9 +662,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             mapping.value = None
         elif new_type == "Table Name":
             mapping.position = Position.table_name
-        else:
-            return False
-        return self._set_component_mapping_from_name(name, mapping)
+        self._set_component_mapping_from_name(name, mapping)
 
     def set_reference(self, name, type_, ref):
         """
@@ -706,29 +686,14 @@ class MappingSpecificationModel(QAbstractTableModel):
             mapping.value = ref - 1
         elif type_ == "Row":
             mapping.position = -ref
-        return self._set_component_mapping_from_name(name, mapping)
+        self._set_component_mapping_from_name(name, mapping)
+        self._recommend_types(name, mapping)
 
-    def set_convert_spec(self, name, convert_spec):
-        """
-        Sets the convert spec for given mapping.
+    def _visual_row_from_component_name(self, name):
+        return self._component_names.index(name)
 
-        Args:
-            name (str): name of the mapping
-            convert_spec (ConvertSpec): a new convert spec
-
-        Returns:
-            bool: True if the convert spec was modified successfully, False otherwise.
-        """
-        # FIXME
-        self.about_to_undo.emit(self._table_name, self._mapping_name)
-        mapping = self._get_component_mapping_from_name(name)
-        if not isinstance(mapping, ConstantMapping):
-            return False
-        try:
-            mapping.convert_spec = convert_spec
-        except TypeError:
-            return False
-        return self._set_component_mapping_from_name(name, mapping)
+    def _logical_row_from_component_name(self, name):
+        return self._logical_row[self._visual_row_from_component_name(name)]
 
     def _get_component_mapping_from_name(self, name):
         if not self._root_mapping:
@@ -738,85 +703,51 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     def _set_component_mapping_from_name(self, name, mapping):
         if not self._root_mapping:
-            return False
+            return
         row = self._logical_row_from_component_name(name)
         top_left = self.index(row, 1)
         bottom_right = self.index(row, 2)
         self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole, Qt.DisplayRole, Qt.ToolTipRole])
-        return
-        # FIXME
+
+    def _recommend_types(self, name, mapping):
         # Recommend data types
-        if name == "Parameter values":
-            self._recommend_parameter_value_mapping_reference_type_change(mapping)
-        elif name == "Parameter time index":
-            self._recommend_datetime_type(mapping)
-            self._recommend_float_type_for_non_pivoted_columns(mapping)
-        elif name == "Parameter time pattern index":
-            self._recommend_float_type_for_non_pivoted_columns(mapping)
-        else:
+        self._recommend_float_type_for_values()
+        if name.endswith("indexes") and self.is_time_series_value():
+            self._recommend_date_time_type(mapping)
+        elif not name.endswith("values"):
             self._recommend_string_type(mapping)
         self.mapping_changed.emit()
-        return True
 
-    def value_mapping_index(self):
-        if self.value_mapping is None:
-            return QModelIndex()
-        try:
-            row = self._logical_row_from_component_mapping(self.value_mapping)
-        except ValueError:
-            return QModelIndex()
-        return self.index(row, 2)
-
-    def component_mapping_from_index(self, index):
-        return self._component_mappings[self._logical_row[index.row()]]
-
-    def _logical_row_from_component_mapping(self, mapping):
-        return self._component_mappings.index(mapping)
-
-    def _visual_row_from_component_name(self, name):
-        return self._component_names.index(name)
-
-    def _logical_row_from_component_name(self, name):
-        return self._logical_row[self._component_names.index(name)]
-
-    def _recommend_float_type_for_non_pivoted_columns(self, mapping):
-        if (
-            isinstance(mapping, RowMapping)
-            and self._root_mapping.is_pivoted()
-            and isinstance(self._root_mapping.parameters.value, NoneMapping)
-        ):
-            non_pivoted_columns = self._root_mapping.non_pivoted_columns()
-            self.multi_column_type_recommendation_changed.emit(non_pivoted_columns, FloatConvertSpec())
+    def _recommend_float_type_for_values(self):
+        if not self.mapping_has_values():
+            return
+        visual_row = next((k for k, m in enumerate(self._component_names) if m.endswith("values")), None)
+        if visual_row is None:
+            return
+        logical_row = self._logical_row[visual_row]
+        mapping = self._component_mappings[logical_row]
+        if not self._root_mapping.is_pivoted():
+            self._recommend_float_type(mapping)
+            return
+        excluded_columns = self._root_mapping.non_pivoted_columns()
+        self.multi_column_type_recommended.emit(excluded_columns, FloatConvertSpec())
 
     def _recommend_string_type(self, mapping):
-        self._recommend_mapping_reference_type_change(mapping, StringConvertSpec())
+        self._recommend_type(mapping, StringConvertSpec())
 
     def _recommend_float_type(self, mapping):
-        self._recommend_mapping_reference_type_change(mapping, FloatConvertSpec())
+        self._recommend_type(mapping, FloatConvertSpec())
 
-    def _recommend_datetime_type(self, mapping):
-        self._recommend_mapping_reference_type_change(mapping, DateTimeConvertSpec())
+    def _recommend_date_time_type(self, mapping):
+        self._recommend_type(mapping, DateTimeConvertSpec())
 
-    def _recommend_mapping_reference_type_change(self, mapping, convert_spec):
-        if mapping.reference is None:
+    def _recommend_type(self, mapping, convert_spec):
+        if not isinstance(mapping.position, int):
             return
-        if isinstance(mapping, ColumnMapping):
-            self.row_or_column_type_recommendation_changed.emit(mapping.reference, convert_spec, Qt.Horizontal)
-        elif isinstance(mapping, RowMapping):
-            self.row_or_column_type_recommendation_changed.emit(mapping.reference, convert_spec, Qt.Vertical)
-
-    def _recommend_parameter_value_mapping_reference_type_change(self, mapping):
-        if isinstance(mapping, ColumnMapping):
-            if mapping.reference is not None:
-                self.row_or_column_type_recommendation_changed.emit(
-                    mapping.reference, FloatConvertSpec(), Qt.Horizontal
-                )
-        elif isinstance(mapping, RowMapping):
-            if mapping.reference is not None:
-                self.row_or_column_type_recommendation_changed.emit(mapping.reference, FloatConvertSpec(), Qt.Vertical)
-            else:
-                non_pivoted_columns = self._root_mapping.non_pivoted_columns()
-                self.multi_column_type_recommendation_changed.emit(non_pivoted_columns, FloatConvertSpec())
+        if mapping.position >= 0:
+            self.row_or_column_type_recommended.emit(mapping.position, convert_spec, Qt.Horizontal)
+        else:
+            self.row_or_column_type_recommended.emit(-(mapping.position + 1), convert_spec, Qt.Vertical)
 
     def set_skip_columns(self, columns=None):
         if columns is None:

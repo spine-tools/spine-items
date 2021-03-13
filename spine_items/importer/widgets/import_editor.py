@@ -340,10 +340,11 @@ class ImportEditor(QObject):
         mapping_specification = self._preview_table_model.mapping_specification()
         if mapping_specification is None:
             return
-        if mapping_specification.last_pivot_row == -1:
+        last_pivot_row = mapping_specification.last_pivot_row()
+        if last_pivot_row == -1:
             pivoted_rows = []
         else:
-            pivoted_rows = list(range(mapping_specification.last_pivot_row + 1))
+            pivoted_rows = list(range(last_pivot_row + 1))
         self._ui.source_data_table.verticalHeader().sections_with_buttons = pivoted_rows
 
     @Slot(QPoint)

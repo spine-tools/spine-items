@@ -107,13 +107,7 @@ class SetComponentMappingType(QUndoCommand):
     """Sets the type of a component mapping."""
 
     def __init__(
-        self,
-        component_display_name,
-        mapping_specification_model,
-        mapping_type,
-        previous_type,
-        previous_reference,
-        previous_convert_spec,
+        self, component_display_name, mapping_specification_model, mapping_type, previous_type, previous_reference
     ):
         """
         Args:
@@ -122,7 +116,6 @@ class SetComponentMappingType(QUndoCommand):
             mapping_type (str): name of the new type
             previous_type (str): name of the original type
             previous_reference (str or int): original mapping's reference
-            previous_convert_spec (ConvertSpec): original mapping's convert spec if any
         """
         text = "change source mapping"
         super().__init__(text)
@@ -131,7 +124,6 @@ class SetComponentMappingType(QUndoCommand):
         self._new_type = mapping_type
         self._previous_type = previous_type
         self._previous_reference = previous_reference
-        self._previous_convert_spec = previous_convert_spec
         if self._new_type == self._previous_type:
             self.setObsolete(True)
 
@@ -143,8 +135,6 @@ class SetComponentMappingType(QUndoCommand):
         """Restores component mapping's original type."""
         self._model.set_type(self._component_display_name, self._previous_type)
         self._model.set_reference(self._component_display_name, self._previous_type, self._previous_reference)
-        if self._previous_convert_spec is not None:
-            self._model.set_convert_spec(self._component_display_name, self._previous_convert_spec)
 
 
 class SetComponentMappingReference(QUndoCommand):
@@ -189,33 +179,6 @@ class SetComponentMappingReference(QUndoCommand):
             self._model.set_type(self._component_display_name, "None")
         else:
             self._model.set_reference(self._component_display_name, self._previous_type, self._previous_reference)
-
-
-class SetComponentMappingConvertSpec(QUndoCommand):
-    """Sets the convert spec for a component constant mapping."""
-
-    def __init__(self, component_display_name, mapping_specification_model, convert_spec, previous_convert_spec):
-        """
-        Args:
-            component_display_name (str): component name on the mapping specification table
-            mapping_specification_model (MappingSpecificationModel): specification model
-            convert_spec (ConvertSpec): new convert spec
-            previous_convert_spec (ConvertSpec): previous convert spec
-        """
-        text = "change source mapping convert spec"
-        super().__init__(text)
-        self._model = mapping_specification_model
-        self._component_display_name = component_display_name
-        self._convert_spec = convert_spec
-        self._previous_convert_spec = previous_convert_spec
-        if self._convert_spec == self._previous_convert_spec:
-            self.setObsolete(True)
-
-    def redo(self):
-        self._model.set_convert_spec(self._component_display_name, self._convert_spec)
-
-    def undo(self):
-        self._model.set_convert_spec(self._component_display_name, self._previous_convert_spec)
 
 
 class SetConnectorOption(QUndoCommand):
@@ -293,7 +256,7 @@ class CreateMapping(QUndoCommand):
         if self._mapping_name is None:
             self._mapping_name = self._import_mappings.create_mapping()
         else:
-            self._import_mappings.insert_mapping_specification(
+            self._import_mappings.insert_mapping(
                 self._source_table_name, self._mapping_name, self._row, self._stored_mapping_specification
             )
 
@@ -327,7 +290,7 @@ class DuplicateMapping(QUndoCommand):
         if self._mapping_name is None:
             self._mapping_name = self._import_mappings.duplicate_mapping(self._source_table_name, self._row)
         else:
-            self._import_mappings.insert_mapping_specification(
+            self._import_mappings.insert_mapping(
                 self._source_table_name, self._mapping_name, self._row + 1, self._stored_mapping_specification
             )
 
@@ -365,7 +328,7 @@ class DeleteMapping(QUndoCommand):
 
     def undo(self):
         """Restores the deleted mapping."""
-        self._import_mappings.insert_mapping_specification(
+        self._import_mappings.insert_mapping(
             self._source_table_name, self._mapping_name, self._row, self._stored_mapping_specification
         )
 

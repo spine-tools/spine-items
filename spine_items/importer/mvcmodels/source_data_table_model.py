@@ -85,15 +85,15 @@ class SourceDataTableModel(MinimalTableModel):
         if self._mapping_specification is not None:
             self._mapping_specification.dataChanged.disconnect(self._mapping_data_changed)
             self._mapping_specification.mapping_read_start_row_changed.disconnect(self._mapping_data_changed)
-            self._mapping_specification.row_or_column_type_recommendation_changed.disconnect(self.set_type)
-            self._mapping_specification.multi_column_type_recommendation_changed.disconnect(self.set_all_column_types)
+            self._mapping_specification.row_or_column_type_recommended.disconnect(self.set_type)
+            self._mapping_specification.multi_column_type_recommended.disconnect(self.set_all_column_types)
         self._mapping_specification = mapping
         if self._mapping_specification is not None:
             self._mapping_specification.dataChanged.connect(self._mapping_data_changed)
             self._mapping_specification.modelReset.connect(self._mapping_data_changed)
             self._mapping_specification.mapping_read_start_row_changed.connect(self._mapping_data_changed)
-            self._mapping_specification.row_or_column_type_recommendation_changed.connect(self.set_type)
-            self._mapping_specification.multi_column_type_recommendation_changed.connect(self.set_all_column_types)
+            self._mapping_specification.row_or_column_type_recommended.connect(self.set_type)
+            self._mapping_specification.multi_column_type_recommended.connect(self.set_all_column_types)
         self._polish_mapping()
         self._mapping_data_changed()
 
@@ -200,26 +200,25 @@ class SourceDataTableModel(MinimalTableModel):
 
     def data(self, index, role=Qt.DisplayRole):
         if self._mapping_specification:
-            last_pivoted_row = self._mapping_specification.last_pivot_row
-            read_from_row = self._mapping_specification.read_start_row
+            last_pivot_row = self._mapping_specification.last_pivot_row()
+            read_start_row = self._mapping_specification.read_start_row
         else:
-            last_pivoted_row = -1
-            read_from_row = 0
+            last_pivot_row = -1
+            read_start_row = 0
         if role in (Qt.ToolTipRole, Qt.BackgroundRole):
-            if index.row() > max(last_pivoted_row, read_from_row - 1):
+            if index.row() > max(last_pivot_row, read_start_row - 1):
                 error = self._column_type_errors.get((index.row(), index.column()))
                 if error is not None:
                     return self.data_error(error, index, role, orientation=Qt.Horizontal)
 
-            if index.row() <= last_pivoted_row:
-                if (
-                    index.column()
-                    not in self._mapping_specification.mapping.non_pivoted_columns()
-                    + self._mapping_specification.skip_columns
-                ):
-                    error = self._row_type_errors.get((index.row(), index.column()))
-                    if error is not None:
-                        return self.data_error(error, index, role, orientation=Qt.Vertical)
+            if index.row() <= last_pivot_row and (
+                index.column()
+                not in self._mapping_specification.mapping.non_pivoted_columns()
+                + self._mapping_specification.skip_columns
+            ):
+                error = self._row_type_errors.get((index.row(), index.column()))
+                if error is not None:
+                    return self.data_error(error, index, role, orientation=Qt.Vertical)
 
         if role == Qt.BackgroundRole and self._mapping_specification:
             return self.data_color(index)
@@ -239,8 +238,7 @@ class SourceDataTableModel(MinimalTableModel):
         Returns:
             QColor: color of index
         """
-        mapping = self._mapping_specification.mapping
-        if self.index_below_last_pivot_row(mapping, index):
+        if self.index_below_last_pivot_row(index):
             return self._mapping_specification.get_value_color()
         for k in range(self._mapping_specification.rowCount()):
             component_mapping = self._mapping_specification.get_component_mapping(k)
@@ -248,15 +246,18 @@ class SourceDataTableModel(MinimalTableModel):
                 return self._mapping_specification.get_color(k)
         return None
 
-    def index_below_last_pivot_row(self, mapping, index):
-        # FIXME?
-        # if not any(isinstance(m, (ParameterValueMapping, ExpandedParameterValueMapping)) for m in mapping.flatten()):
-        #    return False
+    def _last_row(self):
+        mapping = self._mapping_specification.mapping
+        return max(mapping.last_pivot_row(), mapping.read_start_row - 1)
+
+    def index_below_last_pivot_row(self, index):
+        if not self._mapping_specification.value_mapping:
+            return False
+        mapping = self._mapping_specification.mapping
         if not mapping.is_pivoted():
             return False
-        last_row = max(mapping.last_pivot_row(), mapping.read_start_row - 1)
-        return (
-            last_row is not None and index.row() > last_row and index.column() not in self.mapping_column_ref_int_list()
+        return index.row() > self._last_row() and index.column() not in set(
+            mapping.non_pivoted_columns() + mapping.skip_columns
         )
 
     def index_in_mapping(self, mapping, index):
@@ -276,32 +277,9 @@ class SourceDataTableModel(MinimalTableModel):
             if index.column() in set(mapping.non_pivoted_columns() + mapping.skip_columns):
                 return False
             return index.row() == -(mapping.position + 1)
-        if index.row() < max(mapping.read_start_row, mapping.last_pivot_row()):
+        if index.row() <= self._last_row():
             return False
         return index.column() == mapping.position
-
-    def mapping_column_ref_int_list(self):
-        """Returns a list of column indexes that are not pivoted
-
-        Returns:
-            [List[int]] -- list of ints
-        """
-        if not self._mapping_specification:
-            return []
-        non_pivoted_columns = self._mapping_specification.mapping.non_pivoted_columns()
-        skip_cols = self._mapping_specification.mapping.skip_columns
-        if skip_cols is None:
-            skip_cols = []
-        int_non_piv_cols = []
-        for pc in set(non_pivoted_columns + skip_cols):
-            if isinstance(pc, str):
-                try:
-                    pc = self.horizontal_header_labels().index(pc)
-                except ValueError:
-                    continue
-            int_non_piv_cols.append(pc)
-
-        return int_non_piv_cols
 
     def _reference_from_header(self, ref):
         if isinstance(ref, str) and ref in self.header:
@@ -320,6 +298,6 @@ class SourceDataTableModel(MinimalTableModel):
 
     def section_in_mapping(self, mapping, section):
         if mapping.position == Position.header and mapping.value is None:
-            # Full header mapping
+            # Mapping from all headers
             return True
         return mapping.position == Position.header and mapping.value in (section, self.headerData(section))

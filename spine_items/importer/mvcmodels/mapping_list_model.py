@@ -41,7 +41,7 @@ class MappingListModel(QAbstractListModel):
         self._names = [m.mapping_name for m in self._mapping_specifications]
         for k, m in enumerate(self._mapping_specifications):
             if not m.mapping_name:
-                self._names[k] = m.mapping_name = unique_name("Mapping", self._names)
+                self._names[k] = m.mapping_name = self.unique_name()
 
     def flags(self, index):
         """Returns flags for given index."""
@@ -107,17 +107,20 @@ class MappingListModel(QAbstractListModel):
         index = self.index(row, 0)
         self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
+    def unique_name(self, prefix="Mapping"):
+        return unique_name(prefix, self._names)
+
     def add_mapping(self):
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
         m = import_mapping_from_dict({"map_type": "ObjectClass"})
-        name = unique_name("Mapping", self._names)
+        name = self.unique_name()
         specification = MappingSpecificationModel(self._table_name, name, m, self._undo_stack)
         self._mapping_specifications.append(specification)
         self._names.append(name)
         self.endInsertRows()
         return name
 
-    def insert_mapping_specification(self, name, row, specification):
+    def insert_mapping(self, name, row, specification):
         self.beginInsertRows(QModelIndex(), row, row)
         self._names.insert(row, name)
         self._mapping_specifications.insert(row, specification)
