@@ -255,6 +255,7 @@ class LineEditWithTypeButton(QWidget):
         self.setStyleSheet(f"QLineEdit{{background: {background}; border: 0px}}")
 
     def set_component_mapping(self, component_mapping):
+        return  # FIXME
         self._component_mapping = component_mapping
         convert_spec = component_mapping.convert_spec
         font_str = _TYPE_TO_FONT_AWESOME_ICON[convert_spec.DISPLAY_NAME]

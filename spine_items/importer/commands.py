@@ -18,8 +18,6 @@ from enum import auto, IntEnum, unique
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QUndoCommand
 
-# FIXME from spinedb_api import parameter_mapping_from_dict
-
 
 @unique
 class _Id(IntEnum):
@@ -144,7 +142,7 @@ class SetComponentMappingType(QUndoCommand):
     def undo(self):
         """Restores component mapping's original type."""
         self._model.set_type(self._component_display_name, self._previous_type)
-        self._model.set_value(self._component_display_name, self._previous_reference)
+        self._model.set_reference(self._component_display_name, self._previous_type, self._previous_reference)
         if self._previous_convert_spec is not None:
             self._model.set_convert_spec(self._component_display_name, self._previous_convert_spec)
 
@@ -156,38 +154,41 @@ class SetComponentMappingReference(QUndoCommand):
         self,
         component_display_name,
         mapping_specification_model,
-        reference,
+        new_type,
+        new_reference,
+        previous_type,
         previous_reference,
-        previous_mapping_type_was_none,
     ):
         """
         Args:
             component_display_name (str): component name on the mapping specification table
             mapping_specification_model (MappingSpecificationModel): specification model
-            reference (str or int): new value for the reference
+            new_type (str): new mapping 'type'
+            new_reference (str or int): new value for the reference
+            previous_type (str): original mapping 'type'
             previous_reference (str or int): reference's original value
-            previous_mapping_type_was_none (bool): True if the mapping was originally a :class:`NoneMapping`
         """
         text = "change source mapping reference"
         super().__init__(text)
         self._model = mapping_specification_model
         self._component_display_name = component_display_name
-        self._reference = reference
+        self._new_type = new_type
+        self._new_reference = new_reference
+        self._previous_type = previous_type
         self._previous_reference = previous_reference
-        self._previous_mapping_type_was_none = previous_mapping_type_was_none
-        if self._reference == self._previous_reference:
+        if self._new_reference == self._previous_reference:
             self.setObsolete(True)
 
     def redo(self):
         """Sets the reference's value."""
-        self._model.set_value(self._component_display_name, self._reference)
+        self._model.set_reference(self._component_display_name, self._new_type, self._new_reference)
 
     def undo(self):
         """Restores the reference's value and, if necessary, mapping type to their original values."""
-        if self._previous_mapping_type_was_none:
+        if self._previous_type == "None":
             self._model.set_type(self._component_display_name, "None")
         else:
-            self._model.set_value(self._component_display_name, self._previous_reference)
+            self._model.set_reference(self._component_display_name, self._previous_type, self._previous_reference)
 
 
 class SetComponentMappingConvertSpec(QUndoCommand):
@@ -436,14 +437,16 @@ class SetImportObjectsFlag(QUndoCommand):
 class SetParameterType(QUndoCommand):
     """Command to change the parameter type of an item mapping."""
 
-    def __init__(self, source_table_name, mapping_specification_name, options_widget, new_type, previous_parameter):
+    def __init__(
+        self, source_table_name, mapping_specification_name, options_widget, new_type, previous_parameter_mapping
+    ):
         """
         Args:
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
             options_widget (ImportMappingOptions): options widget
             new_type (str): name of the new parameter type
-            previous_parameter (ParameterMappingBase): previous parameter mapping
+            previous_parameter_mapping (ImportMapping): previous parameter mapping
         """
         text = "parameter type change"
         super().__init__(text)
@@ -451,7 +454,7 @@ class SetParameterType(QUndoCommand):
         self._mapping_specification_name = mapping_specification_name
         self._options_widget = options_widget
         self._new_type = new_type
-        self._previous_parameter = previous_parameter.to_dict()
+        self._previous_parameter_mapping = previous_parameter_mapping
 
     def redo(self):
         """Changes a parameter's type."""
@@ -461,8 +464,9 @@ class SetParameterType(QUndoCommand):
 
     def undo(self):
         """Restores a parameter to its previous type"""
-        mapping = parameter_mapping_from_dict(self._previous_parameter)
-        self._options_widget.set_parameter_mapping(self._source_table_name, self._mapping_specification_name, mapping)
+        self._options_widget.set_parameter_mapping(
+            self._source_table_name, self._mapping_specification_name, self._previous_parameter_mapping
+        )
 
 
 class SetValueType(QUndoCommand):
@@ -530,7 +534,9 @@ class SetReadStartRow(QUndoCommand):
 class SetItemMappingDimension(QUndoCommand):
     """Command to change item mapping's dimension option."""
 
-    def __init__(self, source_table_name, mapping_specification_name, options_widget, dimension, previous_dimension):
+    def __init__(
+        self, source_table_name, mapping_specification_name, options_widget, dimension_count, previous_dimension_count
+    ):
         """
         Args:
             source_table_name (str): name of the source table
@@ -544,17 +550,29 @@ class SetItemMappingDimension(QUndoCommand):
         self._source_table_name = source_table_name
         self._mapping_specification_name = mapping_specification_name
         self._options_widget = options_widget
-        self._dimension = dimension
-        self._previous_dimension = previous_dimension
+        self._dimension_count = dimension_count
+        self._previous_dimension_count = previous_dimension_count
+        self._new_cls_mapping = None
+        self._new_obj_mapping = None
 
     def redo(self):
         """Changes the item mapping's dimension to the new value."""
-        self._options_widget.set_dimension(self._source_table_name, self._mapping_specification_name, self._dimension)
+        self._new_cls_mapping, self._new_obj_mapping = self._options_widget.set_dimension_count(
+            self._source_table_name,
+            self._mapping_specification_name,
+            self._dimension_count,
+            self._new_cls_mapping,
+            self._new_obj_mapping,
+        )
 
     def undo(self):
         """Changes the item mapping's dimension to its previous value."""
-        self._options_widget.set_dimension(
-            self._source_table_name, self._mapping_specification_name, self._previous_dimension
+        self._new_cls_mapping, self._new_obj_mapping = self._options_widget.set_dimension_count(
+            self._source_table_name,
+            self._mapping_specification_name,
+            self._previous_dimension_count,
+            self._new_cls_mapping,
+            self._new_obj_mapping,
         )
 
 

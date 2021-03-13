@@ -15,16 +15,7 @@ Contains the source data table model.
 :date:   1.6.2019
 """
 from PySide2.QtCore import Qt, Signal, Slot
-
-# from spinedb_api import (
-#    EntityClassMapping,
-#    ParameterValueMapping,
-#    SingleMappingBase,
-#    ColumnHeaderMapping,
-#    ColumnMapping,
-#    RowMapping,
-#    ParameterValueFormatError,
-# )
+from spinedb_api import ParameterValueFormatError
 from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel
 from spinedb_api.import_mapping.type_conversion import ConvertSpec
@@ -82,7 +73,7 @@ class SourceDataTableModel(MinimalTableModel):
         ):
             return
         header = [self.headerData(j) for j in range(self.columnCount())]
-        self._mapping_specification.mapping.polish("tablename", header)  # FIXME
+        self._mapping_specification.mapping.polish("tablename", header)  # FIXME: Where is the real tablename?
 
     def set_mapping(self, mapping):
         """Set mapping to display colors from
@@ -249,10 +240,11 @@ class SourceDataTableModel(MinimalTableModel):
         """
         mapping = self._mapping_specification.mapping
         if self.index_below_last_pivot_row(mapping, index):
-            return self._mapping_specification.data_color("Parameter values")
-        for k, component_mapping in enumerate(self._mapping_specification._component_mappings):
+            return self._mapping_specification.get_value_color()
+        for k in range(self._mapping_specification.rowCount()):
+            component_mapping = self._mapping_specification.get_component_mapping(k)
             if self.index_in_mapping(component_mapping, index):
-                return self._mapping_specification._colors[k]
+                return self._mapping_specification.get_color(k)
         return None
 
     def index_below_last_pivot_row(self, mapping, index):
@@ -280,7 +272,7 @@ class SourceDataTableModel(MinimalTableModel):
         if not isinstance(mapping.position, int):
             return False
         if mapping.position < 0:
-            if index.column() in set(mapping.non_pivoted_columns() + mapping.skip_cols):
+            if index.column() in set(mapping.non_pivoted_columns() + mapping.skip_columns):
                 return False
             return index.row() == -(mapping.position + 1)
         if index.row() < max(mapping.read_start_row, mapping.last_pivot_row()):
@@ -320,15 +312,13 @@ class SourceDataTableModel(MinimalTableModel):
             return super().headerData(section, orientation, role)
         if self._mapping_specification is None:
             return super().headerData(section, orientation, role)
-        for k, component_mapping in enumerate(self._mapping_specification._component_mappings):
-            if self.section_in_mapping(component_mapping, section, orientation):
-                return self._mapping_specification._colors[k]
+        for k in range(self._mapping_specification.rowCount()):
+            component_mapping = self._mapping_specification.get_component_mapping(k)
+            if self.section_in_mapping(component_mapping, section):
+                return self._mapping_specification.get_color(k)
 
-    def section_in_mapping(self, mapping, section, orientation):
-        if orientation == Qt.Horizontal:
-            return mapping.position == Position.header and mapping.value in (
-                section,
-                self.headerData(section, orientation),
-            )
-        # Mapping from header has this particular combination of position and value
-        return mapping.position == Position.header and mapping.value is None
+    def section_in_mapping(self, mapping, section):
+        if mapping.position == Position.header and mapping.value is None:
+            # Full header mapping
+            return True
+        return mapping.position == Position.header and mapping.value in (section, self.headerData(section))

@@ -16,23 +16,7 @@ ImportMappingOptions widget.
 :date:   12.5.2020
 """
 from PySide2.QtCore import QObject, Qt, Signal, Slot
-from spinedb_api.import_mapping.import_mapping import RelationshipClassMapping
-
-# from spinedb_api import (
-#    RelationshipClassMapping,
-#    ObjectClassMapping,
-#    ObjectGroupMapping,
-#    AlternativeMapping,
-#    ScenarioMapping,
-#    ScenarioAlternativeMapping,
-#    ParameterValueListMapping,
-#    FeatureMapping,
-#    ToolMapping,
-#    ToolFeatureMapping,
-#    ToolFeatureMethodMapping,
-#    MapValueMapping,
-#    TimeSeriesValueMapping,
-# )
+from PySide2.QtWidgets import QWidget
 from spinetoolbox.widgets.custom_menus import SimpleFilterMenu
 from ..commands import (
     SetImportObjectsFlag,
@@ -45,7 +29,7 @@ from ..commands import (
     SetReadStartRow,
     SetTimeSeriesRepeatFlag,
 )
-from ..mvcmodels.mapping_specification_model import MappingType as MappingType
+from ..mvcmodels.mapping_specification_model import MappingType
 
 
 class ImportMappingOptions(QObject):
@@ -73,7 +57,7 @@ class ImportMappingOptions(QObject):
         self._ui.ignore_columns_button.setMenu(self._ui_ignore_columns_filtermenu)
 
         # connect signals
-        self._ui.dimension_spin_box.valueChanged.connect(self._change_dimension)
+        self._ui.dimension_spin_box.valueChanged.connect(self._change_dimension_count)
         self._ui.class_type_combo_box.currentTextChanged.connect(self._change_item_mapping_type)
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_parameter_type)
         self._ui.value_type_combo_box.currentTextChanged.connect(self._change_value_type)
@@ -116,11 +100,11 @@ class ImportMappingOptions(QObject):
         """
         Updates ui according to the current mapping type.
         """
+        for widget in self._ui.dockWidget_mapping_options.findChildren(QWidget):
+            widget.setEnabled(bool(self._mapping_specification_model))
         if not self._mapping_specification_model:
-            self._ui.dockWidget_mapping_options.hide()
             return
 
-        self._ui.dockWidget_mapping_options.show()
         self._block_signals = True
         class_type_index = [
             MappingType.ObjectClass,
@@ -139,18 +123,18 @@ class ImportMappingOptions(QObject):
 
         # update item mapping settings
         if self._mapping_specification_model.mapping_can_import_objects():
-            self._ui.import_objects_check_box.show()
+            self._ui.import_objects_check_box.setEnabled(True)
             check_state = Qt.Checked if self._mapping_specification_model.import_objects else Qt.Unchecked
             self._ui.import_objects_check_box.setCheckState(check_state)
         else:
-            self._ui.import_objects_check_box.hide()
-        if isinstance(self._mapping_specification_model.mapping, RelationshipClassMapping):
-            self._ui.dimension_label.show()
-            self._ui.dimension_spin_box.show()
+            self._ui.import_objects_check_box.setEnabled(False)
+        if self._mapping_specification_model.mapping_has_dimensions():
+            self._ui.dimension_label.setEnabled(True)
+            self._ui.dimension_spin_box.setEnabled(True)
             self._ui.dimension_spin_box.setValue(self._mapping_specification_model.dimension)
         else:
-            self._ui.dimension_label.hide()
-            self._ui.dimension_spin_box.hide()
+            self._ui.dimension_label.setEnabled(False)
+            self._ui.dimension_spin_box.setEnabled(False)
 
         # update parameter mapping settings
         if self._mapping_specification_model.mapping_has_parameters():
@@ -161,14 +145,13 @@ class ImportMappingOptions(QObject):
         if self._mapping_specification_model.mapping_has_values():
             self._ui.value_type_combo_box.setEnabled(True)
             self._ui.value_type_combo_box.setCurrentText(self._mapping_specification_model.value_type)
-            self._ui.value_type_label.setText(self._mapping_specification_model.value_type_label_text)
+            self._ui.value_type_label.setText(self._mapping_specification_model.value_type_label)
         else:
             self._ui.value_type_combo_box.setEnabled(False)
 
-        self._ui.ignore_columns_button.setVisible(self._mapping_specification_model.is_pivoted)
-        self._ui.ignore_columns_label.setVisible(self._mapping_specification_model.is_pivoted)
-
         # update ignore columns filter
+        self._ui.ignore_columns_button.setEnabled(self._mapping_specification_model.is_pivoted)
+        self._ui.ignore_columns_label.setEnabled(self._mapping_specification_model.is_pivoted)
         skip_cols = []
         if self._mapping_specification_model.mapping.skip_columns:
             skip_cols = self._mapping_specification_model.mapping.skip_columns
@@ -234,45 +217,52 @@ class ImportMappingOptions(QObject):
         self._executing_command = False
 
     @Slot(int)
-    def _change_dimension(self, dimension):
+    def _change_dimension_count(self, dimension_count):
         """
         Pushes a SetItemMappingDimension command to the undo stack.
 
         Args:
-            dimension (int): mapping's dimension
+            dimension_count (int): mapping's dimension
         """
         if self._executing_command or self._block_signals:
             return
         source_table_name = self._mapping_specification_model.source_table_name
         specification_name = self._mapping_specification_model.mapping_name
-        previous_dimension = self._mapping_specification_model.mapping.dimensions
+        previous_dimension_count = self._mapping_specification_model.mapping_dimension_count()
         self._undo_stack.push(
-            SetItemMappingDimension(source_table_name, specification_name, self, dimension, previous_dimension)
+            SetItemMappingDimension(
+                source_table_name, specification_name, self, dimension_count, previous_dimension_count
+            )
         )
 
-    def set_dimension(self, source_table_name, mapping_specification_name, dimension):
+    def set_dimension_count(
+        self, source_table_name, mapping_specification_name, dimension_count, new_cls_mapping, new_obj_mapping
+    ):
         """
-        Changes the item mapping's dimension and emits about_to_undo.
+        Changes the item mapping's dimension count and emits about_to_undo.
 
         Args:
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
-            dimension (int): new dimension value
+            dimension_count (int): new dimension value
         """
         if self._mapping_specification_model is None:
             return
         self._executing_command = True
         self.about_to_undo.emit(source_table_name, mapping_specification_name)
-        self._mapping_specification_model.set_dimension(dimension)
+        new_cls_mapping, new_obj_mapping = self._mapping_specification_model.set_dimension_count(
+            dimension_count, new_cls_mapping, new_obj_mapping
+        )
         self._executing_command = False
+        return new_cls_mapping, new_obj_mapping
 
     @Slot(str)
-    def _change_parameter_type(self, type_name):
+    def _change_parameter_type(self, new_type):
         """
         Pushes a SetParameterType command to undo stack.
 
         Args:
-            type_name (str): new parameter type's name
+            new_type (str): new parameter type's name
         """
         if self._executing_command:
             return
@@ -281,18 +271,18 @@ class ImportMappingOptions(QObject):
         if self._mapping_specification_model:
             source_table_name = self._mapping_specification_model.source_table_name
             specification_name = self._mapping_specification_model.mapping_name
-            previous_mapping = self._mapping_specification_model.mapping.parameters
+            previous_mapping = self._mapping_specification_model.parameter_mapping
             self._undo_stack.push(
-                SetParameterType(source_table_name, specification_name, self, type_name, previous_mapping)
+                SetParameterType(source_table_name, specification_name, self, new_type, previous_mapping)
             )
 
     @Slot(str)
-    def _change_value_type(self, type_name):
+    def _change_value_type(self, new_type):
         """
         Pushes a SetValueType command to undo stack.
 
         Args:
-            type_name (str): new value type's name
+            new_type (str): new value type's name
         """
         if self._executing_command:
             return
@@ -301,39 +291,39 @@ class ImportMappingOptions(QObject):
         if self._mapping_specification_model:
             source_table_name = self._mapping_specification_model.source_table_name
             specification_name = self._mapping_specification_model.mapping_name
-            old_type_name = self._mapping_specification_model.value_type
-            self._undo_stack.push(SetValueType(source_table_name, specification_name, self, type_name, old_type_name))
+            old_type = self._mapping_specification_model.value_type
+            self._undo_stack.push(SetValueType(source_table_name, specification_name, self, new_type, old_type))
 
-    def set_parameter_type(self, source_table_name, mapping_specification_name, type_name):
+    def set_parameter_type(self, source_table_name, mapping_specification_name, new_type):
         """
         Sets parameter type for an item mapping.
 
         Args:
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
-            type_name (src): new parameter type's name
+            new_type (src): new parameter type's name
         """
         if self._mapping_specification_model is None:
             return
         self._executing_command = True
         self.about_to_undo.emit(source_table_name, mapping_specification_name)
-        self._mapping_specification_model.change_parameter_type(type_name)
+        self._mapping_specification_model.change_parameter_type(new_type)
         self._executing_command = False
 
-    def set_value_type(self, source_table_name, mapping_specification_name, type_name):
+    def set_value_type(self, source_table_name, mapping_specification_name, new_type):
         """
         Sets parameter value type for an item mapping.
 
         Args:
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
-            type_name (src): new parameter type's name
+            new_type (src): new parameter type's name
         """
         if self._mapping_specification_model is None:
             return
         self._executing_command = True
         self.about_to_undo.emit(source_table_name, mapping_specification_name)
-        self._mapping_specification_model.change_value_type(type_name)
+        self._mapping_specification_model.change_value_type(new_type)
         self._executing_command = False
 
     def set_parameter_mapping(self, source_table_name, mapping_specification_name, parameter_mapping):
@@ -520,11 +510,10 @@ class ImportMappingOptions(QObject):
         if value_mapping is None:
             self._ui.time_series_repeat_check_box.setEnabled(False)
             return
-        is_time_series = self._mapping_specification_model.value_type == "time_series"
+        is_time_series = self._mapping_specification_model.is_time_series_value()
         self._ui.time_series_repeat_check_box.setEnabled(is_time_series)
-        # FIXME: options
         self._ui.time_series_repeat_check_box.setCheckState(
-            Qt.Checked if is_time_series and value_mapping.options.repeat else Qt.Unchecked
+            Qt.Checked if is_time_series and value_mapping.options.get("repeat") else Qt.Unchecked
         )
 
     def _update_map_options(self):
@@ -535,8 +524,9 @@ class ImportMappingOptions(QObject):
         if value_mapping is None:
             self._ui.map_dimension_spin_box.setEnabled(False)
             return
-        is_map = self._mapping_specification_model.value_type == "map"
+        is_map = self._mapping_specification_model.is_map_value()
+        dimension_count = self._mapping_specification_model.map_dimension_count()
         self._ui.map_dimension_spin_box.setEnabled(is_map)
-        self._ui.map_dimension_spin_box.setValue(len(value_mapping.extra_dimensions) if is_map else 1)
+        self._ui.map_dimension_spin_box.setValue(dimension_count)
         self._ui.map_compression_check_box.setEnabled(is_map)
         self._ui.map_compression_check_box.setChecked(Qt.Checked if is_map and value_mapping.compress else Qt.Unchecked)
