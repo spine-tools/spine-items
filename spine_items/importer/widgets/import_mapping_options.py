@@ -20,10 +20,10 @@ from PySide2.QtWidgets import QWidget
 from spinetoolbox.widgets.custom_menus import SimpleFilterMenu
 from ..commands import (
     SetImportObjectsFlag,
-    SetItemMappingDimension,
+    SetItemMappingDimensionCount,
     SetItemMappingType,
     SetMapCompressFlag,
-    SetMapDimensions,
+    SetMapDimensionCount,
     SetParameterType,
     SetValueType,
     SetReadStartRow,
@@ -34,7 +34,7 @@ from ..mvcmodels.mapping_specification_model import MappingType
 
 class ImportMappingOptions(QObject):
     """
-    Provides methods for managing Mapping options (class type, dimensions, parameter type, ignore columns, and so on).
+    Provides methods for managing Mapping options (class type, dimension_count, parameter type, ignore columns, and so on).
     """
 
     about_to_undo = Signal(str, str)
@@ -65,7 +65,7 @@ class ImportMappingOptions(QObject):
         self._ui_ignore_columns_filtermenu.filterChanged.connect(self.change_skip_columns)
         self._ui.start_read_row_spin_box.valueChanged.connect(self._change_read_start_row)
         self._ui.time_series_repeat_check_box.stateChanged.connect(self._change_time_series_repeat_flag)
-        self._ui.map_dimension_spin_box.valueChanged.connect(self._change_map_dimensions)
+        self._ui.map_dimension_spin_box.valueChanged.connect(self._change_map_dimension_count)
         self._ui.map_compression_check_box.stateChanged.connect(self._change_map_compression_flag)
         self.update_ui()
 
@@ -131,7 +131,7 @@ class ImportMappingOptions(QObject):
         if self._mapping_specification_model.mapping_has_dimensions():
             self._ui.dimension_label.setEnabled(True)
             self._ui.dimension_spin_box.setEnabled(True)
-            self._ui.dimension_spin_box.setValue(self._mapping_specification_model.dimension)
+            self._ui.dimension_spin_box.setValue(self._mapping_specification_model.dimension_count())
         else:
             self._ui.dimension_label.setEnabled(False)
             self._ui.dimension_spin_box.setEnabled(False)
@@ -207,7 +207,7 @@ class ImportMappingOptions(QObject):
         Args:
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
-            mapping (ItemMappingBase): item mapping
+            mapping (ImportMapping): item mapping
         """
         if self._mapping_specification_model is None:
             return
@@ -219,7 +219,7 @@ class ImportMappingOptions(QObject):
     @Slot(int)
     def _change_dimension_count(self, dimension_count):
         """
-        Pushes a SetItemMappingDimension command to the undo stack.
+        Pushes a SetItemMappingDimensionCount command to the undo stack.
 
         Args:
             dimension_count (int): mapping's dimension
@@ -230,7 +230,7 @@ class ImportMappingOptions(QObject):
         specification_name = self._mapping_specification_model.mapping_name
         previous_dimension_count = self._mapping_specification_model.mapping_dimension_count()
         self._undo_stack.push(
-            SetItemMappingDimension(
+            SetItemMappingDimensionCount(
                 source_table_name, specification_name, self, dimension_count, previous_dimension_count
             )
         )
@@ -245,6 +245,8 @@ class ImportMappingOptions(QObject):
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
             dimension_count (int): new dimension value
+            new_cls_mapping (RelationshipClassObjectClassMapping): mapping to undo previous dimension removal
+            new_obj_mapping (RelationshipObjectMapping): mapping to undo previous dimension removal
         """
         if self._mapping_specification_model is None:
             return
@@ -436,12 +438,12 @@ class ImportMappingOptions(QObject):
         self._executing_command = False
 
     @Slot(int)
-    def _change_map_dimensions(self, dimensions):
+    def _change_map_dimension_count(self, dimension_count):
         """
-        Pushes :class:`SetMapDimensions` to the undo stack.
+        Pushes :class:`SetMapDimensionCount` to the undo stack.
 
         Args:
-            dimensions (int): new map dimensions
+            dimension_count (int): new map dimension_count
         """
         if self._executing_command or self._block_signals:
             return
@@ -449,27 +451,33 @@ class ImportMappingOptions(QObject):
             return
         source_table_name = self._mapping_specification_model.source_table_name
         specification_name = self._mapping_specification_model.mapping_name
-        previous_dimensions = len(self._mapping_specification_model.value_mapping.extra_dimensions)
+        previous_dimension_count = self._mapping_specification_model.map_dimension_count()
         self._undo_stack.push(
-            SetMapDimensions(source_table_name, specification_name, self, dimensions, previous_dimensions)
+            SetMapDimensionCount(source_table_name, specification_name, self, dimension_count, previous_dimension_count)
         )
 
-    def set_map_dimensions(self, source_table_name, mapping_specification_name, dimensions):
+    def set_map_dimension_count(
+        self, source_table_name, mapping_specification_name, dimension_count, new_index_mapping
+    ):
         """
-        Sets map dimensions.
+        Sets map dimension_count.
 
         Args:
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
-            dimensions (int): new map dimensions
+            dimension_count (int): new map dimension_count
+            new_index_mapping (...IndexMapping): Index mapping to undo previous dimension removing
         """
         if self._mapping_specification_model is None:
             return
         self._executing_command = True
         self.about_to_undo.emit(source_table_name, mapping_specification_name)
-        self._mapping_specification_model.set_map_dimensions(dimensions)
-        self._ui.map_dimension_spin_box.setValue(dimensions)
+        new_index_mapping = self._mapping_specification_model.set_map_dimension_count(
+            dimension_count, new_index_mapping
+        )
+        self._ui.map_dimension_spin_box.setValue(dimension_count)
         self._executing_command = False
+        return new_index_mapping
 
     @Slot(bool)
     def _change_map_compression_flag(self, compress):

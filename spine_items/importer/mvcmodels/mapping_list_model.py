@@ -16,7 +16,7 @@ Contains the mapping list model.
 :date:   1.6.2019
 """
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
-from spinedb_api.import_mapping.import_mapping import ObjectClassMapping
+from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
 from spine_items.commands import RenameMapping
 from spine_items.utils import unique_name
 from .mapping_specification_model import MappingSpecificationModel
@@ -109,7 +109,7 @@ class MappingListModel(QAbstractListModel):
 
     def add_mapping(self):
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
-        m = ObjectClassMapping()
+        m = import_mapping_from_dict({"map_type": "ObjectClass"})
         name = unique_name("Mapping", self._names)
         specification = MappingSpecificationModel(self._table_name, name, m, self._undo_stack)
         self._mapping_specifications.append(specification)

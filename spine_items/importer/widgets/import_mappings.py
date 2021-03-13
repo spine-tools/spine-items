@@ -56,7 +56,9 @@ class ImportMappings(QObject):
         # NOTE: We make the delegate an attribute so it's never accidentally gc'ed
         self._src_type_delegate = ComboBoxDelegate(SOURCE_TYPES)
         self._ui.mapping_spec_table.setItemDelegateForColumn(1, self._src_type_delegate)
-
+        self._ui.new_button.setEnabled(False)
+        self._ui.remove_button.setEnabled(False)
+        self._ui.duplicate_button.setEnabled(False)
         # connect signals
         self._ui.new_button.clicked.connect(self.new_mapping)
         self._ui.remove_button.clicked.connect(self.delete_selected_mapping)
@@ -71,6 +73,10 @@ class ImportMappings(QObject):
             current_model.modelReset.disconnect(self._resize_table_view_mappings_columns)
         self._ui.mapping_spec_table.setModel(mapping_spec_model)
         self._resize_table_view_mappings_columns()
+        self._ui.remove_button.setEnabled(mapping_spec_model is not None)
+        self._ui.duplicate_button.setEnabled(mapping_spec_model is not None)
+        if mapping_spec_model is None:
+            return
         mapping_spec_model.modelReset.connect(self._resize_table_view_mappings_columns)
         self._set_line_edit_with_type_button()
         mapping_spec_model.mapping_changed.connect(self._set_line_edit_with_type_button)
@@ -111,6 +117,7 @@ class ImportMappings(QObject):
             source_table_name (str): newly selected source table's name
             model (MappingListModel): mapping list model attached to that source table.
         """
+        self._ui.new_button.setEnabled(True)
         self._source_table = source_table_name
         if self._mappings_model is not None:
             self._mappings_model.dataChanged.disconnect(self.data_changed)
@@ -163,7 +170,7 @@ class ImportMappings(QObject):
     def create_mapping(self):
         if self._mappings_model is None:
             return
-        mapping_name = self._mappings_model.insert_mapping()
+        mapping_name = self._mappings_model.add_mapping()
         specification = self._mappings_model.mapping_specification(mapping_name)
         row = self._mappings_model.rowCount() - 1
 
@@ -251,6 +258,7 @@ class ImportMappings(QObject):
             self.mapping_selection_changed.emit(self._mappings_model.data_mapping(index))
         else:
             self.mapping_selection_changed.emit(None)
+        has_selection = self._ui.mapping_list.selectionModel().hasSelection()
 
     @Slot(QPoint)
     def _show_mapping_list_context_menu(self, pos):

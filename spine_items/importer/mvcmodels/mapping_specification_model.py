@@ -23,9 +23,12 @@ from spinetoolbox.helpers import color_from_index
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.mapping import Position
 from spinedb_api.import_mapping.import_mapping_compat import (
+    parse_named_mapping_spec,
+    unparse_named_mapping_spec,
     import_mapping_from_dict,
     parameter_mapping_from_dict,
     parameter_value_mapping_from_dict,
+    parameter_default_value_mapping_from_dict,
 )
 from spinedb_api.import_mapping.import_mapping import (
     ImportMapping,
@@ -208,8 +211,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             last_row = 0
         return last_row
 
-    @property
-    def dimension(self):
+    def dimension_count(self):
         if self._root_mapping is None:
             return 0
         return len([m for m in self._component_mappings if isinstance(m, RelationshipClassObjectClassMapping)])
@@ -430,7 +432,10 @@ class MappingSpecificationModel(QAbstractTableModel):
             self.value_mapping = None
         else:
             value_type = VALUE_TYPES[new_type]
-            self.value_mapping = parameter_value_mapping_from_dict({"value_type": value_type})
+            if self.parameter_type == "Definition":
+                self.value_mapping = parameter_default_value_mapping_from_dict({"value_type": value_type})
+            elif self.parameter_type == "Value":
+                self.value_mapping = parameter_value_mapping_from_dict({"value_type": value_type})
         self.update_display_table()
         self.endResetModel()
 
@@ -500,7 +505,7 @@ class MappingSpecificationModel(QAbstractTableModel):
                 return "Headers"
             return mapping.value + 1
         if mapping.position == Position.table_name:
-            return mapping.value
+            return self.source_table_name
         if mapping.position >= 0:
             return mapping.position + 1
         return -(mapping.position + 1) + 1
@@ -674,9 +679,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             mapping.position = -1
             mapping.value = None
         elif new_type == "Table Name":
-            # FIXME: Try to use Position.table_name
-            mapping.position = Position.hidden
-            mapping.value = self._table_name
+            mapping.position = Position.table_name
         else:
             return False
         return self._set_component_mapping_from_name(name, mapping)
@@ -828,31 +831,30 @@ class MappingSpecificationModel(QAbstractTableModel):
             return
         self.value_mapping.options["repeat"] = repeat
 
-    def set_map_dimensions(self, dimensions):
+    def set_map_dimension_count(self, dimension_count, new_index_mapping=None):
         if self._root_mapping is None:
             return
-        if not isinstance(self.value_mapping, MapValueMapping):
+        if not self.is_map_value():
             return
-        previous_dimensions = len(self.value_mapping.extra_dimensions)
-        if dimensions == previous_dimensions:
+        previous_dimension_count = self.map_dimension_count()
+        if dimension_count == previous_dimension_count:
             return
-        self.value_mapping.set_number_of_extra_dimensions(dimensions)
-        first_dimension_row = 0
-        for name in self._component_names:
-            if name.startswith("Parameter index"):
-                break
-            first_dimension_row += 1
-        if previous_dimensions < dimensions:
-            first = first_dimension_row + previous_dimensions
-            last = first_dimension_row + dimensions - 1
-            self.beginInsertRows(QModelIndex(), first, last)
-            self.endInsertRows()
+        parameter_type = self.parameter_type
+        index_mapping = ParameterValueIndexMapping if parameter_type == "Value" else ParameterDefaultValueIndexMapping
+        last_index_mapping = next(m for m in reversed(self._component_mappings) if isinstance(m, index_mapping))
+        last_index_mapping_child = last_index_mapping.child
+        self.beginResetModel()
+        if dimension_count > previous_dimension_count:
+            if new_index_mapping is None:
+                new_index_mapping = index_mapping(Position.hidden)
+            last_index_mapping.child = new_index_mapping
+            new_index_mapping.child = last_index_mapping_child
         else:
-            first = first_dimension_row + dimensions
-            last = first_dimension_row + previous_dimensions - 1
-            self.beginRemoveRows(QModelIndex(), first, last)
-            self.endRemoveRows()
+            new_index_mapping = last_index_mapping
+            last_index_mapping.parent.child = last_index_mapping_child
         self.update_display_table()
+        self.endResetModel()
+        return new_index_mapping
 
     def set_map_compress_flag(self, compress):
         """
@@ -861,7 +863,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         Args:
             compress (bool): flag value
         """
-        if self._root_mapping is None or not isinstance(self.value_mapping, MapValueMapping):
+        if self._root_mapping is None or not self.is_map_value():
             return
         self.value_mapping.compress = compress
 
@@ -872,26 +874,23 @@ class MappingSpecificationModel(QAbstractTableModel):
         Returns:
             dict: serialized specification
         """
-        specification_dict = self._root_mapping.to_dict()
-        specification_dict["mapping_name"] = self._mapping_name
-        return specification_dict
+        return unparse_named_mapping_spec(self._mapping_name, self._root_mapping)
 
     @staticmethod
-    def from_dict(specification_dict, table_name, undo_stack):
+    def from_dict(named_mapping_spec, table_name, undo_stack):
         """
         Restores a serialized mapping specification.
 
         Args:
-            specification_dict (dict): serialized specification model
+            named_mapping_spec (dict): keys are mapping names, values are specs
             table_name (str): source table name
             undo_stack (QUndoStack): undo stack
 
         Returns:
             MappingSpecificationModel: mapping specification
         """
-        mapping_name = specification_dict.get("mapping_name", "")
-        mapping = import_mapping_from_dict(specification_dict)
-        return MappingSpecificationModel(table_name, mapping_name, mapping, undo_stack)
+        name, mapping = parse_named_mapping_spec(named_mapping_spec)
+        return MappingSpecificationModel(table_name, name, mapping, undo_stack)
 
     def duplicate(self, table_name, undo_stack):
         return self.from_dict(self.to_dict(), table_name, undo_stack)

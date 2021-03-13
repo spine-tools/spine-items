@@ -73,7 +73,8 @@ class SourceDataTableModel(MinimalTableModel):
         ):
             return
         header = [self.headerData(j) for j in range(self.columnCount())]
-        self._mapping_specification.mapping.polish("tablename", header)  # FIXME: Where is the real tablename?
+        tablename = self._mapping_specification.source_table_name
+        self._mapping_specification.mapping.polish(tablename, header)
 
     def set_mapping(self, mapping):
         """Set mapping to display colors from

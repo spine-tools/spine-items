@@ -531,7 +531,7 @@ class SetReadStartRow(QUndoCommand):
         )
 
 
-class SetItemMappingDimension(QUndoCommand):
+class SetItemMappingDimensionCount(QUndoCommand):
     """Command to change item mapping's dimension option."""
 
     def __init__(
@@ -542,10 +542,10 @@ class SetItemMappingDimension(QUndoCommand):
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
             options_widget (ImportMappingOptions): options widget
-            dimension (int): new dimension
+            dimension_count (int): new dimension
             previous_dimension (int): previous dimension
         """
-        text = "mapping dimension change"
+        text = "mapping dimension count change"
         super().__init__(text)
         self._source_table_name = source_table_name
         self._mapping_specification_name = mapping_specification_name
@@ -607,36 +607,42 @@ class SetTimeSeriesRepeatFlag(QUndoCommand):
         )
 
 
-class SetMapDimensions(QUndoCommand):
-    """Command to change the dimensions of a Map parameter value type."""
+class SetMapDimensionCount(QUndoCommand):
+    """Command to change the dimension_count of a Map parameter value type."""
 
-    def __init__(self, source_table_name, mapping_specification_name, options_widget, dimensions, previous_dimensions):
+    def __init__(
+        self, source_table_name, mapping_specification_name, options_widget, dimension_count, previous_dimension_count
+    ):
         """
         Args:
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
             options_widget (ImportMappingOptions): options widget
-            dimensions (int): new dimensions
-            previous_dimensions (int): previous dimensions
+            dimension_count (int): new dimension_count
+            previous_dimension_count (int): previous dimension_count
         """
-        text = "map dimensions change"
+        text = "map dimension count change"
         super().__init__(text)
         self._source_table_name = source_table_name
         self._mapping_specification_name = mapping_specification_name
         self._options_widget = options_widget
-        self._dimensions = dimensions
-        self._previous_dimensions = previous_dimensions
+        self._dimension_count = dimension_count
+        self._previous_dimension_count = previous_dimension_count
+        self._new_index_mapping = None
 
     def redo(self):
-        """Sets the Map dimensions to the new value."""
-        self._options_widget.set_map_dimensions(
-            self._source_table_name, self._mapping_specification_name, self._dimensions
+        """Sets the Map dimension_count to the new value."""
+        self._new_index_mapping = self._options_widget.set_map_dimension_count(
+            self._source_table_name, self._mapping_specification_name, self._dimension_count, self._new_index_mapping
         )
 
     def undo(self):
-        """Restores the previous Map dimensions value."""
-        self._options_widget.set_map_dimensions(
-            self._source_table_name, self._mapping_specification_name, self._previous_dimensions
+        """Restores the previous Map dimension_count value."""
+        self._new_index_mapping = self._options_widget.set_map_dimension_count(
+            self._source_table_name,
+            self._mapping_specification_name,
+            self._previous_dimension_count,
+            self._new_index_mapping,
         )
 
 
@@ -710,7 +716,7 @@ class RestoreMappingsFromDict(QUndoCommand):
         super().__init__("import mappings")
         self._import_editor = import_editor
         self._mapping_dict = mapping_dict
-        self._previous_mapping_dict = import_editor.get_settings_dict()
+        self._previous_mapping_dict = import_editor.get_mapping_dict()
 
     def redo(self):
         """Restores the mappings."""

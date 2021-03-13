@@ -280,7 +280,7 @@ class ImportEditor(QObject):
         self._restore_mapping(mapping)
         self._ui.source_list.selectionModel().setCurrentIndex(current, QItemSelectionModel.ClearAndSelect)
 
-    def get_settings_dict(self):
+    def get_mapping_dict(self):
         """Returns a dictionary with type of connector, connector options for tables,
         mappings for tables, selected tables.
 

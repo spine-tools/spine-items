@@ -332,7 +332,7 @@ class ImportEditorWindow(QMainWindow):
         if not filename[0]:
             return
         with open(filename[0], 'w') as file_p:
-            settings = self._editor.get_settings_dict()
+            settings = self._editor.get_mapping_dict()
             json.dump(settings, file_p)
         self._ui.statusbar.showMessage(f"Mapping saved to: {filename[0]}", 10000)
 
@@ -358,7 +358,7 @@ class ImportEditorWindow(QMainWindow):
         if not name:
             self.show_error("Please enter a name for the specification.")
             return False
-        mapping = self._editor.get_settings_dict() if self._editor else {}
+        mapping = self._editor.get_mapping_dict() if self._editor else {}
         description = self._spec_toolbar.description()
         spec_dict = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
         self._specification = self._toolbox.load_specification(spec_dict)
