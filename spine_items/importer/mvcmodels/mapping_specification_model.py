@@ -88,11 +88,13 @@ DISPLAY_VALUE_TYPES = {v: k for k, v in VALUE_TYPES.items()}
 DISPLAY_MAPPING_NAMES = {
     "ObjectClass": "Object class names",
     "Object": "Object names",
+    "ObjectMetadata": "Object metadata",
     "ObjectGroup": "Member names",
     "RelationshipClass": "Relationship class names",
     "RelationshipClassObjectClass": "Object class names",
     "Relationship": None,
     "RelationshipObject": "Object names",
+    "RelationshipMetadata": "Relationship metadata",
     "Alternative": "Alternative names",
     "Scenario": "Scenario names",
     "ScenarioActiveFlag": "Scenario active flags",
@@ -112,6 +114,7 @@ DISPLAY_MAPPING_NAMES = {
     "ParameterDefinition": "Parameter names",
     "ParameterValue": "Parameter values",
     "ParameterValueType": None,
+    "ParameterValueMetadata": "Parameter value metadata",
     "ParameterValueIndex": "Parameter indexes",
     "ExpandedValue": "Parameter values",
     "ParameterDefaultValue": "Parameter default values",
@@ -560,11 +563,22 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     def _mapping_issues(self, row):
         """Returns a message string if given row contains issues, or an empty string if everything is OK."""
-        # FIXME MAYBE
+        name = self._component_names[row]
+        if self._is_optional(name):
+            return ""
         m = self._component_mappings[self._logical_row[row]]
         if m.position == Position.hidden and m.value is None:
             return "Position or value not set for mapping"
         return ""
+
+    def _is_optional(self, component_name):
+        if component_name.endswith("metadata"):
+            return True
+        if component_name.startswith("Object names"):
+            return not self.mapping_has_values()
+        if component_name == "Alternative names":
+            return self.map_type not in (MappingType.Alternative, MappingType.ScenarioAlternative)
+        return False
 
     def rowCount(self, index=None):
         if not self._root_mapping:
@@ -614,14 +628,25 @@ class MappingSpecificationModel(QAbstractTableModel):
             return False
         row = index.row()
         name = self._component_names[row]
-        previous_type = self.index(row, 1).data()
-        previous_reference = self.index(row, 2).data()
+        current_type = self.index(row, 1).data()
+        current_reference = self.index(row, 2).data()
         if column == 1:
-            self._undo_stack.push(SetComponentMappingType(name, self, value, previous_type, previous_reference))
-        elif column == 2:
+            self._undo_stack.push(SetComponentMappingType(name, self, value, current_type, current_reference))
+            return False
+        if current_type != "None":
             self._undo_stack.push(
-                SetComponentMappingReference(name, self, previous_type, value, previous_type, previous_reference)
+                SetComponentMappingReference(name, self, current_type, value, current_type, current_reference)
             )
+            return False
+        # If type is "None", set it to something reasonable to save users work
+        try:
+            value = int(value)
+        except ValueError:
+            pass
+        if isinstance(value, int):
+            self.change_component_mapping(name, "Column", value)
+        elif isinstance(value, str):
+            self.change_component_mapping(name, "Constant", value)
         return False
 
     def change_component_mapping(self, component_name, new_type, new_ref):
