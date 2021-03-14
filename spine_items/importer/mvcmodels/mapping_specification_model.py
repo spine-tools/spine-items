@@ -18,7 +18,7 @@ Contains the mapping specification model.
 
 from enum import Enum, unique
 from distutils.util import strtobool
-from PySide2.QtCore import Qt, QAbstractTableModel, Signal, Slot, QTimer
+from PySide2.QtCore import Qt, QAbstractTableModel, Signal, QTimer
 from spinetoolbox.helpers import color_from_index
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.mapping import Position
@@ -58,9 +58,11 @@ from ..commands import SetComponentMappingReference, SetComponentMappingType
 from ..mapping_colors import ERROR_COLOR
 
 
+# FIXME: We need to use the Parameter Value Editor in constant vales
+
+
 @unique
 class MappingType(Enum):
-    Nothing = "Nothing"
     ObjectClass = "Object class"
     RelationshipClass = "Relationship class"
     ObjectGroup = "Object group"
@@ -181,7 +183,7 @@ class MappingSpecificationModel(QAbstractTableModel):
     @property
     def map_type(self):
         if self._root_mapping is None:
-            return MappingType.Nothing
+            return None
         if isinstance(self._root_mapping, ObjectClassMapping):
             if any(isinstance(m, ObjectGroupMapping) for m in self._component_mappings):
                 return MappingType.ObjectGroup
@@ -204,7 +206,6 @@ class MappingSpecificationModel(QAbstractTableModel):
             return MappingType.Tool
         if any(isinstance(m, ToolFeatureMethodEntityClassMapping) for m in self._component_mappings):
             return MappingType.ToolFeatureMethod
-        return MappingType.Nothing
 
     def last_pivot_row(self):
         return self._root_mapping.last_pivot_row()
@@ -218,6 +219,8 @@ class MappingSpecificationModel(QAbstractTableModel):
         return self.map_type in (MappingType.RelationshipClass, MappingType.ObjectGroup)
 
     def _import_objects_mapping(self):
+        if not self.mapping_can_import_objects():
+            return None
         return next((m for m in self._component_mappings if hasattr(m, "import_objects")), None)
 
     @property
@@ -341,11 +344,9 @@ class MappingSpecificationModel(QAbstractTableModel):
     def mapping_dimension_count(self):
         return len([m for m in self._component_mappings if isinstance(m, RelationshipClassObjectClassMapping)])
 
-    @property
     def last_object_class_mapping(self):
         return next(m for m in reversed(self._component_mappings) if isinstance(m, RelationshipClassObjectClassMapping))
 
-    @property
     def last_object_mapping(self):
         return next(m for m in reversed(self._component_mappings) if isinstance(m, RelationshipObjectMapping))
 
@@ -355,8 +356,8 @@ class MappingSpecificationModel(QAbstractTableModel):
         curr_dimension_count = self.mapping_dimension_count()
         if curr_dimension_count == dimension_count:
             return None, None
-        last_cls_mapping = self.last_object_class_mapping
-        last_obj_mapping = self.last_object_mapping
+        last_cls_mapping = self.last_object_class_mapping()
+        last_obj_mapping = self.last_object_mapping()
         cls_mapping_child = last_cls_mapping.child
         obj_mapping_child = last_obj_mapping.child
         self.beginResetModel()
@@ -449,9 +450,16 @@ class MappingSpecificationModel(QAbstractTableModel):
         self.update_display_table()
         self.endResetModel()
 
+    def _component_name_from_type(self, component_type):
+        if self.map_type == MappingType.ObjectGroup and component_type == "Object":
+            return "Group names"
+        if self.value_type == "Array" and component_type in ("ParameterValueIndex", "ParameterDefaultValueIndex"):
+            return None
+        return DISPLAY_MAPPING_NAMES[component_type]
+
     def _update_component_mappings(self):
         self._component_mappings = self._root_mapping.flatten()
-        self._component_names = [DISPLAY_MAPPING_NAMES[m.MAP_TYPE] for m in self._component_mappings]
+        self._component_names = [self._component_name_from_type(m.MAP_TYPE) for m in self._component_mappings]
         self._logical_row.clear()
         display_row = 0
         invalid_rows = []

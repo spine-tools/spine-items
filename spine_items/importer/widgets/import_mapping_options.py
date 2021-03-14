@@ -106,19 +106,22 @@ class ImportMappingOptions(QObject):
             return
 
         self._block_signals = True
-        class_type_index = [
-            MappingType.ObjectClass,
-            MappingType.RelationshipClass,
-            MappingType.ObjectGroup,
-            MappingType.Alternative,
-            MappingType.Scenario,
-            MappingType.ScenarioAlternative,
-            MappingType.ParameterValueList,
-            MappingType.Feature,
-            MappingType.Tool,
-            MappingType.ToolFeature,
-            MappingType.ToolFeatureMethod,
-        ].index(self._mapping_specification_model.map_type)
+        try:
+            class_type_index = [
+                MappingType.ObjectClass,
+                MappingType.RelationshipClass,
+                MappingType.ObjectGroup,
+                MappingType.Alternative,
+                MappingType.Scenario,
+                MappingType.ScenarioAlternative,
+                MappingType.ParameterValueList,
+                MappingType.Feature,
+                MappingType.Tool,
+                MappingType.ToolFeature,
+                MappingType.ToolFeatureMethod,
+            ].index(self._mapping_specification_model.map_type)
+        except ValueError:
+            class_type_index = -1
         self._ui.class_type_combo_box.setCurrentIndex(class_type_index)
 
         # update item mapping settings
