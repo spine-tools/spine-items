@@ -20,11 +20,6 @@ from spine_items.importer.mvcmodels.mapping_specification_model import MappingSp
 from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
 
 
-def _is_optional(index):
-    optionals = ("Object metadata", "Relationship metadata", "Parameter value metadata", "Alternative names")
-    return index.siblingAtColumn(0).data() in optionals
-
-
 class TestMappingSpecificationModel(unittest.TestCase):
     def test_data_when_mapping_object_class_without_objects_or_parameters(self):
         undo_stack = MagicMock()
@@ -50,8 +45,8 @@ class TestMappingSpecificationModel(unittest.TestCase):
         self.assertEqual(index.data(), "None")
         index = model.index(0, 2)
         self.assertEqual(index.data(), None)
-        self.assertEqual(index.data(Qt.BackgroundRole), ERROR_COLOR)
-        self.assertTrue(index.data(Qt.ToolTipRole))
+        self.assertEqual(index.data(Qt.BackgroundRole), None)
+        self.assertFalse(index.data(Qt.ToolTipRole))
         index = model.index(1, 2)
         self.assertEqual(index.data(), None)
         self.assertEqual(index.data(Qt.BackgroundRole), None)
@@ -102,9 +97,8 @@ class TestMappingSpecificationModel(unittest.TestCase):
             self.assertEqual(index.data(), "None")
             index = model.index(row, 2)
             self.assertEqual(index.data(), None)
-            if not _is_optional(index):
-                self.assertEqual(index.data(Qt.BackgroundRole), ERROR_COLOR)
-                self.assertTrue(index.data(Qt.ToolTipRole))
+            self.assertEqual(index.data(Qt.BackgroundRole), None)
+            self.assertFalse(index.data(Qt.ToolTipRole))
 
     def test_data_when_mapping_valid_object_class_with_pivoted_parameters(self):
         array_parameter_mapping_dict = {
@@ -390,12 +384,12 @@ class TestMappingSpecificationModel(unittest.TestCase):
         self.assertEqual(index.data(), "None")
         index = model.index(0, 2)
         self.assertEqual(index.data(), None)
-        self.assertEqual(index.data(Qt.BackgroundRole), ERROR_COLOR)
-        self.assertTrue(index.data(Qt.ToolTipRole))
+        self.assertEqual(index.data(Qt.BackgroundRole), None)
+        self.assertFalse(index.data(Qt.ToolTipRole))
         index = model.index(1, 2)
         self.assertEqual(index.data(), None)
-        self.assertEqual(index.data(Qt.BackgroundRole), ERROR_COLOR)
-        self.assertTrue(index.data(Qt.ToolTipRole))
+        self.assertEqual(index.data(Qt.BackgroundRole), None)
+        self.assertFalse(index.data(Qt.ToolTipRole))
         index = model.index(2, 2)
         self.assertEqual(index.data(), None)
         self.assertEqual(index.data(Qt.BackgroundRole), None)
@@ -449,9 +443,8 @@ class TestMappingSpecificationModel(unittest.TestCase):
             self.assertEqual(index.data(), "None")
             index = model.index(row, 2)
             self.assertEqual(index.data(), None)
-            if not _is_optional(index):
-                self.assertEqual(index.data(Qt.BackgroundRole), ERROR_COLOR)
-                self.assertTrue(index.data(Qt.ToolTipRole))
+            self.assertEqual(index.data(Qt.BackgroundRole), None)
+            self.assertFalse(index.data(Qt.ToolTipRole))
 
     def test_data_when_mapping_multidimensional_relationship_class_with_parameters(self):
         indexed_parameter_mapping_dict = {

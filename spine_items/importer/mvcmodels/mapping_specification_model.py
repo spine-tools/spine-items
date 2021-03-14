@@ -52,6 +52,7 @@ from spinedb_api.import_mapping.import_mapping import (
     ParameterDefaultValueMapping,
     ParameterDefaultValueTypeMapping,
     ParameterDefaultValueIndexMapping,
+    check_validity,
 )
 from spinedb_api.import_mapping.type_conversion import DateTimeConvertSpec, FloatConvertSpec, StringConvertSpec
 from ..commands import SetComponentMappingReference, SetComponentMappingType
@@ -221,14 +222,14 @@ class MappingSpecificationModel(QAbstractTableModel):
     def mapping_can_import_objects(self):
         return self.map_type in (MappingType.RelationshipClass, MappingType.ObjectGroup)
 
-    def _import_objects_mapping(self):
+    def _import_objects_mappings(self):
         if not self.mapping_can_import_objects():
-            return None
-        return next((m for m in self._component_mappings if hasattr(m, "import_objects")), None)
+            return []
+        return [m for m in self._component_mappings if hasattr(m, "import_objects")]
 
     @property
     def import_objects(self):
-        m = self._import_objects_mapping()
+        m = next(iter(self._import_objects_mappings()), None)
         if m is None:
             return False
         return m.import_objects
@@ -332,8 +333,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             self.mapping_read_start_row_changed.emit(row)
 
     def set_import_objects(self, flag):
-        m = self._import_objects_mapping()
-        if m is not None:
+        for m in self._import_objects_mappings():
             m.import_objects = bool(flag)
 
     def set_mapping(self, mapping):
@@ -535,13 +535,16 @@ class MappingSpecificationModel(QAbstractTableModel):
             return self.get_color(index.row())
         if column == 2:
             if role == Qt.BackgroundRole:
-                if self._mapping_issues(index.row()):
+                row = self._logical_row[index.row()]
+                issues = self._row_issues().get(row)
+                if issues is not None:
                     return ERROR_COLOR
                 return None
             if role == Qt.ToolTipRole:
-                issue = self._mapping_issues(index.row())
-                if issue:
-                    return issue
+                row = self._logical_row[index.row()]
+                issues = self._row_issues().get(row)
+                if issues is not None:
+                    return issues
                 return None
 
     def get_component_mapping(self, visual_row):
@@ -551,7 +554,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         return self._colors[visual_row]
 
     def data_color(self, component_name):
-        # NOTE: used in tests
+        # FIXME: used only in tests
         visual_row = self._visual_row_from_component_name(component_name)
         return self._colors[visual_row]
 
@@ -561,15 +564,11 @@ class MappingSpecificationModel(QAbstractTableModel):
             return None
         return self._colors[row]
 
-    def _mapping_issues(self, row):
-        """Returns a message string if given row contains issues, or an empty string if everything is OK."""
-        name = self._component_names[row]
-        if self._is_optional(name):
-            return ""
-        m = self._component_mappings[self._logical_row[row]]
-        if m.position == Position.hidden and m.value is None:
-            return "Position or value not set for mapping"
-        return ""
+    def _row_issues(self):
+        row_issues = {}
+        for issue in check_validity(self._root_mapping):
+            row_issues.setdefault(issue.rank, []).append(issue.msg)
+        return row_issues
 
     def _is_optional(self, component_name):
         if component_name.endswith("metadata"):
@@ -744,7 +743,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             return
         row = self._logical_row_from_component_name(name)
         top_left = self.index(row, 1)
-        bottom_right = self.index(row, 2)
+        bottom_right = self.index(self.rowCount() - 1, 2)
         self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole, Qt.DisplayRole, Qt.ToolTipRole])
 
     def _recommend_types(self, name, mapping):
