@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 from PySide2.QtCore import Qt
 from spine_items.importer.mapping_colors import ERROR_COLOR
 from spine_items.importer.mvcmodels.mapping_specification_model import MappingSpecificationModel
-from spinedb_api import item_mapping_from_dict
+from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
 
 
 def _is_optional(index):
@@ -31,7 +31,7 @@ class TestMappingSpecificationModel(unittest.TestCase):
         model = MappingSpecificationModel(
             "source table",
             "mapping",
-            item_mapping_from_dict({"map_type": "ObjectClass", "name": None, "object": None}),
+            import_mapping_from_dict({"map_type": "ObjectClass", "name": None, "object": None}),
             undo_stack,
         )
         self.assertEqual(model.rowCount(), 3)
@@ -76,7 +76,9 @@ class TestMappingSpecificationModel(unittest.TestCase):
             "parameters": indexed_parameter_mapping_dict,
         }
         undo_stack = MagicMock()
-        model = MappingSpecificationModel("source table", "mapping 1", item_mapping_from_dict(mapping_dict), undo_stack)
+        model = MappingSpecificationModel(
+            "source table", "mapping 1", import_mapping_from_dict(mapping_dict), undo_stack
+        )
         self.assertEqual(model.rowCount(), 8)
         self.assertEqual(model.columnCount(), 3)
         index = model.index(0, 0)
@@ -113,7 +115,7 @@ class TestMappingSpecificationModel(unittest.TestCase):
         }
         mapping_dict = {"map_type": "ObjectClass", "name": 0, "objects": 1, "parameters": array_parameter_mapping_dict}
         undo_stack = MagicMock()
-        model = MappingSpecificationModel("source table", "mapping", item_mapping_from_dict(mapping_dict), undo_stack)
+        model = MappingSpecificationModel("source table", "mapping", import_mapping_from_dict(mapping_dict), undo_stack)
         self.assertEqual(model.rowCount(), 7)
         self.assertEqual(model.columnCount(), 3)
         index = model.index(0, 0)
@@ -188,7 +190,9 @@ class TestMappingSpecificationModel(unittest.TestCase):
             "objects": {"reference": "object_name", "map_type": "constant"},
         }
         undo_stack = MagicMock()
-        model = MappingSpecificationModel("source table", "mapping 1", item_mapping_from_dict(mapping_dict), undo_stack)
+        model = MappingSpecificationModel(
+            "source table", "mapping 1", import_mapping_from_dict(mapping_dict), undo_stack
+        )
         self.assertEqual(model.rowCount(), 8)
         self.assertEqual(model.columnCount(), 3)
         index = model.index(0, 0)
@@ -274,7 +278,7 @@ class TestMappingSpecificationModel(unittest.TestCase):
             "objects": {"reference": "object_name", "map_type": "constant"},
         }
         undo_stack = MagicMock()
-        model = MappingSpecificationModel("source table", "mapping", item_mapping_from_dict(mapping_dict), undo_stack)
+        model = MappingSpecificationModel("source table", "mapping", import_mapping_from_dict(mapping_dict), undo_stack)
         self.assertEqual(model.rowCount(), 9)
         self.assertEqual(model.columnCount(), 3)
         index = model.index(0, 0)
@@ -355,7 +359,7 @@ class TestMappingSpecificationModel(unittest.TestCase):
         model = MappingSpecificationModel(
             "source table name",
             "mapping",
-            item_mapping_from_dict(
+            import_mapping_from_dict(
                 {"map_type": "RelationshipClass", "name": None, "object_classes": None, "object": None}
             ),
             undo_stack,
@@ -411,7 +415,9 @@ class TestMappingSpecificationModel(unittest.TestCase):
             "parameters": indexed_parameter_mapping_dict,
         }
         undo_stack = MagicMock()
-        model = MappingSpecificationModel("source table", "mapping 1", item_mapping_from_dict(mapping_dict), undo_stack)
+        model = MappingSpecificationModel(
+            "source table", "mapping 1", import_mapping_from_dict(mapping_dict), undo_stack
+        )
         self.assertEqual(model.rowCount(), 9)
         self.assertEqual(model.columnCount(), 3)
         index = model.index(0, 0)
@@ -460,7 +466,9 @@ class TestMappingSpecificationModel(unittest.TestCase):
             "parameters": indexed_parameter_mapping_dict,
         }
         undo_stack = MagicMock()
-        model = MappingSpecificationModel("source_table", "mapping 1", item_mapping_from_dict(mapping_dict), undo_stack)
+        model = MappingSpecificationModel(
+            "source_table", "mapping 1", import_mapping_from_dict(mapping_dict), undo_stack
+        )
         self.assertEqual(model.rowCount(), 11)
         self.assertEqual(model.columnCount(), 3)
         index = model.index(0, 0)

@@ -547,6 +547,11 @@ class MappingSpecificationModel(QAbstractTableModel):
     def get_color(self, visual_row):
         return self._colors[visual_row]
 
+    def data_color(self, component_name):
+        # NOTE: used in tests
+        visual_row = self._visual_row_from_component_name(component_name)
+        return self._colors[visual_row]
+
     def get_value_color(self):
         row = next((k for k, name in enumerate(self._component_names) if name.endswith("values")), None)
         if row is None:

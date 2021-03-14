@@ -211,11 +211,7 @@ class SourceDataTableModel(MinimalTableModel):
                 if error is not None:
                     return self.data_error(error, index, role, orientation=Qt.Horizontal)
 
-            if index.row() <= last_pivot_row and (
-                index.column()
-                not in self._mapping_specification.mapping.non_pivoted_columns()
-                + self._mapping_specification.skip_columns
-            ):
+            if index.row() <= last_pivot_row and index.column() not in self._non_pivoted_and_skipped_columns():
                 error = self._row_type_errors.get((index.row(), index.column()))
                 if error is not None:
                     return self.data_error(error, index, role, orientation=Qt.Vertical)
@@ -227,6 +223,10 @@ class SourceDataTableModel(MinimalTableModel):
             if converted_data is not None:
                 return str(converted_data)
         return super().data(index, role)
+
+    def _non_pivoted_and_skipped_columns(self):
+        mapping = self._mapping_specification.mapping
+        return set(mapping.non_pivoted_columns() + mapping.skip_columns)
 
     def data_color(self, index):
         """
@@ -256,9 +256,7 @@ class SourceDataTableModel(MinimalTableModel):
         mapping = self._mapping_specification.mapping
         if not mapping.is_pivoted():
             return False
-        return index.row() > self._last_row() and index.column() not in set(
-            mapping.non_pivoted_columns() + mapping.skip_columns
-        )
+        return index.row() > self._last_row() and index.column() not in self._non_pivoted_and_skipped_columns()
 
     def index_in_mapping(self, mapping, index):
         """
@@ -274,7 +272,7 @@ class SourceDataTableModel(MinimalTableModel):
         if not isinstance(mapping.position, int):
             return False
         if mapping.position < 0:
-            if index.column() in set(mapping.non_pivoted_columns() + mapping.skip_columns):
+            if index.column() in self._non_pivoted_and_skipped_columns():
                 return False
             return index.row() == -(mapping.position + 1)
         if index.row() <= self._last_row():
