@@ -98,10 +98,9 @@ class SourceDataTableModel(MinimalTableModel):
         self._mapping_data_changed()
 
     def validate(self, section, orientation=Qt.Horizontal):
-        type_class = self.get_type(section, orientation)
-        if type_class is None:
+        converter = self.get_type(section, orientation)
+        if converter is None:
             return
-        converter = type_class.convert_function()
         if orientation == Qt.Horizontal:
             for row in range(self.rowCount()):
                 self._column_type_errors.pop((row, section), None)
