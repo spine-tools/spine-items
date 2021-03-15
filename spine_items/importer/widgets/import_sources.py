@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Contains ImportEditor widget and SourceDataTableMenu.
+Contains ImportSources widget and SourceDataTableMenu.
 
 :author: P. Vennström (VTT)
 :date:   1.6.2019
@@ -29,9 +29,10 @@ from ..mvcmodels.source_data_table_model import SourceDataTableModel
 from ..mvcmodels.source_table_list_model import SourceTableItem, SourceTableListModel
 
 
-class ImportEditor(QObject):
+class ImportSources(QObject):
     """
-    Provides an interface for defining one or more Mappings associated to a data Source (CSV file, Excel file, etc).
+    Loads and controls the 'Sources' and 'Source data' part of the window.
+    Loads the 'Mappings' part of the window as the user changes the source table.
     """
 
     table_checked = Signal()
@@ -148,6 +149,7 @@ class ImportEditor(QObject):
         if item is None:
             return
         if item.name not in self._table_mappings:
+            # FIXME: How come MappingListModel() receives an ObjectClassMapping() and not an MappingSpecificationModel()?
             self._table_mappings[item.name] = MappingListModel([ObjectClassMapping()], item.name, self._undo_stack)
         self.source_table_selected.emit(item.name, self._table_mappings[item.name])
         self._connector.set_table(item.name)

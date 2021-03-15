@@ -27,7 +27,7 @@ SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table 
 
 class ImportMappings(QObject):
     """
-    Provides methods for managing Mappings (add, remove, edit, visualize, and so on).
+    Controls the 'Mappings' and 'Mapping specifications' part of the window.
     """
 
     mapping_selection_changed = Signal(object)
@@ -231,7 +231,6 @@ class ImportMappings(QObject):
             self.mapping_selection_changed.emit(self._mappings_model.data_mapping(index))
         else:
             self.mapping_selection_changed.emit(None)
-        has_selection = self._ui.mapping_list.selectionModel().hasSelection()
 
     @Slot(QPoint)
     def _show_mapping_list_context_menu(self, pos):

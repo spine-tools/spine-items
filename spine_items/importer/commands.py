@@ -30,7 +30,7 @@ class PasteMappings(QUndoCommand):
     def __init__(self, import_editor_window, source_table_name, copied_mappings, previous_mappings):
         """
         Args:
-            import_editor (ImportEditorWindow): import editor
+            import_editor_window (ImportEditorWindow): import editor window
             source_table_name (src): name of the target source table
             copied_mappings (Iterable): mappings to paste
             previous_mappings (Iterable): mappings before pasting
@@ -54,24 +54,24 @@ class PasteMappings(QUndoCommand):
 class PasteOptions(QUndoCommand):
     """Command to paste copied mapping options."""
 
-    def __init__(self, import_editor, source_table_name, copied_options, previous_options):
+    def __init__(self, import_sources, source_table_name, copied_options, previous_options):
         """
         Args:
-            import_editor (ImportEditor): import editor
+            import_sources (ImportSources): import editor
             source_table_name (src): name of the target source table
             copied_options (dict): options from the internal clipboard
             previous_options (dict): previous options
         """
         text = "paste options"
         super().__init__(text)
-        self._import_editor = import_editor
+        self._import_sources = import_sources
         self._source_table_name = source_table_name
         self._options = copied_options
         self._previous_options = previous_options
 
     def redo(self):
         """Pastes the options."""
-        self._import_editor.paste_options(self._source_table_name, self._options)
+        self._import_sources.paste_options(self._source_table_name, self._options)
 
     def undo(self):
         """Restores the options to their previous values."""
@@ -670,21 +670,21 @@ class SetColumnOrRowType(QUndoCommand):
 class RestoreMappingsFromDict(QUndoCommand):
     """Restores mappings from a dict."""
 
-    def __init__(self, import_editor, mapping_dict):
+    def __init__(self, import_sources, mapping_dict):
         """
         Args:
-            import_editor (ImportEditor): import editor
+            import_sources (ImportSources): import editor
             mapping_dict (dict): mappings to
         """
         super().__init__("import mappings")
-        self._import_editor = import_editor
+        self._import_sources = import_sources
         self._mapping_dict = mapping_dict
-        self._previous_mapping_dict = import_editor.get_mapping_dict()
+        self._previous_mapping_dict = import_sources.get_mapping_dict()
 
     def redo(self):
         """Restores the mappings."""
-        self._import_editor.import_mappings(self._mapping_dict)
+        self._import_sources.import_mappings(self._mapping_dict)
 
     def undo(self):
         """Reverts back to previous mappings."""
-        self._import_editor.import_mappings(self._previous_mapping_dict)
+        self._import_sources.import_mappings(self._previous_mapping_dict)

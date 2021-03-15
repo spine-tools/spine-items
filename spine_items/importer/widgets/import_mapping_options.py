@@ -34,7 +34,7 @@ from ..mvcmodels.mapping_specification_model import MappingType
 
 class ImportMappingOptions(QObject):
     """
-    Provides methods for managing Mapping options (class type, dimension_count, parameter type, ignore columns, and so on).
+    Controls the 'Mapping options' part of the window. 
     """
 
     about_to_undo = Signal(str, str)
