@@ -79,7 +79,7 @@ class ImporterSpecification(ProjectItemSpecification):
             try:
                 shutil.copyfile(self.definition_file_path, backup_file_path)
             except OSError:
-                return False
+                pass
         specification_dict = self.to_dict()
         with open(self.definition_file_path, "w") as fp:
             json.dump(specification_dict, fp, indent=4)
