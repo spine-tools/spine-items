@@ -34,7 +34,7 @@ from ..mvcmodels.mapping_specification_model import MappingType
 
 class ImportMappingOptions(QObject):
     """
-    Controls the 'Mapping options' part of the window. 
+    Controls the 'Mapping options' part of the window.
     """
 
     about_to_undo = Signal(str, str)

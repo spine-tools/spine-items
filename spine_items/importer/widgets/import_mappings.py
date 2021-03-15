@@ -18,7 +18,9 @@ ImportMappings widget.
 
 from copy import deepcopy
 from PySide2.QtCore import QObject, QPoint, QItemSelectionModel, Signal, Slot
+from PySide2.QtWidgets import QStyledItemDelegate
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
+from spinetoolbox.widgets.parameter_value_editor import ParameterValueEditor
 from .custom_menus import MappingListMenu
 from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
 
@@ -52,7 +54,9 @@ class ImportMappings(QObject):
         # initialize interface
         # NOTE: We make the delegate an attribute so it's never accidentally gc'ed
         self._src_type_delegate = ComboBoxDelegate(SOURCE_TYPES)
+        self._parameter_constant_value_delegate = ParameterConstantValueDelegate(self._parent)
         self._ui.mapping_spec_table.setItemDelegateForColumn(1, self._src_type_delegate)
+        self._ui.mapping_spec_table.setItemDelegateForColumn(2, self._parameter_constant_value_delegate)
         self._ui.new_button.setEnabled(False)
         self._ui.remove_button.setEnabled(False)
         self._ui.duplicate_button.setEnabled(False)
@@ -252,3 +256,22 @@ class ImportMappings(QObject):
         else:
             specs = [self._mappings_model.data_mapping(index) for index in indexes]
         return {spec.mapping_name: deepcopy(spec.mapping) for spec in specs}
+
+
+class ParameterConstantValueDelegate(QStyledItemDelegate):
+    """A delegate that shows a ParameterValueEditor for constant value mappings."""
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self._parent = parent
+
+    def createEditor(self, parent, option, index):
+        if index.column() != 2:
+            return super().createEditor(parent, option, index)
+        target = index.siblingAtColumn(0).data()
+        ref_type = index.siblingAtColumn(1).data()
+        if target.endswith("values") and ref_type == "Constant":
+            editor = ParameterValueEditor(index, self._parent)
+            editor.show()
+            return None
+        return super().createEditor(parent, option, index)

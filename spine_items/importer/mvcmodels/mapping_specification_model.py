@@ -20,6 +20,9 @@ from enum import Enum, unique
 from distutils.util import strtobool
 from PySide2.QtCore import Qt, QAbstractTableModel, Signal, QTimer
 from spinetoolbox.helpers import color_from_index
+from spinetoolbox.mvcmodels.shared import PARSED_ROLE
+from spinetoolbox.spine_db_manager import SpineDBManager
+from spinedb_api.parameter_value import from_database
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.mapping import Position
 from spinedb_api.import_mapping.import_mapping_compat import (
@@ -504,8 +507,15 @@ class MappingSpecificationModel(QAbstractTableModel):
         return "Row"
 
     def get_map_reference_display(self, mapping, name):
-        if name.endswith("values") and self._root_mapping.is_pivoted():
-            return "Pivoted values"
+        # A) Handle two special cases for value mappings
+        if name.endswith("values"):
+            if self._root_mapping.is_pivoted():
+                # 1. Pivoted values
+                return "Pivoted values"
+            if mapping.position == Position.hidden and mapping.value is not None:
+                # 2. Constant value: we want special database value support
+                return SpineDBManager.display_data_from_parsed(from_database(mapping.value))
+        # B) Handle all other cases cases
         if mapping.position == Position.hidden:
             if name.endswith("flags") and not isinstance(mapping.value, bool):
                 return bool(strtobool(mapping.value))
@@ -521,6 +531,11 @@ class MappingSpecificationModel(QAbstractTableModel):
         return -(mapping.position + 1) + 1
 
     def data(self, index, role=Qt.DisplayRole):
+        if role == PARSED_ROLE:
+            # Only used for the ParameterValueEditor.
+            # At this point, the delegate has already checked that it's a constant parameter/default value mapping
+            m = self._component_mappings[self._logical_row[index.row()]]
+            return from_database(m.value)
         column = index.column()
         if role in (Qt.DisplayRole, Qt.EditRole):
             name = self._component_names[index.row()]
@@ -865,3 +880,18 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     def duplicate(self, table_name, undo_stack):
         return self.from_dict(self.to_dict(), table_name, undo_stack)
+
+    def get_set_data_delayed(self, index):
+        """Returns a function that ParameterValueEditor can call to set data for the given index at any later time,
+        even if the model changes.
+
+        Args:
+            index (QModelIndex)
+
+        Returns:
+            function
+        """
+        return lambda value, index=index: self.setData(index, value)
+
+    def index_name(self, index):
+        return index.siblingAtColumn(0).data()
