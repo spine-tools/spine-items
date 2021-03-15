@@ -161,6 +161,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         self._table_name = table_name
         self._mapping_name = mapping_name
         self._undo_stack = undo_stack
+        self._row_issues = None
 
     @property
     def mapping(self):
@@ -536,13 +537,13 @@ class MappingSpecificationModel(QAbstractTableModel):
         if column == 2:
             if role == Qt.BackgroundRole:
                 row = self._logical_row[index.row()]
-                issues = self._row_issues().get(row)
+                issues = self._get_row_issues().get(row)
                 if issues is not None:
                     return ERROR_COLOR
                 return None
             if role == Qt.ToolTipRole:
                 row = self._logical_row[index.row()]
-                issues = self._row_issues().get(row)
+                issues = self._get_row_issues().get(row)
                 if issues is not None:
                     return issues
                 return None
@@ -564,11 +565,12 @@ class MappingSpecificationModel(QAbstractTableModel):
             return None
         return self._colors[row]
 
-    def _row_issues(self):
-        row_issues = {}
-        for issue in check_validity(self._root_mapping):
-            row_issues.setdefault(issue.rank, []).append(issue.msg)
-        return row_issues
+    def _get_row_issues(self):
+        if self._row_issues is None:
+            self._row_issues = {}
+            for issue in check_validity(self._root_mapping):
+                self._row_issues.setdefault(issue.rank, []).append(issue.msg)
+        return self._row_issues
 
     def _is_optional(self, component_name):
         if component_name.endswith("metadata"):
@@ -744,6 +746,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         row = self._logical_row_from_component_name(name)
         top_left = self.index(row, 1)
         bottom_right = self.index(self.rowCount() - 1, 2)
+        self._row_issues = None  # Force recomputing the issues
         self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole, Qt.DisplayRole, Qt.ToolTipRole])
 
     def _recommend_types(self, name, mapping):
