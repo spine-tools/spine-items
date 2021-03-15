@@ -22,7 +22,7 @@ from PySide2.QtCore import Qt, QAbstractTableModel, Signal, QTimer
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.mvcmodels.shared import PARSED_ROLE
 from spinetoolbox.spine_db_manager import SpineDBManager
-from spinedb_api.parameter_value import from_database
+from spinedb_api.parameter_value import from_database, ParameterValueFormatError
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.mapping import Position
 from spinedb_api.import_mapping.import_mapping_compat import (
@@ -514,7 +514,11 @@ class MappingSpecificationModel(QAbstractTableModel):
                 return "Pivoted values"
             if mapping.position == Position.hidden and mapping.value is not None:
                 # 2. Constant value: we want special database value support
-                return SpineDBManager.display_data_from_parsed(from_database(mapping.value))
+                try:
+                    value = from_database(mapping.value)
+                    return SpineDBManager.display_data_from_parsed(value)
+                except ParameterValueFormatError:
+                    return None
         # B) Handle all other cases cases
         if mapping.position == Position.hidden:
             if name.endswith("flags") and not isinstance(mapping.value, bool):
@@ -535,7 +539,10 @@ class MappingSpecificationModel(QAbstractTableModel):
             # Only used for the ParameterValueEditor.
             # At this point, the delegate has already checked that it's a constant parameter/default value mapping
             m = self._component_mappings[self._logical_row[index.row()]]
-            return from_database(m.value)
+            try:
+                return from_database(m.value)
+            except ParameterValueFormatError:
+                return None
         column = index.column()
         if role in (Qt.DisplayRole, Qt.EditRole):
             name = self._component_names[index.row()]
