@@ -60,7 +60,7 @@ class DataStore(ProjectItem):
         self._url = self.parse_url(url)
         self._additional_resource_metadata = None
         self._spine_db_editor = None
-        self._open_db_editors = {}
+        self._multi_db_editors_open = {}
         self._open_url_menu = QMenu("Open URL in Spine DB editor", self._toolbox)
         self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
 
@@ -326,13 +326,13 @@ class DataStore(ProjectItem):
         self._properties_ui.lineEdit_password.setEnabled(True)
 
     def actions(self):
-        self._open_db_editors = {x.name(): x for x in self._toolbox.db_mngr.get_all_multi_spine_db_editors()}
-        if not self._open_db_editors:
+        self._multi_db_editors_open = {x.name(): x for x in self._toolbox.db_mngr.get_all_multi_spine_db_editors()}
+        if not self._multi_db_editors_open:
             return super().actions()
         self._open_url_menu.clear()
         self._open_url_menu.addAction("New window")
         self._open_url_menu.addSeparator()
-        for name in self._open_db_editors:
+        for name in self._multi_db_editors_open:
             self._open_url_menu.addAction(name)
         return [self._open_url_menu.menuAction()]
 
@@ -342,17 +342,16 @@ class DataStore(ProjectItem):
         if action.text() == "New window":
             self._open_url_in_new_db_editor()
             return
-        db_editor = self._open_db_editors[action.text()]
+        db_editor = self._multi_db_editors_open[action.text()]
         self._open_url_in_existing_db_editor(db_editor)
 
     @Slot(bool)
     def open_url_in_spine_db_editor(self, checked=False):
         """Opens current url in the Spine database editor."""
-        db_editor = next(self._toolbox.db_mngr.get_all_multi_spine_db_editors(), None)
-        if db_editor is None:
-            self._open_url_in_new_db_editor()
-            return
-        self._open_url_in_existing_db_editor(db_editor)
+        sa_url = self.sql_alchemy_url()
+        if sa_url is not None:
+            db_url_codenames = {sa_url: self.name}
+            self._toolbox.db_mngr.open_db_editor(db_url_codenames)
 
     def _open_url_in_new_db_editor(self, checked=False):
         sa_url = self.sql_alchemy_url()
@@ -365,7 +364,7 @@ class DataStore(ProjectItem):
         if sa_url is not None:
             db_editor.add_new_tab({sa_url: self.name})
             db_editor.raise_()
-            qApp.setActiveWindow(db_editor)  # pylint: disable=undefined-variable
+            db_editor.activateWindow()
 
     def data_files(self):
         """Return a list of files that are in this items data directory."""
