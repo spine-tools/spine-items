@@ -19,6 +19,7 @@ Provides MainProgramTextEdit.
 from pygments.styles import get_style_by_name
 from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
+from pygments.token import Token
 from PySide2.QtWidgets import QTextEdit
 from PySide2.QtGui import QSyntaxHighlighter, QTextCharFormat, QBrush, QColor, QFontMetrics, QFontDatabase, QFont
 
@@ -47,6 +48,8 @@ class CustomSyntaxHighlighter(QSyntaxHighlighter):
                 text_format.setFontUnderline(True)
 
     def highlightBlock(self, text):
+        if self.lexer is None:
+            return
         for start, ttype, subtext in self.lexer.get_tokens_unprocessed(text):
             while ttype not in self._formats:
                 ttype = ttype.parent
@@ -57,13 +60,14 @@ class CustomSyntaxHighlighter(QSyntaxHighlighter):
 class MainProgramTextEdit(QTextEdit):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
-        self._highlighter = CustomSyntaxHighlighter(self.document())
+        self._highlighter = CustomSyntaxHighlighter(self)
         style = get_style_by_name("monokai")
         self._highlighter.set_style(style)
         font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
         self.setFont(font)
         self.setTabStopDistance(QFontMetrics(font).horizontalAdvance(4 * " "))
-        self.setStyleSheet(f"QTextEdit {{background-color: {style.background_color};}}")
+        foreground_color = style.styles[Token.Text]
+        self.setStyleSheet(f"QTextEdit {{background-color: {style.background_color}; color: {foreground_color};}}")
 
     def insertFromMimeData(self, source):
         if source.hasText():
@@ -76,3 +80,8 @@ class MainProgramTextEdit(QTextEdit):
         except ClassNotFound:
             # No lexer for aliases 'gams' nor 'executable'
             pass
+
+    def setDocument(self, doc):
+        super().setDocument(doc)
+        self._highlighter.setDocument(doc)
+        doc.setDefaultFont(self.font())

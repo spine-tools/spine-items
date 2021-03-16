@@ -20,7 +20,7 @@ is filled with all the information from the specification being edited.
 
 import os
 from copy import deepcopy
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QKeySequence
+from PySide2.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QTextDocument
 from PySide2.QtWidgets import (
     QMainWindow,
     QDialogButtonBox,
@@ -61,8 +61,8 @@ class ToolSpecificationEditorWindow(QMainWindow):
         # Setup UI from Qt Designer file
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.takeCentralWidget()
         self.setWindowTitle("Tool Specification Editor[*]")
+        self._restore_dock_widgets()
         restore_ui(self, self._app_settings, self.settings_group)
         self._undo_stack = QUndoStack(self)
         self._change_notifier = ChangeNotifier(self._undo_stack, self)
@@ -70,21 +70,26 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
         # Customize text edit main program
-        self.ui.textEdit_main_program.setEnabled(False)
+        self.ui.textEdit_program.setEnabled(False)
+        self._curren_programfile_path = None
+        self._programfile_documents = {}
         # Class attributes
         self._toolbox = toolbox
         self._project = self._toolbox.project()
         self._original_spec_name = None if specification is None else specification.name
         # init models
+        self.main_programfile_model = QStandardItemModel()
         self.programfiles_model = QStandardItemModel()
         self.inputfiles_model = QStandardItemModel()
         self.inputfiles_opt_model = QStandardItemModel()
         self.outputfiles_model = QStandardItemModel()
         # init ui
+        self.ui.treeView_main_programfile.setModel(self.main_programfile_model)
         self.ui.treeView_programfiles.setModel(self.programfiles_model)
         self.ui.treeView_inputfiles.setModel(self.inputfiles_model)
         self.ui.treeView_inputfiles_opt.setModel(self.inputfiles_opt_model)
         self.ui.treeView_outputfiles.setModel(self.outputfiles_model)
+        self.ui.treeView_main_programfile.setStyleSheet(TREEVIEW_HEADER_SS)
         self.ui.treeView_programfiles.setStyleSheet(TREEVIEW_HEADER_SS)
         self.ui.treeView_inputfiles.setStyleSheet(TREEVIEW_HEADER_SS)
         self.ui.treeView_inputfiles_opt.setStyleSheet(TREEVIEW_HEADER_SS)
@@ -98,7 +103,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
             tooltype = specification.tooltype.lower()
             index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == tooltype), -1)
             self.ui.comboBox_tooltype.setCurrentIndex(index)
-            self.ui.textEdit_main_program.set_lexer_name(tooltype.lower())
+            self.ui.textEdit_program.set_lexer_name(tooltype.lower())
         # Init lists
         programfiles = list(specification.includes) if specification else list()
         # Get first item from programfiles list as the main program file
@@ -123,9 +128,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.toolButton_add_program_files.setStyleSheet("QToolButton::menu-indicator { image: none; }")
         if self.includes_main_path is not None:
             self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
-        self._change_main_program_file_timer = QTimer(self)
         self._change_args_timer = QTimer(self)
-        self._change_main_program_file_timer.setInterval(200)
         self._change_args_timer.setInterval(200)
         # Add button box
         self._button_box = QDialogButtonBox(self)
@@ -134,6 +137,13 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self.ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self.connect_signals()
+
+    def _restore_dock_widgets(self):
+        docs = (self.ui.dockWidget_program_files, self.ui.dockWidget_editor, self.ui.dockWidget_io_files)
+        self.splitDockWidget(*docs[:-1], Qt.Horizontal)
+        self.splitDockWidget(*docs[1:], Qt.Horizontal)
+        width = sum(d.width() for d in docs)
+        self.resizeDocks(docs, [width * x for x in (0.3, 0.4, 0.3)], Qt.Horizontal)
 
     def _populate_main_menu(self):
         menu = self._spec_toolbar.menu
@@ -146,6 +156,19 @@ class ToolSpecificationEditorWindow(QMainWindow):
         menu.addAction(self.ui.actionSaveAndClose)
         self.ui.menubar.hide()
         self.addAction(self._spec_toolbar.menu_action)
+
+    def populate_main_programfile_list(self, item):
+        """List program files in QTreeView.
+        """
+        self.main_programfile_model.clear()
+        self.main_programfile_model.setHorizontalHeaderItem(0, QStandardItem("Main program file"))
+        if not item:
+            return
+        qitem = QStandardItem(item)
+        qitem.setFlags(~Qt.ItemIsEditable)
+        qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
+        self.main_programfile_model.appendRow(qitem)
+        QTimer.singleShot(0, self._push_change_main_program_file_command)
 
     def populate_programfile_list(self, items):
         """List program files in QTreeView.
@@ -196,15 +219,11 @@ class ToolSpecificationEditorWindow(QMainWindow):
         """Connect signals to slots."""
         self.ui.toolButton_add_program_files.clicked.connect(self.show_add_program_files_dialog)
         self.ui.toolButton_add_program_dirs.clicked.connect(self.show_add_program_dirs_dialog)
-        self.ui.lineEdit_main_program.file_dropped.connect(self.ui.lineEdit_main_program.setText)
-        self.ui.textEdit_main_program.document().modificationChanged.connect(
-            self.ui.toolButton_save_main_program.setEnabled
-        )
         self.ui.treeView_programfiles.files_dropped.connect(self.add_dropped_program_files)
         self.ui.treeView_programfiles.doubleClicked.connect(self.open_program_file)
         self.ui.toolButton_new_main_program.clicked.connect(self.new_main_program_file)
         self.ui.toolButton_browse_main_program.clicked.connect(self.browse_main_program_file)
-        self.ui.toolButton_save_main_program.clicked.connect(self.save_main_program_file)
+        self.ui.toolButton_save_program.clicked.connect(self.save_program_file)
         self.ui.toolButton_minus_program_files.clicked.connect(self.remove_program_files)
         self.ui.toolButton_plus_inputfiles.clicked.connect(self.add_inputfiles)
         self.ui.toolButton_minus_inputfiles.clicked.connect(self.remove_inputfiles)
@@ -222,12 +241,13 @@ class ToolSpecificationEditorWindow(QMainWindow):
         # Push undo commands
         self.ui.comboBox_tooltype.activated.connect(self._push_change_tooltype_command)
         self.ui.checkBox_execute_in_work.toggled.connect(self._push_change_execute_in_work_command)
-        self.ui.lineEdit_main_program.textChanged.connect(self._change_main_program_file_timer.start)
-        self._change_main_program_file_timer.timeout.connect(self._push_change_main_program_file_command)
         self.ui.lineEdit_args.textChanged.connect(self._change_args_timer.start)
         self._change_args_timer.timeout.connect(self._push_change_args_command)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
         self.ui.actionSaveAndClose.triggered.connect(self.save_and_close)
+        # Program file selection changed
+        self.ui.treeView_main_programfile.selectionModel().selectionChanged.connect(self._load_main_programfile)
+        self.ui.treeView_programfiles.selectionModel().selectionChanged.connect(self._load_programfile)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
@@ -244,7 +264,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
     def _set_tooltype(self, value):
         value = value.lower()
         self.spec_dict["tooltype"] = value
-        self.ui.textEdit_main_program.set_lexer_name(value)
+        self.ui.textEdit_program.set_lexer_name(value)
         index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == value), -1)
         self.ui.comboBox_tooltype.setCurrentIndex(index)
 
@@ -277,8 +297,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
 
     @Slot()
     def _push_change_main_program_file_command(self):
-        self._change_main_program_file_timer.stop()
-        new_value = self.ui.lineEdit_main_program.text()
+        new_value = self.main_programfile_model.index(0, 0).data()
         old_program_files = self.spec_dict.get("includes", [])
         if self.includes_main_path is not None:
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
@@ -321,21 +340,54 @@ class ToolSpecificationEditorWindow(QMainWindow):
         Args:
             file_path (str): absolute path
         """
-        self.ui.lineEdit_main_program.setText(file_path)
+        self.populate_main_programfile_list(file_path)
         self.ui.label_mainpath.setText(self.includes_main_path)
-        # Update UI
-        if not os.path.isfile(file_path):
-            self.show_status_bar_msg("Main program file is not valid")
-            self.ui.textEdit_main_program.setEnabled(False)
-            self.ui.textEdit_main_program.clear()
+
+    @Slot("QItemSelection", "QItemSelection")
+    def _load_main_programfile(self, _selected, _deselected):
+        current = self.ui.treeView_main_programfile.selectionModel().currentIndex()
+        if not current.isValid():
             return
-        self.ui.textEdit_main_program.setEnabled(True)
+        file_path = current.data()
+        self._load_programfile_in_editor(file_path)
+        self.ui.treeView_programfiles.selectionModel().selectionChanged.disconnect(self._load_programfile)
+        self.ui.treeView_programfiles.clearSelection()
+        self.ui.treeView_programfiles.selectionModel().selectionChanged.connect(self._load_programfile)
+
+    @Slot("QItemSelection", "QItemSelection")
+    def _load_programfile(self, _selected, _deselected):
+        current = self.ui.treeView_programfiles.selectionModel().currentIndex()
+        if not current.isValid():
+            return
+        file_path = os.path.join(self.includes_main_path, current.data())
+        self._load_programfile_in_editor(file_path)
+        self.ui.treeView_main_programfile.selectionModel().selectionChanged.disconnect(self._load_main_programfile)
+        self.ui.treeView_main_programfile.clearSelection()
+        self.ui.treeView_main_programfile.selectionModel().selectionChanged.connect(self._load_main_programfile)
+
+    def _load_programfile_in_editor(self, file_path):
+        self._curren_programfile_path = file_path
+        if not os.path.isfile(file_path):
+            self.show_status_bar_msg(f"Program file {file_path} is not valid")
+            self.ui.textEdit_program.setEnabled(False)
+            self.ui.textEdit_program.clear()
+            return
+        self.ui.textEdit_program.setEnabled(True)
         try:
             with open(file_path, 'r') as file:
                 text = file.read()
-            self.ui.textEdit_main_program.setPlainText(text)
-        except IOError as e:
-            self.show_status_bar_msg(e)
+        except (IOError, UnicodeDecodeError) as e:
+            self.show_status_bar_msg(str(e))
+            return
+        if file_path not in self._programfile_documents:
+            document = self._programfile_documents[file_path] = QTextDocument(self.ui.textEdit_program)
+            document.setPlainText(text)
+            document.setModified(False)
+            document.modificationChanged.connect(self.ui.toolButton_save_program.setEnabled)
+        else:
+            document = self._programfile_documents[file_path]
+        self.ui.toolButton_save_program.setEnabled(document.isModified())
+        self.ui.textEdit_program.setDocument(document)
 
     @Slot(bool)
     def browse_main_program_file(self, checked=False):
@@ -347,17 +399,17 @@ class ToolSpecificationEditorWindow(QMainWindow):
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
             return
-        self.ui.lineEdit_main_program.setText(file_path)
+        self.populate_main_programfile_list(file_path)
 
     @Slot(bool)
-    def save_main_program_file(self, _=False):
-        """Saves main program file."""
-        main_program = self.ui.lineEdit_main_program.text().strip()
+    def save_program_file(self, _=False):
+        """Saves program file."""
         try:
-            with open(main_program, "w") as file:
-                file.write(self.ui.textEdit_main_program.toPlainText())
-            self.ui.textEdit_main_program.document().setModified(False)
-            self.show_status_bar_msg(f"Main program file '{os.path.basename(main_program)}' saved successfully")
+            with open(self._curren_programfile_path, "w") as file:
+                file.write(self.ui.textEdit_program.toPlainText())
+            self.ui.textEdit_program.document().setModified(False)
+            basename = os.path.basename(self._curren_programfile_path)
+            self.show_status_bar_msg(f"Program file '{basename}' saved successfully")
         except IOError as e:
             self.show_status_bar_msg(e)
 
@@ -382,7 +434,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
             # noinspection PyTypeChecker, PyArgumentList, PyCallByClass
             QMessageBox.information(self, "Creating file failed", msg)
             return
-        self.ui.lineEdit_main_program.setText(file_path)
+        self.populate_main_programfile_list(file_path)
 
     @Slot()
     def new_program_file(self):
@@ -653,7 +705,10 @@ class ToolSpecificationEditorWindow(QMainWindow):
             return False
         flags = Qt.MatchContains
         # Check that path of main program file is valid before saving it
-        main_program = self.ui.lineEdit_main_program.text().strip()
+        if not self.main_programfile_model.rowCount():
+            main_program = None
+        else:
+            main_program = self.main_programfile_model.index(0, 0).data().strip()
         if not os.path.isfile(main_program):
             self.show_status_bar_msg("Main program file is not valid")
             return False
