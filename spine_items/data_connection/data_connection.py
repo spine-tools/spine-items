@@ -19,14 +19,14 @@ Module for data connection class.
 import os
 import shutil
 import logging
-from PySide2.QtCore import Slot, Qt, QFileInfo
+from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
-from PySide2.QtWidgets import QFileDialog, QStyle, QFileIconProvider, QInputDialog, QMessageBox
+from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QStyle, QFileIconProvider, QInputDialog, QMessageBox
 from datapackage.exceptions import DataPackageException
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.custom_file_system_watcher import CustomFileSystemWatcher
-from spinetoolbox.helpers import busy_effect, open_url
+from spinetoolbox.helpers import open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from spinetoolbox.widgets.spine_datapackage_widget import SpineDatapackageWidget, CustomPackage
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
@@ -103,8 +103,8 @@ class DataConnection(ProjectItem):
         s[self._properties_ui.treeView_dc_references.files_dropped] = self.add_references
         s[self._properties_ui.treeView_dc_data.files_dropped] = self.add_data_files
         s[self.get_icon().files_dropped_on_icon] = self.receive_files_dropped_on_icon
-        s[self._properties_ui.treeView_dc_references.del_key_pressed] = lambda: self.remove_references()
-        s[self._properties_ui.treeView_dc_data.del_key_pressed] = lambda: self.remove_files()
+        s[self._properties_ui.treeView_dc_references.del_key_pressed] = lambda: self.remove_references
+        s[self._properties_ui.treeView_dc_data.del_key_pressed] = self.remove_files
         return s
 
     def restore_selections(self):
@@ -113,14 +113,14 @@ class DataConnection(ProjectItem):
         self._properties_ui.treeView_dc_references.setModel(self.reference_model)
         self._properties_ui.treeView_dc_data.setModel(self.data_model)
 
-    @Slot("QGraphicsItem", list)
+    @Slot(QGraphicsItem, list)
     def receive_files_dropped_on_icon(self, icon, file_paths):
         """Called when files are dropped onto a data connection graphics item.
         If the item is this Data Connection's graphics item, add the files to data."""
         if icon == self.get_icon():
             self.add_data_files(file_paths)
 
-    @Slot("QVariant")
+    @Slot(list)
     def add_data_files(self, file_paths):
         """Add files to data directory"""
         for file_path in file_paths:
@@ -142,7 +142,7 @@ class DataConnection(ProjectItem):
             return
         self.add_references(file_paths)
 
-    @Slot("QVariant")
+    @Slot(list)
     def add_references(self, paths):
         """Add multiple file paths to reference list.
 
@@ -169,6 +169,8 @@ class DataConnection(ProjectItem):
         self.references += paths
         self.file_system_watcher.add_persistent_file_paths(paths)
         self._append_references_to_model(*paths)
+        self._check_notifications()
+        self._resources_to_successors_changed()
 
     @Slot(bool)
     def remove_references(self, checked=False):
@@ -189,7 +191,8 @@ class DataConnection(ProjectItem):
         """
         self.file_system_watcher.remove_persistent_file_paths(paths)
         if self._remove_references(*paths):
-            self.item_changed.emit()
+            self._check_notifications()
+            self._resources_to_successors_changed()
 
     def _remove_references(self, *paths):
         result = False
@@ -226,19 +229,22 @@ class DataConnection(ProjectItem):
     @Slot(str)
     def _handle_file_removed(self, path):
         if self._remove_references(path) or self._remove_data_file(path):
-            self.item_changed.emit()
+            self._check_notifications()
+            self._resources_to_successors_changed()
 
     @Slot(str, str)
     def _handle_file_renamed(self, old_path, new_path):
         if self._rename_reference(old_path, new_path) or self._rename_data_file(old_path, new_path):
             self._updated_from[new_path] = old_path
-            self.item_changed.emit()
+            self._check_notifications()
+            self._resources_to_successors_changed()
 
     @Slot(str)
     def _handle_file_added(self, path):
         if _samepath(os.path.dirname(path), self.data_dir):
             self._append_data_files_to_model(path)
-            self.item_changed.emit()
+            self._check_notifications()
+            self._resources_to_successors_changed()
 
     @Slot(bool)
     def copy_to_project(self, checked=False):
@@ -259,7 +265,7 @@ class DataConnection(ProjectItem):
             except OSError:
                 self._logger.msg_error.emit("[OSError] Copying failed")
 
-    @Slot("QModelIndex")
+    @Slot(QModelIndex)
     def open_reference(self, index):
         """Open reference in default program."""
         if not index:
@@ -274,7 +280,7 @@ class DataConnection(ProjectItem):
         if not res:
             self._logger.msg_error.emit(f"Failed to open reference:<b>{reference}</b>")
 
-    @Slot("QModelIndex")
+    @Slot(QModelIndex)
     def open_data_file(self, index):
         """Open data file in default program."""
         if not index:
@@ -317,7 +323,6 @@ class DataConnection(ProjectItem):
         self._logger.msg_success.emit("Datapackage successfully created.")
         datapackage.save(self.datapackage_path)
 
-    @busy_effect
     @Slot(bool)
     def show_spine_datapackage_form(self, _=False):
         """Show spine_datapackage_form widget."""
@@ -379,6 +384,7 @@ class DataConnection(ProjectItem):
             msg = "Please check directory permissions."
             self._logger.information_box.emit("Creating file failed", msg)
 
+    @Slot()
     def remove_files(self):
         """Remove selected files from data directory."""
         indexes = self._properties_ui.treeView_dc_data.selectedIndexes()
@@ -477,8 +483,9 @@ class DataConnection(ProjectItem):
             resources[k] = resource.clone(additional_metadata={"updated_from": updated_from})
         return resources
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
-        """See base class."""
+    def _check_notifications(self):
+        """Sets or clears the exclamation mark icon."""
+        self.clear_notifications()
         if not self.file_references() and not self.data_files():
             self.add_notification(
                 "This Data Connection does not have any references or data. "
@@ -506,6 +513,7 @@ class DataConnection(ProjectItem):
         self.file_system_watcher.remove_persistent_dir_path(old_data_dir)
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.populate_data_list()
+        self._resources_to_successors_changed()
         return True
 
     def tear_down(self):

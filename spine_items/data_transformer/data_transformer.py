@@ -63,6 +63,13 @@ class DataTransformer(ProjectItem):
     def executable_class(self):
         return ExecutableItem
 
+    def rename(self, new_name, rename_data_dir_message):
+        """See base class."""
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
+        self._resources_to_successors_changed()
+        return True
+
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()
@@ -98,7 +105,8 @@ class DataTransformer(ProjectItem):
         if specification.settings is not None:
             with open(path, "w") as filter_config_file:
                 dump(specification.settings.filter_config(), filter_config_file)
-        self.item_changed.emit()
+        self._resources_to_predecessors_changed()
+        self._check_notifications()
         return True
 
     def update_name_label(self):
@@ -138,9 +146,9 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(specification_name)
         self.set_specification(specification)
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
+    def upstream_resources_updated(self, resources):
         """See base class."""
-        self._db_resources = [r for r in upstream_resources if r.type_ == "database"]
+        self._db_resources = [r for r in resources if r.type_ == "database"]
 
     def resources_for_direct_successors(self):
         """See base class."""

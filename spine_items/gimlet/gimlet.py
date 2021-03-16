@@ -63,7 +63,8 @@ class Gimlet(ProjectItem):
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self._file_model = CheckableFileListModel(header_label="Available resources", draggable=True)
-        self._upstream_resources = list()  # ProjectItemResources for handling changes in the DAG on Design View
+        self._resources_from_downstream = list()
+        self._resources_from_upstream = list()
         self.use_shell = use_shell
         self.shell_index = shell_index
         self.cmd = cmd
@@ -256,21 +257,19 @@ class Gimlet(ProjectItem):
             self._properties_ui.radioButton_unique.setChecked(True)
         self._properties_ui.radioButton_default.blockSignals(False)
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
-        """Saves a copy of ProjectItemResources for handling
-        changes in the DAG on Design View.
+    def upstream_resources_updated(self, resources):
+        self._resources_from_upstream = list(resources)
+        self._update_files_and_cmd_line_args()
 
-        See also base class.
+    def downstream_resources_updated(self, resources):
+        self._resources_from_downstream = list(resources)
+        self._update_files_and_cmd_line_args()
 
-        Args:
-            upstream_resources (list): ProjectItemResources available from upstream
-            downstream_resources (list): ProjectItemResources available from downstream
-        """
-        self._upstream_resources = upstream_resources + downstream_resources
-        all_resources = upstream_resources + downstream_resources
+    def _update_files_and_cmd_line_args(self):
+        """Updates the file model and command line arguments with regards to available resources."""
+        all_resources = self._resources_from_upstream + self._resources_from_downstream
         self._file_model.update(all_resources)
-        self._notify_if_duplicate_file_paths()
-        # Update cmdline args
+        self._check_notifications()
         cmd_line_args = self.cmd_line_args.copy()
         for resource in all_resources:
             updated_from = resource.metadata.get("updated_from")
@@ -340,8 +339,9 @@ class Gimlet(ProjectItem):
             return
         super().notify_destination(source_item)
 
-    def _notify_if_duplicate_file_paths(self):
-        """Adds a notification if file list contains duplicate entries."""
+    def _check_notifications(self):
+        """See base class."""
+        self.clear_notifications()
         duplicates = self._file_model.duplicate_paths()
         if duplicates:
             self.add_notification("Duplicate input files from predecessor items:<br>{}".format("<br>".join(duplicates)))
@@ -360,4 +360,4 @@ class Gimlet(ProjectItem):
         Returns:
             list: List of ProjectItemResources
         """
-        return self._upstream_resources
+        return self._resources_from_upstream + self._resources_from_downstream

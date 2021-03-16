@@ -129,6 +129,7 @@ class Exporter(ExporterBase):
                 self._properties_ui.specification_combo_box.setCurrentIndex(-1)
             return True
         self._specification_name = specification.name
+        self._check_notifications()
         if self._active:
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
         return True

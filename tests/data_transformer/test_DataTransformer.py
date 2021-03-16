@@ -95,7 +95,7 @@ class TestDataTransformer(unittest.TestCase):
         provider = MagicMock()
         provider.name = "resource provider"
         db_resource = database_resource(provider.name, "sqlite:///database.sqlite")
-        self.transformer.handle_dag_changed(0, [db_resource], [])
+        self.transformer.upstream_resources_updated([db_resource])
         expected_resource = database_resource(self.transformer.name, "sqlite:///database.sqlite")
         self.assertEqual(self.transformer.resources_for_direct_successors(), [expected_resource])
         settings = EntityClassRenamingSettings({})

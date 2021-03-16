@@ -128,8 +128,7 @@ class TestImporter(unittest.TestCase):
             self.importer.activate()
         expected_file_list = ["file1", "file2"]
         resources = [transient_file_resource("provider", label=file_name) for file_name in expected_file_list]
-        rank = 0
-        self.importer.handle_dag_changed(rank, resources, [])
+        self.importer.upstream_resources_updated(resources)
         model = self.importer._properties_ui.treeView_files.model()
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
@@ -142,16 +141,15 @@ class TestImporter(unittest.TestCase):
             mock_spec_menu.return_value = QMenu()
             self.importer.activate()
         resources = [transient_file_resource("provider", label=name) for name in ["file1", "file2"]]
-        rank = 0
         # Add initial files
-        self.importer.handle_dag_changed(rank, resources, [])
+        self.importer.upstream_resources_updated(resources)
         model = self.importer._properties_ui.treeView_files.model()
         for row in range(2):
             index = model.index(row, 0)
             model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
         # Update with one existing, one new file
         resources = [transient_file_resource("provider", label=name) for name in ["file2", "file3"]]
-        self.importer.handle_dag_changed(rank, resources, [])
+        self.importer.upstream_resources_updated(resources)
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(file_list, ["file2", "file3"])
         checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]

@@ -139,7 +139,7 @@ class TestGdxExporter(unittest.TestCase):
             database_resource("provider", "first url to database"),
             database_resource("provider", "second url to database"),
         ]
-        self.exporter.handle_dag_changed(0, resources, [])
+        self.exporter.upstream_resources_updated(resources)
         self.exporter.activate()
         urls_in_properties_tab = list()
         for i in range(self.exporter._properties_ui.databases_list_layout.count()):
@@ -160,7 +160,7 @@ class TestGdxExporter(unittest.TestCase):
             database_resource("provider", "first url to database"),
             database_resource("provider", "second url to database"),
         ]
-        self.exporter.handle_dag_changed(0, resources, [])
+        self.exporter.upstream_resources_updated(resources)
         self.exporter.activate()
         urls_in_properties_tab = list()
         for i in range(self.exporter._properties_ui.databases_list_layout.count()):
@@ -170,7 +170,7 @@ class TestGdxExporter(unittest.TestCase):
         self.assertTrue("first url to database" in urls_in_properties_tab)
         self.assertTrue("second url to database" in urls_in_properties_tab)
         resources = [database_resource("provider", "url to a database in the clouds")]
-        exporter2.handle_dag_changed(1, resources, [])
+        exporter2.upstream_resources_updated(resources)
         exporter2.activate()
         self.assertEqual(exporter2._properties_ui.databases_list_layout.count(), 1)
         database_item = exporter2._properties_ui.databases_list_layout.itemAt(0).widget()

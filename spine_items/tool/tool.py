@@ -88,6 +88,8 @@ class Tool(ProjectItem):
         self.julia_console_requested.connect(self._setup_julia_console)
         self._specification_menu = None
         self._options = options if options is not None else {}
+        self._resources_from_upstream = list()
+        self._resources_from_downstream = list()
 
     def _get_options_widget(self):
         """Returns a widget to specify the options for this tool.
@@ -224,7 +226,8 @@ class Tool(ProjectItem):
             self.undo_execute_in_work = self.execute_in_work
         if specification:
             self.do_update_execution_mode(specification.execute_in_work)
-        self.item_changed.emit()
+        self._resources_to_successors_changed()
+        self._check_notifications()
         return True
 
     def undo_set_specification(self):
@@ -320,19 +323,20 @@ class Tool(ProjectItem):
             file_paths[req_file_path] = find_file(filename, resources)
         return file_paths
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
+    def _check_notifications(self):
         """See base class."""
+        self.clear_notifications()
         if not self.specification():
             self.add_notification("This Tool does not have a specification. Set it in the Tool Properties Panel.")
-        if self.specification() is not None and not self.specification().path:
+        elif not self.specification().path:
             n = self.specification().name
             self.add_notification(
                 f"Tool specification <b>{n}</b> path does not exist. Fix this in Tool specification editor."
             )
-        resources = upstream_resources + downstream_resources
-        self._input_file_model.update(resources)
-        self._notify_if_duplicate_file_paths()
-        file_paths = self._find_input_files(resources)
+        duplicates = self._input_file_model.duplicate_paths()
+        if duplicates:
+            self.add_notification("Duplicate input files:<br>{}".format("<br>".join(duplicates)))
+        file_paths = self._find_input_files(self._resources_from_upstream + self._resources_from_downstream)
         file_paths = flatten_file_path_duplicates(file_paths, self._logger)
         not_found = [k for k, v in file_paths.items() if v is None]
         if not_found:
@@ -340,6 +344,28 @@ class Tool(ProjectItem):
                 "File(s) {0} needed to execute this Tool are not provided by any input item. "
                 "Connect items that provide the required files to this Tool.".format(", ".join(not_found))
             )
+
+    def handle_execution_successful(self, execution_direction, engine_state):
+        """See base class."""
+        if execution_direction != "FORWARD":
+            return
+        self._resources_to_successors_changed()
+
+    def upstream_resources_updated(self, resources):
+        """See base class."""
+        self._resources_from_upstream = resources
+        self._update_files_and_cmd_line_args()
+        self._check_notifications()
+
+    def downstream_resources_updated(self, resources):
+        """See base class."""
+        self._resources_from_downstream = resources
+        self._update_files_and_cmd_line_args()
+
+    def _update_files_and_cmd_line_args(self):
+        """Updates the file model and command line arguments."""
+        resources = self._resources_from_upstream + self._resources_from_downstream
+        self._input_file_model.update(resources)
         # Update cmdline args
         cmd_line_args = self.cmd_line_args.copy()
         for resource in resources:
@@ -350,12 +376,6 @@ class Tool(ProjectItem):
                 continue
             cmd_line_args[i] = resource.label
         self.update_cmd_line_args(cmd_line_args)
-
-    def _notify_if_duplicate_file_paths(self):
-        """Adds a notification if file_list contains duplicate entries."""
-        duplicates = self._input_file_model.duplicate_paths()
-        if duplicates:
-            self.add_notification("Duplicate input files:<br>{}".format("<br>".join(duplicates)))
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
@@ -388,7 +408,7 @@ class Tool(ProjectItem):
         if not super().rename(new_name, rename_data_dir_message):
             return False
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
-        self.item_changed.emit()
+        self._resources_to_successors_changed()
         return True
 
     def notify_destination(self, source_item):

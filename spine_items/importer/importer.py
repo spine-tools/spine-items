@@ -21,7 +21,6 @@ from PySide2.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
-from spine_engine import ExecutionDirection
 from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand
 from ..models import CheckableFileListModel
 from .executable_item import ExecutableItem
@@ -90,9 +89,9 @@ class Importer(ProjectItem):
     @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
-        if execution_direction != ExecutionDirection.FORWARD:
+        if execution_direction != "FORWARD":
             return
-        successors = self._project.direct_successors(self)
+        successors = [self._project.get_item(name) for name in self._project.successor_names(self)]
         committed_db_maps = set()
         for successor in successors:
             if successor.item_type() == "Data Store":
@@ -174,13 +173,15 @@ class Importer(ProjectItem):
 
     def do_set_specification(self, specification):
         """see base class"""
-        if not super().do_set_specification(specification):
+        success = super().do_set_specification(specification)
+        self._check_notifications()
+        if not success:
             return False
         if self._active:
             self._update_ui()
         if specification is None:
             return True
-        self.item_changed.emit()
+        self._check_notifications()
         return True
 
     @Slot(bool)
@@ -233,14 +234,19 @@ class Importer(ProjectItem):
         """
         self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self.name, self._file_model, index, checked))
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
-        """See base class."""
+    def upstream_resources_updated(self, resources):
+        self._file_model.update(r for r in resources if r.type_ != "database")
+        self._check_notifications()
+
+    def _check_notifications(self):
+        self.clear_notifications()
         if not self.specification():
             self.add_notification(
                 "This Importer does not have a specification. Set it in the Importer Properties Panel."
             )
-        self._file_model.update(r for r in upstream_resources if r.type_ != "database")
-        self._notify_if_duplicate_file_paths()
+        duplicates = self._file_model.duplicate_paths()
+        if duplicates:
+            self.add_notification("Duplicate input files from upstream items:<br>{}".format("<br>".join(duplicates)))
         if self._file_model.rowCount() == 0:
             self.add_notification(
                 "This Importer does not have any input data. "
@@ -292,12 +298,6 @@ class Importer(ProjectItem):
             )
         else:
             super().notify_destination(source_item)
-
-    def _notify_if_duplicate_file_paths(self):
-        """Adds a notification if file_list contains duplicate entries."""
-        duplicates = self._file_model.duplicate_paths()
-        if duplicates:
-            self.add_notification("Duplicate input files from upstream items:<br>{}".format("<br>".join(duplicates)))
 
     @staticmethod
     def upgrade_v1_to_v2(item_name, item_dict):

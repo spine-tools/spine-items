@@ -23,7 +23,6 @@ from PySide2.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
-from spine_engine import ExecutionDirection
 from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
 from ..commands import UpdateCancelOnErrorCommand
@@ -196,8 +195,10 @@ class DataStore(ProjectItem):
 
     def do_update_url(self, **kwargs):
         self._url.update(kwargs)
-        self.item_changed.emit()
         self.load_url_into_selections(kwargs)
+        self._resources_to_predecessors_changed()
+        self._resources_to_successors_changed()
+        self._check_notifications()
 
     @Slot()
     def refresh_host(self):
@@ -400,7 +401,7 @@ class DataStore(ProjectItem):
     @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
-        if execution_direction != ExecutionDirection.FORWARD:
+        if execution_direction != "FORWARD":
             return
         url = self.sql_alchemy_url()
         db_map = self._toolbox.db_mngr.db_map(url)
@@ -408,10 +409,10 @@ class DataStore(ProjectItem):
             cookie = self
             self._toolbox.db_mngr.session_committed.emit({db_map}, cookie)
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
-        """See base class."""
-        sa_url = convert_to_sqlalchemy_url(self._url, self.name, logger=None)
-        if sa_url is None:
+    def _check_notifications(self):
+        """Updates the SqlAlchemy format URL and checks for notifications"""
+        self.clear_notifications()
+        if convert_to_sqlalchemy_url(self._url, self.name, logger=None) is None:
             self.add_notification(
                 "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
             )
@@ -474,7 +475,8 @@ class DataStore(ProjectItem):
                     self._url.update(database=database)
                     self.load_url_into_selections(self._url)
             self._additional_resource_metadata = {"updated_from": old_url}
-        self.item_changed.emit()
+        self._resources_to_predecessors_changed()
+        self._resources_to_successors_changed()
         return True
 
     def notify_destination(self, source_item):
@@ -504,10 +506,6 @@ class DataStore(ProjectItem):
         """See base class."""
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         resources = scan_for_resources(self, sa_url)
-        if not resources:
-            self.add_notification(
-                "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
-            )
         if self._additional_resource_metadata:
             resources = [r.clone(additional_metadata=self._additional_resource_metadata) for r in resources]
         return resources

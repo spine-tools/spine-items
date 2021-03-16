@@ -79,6 +79,19 @@ class ExporterBase(ProjectItem):
     def executable_class(self):
         raise NotImplementedError()
 
+    def handle_execution_successful(self, execution_direction, engine_state):
+        """See base class."""
+        if execution_direction != "FORWARD":
+            return
+        self._resources_to_successors_changed()
+
+    def rename(self, new_name, rename_data_dir_message):
+        """See base class."""
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
+        self._resources_to_successors_changed()
+        return True
+
     def database(self, url):
         """
         Returns database information for given URL.
@@ -131,9 +144,9 @@ class ExporterBase(ProjectItem):
             Qt.Checked if self._cancel_on_error else Qt.Unchecked
         )
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
+    def upstream_resources_updated(self, resources):
         """See base class."""
-        full_urls = set(r.url for r in upstream_resources if r.type_ == "database")
+        full_urls = set(r.url for r in resources if r.type_ == "database")
         database_urls = set(clear_filter_configs(url) for url in full_urls)
         old_urls = self._database_model.urls()
         if database_urls != old_urls:
@@ -173,9 +186,9 @@ class ExporterBase(ProjectItem):
         self._full_url_model.set_urls(full_urls)
         if self._active:
             self._update_properties_tab()
-        self._check_state()
+        self._check_notifications()
 
-    def _check_state(self):
+    def _check_notifications(self):
         """
         Checks the status of database export settings.
 
@@ -206,7 +219,6 @@ class ExporterBase(ProjectItem):
         """Checks specification's status."""
         raise NotImplementedError()
 
-    @Slot()
     def _report_notifications(self):
         """Updates the exclamation icon and notifications labels."""
         if self._icon is None:
@@ -271,7 +283,7 @@ class ExporterBase(ProjectItem):
         self._notifications.missing_output_file_name = not file_name
         self._check_duplicate_file_names()
         self._report_notifications()
-        self.item_changed.emit()
+        self._resources_to_successors_changed()
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item's configuration."""

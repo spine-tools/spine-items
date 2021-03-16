@@ -19,12 +19,13 @@ Module for data connection icon class.
 import os
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QObject, Qt, QTimer, Signal
-from spinetoolbox.graphics_items import ProjectItemIcon
+from PySide2.QtWidgets import QGraphicsItem
+from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
 class DataConnectionIcon(ProjectItemIcon):
     class _SignalHolder(QObject):
-        files_dropped_on_icon = Signal("QGraphicsItem", list)
+        files_dropped_on_icon = Signal(QGraphicsItem, list)
         """A signal that it triggered when files are dragged and dropped on the item."""
 
     def __init__(self, toolbox, icon):

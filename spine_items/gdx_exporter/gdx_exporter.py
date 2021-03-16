@@ -143,7 +143,7 @@ class GdxExporter(ExporterBase):
             self._settings_pack.merging_settings = result.merging_settings
         self._worker = None
         self._toolbox.update_window_modified(False)
-        self._check_state()
+        self._check_notifications()
 
     @Slot(object)
     def _worker_failed(self, exception):
