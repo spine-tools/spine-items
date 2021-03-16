@@ -368,6 +368,7 @@ class SpecEditorManager:
         editor = self._editors.get(key)
         if editor is None:
             editor = self._editors[key] = self._constructor(toolbox, specification, item, *args, **kwargs)
+            editor.setAttribute(Qt.WA_DeleteOnClose, True)
             editor.destroyed.connect(lambda o=None, key=key: self._editors.pop(key, None))
             editor.show()
             return
