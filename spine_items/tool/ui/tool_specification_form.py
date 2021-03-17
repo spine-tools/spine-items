@@ -394,7 +394,7 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.dockWidget_program_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Program files", None))
         self.dockWidget_io_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Input & output files", None))
-        self.dockWidget_program.setWindowTitle(QCoreApplication.translate("MainWindow", u"Program source code", None))
+        self.dockWidget_program.setWindowTitle(QCoreApplication.translate("MainWindow", u"<no file selected>", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Main program directory:", None))
         self.label_mainpath.setText("")
 #if QT_CONFIG(tooltip)

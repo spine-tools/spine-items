@@ -125,11 +125,14 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.connect_signals()
 
     def _restore_dock_widgets(self):
-        docs = (self.ui.dockWidget_program_files, self.ui.dockWidget_program, self.ui.dockWidget_io_files)
-        self.splitDockWidget(*docs[:-1], Qt.Horizontal)
-        self.splitDockWidget(*docs[1:], Qt.Horizontal)
-        width = sum(d.width() for d in docs)
-        self.resizeDocks(docs, [width * x for x in (0.3, 0.4, 0.3)], Qt.Horizontal)
+        docks = (self.ui.dockWidget_program_files, self.ui.dockWidget_program)
+        self.splitDockWidget(*docks, Qt.Horizontal)
+        width = sum(d.width() for d in docks)
+        self.resizeDocks(docks, [width * x for x in (0.3, 0.7)], Qt.Horizontal)
+        docks = (self.ui.dockWidget_program_files, self.ui.dockWidget_io_files)
+        self.splitDockWidget(*docks, Qt.Vertical)
+        height = sum(d.height() for d in docks)
+        self.resizeDocks(docks, [height * x for x in (0.6, 0.4)], Qt.Vertical)
 
     def _populate_main_menu(self):
         menu = self._spec_toolbar.menu
@@ -416,27 +419,30 @@ class ToolSpecificationEditorWindow(QMainWindow):
         indexes = [ind for ind in indexes if ind.parent() != self.programfiles_model.index(0, 0)]
         self.ui.actionRemove_selected_program_files.setEnabled(bool(indexes))
         current = self.ui.treeView_programfiles.selectionModel().currentIndex()
-        if not current.isValid():
+        if not current.isValid() or not current.parent().isValid():
+            self._clear_program_text_edit()
             return
         file_path = os.path.join(self.includes_main_path, current.data())
         self._load_programfile_in_editor(file_path)
+
+    def _clear_program_text_edit(self):
+        self.ui.textEdit_program.setDocument(QTextDocument())
+        self.ui.textEdit_program.setEnabled(False)
+        self.ui.toolButton_save_program.setEnabled(False)
 
     def _load_programfile_in_editor(self, file_path):
         self._curren_programfile_path = file_path
         if not os.path.isfile(file_path):
             self.show_status_bar_msg(f"Program file {file_path} is not valid")
-            self.ui.textEdit_program.setEnabled(False)
-            self.ui.textEdit_program.clear()
-            return
-        self.ui.dockWidget_program.setWindowTitle(os.path.basename(file_path))
-        self.ui.textEdit_program.setEnabled(True)
-        try:
-            with open(file_path, 'r') as file:
-                text = file.read()
-        except (IOError, UnicodeDecodeError) as e:
-            self.show_status_bar_msg(str(e))
+            self._clear_program_text_edit()
             return
         if file_path not in self._programfile_documents:
+            try:
+                with open(file_path, 'r') as file:
+                    text = file.read()
+            except (IOError, UnicodeDecodeError) as e:
+                self.show_status_bar_msg(str(e))
+                return
             document = self._programfile_documents[file_path] = QTextDocument(self.ui.textEdit_program)
             document.setPlainText(text)
             document.setModified(False)
@@ -445,6 +451,8 @@ class ToolSpecificationEditorWindow(QMainWindow):
             document = self._programfile_documents[file_path]
         self.ui.toolButton_save_program.setEnabled(document.isModified())
         self.ui.textEdit_program.setDocument(document)
+        self.ui.textEdit_program.setEnabled(True)
+        self.ui.dockWidget_program.setWindowTitle(os.path.basename(file_path))
 
     @Slot(bool)
     def browse_main_program_file(self, checked=False):

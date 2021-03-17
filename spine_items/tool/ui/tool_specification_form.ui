@@ -308,7 +308,7 @@
     <set>Qt::BottomDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Program source code</string>
+    <string>&lt;no file selected&gt;</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>8</number>
