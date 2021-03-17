@@ -232,8 +232,8 @@ class ImportSources(QObject):
                 header = list(range(1, len(data[0]) + 1))
             self._preview_table_model.reset_model(main_data=data)
             self._preview_table_model.set_horizontal_header_labels(header)
-            types = self._connector.table_types.get(self._connector.current_table)
-            row_types = self._connector.table_row_types.get(self._connector.current_table)
+            types = self._connector.table_types.get(self._connector.current_table, {})
+            row_types = self._connector.table_row_types.get(self._connector.current_table, {})
             for col in range(len(header)):
                 col_type = types.get(col, "string")
                 self._preview_table_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Horizontal)
