@@ -42,6 +42,10 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
         for tn, cols in mapping.get("table_row_types", {}).items()
     }
     for path in source_filepaths:
+        file_anchor = (
+            "<a style='color:#BB99FF;' title='" + path + "' href='file:///" + path + f"'>{os.path.basename(path)}</a>"
+        )
+        logger.msg.emit("Importing " + file_anchor)
         try:
             connector.connect_to_source(path)
         except IOError as error:
@@ -52,17 +56,17 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
                 table_mappings, table_options, table_column_convert_specs, table_row_convert_specs, max_rows=-1
             )
         except spinedb_api.InvalidMapping as error:
-            logger.msg_error.emit(f"Failed to import '{path}': {error}")
+            logger.msg_error.emit(f"Failed to import: {error}")
             if cancel_on_error:
                 logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
                 return (False,)
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
             continue
         if not errors:
-            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data from {path}")
+            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data.")
         else:
             logger.msg_warning.emit(
-                f"Read {sum(len(d) for d in data.values())} data from {path} with {len(errors)} errors."
+                f"Read {sum(len(d) for d in data.values())} data with {len(errors)} errors."
             )
         all_data.append(data)
         all_errors.extend(errors)
