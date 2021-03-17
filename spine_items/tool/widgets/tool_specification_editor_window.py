@@ -429,6 +429,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.textEdit_program.setDocument(QTextDocument())
         self.ui.textEdit_program.setEnabled(False)
         self.ui.toolButton_save_program.setEnabled(False)
+        self.ui.dockWidget_program.setWindowTitle("Select a program file to edit its contents...")
 
     def _load_programfile_in_editor(self, file_path):
         self._curren_programfile_path = file_path
@@ -447,12 +448,14 @@ class ToolSpecificationEditorWindow(QMainWindow):
             document.setPlainText(text)
             document.setModified(False)
             document.modificationChanged.connect(self.ui.toolButton_save_program.setEnabled)
+            document.modificationChanged.connect(self.ui.dockWidget_program.setWindowModified)
         else:
             document = self._programfile_documents[file_path]
         self.ui.toolButton_save_program.setEnabled(document.isModified())
+        self.ui.dockWidget_program.setWindowModified(document.isModified())
         self.ui.textEdit_program.setDocument(document)
         self.ui.textEdit_program.setEnabled(True)
-        self.ui.dockWidget_program.setWindowTitle(os.path.basename(file_path))
+        self.ui.dockWidget_program.setWindowTitle(os.path.basename(file_path) + "[*]")
 
     @Slot(bool)
     def browse_main_program_file(self, checked=False):
