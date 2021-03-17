@@ -20,6 +20,7 @@ from copy import deepcopy
 from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QPoint, Qt, Signal, Slot, QPersistentModelIndex
 from spinedb_api.import_mapping.import_mapping import ObjectClassMapping
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
+from spinedb_api.mapping import Position
 from .custom_menus import SourceListMenu, SourceDataTableMenu
 from .options_widget import OptionsWidget
 from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict
@@ -149,8 +150,10 @@ class ImportSources(QObject):
         if item is None:
             return
         if item.name not in self._table_mappings:
-            # FIXME: How come MappingListModel() receives an ObjectClassMapping() and not an MappingSpecificationModel()?
-            self._table_mappings[item.name] = MappingListModel([ObjectClassMapping()], item.name, self._undo_stack)
+            specification = MappingSpecificationModel(
+                item.name, "", ObjectClassMapping(Position.hidden), self._undo_stack
+            )
+            self._table_mappings[item.name] = MappingListModel([specification], item.name, self._undo_stack)
         self.source_table_selected.emit(item.name, self._table_mappings[item.name])
         self._connector.set_table(item.name)
         self._connector.request_data(item.name, max_rows=100)
@@ -187,7 +190,7 @@ class ImportSources(QObject):
         for t_name, t_mapping in tables.items():
             if t_name not in self._table_mappings:
                 if t_mapping is None:
-                    t_mapping = ObjectClassMapping()
+                    t_mapping = ObjectClassMapping(Position.hidden)
                 specification = MappingSpecificationModel(t_name, "", t_mapping, self._undo_stack)
                 self._table_mappings[t_name] = MappingListModel([specification], t_name, self._undo_stack)
                 new_tables.append(t_name)
