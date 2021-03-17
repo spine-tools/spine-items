@@ -187,9 +187,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         return root_item.child(0).data(Qt.UserRole)
 
     def _additional_program_file_list(self):
-        index = self.programfiles_model.index(1, 0)
-        root_item = self.programfiles_model.itemFromIndex(index)
-        return [root_item.child(i).text() for i in range(root_item.rowCount())]
+        return self.spec_dict.get("includes", [])[1:]
 
     def populate_main_programfile(self, name):
         """List program files in QTreeView.
@@ -211,14 +209,25 @@ class ToolSpecificationEditorWindow(QMainWindow):
     def populate_programfile_list(self, names):
         """List program files in QTreeView.
         """
+        # Find visible indexes
+        visible = set()
+        for item in self.programfiles_model.findItems("", Qt.MatchContains | Qt.MatchRecursive):
+            if not item.rowCount():
+                index = self.programfiles_model.indexFromItem(item)
+                if self.ui.treeView_programfiles.isExpanded(index.parent()):
+                    visible.add(self._programfile_path_from_index(index))
+        # Repopulate
         index = self.programfiles_model.index(1, 0)
         root_item = self.programfiles_model.itemFromIndex(index)
         root_item.removeRows(0, root_item.rowCount())
-        for name in names:
-            item = QStandardItem(name)
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            item.setData(QFileIconProvider().icon(QFileInfo(name)), Qt.DecorationRole)
-            root_item.appendRow(item)
+        components = _collect_components(names)
+        _build_tree(root_item, components)
+        # Reexpand visible
+        for item in self.programfiles_model.findItems("", Qt.MatchContains | Qt.MatchRecursive):
+            if not item.rowCount():
+                index = self.programfiles_model.indexFromItem(item)
+                if self._programfile_path_from_index(index) in visible:
+                    self.ui.treeView_programfiles.expand(index.parent())
 
     def init_io_file_list(self):
         for name in ("Input files", "Optional input files", "Output files"):
@@ -245,20 +254,13 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.treeView_io_files.setIndexWidget(index, widget)
 
     def _input_file_list(self):
-        index = self.io_files_model.index(0, 0)
-        return self._io_file_list(index)
+        return self.spec_dict.get("inputfiles", [])
 
     def _opt_input_file_list(self):
-        index = self.io_files_model.index(1, 0)
-        return self._io_file_list(index)
+        return self.spec_dict.get("inputfiles_opt", [])
 
     def _output_file_list(self):
-        index = self.io_files_model.index(2, 0)
-        return self._io_file_list(index)
-
-    def _io_file_list(self, index):
-        root_item = self.io_files_model.itemFromIndex(index)
-        return [root_item.child(i).text() for i in range(root_item.rowCount())]
+        return self.spec_dict.get("outputfiles", [])
 
     def _populate_io_files_list(self, index, names):
         root_item = self.io_files_model.itemFromIndex(index)
@@ -415,15 +417,21 @@ class ToolSpecificationEditorWindow(QMainWindow):
 
     @Slot("QItemSelection", "QItemSelection")
     def _handle_programfile_selection_changed(self, _selected, _deselected):
-        indexes = self.ui.treeView_programfiles.selectedIndexes()
-        indexes = [ind for ind in indexes if ind.parent() != self.programfiles_model.index(0, 0)]
+        # Set remove action enabled
+        indexes = self._selected_program_file_indexes()
         self.ui.actionRemove_selected_program_files.setEnabled(bool(indexes))
+        # Load selected file code on text edit
         current = self.ui.treeView_programfiles.selectionModel().currentIndex()
-        if not current.isValid() or not current.parent().isValid():
+        if self.programfiles_model.rowCount(current):
+            # Not a leaf
             self._clear_program_text_edit()
             return
-        file_path = os.path.join(self.includes_main_path, current.data())
+        file_path = self._programfile_path_from_index(current)
         self._load_programfile_in_editor(file_path)
+
+    def _programfile_path_from_index(self, index):
+        components = _path_components_from_index(index)
+        return os.path.join(self.includes_main_path, *components)
 
     def _clear_program_text_edit(self):
         self.ui.textEdit_program.setDocument(QTextDocument())
@@ -593,15 +601,22 @@ class ToolSpecificationEditorWindow(QMainWindow):
         """Support for deleting items with the Delete key."""
         self.remove_program_files()
 
+    def _selected_program_file_indexes(self):
+        indexes = set(self.ui.treeView_programfiles.selectedIndexes())
+        # discard main program file
+        parent = self.programfiles_model.index(0, 0)
+        indexes.discard(self.programfiles_model.index(0, 0, parent))
+        # keep only leaves
+        return {ind for ind in indexes if not self.programfiles_model.rowCount(ind)}
+
     @Slot(bool)
     def remove_program_files(self, checked=False):
         """Removes selected program files from program_file list."""
-        indexes = self.ui.treeView_programfiles.selectedIndexes()
-        indexes = [ind for ind in indexes if ind.parent() != self.programfiles_model.index(0, 0)]
-        if not indexes:  # Nothing selected
+        indexes = self._selected_program_file_indexes()
+        if not indexes:  # Nothing removable selected
             self.show_status_bar_msg("Please select program files to remove")
             return
-        removed_files = {ind.data(Qt.DisplayRole) for ind in indexes}
+        removed_files = {os.path.join(*_path_components_from_index(ind)) for ind in indexes}
         old_program_files = self.spec_dict.get("includes", [""])
         new_program_files = [f for f in old_program_files if f not in removed_files]
         if self.includes_main_path is not None:
@@ -617,12 +632,10 @@ class ToolSpecificationEditorWindow(QMainWindow):
     @Slot("QModelIndex")
     def open_program_file(self, index):
         """Open program file in default program."""
-        if not index:
-            return
         if not index.isValid():
             self._toolbox.msg_error.emit("Selected index not valid")
             return
-        program_file = self.programfiles_model.itemFromIndex(index).text()
+        program_file = self._programfile_path_from_index(index)
         _, ext = os.path.splitext(program_file)
         if ext in [".bat", ".exe"]:
             self._toolbox.msg_warning.emit(
@@ -896,3 +909,66 @@ class ToolSpecificationEditorWindow(QMainWindow):
         mspw = 60000 / 140  # Assume people can read ~140 words per minute
         duration = mspw * word_count
         self.ui.statusbar.showMessage(msg, duration)
+
+
+def _path_components(path):
+    """
+    Args:
+        path(str): a filesytem path, e.g. (/home/user/spine/toolbox/file.py)
+
+    Yields:
+        str: path components in 'reverse' order, e.g., file.py, toolbox, spine, user, home
+    """
+    while path:
+        path, component = os.path.split(path)
+        yield component
+
+
+def _collect_components(names):
+    """
+    Args:
+        names (list(str)): list of filepaths
+
+    Returns:
+        dict: mapping folders to contents recursively
+    """
+    components = {}
+    for name in names:
+        d = components
+        for component in reversed(list(_path_components(name))):
+            d = d.setdefault(component, {})
+    return components
+
+
+def _build_tree(root, components):
+    """
+    Appends rows from given components to given root item.
+
+    Args:
+        root (QStandardItem): root item
+        components (dict): mapping folders to contents recursively
+    """
+    nodes = []
+    leafs = []
+    for parent, children in components.items():
+        item = QStandardItem(parent)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        _build_tree(item, children)
+        if item.hasChildren():
+            nodes.append(item)
+            item.setData(QFileIconProvider().icon(QFileIconProvider.Folder), Qt.DecorationRole)
+        else:
+            item.setData(QFileIconProvider().icon(QFileInfo(parent)), Qt.DecorationRole)
+            leafs.append(item)
+    for item in sorted(nodes, key=lambda x: x.text()):
+        root.appendRow(item)
+    for item in sorted(leafs, key=lambda x: x.text()):
+        root.appendRow(item)
+
+
+def _path_components_from_index(index):
+    components = []
+    while index.parent().isValid():
+        components.insert(0, index.data())
+        index = index.parent()
+    return components
