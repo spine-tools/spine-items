@@ -24,7 +24,7 @@ from .executable_item import ExecutableItem
 from .commands import UpdateShellCheckBoxCommand, UpdateShellComboboxCommand, UpdatecmdCommand, UpdateWorkDirModeCommand
 from ..commands import ChangeItemSelectionCommand, UpdateCmdLineArgsCommand
 from ..models import GimletCommandLineArgsModel, CheckableFileListModel
-from ..utils import cmd_line_arg_from_dict
+from ..utils import cmd_line_arg_from_dict, LabelArg
 
 
 class Gimlet(ProjectItem):
@@ -200,7 +200,7 @@ class Gimlet(ProjectItem):
 
     @Slot(bool)
     def _add_selected_file_path_args(self, _=False):
-        new_args = [index.data() for index in self._properties_ui.treeView_files.selectedIndexes()]
+        new_args = [LabelArg(index.data()) for index in self._properties_ui.treeView_files.selectedIndexes()]
         self._push_update_cmd_line_args_command(self.cmd_line_args + new_args)
 
     @Slot(list)

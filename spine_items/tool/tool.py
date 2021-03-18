@@ -28,7 +28,7 @@ from .widgets.custom_menus import ToolSpecificationMenu
 from .widgets.options_widgets import JuliaOptionsWidget
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
-from ..utils import CmdLineArg, cmd_line_arg_from_dict
+from ..utils import CmdLineArg, cmd_line_arg_from_dict, LabelArg
 from ..models import ToolCommandLineArgsModel, FileListModel
 from .output_resources import scan_for_resources
 
@@ -190,7 +190,7 @@ class Tool(ProjectItem):
 
     @Slot(bool)
     def _add_selected_file_path_args(self, _=False):
-        new_args = [index.data() for index in self._properties_ui.treeView_input_files.selectedIndexes()]
+        new_args = [LabelArg(index.data()) for index in self._properties_ui.treeView_input_files.selectedIndexes()]
         self._push_update_cmd_line_args_command(self.cmd_line_args + new_args)
 
     @Slot(list)
