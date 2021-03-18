@@ -430,7 +430,17 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self._load_programfile_in_editor(file_path)
 
     def _programfile_path_from_index(self, index):
+        """Return absolute path to a file pointed by index.
+
+        Args:
+            index (QModelIndex): index
+
+        Returns:
+            str: file path
+        """
         components = _path_components_from_index(index)
+        if not components:
+            return ""
         return os.path.join(self.includes_main_path, *components)
 
     def _clear_program_text_edit(self):

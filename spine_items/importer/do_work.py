@@ -65,9 +65,7 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
         if not errors:
             logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data.")
         else:
-            logger.msg_warning.emit(
-                f"Read {sum(len(d) for d in data.values())} data with {len(errors)} errors."
-            )
+            logger.msg_warning.emit(f"Read {sum(len(d) for d in data.values())} data with {len(errors)} errors.")
         all_data.append(data)
         all_errors.extend(errors)
     if all_errors:
