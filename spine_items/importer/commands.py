@@ -461,6 +461,37 @@ class SetValueType(QUndoCommand):
         self._options_widget.set_value_type(self._source_table_name, self._mapping_specification_name, self._old_type)
 
 
+class SetSkipColumns(QUndoCommand):
+    """Command to change item mapping's skip columns option."""
+
+    def __init__(self, source_table_name, mapping_spec_name, options_widget, skip_cols, previous_skip_cols):
+        """
+        Args:
+            source_table_name (str): name of the source table
+            mapping_spec_name (str): name of the mapping specification
+            options_widget (ImportMappingOptions): options widget
+            skip_cols (list): new skip columns
+            previous_skip_cols (list): previous skip columns
+        """
+        text = "mapping ignore columns change"
+        super().__init__(text)
+        self._source_table_name = source_table_name
+        self._mapping_spec_name = mapping_spec_name
+        self._options_widget = options_widget
+        self._skip_cols = skip_cols
+        self._previous_skip_cols = previous_skip_cols
+
+    def redo(self):
+        """Changes item mapping's skip columns to a new value."""
+        self._options_widget.set_skip_columns(self._source_table_name, self._mapping_spec_name, self._skip_cols)
+
+    def undo(self):
+        """Restores item mapping's skip columns to its previous value."""
+        self._options_widget.set_skip_columns(
+            self._source_table_name, self._mapping_spec_name, self._previous_skip_cols
+        )
+
+
 class SetReadStartRow(QUndoCommand):
     """Command to change item mapping's read start row option."""
 

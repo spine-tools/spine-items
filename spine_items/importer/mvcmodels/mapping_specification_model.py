@@ -184,9 +184,7 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     @property
     def skip_columns(self):
-        if self._root_mapping.skip_columns is None:
-            return []
-        return list(self._root_mapping.skip_columns)
+        return self._root_mapping.skip_columns
 
     @property
     def map_type(self):

@@ -26,6 +26,7 @@ from ..commands import (
     SetMapDimensionCount,
     SetParameterType,
     SetValueType,
+    SetSkipColumns,
     SetReadStartRow,
     SetTimeSeriesRepeatFlag,
 )
@@ -62,7 +63,7 @@ class ImportMappingOptions(QObject):
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_parameter_type)
         self._ui.value_type_combo_box.currentTextChanged.connect(self._change_value_type)
         self._ui.import_objects_check_box.stateChanged.connect(self._change_import_objects)
-        self._ui_ignore_columns_filtermenu.filterChanged.connect(self.change_skip_columns)
+        self._ui_ignore_columns_filtermenu.filterChanged.connect(self._change_skip_columns)
         self._ui.start_read_row_spin_box.valueChanged.connect(self._change_read_start_row)
         self._ui.time_series_repeat_check_box.stateChanged.connect(self._change_time_series_repeat_flag)
         self._ui.map_dimension_spin_box.valueChanged.connect(self._change_map_dimension_count)
@@ -72,12 +73,9 @@ class ImportMappingOptions(QObject):
     @Slot(int)
     def set_num_available_columns(self, num):
         selected = self._ui_ignore_columns_filtermenu._filter._filter_model.get_selected()
-        self._ui_ignore_columns_filtermenu._filter._filter_model.set_list(set(range(num)))
+        # The filter menu is 1-based
+        self._ui_ignore_columns_filtermenu._filter._filter_model.set_list(set(range(1, num + 1)))
         self._ui_ignore_columns_filtermenu._filter._filter_model.set_selected(selected)
-
-    def change_skip_columns(self, skip_cols):
-        if self._mapping_specification_model:
-            self._mapping_specification_model.set_skip_columns(skip_cols)
 
     @Slot(object)
     def set_mapping_specification_model(self, model):
@@ -155,20 +153,27 @@ class ImportMappingOptions(QObject):
         # update ignore columns filter
         self._ui.ignore_columns_button.setEnabled(self._mapping_specification_model.is_pivoted)
         self._ui.ignore_columns_label.setEnabled(self._mapping_specification_model.is_pivoted)
-        skip_cols = []
-        if self._mapping_specification_model.mapping.skip_columns:
-            skip_cols = self._mapping_specification_model.mapping.skip_columns
-        self._ui_ignore_columns_filtermenu._filter._filter_model.set_selected(skip_cols)
-        skip_text = ",".join(str(c) for c in skip_cols)
-        if len(skip_text) > 20:
-            skip_text = skip_text[:20] + "..."
-        self._ui.ignore_columns_button.setText(skip_text)
+        skip_cols = self._mapping_specification_model.mapping.skip_columns
+        self._update_ignore_columns_button(skip_cols)
 
         self._ui.start_read_row_spin_box.setValue(self._mapping_specification_model.read_start_row)
 
         self._update_time_series_options()
         self._update_map_options()
         self._block_signals = False
+
+    def _update_ignore_columns_button(self, skip_cols):
+        """
+        Args:
+            skip_cols (list(int)): 0-based
+        """
+        # NOTE: We go from 0-based to 1-based, for visualization
+        skip_cols = [c + 1 for c in skip_cols]
+        self._ui_ignore_columns_filtermenu._filter._filter_model.set_selected(skip_cols)
+        skip_button_text = ", ".join(str(c) for c in skip_cols)
+        if len(skip_button_text) > 20:
+            skip_button_text = skip_button_text[:20] + "..."
+        self._ui.ignore_columns_button.setText(skip_button_text)
 
     @Slot(str)
     def _change_item_mapping_type(self, new_type):
@@ -407,6 +412,25 @@ class ImportMappingOptions(QObject):
         self._executing_command = True
         self.about_to_undo.emit(source_table_name, mapping_specification_name)
         self._mapping_specification_model.set_read_start_row(start_row)
+        self._executing_command = False
+
+    def _change_skip_columns(self, skip_cols):
+        if self._executing_command or self._block_signals:
+            return
+        source_table_name = self._mapping_specification_model.source_table_name
+        mapping_spec_name = self._mapping_specification_model.mapping_name
+        previous_skip_cols = self._mapping_specification_model.skip_columns.copy()
+        # NOTE: The columns in the filter menu are 1-based, for visualization. Here we need them 0-based
+        skip_cols = sorted([c - 1 for c in skip_cols])
+        self._undo_stack.push(SetSkipColumns(source_table_name, mapping_spec_name, self, skip_cols, previous_skip_cols))
+
+    def set_skip_columns(self, source_table_name, mapping_spec_name, skip_cols):
+        if self._mapping_specification_model is None:
+            return
+        self._executing_command = True
+        self.about_to_undo.emit(source_table_name, mapping_spec_name)
+        self._mapping_specification_model.set_skip_columns(skip_cols)
+        self._update_ignore_columns_button(skip_cols)
         self._executing_command = False
 
     @Slot(bool)
