@@ -17,7 +17,7 @@ Contains common & shared (Q)widgets.
 """
 
 import os
-from PySide2.QtCore import Qt, Signal, Slot, QUrl, QMimeData, QTimer
+from PySide2.QtCore import Qt, Signal, Slot, QUrl, QMimeData
 from PySide2.QtWidgets import (
     QApplication,
     QWidget,
@@ -184,10 +184,6 @@ class SpecNameDescriptionToolbar(QToolBar):
         self._line_edit_description = PropertyQLineEdit()
         self._line_edit_name.setPlaceholderText("Enter specification name here...")
         self._line_edit_description.setPlaceholderText("Enter specification description here...")
-        self._timer_set_name = QTimer(self)
-        self._timer_set_description = QTimer(self)
-        self._timer_set_name.setInterval(200)
-        self._timer_set_description.setInterval(200)
         self.setAllowedAreas(Qt.TopToolBarArea)
         self.setFloatable(False)
         self.setMovable(False)
@@ -208,10 +204,8 @@ class SpecNameDescriptionToolbar(QToolBar):
         if spec:
             self.do_set_name(spec.name)
             self.do_set_description(spec.description)
-        self._line_edit_name.textEdited.connect(self._timer_set_name.start)
-        self._line_edit_description.textEdited.connect(self._timer_set_description.start)
-        self._timer_set_name.timeout.connect(self._set_name)
-        self._timer_set_description.timeout.connect(self._set_description)
+        self._line_edit_name.editingFinished.connect(self._set_name)
+        self._line_edit_description.editingFinished.connect(self._set_description)
 
     def _make_main_menu(self):
         menu = QMenu(self)
@@ -229,7 +223,6 @@ class SpecNameDescriptionToolbar(QToolBar):
 
     @Slot()
     def _set_name(self):
-        self._timer_set_name.stop()
         if self.name() == self._current_name:
             return
         self._undo_stack.push(
@@ -238,7 +231,6 @@ class SpecNameDescriptionToolbar(QToolBar):
 
     @Slot()
     def _set_description(self):
-        self._timer_set_description.stop()
         if self.description() == self._current_description:
             return
         self._undo_stack.push(
