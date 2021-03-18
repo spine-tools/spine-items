@@ -149,6 +149,7 @@ class DataTransformer(ProjectItem):
     def upstream_resources_updated(self, resources):
         """See base class."""
         self._db_resources = [r for r in resources if r.type_ == "database"]
+        self._resources_to_successors_changed()
 
     def resources_for_direct_successors(self):
         """See base class."""
