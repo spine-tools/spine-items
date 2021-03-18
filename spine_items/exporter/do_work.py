@@ -64,9 +64,7 @@ def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databas
                     file.unlink()
                 writer = make_writer(specification.output_format, out_path)
                 for mapping_specification in specification.mapping_specifications().values():
-                    mapping = copy(mapping_specification.root)
-                    mapping.drop_non_positioned_tail()
-                    write(database_map, writer, mapping)
+                    write(database_map, writer, mapping_specification.root)
             except (PermissionError, WriterException) as e:
                 logger.msg_error.emit(str(e))
                 if cancel_on_error:
