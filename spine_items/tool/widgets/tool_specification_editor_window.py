@@ -575,7 +575,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
                 continue
             if self.includes_main_path is not None:
                 common_prefix = os.path.commonprefix([os.path.abspath(self.includes_main_path), os.path.abspath(file)])
-                if common_prefix != self.includes_main_path:
+                if os.path.normcase(common_prefix) != os.path.normcase(self.includes_main_path):
                     invalid.append(os.path.basename(file))
                     continue
             valid_files.append(file)
