@@ -17,12 +17,18 @@ Contains utilities shared between project items.
 """
 
 from datetime import datetime
+import json
 import os.path
+from pathlib import Path
 import re
 from time import time
 from contextlib import contextmanager
 from spinedb_api.spine_db_server import start_spine_db_server, shutdown_spine_db_server
-from spine_engine.project_item.project_item_resource import extract_packs
+from spine_engine.project_item.project_item_resource import (
+    extract_packs,
+    file_resource_in_pack,
+    transient_file_resource,
+)
 
 
 def labelled_resource_filepaths(resources):
@@ -255,3 +261,92 @@ def subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, fork):
     else:
         path = os.path.join(data_dir, time_stamp, output_file_name)
     return path
+
+
+def exported_files_as_resources(item_name, exported_files, data_dir, databases):
+    """Collects exported files from 'export manifests'.
+
+    Args:
+        item_name (str): item's name
+        exported_files (dict, optional): item's exported files cache
+        data_dir (str): item's data directory
+        databases (Iterable of Database): item's upstream databases
+
+    Returns:
+        tuple: output resources and updated exported files cache
+    """
+    manifests = _collect_execution_manifests(data_dir)
+    exported_file_path = Path(data_dir, "exported.json")
+    if manifests is not None:
+        _write_exported_files_file(exported_file_path, manifests, data_dir)
+        exported_files = manifests
+    elif exported_files is None and exported_file_path.exists():
+        exported_files = _read_exported_files_file(exported_file_path, data_dir)
+    resources = list()
+    if exported_files is not None:
+        for db in databases:
+            if db.output_file_name:
+                files = [f for f in exported_files.get(db.output_file_name, []) if Path(f).exists()]
+                if files:
+                    resources = [file_resource_in_pack(item_name, db.output_file_name, f) for f in files]
+                else:
+                    resources.append(transient_file_resource(item_name, db.output_file_name))
+    else:
+        for db in databases:
+            if db.output_file_name:
+                resources.append(transient_file_resource(item_name, db.output_file_name))
+    return resources, exported_files
+
+
+def _collect_execution_manifests(data_dir):
+    """Collects output file names from export manifest files written by exporter's executable item.
+
+    Deletes the manifest files after reading their contents.
+
+    Args:
+        data_dir (str): item's data directory
+
+    Returns:
+        dict: mapping from output label to list of file paths, or None if no manifest files were found
+    """
+    manifests = None
+    for path in Path(data_dir).iterdir():
+        if path.name.startswith("__export-manifest") and path.suffix == ".json":
+            with open(path) as manifest_file:
+                manifest = json.load(manifest_file)
+            path.unlink()
+            for out_file_name, paths in manifest.items():
+                if manifests is None:
+                    manifests = dict()
+                path_list = manifests.setdefault(out_file_name, list())
+                path_list += paths
+    return manifests
+
+
+def _write_exported_files_file(file_path, manifests, data_dir):
+    """Writes manifests to the exported files file.
+
+    Args:
+        file_path (Path): path to the exported files file
+        manifests (dict): collected execution manifests
+    """
+    relative_path_manifests = dict()
+    for out_file_name, paths in manifests.items():
+        relative_path_manifests[out_file_name] = [str(Path(p).relative_to(data_dir)) for p in paths]
+    with open(file_path, "w") as manifests_file:
+        json.dump(relative_path_manifests, manifests_file)
+
+
+def _read_exported_files_file(file_path, data_dir):
+    """Reads manifests from the exported files file.
+
+    Args:
+        file_path (Path): path to the exported files file
+        data_dir (str): absolute path to item's data directory
+
+    Returns:
+        dict: mapping from output file name to a list of actually exported file paths
+    """
+    with open(file_path) as manifests_file:
+        relative_path_manifests = json.load(manifests_file)
+    return {name: [str(Path(data_dir, p)) for p in paths] for name, paths in relative_path_manifests.items()}

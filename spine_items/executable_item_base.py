@@ -21,6 +21,7 @@ from spinedb_api.filters.tools import filter_configs, name_from_dict
 from spinedb_api.spine_io import gdx_utils
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
+from .utils import exported_files_as_resources
 
 
 class ExporterExecutableItemBase(ExecutableItemBase):
@@ -43,7 +44,7 @@ class ExporterExecutableItemBase(ExecutableItemBase):
         self._cancel_on_error = cancel_on_error
         self._gams_path = gams_path
         self._forks = dict()
-        self._result_files = dict()
+        self._result_files = None
         self._process = None
 
     @staticmethod
@@ -98,13 +99,9 @@ class ExporterExecutableItemBase(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        resources = list()
-        for label, paths in self._result_files.items():
-            if len(paths) == 1:
-                resources.append(transient_file_resource(self.name, label, paths[0]))
-            elif len(paths) > 1:
-                for path in paths:
-                    resources.append(file_resource_in_pack(self.name, label, path))
+        resources, self._result_files = exported_files_as_resources(
+            self.name, self._result_files, self._data_dir, self._databases
+        )
         return resources
 
     def _resolve_gams_system_directory(self):
