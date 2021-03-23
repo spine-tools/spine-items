@@ -332,8 +332,11 @@
      </property>
      <item>
       <widget class="MainProgramTextEdit" name="textEdit_program">
-       <property name="enabled">
-        <bool>true</bool>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
       </widget>
      </item>
@@ -614,7 +617,7 @@ p, li { white-space: pre-wrap; }
   </customwidget>
   <customwidget>
    <class>MainProgramTextEdit</class>
-   <extends>QTextEdit</extends>
+   <extends>QLineEdit</extends>
    <header>spine_items/tool/widgets/main_program_text_edit.h</header>
   </customwidget>
  </customwidgets>

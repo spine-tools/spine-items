@@ -20,7 +20,7 @@ from pygments.styles import get_style_by_name
 from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 from pygments.token import Token
-from PySide2.QtWidgets import QTextEdit
+from PySide2.QtWidgets import QPlainTextEdit, QPlainTextDocumentLayout
 from PySide2.QtGui import QSyntaxHighlighter, QTextCharFormat, QBrush, QColor, QFontMetrics, QFontDatabase, QFont
 
 
@@ -57,7 +57,7 @@ class CustomSyntaxHighlighter(QSyntaxHighlighter):
             self.setFormat(start, len(subtext), text_format)
 
 
-class MainProgramTextEdit(QTextEdit):
+class MainProgramTextEdit(QPlainTextEdit):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self._highlighter = CustomSyntaxHighlighter(self)
@@ -67,7 +67,7 @@ class MainProgramTextEdit(QTextEdit):
         self.setFont(font)
         self.setTabStopDistance(QFontMetrics(font).horizontalAdvance(4 * " "))
         foreground_color = style.styles[Token.Text]
-        self.setStyleSheet(f"QTextEdit {{background-color: {style.background_color}; color: {foreground_color};}}")
+        self.setStyleSheet(f"QPlainTextEdit {{background-color: {style.background_color}; color: {foreground_color};}}")
 
     def insertFromMimeData(self, source):
         if source.hasText():
@@ -82,6 +82,7 @@ class MainProgramTextEdit(QTextEdit):
             pass
 
     def setDocument(self, doc):
+        doc.setDocumentLayout(QPlainTextDocumentLayout(doc))
         super().setDocument(doc)
         self._highlighter.setDocument(doc)
         doc.setDefaultFont(self.font())
