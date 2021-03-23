@@ -231,10 +231,7 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     @property
     def import_objects(self):
-        m = next(iter(self._import_objects_mappings()), None)
-        if m is None:
-            return False
-        return m.import_objects
+        return all(m.import_objects for m in self._import_objects_mappings())
 
     @property
     def parameter_mapping(self):
