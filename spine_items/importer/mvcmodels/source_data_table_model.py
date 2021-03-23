@@ -72,9 +72,8 @@ class SourceDataTableModel(MinimalTableModel):
             or self._mapping_specification.mapping is None
         ):
             return
-        header = [self.headerData(j) for j in range(self.columnCount())]
         tablename = self._mapping_specification.source_table_name
-        self._mapping_specification.mapping.polish(tablename, header)
+        self._mapping_specification.mapping.polish(tablename, self.header, for_preview=True)
 
     def set_mapping(self, mapping):
         """Set mapping to display colors from
@@ -277,11 +276,6 @@ class SourceDataTableModel(MinimalTableModel):
         if index.row() <= self._last_row():
             return False
         return index.column() == mapping.position
-
-    def _reference_from_header(self, ref):
-        if isinstance(ref, str) and ref in self.header:
-            return self.header.index(ref)
-        return ref
 
     def headerData(self, section, orientation=Qt.Horizontal, role=Qt.DisplayRole):
         if orientation != Qt.Horizontal or role != Qt.BackgroundRole:

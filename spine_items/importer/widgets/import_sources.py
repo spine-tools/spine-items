@@ -229,8 +229,9 @@ class ImportSources(QObject):
                 return
             if not header:
                 header = list(range(1, len(data[0]) + 1))
-            self._preview_table_model.reset_model(main_data=data)
+            # Set header data before reseting model because the header needs to be there for some slots...
             self._preview_table_model.set_horizontal_header_labels(header)
+            self._preview_table_model.reset_model(main_data=data)
             types = self._connector.table_types.get(self._connector.current_table, {})
             row_types = self._connector.table_row_types.get(self._connector.current_table, {})
             for col in range(len(header)):
