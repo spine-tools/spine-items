@@ -18,7 +18,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
 
 
-_positions = ["hidden", "table name", "single row"]
+_positions = ["hidden", "table name"]
 
 
 def position_section_width():
@@ -39,7 +39,6 @@ class PositionEditDelegate(QStyledItemDelegate):
     def setEditorData(self, editor, index):
         model = index.model()
         editor.set_table_name_item_disabled(model.has_table_name())
-        editor.set_single_row_item_disabled(index.row() != model.rowCount() - 1)
         editor.set(index.data())
 
 
@@ -57,15 +56,6 @@ class _PositionEdit(QComboBox):
         self.setLineEdit(SelectingLineEdit())
 
     def set_table_name_item_disabled(self, disabled):
-        """Disables or enables the 'table name' item.
-
-        Args:
-            disabled (bool): True to disable the item, False to enable it
-        """
-        model = self.model()
-        model.item(len(_positions) - 2).setEnabled(not disabled)
-
-    def set_single_row_item_disabled(self, disabled):
         """Disables or enables the 'table name' item.
 
         Args:

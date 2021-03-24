@@ -53,7 +53,7 @@ from spinedb_api.export_mapping.export_mapping import (
     ToolFeatureRequiredFlagMapping,
     ToolMapping,
 )
-from ..commands import SetFixedTitle, SetMappingPosition, SetMappingProperty
+from ..commands import SetFixedTitle, SetMappingPositions, SetMappingProperty
 
 
 class MappingTableModel(QAbstractTableModel):
@@ -85,7 +85,7 @@ class MappingTableModel(QAbstractTableModel):
                     return mapping.value
                 return _names[type(mapping)]
             if column == 1:
-                if row == self._value_row() and self._non_leaf_mapping_is_pivoted:
+                if row == _value_row(self._mappings) and self._non_leaf_mapping_is_pivoted:
                     return "in pivot"
                 position = self._mappings[row].position
                 if is_regular(position):
@@ -95,7 +95,6 @@ class MappingTableModel(QAbstractTableModel):
                 return {
                     Position.hidden: "hidden",
                     Position.table_name: "table name",
-                    Position.single_row: "single row",
                 }.get(position, "unrecognized")
             if column == 3:
                 return self._mappings[row].header
@@ -124,13 +123,8 @@ class MappingTableModel(QAbstractTableModel):
             if column == 0:
                 return super().flags(index) | Qt.ItemIsEditable
             return super().flags(index) & ~Qt.ItemIsEnabled
-        value_row = self._value_row()
-        if row == value_row:
-            if column == 1 and self._non_leaf_mapping_is_pivoted:
-                return super().flags(index) & ~Qt.ItemIsEnabled
-            if column == 2:
-                return super().flags(index) & ~Qt.ItemIsEnabled
-        if row > value_row and column == 2:
+        value_row = _value_row(self._mappings)
+        if row >= value_row and column == 2:
             return super().flags(index) & ~Qt.ItemIsEnabled
         if index.column() == 0:
             return super().flags(index) & ~Qt.ItemIsSelectable
@@ -172,32 +166,7 @@ class MappingTableModel(QAbstractTableModel):
                 self._undo_stack.push(SetFixedTitle(self, value, mapping.value))
                 return True
             if column == 1:
-                previous_value = mapping.position
-                try:
-                    value = max(int(value), 1)
-                    if is_pivoted(mapping.position):
-                        value = -value
-                    else:
-                        value = value - 1
-                except ValueError:
-                    value = value.strip().lower()
-                    if value.startswith("t"):
-                        if isinstance(self._mappings[0], FixedValueMapping):
-                            return False
-                        value = Position.table_name
-                    elif value.startswith("h"):
-                        value = Position.hidden
-                    elif value.startswith("s"):
-                        if row != len(self._mappings) - 1:
-                            return False
-                        value = Position.single_row
-                    else:
-                        return False
-                if value == mapping.position:
-                    return False
-                command = SetMappingPosition(self, self._mapping_name, row, value, previous_value)
-                self._undo_stack.push(command)
-                return True
+                return self._push_set_positions_command(value, row, mapping)
             if column == 3:
                 if value == mapping.header:
                     return False
@@ -218,12 +187,9 @@ class MappingTableModel(QAbstractTableModel):
                 return True
         elif role == Qt.CheckStateRole:
             row = index.row()
-            mapping = self._mappings[row]
-            position = mapping.position
-            if position in (Position.hidden, Position.table_name, Position.single_row):
-                position = 0
-            new_position = -position - 1
-            command = SetMappingPosition(self, self._mapping_name, row, new_position, mapping.position)
+            new_positions = _propose_toggled_pivot(self._mappings, row)
+            previous_positions = [m.position for m in self._mappings]
+            command = SetMappingPositions(self, self._mapping_name, new_positions, previous_positions)
             self._undo_stack.push(command)
             return True
         return False
@@ -242,26 +208,73 @@ class MappingTableModel(QAbstractTableModel):
         self._non_leaf_mapping_is_pivoted = self._is_non_leaf_pivoted()
         self.endResetModel()
 
-    def set_position(self, position, row, mapping_name):
+    def _push_set_positions_command(self, value, row, mapping):
+        """Pushes SetMappingPosition command to undo stack
+
+        Args:
+            value (str): table cell's value
+            row (int): row index
+            mapping (Mapping): mapping to modify
+        """
+        try:
+            value = max(int(value), 1)
+            if is_pivoted(mapping.position):
+                value = -value
+            else:
+                value = value - 1
+        except ValueError:
+            value = value.strip().lower()
+            if value.startswith("t"):
+                if isinstance(self._mappings[0], FixedValueMapping):
+                    return False
+                value = Position.table_name
+            elif value.startswith("h"):
+                value = Position.hidden
+            else:
+                return False
+        if value == mapping.position and (row != _value_row(self._mappings) or not self._non_leaf_mapping_is_pivoted):
+            return False
+        positions = _propose_positions(self._mappings, row, value)
+        previous_positions = [m.position for m in self._mappings]
+        command = SetMappingPositions(self, self._mapping_name, positions, previous_positions)
+        self._undo_stack.push(command)
+        return True
+
+    def set_positions(self, positions, mapping_name):
         """
         Sets mapping position for given row.
 
         Args:
-            position (int or Position): mapping position
-            row (int): row index
+            positions (list of Position): mapping position
             mapping_name (str): mapping's name
         """
         if mapping_name != self._mapping_name:
             self._mapping_provider.show_on_table(mapping_name)
-        self._mappings[row].position = position
-        index = self.index(row, 1)
-        self.dataChanged.emit(index, index, [Qt.DisplayRole])
-        pivot_index = self.index(row, 2)
-        self.dataChanged.emit(pivot_index, pivot_index, [Qt.CheckStateRole])
+        top = -1
+        pivot_top = top
+        bottom = len(self._mappings)
+        pivot_bottom = bottom
+        for row in range(len(self._mappings)):
+            mapping = self._mappings[row]
+            position = positions[row]
+            if position != mapping.position:
+                top = row
+                bottom = min(bottom, row)
+                if is_pivoted(position) or is_pivoted(mapping.position):
+                    pivot_top = row
+                    pivot_bottom = min(pivot_bottom, row)
+                mapping.position = position
+        top_left = self.index(top, 1)
+        bottom_right = self.index(bottom, 1)
+        self.dataChanged.emit(top_left, bottom_right, [Qt.DisplayRole])
+        if pivot_bottom <= pivot_top:
+            top_left = self.index(pivot_top, 2)
+            bottom_right = self.index(pivot_bottom, 2)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
         non_leaf_pivoted = self._is_non_leaf_pivoted()
         if non_leaf_pivoted != self._non_leaf_mapping_is_pivoted:
             self._non_leaf_mapping_is_pivoted = non_leaf_pivoted
-            index = self.index(self._value_row(), 1)
+            index = self.index(_value_row(self._mappings), 1)
             self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
     def set_header(self, header, row, mapping_name):
@@ -305,26 +318,13 @@ class MappingTableModel(QAbstractTableModel):
         index = self.index(0, 0)
         self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
-    def _value_row(self):
-        """
-        Returns the last relevant row, i.e. the one that contains the leaf mapping.
-
-        Returns:
-            int: row index
-        """
-        return (
-            len(self._mappings)
-            - 1
-            - len(list(takewhile(lambda m: m.position == Position.hidden, reversed(self._mappings))))
-        )
-
     def _is_non_leaf_pivoted(self):
         """Checks if a non-leaf mapping is pivoted.
 
         Returns:
             bool: True if one or more non-leaf mappings are pivoted, False otherwise
         """
-        return any(is_pivoted(m.position) for m in self._mappings[: self._value_row()])
+        return any(is_pivoted(m.position) for m in self._mappings[: _value_row(self._mappings)])
 
 
 _names = {
@@ -361,3 +361,104 @@ _names = {
     ToolFeatureRequiredFlagMapping: "Required flags",
     ToolMapping: "Tools",
 }
+
+
+def _value_row(mappings):
+    """
+    Returns the last relevant row, i.e. the one that contains the leaf mapping.
+
+    Args:
+        mappings (list of Mapping): flattened mappings
+
+    Returns:
+        int: row index
+    """
+    return len(mappings) - 1 - len(list(takewhile(lambda m: m.position == Position.hidden, reversed(mappings))))
+
+
+def _propose_toggled_pivot(mappings, target_index):
+    """Proposes new positions after toggling a mapping's pivoted status.
+
+    Args:
+        mappings (list of Mapping): flattened mappings
+        target_index (int): target mapping's index
+
+    Returns:
+        list of Position: positions after toggling
+    """
+    previous_position = mappings[target_index].position
+    if previous_position in (Position.hidden, Position.table_name):
+        previous_position = 0
+    new_position = -previous_position - 1
+    positions = [m.position for m in mappings]
+    if new_position < 0:
+        positions[target_index] = new_position
+        _remove_column(positions, previous_position)
+    else:
+        _insert_into_position(positions, target_index, new_position)
+    return positions
+
+
+def _propose_positions(mappings, target_index, new_position):
+    """Proposes new positions.
+
+    Args:
+        mappings (list of Mapping): flattened mappings
+        target_index (int): index of mapping to modify
+        new_position (Position or int): mapping's new position
+
+    Returns:
+        list of Position: positions after modification
+    """
+    positions = [m.position for m in mappings]
+    if target_index == _value_row(mappings):
+        _turn_off_pivots(positions)
+    if isinstance(new_position, int):
+        _insert_into_position(positions, target_index, new_position)
+    else:
+        positions[target_index] = new_position
+    return positions
+
+
+def _turn_off_pivots(positions):
+    """Toggles pivoted positions.
+
+    Args:
+        positions (list of Position): proposed positions
+    """
+    for row, position in enumerate(positions):
+        if is_pivoted(position):
+            new_position = -position - 1
+            _insert_into_position(positions, row, new_position)
+
+
+def _insert_into_position(positions, target_index, new_position):
+    """Inserts a position.
+
+    Args:
+        positions (list of Position): proposed positions
+        target_index (int): index of position to modify
+        new_position (Position or int): new position
+    """
+    for i in range(len(positions)):
+        if i == target_index:
+            continue
+        if positions[i] == new_position:
+            direction = 1 if new_position >= 0 else -1
+            _insert_into_position(positions, i, new_position + direction)
+            break
+    positions[target_index] = new_position
+
+
+def _remove_column(positions, column):
+    """Removes a regular column position.
+
+    Args:
+        positions (list of Position): proposed positions
+
+    """
+    new_position = column + 1
+    for i in range(len(positions)):
+        if positions[i] == new_position:
+            _insert_into_position(positions, i, new_position)
+            break
