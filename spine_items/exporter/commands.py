@@ -154,28 +154,26 @@ class SetFixedTitle(QUndoCommand):
         self._model.set_fixed_title(self._previous_title)
 
 
-class SetMappingPosition(QUndoCommand):
-    def __init__(self, model, mapping_name, row, position, previous_position):
+class SetMappingPositions(QUndoCommand):
+    def __init__(self, model, mapping_name, positions, previous_positions):
         """
         Args:
             model (MappingTableModel): mapping model
             mapping_name (str): mapping's name
-            row (int): model row
-            position (int, Position, optional): mapping's new position
-            previous_position (int, Position, optional): previous position
+            positions (list of Position): new positions
+            previous_positions (list of Position): previous positions
         """
         super().__init__("change mapping position")
         self._mapping_table_model = model
         self._mapping_name = mapping_name
-        self._row = row
-        self._position = position
-        self._previous_position = previous_position
+        self._positions = positions
+        self._previous_positions = previous_positions
 
     def redo(self):
-        self._mapping_table_model.set_position(self._position, self._row, self._mapping_name)
+        self._mapping_table_model.set_positions(self._positions, self._mapping_name)
 
     def undo(self):
-        self._mapping_table_model.set_position(self._previous_position, self._row, self._mapping_name)
+        self._mapping_table_model.set_positions(self._previous_positions, self._mapping_name)
 
 
 class SetMappingProperty(QUndoCommand):
@@ -185,7 +183,7 @@ class SetMappingProperty(QUndoCommand):
 
         Args:
             command_name (str)
-            setter (function): setter function
+            setter (Callable): setter function
             mapping_name (str): mapping's name
             row (int): model row
             value (str): mapping's new value for the property

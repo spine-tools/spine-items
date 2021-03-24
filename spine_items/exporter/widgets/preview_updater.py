@@ -16,7 +16,7 @@ Contains :class:`PreviewUpdater`.
 """
 from copy import deepcopy
 from time import monotonic
-from PySide2.QtCore import QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide2.QtWidgets import QFileDialog
 from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping
@@ -49,7 +49,6 @@ class PreviewUpdater:
         self._ui.database_url_combo_box.setModel(self._url_model)
         self._mapping_list_model = mapping_list_model
         self._mapping_list_model.rowsAboutToBeRemoved.connect(self._remove_mappings)
-        self._mapping_list_model.rowsInserted.connect(self._add_mappings)
         self._mapping_list_model.dataChanged.connect(self._rename_mapping)
         self._mapping_table_model = mapping_table_model
         self._mapping_table_model.dataChanged.connect(lambda *_: self._reload_current_mapping())
@@ -70,6 +69,7 @@ class PreviewUpdater:
         self._ui.max_preview_rows_spin_box.valueChanged.connect(self._reload_preview)
         self._ui.max_preview_tables_spin_box.valueChanged.connect(self._reload_preview)
         self._ui.load_url_from_fs_button.clicked.connect(self._load_url_from_filesystem)
+        self._ui.mapping_list.selectionModel().currentChanged.connect(self._change_selected_table)
         self._enable_controls()
         if self._url_model.rowCount() > 0:
             self._reload_preview()
@@ -96,6 +96,31 @@ class PreviewUpdater:
             table_name = current.data()
             mapping_name = current.parent().data()
             self._preview_table_model.reset(mapping_name, table_name, table)
+
+    @Slot(QModelIndex, QModelIndex)
+    def _change_selected_table(self, current, previous):
+        """
+        Changes selected table on the tree view after user has selected another mapping.
+
+        Args:
+            current (QModelIndex): index to selected mapping on mapping list
+            previous (QModelIndex): index to previously selected mapping on mapping list
+        """
+        current_preview = self._ui.preview_tree_view.selectionModel().currentIndex()
+        mapping_name = current.data()
+        if current_preview.parent().data() == mapping_name:
+            return
+        for row in range(self._preview_tree_model.rowCount()):
+            index = self._preview_tree_model.index(row, 0)
+            if index.data() == mapping_name:
+                if self._preview_tree_model.rowCount(index) > 0:
+                    table_index = self._preview_tree_model.index(0, 0, index)
+                    self._ui.preview_tree_view.selectionModel().setCurrentIndex(
+                        table_index, QItemSelectionModel.ClearAndSelect
+                    )
+                    return
+                self._ui.preview_tree_view.selectionModel().setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+                return
 
     @Slot(QModelIndex, QModelIndex, list)
     def _expand_tree_after_table_change(self, top_left, bottom_right, roles):
@@ -169,22 +194,6 @@ class PreviewUpdater:
             self._preview_tree_model.remove_mapping(removed_name)
             self._stamps.pop((self._current_url, removed_name), None)
 
-    @Slot(QModelIndex, int, int)
-    def _add_mappings(self, parent, first, last):
-        """
-        Adds mappings to the preview models.
-
-        Args:
-            parent (QModelIndex): parent index, ignored
-            first (int): first mapping list row that has been added
-            last (int): last mapping list row that has been added
-        """
-        if self._current_url is None:
-            return
-        for row in range(first, last + 1):
-            new_name = self._mapping_list_model.index(row, 0).data()
-            self._load_preview_data(new_name)
-
     @Slot(QModelIndex, QModelIndex, list)
     def _rename_mapping(self, top_left, bottom_right, roles):
         """
@@ -256,6 +265,8 @@ class PreviewUpdater:
                 self._stamps[worker_id] = current_stamp
             return
         self._preview_tree_model.add_or_update_tables(mapping_name, data)
+        mapping_index = self._ui.mapping_list.selectionModel().currentIndex()
+        self._change_selected_table(mapping_index, mapping_index)
 
     @Slot(bool)
     def _load_url_from_filesystem(self, _):
