@@ -15,7 +15,6 @@ Exporter's execute kernel (do_work), as target for a multiprocess.Process
 :authors: A. Soininen (VTT)
 :date:    14.12.2020
 """
-from copy import copy
 from pathlib import Path
 from spinedb_api.spine_io.exporters.writer import write, WriterException
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
@@ -63,8 +62,8 @@ def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databas
                 if file.exists():
                     file.unlink()
                 writer = make_writer(specification.output_format, out_path)
-                for mapping_specification in specification.mapping_specifications().values():
-                    write(database_map, writer, mapping_specification.root)
+                mappings = (m.root for m in specification.mapping_specifications().values())
+                write(database_map, writer, *mappings)
             except (PermissionError, WriterException) as e:
                 logger.msg_error.emit(str(e))
                 if cancel_on_error:
