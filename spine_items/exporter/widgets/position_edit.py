@@ -38,7 +38,6 @@ class PositionEditDelegate(QStyledItemDelegate):
 
     def setEditorData(self, editor, index):
         model = index.model()
-        editor.set_table_name_item_disabled(model.has_table_name())
         editor.set(index.data())
 
 
@@ -54,15 +53,6 @@ class _PositionEdit(QComboBox):
         self.setInsertPolicy(QComboBox.NoInsert)
         self.currentTextChanged.connect(self._insert)
         self.setLineEdit(SelectingLineEdit())
-
-    def set_table_name_item_disabled(self, disabled):
-        """Disables or enables the 'table name' item.
-
-        Args:
-            disabled (bool): True to disable the item, False to enable it
-        """
-        model = self.model()
-        model.item(len(_positions) - 1).setEnabled(not disabled)
 
     @Slot(str)
     def _insert(self, text):
