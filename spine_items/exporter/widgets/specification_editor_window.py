@@ -148,14 +148,6 @@ class SpecificationEditorWindow(QMainWindow):
         self.setWindowTitle("Exporter specification editor[*]" + (f"   -- {item.name} --" if item is not None else ""))
         central_widget = self.takeCentralWidget()
         central_widget.deleteLater()
-        self._preview_updater = PreviewUpdater(
-            self,
-            self._ui,
-            url_model,
-            self._mapping_list_model,
-            self._mapping_model,
-            self._toolbox.project().project_dir,
-        )
         self._specification_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._specification_toolbar)
         self._populate_toolbar_menu()
@@ -206,6 +198,14 @@ class SpecificationEditorWindow(QMainWindow):
         if specification is None:
             self._mapping_list_model.extend(_new_mapping_specification(MappingType.objects))
         self._undo_stack.cleanChanged.connect(lambda clean: self.setWindowModified(not clean))
+        self._preview_updater = PreviewUpdater(
+            self,
+            self._ui,
+            url_model,
+            self._mapping_list_model,
+            self._mapping_model,
+            self._toolbox.project().project_dir,
+        )
 
     def _restore_dock_widgets(self):
         """Docks all floating and or hidden QDockWidgets back to the window."""
