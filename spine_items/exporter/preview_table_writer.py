@@ -36,7 +36,7 @@ class TableWriter(Writer):
     def finish_table(self):
         self._current_table = None
 
-    def start_table(self, table_name):
+    def start_table(self, table_name, title_key):
         self._table_count += 1
         self._current_table = self._tables.setdefault(table_name, list())
         return self._table_count <= self._max_tables
