@@ -35,7 +35,7 @@
      <x>0</x>
      <y>0</y>
      <width>1108</width>
-     <height>21</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>
@@ -484,17 +484,6 @@
     </layout>
    </widget>
   </widget>
-  <action name="save_and_close_action">
-   <property name="text">
-    <string>Save and close</string>
-   </property>
-   <property name="toolTip">
-    <string>Save specification and close the editor</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Return</string>
-   </property>
-  </action>
  </widget>
  <customwidgets>
   <customwidget>

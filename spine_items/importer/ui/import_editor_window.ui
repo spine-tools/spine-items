@@ -48,7 +48,6 @@
     <addaction name="export_mappings_action"/>
     <addaction name="import_mappings_action"/>
     <addaction name="separator"/>
-    <addaction name="actionSaveAndClose"/>
    </widget>
    <widget class="QMenu" name="edit_menu">
     <property name="title">
@@ -604,14 +603,6 @@
    </property>
    <property name="text">
     <string>Import mappings...</string>
-   </property>
-  </action>
-  <action name="actionSaveAndClose">
-   <property name="text">
-    <string>Save and close</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Return</string>
    </property>
   </action>
   <action name="actionLoad_file">

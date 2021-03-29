@@ -185,7 +185,6 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionSaveAndClose"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -308,7 +307,7 @@
     <set>Qt::BottomDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Select a program file to edit its contents...</string>
+    <string/>
    </property>
    <attribute name="dockWidgetArea">
     <number>8</number>
@@ -415,14 +414,6 @@
     </layout>
    </widget>
   </widget>
-  <action name="actionSaveAndClose">
-   <property name="text">
-    <string>Save and close</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Return</string>
-   </property>
-  </action>
   <action name="actionNew_main_program_file">
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">

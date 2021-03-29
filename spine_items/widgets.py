@@ -28,9 +28,9 @@ from PySide2.QtWidgets import (
     QMessageBox,
     QAction,
     QMenu,
+    QLineEdit,
 )
 from PySide2.QtGui import QDrag, QGuiApplication, QKeySequence, QIcon
-from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
 from spinetoolbox.helpers import ensure_window_is_on_screen, CharIconEngine
 from .commands import ChangeSpecPropertyCommand
 
@@ -180,8 +180,8 @@ class SpecNameDescriptionToolbar(QToolBar):
         self._undo_stack = undo_stack
         self._current_name = ""
         self._current_description = ""
-        self._line_edit_name = PropertyQLineEdit()
-        self._line_edit_description = PropertyQLineEdit()
+        self._line_edit_name = QLineEdit()
+        self._line_edit_description = QLineEdit()
         self._line_edit_name.setPlaceholderText("Enter specification name here...")
         self._line_edit_description.setPlaceholderText("Enter specification description here...")
         self.setAllowedAreas(Qt.TopToolBarArea)

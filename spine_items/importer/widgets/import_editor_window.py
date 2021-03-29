@@ -109,17 +109,19 @@ class ImportEditorWindow(QMainWindow):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Import Editor[*]")
         self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self._ui.statusbar.addPermanentWidget(self._button_box)
         self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(False)
         self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
+        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
         self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
         self._ui.actionLoad_file.triggered.connect(self._show_open_file_dialog)
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
-        self._ui.actionSaveAndClose.triggered.connect(self.save_and_close)
         self.connection_failed.connect(self.show_error)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
         if filepath:
@@ -136,14 +138,14 @@ class ImportEditorWindow(QMainWindow):
         undo_action.setShortcuts(QKeySequence.Undo)
         redo_action.setShortcuts(QKeySequence.Redo)
         menu.addActions([redo_action, undo_action])
-        menu.addSeparator()
-        menu.addAction(self._ui.actionSaveAndClose)
         self._ui.menubar.hide()
         self.addAction(self._spec_toolbar.menu_action)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
 
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):

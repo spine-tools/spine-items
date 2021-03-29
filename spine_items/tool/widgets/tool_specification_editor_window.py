@@ -114,11 +114,11 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.populate_outputfiles_list(outputfiles)
         if self.includes_main_path is not None:
             self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
-        self._change_args_timer = QTimer(self)
-        self._change_args_timer.setInterval(200)
         # Add button box
         self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(False)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
         self.ui.statusbar.addPermanentWidget(self._button_box)
         self.ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self.ui.statusbar.setStyleSheet(STATUSBAR_SS)
@@ -141,8 +141,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
         undo_action.setShortcuts(QKeySequence.Undo)
         redo_action.setShortcuts(QKeySequence.Redo)
         menu.addActions([redo_action, undo_action])
-        menu.addSeparator()
-        menu.addAction(self.ui.actionSaveAndClose)
         self.ui.menubar.hide()
         self.addAction(self._spec_toolbar.menu_action)
 
@@ -310,6 +308,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.actionAdd_output_files.triggered.connect(self.add_outputfiles)
         self.ui.actionRemove_selected_output_files.triggered.connect(self.remove_outputfiles)
         self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
+        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
         self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
         # Enable removing items from QTreeViews by pressing the Delete key
         self.ui.treeView_programfiles.del_key_pressed.connect(self.remove_program_files_with_del)
@@ -317,10 +316,8 @@ class ToolSpecificationEditorWindow(QMainWindow):
         # Push undo commands
         self.ui.comboBox_tooltype.activated.connect(self._push_change_tooltype_command)
         self.ui.checkBox_execute_in_work.toggled.connect(self._push_change_execute_in_work_command)
-        self.ui.lineEdit_args.textChanged.connect(self._change_args_timer.start)
-        self._change_args_timer.timeout.connect(self._push_change_args_command)
+        self.ui.lineEdit_args.editingFinished.connect(self._push_change_args_command)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
-        self.ui.actionSaveAndClose.triggered.connect(self.save_and_close)
         # Selection changed
         self.ui.treeView_programfiles.selectionModel().selectionChanged.connect(
             self._handle_programfile_selection_changed
@@ -330,6 +327,8 @@ class ToolSpecificationEditorWindow(QMainWindow):
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
 
     @Slot(int)
     def _push_change_tooltype_command(self, index):
@@ -447,7 +446,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.textEdit_program.setDocument(QTextDocument())
         self.ui.textEdit_program.setEnabled(False)
         self.ui.toolButton_save_program.setEnabled(False)
-        self.ui.dockWidget_program.setWindowTitle("Select a program file to edit its contents...")
+        self.ui.dockWidget_program.setWindowTitle("")
 
     def _load_programfile_in_editor(self, file_path):
         self._curren_programfile_path = file_path
@@ -642,8 +641,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
     @Slot("QModelIndex")
     def open_program_file(self, index):
         """Open program file in default program."""
-        if not index.isValid():
-            self._toolbox.msg_error.emit("Selected index not valid")
+        if not index.isValid() or self.programfiles_model.rowCount(index):
             return
         program_file = self._programfile_path_from_index(index)
         _, ext = os.path.splitext(program_file)

@@ -68,7 +68,7 @@ class SpecificationEditorWindow(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
         self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
         self._ui.statusbar.addPermanentWidget(self._button_box)
         self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
@@ -92,8 +92,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
         self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
         self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
+        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
-        self._ui.actionSaveAndClose.triggered.connect(self.save_and_close)
 
     def _populate_main_menu(self):
         menu = self._spec_toolbar.menu
@@ -102,14 +102,14 @@ class SpecificationEditorWindow(QMainWindow):
         undo_action.setShortcuts(QKeySequence.Undo)
         redo_action.setShortcuts(QKeySequence.Redo)
         menu.addActions([redo_action, undo_action])
-        menu.addSeparator()
-        menu.addAction(self._ui.actionSaveAndClose)
         self._ui.menubar.hide()
         self.addAction(self._spec_toolbar.menu_action)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
 
     @Slot(str)
     def _change_filter_widget(self, filter_name):

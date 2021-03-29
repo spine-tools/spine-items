@@ -189,15 +189,17 @@ class SpecificationEditorWindow(QMainWindow):
         if self._mapping_list_model.rowCount() > 0:
             self._ui.mapping_list.setCurrentIndex(self._mapping_list_model.index(0, 0))
         self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(False)
         self._ui.status_bar.addPermanentWidget(self._button_box)
         self._ui.status_bar.layout().setContentsMargins(6, 6, 6, 6)
-        self._ui.save_and_close_action.triggered.connect(self._save_and_close)
-        self._button_box.accepted.connect(self._save_and_close)
-        self._button_box.rejected.connect(self._discard_and_close)
+        self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self._save_and_close)
+        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self._discard_and_close)
+        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
         if specification is None:
             self._mapping_list_model.extend(_new_mapping_specification(MappingType.objects))
-        self._undo_stack.cleanChanged.connect(lambda clean: self.setWindowModified(not clean))
+        self._undo_stack.cleanChanged.connect(self._update_window_modified)
         self._preview_updater = PreviewUpdater(
             self,
             self._ui,
@@ -206,6 +208,12 @@ class SpecificationEditorWindow(QMainWindow):
             self._mapping_model,
             self._toolbox.project().project_dir,
         )
+
+    @Slot(bool)
+    def _update_window_modified(self, clean):
+        self.setWindowModified(not clean)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
 
     def _restore_dock_widgets(self):
         """Docks all floating and or hidden QDockWidgets back to the window."""
@@ -729,8 +737,6 @@ class SpecificationEditorWindow(QMainWindow):
     def _populate_toolbar_menu(self):
         menu = self._specification_toolbar.menu
         menu.addActions([self._undo_action, self._redo_action])
-        menu.addSeparator()
-        menu.addAction(self._ui.save_and_close_action)
 
     def closeEvent(self, event):
         """Handles close window.

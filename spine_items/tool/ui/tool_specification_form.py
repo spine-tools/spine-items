@@ -37,8 +37,6 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(991, 829)
         MainWindow.setDockNestingEnabled(True)
-        self.actionSaveAndClose = QAction(MainWindow)
-        self.actionSaveAndClose.setObjectName(u"actionSaveAndClose")
         self.actionNew_main_program_file = QAction(MainWindow)
         self.actionNew_main_program_file.setObjectName(u"actionNew_main_program_file")
         icon = QIcon()
@@ -295,7 +293,6 @@ class Ui_MainWindow(object):
         self.menuEdit.addAction(self.actionRemove_selected_opt_input_files)
         self.menuEdit.addAction(self.actionAdd_output_files)
         self.menuEdit.addAction(self.actionRemove_selected_output_files)
-        self.menuFile.addAction(self.actionSaveAndClose)
 
         self.retranslateUi(MainWindow)
 
@@ -304,10 +301,6 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Tool Specification Editor", None))
-        self.actionSaveAndClose.setText(QCoreApplication.translate("MainWindow", u"Save and close", None))
-#if QT_CONFIG(shortcut)
-        self.actionSaveAndClose.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Return", None))
-#endif // QT_CONFIG(shortcut)
         self.actionNew_main_program_file.setText(QCoreApplication.translate("MainWindow", u"New main program file", None))
 #if QT_CONFIG(tooltip)
         self.actionNew_main_program_file.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Create new main program file</p></body></html>", None))
@@ -398,7 +391,7 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.dockWidget_program_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Program files", None))
         self.dockWidget_io_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Input & output files", None))
-        self.dockWidget_program.setWindowTitle(QCoreApplication.translate("MainWindow", u"Select a program file to edit its contents...", None))
+        self.dockWidget_program.setWindowTitle("")
         self.label.setText(QCoreApplication.translate("MainWindow", u"Main program directory:", None))
         self.label_mainpath.setText("")
 #if QT_CONFIG(tooltip)
