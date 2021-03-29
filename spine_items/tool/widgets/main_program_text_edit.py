@@ -20,8 +20,18 @@ from pygments.styles import get_style_by_name
 from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 from pygments.token import Token
-from PySide2.QtWidgets import QPlainTextEdit, QPlainTextDocumentLayout
-from PySide2.QtGui import QSyntaxHighlighter, QTextCharFormat, QBrush, QColor, QFontMetrics, QFontDatabase, QFont
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QPlainTextEdit, QPlainTextDocumentLayout, QAction
+from PySide2.QtGui import (
+    QSyntaxHighlighter,
+    QTextCharFormat,
+    QBrush,
+    QColor,
+    QFontMetrics,
+    QFontDatabase,
+    QFont,
+    QKeySequence,
+)
 
 
 class CustomSyntaxHighlighter(QSyntaxHighlighter):
@@ -65,9 +75,13 @@ class MainProgramTextEdit(QPlainTextEdit):
         self._highlighter.set_style(style)
         font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
         self.setFont(font)
-        self.setTabStopDistance(QFontMetrics(font).horizontalAdvance(4 * " "))
         foreground_color = style.styles[Token.Text]
         self.setStyleSheet(f"QPlainTextEdit {{background-color: {style.background_color}; color: {foreground_color};}}")
+        self.save_action = QAction(self)
+        self.save_action.setShortcut(QKeySequence.Save)
+        self.save_action.setShortcutContext(Qt.WidgetShortcut)
+        self.save_action.setEnabled(False)
+        self.addAction(self.save_action)
 
     def insertFromMimeData(self, source):
         if source.hasText():
@@ -86,3 +100,5 @@ class MainProgramTextEdit(QPlainTextEdit):
         super().setDocument(doc)
         self._highlighter.setDocument(doc)
         doc.setDefaultFont(self.font())
+        self.setTabStopDistance(QFontMetrics(self.font()).horizontalAdvance(4 * " "))
+        doc.modificationChanged.connect(self.save_action.setEnabled)

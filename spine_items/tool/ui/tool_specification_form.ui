@@ -397,15 +397,8 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
          <property name="text">
-          <string>...</string>
-         </property>
-         <property name="icon">
-          <iconset resource="../../ui/resources/resources_icons.qrc">
-           <normaloff>:/icons/save.svg</normaloff>:/icons/save.svg</iconset>
+          <string>Save program file</string>
          </property>
         </widget>
        </item>

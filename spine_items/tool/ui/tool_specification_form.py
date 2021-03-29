@@ -265,9 +265,6 @@ class Ui_MainWindow(object):
         self.toolButton_save_program = QToolButton(self.dockWidgetContents)
         self.toolButton_save_program.setObjectName(u"toolButton_save_program")
         self.toolButton_save_program.setEnabled(False)
-        icon5 = QIcon()
-        icon5.addFile(u":/icons/save.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_save_program.setIcon(icon5)
 
         self.horizontalLayout_6.addWidget(self.toolButton_save_program)
 
@@ -394,9 +391,6 @@ class Ui_MainWindow(object):
         self.dockWidget_program.setWindowTitle("")
         self.label.setText(QCoreApplication.translate("MainWindow", u"Main program directory:", None))
         self.label_mainpath.setText("")
-#if QT_CONFIG(tooltip)
-        self.toolButton_save_program.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Save</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolButton_save_program.setText(QCoreApplication.translate("MainWindow", u"...", None))
+        self.toolButton_save_program.setText(QCoreApplication.translate("MainWindow", u"Save program file", None))
     # retranslateUi
 

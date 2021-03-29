@@ -301,6 +301,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.treeView_programfiles.files_dropped.connect(self.add_dropped_program_files)
         self.ui.treeView_programfiles.doubleClicked.connect(self.open_program_file)
         self.ui.toolButton_save_program.clicked.connect(self.save_program_file)
+        self.ui.textEdit_program.save_action.triggered.connect(self.save_program_file)
         self.ui.actionAdd_input_files.triggered.connect(self.add_inputfiles)
         self.ui.actionRemove_selected_input_files.triggered.connect(self.remove_inputfiles)
         self.ui.actionAdd_opt_input_files.triggered.connect(self.add_inputfiles_opt)
