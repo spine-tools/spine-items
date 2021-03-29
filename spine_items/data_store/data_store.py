@@ -353,6 +353,7 @@ class DataStore(ProjectItem):
         if sa_url is not None:
             db_url_codenames = {sa_url: self.name}
             self._toolbox.db_mngr.open_db_editor(db_url_codenames)
+        self._check_notifications()
 
     def _open_url_in_new_db_editor(self, checked=False):
         sa_url = self.sql_alchemy_url()
@@ -393,6 +394,7 @@ class DataStore(ProjectItem):
                 return
             sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
+        self._check_notifications()
 
     def update_name_label(self):
         """Update Data Store tab name label. Used only when renaming project items."""
@@ -416,6 +418,13 @@ class DataStore(ProjectItem):
             self.add_notification(
                 "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
             )
+            return
+        db = self._url["database"]
+        if db.lower().endswith(".sqlite") and os.path.isfile(db):
+            if os.path.getsize(db) == 0:
+                self.add_notification("This Data Store is pointing to an empty SQLITE file. "
+                                      "Please click 'New Spine db' or 'Open editor...' to initialize it.")
+            return
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
