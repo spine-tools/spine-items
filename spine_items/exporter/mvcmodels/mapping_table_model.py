@@ -28,6 +28,7 @@ from spinedb_api.export_mapping.export_mapping import (
     FeatureParameterDefinitionMapping,
     ObjectClassMapping,
     ObjectGroupMapping,
+    ObjectGroupObjectMapping,
     ObjectMapping,
     ParameterDefaultValueMapping,
     ParameterDefaultValueIndexMapping,
@@ -92,10 +93,7 @@ class MappingTableModel(QAbstractTableModel):
                     return str(position + 1)
                 if is_pivoted(position):
                     return str(-position)
-                return {
-                    Position.hidden: "hidden",
-                    Position.table_name: "table name",
-                }.get(position, "unrecognized")
+                return {Position.hidden: "hidden", Position.table_name: "table name"}.get(position, "unrecognized")
             if column == 3:
                 return self._mappings[row].header
             if column == 4:
@@ -336,6 +334,7 @@ _names = {
     FeatureParameterDefinitionMapping: "Parameter definitions",
     ObjectClassMapping: "Object classes",
     ObjectGroupMapping: "Object groups",
+    ObjectGroupObjectMapping: "Objects",
     ObjectMapping: "Objects",
     ParameterDefaultValueMapping: "Default values",
     ParameterDefaultValueIndexMapping: "Default value indexes",

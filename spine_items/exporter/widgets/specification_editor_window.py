@@ -759,7 +759,7 @@ def _new_mapping_specification(mapping_type):
     if mapping_type == MappingType.objects:
         return MappingSpecification(mapping_type, False, False, object_export(0, 1))
     if mapping_type == MappingType.object_groups:
-        return MappingSpecification(mapping_type, False, False, object_group_export(0, 2, 1))
+        return MappingSpecification(mapping_type, False, False, object_group_export(0, 1, 2))
     if mapping_type == MappingType.object_group_parameter_values:
         return MappingSpecification(
             mapping_type, False, False, object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, 5)
