@@ -50,6 +50,7 @@ class PreviewUpdater:
         self._mapping_list_model = mapping_list_model
         self._mapping_list_model.rowsAboutToBeRemoved.connect(self._remove_mappings)
         self._mapping_list_model.dataChanged.connect(self._rename_mapping)
+        self._mapping_list_model.dataChanged.connect(self._enable_mapping)
         self._mapping_table_model = mapping_table_model
         self._mapping_table_model.dataChanged.connect(lambda *_: self._reload_current_mapping())
         self._mapping_table_model.modelReset.connect(lambda: self._reload_current_mapping())
@@ -78,9 +79,10 @@ class PreviewUpdater:
         """Sets the current url and reloads preview."""
         self._current_url = self._ui.database_url_combo_box.currentText()
         self._stamps.clear()
-        for row in range(self._mapping_list_model.rowCount()):
+        for row in range(1, self._mapping_list_model.rowCount()):
             index = self._mapping_list_model.index(row, 0)
-            self._load_preview_data(index.data())
+            if index.data(Qt.CheckStateRole) == Qt.Checked:
+                self._load_preview_data(index.data())
 
     @Slot(QModelIndex, QModelIndex)
     def _change_table(self, current, previous):
@@ -96,6 +98,8 @@ class PreviewUpdater:
             table_name = current.data()
             mapping_name = current.parent().data()
             self._preview_table_model.reset(mapping_name, table_name, table)
+        else:
+            self._preview_table_model.clear()
 
     @Slot(QModelIndex, QModelIndex)
     def _change_selected_table(self, current, previous):
@@ -106,6 +110,8 @@ class PreviewUpdater:
             current (QModelIndex): index to selected mapping on mapping list
             previous (QModelIndex): index to previously selected mapping on mapping list
         """
+        if current.data(Qt.CheckStateRole) == Qt.Unchecked:
+            return
         current_preview = self._ui.preview_tree_view.selectionModel().currentIndex()
         mapping_name = current.data()
         if current_preview.parent().data() == mapping_name:
@@ -190,7 +196,10 @@ class PreviewUpdater:
         if self._current_url is None:
             return
         for row in range(first, last + 1):
-            removed_name = self._mapping_list_model.index(row, 0).data()
+            index = self._mapping_list_model.index(row, 0)
+            if index.data(Qt.CheckStateRole) == Qt.Unchecked:
+                continue
+            removed_name = index.data()
             self._preview_tree_model.remove_mapping(removed_name)
             self._stamps.pop((self._current_url, removed_name), None)
 
@@ -208,16 +217,45 @@ class PreviewUpdater:
             return
         mapping_list_model = self._ui.mapping_list.model()
         make_index = mapping_list_model.index
-        names = [make_index(row, 0).data() for row in range(mapping_list_model.rowCount())]
+        names = [make_index(row, 0).data() for row in range(1, mapping_list_model.rowCount())]
         old_name, _new_name = self._preview_tree_model.rename_mappings(names)
         self._stamps.pop((self._current_url, old_name), None)
+
+    @Slot(QModelIndex, QModelIndex, list)
+    def _enable_mapping(self, top_left, bottom_right, roles):
+        """
+        Removes/adds mappings as they are enabled or disabled.
+
+        Args:
+            top_left (QModelIndex): top left corner of modified mappings' in mapping list model
+            bottom_right (QModelIndex): top left corner of modified mappings' in mapping list model
+            roles (list of int): changed data's role
+        """
+        if Qt.CheckStateRole not in roles or self._current_url is None:
+            return
+        first = top_left.row()
+        if first == 0:
+            first = 1
+        last = bottom_right.row()
+        for row in range(first, last + 1):
+            index = self._mapping_list_model.index(row, 0)
+            enabled = index.data(Qt.CheckStateRole) == Qt.Checked
+            name = index.data()
+            if not enabled and self._preview_tree_model.has_name(name):
+                self._preview_tree_model.remove_mapping(name)
+                self._stamps.pop((self._current_url, name), None)
+            elif not self._preview_tree_model.has_name(name):
+                self._load_preview_data(name)
 
     def _reload_current_mapping(self):
         """Reloads mapping that is currently selected on mapping list."""
         if self._current_url is None:
             return
         index = self._ui.mapping_list.currentIndex()
-        if not index.isValid():
+        if not index.isValid() or index.row() == 0:
+            return
+        if index.data(Qt.CheckStateRole) == Qt.Unchecked:
+            self._ui.preview_tree_view.selectionModel().setCurrentIndex(QModelIndex(), QItemSelectionModel.Clear)
             return
         mapping_name = index.data()
         self._load_preview_data(mapping_name)

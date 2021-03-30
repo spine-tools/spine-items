@@ -15,9 +15,11 @@ Contains Exporter's specifications.
 :authors: A. Soininen (VTT)
 :date:    11.12.2020
 """
+from dataclasses import dataclass
 from enum import Enum, unique
 import json
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
+from spinedb_api.mapping import Mapping
 from spinedb_api.mapping import to_dict as mapping_to_dict
 from spinedb_api.export_mapping.export_mapping import from_dict as mapping_from_dict
 from .item_info import ItemInfo
@@ -49,19 +51,13 @@ class OutputFormat(Enum):
     EXCEL = "Excel"
 
 
+@dataclass
 class MappingSpecification:
-    def __init__(self, type_, export_objects_flag, use_fixed_table_name_flag, root):
-        """
-        Args:
-            type_ (MappingType): mapping's type
-            export_objects_flag (bool): export relationship's objects flag
-            use_fixed_table_name_flag (bool): use fixed table name flag
-            root (Mapping): root mapping
-        """
-        self.type = type_
-        self.export_objects_flag = export_objects_flag
-        self.use_fixed_table_name_flag = use_fixed_table_name_flag
-        self.root = root
+    type: MappingType
+    enabled: bool
+    export_object_flag: bool
+    use_fixed_table_name_flag: bool
+    root: Mapping
 
 
 class Specification(ProjectItemSpecification):
@@ -104,6 +100,15 @@ class Specification(ProjectItemSpecification):
         """
         return self._mapping_specifications
 
+    def enabled_specifications(self):
+        """
+        Returns enabled export mapping specifications.
+
+        Returns:
+            dict: mapping specifications
+        """
+        return {name: spec for name, spec in self._mapping_specifications.items() if spec.enabled}
+
     def root_mapping(self, name):
         """
         Returns root mapping for given name.
@@ -144,10 +149,14 @@ class Specification(ProjectItemSpecification):
         """
         mappings = dict()
         for name, mapping_spec in self._mapping_specifications.items():
-            spec_dict = {"type": mapping_spec.type.value, "mapping": mapping_to_dict(mapping_spec.root)}
+            spec_dict = {
+                "type": mapping_spec.type.value,
+                "mapping": mapping_to_dict(mapping_spec.root),
+                "enabled": mapping_spec.enabled,
+                "use_fixed_table_name": mapping_spec.use_fixed_table_name_flag,
+            }
             if mapping_spec.type in (MappingType.relationships,):
                 spec_dict["export_objects_flag"] = mapping_spec.export_objects_flag
-            spec_dict["use_fixed_table_name"] = mapping_spec.use_fixed_table_name_flag
             mappings[name] = spec_dict
         return {
             "item_type": ItemInfo.item_type(),
@@ -171,6 +180,7 @@ class Specification(ProjectItemSpecification):
         mapping_specifications = {
             name: MappingSpecification(
                 MappingType(spec_dict["type"]),
+                spec_dict.get("enabled", True),
                 spec_dict.get("export_objects_flag", False),
                 spec_dict.get("use_fixed_table_name", False),
                 mapping_from_dict(spec_dict["mapping"]),

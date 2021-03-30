@@ -52,8 +52,11 @@ from ...commands import RenameMapping
 from ...widgets import prompt_to_save_changes, restore_ui, save_ui, SpecNameDescriptionToolbar
 from .preview_updater import PreviewUpdater
 from ..commands import (
+    DisableAllMappings,
+    EnableAllMappings,
     NewMapping,
     RemoveMapping,
+    SetMappingEnabled,
     SetMappingType,
     SetExportFormat,
     SetExportObjectsFlag,
@@ -139,6 +142,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._mapping_list_model.rowsInserted.connect(self._select_inserted_row)
         self._mapping_list_model.rowsRemoved.connect(self._check_for_empty_mappings_list)
         self._mapping_list_model.rename_requested.connect(self._rename_mapping)
+        self._mapping_list_model.mapping_enabled_state_change_requested.connect(self._set_mapping_enabled)
+        self._mapping_list_model.set_all_mappings_enabled_requested.connect(self._enable_disable_all_mappings)
         self._mapping_model = MappingTableModel("", None, self._undo_stack, self)
 
         from ..ui.specification_editor import Ui_MainWindow
@@ -302,7 +307,7 @@ class SpecificationEditorWindow(QMainWindow):
             current (QModelIndex): current mapping on mapping name list
             previous (QModelIndex): previous mapping name
         """
-        if not current.isValid():
+        if not current.isValid() or current.row() == 0:
             self._mapping_model.set_mapping("", None)
             return
         mapping_type = current.data(MappingListModel.MAPPING_TYPE_ROLE)
@@ -395,11 +400,17 @@ class SpecificationEditorWindow(QMainWindow):
             return
         indexes = selection_model.selectedIndexes()
         if len(indexes) == 1:
-            self._undo_stack.push(RemoveMapping(indexes[0].row(), self._mapping_list_model))
+            row = indexes[0].row()
+            if row == 0:
+                return
+            self._undo_stack.push(RemoveMapping(row, self._mapping_list_model))
         else:
             self._undo_stack.beginMacro("remove mappings")
             for index in indexes:
-                self._undo_stack.push(RemoveMapping(index.row(), self._mapping_list_model))
+                row = index.row()
+                if row == 0:
+                    continue
+                self._undo_stack.push(RemoveMapping(row, self._mapping_list_model))
             self._undo_stack.endMacro()
 
     @Slot(QModelIndex, int, int)
@@ -424,6 +435,27 @@ class SpecificationEditorWindow(QMainWindow):
             new_name (str): mapping's new name
         """
         self._undo_stack.push(RenameMapping(row, self._mapping_list_model, new_name))
+
+    @Slot(int)
+    def _set_mapping_enabled(self, row):
+        """
+        Pushes a ``SetMappingEnabled`` command to undo stack.
+
+        Args:
+            row (int): row index in mapping list model
+        """
+        self._undo_stack.push(SetMappingEnabled(row, self._mapping_list_model))
+
+    @Slot(bool)
+    def _enable_disable_all_mappings(self, enabled):
+        """
+        Pushes a ``EnableAllMappings`` or ``DisableAllMappings`` command to undo stack.
+
+        Args:
+            enabled (bool): True to enable all mapping, False to disable
+        """
+        make_command = EnableAllMappings if enabled else DisableAllMappings
+        self._undo_stack.push(make_command(self._mapping_list_model))
 
     @Slot(str)
     def _change_mapping_type(self, _):
@@ -763,44 +795,49 @@ def _new_mapping_specification(mapping_type):
         MappingSpecification: an export mapping specification
     """
     if mapping_type == MappingType.objects:
-        return MappingSpecification(mapping_type, False, False, object_export(0, 1))
+        return MappingSpecification(mapping_type, True, False, False, object_export(0, 1))
     if mapping_type == MappingType.object_groups:
-        return MappingSpecification(mapping_type, False, False, object_group_export(0, 1, 2))
+        return MappingSpecification(mapping_type, True, False, False, object_group_export(0, 1, 2))
     if mapping_type == MappingType.object_group_parameter_values:
         return MappingSpecification(
-            mapping_type, False, False, object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, 5)
+            mapping_type, True, False, False, object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, 5)
         )
     if mapping_type == MappingType.object_parameter_default_values:
-        return MappingSpecification(mapping_type, False, False, object_parameter_default_value_export(0, 1, 2))
+        return MappingSpecification(mapping_type, True, False, False, object_parameter_default_value_export(0, 1, 2))
     if mapping_type == MappingType.object_parameter_values:
-        return MappingSpecification(mapping_type, False, False, object_parameter_export(0, 2, Position.hidden, 1, 3, 4))
+        return MappingSpecification(
+            mapping_type, True, False, False, object_parameter_export(0, 2, Position.hidden, 1, 3, 4)
+        )
     if mapping_type == MappingType.parameter_value_lists:
-        return MappingSpecification(mapping_type, False, False, parameter_value_list_export(0, 1))
+        return MappingSpecification(mapping_type, True, False, False, parameter_value_list_export(0, 1))
     if mapping_type == MappingType.relationships:
-        return MappingSpecification(mapping_type, True, False, relationship_export(0, Position.hidden, [1], [2]))
+        return MappingSpecification(mapping_type, True, True, False, relationship_export(0, Position.hidden, [1], [2]))
     if mapping_type == MappingType.relationship_parameter_default_values:
-        return MappingSpecification(mapping_type, False, False, relationship_parameter_default_value_export(0, 1, 2))
+        return MappingSpecification(
+            mapping_type, True, False, False, relationship_parameter_default_value_export(0, 1, 2)
+        )
     if mapping_type == MappingType.relationship_parameter_values:
         return MappingSpecification(
             mapping_type,
+            True,
             True,
             False,
             relationship_parameter_export(0, 3, Position.hidden, Position.hidden, [1], [2], 4),
         )
     if mapping_type == MappingType.alternatives:
-        return MappingSpecification(mapping_type, False, False, alternative_export(0))
+        return MappingSpecification(mapping_type, True, False, False, alternative_export(0))
     if mapping_type == MappingType.scenario_alternatives:
-        return MappingSpecification(mapping_type, False, False, scenario_alternative_export(0, 1))
+        return MappingSpecification(mapping_type, True, False, False, scenario_alternative_export(0, 1))
     if mapping_type == MappingType.scenarios:
-        return MappingSpecification(mapping_type, False, False, scenario_export(0, 1))
+        return MappingSpecification(mapping_type, True, False, False, scenario_export(0, 1))
     if mapping_type == MappingType.features:
-        return MappingSpecification(mapping_type, False, False, feature_export(0, 1))
+        return MappingSpecification(mapping_type, True, False, False, feature_export(0, 1))
     if mapping_type == MappingType.tools:
-        return MappingSpecification(mapping_type, False, False, tool_export(0))
+        return MappingSpecification(mapping_type, True, False, False, tool_export(0))
     if mapping_type == MappingType.tool_features:
-        return MappingSpecification(mapping_type, False, False, tool_feature_export(0, 1, 2, 3))
+        return MappingSpecification(mapping_type, True, False, False, tool_feature_export(0, 1, 2, 3))
     if mapping_type == MappingType.tool_feature_methods:
-        return MappingSpecification(mapping_type, False, False, tool_feature_method_export(0, 1, 2, 3))
+        return MappingSpecification(mapping_type, True, False, False, tool_feature_method_export(0, 1, 2, 3))
     raise NotImplementedError()
 
 

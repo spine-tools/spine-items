@@ -27,6 +27,14 @@ class PreviewTableModel(QAbstractTableModel):
         self._mapping_name = None
         self._table_name = None
 
+    def clear(self):
+        """Empties the table."""
+        if not self._table:
+            return
+        self.beginResetModel()
+        self._table.clear()
+        self.endResetModel()
+
     def columnCount(self, parent=QModelIndex()):
         if not self._table:
             return 0

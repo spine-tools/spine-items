@@ -101,6 +101,17 @@ class PreviewTreeModel(QAbstractItemModel):
             return super().flags(parent) | Qt.ItemNeverHasChildren
         return super().flags(parent)
 
+    def has_name(self, name):
+        """Returns True if the model has a mapping with given name.
+
+        Args:
+            name (str): mapping's name to look for
+
+        Returns:
+            bool: True if mapping was found, False otherwise
+        """
+        return name in self._mapping_names
+
     def index(self, row, column, parent=QModelIndex()):
         if not parent.isValid():
             return self.createIndex(row, column)

@@ -15,6 +15,7 @@ Contains Exporter's undo commands.
 :date:    11.12.2020
 """
 from copy import deepcopy
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QUndoCommand
 from .mvcmodels.mapping_list_model import MappingListModel
 
@@ -58,6 +59,59 @@ class RemoveMapping(QUndoCommand):
 
     def undo(self):
         self._mapping_list_model.insert_mapping(self._row, self._name, self._mapping_specification)
+
+
+class SetMappingEnabled(QUndoCommand):
+    def __init__(self, row, mapping_list_model):
+        """
+        Args:
+            row (int): row index of mapping's name
+            mapping_list_model (MappingListModel): mapping list model
+        """
+        self._mapping_list_model = mapping_list_model
+        name = self._mapping_list_model.index(row, 0).data()
+        self._row = row
+        self._previously_enabled = self._mapping_list_model.index(self._row, 0).data(Qt.CheckStateRole) == Qt.Checked
+        super().__init__(("disable" if self._previously_enabled else "enable") + f" '{name}'")
+
+    def redo(self):
+        self._mapping_list_model.set_mapping_enabled(self._row, not self._previously_enabled)
+
+    def undo(self):
+        self._mapping_list_model.set_mapping_enabled(self._row, self._previously_enabled)
+
+
+class EnableAllMappings(QUndoCommand):
+    def __init__(self, mapping_list_model):
+        """
+        Args:
+            mapping_list_model (MappingListModel): mapping list model
+        """
+        super().__init__("enable all mappings")
+        self._mapping_list_model = mapping_list_model
+        self._previously_enabled = self._mapping_list_model.enabled_mapping_rows()
+
+    def redo(self):
+        self._mapping_list_model.set_all_enabled(True)
+
+    def undo(self):
+        self._mapping_list_model.enable_mapping_rows(self._previously_enabled)
+
+
+class DisableAllMappings(QUndoCommand):
+    def __init__(self, mapping_list_model):
+        """
+        Args:
+            mapping_list_model (MappingListModel): mapping list model
+        """
+        super().__init__("disable all mappings")
+        self._mapping_list_model = mapping_list_model
+
+    def redo(self):
+        self._mapping_list_model.set_all_enabled(False)
+
+    def undo(self):
+        self._mapping_list_model.set_all_enabled(True)
 
 
 class SetMapping(QUndoCommand):
