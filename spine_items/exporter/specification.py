@@ -55,7 +55,7 @@ class OutputFormat(Enum):
 class MappingSpecification:
     type: MappingType
     enabled: bool
-    export_object_flag: bool
+    export_objects_flag: bool
     use_fixed_table_name_flag: bool
     root: Mapping
 
