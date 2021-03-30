@@ -116,9 +116,17 @@ class PreviewUpdater:
         mapping_name = current.data()
         if current_preview.parent().data() == mapping_name:
             return
+        self._set_current_table(mapping_name)
+
+    def _set_current_table(self, name):
+        """Sets the current index of preview tree.
+
+        Args:
+            name (str): mapping's name
+        """
         for row in range(self._preview_tree_model.rowCount()):
             index = self._preview_tree_model.index(row, 0)
-            if index.data() == mapping_name:
+            if index.data() == name:
                 if self._preview_tree_model.rowCount(index) > 0:
                     table_index = self._preview_tree_model.index(0, 0, index)
                     self._ui.preview_tree_view.selectionModel().setCurrentIndex(
@@ -217,9 +225,13 @@ class PreviewUpdater:
             return
         mapping_list_model = self._ui.mapping_list.model()
         make_index = mapping_list_model.index
-        names = [make_index(row, 0).data() for row in range(1, mapping_list_model.rowCount())]
-        old_name, _new_name = self._preview_tree_model.rename_mappings(names)
+        indexes = [make_index(row, 0) for row in range(1, mapping_list_model.rowCount())]
+        names = [index.data() for index in indexes if index.data(Qt.CheckStateRole) == Qt.Checked]
+        old_name, new_name = self._preview_tree_model.rename_mappings(names)
+        if not old_name:
+            return
         self._stamps.pop((self._current_url, old_name), None)
+        self._set_current_table(new_name)
 
     @Slot(QModelIndex, QModelIndex, list)
     def _enable_mapping(self, top_left, bottom_right, roles):

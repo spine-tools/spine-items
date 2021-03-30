@@ -422,8 +422,10 @@ class DataStore(ProjectItem):
         db = self._url["database"]
         if db.lower().endswith(".sqlite") and os.path.isfile(db):
             if os.path.getsize(db) == 0:
-                self.add_notification("This Data Store is pointing to an empty SQLITE file. "
-                                      "Please click 'New Spine db' or 'Open editor...' to initialize it.")
+                self.add_notification(
+                    "This Data Store is pointing to an empty SQLITE file. "
+                    "Please click 'New Spine db' or 'Open editor...' to initialize it."
+                )
             return
 
     def item_dict(self):

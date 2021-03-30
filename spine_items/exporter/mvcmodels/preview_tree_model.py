@@ -140,7 +140,11 @@ class PreviewTreeModel(QAbstractItemModel):
         new_names = sorted(new_names)
         olds = set(self._mapping_names)
         news = set(new_names)
-        old_name = next(iter(olds - news))
+        try:
+            old_name = next(iter(olds - news))
+        except StopIteration:
+            # A disabled mapping was renamed.
+            return "", ""
         new_name = next(iter(news - olds))
         old_row = self._mapping_names.index(old_name)
         self.beginRemoveRows(QModelIndex(), old_row, old_row)
