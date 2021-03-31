@@ -391,7 +391,7 @@ def _propose_toggled_pivot(mappings, target_index):
         list of Position: positions after toggling
     """
     previous_position = mappings[target_index].position
-    if previous_position in (Position.hidden, Position.table_name):
+    if previous_position in (Position.hidden, Position.table_name, Position.header):
         previous_position = 0
     new_position = -previous_position - 1
     positions = [m.position for m in mappings]
