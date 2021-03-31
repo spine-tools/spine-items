@@ -16,9 +16,10 @@ Contains mapping position editor.
 """
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
+from ..mvcmodels.mapping_table_model import POSITION_DISPLAY_TEXT
 
 
-_positions = ["hidden", "table name"]
+_positions = list(POSITION_DISPLAY_TEXT.values())
 
 
 def position_section_width():

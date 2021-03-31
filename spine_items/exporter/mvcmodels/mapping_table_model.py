@@ -57,6 +57,9 @@ from spinedb_api.export_mapping.export_mapping import (
 from ..commands import SetFixedTitle, SetMappingPositions, SetMappingProperty
 
 
+POSITION_DISPLAY_TEXT = {Position.hidden: "hidden", Position.table_name: "table name", Position.header: "column header"}
+
+
 class MappingTableModel(QAbstractTableModel):
     def __init__(self, mapping_name, root_mapping, undo_stack, mapping_provider):
         """
@@ -93,7 +96,7 @@ class MappingTableModel(QAbstractTableModel):
                     return str(position + 1)
                 if is_pivoted(position):
                     return str(-position)
-                return {Position.hidden: "hidden", Position.table_name: "table name"}.get(position, "unrecognized")
+                return POSITION_DISPLAY_TEXT.get(position, "unrecognized")
             if column == 3:
                 return self._mappings[row].header
             if column == 4:
@@ -228,6 +231,8 @@ class MappingTableModel(QAbstractTableModel):
                 value = Position.table_name
             elif value.startswith("h"):
                 value = Position.hidden
+            elif value.startswith("c"):
+                value = Position.header
             else:
                 return False
         if value == mapping.position and (row != _value_row(self._mappings) or not self._non_leaf_mapping_is_pivoted):
