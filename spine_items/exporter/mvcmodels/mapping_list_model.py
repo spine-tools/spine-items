@@ -20,7 +20,7 @@ from spinedb_api.export_mapping.export_mapping import (
     ParameterValueIndexMapping,
     RelationshipClassObjectClassMapping,
 )
-from spine_items.utils import unique_name
+from spinetoolbox.helpers import unique_name
 
 
 class MappingListModel(QAbstractListModel):

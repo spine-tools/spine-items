@@ -18,7 +18,7 @@ Contains the mapping list model.
 from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
 from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
 from spine_items.commands import RenameMapping
-from spine_items.utils import unique_name
+from spinetoolbox.helpers import unique_name
 from .mapping_specification_model import MappingSpecificationModel
 
 

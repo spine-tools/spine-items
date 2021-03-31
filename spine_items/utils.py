@@ -109,8 +109,8 @@ def labelled_resource_args(resources, use_db_server=False):
             server_urls.append(server_url)
             continue
         result[resource.label] = resource.url
-    for label, resources in pack_resources.items():
-        result[label] = " ".join(r.path for r in resources if r.hasfilepath)
+    for label, resources_ in pack_resources.items():
+        result[label] = " ".join(r.path for r in resources_ if r.hasfilepath)
     try:
         yield result
     finally:
@@ -153,31 +153,6 @@ def database_label(provider_name):
         str: resource label
     """
     return "db_url@" + provider_name
-
-
-def unique_name(prefix, existing):
-    """
-    Creates a unique name in the form "prefix X" where X is a number.
-
-    Args:
-        prefix (str): name prefix
-        existing (Iterable of str): existing names
-
-    Returns:
-        str: unique name
-    """
-    pattern = re.compile(fr"^{prefix} [0-9]+$")
-    reserved = set()
-    for name in existing:
-        if pattern.fullmatch(name) is not None:
-            _, _, number = name.partition(" ")
-            reserved.add(int(number))
-    free = len(reserved) + 1
-    for i in range(len(reserved)):
-        if i + 1 not in reserved:
-            free = i + 1
-            break
-    return f"{prefix} {free}"
 
 
 class Database:
