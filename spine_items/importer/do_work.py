@@ -48,8 +48,8 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
         logger.msg.emit("Importing " + file_anchor)
         try:
             connector.connect_to_source(path)
-        except IOError as error:
-            logger.msg_error.emit(f"Failed to connect to source: {error}")
+        except Exception as error:  # pylint: disable=broad-except
+            logger.msg_error.emit(f"Failed to connect to {path}: {error}")
             return (False,)
         try:
             data, errors = connector.get_mapped_data(
