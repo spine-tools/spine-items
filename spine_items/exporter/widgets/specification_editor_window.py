@@ -191,8 +191,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self._ui.mapping_table_view.horizontalHeader().setMinimumSectionSize(position_section_width())
         self._enable_mapping_specification_editing()
-        if self._mapping_list_model.rowCount() > 0:
-            self._ui.mapping_list.setCurrentIndex(self._mapping_list_model.index(0, 0))
+        if self._mapping_list_model.rowCount() > 1:
+            self._ui.mapping_list.setCurrentIndex(self._mapping_list_model.index(1, 0))
         self._button_box = QDialogButtonBox(self)
         self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
         self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
