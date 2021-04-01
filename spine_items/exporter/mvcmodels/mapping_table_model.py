@@ -127,12 +127,16 @@ class MappingTableModel(QAbstractTableModel):
         value_row = _value_row(self._mappings)
         if row >= value_row and column == 2:
             return super().flags(index) & ~Qt.ItemIsEnabled
-        if index.column() == 0:
+        if column == 0:
             return super().flags(index) & ~Qt.ItemIsSelectable
-        if index.column() in (1, 3, 4):
+        if column in (1, 4):
             return super().flags(index) | Qt.ItemIsEditable
-        if index.column() == 2:
+        if column == 2:
             return super().flags(index) | Qt.ItemIsUserCheckable
+        if column == 3:
+            if self._mappings[row].position == Position.header:
+                return super().flags(index) & ~Qt.ItemIsEnabled
+            return super().flags(index) | Qt.ItemIsEditable
         return super().flags(index)
 
     def has_table_name(self):
