@@ -88,6 +88,8 @@ class ExporterBase(ProjectItem):
         """See base class."""
         if not super().rename(new_name, rename_data_dir_message):
             return False
+        if self._active:
+            self._properties_ui.item_name_label.setText(new_name)
         self._resources_to_successors_changed()
         return True
 
