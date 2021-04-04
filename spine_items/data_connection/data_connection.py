@@ -20,15 +20,13 @@ import os
 import shutil
 import logging
 from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex
-from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
+from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QStyle, QFileIconProvider, QInputDialog, QMessageBox
-from datapackage.exceptions import DataPackageException
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.custom_file_system_watcher import CustomFileSystemWatcher
 from spinetoolbox.helpers import open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
-from spinetoolbox.widgets.spine_datapackage_widget import SpineDatapackageWidget, CustomPackage
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
@@ -54,14 +52,11 @@ class DataConnection(ProjectItem):
         self._toolbox = toolbox
         self.reference_model = QStandardItemModel()  # References to files
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
-        self.datapackage_icon = QIcon(QPixmap(":/icons/datapkg.png"))
-        self.datapackage_path = os.path.join(self.data_dir, "datapackage.json")
         self.file_system_watcher = None
         self.references = [ref for ref in references if os.path.isfile(ref)]
         self.populate_reference_list()
         # Populate data (files) model
         self.populate_data_list()
-        self.spine_datapackage_form = None
         self._updated_from = {}
 
     def set_up(self):
@@ -96,8 +91,6 @@ class DataConnection(ProjectItem):
         s[self._properties_ui.toolButton_plus.clicked] = self.show_add_references_dialog
         s[self._properties_ui.toolButton_minus.clicked] = self.remove_references
         s[self._properties_ui.toolButton_add.clicked] = self.copy_to_project
-        s[self._properties_ui.pushButton_create_pkg.clicked] = self.create_datapackage
-        s[self._properties_ui.pushButton_open_pkg_editor.clicked] = self.show_spine_datapackage_form
         s[self._properties_ui.treeView_dc_references.doubleClicked] = self.open_reference
         s[self._properties_ui.treeView_dc_data.doubleClicked] = self.open_data_file
         s[self._properties_ui.treeView_dc_references.files_dropped] = self.add_references
@@ -295,68 +288,6 @@ class DataConnection(ProjectItem):
         if not res:
             self._logger.msg_error.emit(f"Opening file <b>{data_file}</b> failed")
 
-    @Slot(bool)
-    def create_datapackage(self, _=False):
-        datapackage = CustomPackage(base_path=self.data_dir, unsafe=True)
-        datapackage.infer(os.path.join(self.data_dir, '*.csv'))
-        if not datapackage.resources:
-            self._logger.msg_error.emit(
-                f"No resources found. Please add CSV files to <b>{self.name}</b> and try again."
-            )
-            return
-        if os.path.exists(self.datapackage_path):
-            msg = QMessageBox(qApp.activeWindow())  # pylint: disable=undefined-variable
-            msg.setIcon(QMessageBox.Question)
-            msg.setWindowTitle("File already exists")
-            msg.setText(f"The file <b>'{self.datapackage_path}'</b> already exists.")
-            msg.setInformativeText("Do you want to update or replace it?")
-            msg.addButton("Replace", QMessageBox.AcceptRole)
-            update = msg.addButton("Update", QMessageBox.AcceptRole)
-            cancel = msg.addButton("Cancel", QMessageBox.RejectRole)
-            msg.exec_()  # Show message box
-            if msg.clickedButton() == cancel:
-                return
-            if msg.clickedButton() == update:
-                datapackage.update_descriptor(self.datapackage_path)
-                self._logger.msg_success.emit("Datapackage successfully updated.")
-                return
-        self._logger.msg_success.emit("Datapackage successfully created.")
-        datapackage.save(self.datapackage_path)
-
-    @Slot(bool)
-    def show_spine_datapackage_form(self, _=False):
-        """Show spine_datapackage_form widget."""
-        if not os.path.isfile(self.datapackage_path):
-            self._logger.msg_error.emit(
-                "'datapackage.json' not found. "
-                "Press <b>New</b> to create one from the contents in the data directory."
-            )
-            return
-        if self.spine_datapackage_form:
-            if self.spine_datapackage_form.windowState() & Qt.WindowMinimized:
-                # Remove minimized status and restore window with the previous state (maximized/normal state)
-                self.spine_datapackage_form.setWindowState(
-                    self.spine_datapackage_form.windowState() & ~Qt.WindowMinimized | Qt.WindowActive
-                )
-                self.spine_datapackage_form.activateWindow()
-            else:
-                self.spine_datapackage_form.raise_()
-            return
-
-        try:
-            datapackage = CustomPackage(self.datapackage_path, base_path=self.data_dir, unsafe=True)
-        except DataPackageException as e:
-            self._logger.msg_error.emit(str(e))
-            return
-        self.spine_datapackage_form = SpineDatapackageWidget(datapackage)
-        self.spine_datapackage_form.destroyed.connect(self.datapackage_form_destroyed)
-        self.spine_datapackage_form.show()
-
-    @Slot()
-    def datapackage_form_destroyed(self):
-        """Notify a connection that datapackage form has been destroyed."""
-        self.spine_datapackage_form = None
-
     def make_new_file(self):
         """Create a new blank file to this Data Connections data directory."""
         msg = "File name"
@@ -458,10 +389,7 @@ class DataConnection(ProjectItem):
         for path in paths:
             item = QStandardItem(path)
             item.setFlags(~Qt.ItemIsEditable)
-            if _samepath(path, self.datapackage_path):
-                icon = self.datapackage_icon
-            else:
-                icon = QFileIconProvider().icon(QFileInfo(path))
+            icon = QFileIconProvider().icon(QFileInfo(path))
             item.setData(icon, Qt.DecorationRole)
             full_path = os.path.join(self.data_dir, path)  # For drag and drop
             item.setData(full_path, Qt.UserRole)
@@ -517,11 +445,8 @@ class DataConnection(ProjectItem):
         return True
 
     def tear_down(self):
-        """Tears down this item. Called by toolbox just before closing.
-        Closes the SpineDatapackageWidget instances opened."""
+        """Tears down this item. Called by toolbox just before closing."""
         super().tear_down()
-        if self.spine_datapackage_form:
-            self.spine_datapackage_form.close()
         self.file_system_watcher.tear_down()
 
     def notify_destination(self, source_item):

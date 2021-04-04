@@ -17,11 +17,9 @@ Contains base class for project items.
 """
 
 from itertools import zip_longest
-from pathlib import Path
 from PySide2.QtCore import Qt, Slot
 from spinedb_api import clear_filter_configs
 from spinetoolbox.project_item.project_item import ProjectItem
-from spine_engine.project_item.project_item_resource import transient_file_resource, file_resource_in_pack
 from spine_engine.utils.serialization import serialize_url
 from spine_items.models import DatabaseListModel
 from spine_items.utils import Database
