@@ -17,7 +17,7 @@ Contains common & shared (Q)widgets.
 """
 
 import os
-from PySide2.QtCore import Qt, Signal, Slot, QUrl, QMimeData, QTimer
+from PySide2.QtCore import Qt, Signal, Slot, QUrl, QMimeData
 from PySide2.QtWidgets import (
     QApplication,
     QWidget,
@@ -28,9 +28,9 @@ from PySide2.QtWidgets import (
     QMessageBox,
     QAction,
     QMenu,
+    QLineEdit,
 )
 from PySide2.QtGui import QDrag, QGuiApplication, QKeySequence, QIcon
-from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
 from spinetoolbox.helpers import ensure_window_is_on_screen, CharIconEngine
 from .commands import ChangeSpecPropertyCommand
 
@@ -48,8 +48,8 @@ class ReferencesTreeView(QTreeView):
         parent (QWidget): The parent of this view
     """
 
-    files_dropped = Signal("QVariant", name="files_dropped")
-    del_key_pressed = Signal(name="del_key_pressed")
+    files_dropped = Signal(list)
+    del_key_pressed = Signal()
 
     def __init__(self, parent):
         """Initializes the view."""
@@ -90,8 +90,8 @@ class DataTreeView(QTreeView):
         parent (QWidget): The parent of this view
     """
 
-    files_dropped = Signal("QVariant", name="files_dropped")
-    del_key_pressed = Signal(name="del_key_pressed")
+    files_dropped = Signal(list)
+    del_key_pressed = Signal()
 
     def __init__(self, parent):
         """Initializes the view."""
@@ -172,20 +172,18 @@ class SpecNameDescriptionToolbar(QToolBar):
 
         Args:
             parent (QMainWindow): QMainWindow instance
+            spec (ProjectItemSpecification): specification that is being edited
+            undo_stack (QUndoStack): an undo stack
         """
         super().__init__("Specification name and description", parent=parent)
         self._parent = parent
         self._undo_stack = undo_stack
         self._current_name = ""
         self._current_description = ""
-        self._line_edit_name = PropertyQLineEdit()
-        self._line_edit_description = PropertyQLineEdit()
+        self._line_edit_name = QLineEdit()
+        self._line_edit_description = QLineEdit()
         self._line_edit_name.setPlaceholderText("Enter specification name here...")
         self._line_edit_description.setPlaceholderText("Enter specification description here...")
-        self._timer_set_name = QTimer(self)
-        self._timer_set_description = QTimer(self)
-        self._timer_set_name.setInterval(200)
-        self._timer_set_description.setInterval(200)
         self.setAllowedAreas(Qt.TopToolBarArea)
         self.setFloatable(False)
         self.setMovable(False)
@@ -206,10 +204,8 @@ class SpecNameDescriptionToolbar(QToolBar):
         if spec:
             self.do_set_name(spec.name)
             self.do_set_description(spec.description)
-        self._line_edit_name.textEdited.connect(self._timer_set_name.start)
-        self._line_edit_description.textEdited.connect(self._timer_set_description.start)
-        self._timer_set_name.timeout.connect(self._set_name)
-        self._timer_set_description.timeout.connect(self._set_description)
+        self._line_edit_name.editingFinished.connect(self._set_name)
+        self._line_edit_description.editingFinished.connect(self._set_description)
 
     def _make_main_menu(self):
         menu = QMenu(self)
@@ -227,7 +223,6 @@ class SpecNameDescriptionToolbar(QToolBar):
 
     @Slot()
     def _set_name(self):
-        self._timer_set_name.stop()
         if self.name() == self._current_name:
             return
         self._undo_stack.push(
@@ -236,7 +231,6 @@ class SpecNameDescriptionToolbar(QToolBar):
 
     @Slot()
     def _set_description(self):
-        self._timer_set_description.stop()
         if self.description() == self._current_description:
             return
         self._undo_stack.push(
@@ -268,11 +262,11 @@ def prompt_to_save_changes(parent, save_callback):
 
     Args:
         parent (QWidget)
-        save_callback (function): A function that call if the user choses Save.
+        save_callback (Callable): A function to call if the user chooses Save.
             It must return True or False depending on the outcome of the 'saving'.
 
     Returns:
-        bool: False if the user choses to cancel, in which case we don't close the form.
+        bool: False if the user chooses to cancel, in which case we don't close the form.
     """
     msg = QMessageBox(parent)
     msg.setIcon(QMessageBox.Question)
@@ -333,3 +327,51 @@ def save_ui(window, app_settings, settings_group):
     app_settings.setValue("windowMaximized", window.windowState() == Qt.WindowMaximized)
     app_settings.setValue("n_screens", len(QGuiApplication.screens()))
     app_settings.endGroup()
+
+
+class SpecEditorManager:
+    """
+    A class to associate specification editors to a key, basically to avoid opening two editors for the same spec
+    or item.
+    """
+
+    def __init__(self, constructor):
+        """
+        Args:
+            constructor (QMainWindow): Editor factory.
+        """
+        self._constructor = constructor
+        self._editors = {}
+
+    def create_editor(self, toolbox, specification, item, *args, **kwargs):
+        """Activates existing editor or creates a new one if none.
+
+        Args:
+            toolbox (ToolboxUI)
+            specification (ProjectItemSpecification, NoneType)
+            item (ProjectItem, NoneType)
+        """
+        if specification:
+            key = specification.name
+        elif item:
+            key = item.name
+        else:
+            key = None
+        editor = self._editors.get(key)
+        if editor is None:
+            editor = self._editors[key] = self._constructor(toolbox, specification, item, *args, **kwargs)
+            editor.setAttribute(Qt.WA_DeleteOnClose, True)
+            editor.destroyed.connect(lambda o=None, key=key: self._editors.pop(key, None))
+            editor.show()
+            return
+        if editor.windowState() & Qt.WindowMinimized:
+            # Remove minimized status and restore window with the previous state (maximized/normal state)
+            editor.setWindowState(editor.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
+            editor.activateWindow()
+        else:
+            editor.raise_()
+
+    def close_all_editors(self):
+        """Closes all editors."""
+        for widget in self._editors.values():
+            widget.close()

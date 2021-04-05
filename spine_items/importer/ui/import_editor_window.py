@@ -41,8 +41,6 @@ class Ui_MainWindow(object):
         self.import_mappings_action = QAction(MainWindow)
         self.import_mappings_action.setObjectName(u"import_mappings_action")
         self.import_mappings_action.setEnabled(False)
-        self.actionSaveAndClose = QAction(MainWindow)
-        self.actionSaveAndClose.setObjectName(u"actionSaveAndClose")
         self.actionLoad_file = QAction(MainWindow)
         self.actionLoad_file.setObjectName(u"actionLoad_file")
         self.actionSwitch_connector = QAction(MainWindow)
@@ -337,7 +335,6 @@ class Ui_MainWindow(object):
         self.file_menu.addAction(self.export_mappings_action)
         self.file_menu.addAction(self.import_mappings_action)
         self.file_menu.addSeparator()
-        self.file_menu.addAction(self.actionSaveAndClose)
 
         self.retranslateUi(MainWindow)
 
@@ -351,10 +348,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Import Editor", None))
         self.export_mappings_action.setText(QCoreApplication.translate("MainWindow", u"Export mappings...", None))
         self.import_mappings_action.setText(QCoreApplication.translate("MainWindow", u"Import mappings...", None))
-        self.actionSaveAndClose.setText(QCoreApplication.translate("MainWindow", u"Save and close", None))
-#if QT_CONFIG(shortcut)
-        self.actionSaveAndClose.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Return", None))
-#endif // QT_CONFIG(shortcut)
         self.actionLoad_file.setText(QCoreApplication.translate("MainWindow", u"Load file...", None))
         self.actionSwitch_connector.setText(QCoreApplication.translate("MainWindow", u"Switch connector...", None))
         self.file_menu.setTitle(QCoreApplication.translate("MainWindow", u"File", None))

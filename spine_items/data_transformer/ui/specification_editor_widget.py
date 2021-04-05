@@ -34,8 +34,6 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(800, 600)
-        self.actionSaveAndClose = QAction(MainWindow)
-        self.actionSaveAndClose.setObjectName(u"actionSaveAndClose")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -156,7 +154,6 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.menubar.addAction(self.menuFile.menuAction())
-        self.menuFile.addAction(self.actionSaveAndClose)
 
         self.retranslateUi(MainWindow)
 
@@ -168,10 +165,6 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.actionSaveAndClose.setText(QCoreApplication.translate("MainWindow", u"Save and close", None))
-#if QT_CONFIG(shortcut)
-        self.actionSaveAndClose.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Return", None))
-#endif // QT_CONFIG(shortcut)
         self.label.setText(QCoreApplication.translate("MainWindow", u"Filter type", None))
         self.no_filter_label.setText(QCoreApplication.translate("MainWindow", u"No filter selected.", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Database url:", None))

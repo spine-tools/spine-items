@@ -16,6 +16,8 @@ Contains Importer's specification.
 :date:    32.10.2020
 """
 import json
+import shutil
+import os
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from .item_info import ItemInfo
 
@@ -69,6 +71,15 @@ class ImporterSpecification(ProjectItemSpecification):
 
     def save(self):
         """See base class."""
+        backup_file_path = self.definition_file_path + ".bak"
+        if not os.path.isfile(backup_file_path):
+            # Save backup file. This is because we have changed the import API quite drastically
+            # and we want to be safe. Maybe remove after things stabilize.
+            # See https://github.com/Spine-project/Spine-Database-API/issues/119 for details
+            try:
+                shutil.copyfile(self.definition_file_path, backup_file_path)
+            except OSError:
+                pass
         specification_dict = self.to_dict()
         with open(self.definition_file_path, "w") as fp:
             json.dump(specification_dict, fp, indent=4)

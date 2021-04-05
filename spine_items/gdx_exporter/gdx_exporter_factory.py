@@ -30,7 +30,7 @@ class GdxExporterFactory(ProjectItemFactory):
 
     @staticmethod
     def icon():
-        return ":/icons/item_icons/database-export.svg"
+        return ":/icons/item_icons/database-export-gdx.svg"
 
     @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):

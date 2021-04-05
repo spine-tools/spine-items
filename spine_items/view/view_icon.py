@@ -17,7 +17,7 @@ Module for view icon class.
 """
 
 from PySide2.QtGui import QColor
-from spinetoolbox.graphics_items import ProjectItemIcon
+from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
 class ViewIcon(ProjectItemIcon):

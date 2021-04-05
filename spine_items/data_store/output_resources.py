@@ -14,8 +14,8 @@ Contains utilities to scan for Data Store's output resources.
 :authors: A. Soininen (VTT)
 :date:    4.12.2020
 """
-from spine_engine.project_item.project_item_resource import ProjectItemResource
-from .utils import make_label
+from spine_engine.project_item.project_item_resource import database_resource
+from spine_items.utils import database_label
 
 
 def scan_for_resources(provider, url):
@@ -31,6 +31,4 @@ def scan_for_resources(provider, url):
     """
     if not url:
         return list()
-    metadata = {"label": make_label(provider.name)}
-    resource = ProjectItemResource(provider, "database", url=str(url), metadata=metadata)
-    return [resource]
+    return [database_resource(provider.name, str(url), label=database_label(provider.name))]

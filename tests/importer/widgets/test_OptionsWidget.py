@@ -35,7 +35,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(connector, self._undo_stack)
-        layout = widget.layout()
+        layout = widget.form_layout
         checked = {"number": False}
         for item in (layout.itemAt(i).widget() for i in range(layout.count())):
             if isinstance(item, QSpinBox):
@@ -50,7 +50,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(connector, self._undo_stack)
-        layout = widget.layout()
+        layout = widget.form_layout
         checked = False
         for item in (layout.itemAt(i).widget() for i in range(layout.count())):
             if isinstance(item, QLineEdit):
@@ -67,7 +67,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(connector, self._undo_stack)
-        layout = widget.layout()
+        layout = widget.form_layout
         checked = False
         for item in (layout.itemAt(i).widget() for i in range(layout.count())):
             if isinstance(item, QComboBox):
@@ -82,7 +82,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(connector, self._undo_stack)
-        layout = widget.layout()
+        layout = widget.form_layout
         checked = False
         for item in (layout.itemAt(i).widget() for i in range(layout.count())):
             if isinstance(item, QCheckBox):

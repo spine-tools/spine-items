@@ -13,7 +13,7 @@ Contains unit tests for Import editor's MappingListModel.
 """
 import unittest
 from PySide2.QtWidgets import QUndoStack
-from spinedb_api import ObjectClassMapping
+from spinedb_api.import_mapping.import_mapping import ObjectClassMapping
 from spine_items.importer.mvcmodels.mapping_list_model import MappingListModel
 from spine_items.importer.mvcmodels.mapping_specification_model import MappingSpecificationModel
 
@@ -21,7 +21,7 @@ from spine_items.importer.mvcmodels.mapping_specification_model import MappingSp
 class TestMappingListModel(unittest.TestCase):
     def test_construction(self):
         undo_stack = QUndoStack()
-        specification = MappingSpecificationModel("table_name", "mapping_name", ObjectClassMapping(), undo_stack)
+        specification = MappingSpecificationModel("table_name", "mapping_name", ObjectClassMapping(0), undo_stack)
         model = MappingListModel([specification], "table", undo_stack)
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
@@ -29,7 +29,7 @@ class TestMappingListModel(unittest.TestCase):
 
     def test_setData(self):
         undo_stack = QUndoStack()
-        specification = MappingSpecificationModel("table_name", "mapping_name", ObjectClassMapping(), undo_stack)
+        specification = MappingSpecificationModel("table_name", "mapping_name", ObjectClassMapping(0), undo_stack)
         model = MappingListModel([specification], "table", undo_stack)
         index = model.index(0, 0)
         model.setData(index, "new_name")

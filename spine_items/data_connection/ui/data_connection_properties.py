@@ -34,7 +34,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(294, 524)
+        Form.resize(276, 476)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -66,7 +66,7 @@ class Ui_Form(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 292, 502))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 274, 454))
         self.verticalLayout_16 = QVBoxLayout(self.scrollAreaWidgetContents_2)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
         self.treeView_dc_references = ReferencesTreeView(self.scrollAreaWidgetContents_2)
@@ -162,39 +162,6 @@ class Ui_Form(object):
 
         self.verticalLayout_16.addWidget(self.treeView_dc_data)
 
-        self.groupBox = QGroupBox(self.scrollAreaWidgetContents_2)
-        self.groupBox.setObjectName(u"groupBox")
-        self.horizontalLayout = QHBoxLayout(self.groupBox)
-        self.horizontalLayout.setSpacing(6)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_create_pkg = QPushButton(self.groupBox)
-        self.pushButton_create_pkg.setObjectName(u"pushButton_create_pkg")
-        sizePolicy3 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.pushButton_create_pkg.sizePolicy().hasHeightForWidth())
-        self.pushButton_create_pkg.setSizePolicy(sizePolicy3)
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/datapkg.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.pushButton_create_pkg.setIcon(icon3)
-
-        self.horizontalLayout.addWidget(self.pushButton_create_pkg)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout.addItem(self.horizontalSpacer)
-
-        self.pushButton_open_pkg_editor = QPushButton(self.groupBox)
-        self.pushButton_open_pkg_editor.setObjectName(u"pushButton_open_pkg_editor")
-        sizePolicy3.setHeightForWidth(self.pushButton_open_pkg_editor.sizePolicy().hasHeightForWidth())
-        self.pushButton_open_pkg_editor.setSizePolicy(sizePolicy3)
-
-        self.horizontalLayout.addWidget(self.pushButton_open_pkg_editor)
-
-
-        self.verticalLayout_16.addWidget(self.groupBox)
-
         self.line_3 = QFrame(self.scrollAreaWidgetContents_2)
         self.line_3.setObjectName(u"line_3")
         self.line_3.setFrameShape(QFrame.HLine)
@@ -214,9 +181,9 @@ class Ui_Form(object):
         self.toolButton_dc_open_dir.setSizePolicy(sizePolicy2)
         self.toolButton_dc_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_dc_open_dir.setMaximumSize(QSize(22, 22))
-        icon4 = QIcon()
-        icon4.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_dc_open_dir.setIcon(icon4)
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_dc_open_dir.setIcon(icon3)
 
         self.horizontalLayout_7.addWidget(self.toolButton_dc_open_dir)
 
@@ -254,9 +221,6 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.treeView_dc_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Drag-and-drop files here, they will be copied to the data directory.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.groupBox.setTitle(QCoreApplication.translate("Form", u"Datapackage", None))
-        self.pushButton_create_pkg.setText(QCoreApplication.translate("Form", u"New", None))
-        self.pushButton_open_pkg_editor.setText(QCoreApplication.translate("Form", u"Open editor...", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_dc_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Data Connection's project directory in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

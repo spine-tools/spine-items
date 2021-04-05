@@ -21,7 +21,7 @@ import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide2.QtWidgets import QApplication
 from spinedb_api import append_filter_config
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.data_transformer.data_transformer import DataTransformer
 from spine_items.data_transformer.data_transformer_factory import DataTransformerFactory
 from spine_items.data_transformer.data_transformer_specification import DataTransformerSpecification
@@ -63,7 +63,7 @@ class TestDataTransformer(unittest.TestCase):
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.transformer.item_dict()
-        self.assertEqual(d, {"description": "", "type": "Data Transformer", "x": 0.0, "y": 0.0, "specification": None})
+        self.assertEqual(d, {"description": "", "type": "Data Transformer", "x": 0.0, "y": 0.0, "specification": ""})
 
     def test_notify_destination(self):
         self.transformer.logger.msg = MagicMock()
@@ -94,16 +94,16 @@ class TestDataTransformer(unittest.TestCase):
         self.assertEqual(self.transformer.resources_for_direct_successors(), [])
         provider = MagicMock()
         provider.name = "resource provider"
-        db_resource = ProjectItemResource(provider, "database", "sqlite:///database.sqlite")
-        self.transformer.handle_dag_changed(0, [db_resource], [])
-        expected_resource = ProjectItemResource(self.transformer, "database", "sqlite:///database.sqlite")
+        db_resource = database_resource(provider.name, "sqlite:///database.sqlite")
+        self.transformer.upstream_resources_updated([db_resource])
+        expected_resource = database_resource(self.transformer.name, "sqlite:///database.sqlite")
         self.assertEqual(self.transformer.resources_for_direct_successors(), [expected_resource])
         settings = EntityClassRenamingSettings({})
         specification = DataTransformerSpecification("specification", settings, "test specification")
         self.transformer.do_set_specification(specification)
         config_path = filter_config_path(self.transformer.data_dir)
         filter_url = append_filter_config("sqlite:///database.sqlite", config_path)
-        expected_resource = ProjectItemResource(self.transformer, "database", filter_url)
+        expected_resource = database_resource(self.transformer.name, filter_url)
         self.assertEqual(self.transformer.resources_for_direct_successors(), [expected_resource])
 
     def test_rename(self):

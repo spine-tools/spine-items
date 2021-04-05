@@ -21,10 +21,11 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import file_resource
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
 from spine_items.tool.utils import _LatestOutputFile
+from spine_items.utils import CmdLineArg
 
 
 class TestToolExecutable(unittest.TestCase):
@@ -47,7 +48,7 @@ class TestToolExecutable(unittest.TestCase):
             "y": 0,
             "specification": "Python Tool",
             "execute_in_work": True,
-            "cmd_line_args": ["a", "b"],
+            "cmd_line_args": [{"type": "literal", "arg": "a"}, {"type": "literal", "arg": "b"}],
             "options": {},
         }
         script_dir = pathlib.Path(self._temp_dir.name, "scripts")
@@ -77,7 +78,7 @@ class TestToolExecutable(unittest.TestCase):
         self.assertEqual("Tool", item.item_type())
         self.assertTrue(item._tool_specification.name, "Python Tool")
         self.assertEqual("some_work_dir", item._work_dir)
-        self.assertEqual(["a", "b"], item._cmd_line_args)
+        self.assertEqual([CmdLineArg("a"), CmdLineArg("b")], item._cmd_line_args)
         # Test that the item is not created if "appSettings/workDir" key is missing from qsettings
         item = ExecutableItem.from_dict(
             item_dict,
@@ -112,7 +113,7 @@ class TestToolExecutable(unittest.TestCase):
         )
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("Tool", item.item_type())
-        self.assertEqual(["a", "b"], item._cmd_line_args)
+        self.assertEqual([CmdLineArg("a"), CmdLineArg("b")], item._cmd_line_args)
         self.assertIsNone(item._work_dir)
         # Modify item_dict
         item_dict["specification"] = ""
@@ -183,9 +184,15 @@ class TestToolExecutable(unittest.TestCase):
             project_dir=self._temp_dir.name,
             logger=logger,
         )
-        resources = [ProjectItemResource(mock.Mock(), "file", optional_file.as_uri())]
+        resources = [file_resource("provider", str(optional_file))]
         file_paths = executable._find_optional_input_files(resources)
-        self.assertEqual(file_paths, {"1.txt": [str(optional_file)]})
+        expected = {"1.txt": [optional_file]}
+        self.assertEqual(len(file_paths), len(expected))
+        for label, expected_files in expected.items():
+            paths = file_paths[label]
+            self.assertEqual(len(paths), len(expected_files))
+            for file_path, expected_path in zip(paths, expected_files):
+                self.assertTrue(expected_path.samefile(pathlib.Path(file_path)))
 
     def test_find_optional_input_files_with_wildcards(self):
         optional_file1 = pathlib.Path(self._temp_dir.name, "1.txt")
@@ -207,12 +214,15 @@ class TestToolExecutable(unittest.TestCase):
             project_dir=self._temp_dir.name,
             logger=logger,
         )
-        resources = [
-            ProjectItemResource(mock.Mock(), "file", optional_file1.as_uri()),
-            ProjectItemResource(mock.Mock(), "file", optional_file2.as_uri()),
-        ]
+        resources = [file_resource("provider", str(optional_file1)), file_resource("provider", str(optional_file2))]
         file_paths = executable._find_optional_input_files(resources)
-        self.assertEqual(file_paths, {"*.txt": [str(optional_file1), str(optional_file2)]})
+        expected = {"*.txt": [optional_file1, optional_file2]}
+        self.assertEqual(len(file_paths), len(expected))
+        for label, expected_files in expected.items():
+            paths = file_paths[label]
+            self.assertEqual(len(paths), len(expected_files))
+            for file_path, expected_path in zip(paths, expected_files):
+                self.assertTrue(expected_path.samefile(pathlib.Path(file_path)))
 
     def test_find_optional_input_files_in_sub_directory(self):
         pathlib.Path(self._temp_dir.name, "subdir").mkdir()
@@ -235,12 +245,15 @@ class TestToolExecutable(unittest.TestCase):
             project_dir=self._temp_dir.name,
             logger=logger,
         )
-        resources = [
-            ProjectItemResource(mock.Mock(), "file", optional_file1.as_uri()),
-            ProjectItemResource(mock.Mock(), "file", optional_file2.as_uri()),
-        ]
+        resources = [file_resource("provider", str(optional_file1)), file_resource("provider", str(optional_file2))]
         file_paths = executable._find_optional_input_files(resources)
-        self.assertEqual(file_paths, {"subdir/*.txt": [str(optional_file1)], "subdir/data.dat": [str(optional_file2)]})
+        expected = {"subdir/*.txt": [optional_file1], "subdir/data.dat": [optional_file2]}
+        self.assertEqual(len(file_paths), len(expected))
+        for label, expected_files in expected.items():
+            paths = file_paths[label]
+            self.assertEqual(len(paths), len(expected_files))
+            for file_path, expected_path in zip(paths, expected_files):
+                self.assertTrue(expected_path.samefile(pathlib.Path(file_path)))
 
     def test_output_resources_forward(self):
         logger = mock.MagicMock()
@@ -257,19 +270,23 @@ class TestToolExecutable(unittest.TestCase):
             "name", self._temp_dir.name, tool_specification, [], {}, self._temp_dir.name, logger
         )
         output_dir = pathlib.Path(executable._data_dir, "output")
+        output_dir.mkdir()
+        out_file_1 = output_dir / "results.gdx"
+        out_file_1.touch()
+        out_file_2 = output_dir / "report.txt"
+        out_file_2.touch()
         with mock.patch("spine_items.tool.output_resources.find_last_output_files") as mock_find_last_output_files:
             mock_find_last_output_files.return_value = {
-                "results.gdx": [_LatestOutputFile("label", output_dir / "results.gdx")],
-                "report.txt": [_LatestOutputFile("label2", output_dir / "report.txt")],
+                "results.gdx": [_LatestOutputFile("label", str(out_file_1))],
+                "report.txt": [_LatestOutputFile("label2", str(out_file_2))],
             }
             resources = executable._output_resources_forward()
             mock_find_last_output_files.assert_called_once()
             self.assertIsInstance(resources, list)
             self.assertEqual(2, len(resources))
-            self.assertIsInstance(resources[0], ProjectItemResource)
-            self.assertIsInstance(resources[1], ProjectItemResource)
-            self.assertEqual("transient_file", resources[0].type_)
-            self.assertEqual("transient_file", resources[1].type_)
+            resource_paths = [r.path for r in resources]
+            self.assertTrue(any(out_file_1.samefile(p) for p in resource_paths))
+            self.assertTrue(any(out_file_2.samefile(p) for p in resource_paths))
 
     def test_stop_execution(self):
         logger = mock.MagicMock()

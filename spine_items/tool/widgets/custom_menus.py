@@ -76,19 +76,3 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
             return
         path_url = "file:///" + tool_specification_path
         self._toolbox.open_anchor(QUrl(path_url, QUrl.TolerantMode))
-
-
-class AddProgramFilesPopupMenu(CustomPopupMenu):
-    """Popup menu class for add includes button in Tool specification editor widget."""
-
-    def __init__(self, parent):
-        """
-        Args:
-            parent (QWidget): Parent widget (ToolSpecificationEditorWindow)
-        """
-        super().__init__(parent)
-        self._parent = parent
-        # Open a tool specification file
-        self.add_action("New file", self._parent.new_program_file)
-        self.addSeparator()
-        self.add_action("Open files...", self._parent.show_add_program_files_dialog)

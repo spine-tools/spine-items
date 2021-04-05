@@ -22,14 +22,13 @@ from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
-from .widgets.specification_editor_window import SpecificationEditorWindow
 from .output_resources import scan_for_resources
 
 
 class DataTransformer(ProjectItem):
     """Data transformer project item."""
 
-    def __init__(self, name, description, x, y, toolbox, project, specification_name=None):
+    def __init__(self, name, description, x, y, toolbox, project, specification_name=""):
         """
         Args:
             name (str): item's name
@@ -64,6 +63,13 @@ class DataTransformer(ProjectItem):
     def executable_class(self):
         return ExecutableItem
 
+    def rename(self, new_name, rename_data_dir_message):
+        """See base class."""
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
+        self._resources_to_successors_changed()
+        return True
+
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()
@@ -90,7 +96,7 @@ class DataTransformer(ProjectItem):
         """see base class"""
         if not super().do_set_specification(specification):
             return False
-        self._specification_name = specification.name if specification is not None else None
+        self._specification_name = specification.name if specification is not None else ""
         if self._active:
             self._update_ui()
         if specification is None:
@@ -99,7 +105,8 @@ class DataTransformer(ProjectItem):
         if specification.settings is not None:
             with open(path, "w") as filter_config_file:
                 dump(specification.settings.filter_config(), filter_config_file)
-        self.item_changed.emit()
+        self._resources_to_predecessors_changed()
+        self._check_notifications()
         return True
 
     def update_name_label(self):
@@ -109,10 +116,9 @@ class DataTransformer(ProjectItem):
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
-        specification_window = SpecificationEditorWindow(
-            self._toolbox, specification=None, urls=[r.url for r in self._db_resources], item=self
+        self._toolbox.show_specification_form(
+            self.item_type(), self.specification(), item=self, urls=[r.url for r in self._db_resources]
         )
-        specification_window.show()
 
     def notify_destination(self, source_item):
         """See base class."""
@@ -140,9 +146,10 @@ class DataTransformer(ProjectItem):
         specification = self._toolbox.specification_model.find_specification(specification_name)
         self.set_specification(specification)
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
+    def upstream_resources_updated(self, resources):
         """See base class."""
-        self._db_resources = [r for r in upstream_resources if r.type_ == "database"]
+        self._db_resources = [r for r in resources if r.type_ == "database"]
+        self._resources_to_successors_changed()
 
     def resources_for_direct_successors(self):
         """See base class."""

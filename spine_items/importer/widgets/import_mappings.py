@@ -17,11 +17,11 @@ ImportMappings widget.
 """
 
 from copy import deepcopy
-from PySide2.QtCore import QObject, QItemSelectionModel, Signal, Slot, Qt
+from PySide2.QtCore import QObject, QPoint, QItemSelectionModel, Signal, Slot
+from PySide2.QtWidgets import QStyledItemDelegate
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
-from spinedb_api import ConstantMapping
+from spinetoolbox.widgets.parameter_value_editor import ParameterValueEditor
 from .custom_menus import MappingListMenu
-from .table_view_with_button_header import LineEditWithTypeButton
 from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
 
 SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "None")
@@ -29,7 +29,7 @@ SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table 
 
 class ImportMappings(QObject):
     """
-    Provides methods for managing Mappings (add, remove, edit, visualize, and so on).
+    Controls the 'Mappings' and 'Mapping specifications' part of the window.
     """
 
     mapping_selection_changed = Signal(object)
@@ -54,8 +54,12 @@ class ImportMappings(QObject):
         # initialize interface
         # NOTE: We make the delegate an attribute so it's never accidentally gc'ed
         self._src_type_delegate = ComboBoxDelegate(SOURCE_TYPES)
+        self._parameter_constant_value_delegate = ParameterConstantValueDelegate(self._parent)
         self._ui.mapping_spec_table.setItemDelegateForColumn(1, self._src_type_delegate)
-
+        self._ui.mapping_spec_table.setItemDelegateForColumn(2, self._parameter_constant_value_delegate)
+        self._ui.new_button.setEnabled(False)
+        self._ui.remove_button.setEnabled(False)
+        self._ui.duplicate_button.setEnabled(False)
         # connect signals
         self._ui.new_button.clicked.connect(self.new_mapping)
         self._ui.remove_button.clicked.connect(self.delete_selected_mapping)
@@ -70,31 +74,11 @@ class ImportMappings(QObject):
             current_model.modelReset.disconnect(self._resize_table_view_mappings_columns)
         self._ui.mapping_spec_table.setModel(mapping_spec_model)
         self._resize_table_view_mappings_columns()
-        mapping_spec_model.modelReset.connect(self._resize_table_view_mappings_columns)
-        self._set_line_edit_with_type_button()
-        mapping_spec_model.mapping_changed.connect(self._set_line_edit_with_type_button)
-
-    @Slot()
-    def _set_line_edit_with_type_button(self):
-        """Sets a LineEditWithTypeButton for the value mapping index if it's a constant mapping.
-        This is so the user can set the convert_spec for that mapping.
-        """
-        model = self._ui.mapping_spec_table.model()
-        index = model.value_mapping_index()
-        if not index.isValid():
+        self._ui.remove_button.setEnabled(mapping_spec_model is not None)
+        self._ui.duplicate_button.setEnabled(mapping_spec_model is not None)
+        if mapping_spec_model is None:
             return
-        component_mapping = model.component_mapping_from_index(index)
-        if isinstance(component_mapping, ConstantMapping):
-            widget = self._ui.mapping_spec_table.indexWidget(index)
-            if widget is None:
-                widget = LineEditWithTypeButton(self._ui.mapping_spec_table)
-                widget.reference_changed.connect(lambda ref: model.setData(index, ref))
-                widget.convert_spec_changed.connect(model.change_constant_value_convert_spec)
-            widget.set_component_mapping(component_mapping)
-            widget.set_background_color(index.data(Qt.BackgroundRole))
-        else:
-            widget = None
-        self._ui.mapping_spec_table.setIndexWidget(index, widget)
+        mapping_spec_model.modelReset.connect(self._resize_table_view_mappings_columns)
 
     @Slot()
     def _resize_table_view_mappings_columns(self):
@@ -110,6 +94,7 @@ class ImportMappings(QObject):
             source_table_name (str): newly selected source table's name
             model (MappingListModel): mapping list model attached to that source table.
         """
+        self._ui.new_button.setEnabled(True)
         self._source_table = source_table_name
         if self._mappings_model is not None:
             self._mappings_model.dataChanged.disconnect(self.data_changed)
@@ -175,11 +160,11 @@ class ImportMappings(QObject):
         self._select_row(row)
         return mapping_name
 
-    def insert_mapping_specification(self, source_table_name, name, row, mapping_specification):
+    def insert_mapping(self, source_table_name, name, row, mapping_specification):
         self.about_to_undo.emit(source_table_name)
         if self._mappings_model is None:
             return
-        self._mappings_model.insert_mapping_specification(name, row, mapping_specification)
+        self._mappings_model.insert_mapping(name, row, mapping_specification)
         self._select_row(row)
 
     @Slot()
@@ -199,9 +184,9 @@ class ImportMappings(QObject):
             return
         spec = self._mappings_model.mapping_specifications[row]
         dup_spec = spec.duplicate(source_table_name, self._undo_stack)
-        prefix = self._mappings_model.mapping_name_at(row) + "--"
-        name = self._mappings_model._make_new_mapping_name(prefix)
-        self.insert_mapping_specification(source_table_name, name, row + 1, dup_spec)
+        prefix = self._mappings_model.mapping_name_at(row)
+        name = self._mappings_model.unique_name(prefix)
+        self.insert_mapping(source_table_name, name, row + 1, dup_spec)
         return name
 
     @Slot()
@@ -251,7 +236,7 @@ class ImportMappings(QObject):
         else:
             self.mapping_selection_changed.emit(None)
 
-    @Slot("QPoint")
+    @Slot(QPoint)
     def _show_mapping_list_context_menu(self, pos):
         global_pos = self._ui.mapping_list.mapToGlobal(pos)
         indexes = self._ui.mapping_list.selectionModel().selectedRows()
@@ -271,3 +256,22 @@ class ImportMappings(QObject):
         else:
             specs = [self._mappings_model.data_mapping(index) for index in indexes]
         return {spec.mapping_name: deepcopy(spec.mapping) for spec in specs}
+
+
+class ParameterConstantValueDelegate(QStyledItemDelegate):
+    """A delegate that shows a ParameterValueEditor for constant value mappings."""
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self._parent = parent
+
+    def createEditor(self, parent, option, index):
+        if index.column() != 2:
+            return super().createEditor(parent, option, index)
+        target = index.siblingAtColumn(0).data()
+        ref_type = index.siblingAtColumn(1).data()
+        if target.endswith("values") and ref_type == "Constant":
+            editor = ParameterValueEditor(index, self._parent)
+            editor.show()
+            return None
+        return super().createEditor(parent, option, index)

@@ -17,7 +17,7 @@ Module for data store icon class.
 """
 
 from PySide2.QtGui import QColor
-from spinetoolbox.graphics_items import ProjectItemIcon
+from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
 class DataStoreIcon(ProjectItemIcon):
@@ -38,4 +38,4 @@ class DataStoreIcon(ProjectItemIcon):
         """
         super().mouseDoubleClickEvent(e)
         item = self._toolbox.project_item_model.get_item(self._name)
-        item.project_item.open_url_in_new_db_editor()
+        item.project_item.open_url_in_spine_db_editor()

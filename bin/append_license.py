@@ -20,9 +20,7 @@ license_text = [
 def append_license(path):
     _, extension = os.path.splitext(path)
     if extension not in [".py", ".ui", ".xml"]:
-        raise RuntimeError(
-            "Unsupported file type. Can only append license to .py, .ui or .xml files."
-        )
+        raise RuntimeError("Unsupported file type. Can only append license to .py, .ui or .xml files.")
     if extension == ".py":
         _append_license_py(path)
     else:

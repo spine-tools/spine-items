@@ -16,9 +16,7 @@ Contains Data Connection's executable item as well as support utilities.
 :date:   1.4.2020
 """
 import os
-import pathlib
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
@@ -50,7 +48,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return scan_for_resources(self, self._files)
+        return scan_for_resources(self, self._files, self._project_dir)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):

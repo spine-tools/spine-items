@@ -17,6 +17,7 @@ GdxExporter properties widget.
 """
 
 from PySide2.QtWidgets import QWidget
+from ..item_info import ItemInfo
 
 
 class GdxExporterProperties(QWidget):
@@ -27,12 +28,14 @@ class GdxExporterProperties(QWidget):
         Args:
             toolbox (ToolboxUI): a main window instance
         """
-        from ..ui.gdx_exporter_properties import Ui_Form  # pylint: disable=import-outside-toplevel
+        from spine_items.gdx_exporter.ui.gdx_exporter_properties import (
+            Ui_Form,
+        )  # pylint: disable=import-outside-toplevel
 
         super().__init__()
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "GdxExporter")
+        toolbox.ui.tabWidget_item_properties.addTab(self, ItemInfo.item_type())
 
     @property
     def ui(self):

@@ -16,7 +16,7 @@ Contains the SettingsPack class.
 :date:   6.5.2020
 """
 from spinedb_api.spine_io.exporters import gdx
-from .notifications import Notifications
+from spine_items.utils import ExporterNotifications
 
 
 class SettingsPack:
@@ -37,7 +37,7 @@ class SettingsPack:
         self.merging_settings = dict()
         self.none_fallback = gdx.NoneFallback.USE_IT
         self.none_export = gdx.NoneExport.DO_NOT_EXPORT
-        self.notifications = Notifications()
+        self.notifications = ExporterNotifications()
 
     def to_dict(self):
         """Stores the settings pack into a JSON compatible dictionary."""

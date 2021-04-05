@@ -14,19 +14,28 @@ Contains utilities to scan for Data Connection's output resources.
 :authors: A. Soininen (VTT)
 :date:    4.12.2020
 """
-import pathlib
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+import os.path
+from spine_engine.project_item.project_item_resource import file_resource
+from spine_engine.utils.serialization import path_in_dir
 
 
-def scan_for_resources(provider, files):
+def scan_for_resources(provider, files, project_dir):
     """
     Creates file resources based on DC files.
 
     Args:
         provider (ProjectItem or ExecutableItem): resource provider item
         files (list of str): path to fata files
+        project_dir (str): absolute path to project directory
 
     Returns:
         list of ProjectItemResource: output resources
     """
-    return [ProjectItemResource(provider, "file", url=pathlib.Path(ref).as_uri()) for ref in files]
+    resources = list()
+    for ref in files:
+        if path_in_dir(ref, project_dir):
+            resource = file_resource(provider.name, ref, label=os.path.basename(ref))
+        else:
+            resource = file_resource(provider.name, ref)
+        resources.append(resource)
+    return resources

@@ -18,7 +18,7 @@ Module for tool icon class.
 
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QTimeLine, Slot, QPointF
-from spinetoolbox.graphics_items import ProjectItemIcon
+from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import AnimationSignaller
 
 
@@ -54,7 +54,7 @@ class ToolIcon(ProjectItemIcon):
         delta = QPointF(self._anim_delta_x_factor * value, delta_y)
         self.svg_item.setPos(self._svg_item_pos + delta)
 
-    @Slot("QTimeLine::State")
+    @Slot(int)
     def _handle_time_line_state_changed(self, new_state):
         if new_state == QTimeLine.Running:
             self.svg_item.setTransformOriginPoint(0, self._anim_transformation_origin_point_y)
@@ -77,3 +77,13 @@ class ToolIcon(ProjectItemIcon):
         if self.time_line.state() != QTimeLine.Running:
             return
         self.time_line.stop()
+
+    def mouseDoubleClickEvent(self, e):
+        """Opens Tool Specification editor when this Tool icon is double-clicked.
+
+        Args:
+            e (QGraphicsSceneMouseEvent): Event
+        """
+        super().mouseDoubleClickEvent(e)
+        item = self._toolbox.project_item_model.get_item(self._name)
+        item.project_item.show_specification_window()

@@ -10,24 +10,34 @@
 ######################################################################################################################
 
 """
-Contains the Notifications class.
+Exporter properties widget.
 
 :author: A. Soininen (VTT)
-:date:   6.5.2020
+:date:   11.12.2020
 """
 
+from PySide2.QtWidgets import QWidget
+from ..item_info import ItemInfo
 
-class Notifications:
-    """
-    Holds flags for different error conditions.
 
-    Attributes:
-        duplicate_output_file_name (bool): True if there are duplicate output file names
-        missing_output_file_name (bool): True if the output file name is missing
-        missing_settings (bool): True if export settings are missing
-    """
+class ExporterProperties(QWidget):
+    """A main window widget to show GdxExport item's properties."""
 
-    def __init__(self):
-        self.duplicate_output_file_name = False
-        self.missing_output_file_name = False
-        self.missing_settings = False
+    def __init__(self, toolbox):
+        """
+        Args:
+            toolbox (ToolboxUI): a main window instance
+        """
+        from ..ui.exporter_properties import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__()
+        self._ui = Ui_Form()
+        self._ui.setupUi(self)
+        toolbox.ui.tabWidget_item_properties.addTab(self, ItemInfo.item_type())
+        model = toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
+        self.ui.specification_combo_box.setModel(model)
+
+    @property
+    def ui(self):
+        """The UI form of this widget."""
+        return self._ui

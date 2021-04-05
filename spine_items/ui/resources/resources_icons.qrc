@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/icons">
+    <file>file-regular.svg</file>
     <file>save.svg</file>
     <file>Spine_symbol.png</file>
     <file>copy.svg</file>
@@ -27,5 +28,6 @@
     <file>item_icons/hammer.svg</file>
     <file>item_icons/screwdriver.svg</file>
     <file>item_icons/paint-brush-solid.svg</file>
+    <file>item_icons/database-export-gdx.svg</file>
   </qresource>
 </RCC>

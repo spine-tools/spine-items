@@ -15,24 +15,16 @@ Gimlet class module.
 :author: P. Savolainen (VTT)
 :date:   15.4.2020
 """
-
 import os
-from collections import Counter
-from PySide2.QtCore import Slot, Qt
+from PySide2.QtCore import QModelIndex, Slot, Qt
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.config import GIMLET_WORK_DIR_NAME
-from spine_engine.utils.serialization import (
-    deserialize_checked_states,
-    serialize_checked_states,
-    serialize_path,
-    deserialize_path,
-)
-from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .commands import UpdateShellCheckBoxCommand, UpdateShellComboboxCommand, UpdatecmdCommand, UpdateWorkDirModeCommand
 from ..commands import ChangeItemSelectionCommand, UpdateCmdLineArgsCommand
-from ..models import GimletCommandLineArgsModel, InputFileListModel
+from ..models import GimletCommandLineArgsModel, CheckableFileListModel
+from ..utils import cmd_line_arg_from_dict, LabelArg
 
 
 class Gimlet(ProjectItem):
@@ -70,8 +62,9 @@ class Gimlet(ProjectItem):
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
-        self._file_model = InputFileListModel(header_label="Available resources")
-        self._upstream_resources = list()  # ProjectItemResources for handling changes in the DAG on Design View
+        self._file_model = CheckableFileListModel(header_label="Available resources", draggable=True)
+        self._resources_from_downstream = list()
+        self._resources_from_upstream = list()
         self.use_shell = use_shell
         self.shell_index = shell_index
         self.cmd = cmd
@@ -82,7 +75,7 @@ class Gimlet(ProjectItem):
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._file_model.set_initial_state(selections if selections is not None else dict())
-        self._file_model.selected_state_changed.connect(self._push_file_selection_change_to_undo_stack)
+        self._file_model.checked_state_changed.connect(self._push_file_selection_change_to_undo_stack)
         self._work_dir_mode = None
         self.update_work_dir_mode(work_dir_mode)
         self.default_gimlet_work_dir = os.path.join(self.data_dir, GIMLET_WORK_DIR_NAME)
@@ -207,7 +200,7 @@ class Gimlet(ProjectItem):
 
     @Slot(bool)
     def _add_selected_file_path_args(self, _=False):
-        new_args = [index.data() for index in self._properties_ui.treeView_files.selectedIndexes()]
+        new_args = [LabelArg(index.data()) for index in self._properties_ui.treeView_files.selectedIndexes()]
         self._push_update_cmd_line_args_command(self.cmd_line_args + new_args)
 
     @Slot(list)
@@ -230,14 +223,10 @@ class Gimlet(ProjectItem):
         if self._active:
             self._properties_ui.treeView_cmdline_args.setFocus()
 
-    @Slot(bool, str)
-    def _push_file_selection_change_to_undo_stack(self, selected, label):
+    @Slot(QModelIndex, bool)
+    def _push_file_selection_change_to_undo_stack(self, index, checked):
         """Makes changes to file selection undoable."""
-        self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self, selected, label))
-
-    def set_file_selected(self, label, selected):
-        """Handles selecting files in Gimlet file list."""
-        self._file_model.set_selected(label, selected)
+        self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self.name, self._file_model, index, checked))
 
     @Slot(bool)
     def push_work_dir_mode_cmd(self, checked):
@@ -268,21 +257,19 @@ class Gimlet(ProjectItem):
             self._properties_ui.radioButton_unique.setChecked(True)
         self._properties_ui.radioButton_default.blockSignals(False)
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
-        """Saves a copy of ProjectItemResources for handling
-        changes in the DAG on Design View.
+    def upstream_resources_updated(self, resources):
+        self._resources_from_upstream = list(resources)
+        self._update_files_and_cmd_line_args()
 
-        See also base class.
+    def downstream_resources_updated(self, resources):
+        self._resources_from_downstream = list(resources)
+        self._update_files_and_cmd_line_args()
 
-        Args:
-            upstream_resources (list): ProjectItemResources available from upstream
-            downstream_resources (list): ProjectItemResources available from downstream
-        """
-        self._upstream_resources = upstream_resources + downstream_resources
-        all_resources = upstream_resources + downstream_resources
+    def _update_files_and_cmd_line_args(self):
+        """Updates the file model and command line arguments with regards to available resources."""
+        all_resources = self._resources_from_upstream + self._resources_from_downstream
         self._file_model.update(all_resources)
-        self._notify_if_duplicate_file_paths()
-        # Update cmdline args
+        self._check_notifications()
         cmd_line_args = self.cmd_line_args.copy()
         for resource in all_resources:
             updated_from = resource.metadata.get("updated_from")
@@ -299,12 +286,13 @@ class Gimlet(ProjectItem):
         d["use_shell"] = self.use_shell
         d["shell_index"] = self.shell_index
         d["cmd"] = self.cmd
-        d["selections"] = serialize_checked_states(self._file_model.files, self._project.project_dir)
+        selections = list()
+        for row in range(self._file_model.rowCount()):
+            label, selected = self._file_model.checked_data(self._file_model.index(row, 0))
+            selections.append([label, selected])
+        d["file_selection"] = selections
         d["work_dir_mode"] = self._work_dir_mode
-        # NOTE: We enclose the arguments in quotes because that preserves the args that have spaces
-        cmd_line_args = [f'"{arg}"' for arg in self.cmd_line_args]
-        cmd_line_args = split_cmdline_args(" ".join(cmd_line_args))
-        d["cmd_line_args"] = [serialize_path(arg, self._project.project_dir) for arg in cmd_line_args]
+        d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
         return d
 
     @staticmethod
@@ -314,10 +302,10 @@ class Gimlet(ProjectItem):
         use_shell = item_dict.get("use_shell", True)
         shel_index = item_dict.get("shell_index", 0)
         cmd = item_dict.get("cmd", "")
-        selections = deserialize_checked_states(item_dict.get("selections", list()), project.project_dir)
+        selections = {label: selected for label, selected in item_dict.get("file_selection", list())}
         work_dir_mode = item_dict.get("work_dir_mode", True)
         cmd_line_args = item_dict.get("cmd_line_args", [])
-        cmd_line_args = [deserialize_path(arg, project.project_dir) for arg in cmd_line_args]
+        cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in cmd_line_args]
         return Gimlet(
             name,
             description,
@@ -340,28 +328,21 @@ class Gimlet(ProjectItem):
                 f"Link established. Files from <b>{source_item.name}</b> are now available in <b>{self.name}</b>."
             )
             return
-        if source_item.item_type() in [
-            "Data Store",
-            "Data Transformer",
-            "Data Connection",
-            "Tool",
-            "GdxExporter",
-            "Gimlet",
-        ]:
+        if source_item.item_type() in ["Data Store", "Data Transformer", "Data Connection", "Tool", "Gimlet"]:
             self._logger.msg.emit("Link established")
+            return
+        if source_item.item_type() in ("GdxExporter", "Exporter"):
+            self._logger.msg.emit(
+                f"Link established. Files exported by <b>{source_item.name}</b> are "
+                f"now available in <b>{self.name}</b>."
+            )
             return
         super().notify_destination(source_item)
 
-    def _notify_if_duplicate_file_paths(self):
-        """Adds a notification if file list contains duplicate entries."""
-        labels = list()
-        for item in self._file_model.files:
-            labels.append(item.label)
-        file_counter = Counter(labels)
-        duplicates = list()
-        for label, count in file_counter.items():
-            if count > 1:
-                duplicates.append(label)
+    def _check_notifications(self):
+        """See base class."""
+        self.clear_notifications()
+        duplicates = self._file_model.duplicate_paths()
         if duplicates:
             self.add_notification("Duplicate input files from predecessor items:<br>{}".format("<br>".join(duplicates)))
 
@@ -379,4 +360,4 @@ class Gimlet(ProjectItem):
         Returns:
             list: List of ProjectItemResources
         """
-        return self._upstream_resources
+        return self._resources_from_upstream + self._resources_from_downstream

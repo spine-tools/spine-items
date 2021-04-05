@@ -14,10 +14,11 @@ Contains :class:`SpecificationEditorWindow`.
 :author: A. Soininen (VTT)
 :date:   2.10.2020
 """
-from PySide2.QtCore import Qt, Signal, Slot
+from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QMainWindow, QDialogButtonBox, QUndoStack
 from spinetoolbox.config import STATUSBAR_SS
+from spinetoolbox.widgets.notification import ChangeNotifier
 from .entity_class_renaming_widget import EntityClassRenamingWidget
 from .parameter_renaming_widget import ParameterRenamingWidget
 from ..data_transformer_specification import DataTransformerSpecification
@@ -36,13 +37,13 @@ _CLASSES_TO_DISPLAY_NAMES = {class_: name for name, class_ in _SETTINGS_CLASSES.
 class SpecificationEditorWindow(QMainWindow):
     """Data transformer's specification editor."""
 
-    def __init__(self, toolbox, specification=None, urls=None, item=None):
+    def __init__(self, toolbox, specification=None, item=None, urls=None):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window
             specification (ProjectItemSpecification, optional): transformer specification
+            item (ProjectItem, optional): invoking project item, if window was opened from its properties tab
             urls (dict, optional): a mapping from provider name to database URL
-            item_name (str, optional): invoking project item's name, if window was opened from its properties tab
         """
         from ..ui.specification_editor_widget import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
@@ -62,11 +63,12 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self._undo_stack = QUndoStack(self)
+        self._change_notifier = ChangeNotifier(self._undo_stack, self)
         self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
         self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
         self._ui.statusbar.addPermanentWidget(self._button_box)
         self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
@@ -90,8 +92,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
         self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
         self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
+        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
-        self._ui.actionSaveAndClose.triggered.connect(self.save_and_close)
 
     def _populate_main_menu(self):
         menu = self._spec_toolbar.menu
@@ -100,14 +102,14 @@ class SpecificationEditorWindow(QMainWindow):
         undo_action.setShortcuts(QKeySequence.Undo)
         redo_action.setShortcuts(QKeySequence.Redo)
         menu.addActions([redo_action, undo_action])
-        menu.addSeparator()
-        menu.addAction(self._ui.actionSaveAndClose)
         self._ui.menubar.hide()
         self.addAction(self._spec_toolbar.menu_action)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
 
     @Slot(str)
     def _change_filter_widget(self, filter_name):

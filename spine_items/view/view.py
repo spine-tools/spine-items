@@ -106,26 +106,18 @@ class View(ProjectItem):
         """Update View tab name label. Used only when renaming project items."""
         self._properties_ui.label_view_name.setText(self.name)
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
-        """Update the list of references that this item is viewing."""
-        self._update_references_list(upstream_resources)
-
-    def _update_references_list(self, resources_upstream):
-        """Updates the references list with resources upstream.
-
-        Args:
-            resources_upstream (list): ProjectItemResource instances
-        """
+    def upstream_resources_updated(self, resources):
+        """See base class."""
         self._references.clear()
-        for resource in resources_upstream:
+        for resource in resources:
             if resource.type_ == "database" and resource.scheme == "sqlite":
                 url = make_url(resource.url)
-                self._references[url.database] = (url, resource.provider.name)
+                self._references[url.database] = (url, resource.provider_name)
             elif resource.type_ == "file":
                 filepath = resource.path
                 if os.path.splitext(filepath)[1] == ".sqlite":
                     url = URL("sqlite", database=filepath)
-                    self._references[url.database] = (url, resource.provider.name)
+                    self._references[url.database] = (url, resource.provider_name)
         self.populate_reference_list()
 
     def _selected_indexes(self):

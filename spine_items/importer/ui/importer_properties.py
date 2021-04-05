@@ -115,8 +115,6 @@ class Ui_Form(object):
         self.treeView_files.setFont(font2)
         self.treeView_files.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView_files.setTextElideMode(Qt.ElideLeft)
-        self.treeView_files.setIndentation(5)
-        self.treeView_files.setRootIsDecorated(False)
         self.treeView_files.setUniformRowHeights(True)
 
         self.verticalLayout_21.addWidget(self.treeView_files)

@@ -16,10 +16,89 @@ Provides MainProgramTextEdit.
 :date:   28.1.2020
 """
 
-from PySide2.QtWidgets import QTextEdit
+from pygments.styles import get_style_by_name
+from pygments.lexers import get_lexer_by_name
+from pygments.util import ClassNotFound
+from pygments.token import Token
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QPlainTextEdit, QPlainTextDocumentLayout, QAction
+from PySide2.QtGui import (
+    QSyntaxHighlighter,
+    QTextCharFormat,
+    QBrush,
+    QColor,
+    QFontMetrics,
+    QFontDatabase,
+    QFont,
+    QKeySequence,
+)
 
 
-class MainProgramTextEdit(QTextEdit):
+class CustomSyntaxHighlighter(QSyntaxHighlighter):
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
+        self.lexer = None
+        self._formats = {}
+
+    def set_style(self, style):
+        self._formats.clear()
+        for ttype, tstyle in style:
+            text_format = self._formats[ttype] = QTextCharFormat()
+            if tstyle['color']:
+                brush = QBrush(QColor("#" + tstyle['color']))
+                text_format.setForeground(brush)
+            if tstyle['bgcolor']:
+                brush = QBrush(QColor("#" + tstyle['bgcolor']))
+                text_format.setBackground(brush)
+            if tstyle['bold']:
+                text_format.setFontWeight(QFont.Bold)
+            if tstyle['italic']:
+                text_format.setFontItalic(True)
+            if tstyle['underline']:
+                text_format.setFontUnderline(True)
+
+    def highlightBlock(self, text):
+        if self.lexer is None:
+            return
+        for start, ttype, subtext in self.lexer.get_tokens_unprocessed(text):
+            while ttype not in self._formats:
+                ttype = ttype.parent
+            text_format = self._formats.get(ttype, QTextCharFormat())
+            self.setFormat(start, len(subtext), text_format)
+
+
+class MainProgramTextEdit(QPlainTextEdit):
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
+        self._highlighter = CustomSyntaxHighlighter(self)
+        style = get_style_by_name("monokai")
+        self._highlighter.set_style(style)
+        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        self.setFont(font)
+        foreground_color = style.styles[Token.Text]
+        self.setStyleSheet(f"QPlainTextEdit {{background-color: {style.background_color}; color: {foreground_color};}}")
+        self.save_action = QAction(self)
+        self.save_action.setShortcut(QKeySequence.Save)
+        self.save_action.setShortcutContext(Qt.WidgetShortcut)
+        self.save_action.setEnabled(False)
+        self.addAction(self.save_action)
+
     def insertFromMimeData(self, source):
         if source.hasText():
             self.insertPlainText(source.text())
+
+    def set_lexer_name(self, lexer_name):
+        try:
+            self._highlighter.lexer = get_lexer_by_name(lexer_name)
+            self._highlighter.rehighlight()
+        except ClassNotFound:
+            # No lexer for aliases 'gams' nor 'executable'
+            pass
+
+    def setDocument(self, doc):
+        doc.setDocumentLayout(QPlainTextDocumentLayout(doc))
+        super().setDocument(doc)
+        self._highlighter.setDocument(doc)
+        doc.setDefaultFont(self.font())
+        self.setTabStopDistance(QFontMetrics(self.font()).horizontalAdvance(4 * " "))
+        doc.modificationChanged.connect(self.save_action.setEnabled)

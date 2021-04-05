@@ -18,7 +18,7 @@ Data connection properties widget.
 
 import os
 from PySide2.QtWidgets import QWidget
-from PySide2.QtCore import Qt, Slot, QUrl
+from PySide2.QtCore import QPoint, Qt, Slot, QUrl
 from spinetoolbox.config import TREEVIEW_HEADER_SS
 from .custom_menus import DcRefContextMenu, DcDataContextMenu
 
@@ -51,7 +51,7 @@ class DataConnectionPropertiesWidget(QWidget):
         self.ui.treeView_dc_references.customContextMenuRequested.connect(self.show_references_context_menu)
         self.ui.treeView_dc_data.customContextMenuRequested.connect(self.show_data_context_menu)
 
-    @Slot("QPoint", name="show_references_context_menu")
+    @Slot(QPoint)
     def show_references_context_menu(self, pos):
         """Create and show a context-menu in data connection properties
         references view.
@@ -84,7 +84,7 @@ class DataConnectionPropertiesWidget(QWidget):
         elif option == "Copy reference(s) to project":
             dc.copy_to_project()
 
-    @Slot("QPoint", name="show_data_context_menu")
+    @Slot(QPoint)
     def show_data_context_menu(self, pos):
         """Create and show a context-menu in data connection properties
         data view.

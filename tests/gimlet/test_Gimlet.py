@@ -90,7 +90,9 @@ class TestGimlet(unittest.TestCase):
 
         source_item.item_type = MagicMock(return_value="GdxExporter")
         self.gimlet.notify_destination(source_item)
-        self.gimlet.logger.msg.emit.assert_called_with("Link established")
+        self.gimlet.logger.msg.emit.assert_called_with(
+            "Link established. Files exported by <b>source name</b> are now available in <b>G</b>."
+        )
 
         source_item.item_type = MagicMock(return_value="Tool")
         self.gimlet.notify_destination(source_item)

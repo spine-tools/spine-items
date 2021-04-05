@@ -204,11 +204,11 @@ class TestDataStore(unittest.TestCase):
             mock_qfile_dialog.getSaveFileName.assert_called_once()
         # Open form
         self.toolbox.db_mngr = MagicMock()
-        with mock.patch("spine_items.data_store.data_store.MultiSpineDBEditor") as mock_editor:
-            self.ds_properties_ui.pushButton_ds_open_editor.click()
-            sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
-            self.assertIsNotNone(sa_url)
-            mock_editor.assert_called_with(self.toolbox.db_mngr, {sa_url: 'DS'})
+        self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
+        self.ds_properties_ui.pushButton_ds_open_editor.click()
+        sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
+        self.assertIsNotNone(sa_url)
+        self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: 'DS'})
 
     def test_open_db_editor2(self):
         """Test that selecting the 'sqlite' dialect, typing the path to an existing db file,
@@ -223,11 +223,11 @@ class TestDataStore(unittest.TestCase):
         self.ds_properties_ui.lineEdit_database.editingFinished.emit()
         # Open form
         self.toolbox.db_mngr = MagicMock()
-        with mock.patch("spine_items.data_store.data_store.MultiSpineDBEditor") as mock_editor:
-            self.ds_properties_ui.pushButton_ds_open_editor.click()
-            sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
-            self.assertIsNotNone(sa_url)
-            mock_editor.assert_called_with(self.toolbox.db_mngr, {sa_url: 'DS'})
+        self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
+        self.ds_properties_ui.pushButton_ds_open_editor.click()
+        sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
+        self.assertIsNotNone(sa_url)
+        self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: 'DS'})
 
     def test_notify_destination(self):
         self.ds.logger.msg = mock.MagicMock()

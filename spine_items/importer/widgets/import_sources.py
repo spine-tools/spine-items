@@ -10,28 +10,29 @@
 ######################################################################################################################
 
 """
-Contains ImportEditor widget and SourceDataTableMenu.
+Contains ImportSources widget and SourceDataTableMenu.
 
 :author: P. Vennström (VTT)
 :date:   1.6.2019
 """
 
 from copy import deepcopy
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QPoint, Qt, Signal, Slot
-from spinedb_api import ObjectClassMapping
-from spinedb_api.spine_io.type_conversion import value_to_convert_spec
+from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QPoint, Qt, Signal, Slot, QPersistentModelIndex
+from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
+from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from .custom_menus import SourceListMenu, SourceDataTableMenu
 from .options_widget import OptionsWidget
-from ..commands import PasteMappings, PasteOptions
+from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict
 from ..mvcmodels.mapping_list_model import MappingListModel
 from ..mvcmodels.mapping_specification_model import MappingSpecificationModel
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
 from ..mvcmodels.source_table_list_model import SourceTableItem, SourceTableListModel
 
 
-class ImportEditor(QObject):
+class ImportSources(QObject):
     """
-    Provides an interface for defining one or more Mappings associated to a data Source (CSV file, Excel file, etc).
+    Loads and controls the 'Sources' and 'Source data' part of the window.
+    Loads the 'Mappings' part of the window as the user changes the source table.
     """
 
     table_checked = Signal()
@@ -72,6 +73,7 @@ class ImportEditor(QObject):
 
         # connect signals
         self._ui_options_widget.about_to_undo.connect(self.select_table)
+        self._ui_options_widget.load_default_mapping_requested.connect(self._load_default_mapping)
         self._ui.source_list.customContextMenuRequested.connect(self.show_source_list_context_menu)
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_selected_table)
         self._ui.source_data_table.customContextMenuRequested.connect(self._ui_source_data_table_menu.request_menu)
@@ -81,6 +83,7 @@ class ImportEditor(QObject):
         self._connector.data_ready.connect(self.update_preview_data)
         self._connector.tables_ready.connect(self.update_tables)
         self._connector.mapped_data_ready.connect(self.mapped_data_ready.emit)
+        self._connector.default_mapping_ready.connect(self._set_default_mapping)
         # when data is ready set loading status to False.
         self._connector.connection_ready.connect(lambda: self.set_loading_status(False))
         self._connector.data_ready.connect(lambda: self.set_loading_status(False))
@@ -123,6 +126,14 @@ class ImportEditor(QObject):
         self._ui.dockWidget_mapping_spec.setDisabled(status)
 
     @Slot()
+    def _load_default_mapping(self):
+        self._connector.request_default_mapping()
+
+    @Slot(dict)
+    def _set_default_mapping(self, mapping):
+        self._undo_stack.push(RestoreMappingsFromDict(self, mapping))
+
+    @Slot()
     def request_new_tables_from_connector(self):
         """
         Requests new tables data from connector
@@ -138,7 +149,10 @@ class ImportEditor(QObject):
         if item is None:
             return
         if item.name not in self._table_mappings:
-            self._table_mappings[item.name] = MappingListModel([ObjectClassMapping()], item.name, self._undo_stack)
+            specification = MappingSpecificationModel(
+                item.name, "", import_mapping_from_dict({"map_type": "ObjectClass"}), self._undo_stack
+            )
+            self._table_mappings[item.name] = MappingListModel([specification], item.name, self._undo_stack)
         self.source_table_selected.emit(item.name, self._table_mappings[item.name])
         self._connector.set_table(item.name)
         self._connector.request_data(item.name, max_rows=100)
@@ -175,7 +189,7 @@ class ImportEditor(QObject):
         for t_name, t_mapping in tables.items():
             if t_name not in self._table_mappings:
                 if t_mapping is None:
-                    t_mapping = ObjectClassMapping()
+                    t_mapping = import_mapping_from_dict({"map_type": "ObjectClass"})
                 specification = MappingSpecificationModel(t_name, "", t_mapping, self._undo_stack)
                 self._table_mappings[t_name] = MappingListModel([specification], t_name, self._undo_stack)
                 new_tables.append(t_name)
@@ -215,10 +229,11 @@ class ImportEditor(QObject):
                 return
             if not header:
                 header = list(range(1, len(data[0]) + 1))
-            self._preview_table_model.reset_model(main_data=data)
+            # Set header data before reseting model because the header needs to be there for some slots...
             self._preview_table_model.set_horizontal_header_labels(header)
-            types = self._connector.table_types.get(self._connector.current_table)
-            row_types = self._connector.table_row_types.get(self._connector.current_table)
+            self._preview_table_model.reset_model(main_data=data)
+            types = self._connector.table_types.get(self._connector.current_table, {})
+            row_types = self._connector.table_row_types.get(self._connector.current_table, {})
             for col in range(len(header)):
                 col_type = types.get(col, "string")
                 self._preview_table_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Horizontal)
@@ -266,11 +281,11 @@ class ImportEditor(QObject):
         Args:
             mapping (dict): mapping
         """
-        current = self._ui.source_list.selectionModel().currentIndex()
+        current = QPersistentModelIndex(self._ui.source_list.selectionModel().currentIndex())
         self._restore_mapping(mapping)
         self._ui.source_list.selectionModel().setCurrentIndex(current, QItemSelectionModel.ClearAndSelect)
 
-    def get_settings_dict(self):
+    def get_mapping_dict(self):
         """Returns a dictionary with type of connector, connector options for tables,
         mappings for tables, selected tables.
 
@@ -330,10 +345,11 @@ class ImportEditor(QObject):
         mapping_specification = self._preview_table_model.mapping_specification()
         if mapping_specification is None:
             return
-        if mapping_specification.last_pivot_row == -1:
+        last_pivot_row = mapping_specification.last_pivot_row()
+        if last_pivot_row == -1:
             pivoted_rows = []
         else:
-            pivoted_rows = list(range(mapping_specification.last_pivot_row + 1))
+            pivoted_rows = list(range(last_pivot_row + 1))
         self._ui.source_data_table.verticalHeader().sections_with_buttons = pivoted_rows
 
     @Slot(QPoint)

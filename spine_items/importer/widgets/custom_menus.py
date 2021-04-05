@@ -16,7 +16,7 @@ Classes for context menus used alongside the Importer project item.
 :date:   9.1.2018
 """
 
-from PySide2.QtCore import Qt, QPoint
+from PySide2.QtCore import Qt, QPoint, Slot
 from PySide2.QtWidgets import QMenu
 from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu
 
@@ -101,6 +101,7 @@ class SourceDataTableMenu(QMenu):
             return
         self._model.change_component_mapping(name, map_type, value)
 
+    @Slot(QPoint)
     def request_menu(self, pos=None):
         if not self._model:
             return

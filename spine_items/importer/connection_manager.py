@@ -27,30 +27,34 @@ class ConnectionManager(QObject):
     start_table_get = Signal()
     start_data_get = Signal(str, dict, int)
     start_mapped_data_get = Signal(dict, dict, dict, dict, int)
+    start_default_mapping_get = Signal()
 
-    # Signal with error message if connection fails
     connection_failed = Signal(str)
+    """Signal with error message if connection fails  """
 
-    # Signal that a connection to the datasource is ready
     connection_ready = Signal()
+    """Signal that a connection to the datasource is ready  """
 
-    # Signal that connection is being closed
     connection_closed = Signal()
+    """Signal that connection is being closed  """
 
-    # error while reading data or connection to data source
     error = Signal(str)
+    """error while reading data or connection to data source  """
 
-    # signal that the data connection is getting data
     fetching_data = Signal()
+    """signal that the data connection is getting data  """
 
-    # data from source is ready, should send list of data and headers
     data_ready = Signal(list, list)
+    """data from source is ready, should send list of data and headers  """
 
-    # tables from source is ready, should send a list of str of available tables
     tables_ready = Signal(dict)
+    """tables from source is ready, should send a list of str of available tables  """
 
-    # mapped data read from data source
     mapped_data_ready = Signal(dict, list)
+    """mapped data read from data source  """
+
+    default_mapping_ready = Signal(dict)
+    """default mapping ready from data source  """
 
     current_table_changed = Signal()
     """Emitted when the current table has changed."""
@@ -158,6 +162,11 @@ class ConnectionManager(QObject):
             self.fetching_data.emit()
             self.start_mapped_data_get.emit(table_mappings, options, types, row_types, max_rows)
 
+    def request_default_mapping(self):
+        """Request default mapping from worker."""
+        if self.is_connected:
+            self.start_default_mapping_get.emit()
+
     def connection_ui(self):
         """
         launches a modal ui that prompts the user to select source.
@@ -186,23 +195,26 @@ class ConnectionManager(QObject):
         self._worker.tablesReady.connect(self._handle_tables_ready)
         self._worker.dataReady.connect(self.data_ready.emit)
         self._worker.mappedDataReady.connect(self.mapped_data_ready.emit)
+        self._worker.defaultMappingReady.connect(self.default_mapping_ready.emit)
         self._worker.error.connect(self.error.emit)
         self._worker.connectionFailed.connect(self.connection_failed.emit)
         # connect start working signals
         self.start_table_get.connect(self._worker.tables)
         self.start_data_get.connect(self._worker.data)
         self.start_mapped_data_get.connect(self._worker.mapped_data)
+        self.start_default_mapping_get.connect(self._worker.default_mapping)
         self.connection_closed.connect(self._worker.disconnect)
 
         # when thread is started, connect worker to source
         self._thread.started.connect(self._worker.init_connection)
         self._thread.start()
 
+    @Slot()
     def _handle_connection_ready(self):
         self._is_connected = True
         self.connection_ready.emit()
 
-    @Slot(object)
+    @Slot(dict)
     def _handle_tables_ready(self, table_options):
         if isinstance(table_options, list):
             table_options = {name: {} for name in table_options}
@@ -231,7 +243,7 @@ class ConnectionManager(QObject):
         if self._current_table in self._table_options:
             self.current_table_changed.emit()
 
-    @Slot()
+    @Slot(dict)
     def update_options(self, options):
         if not self._current_table:
             return
@@ -299,18 +311,20 @@ class ConnectionWorker(QObject):
         connection (class): A class derived from `SourceConnection` for connecting to the source file
     """
 
-    # Signal with error message if connection fails
     connectionFailed = Signal(str)
-    # Signal with error message if something errors
+    """Signal with error message if connection fails"""
     error = Signal(str)
-    # Signal that connection is ready to be read
+    """Signal with error message if something errors"""
     connectionReady = Signal()
-    # Signal when tables from source is ready, list of table names
+    """Signal that connection is ready to be read"""
     tablesReady = Signal(list)
-    # Signal when data from a specific table in source is ready, list of data and list of headers
+    """Signal when tables from source is ready, list of table names"""
     dataReady = Signal(list, list)
-    # Signal when data is read and mapped, dict with data and list of errors when reading data with mappings
+    """Signal when data from a specific table in source is ready, list of data and list of headers"""
     mappedDataReady = Signal(dict, list)
+    """Signal when data is read and mapped, dict with data and list of errors when reading data with mappings"""
+    defaultMappingReady = Signal(dict)
+    """Signal when default mapping is ready"""
 
     def __init__(self, source, connection, connection_settings, parent=None):
         super().__init__(parent)
@@ -365,4 +379,13 @@ class ConnectionWorker(QObject):
             self._connection.disconnect()
         except Exception as error:
             self.error.emit(f"Could not disconnect from source: {error}")
+            raise error
+
+    @Slot()
+    def default_mapping(self):
+        try:
+            mapping = self._connection.create_default_mapping()
+            self.defaultMappingReady.emit(mapping)
+        except Exception as error:
+            self.error.emit(f"Could not default mapping from source: {error}")
             raise error

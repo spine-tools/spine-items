@@ -8,48 +8,22 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
 """
-Contains :class:`Database`.
+Exporter project item info.
 
 :authors: A. Soininen (VTT)
-:date:    14.10.2020
+:date:   10.12.2020
 """
+from spine_engine.project_item.project_item_info import ProjectItemInfo
 
 
-class Database:
-    """
-    Database specific export settings.
-
-    Attributes:
-        url (str): database URL
-        output_file_name (str): output file name (relative to item's data dir)
-    """
-
-    def __init__(self):
-        self.url = ""
-        self.output_file_name = ""
-
-    def to_dict(self):
-        """
-        Serializes :class:`Database` into a dictionary.
-
-        Returns:
-            dict: serialized :class:`Database`
-        """
-        return {"output_file_name": self.output_file_name}
+class ItemInfo(ProjectItemInfo):
+    @staticmethod
+    def item_category():
+        """See base class."""
+        return "Exporters"
 
     @staticmethod
-    def from_dict(database_dict):
-        """
-        Deserializes :class:`Database` from a dictionary.
-
-        Args:
-            database_dict (dict): serialized :class:`Database`
-
-        Returns:
-            Database: deserialized instance
-        """
-        db = Database()
-        db.output_file_name = database_dict["output_file_name"]
-        return db
+    def item_type():
+        """See base class."""
+        return "Exporter"

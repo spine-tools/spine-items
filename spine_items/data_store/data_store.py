@@ -23,13 +23,12 @@ from PySide2.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
-from spine_engine import ExecutionDirection
 from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
 from ..commands import UpdateCancelOnErrorCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
-from .utils import convert_to_sqlalchemy_url, make_label
+from .utils import convert_to_sqlalchemy_url
 from .output_resources import scan_for_resources
 
 
@@ -60,7 +59,7 @@ class DataStore(ProjectItem):
         self._url = self.parse_url(url)
         self._additional_resource_metadata = None
         self._spine_db_editor = None
-        self._open_db_editors = {}
+        self._multi_db_editors_open = {}
         self._open_url_menu = QMenu("Open URL in Spine DB editor", self._toolbox)
         self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
 
@@ -83,7 +82,7 @@ class DataStore(ProjectItem):
         super().set_up()
         self._actions.clear()
         self._actions.append(QAction("Open URL in Spine DB editor"))
-        self._actions[-1].triggered.connect(self.open_url_in_new_db_editor)
+        self._actions[-1].triggered.connect(self.open_url_in_spine_db_editor)
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
@@ -102,7 +101,7 @@ class DataStore(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_ds_open_dir.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_new_db_editor
+        s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_spine_db_editor
         s[self._properties_ui.toolButton_select_sqlite_file.clicked] = self.select_sqlite_file
         s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
         s[self._properties_ui.toolButton_copy_url.clicked] = self.copy_url
@@ -196,8 +195,10 @@ class DataStore(ProjectItem):
 
     def do_update_url(self, **kwargs):
         self._url.update(kwargs)
-        self.item_changed.emit()
         self.load_url_into_selections(kwargs)
+        self._resources_to_predecessors_changed()
+        self._resources_to_successors_changed()
+        self._check_notifications()
 
     @Slot()
     def refresh_host(self):
@@ -326,13 +327,13 @@ class DataStore(ProjectItem):
         self._properties_ui.lineEdit_password.setEnabled(True)
 
     def actions(self):
-        self._open_db_editors = {x.name(): x for x in self._toolbox.db_mngr.get_all_multi_spine_db_editors()}
-        if not self._open_db_editors:
+        self._multi_db_editors_open = {x.name(): x for x in self._toolbox.db_mngr.get_all_multi_spine_db_editors()}
+        if not self._multi_db_editors_open:
             return super().actions()
         self._open_url_menu.clear()
         self._open_url_menu.addAction("New window")
         self._open_url_menu.addSeparator()
-        for name in self._open_db_editors:
+        for name in self._multi_db_editors_open:
             self._open_url_menu.addAction(name)
         return [self._open_url_menu.menuAction()]
 
@@ -340,14 +341,21 @@ class DataStore(ProjectItem):
     def _handle_open_url_menu_triggered(self, action):
         """Opens current url."""
         if action.text() == "New window":
-            self.open_url_in_new_db_editor()
+            self._open_url_in_new_db_editor()
             return
-        db_editor = self._open_db_editors[action.text()]
+        db_editor = self._multi_db_editors_open[action.text()]
         self._open_url_in_existing_db_editor(db_editor)
 
     @Slot(bool)
-    def open_url_in_new_db_editor(self, checked=False):
+    def open_url_in_spine_db_editor(self, checked=False):
         """Opens current url in the Spine database editor."""
+        sa_url = self.sql_alchemy_url()
+        if sa_url is not None:
+            db_url_codenames = {sa_url: self.name}
+            self._toolbox.db_mngr.open_db_editor(db_url_codenames)
+        self._check_notifications()
+
+    def _open_url_in_new_db_editor(self, checked=False):
         sa_url = self.sql_alchemy_url()
         if sa_url is not None:
             self._spine_db_editor = MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name})
@@ -358,7 +366,7 @@ class DataStore(ProjectItem):
         if sa_url is not None:
             db_editor.add_new_tab({sa_url: self.name})
             db_editor.raise_()
-            qApp.setActiveWindow(db_editor)  # pylint: disable=undefined-variable
+            db_editor.activateWindow()
 
     def data_files(self):
         """Return a list of files that are in this items data directory."""
@@ -386,6 +394,7 @@ class DataStore(ProjectItem):
                 return
             sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
+        self._check_notifications()
 
     def update_name_label(self):
         """Update Data Store tab name label. Used only when renaming project items."""
@@ -394,7 +403,7 @@ class DataStore(ProjectItem):
     @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
-        if execution_direction != ExecutionDirection.FORWARD:
+        if execution_direction != "FORWARD":
             return
         url = self.sql_alchemy_url()
         db_map = self._toolbox.db_mngr.db_map(url)
@@ -402,13 +411,22 @@ class DataStore(ProjectItem):
             cookie = self
             self._toolbox.db_mngr.session_committed.emit({db_map}, cookie)
 
-    def _do_handle_dag_changed(self, upstream_resources, downstream_resources):
-        """See base class."""
-        sa_url = convert_to_sqlalchemy_url(self._url, self.name, logger=None)
-        if sa_url is None:
+    def _check_notifications(self):
+        """Updates the SqlAlchemy format URL and checks for notifications"""
+        self.clear_notifications()
+        if convert_to_sqlalchemy_url(self._url, self.name, logger=None) is None:
             self.add_notification(
                 "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
             )
+            return
+        db = self._url["database"]
+        if db.lower().endswith(".sqlite") and os.path.isfile(db):
+            if os.path.getsize(db) == 0:
+                self.add_notification(
+                    "This Data Store is pointing to an empty SQLITE file. "
+                    "Please click 'New Spine db' or 'Open editor...' to initialize it."
+                )
+            return
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
@@ -455,11 +473,11 @@ class DataStore(ProjectItem):
     def rename(self, new_name, rename_data_dir_message):
         """See base class."""
         old_data_dir = os.path.abspath(self.data_dir)  # Old data_dir before rename
-        old_name = self.name
         if not super().rename(new_name, rename_data_dir_message):
             return False
         # If dialect is sqlite and db line edit refers to a file in the old data_dir, db line edit needs updating
         if self._url["dialect"] == "sqlite":
+            old_url = self._url["database"]
             db_dir, db_filename = os.path.split(os.path.abspath(self._url["database"].strip()))
             if db_dir == old_data_dir:
                 database = os.path.join(self.data_dir, db_filename)  # NOTE: data_dir has been updated at this point
@@ -467,8 +485,9 @@ class DataStore(ProjectItem):
                 if os.path.exists(database):
                     self._url.update(database=database)
                     self.load_url_into_selections(self._url)
-        self._additional_resource_metadata = {"updated_from": make_label(old_name)}
-        self.item_changed.emit()
+            self._additional_resource_metadata = {"updated_from": old_url}
+        self._resources_to_predecessors_changed()
+        self._resources_to_successors_changed()
         return True
 
     def notify_destination(self, source_item):
@@ -498,10 +517,6 @@ class DataStore(ProjectItem):
         """See base class."""
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         resources = scan_for_resources(self, sa_url)
-        if not resources:
-            self.add_notification(
-                "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
-            )
         if self._additional_resource_metadata:
             resources = [r.clone(additional_metadata=self._additional_resource_metadata) for r in resources]
         return resources

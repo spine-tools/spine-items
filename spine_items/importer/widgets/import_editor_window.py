@@ -35,6 +35,7 @@ from PySide2.QtWidgets import (
 )
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
+from spinetoolbox.widgets.notification import ChangeNotifier
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
 from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
@@ -45,7 +46,7 @@ from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from ..connection_manager import ConnectionManager
 from ..commands import RestoreMappingsFromDict
 from ...widgets import SpecNameDescriptionToolbar, prompt_to_save_changes, save_ui, restore_ui
-from .import_editor import ImportEditor
+from .import_sources import ImportSources
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
 
@@ -82,6 +83,7 @@ class ImportEditorWindow(QMainWindow):
         self._app_settings = self._toolbox.qsettings()
         self.settings_group = "mappingPreviewWindow"
         self._undo_stack = QUndoStack(self)
+        self._change_notifier = ChangeNotifier(self._undo_stack, self)
         self._ui_error = QErrorMessage(self)
         self._ui_error.setWindowTitle("Error")
         self._ui_error.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
@@ -91,7 +93,7 @@ class ImportEditorWindow(QMainWindow):
         self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
-        self._editor = None
+        self._import_sources = None
         self._connection_manager = None
         self._memoized_connectors = {}
         self._copied_mappings = {}
@@ -107,17 +109,19 @@ class ImportEditorWindow(QMainWindow):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Import Editor[*]")
         self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self._ui.statusbar.addPermanentWidget(self._button_box)
         self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(False)
         self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
+        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
         self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
         self._ui.actionLoad_file.triggered.connect(self._show_open_file_dialog)
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
-        self._ui.actionSaveAndClose.triggered.connect(self.save_and_close)
         self.connection_failed.connect(self.show_error)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
         if filepath:
@@ -134,14 +138,14 @@ class ImportEditorWindow(QMainWindow):
         undo_action.setShortcuts(QKeySequence.Undo)
         redo_action.setShortcuts(QKeySequence.Redo)
         menu.addActions([redo_action, undo_action])
-        menu.addSeparator()
-        menu.addAction(self._ui.actionSaveAndClose)
         self._ui.menubar.hide()
         self.addAction(self._spec_toolbar.menu_action)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
+        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
+        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
 
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):
@@ -200,22 +204,24 @@ class ImportEditorWindow(QMainWindow):
         self._connection_manager = ConnectionManager(connector, connector_settings)
         self._connection_manager.source = filepath
         mapping = self._specification.mapping if self._specification else {}
-        self._editor = ImportEditor(self, mapping)
+        self._import_sources = ImportSources(self, mapping)
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
         self._connection_manager.error.connect(self.show_error)
-        self._ui.source_data_table.set_undo_stack(self._undo_stack, self._editor.select_table)
-        self._import_mappings.mapping_selection_changed.connect(self._editor.set_model)
-        self._import_mappings.mapping_selection_changed.connect(self._editor.set_mapping)
-        self._import_mappings.mapping_data_changed.connect(self._editor.set_mapping)
-        self._import_mappings.about_to_undo.connect(self._editor.select_table)
-        self._editor.source_table_selected.connect(self._import_mappings.set_mappings_model)
-        self._editor.source_table_selected.connect(self._ui.source_data_table.horizontalHeader().set_source_table)
-        self._editor.source_table_selected.connect(self._ui.source_data_table.verticalHeader().set_source_table)
-        self._editor.preview_data_updated.connect(self._import_mapping_options.set_num_available_columns)
+        self._ui.source_data_table.set_undo_stack(self._undo_stack, self._import_sources.select_table)
+        self._import_mappings.mapping_selection_changed.connect(self._import_sources.set_model)
+        self._import_mappings.mapping_selection_changed.connect(self._import_sources.set_mapping)
+        self._import_mappings.mapping_data_changed.connect(self._import_sources.set_mapping)
+        self._import_mappings.about_to_undo.connect(self._import_sources.select_table)
+        self._import_sources.source_table_selected.connect(self._import_mappings.set_mappings_model)
+        self._import_sources.source_table_selected.connect(
+            self._ui.source_data_table.horizontalHeader().set_source_table
+        )
+        self._import_sources.source_table_selected.connect(self._ui.source_data_table.verticalHeader().set_source_table)
+        self._import_sources.preview_data_updated.connect(self._import_mapping_options.set_num_available_columns)
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
         self._connection_manager.init_connection()
 
-    @Slot(bool)
+    @Slot()
     def _handle_connection_ready(self):
         self._ui.export_mappings_action.setEnabled(True)
         self._ui.import_mappings_action.setEnabled(True)
@@ -276,19 +282,10 @@ class ImportEditorWindow(QMainWindow):
             dock.setFloating(False)
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
-    def begin_style_change(self):
-        """Begins a style change operation."""
-        self._size = self.size()
-        self.restore_dock_widgets()
-
-    def end_style_change(self):
-        """Ends a style change operation."""
-        qApp.processEvents()  # pylint: disable=undefined-variable
-        self.resize(self._size)
-
     def apply_classic_ui_style(self):
         """Applies the classic UI style."""
-        self.begin_style_change()
+        size = self.size()
+        self.restore_dock_widgets()
         docks = (self._ui.dockWidget_sources, self._ui.dockWidget_mappings)
         self.splitDockWidget(*docks, Qt.Horizontal)
         width = sum(d.size().width() for d in docks)
@@ -303,14 +300,16 @@ class ImportEditorWindow(QMainWindow):
         docks = (self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec)
         height = sum(d.size().height() for d in docks)
         self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
-        self.end_style_change()
+        qApp.processEvents()  # pylint: disable=undefined-variable
+        self.resize(size)
 
+    @Slot()
     def import_mapping_from_file(self):
         """Imports mapping spec from a user selected .json file to the preview window."""
         start_dir = self._toolbox.project().project_dir
         # noinspection PyCallByClass
         filename = QFileDialog.getOpenFileName(
-            self, "Import mapping specification", start_dir, "Mapping options (*.json)"
+            self, "Import mapping specification", start_dir, "Import mapping (*.json)"
         )
         if not filename[0]:
             return
@@ -322,21 +321,22 @@ class ImportEditorWindow(QMainWindow):
                 return
         expected_options = ("table_mappings", "table_types", "table_row_types", "table_options", "selected_tables")
         if not isinstance(settings, dict) or not any(key in expected_options for key in settings.keys()):
-            self._ui.statusbar.showMessage(f"{filename[0]} does not contain mapping options", 10000)
-        self._undo_stack.push(RestoreMappingsFromDict(self._editor, settings))
+            self._ui.statusbar.showMessage(f"{filename[0]} does not contain and import mapping", 10000)
+        self._undo_stack.push(RestoreMappingsFromDict(self._import_sources, settings))
         self._ui.statusbar.showMessage(f"Mapping loaded from {filename[0]}", 10000)
 
+    @Slot()
     def export_mapping_to_file(self):
         """Exports all mapping specs in current preview window to .json file."""
         start_dir = self._toolbox.project().project_dir
         # noinspection PyCallByClass
         filename = QFileDialog.getSaveFileName(
-            self, "Export mapping spec to a file", start_dir, "Mapping options (*.json)"
+            self, "Export mapping spec to a file", start_dir, "Import mapping (*.json)"
         )
         if not filename[0]:
             return
         with open(filename[0], 'w') as file_p:
-            settings = self._editor.get_settings_dict()
+            settings = self._import_sources.get_mapping_dict()
             json.dump(settings, file_p)
         self._ui.statusbar.showMessage(f"Mapping saved to: {filename[0]}", 10000)
 
@@ -348,13 +348,13 @@ class ImportEditorWindow(QMainWindow):
             table (str): source table name
             mappings (dict): mappings to paste
         """
-        self._editor._table_mappings[table].reset(deepcopy(mappings), table)
+        self._import_sources._table_mappings[table].reset(deepcopy(mappings), table)
         index = self._ui.source_list.selectionModel().currentIndex()
         current_table = index.data()
         if table == current_table:
-            self._editor.source_table_selected.emit(table, self._editor._table_mappings[table])
+            self._import_sources.source_table_selected.emit(table, self._import_sources._table_mappings[table])
         else:
-            self._editor.select_table(table)
+            self._import_sources.select_table(table)
 
     def _save(self):
         """Saves changes."""
@@ -362,7 +362,7 @@ class ImportEditorWindow(QMainWindow):
         if not name:
             self.show_error("Please enter a name for the specification.")
             return False
-        mapping = self._editor.get_settings_dict() if self._editor else {}
+        mapping = self._import_sources.get_mapping_dict() if self._import_sources else {}
         description = self._spec_toolbar.description()
         spec_dict = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
         self._specification = self._toolbox.load_specification(spec_dict)
@@ -371,6 +371,7 @@ class ImportEditorWindow(QMainWindow):
         self._undo_stack.setClean()
         return True
 
+    @Slot()
     def save_and_close(self):
         """Saves changes and close window."""
         if not self._save():
@@ -379,6 +380,7 @@ class ImportEditorWindow(QMainWindow):
             self._item.set_specification(self._specification)
         self.close()
 
+    @Slot()
     def discard_and_close(self):
         """Discards changes and close window."""
         self._undo_stack.setClean()
@@ -397,8 +399,8 @@ class ImportEditorWindow(QMainWindow):
         if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
             event.ignore()
             return
-        if self._editor:
-            self._editor.close_connection()
+        if self._import_sources:
+            self._import_sources.close_connection()
         self._undo_stack.cleanChanged.disconnect(self._update_window_modified)
         save_ui(self, self._app_settings, self.settings_group)
         if event:

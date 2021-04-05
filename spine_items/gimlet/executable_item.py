@@ -23,12 +23,17 @@ import uuid
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from spine_engine.utils.helpers import shorten
-from spine_engine.utils.serialization import deserialize_checked_states, deserialize_path
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.execution_managers import StandardExecutionManager
 from .item_info import ItemInfo
 from .utils import SHELLS
-from ..utils import labelled_resource_filepaths, labelled_resource_args, is_label
+from ..utils import (
+    CmdLineArg,
+    cmd_line_arg_from_dict,
+    expand_cmd_line_args,
+    labelled_resource_filepaths,
+    labelled_resource_args,
+)
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -74,10 +79,8 @@ class ExecutableItem(ExecutableItemBase):
             except IndexError:
                 logger.msg_error.emit(f"Error: Unsupported shell_index in project item {name}")
                 shell = ""
-        cmd_list = split_cmdline_args(item_dict["cmd"])
-        cmd_line_args = item_dict["cmd_line_args"]
-        cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
-        cmd_list += cmd_line_args
+        cmd_list = [CmdLineArg(arg) for arg in split_cmdline_args(item_dict["cmd"])]
+        cmd_list += [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
         if item_dict["work_dir_mode"]:
             work_dir = None
         else:
@@ -85,8 +88,7 @@ class ExecutableItem(ExecutableItemBase):
             if not work_dir:
                 logger.msg_error.emit(f"Error: Work directory not set for project item {name}")
                 work_dir = None
-        selected_files = deserialize_checked_states(item_dict.get("selections", list()), project_dir)
-        selections = [path for path, boolean in selected_files.items() if boolean]  # List of selected paths
+        selections = [label for label, selected in item_dict.get("file_selection", list()) if selected]
         return cls(name, shell, cmd_list, work_dir, selections, project_dir, logger)
 
     def stop_execution(self):
@@ -112,16 +114,8 @@ class ExecutableItem(ExecutableItemBase):
         if sys.platform != "win32" and (self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return False
-        cmd_list = self.cmd_list.copy()
-        # Expand cmd_list from resources
-        labelled_args = labelled_resource_args(forward_resources + backward_resources)
-        for k, arg in enumerate(cmd_list):
-            if is_label(arg):
-                if arg not in labelled_args:
-                    self._logger.msg_warning.emit(f"The argument '{k}: {arg}' does not match any available resources.")
-                    continue
-                arg = labelled_args[arg]
-            cmd_list[k] = arg
+        with labelled_resource_args(forward_resources + backward_resources) as labelled_args:
+            cmd_list = expand_cmd_line_args(self.cmd_list, labelled_args, self._logger)
         if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)
             self._exec_mngr = StandardExecutionManager(self._logger, prgm, *cmd_list, workdir=self._work_dir)

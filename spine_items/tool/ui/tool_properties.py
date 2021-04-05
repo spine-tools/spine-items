@@ -173,8 +173,6 @@ class Ui_Form(object):
         self.treeView_input_files.setDragDropMode(QAbstractItemView.DragOnly)
         self.treeView_input_files.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.treeView_input_files.setTextElideMode(Qt.ElideLeft)
-        self.treeView_input_files.setIndentation(5)
-        self.treeView_input_files.setRootIsDecorated(False)
         self.treeView_input_files.setUniformRowHeights(True)
         self.treeView_input_files.setAnimated(False)
         self.treeView_input_files.header().setMinimumSectionSize(26)

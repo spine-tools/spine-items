@@ -17,7 +17,6 @@ Contains Importer's executable item as well as support utilities.
 """
 
 import os
-import pathlib
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
@@ -26,8 +25,6 @@ from spinedb_api.spine_io.importers.json_reader import JSONConnector
 from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
 from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.utils.helpers import shorten
-from spine_engine.utils.serialization import deserialize_checked_states
 from spine_engine.utils.returning_process import ReturningProcess
 from .item_info import ItemInfo
 from .do_work import do_work
@@ -124,8 +121,7 @@ class ExecutableItem(ExecutableItemBase):
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
         mapping = specification.mapping if specification else {}
-        file_selection = item_dict.get("file_selection")
-        file_selection = deserialize_checked_states(file_selection, project_dir)
+        file_selection = {label: selected for label, selected in item_dict.get("file_selection", list())}
         selected_files = [filepath for filepath, selected in file_selection.items() if selected]
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]

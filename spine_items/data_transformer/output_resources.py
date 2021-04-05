@@ -15,10 +15,10 @@ Contains utilities to scan for Tool's output resources.
 :date:    4.12.2020
 """
 
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import database_resource
 from spinedb_api import append_filter_config
 from spinedb_api.filters.tools import store_filter
-from .utils import make_metadata
+from spine_items.utils import database_label
 
 
 def scan_for_resources(provider, dt_specification, db_resources, filter_config_path):
@@ -34,18 +34,17 @@ def scan_for_resources(provider, dt_specification, db_resources, filter_config_p
     Returns:
         list: a list of output resources
     """
-    url_metadata = [(resource.url, make_metadata(resource, provider.name)) for resource in db_resources]
+    label = database_label(provider.name)
     if dt_specification is None or dt_specification.settings is None:
-        return [ProjectItemResource(provider, "database", url, metadata=metadata) for url, metadata in url_metadata]
+        return [database_resource(provider.name, r.url, label=label) for r in db_resources]
     if dt_specification.settings.use_shorthand():
         config = dt_specification.settings.filter_config()
         return [
-            ProjectItemResource(provider, "database", append_filter_config(url, config), metadata=metadata)
-            for url, metadata in url_metadata
+            database_resource(provider.name, append_filter_config(r.url, config), label=label) for r in db_resources
         ]
     with open(filter_config_path, "w") as filter_config_file:
         store_filter(dt_specification.settings.filter_config(), filter_config_file)
     return [
-        ProjectItemResource(provider, "database", append_filter_config(url, filter_config_path), metadata=metadata)
-        for url, metadata in url_metadata
+        database_resource(provider.name, append_filter_config(r.url, filter_config_path), label=label)
+        for r in db_resources
     ]

@@ -18,7 +18,7 @@ Importer's execute kernel (do_work), as target for a multiprocess.Process
 
 import os
 import spinedb_api
-from spinedb_api.spine_io.type_conversion import value_to_convert_spec
+from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 
@@ -33,37 +33,39 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
         for name, options in mapping.get("table_options", {}).items()
         if name in mapping["selected_tables"]
     }
-    table_types = {
+    table_column_convert_specs = {
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_types", {}).items()
     }
-    table_row_types = {
+    table_row_convert_specs = {
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_row_types", {}).items()
     }
     for path in source_filepaths:
+        file_anchor = (
+            "<a style='color:#BB99FF;' title='" + path + "' href='file:///" + path + f"'>{os.path.basename(path)}</a>"
+        )
+        logger.msg.emit("Importing " + file_anchor)
         try:
             connector.connect_to_source(path)
-        except IOError as error:
-            logger.msg_error.emit(f"Failed to connect to source: {error}")
+        except Exception as error:  # pylint: disable=broad-except
+            logger.msg_error.emit(f"Failed to connect to {path}: {error}")
             return (False,)
         try:
             data, errors = connector.get_mapped_data(
-                table_mappings, table_options, table_types, table_row_types, max_rows=-1
+                table_mappings, table_options, table_column_convert_specs, table_row_convert_specs, max_rows=-1
             )
         except spinedb_api.InvalidMapping as error:
-            logger.msg_error.emit(f"Failed to import '{path}': {error}")
+            logger.msg_error.emit(f"Failed to import: {error}")
             if cancel_on_error:
                 logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
                 return (False,)
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
             continue
         if not errors:
-            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data from {path}")
+            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data.")
         else:
-            logger.msg_warning.emit(
-                f"Read {sum(len(d) for d in data.values())} data from {path} with {len(errors)} errors."
-            )
+            logger.msg_warning.emit(f"Read {sum(len(d) for d in data.values())} data with {len(errors)} errors.")
         all_data.append(data)
         all_errors.extend(errors)
     if all_errors:

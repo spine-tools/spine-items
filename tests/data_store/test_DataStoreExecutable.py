@@ -22,7 +22,7 @@ from unittest import mock
 from spinedb_api import create_new_spine_database, DatabaseMapping, DiffDatabaseMapping, import_functions
 from spine_engine import ExecutionDirection
 from spine_items.data_store.executable_item import ExecutableItem
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import database_resource
 
 
 class TestDataStoreExecutable(unittest.TestCase):
@@ -107,10 +107,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem("name", db3_url, True, self._temp_dir.name, logger)
-        input_db_resources = [
-            ProjectItemResource(mock.Mock(), "database", db1_url),
-            ProjectItemResource(mock.Mock(), "database", db2_url),
-        ]
+        input_db_resources = [database_resource("provider", db1_url), database_resource("provider", db2_url)]
         self.assertTrue(executable.execute(input_db_resources, []))
         # Check output db
         output_db_map = DatabaseMapping(db3_url)
@@ -133,7 +130,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
         self.assertEqual(resource.url, "sqlite:///database.sqlite")
-        self.assertEqual(resource.metadata, {'label': '{db_url@name}'})
+        self.assertEqual(resource.label, "db_url@name")
 
     def test_output_resources_forward(self):
         executable = ExecutableItem("name", "sqlite:///database.sqlite", True, self._temp_dir.name, mock.MagicMock())
@@ -142,7 +139,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
         self.assertEqual(resource.url, "sqlite:///database.sqlite")
-        self.assertEqual(resource.metadata, {'label': '{db_url@name}'})
+        self.assertEqual(resource.label, "db_url@name")
 
 
 if __name__ == "__main__":

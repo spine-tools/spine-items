@@ -23,8 +23,8 @@ from unittest import mock
 from gdx2py import GdxFile
 from spine_engine import ExecutionDirection
 from spinedb_api import create_new_spine_database, DiffDatabaseMapping, import_functions
-from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_items.gdx_exporter.database import Database
+from spine_engine.project_item.project_item_resource import database_resource
+from spine_items.utils import Database
 from spine_items.gdx_exporter.gdx_exporter import SettingsPack
 from spine_items.gdx_exporter.executable_item import ExecutableItem
 from spine_items.gdx_exporter.settings_state import SettingsState
@@ -152,7 +152,7 @@ class TestGdxExporterExecutable(unittest.TestCase):
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem("name", settings_pack, databases, False, False, "", self._temp_dir.name, logger)
-        resources = [ProjectItemResource(mock.Mock(), "database", database_url)]
+        resources = [database_resource("provider", database_url)]
         self.assertTrue(executable.execute(resources, []))
         self.assertTrue(Path(executable._data_dir, "output.gdx").exists())
         gams_directory = gdx.find_gams_directory()

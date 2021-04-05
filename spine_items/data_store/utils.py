@@ -13,7 +13,7 @@
 Contains utility Data Store's utility functions.
 
 :authors: A. Soininen (VTT)
-:date:   6.5.2020
+:date:    6.5.2020
 """
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
@@ -70,7 +70,3 @@ def convert_to_sqlalchemy_url(urllib_url, item_name, logger):
             )
         return None
     return sa_url
-
-
-def make_label(name):
-    return "{db_url@" + name + "}"

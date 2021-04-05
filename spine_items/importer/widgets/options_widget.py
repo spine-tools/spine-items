@@ -17,7 +17,17 @@ Contains OptionsWidget class.
 """
 import functools
 from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtWidgets import QLabel, QLineEdit, QComboBox, QCheckBox, QSpinBox, QWidget, QFormLayout
+from PySide2.QtWidgets import (
+    QLabel,
+    QLineEdit,
+    QComboBox,
+    QCheckBox,
+    QSpinBox,
+    QWidget,
+    QFormLayout,
+    QVBoxLayout,
+    QPushButton,
+)
 from ..commands import SetConnectorOption
 
 
@@ -28,6 +38,8 @@ class OptionsWidget(QWidget):
     """Emitted whenever an option in the widget is changed."""
     about_to_undo = Signal(str)
     """Emitted before undo action."""
+    load_default_mapping_requested = Signal()
+    """Emitted whenever the uses presses the button to Load default mapping."""
 
     def __init__(self, connector, undo_stack):
         """
@@ -45,7 +57,10 @@ class OptionsWidget(QWidget):
         self.options_changed.connect(connector.update_options)
 
         # ui
-        QFormLayout(self)
+        layout = QVBoxLayout(self)
+        form_widget = QWidget(self)
+        self.form_layout = QFormLayout(form_widget)
+        layout.addWidget(form_widget)
         self._ui_choices = {str: QLineEdit, list: QComboBox, int: QSpinBox, bool: QCheckBox}
         self._ui_elements = {}
         self._build_ui()
@@ -82,7 +97,13 @@ class OptionsWidget(QWidget):
             self._ui_elements[key] = ui_element
 
             # Add to layout:
-            self.layout().addRow(QLabel(options['label'] + ':'), ui_element)
+            self.form_layout.addRow(QLabel(options['label'] + ':'), ui_element)
+
+        if hasattr(self._connector.connection, "create_default_mapping"):
+            button = QPushButton("Load default mapping")
+            self.layout().addStretch()
+            self.layout().addWidget(button)
+            button.clicked.connect(self.load_default_mapping_requested)
 
     @property
     def connector(self):

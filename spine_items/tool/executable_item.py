@@ -27,7 +27,6 @@ import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .utils import (
     file_paths_from_resources,
@@ -38,7 +37,7 @@ from .utils import (
 )
 from spinedb_api.spine_db_server import REQUIRED_SPINE_INTERFACE_VERSION as REQ_SPINE_IFACE_VER
 from .output_resources import scan_for_resources
-from ..utils import labelled_resource_args, is_label
+from ..utils import cmd_line_arg_from_dict, expand_cmd_line_args, labelled_resource_args
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -381,7 +380,6 @@ class ExecutableItem(ExecutableItemBase):
                     # Creating directories failed -> abort
                     self._logger.msg_error.emit("Creating input subdirectories failed. Tool execution aborted.")
                     return False
-        optional_file_copy_paths = dict()
         if self._tool_specification.inputfiles_opt:
             self._logger.msg.emit("*** Searching for optional input files ***")
             optional_file_paths = self._find_optional_input_files(forward_resources)
@@ -399,19 +397,10 @@ class ExecutableItem(ExecutableItemBase):
             [int(x) for x in spine_iface_ver.split(".")] < [int(x) for x in REQ_SPINE_IFACE_VER.split(".")]
         )
         use_db_server = not spine_iface_outdated
-        # Expand cmd_line_args from resources
         with labelled_resource_args(forward_resources + backward_resources, use_db_server) as labelled_args:
-            for k, arg in enumerate(self._cmd_line_args):
-                if is_label(arg):
-                    if arg not in labelled_args:
-                        self._logger.msg_warning.emit(
-                            f"The argument '{k}: {arg}' does not match any available resources."
-                        )
-                        continue
-                    arg = labelled_args[arg]
-                self._cmd_line_args[k] = arg
+            expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
             try:
-                self._tool_instance.prepare(self._cmd_line_args)
+                self._tool_instance.prepare(expanded_args)
             except RuntimeError as error:
                 self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
                 return False
@@ -574,7 +563,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class"""
-        return scan_for_resources(self, self._tool_specification, self._output_dir, False)
+        return scan_for_resources(self, self._tool_specification, self._output_dir)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
@@ -591,8 +580,7 @@ class ExecutableItem(ExecutableItemBase):
         specification = ExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
-        cmd_line_args = item_dict["cmd_line_args"]
-        cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
+        cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
         return cls(name, work_dir, specification, cmd_line_args, options, project_dir, logger)
 
