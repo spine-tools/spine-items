@@ -37,8 +37,7 @@ class NotebookSpecificationMenu(ItemSpecificationMenu):
     @Slot()
     def _open_jupyter_notebook_file(self):
         spec = self.parent().specification_model.specification(self.index.row())
-        file_path = spec.get_jupyter_notebook_path()  # TODO investigate get_main_program_file_path()
-        print(f"file path {file_path}")
+        file_path = spec.get_jupyter_notebook_path()
         if file_path is None:
             return
         main_program_url = "file:///" + file_path

@@ -19,20 +19,23 @@ is filled with all the information from the specification being edited.
 """
 
 import os
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QFontDatabase, QFontMetrics, QKeySequence
-from PySide2.QtWidgets import QMainWindow, QStatusBar, QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, \
-    QUndoStack
+import sys
+from pathlib import Path
+
+from PySide2.QtGui import QStandardItemModel, QStandardItem
+from PySide2.QtWidgets import QWidget, QStatusBar, QInputDialog, QFileDialog, QFileIconProvider, QMessageBox
 from PySide2.QtCore import Slot, Qt, QFileInfo
 from spinetoolbox.config import STATUSBAR_SS, TREEVIEW_HEADER_SS
 from spinetoolbox.helpers import busy_effect, open_url
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from ..item_info import ItemInfo
 from ..notebook_specifications import NOTEBOOK_TYPES, REQUIRED_KEYS
+from jupyter_client.kernelspec import KernelSpecManager, KernelSpec
 from .custom_menus import AddIncludesPopupMenu
 from ...widgets import restore_ui, SpecNameDescriptionToolbar
 
 
-class NotebookSpecificationEditorWindow(QMainWindow):
+class NotebookSpecificationEditorWindow(QWidget):
     def __init__(self, toolbox, specification=None, item=None):
         """A widget to query user's preferences for a new tool specification.
 
@@ -43,26 +46,12 @@ class NotebookSpecificationEditorWindow(QMainWindow):
         """
         from ..ui.notebook_specification_form import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__(parent=toolbox)  # Inherit stylesheet from ToolboxUI
-        self._item = item
+        super().__init__(parent=toolbox, f=Qt.Window)  # Inherit stylesheet from ToolboxUI
         self._new_spec = None
-        self._app_settings = toolbox.qsettings()
-        self.settings_group = "notebookSpecificationEditorWindow"
         # Setup UI from Qt Designer file
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.takeCentralWidget()
-        self.setWindowTitle("Notebook Specification Editor[*]")
-        restore_ui(self, self._app_settings, self.settings_group)
-        self._undo_stack = QUndoStack(self)
-        self._spec_toolbar = SpecNameDescriptionToolbar(self, specification, self._undo_stack)
-        self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
-        self._populate_main_menu()
-        # Customize text edit main program
-        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        self.ui.textEdit_jupyter_notebook.setFont(font)
-        self.ui.textEdit_jupyter_notebook.setTabStopDistance(QFontMetrics(font).horizontalAdvance(4 * " "))
-        self.ui.textEdit_jupyter_notebook.setEnabled(False)
+        self.ui.widget_main_program.setVisible(False)
         self.ui.textEdit_jupyter_notebook.setStyleSheet(
             "QTextEdit {background-color: #19232D; border: 1px solid #32414B; color: #F0F0F0; border-radius: 2px;}"
         )
@@ -70,6 +59,7 @@ class NotebookSpecificationEditorWindow(QMainWindow):
         self._toolbox = toolbox
         self._project = self._toolbox.project()
         self._original_specification = specification
+        self._original_spec_name = None if specification is None else specification.name
         # init models
         self.input_vars_model = QStandardItemModel()
         self.input_files_model = QStandardItemModel()
@@ -92,6 +82,9 @@ class NotebookSpecificationEditorWindow(QMainWindow):
         self.ui.treeView_output_files.setStyleSheet(TREEVIEW_HEADER_SS)
         self.ui.comboBox_notebook_type.addItem("Select type...")
         self.ui.comboBox_notebook_type.addItems(NOTEBOOK_TYPES)
+        kernel_list = self.populate_available_kernel_list()
+        self.ui.comboBox_notebook_kernel.addItem("Select kernel...")
+        self.ui.comboBox_notebook_kernel.addItems(kernel_list)
         # if a specification is given, fill the form with data from it
         if specification is not None:
             self.ui.lineEdit_name.setText(specification.name)
@@ -102,6 +95,11 @@ class NotebookSpecificationEditorWindow(QMainWindow):
             notebook_types = [x.lower() for x in NOTEBOOK_TYPES]
             index = notebook_types.index(specification.notebook_type) + 1
             self.ui.comboBox_notebook_type.setCurrentIndex(index)
+            if specification.kernel_name:
+                kernel_name_index = kernel_list.index(specification.kernel_name) + 1
+            else:
+                kernel_name_index = 0
+            self.ui.comboBox_notebook_kernel.setCurrentIndex(kernel_name_index)
         # Init lists
         self.source_files = list(specification.includes) if specification else list()
         # Get first item from source_files list as the main program file
@@ -113,7 +111,7 @@ class NotebookSpecificationEditorWindow(QMainWindow):
         self.input_files = list(specification.input_files) if specification else list()
         self.output_vars = list(specification.output_vars) if specification else list()
         self.output_files = list(specification.output_files) if specification else list()
-        self.program_path = specification.path if specification else None
+        self.includes_main_path = specification.path if specification else None
         self.definition = dict(item_type=ItemInfo.item_type())
         # Populate lists (this will also create headers)
         self.populate_input_vars_list(self.input_vars)
@@ -122,18 +120,8 @@ class NotebookSpecificationEditorWindow(QMainWindow):
         self.populate_output_files_list(self.output_files)
         self.ui.lineEdit_name.setFocus()
         self.connect_signals()
-        if self.program_path is not None:  # It's None if the path does not exist
-            self.set_jupyter_notebook_file(os.path.join(self.program_path, self.jupyter_notebook_file))
-
-    def _populate_main_menu(self):
-        menu = self._spec_toolbar.menu
-        undo_action = self._undo_stack.createUndoAction(self)
-        redo_action = self._undo_stack.createRedoAction(self)
-        undo_action.setShortcuts(QKeySequence.Undo)
-        redo_action.setShortcuts(QKeySequence.Redo)
-        menu.addActions([redo_action, undo_action])
-        menu.addSeparator()
-        self.addAction(self._spec_toolbar.menu_action)
+        if self.includes_main_path is not None:  # It's None if the path does not exist
+            self.set_jupyter_notebook_file(os.path.join(self.includes_main_path, self.jupyter_notebook_file))
 
     def connect_signals(self):
         """Connect signals to slots."""
@@ -154,7 +142,7 @@ class NotebookSpecificationEditorWindow(QMainWindow):
         self.ui.toolButton_minus_output_vars.clicked.connect(self.remove_output_vars)
         self.ui.toolButton_plus_output_files.clicked.connect(self.add_output_files)
         self.ui.toolButton_minus_output_files.clicked.connect(self.remove_output_files)
-        self.ui.pushButton_ok.clicked.connect(self.handle_ok_clicked)
+        self.ui.pushButton_ok.clicked.connect(self._save)
         self.ui.pushButton_cancel.clicked.connect(self.close)
         # Enable removing items from QTreeViews by pressing the Delete key
         self.ui.treeView_input_vars.del_key_pressed.connect(self.remove_input_vars_with_del)
@@ -211,6 +199,19 @@ class NotebookSpecificationEditorWindow(QMainWindow):
                 qitem.setData(QFileIconProvider().icon(QFileInfo(item)), Qt.DecorationRole)
                 self.output_files_model.appendRow(qitem)
 
+    def populate_available_kernel_list(self):
+        # ker = Path(sys.executable).as_posix().split('/')[-2]
+        ksm = KernelSpecManager()
+        specs = ksm.find_kernel_specs()
+        available_kernels = list()
+        for k_name, k_path in specs.items():
+            available_kernels.append(k_name)
+            # k_spec = ksm.get_kernel_spec(k_name)
+            # print(f"language {k_spec.language}")
+            # print(f"k_display_name {k_spec.display_name}")
+            # print()
+        return available_kernels
+
     @Slot(bool)
     def browse_jupyter_notebook_file(self, checked=False):
         """Open file browser where user can select the path of the main program file."""
@@ -231,9 +232,9 @@ class NotebookSpecificationEditorWindow(QMainWindow):
     @Slot(str)
     def validate_jupyter_notebook_file(self, file_path):
         folder_path = os.path.split(file_path)[0]
-        self.program_path = os.path.abspath(folder_path)
+        self.includes_main_path = os.path.abspath(folder_path)
         # Update UI
-        self.ui.label_mainpath.setText(self.program_path)
+        self.ui.label_mainpath.setText(self.includes_main_path)
         if not os.path.isfile(file_path):
             self.show_status_bar_msg("Jupyter notebook file is not valid")
             self.ui.widget_main_program.setVisible(False)
@@ -449,15 +450,20 @@ class NotebookSpecificationEditorWindow(QMainWindow):
             self.show_status_bar_msg("Selected output files removed")
 
     @Slot()
-    def handle_ok_clicked(self):
+    def _save(self):
         """Checks that everything is valid, creates Tool spec definition dictionary and adds Tool spec to project."""
         # Check that tool type is selected
         if self.ui.comboBox_notebook_type.currentIndex() == 0:
             self.show_status_bar_msg("Notebook type not selected")
             return
-        self.definition["name"] = self.ui.lineEdit_name.text()
-        self.definition["description"] = self.ui.textEdit_description.toPlainText()
-        self.definition["notebook_type"] = self.ui.comboBox_notebook_type.currentText().lower()
+        if self.ui.comboBox_notebook_kernel.currentIndex() == 0:
+            self.show_status_bar_msg("Notebook kernel not selected")
+            return
+        new_spec_dict = {}
+        new_spec_dict["name"] = self.ui.lineEdit_name.text()
+        new_spec_dict["description"] = self.ui.textEdit_description.toPlainText()
+        new_spec_dict["notebook_type"] = self.ui.comboBox_notebook_type.currentText().lower()
+        new_spec_dict["kernel_name"] = self.ui.comboBox_notebook_kernel.currentText()
         flags = Qt.MatchContains
         # Check that path of main program file is valid before saving it
         jupyter_notebook = self.ui.lineEdit_Jupyter_notebook.text().strip()
@@ -466,59 +472,53 @@ class NotebookSpecificationEditorWindow(QMainWindow):
             return
         # Fix for issue #241
         folder_path, file_path = os.path.split(jupyter_notebook)
-        self.program_path = os.path.abspath(folder_path)
-        self.ui.label_mainpath.setText(self.program_path)
-        self.definition["execute_in_work"] = self.ui.checkBox_execute_in_work.isChecked()
-        self.definition["includes"] = [file_path]
-        self.definition["input_vars"] = [i.text() for i in self.input_vars_model.findItems("", flags)]
-        self.definition["input_files"] = [i.text() for i in self.input_files_model.findItems("", flags)]
-        self.definition["output_vars"] = [i.text() for i in self.output_vars_model.findItems("", flags)]
-        self.definition["output_files"] = [i.text() for i in self.output_files_model.findItems("", flags)]
+        self.includes_main_path = os.path.abspath(folder_path)
+        self.ui.label_mainpath.setText(self.includes_main_path)
+        new_spec_dict["execute_in_work"] = self.ui.checkBox_execute_in_work.isChecked()
+        new_spec_dict["includes"] = [file_path]
+        new_spec_dict["input_vars"] = [i.text() for i in self.input_vars_model.findItems("", flags)]
+        new_spec_dict["input_files"] = [i.text() for i in self.input_files_model.findItems("", flags)]
+        new_spec_dict["output_vars"] = [i.text() for i in self.output_vars_model.findItems("", flags)]
+        new_spec_dict["output_files"] = [i.text() for i in self.output_files_model.findItems("", flags)]
         # Strip whitespace from args before saving it to JSON
-        self.definition["cmdline_args"] = split_cmdline_args(self.ui.lineEdit_args.text())
+        new_spec_dict["cmdline_args"] = split_cmdline_args(self.ui.lineEdit_args.text())
         for k in REQUIRED_KEYS:
-            if not self.definition[k]:
+            if not new_spec_dict[k]:
                 self.show_status_bar_msg(f"{k} missing")
                 return
         # Create new Tool specification
-        if self.call_add_notebook_specification():
+        new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/")
+        self._new_spec = self._make_notebook_specification(new_spec_dict)
+        if not self.call_add_notebook_specification():
             self.close()
+            return False
+        self.close()
+        return True
 
-    def _make_notebook_specification(self):
+    def _make_notebook_specification(self, new_spec_dict):
         """Returns a NotebookSpecification from current form settings.
+
+        Args:
+            new_spec_dict (dict)
 
         Returns:
             NotebookSpecification
         """
-        self.definition["includes_main_path"] = self.program_path.replace(os.sep, "/")
-        notebook = self._toolbox.load_specification(self.definition)
-        if not notebook:
-            self.show_status_bar_msg("Adding Notebook specification failed")
-        return notebook
+        notebook_spec = self._toolbox.load_specification(new_spec_dict)
+        if not notebook_spec:
+            self.show_status_bar_msg("Creating Notebook specification failed")
+        return notebook_spec
 
     def call_add_notebook_specification(self):
-        """Adds or updates Tool specification according to user's selections.
-        If the name is the same as an existing tool specification, it is updated and
-        auto-saved to the definition file. (User is editing an existing
-        tool specification.) If the name is not in the tool specification model, creates
-        a new tool specification and offers to save the definition file. (User is
-        creating a new tool specification from scratch or spawning from an existing one).
+        """Adds new Notebook specification to project.
+
+        Returns:
+            bool
         """
-        new_spec = self._make_notebook_specification()
-        if not new_spec:
+        if not self._new_spec:
             return False
-        if self._original_specification is not None and new_spec.is_equivalent(self._original_specification):
-            # Nothing changed
-            return True
-        if self._original_specification is None or self.definition["name"] != self._original_specification.name:
-            # The user is creating a new spec, either from scratch (no original spec)
-            # or by changing the name of an existing one
-            self._toolbox.add_specification(new_spec)
-        else:
-            # The user is modifying an existing spec, while conserving the name
-            new_spec.definition_file_path = self._original_specification.definition_file_path
-            self._toolbox.update_specification(new_spec)
-        return True
+        update_existing = self._new_spec.name == self._original_spec_name
+        return self._toolbox.add_specification(self._new_spec, update_existing, self)
 
     def keyPressEvent(self, e):
         """Close Setup form when escape key is pressed.

@@ -367,7 +367,7 @@ class Notebook(ProjectItem):
                 f"Link established. The file exported by <b>{source_item.name}</b> will "
                 f"be passed to Notebook <b>{self.name}</b> when executing."
             )
-        elif source_item.item_type() in ["Data Transformer", "Tool"]:
+        elif source_item.item_type() in ["Data Transformer", "Tool", "Notebook"]:
             self._logger.msg.emit("Link established")
         elif source_item.item_type() == "Gimlet":
             self._logger.msg.emit(

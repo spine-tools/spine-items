@@ -35,6 +35,7 @@ class NotebookInstance:
             owner (ExecutableItemBase): The item that owns the instance
         """
         self.notebook_specification = notebook_specification
+        self.kernel_name = None
         self.basedir = basedir
         self._settings = settings
         self._logger = logger
@@ -66,6 +67,7 @@ class NotebookInstance:
         """See base class."""
         # TODO refactor into separate methods for testing
         append_out = "_out"
+        nb_type = self.notebook_specification.notebook_type
         if nb_src_dst_mapping:
             nb_src_name = self.notebook_specification.includes[0]
             self._nb_path = nb_src_dst_mapping[nb_src_name]
@@ -80,6 +82,11 @@ class NotebookInstance:
             for i, name in enumerate(self._output_vars):
                 filename = self.notebook_specification.output_files[i]
                 self._nb_parameters[name] = os.path.join(self.basedir, filename)
+        if self.notebook_specification.kernel_name:
+            self.kernel_name = self.notebook_specification.kernel_name
+        else:
+            self.kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
+        print(f"kernel {self.kernel_name}")
 
     def execute(self):
         """Executes a prepared instance."""
@@ -90,12 +97,14 @@ class NotebookInstance:
     def _console_execute(self):
         """Executes in console.
         """
-        kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
+        print(self._nb_parameters)
+        print(self.kernel_name)
         # TODO add try/catch and return 0 if success 1 otherwise!
+
         pm.execute_notebook(
             self._nb_path,
             self._nb_out_path,
-            kernel_name=kernel_name,
+            kernel_name=self.kernel_name,
             parameters=self._nb_parameters
         )
         # inspect new_book for

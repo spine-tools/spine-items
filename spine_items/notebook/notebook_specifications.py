@@ -23,12 +23,13 @@ from spine_engine.project_item.project_item_specification import ProjectItemSpec
 from .item_info import ItemInfo
 from .notebook_instance import NotebookInstance
 
-NOTEBOOK_TYPES = ["Julia", "Python"]
+NOTEBOOK_TYPES = ["Julia", "Python", "R"]
 
 REQUIRED_KEYS = ["name", "notebook_type", "includes"]
 OPTIONAL_KEYS = [
     "description",
     "short_name",
+    "kernel_name",
     "input_files",
     "input_vars",
     "output_vars",
@@ -67,6 +68,7 @@ class NotebookSpecification(ProjectItemSpecification):
             settings,
             logger,
             description,
+            kernel_name=None,
             input_vars=None,
             output_vars=None,
             cmdline_args=None,
@@ -99,6 +101,7 @@ class NotebookSpecification(ProjectItemSpecification):
             self.path = path
         notebook_ipynb = includes[0]
         self.main_dir, self.main_program = os.path.split(notebook_ipynb)
+        self.kernel_name = kernel_name
         self.includes = includes
         self.input_vars = input_vars
         self.output_vars = output_vars
@@ -113,6 +116,7 @@ class NotebookSpecification(ProjectItemSpecification):
             "notebook_type": self.notebook_type,
             "includes": self.includes,
             "description": self.description,
+            "kernel_name": self.kernel_name,
             "input_vars": self.input_vars,
             "output_vars": self.output_vars,
             "cmdline_args": self.cmdline_args,

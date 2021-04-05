@@ -72,6 +72,15 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.comboBox_notebook_type)
 
+        self.comboBox_notebook_kernel = QComboBox(Form)
+        self.comboBox_notebook_kernel.setObjectName(u"comboBox_notebook_kernel")
+        sizePolicy2.setHeightForWidth(self.comboBox_notebook_kernel.sizePolicy().hasHeightForWidth())
+        self.comboBox_notebook_kernel.setSizePolicy(sizePolicy2)
+        self.comboBox_notebook_kernel.setMinimumSize(QSize(180, 24))
+        self.comboBox_notebook_kernel.setMaximumSize(QSize(16777215, 24))
+
+        self.horizontalLayout.addWidget(self.comboBox_notebook_kernel)
+
 
         self.verticalLayout_11.addLayout(self.horizontalLayout)
 
@@ -468,6 +477,10 @@ class Ui_Form(object):
         self.comboBox_notebook_type.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Notebook specification type</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.comboBox_notebook_type.setCurrentText("")
+#if QT_CONFIG(tooltip)
+        self.comboBox_notebook_kernel.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Kernel for executing notebook</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.comboBox_notebook_kernel.setCurrentText("")
 #if QT_CONFIG(tooltip)
         self.textEdit_description.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Notebook specification description (optional)</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
