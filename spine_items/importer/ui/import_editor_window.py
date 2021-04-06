@@ -72,6 +72,7 @@ class Ui_MainWindow(object):
         self.source_list = MultiCheckableTreeView(self.dockWidgetContents)
         self.source_list.setObjectName(u"source_list")
         self.source_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.source_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.source_list.setTextElideMode(Qt.ElideLeft)
         self.source_list.setRootIsDecorated(True)
         self.source_list.setHeaderHidden(True)

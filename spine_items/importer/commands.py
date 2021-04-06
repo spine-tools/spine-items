@@ -80,27 +80,27 @@ class PasteOptions(QUndoCommand):
 class SetTableChecked(QUndoCommand):
     """Command to change a source table's checked state."""
 
-    def __init__(self, table_name, table_list_model, row, checked):
+    def __init__(self, table_name, table_list_model, checked, *rows):
         """
         Args:
             table_name (str): source table name
             table_list_model (SourceTableListModel): source table model
-            row (int): table row on the list
             checked (bool): new checked state
+            rows (int): table row on the list
         """
         text = ("select" if checked else "deselect") + f" '{table_name}'"
         super().__init__(text)
         self._model = table_list_model
-        self._row = row
+        self._rows = rows
         self._checked = checked
 
     def redo(self):
         """Changes the checked state."""
-        self._model.set_checked(self._row, self._checked)
+        self._model.set_checked(self._checked, *self._rows)
 
     def undo(self):
         """Restores the previous checked state."""
-        self._model.set_checked(self._row, not self._checked)
+        self._model.set_checked(not self._checked, *self._rows)
 
 
 class SetComponentMappingType(QUndoCommand):

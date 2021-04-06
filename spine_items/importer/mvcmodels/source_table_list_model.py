@@ -38,6 +38,7 @@ class SourceTableListModel(QAbstractItemModel):
         """
         super().__init__()
         self._root_item = SourceTableItem(source, None)
+        self._select_all_item = SourceTableItem("Select All", None)
         self._tables = []
         self._undo_stack = undo_stack
 
@@ -85,7 +86,7 @@ class SourceTableListModel(QAbstractItemModel):
 
     def reset(self, items):
         self.beginResetModel()
-        self._tables = items
+        self._tables = [self._select_all_item] + items
         self.endResetModel()
 
     def setData(self, index, value, role=Qt.EditRole):
@@ -95,35 +96,43 @@ class SourceTableListModel(QAbstractItemModel):
             row = index.row()
             item = self._tables[row]
             checked = value == Qt.Checked
-            self._undo_stack.push(SetTableChecked(item.name, self, row, checked))
+            if row == 0:
+                self.set_multiple_checked_undoable(checked, *range(1, len(self._tables)))
+            else:
+                self._undo_stack.push(SetTableChecked(item.name, self, checked, row))
         return True
 
-    def set_checked(self, row, checked):
+    def set_checked(self, checked, *rows):
         """
         Sets the checked status of a list item.
 
         Args:
-            row (int): item row
             checked (bool): True for checked, False for unchecked
+            rows (int): item row
         """
-        self._tables[row].checked = checked
-        index = self.index(row, 0, parent=self._root_index)
+        for row in rows:
+            if self._tables[row].checked == checked:
+                continue
+            self._tables[row].checked = checked
+            index = self.index(row, 0, parent=self._root_index)
+            self.dataChanged.emit(index, index, [Qt.CheckStateRole])
+        # Update select all state
+        self._select_all_item.checked = all(self._tables[row].checked for row in range(1, len(self._tables)))
+        index = self.index(0, 0, parent=self._root_index)
         self.dataChanged.emit(index, index, [Qt.CheckStateRole])
 
-    def set_multiple_checked_undoable(self, rows, checked):
+    def set_multiple_checked_undoable(self, checked, *rows):
         """
         Sets the checked status of multiple list items.
 
         This action is undoable.
 
         Args:
-            rows (Iterable of int): item rows
             checked (bool): True for checked, False for unchecked
+            rows (Iterable of int): item rows
         """
-        self._undo_stack.beginMacro("select" if checked else "deselect" + " source tables")
-        for row in rows:
-            self._undo_stack.push(SetTableChecked(self._tables[row].name, self, row, checked))
-        self._undo_stack.endMacro()
+        rows = [row for row in rows if self._tables[row].checked != checked]
+        self._undo_stack.push(SetTableChecked("All", self, checked, *rows))
 
     def table_at(self, index):
         if index.internalPointer() == self._root_item:

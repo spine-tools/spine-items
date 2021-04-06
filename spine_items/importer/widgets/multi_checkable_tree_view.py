@@ -33,7 +33,7 @@ class MultiCheckableTreeView(QTreeView):
             return
         selected = selection_model.selectedIndexes()
         model = self.model()
-        check_state = Qt.Unchecked if selected[0].data(Qt.CheckStateRole) == Qt.Checked else Qt.Checked
+        check_state = selected[0].data(Qt.CheckStateRole) != Qt.Checked
         if len(selected) == 1:
             model.setData(selected[0], check_state, Qt.CheckStateRole)
         else:
