@@ -19,6 +19,7 @@ from pathlib import Path
 from spinedb_api.spine_io.exporters.writer import write, WriterException
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
 from spinedb_api.spine_io.exporters.excel_writer import ExcelWriter
+from spinedb_api.spine_io.exporters.sql_writer import SqlWriter
 from spinedb_api import clear_filter_configs, DatabaseMapping, SpineDBAPIError
 from spine_items.utils import subdirectory_for_fork
 from .specification import Specification, OutputFormat
@@ -105,4 +106,6 @@ def make_writer(output_format, out_path):
     if output_format == OutputFormat.CSV:
         path = Path(out_path)
         return CsvWriter(path.parent, path.name)
-    return ExcelWriter(out_path)
+    elif output_format == OutputFormat.EXCEL:
+        return ExcelWriter(out_path)
+    return SqlWriter(out_path)

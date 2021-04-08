@@ -49,6 +49,7 @@ class MappingType(Enum):
 class OutputFormat(Enum):
     CSV = "csv"
     EXCEL = "Excel"
+    SQL = "SQL"
 
 
 @dataclass
