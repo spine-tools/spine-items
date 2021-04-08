@@ -800,13 +800,21 @@ def _new_mapping_specification(mapping_type):
         return MappingSpecification(mapping_type, True, False, False, object_group_export(0, 1, 2))
     if mapping_type == MappingType.object_group_parameter_values:
         return MappingSpecification(
-            mapping_type, True, False, False, object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, 5)
+            mapping_type,
+            True,
+            False,
+            False,
+            object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, Position.hidden, 5, None),
         )
     if mapping_type == MappingType.object_parameter_default_values:
         return MappingSpecification(mapping_type, True, False, False, object_parameter_default_value_export(0, 1, 2))
     if mapping_type == MappingType.object_parameter_values:
         return MappingSpecification(
-            mapping_type, True, False, False, object_parameter_export(0, 2, Position.hidden, 1, 3, 4)
+            mapping_type,
+            True,
+            False,
+            False,
+            object_parameter_export(0, 2, Position.hidden, 1, 3, Position.hidden, 4, None),
         )
     if mapping_type == MappingType.parameter_value_lists:
         return MappingSpecification(mapping_type, True, False, False, parameter_value_list_export(0, 1))
@@ -822,7 +830,9 @@ def _new_mapping_specification(mapping_type):
             True,
             True,
             False,
-            relationship_parameter_export(0, 3, Position.hidden, Position.hidden, [1], [2], 4),
+            relationship_parameter_export(
+                0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None
+            ),
         )
     if mapping_type == MappingType.alternatives:
         return MappingSpecification(mapping_type, True, False, False, alternative_export(0))
