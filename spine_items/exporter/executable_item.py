@@ -24,6 +24,7 @@ from spine_items.utils import Database
 from .do_work import do_work
 from ..executable_item_base import ExporterExecutableItemBase
 from .item_info import ItemInfo
+from .specification import OutputFormat
 
 
 class ExecutableItem(ExporterExecutableItemBase):
@@ -58,6 +59,11 @@ class ExecutableItem(ExporterExecutableItemBase):
             return True
         database_urls = [r.url for r in forward_resources if r.type_ == "database"]
         databases, self._forks = self._databases_and_forks(database_urls)
+        if self._specification.output_format == OutputFormat.GDX:
+            gams_system_directory = self._resolve_gams_system_directory()
+            if gams_system_directory is None:
+                self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")
+                return False
         out_dir = Path(self._data_dir, "output")
         self._process = ReturningProcess(
             target=do_work,
@@ -65,6 +71,7 @@ class ExecutableItem(ExporterExecutableItemBase):
                 self._specification.to_dict(),
                 self._output_time_stamps,
                 self._cancel_on_error,
+                gams_system_directory,
                 str(out_dir),
                 databases,
                 self._forks,
