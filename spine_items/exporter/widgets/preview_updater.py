@@ -43,9 +43,10 @@ class PreviewUpdater:
         self._ui = ui
         self._project_dir = project_dir
         if url_model is None:
-            url_model = FullUrlListModel()
+            url_model = FullUrlListModel(self._ui.database_url_combo_box)
         self._url_model = url_model
         self._url_model.rowsInserted.connect(lambda *_: self._enable_controls())
+        self._url_model.modelReset.connect(self._enable_controls)
         self._ui.database_url_combo_box.setModel(self._url_model)
         self._mapping_list_model = mapping_list_model
         self._mapping_list_model.rowsAboutToBeRemoved.connect(self._remove_mappings)
@@ -75,9 +76,13 @@ class PreviewUpdater:
         if self._url_model.rowCount() > 0:
             self._reload_preview()
 
+    @Slot()
     def _reload_preview(self):
         """Sets the current url and reloads preview."""
-        self._current_url = self._ui.database_url_combo_box.currentText()
+        current_url = self._ui.database_url_combo_box.currentText()
+        if not current_url:
+            return
+        self._current_url = current_url
         self._stamps.clear()
         for row in range(1, self._mapping_list_model.rowCount()):
             index = self._mapping_list_model.index(row, 0)
@@ -272,6 +277,7 @@ class PreviewUpdater:
         mapping_name = index.data()
         self._load_preview_data(mapping_name)
 
+    @Slot()
     def _enable_controls(self):
         """Enables and disables widgets as needed."""
         urls_available = self._url_model.rowCount() > 0
@@ -342,6 +348,7 @@ class PreviewUpdater:
         self._stamps.clear()
         self._thread_pool.clear()
         self._thread_pool.deleteLater()
+        self._url_model.modelReset.disconnect(self._enable_controls)
 
 
 class _Worker(QRunnable):

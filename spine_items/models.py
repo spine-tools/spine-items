@@ -569,8 +569,12 @@ class DatabaseListModel(QAbstractListModel):
 
 
 class FullUrlListModel(QAbstractListModel):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        """
+        Args:
+            parent (QObject, optional): model's parent
+            """
+        super().__init__(parent)
         self._urls = list()
 
     def append(self, url):
