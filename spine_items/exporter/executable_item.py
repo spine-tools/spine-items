@@ -59,6 +59,7 @@ class ExecutableItem(ExporterExecutableItemBase):
             return True
         database_urls = [r.url for r in forward_resources if r.type_ == "database"]
         databases, self._forks = self._databases_and_forks(database_urls)
+        gams_system_directory = ""
         if self._specification.output_format == OutputFormat.GDX:
             gams_system_directory = self._resolve_gams_system_directory()
             if gams_system_directory is None:
