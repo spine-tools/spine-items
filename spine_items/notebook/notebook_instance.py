@@ -86,7 +86,6 @@ class NotebookInstance:
             self.kernel_name = self.notebook_specification.kernel_name
         else:
             self.kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-        print(f"kernel {self.kernel_name}")
 
     def execute(self):
         """Executes a prepared instance."""
@@ -97,8 +96,6 @@ class NotebookInstance:
     def _console_execute(self):
         """Executes in console.
         """
-        print(self._nb_parameters)
-        print(self.kernel_name)
         # TODO add try/catch and return 0 if success 1 otherwise!
 
         pm.execute_notebook(

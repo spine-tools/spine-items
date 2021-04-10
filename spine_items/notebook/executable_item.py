@@ -30,16 +30,15 @@ from spine_engine.utils.helpers import shorten
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from .utils import is_pattern
-from ..utils import labelled_resource_args, is_label
+from .utils import (
+    find_file,
+    is_pattern,
+)
+from ..utils import cmd_line_arg_from_dict, expand_cmd_line_args, labelled_resource_args
 
 
-# TODO fix spec ui, add kernel support, add julia and R support
-#   in spec ui choose nb type, then drop down menu will fill with available kernels
-#   hover over selected kernel to get tooltip with kernel details like abs path etc.
-#   need way to open jupyter in toolbox
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, work_dir, output_dir, notebook_specification, cmd_line_args, logger):
+    def __init__(self, name, work_dir, notebook_specification, cmd_line_args, project_dir, logger):
         """
         Args:
             name (str): item's name
@@ -49,10 +48,10 @@ class ExecutableItem(ExecutableItemBase):
             notebook_specification (NotebookSpecification): a notebook specification
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, work_dir, logger)
+        super().__init__(name, project_dir, logger)
         self._name = name
         self._work_dir = work_dir
-        self._output_dir = output_dir
+        self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR))
         self._notebook_specification = notebook_specification
         self._cmd_line_args = cmd_line_args
         self._nb_parameters = None
@@ -77,13 +76,14 @@ class ExecutableItem(ExecutableItemBase):
         return ItemInfo.item_type()
 
     def _map_program_files(self, execution_dir):
+        # FIXME refine this method
         """Maps .ipynb file to its source path and maps its execution directory to be passed to this items instance"""
         for source_pattern in self._notebook_specification.includes:
             dir_name, file_pattern = os.path.split(source_pattern)
             if not dir_name:
-                src_dir = os.path.join(self._notebook_specification.path, file_pattern)
+                src_dir = self._notebook_specification.path + '/' + file_pattern
                 self._nb_io_path_mapping[source_pattern] = src_dir
-                self._nb_io_path_mapping["execution_output_dir"] = execution_dir  # FIXME overwrite for each source_pattern
+                self._nb_io_path_mapping["execution_output_dir"] = execution_dir
             else:
                 src_dir = os.path.join(self._notebook_specification.path, dir_name, file_pattern)
                 dst_dir = os.path.join(execution_dir, dir_name)
@@ -174,7 +174,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return scan_for_resources(self, self._notebook_specification, self._output_dir, False)
+        return scan_for_resources(self, self._notebook_specification, self._output_dir)
 
     def stop_execution(self):
         return NotImplementedError
@@ -219,26 +219,38 @@ class ExecutableItem(ExecutableItemBase):
             return False
         self._notebook_instance = self._notebook_specification.create_instance(execution_dir, self._logger, self)
         with labelled_resource_args(forward_resources + backward_resources, False) as labelled_args:
-            for k, arg in enumerate(self._cmd_line_args):
-                if is_label(arg):
-                    if arg not in labelled_args:
-                        self._logger.msg_warning.emit(
-                            f"The argument '{k}: {arg}' does not match any available resources."
-                        )
-                        continue
-                    arg = labelled_args[arg]
-                self._cmd_line_args[k] = arg
+            expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
             try:
-                self._notebook_instance.prepare(self._nb_io_path_mapping, self._cmd_line_args)
+                self._notebook_instance.prepare(self._nb_io_path_mapping, expanded_args)
             except RuntimeError as error:
-                self._logger.msg_error.emit(f"Failed to prepare notebook instance: {error}")
+                self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
                 return False
             self._logger.msg.emit(
-                f"*** Starting instance of Notebook specification <b>{self._notebook_specification.name}</b> ***")
+                f"*** Starting instance of Tool specification <b>{self._notebook_specification.name}</b> ***"
+            )
             return_code = self._notebook_instance.execute()
         self._handle_output_files(return_code, execution_dir)
         self._notebook_instance = None
         return return_code == 0
+
+    def _find_input_files(self, resources):
+        """
+        Iterates required input  files in tool specification and looks for them in the given resources.
+
+        Args:
+            resources (list): resources available
+
+        Returns:
+            Dictionary mapping required files to path where they are found, or to None if not found
+        """
+        file_paths = dict()
+        for required_path in self._notebook_specification.input_files:
+            _, filename = os.path.split(required_path)
+            if not filename:
+                # It's a directory
+                continue
+            file_paths[required_path] = find_file(filename, resources)
+        return file_paths
 
     def _handle_output_files(self, return_code, execution_dir):
         """Copies Tool specification output files from work directory to result directory.
@@ -303,15 +315,12 @@ class ExecutableItem(ExecutableItemBase):
                 work_dir = None
         else:
             work_dir = None
-        data_dir = pathlib.Path(project_dir, ".spinetoolbox", "items", shorten(name))
-        output_dir = pathlib.Path(data_dir, TOOL_OUTPUT_DIR)
         specification_name = item_dict["specification"]
         specification = ExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
-        cmd_line_args = item_dict["cmd_line_args"]
-        cmd_line_args = [deserialize_path(arg, project_dir) for arg in cmd_line_args]
-        return cls(name, work_dir, output_dir, specification, cmd_line_args, logger)
+        cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
+        return cls(name, work_dir, specification, cmd_line_args, project_dir, logger)
 
 
 def _create_output_dir_timestamp():
