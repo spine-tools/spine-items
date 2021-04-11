@@ -19,8 +19,8 @@ Contains ToolInstance class.
 import os
 import sys
 import shutil
-from spine_engine.config import GAMS_EXECUTABLE, JULIA_EXECUTABLE
-from spine_engine.utils.helpers import python_interpreter
+from spine_engine.config import GAMS_EXECUTABLE
+from spine_engine.utils.helpers import python_interpreter, resolve_julia_executable
 from spine_engine.execution_managers import StandardExecutionManager, KernelExecutionManager
 
 
@@ -150,11 +150,8 @@ class JuliaToolInstance(ToolInstance):
             )
         else:
             # Prepare command "julia --project={PROJECT_DIR} script.jl"
-            julia_path = self._settings.value("appSettings/juliaPath", defaultValue="")
-            if julia_path != "":
-                julia_exe = julia_path
-            else:
-                julia_exe = JULIA_EXECUTABLE
+            julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
+            julia_exe = resolve_julia_executable(julia_exe)
             script_path = self.tool_specification.main_prgm
             julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
             self.program = julia_exe

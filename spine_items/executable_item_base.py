@@ -20,7 +20,6 @@ from spinedb_api import clear_filter_configs, load_filters
 from spinedb_api.filters.tools import filter_configs, name_from_dict
 from spinedb_api.spine_io import gdx_utils
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
 from .utils import exported_files_as_resources
 
 

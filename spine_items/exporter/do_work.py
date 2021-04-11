@@ -19,12 +19,14 @@ from pathlib import Path
 from spinedb_api.spine_io.exporters.writer import write, WriterException
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
 from spinedb_api.spine_io.exporters.excel_writer import ExcelWriter
+from spinedb_api.spine_io.exporters.gdx_writer import GdxWriter
+from spinedb_api.spine_io.exporters.sql_writer import SqlWriter
 from spinedb_api import clear_filter_configs, DatabaseMapping, SpineDBAPIError
 from spine_items.utils import subdirectory_for_fork
 from .specification import Specification, OutputFormat
 
 
-def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databases, forks, logger):
+def do_work(specification, output_time_stamps, cancel_on_error, gams_path, out_dir, databases, forks, logger):
     """
     Exports databases using given specification as export mapping.
 
@@ -32,6 +34,7 @@ def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databas
         specification (dict): export specification dictionary
         output_time_stamps (bool): if True, puts output files into time stamped subdirectories
         cancel_on_error (bool): if True, bails out on non-fatal errors
+        gams_path (str): path to GAMS installation
         out_dir (str): base output directory
         databases (dict): databases to export
         forks (dict): mapping from base database URL to a set of fork names
@@ -61,7 +64,7 @@ def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databas
                 file.parent.mkdir(parents=True, exist_ok=True)
                 if file.exists():
                     file.unlink()
-                writer = make_writer(specification.output_format, out_path)
+                writer = make_writer(specification.output_format, out_path, gams_path)
                 mappings = (m.root for m in specification.enabled_specifications().values())
                 write(database_map, writer, *mappings)
             except (PermissionError, WriterException) as e:
@@ -91,13 +94,14 @@ def do_work(specification, output_time_stamps, cancel_on_error, out_dir, databas
     return all(successes), written_files
 
 
-def make_writer(output_format, out_path):
+def make_writer(output_format, out_path, gams_path):
     """
     Constructs a writer.
 
     Args:
         output_format (OutputFormat): output format
-        out_path (str): path to output file.
+        out_path (str): path to output file
+        gams_path (str): path to GAMS installation
 
     Returns:
         Writer: a writer
@@ -105,4 +109,8 @@ def make_writer(output_format, out_path):
     if output_format == OutputFormat.CSV:
         path = Path(out_path)
         return CsvWriter(path.parent, path.name)
-    return ExcelWriter(out_path)
+    elif output_format == OutputFormat.EXCEL:
+        return ExcelWriter(out_path)
+    elif output_format == OutputFormat.SQL:
+        return SqlWriter(out_path)
+    return GdxWriter(out_path, gams_path)
