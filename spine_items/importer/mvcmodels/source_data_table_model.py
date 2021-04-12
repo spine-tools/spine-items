@@ -28,6 +28,8 @@ class SourceDataTableModel(MinimalTableModel):
     Highlights columns, rows, and so on, depending on Mapping specification.
     """
 
+    _FETCH_CHUNK_SIZE = 100
+
     column_types_updated = Signal()
     row_types_updated = Signal()
     mapping_changed = Signal()
@@ -37,6 +39,7 @@ class SourceDataTableModel(MinimalTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.default_flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        self._unfetched_data = []
         self._mapping_specification = None
         self._column_types = {}
         self._row_types = {}
@@ -61,8 +64,18 @@ class SourceDataTableModel(MinimalTableModel):
         self._column_types = {}
         self._row_types = {}
         self._converted_data = {}
-        super().reset_model(main_data)
+        super().reset_model(main_data[: self._FETCH_CHUNK_SIZE])
+        self._unfetched_data = main_data[self._FETCH_CHUNK_SIZE :]
         self._polish_mapping()
+
+    def canFetchMore(self, parent):
+        return bool(self._unfetched_data)
+
+    def fetchMore(self, parent):
+        self.beginResetModel()
+        self._main_data += self._unfetched_data[: self._FETCH_CHUNK_SIZE]
+        self._unfetched_data[: self._FETCH_CHUNK_SIZE] = []
+        self.endResetModel()
 
     def _polish_mapping(self):
         if (

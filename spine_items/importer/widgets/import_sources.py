@@ -155,7 +155,7 @@ class ImportSources(QObject):
             self._table_mappings[item.name] = MappingListModel([specification], item.name, self._undo_stack)
         self.source_table_selected.emit(item.name, self._table_mappings[item.name])
         self._connector.set_table(item.name)
-        self._connector.request_data(item.name, max_rows=100)
+        self._connector.request_data(item.name)
 
     def _select_table_row(self, row):
         selection_model = self._ui.source_list.selectionModel()
@@ -218,31 +218,33 @@ class ImportSources(QObject):
 
     @Slot(list, list)
     def update_preview_data(self, data, header):
-        if data:
-            try:
-                data = _sanitize_data(data, header)
-            except RuntimeError as error:
-                self._ui_error.showMessage(str(error))
-                self._preview_table_model.reset_model()
-                self._preview_table_model.set_horizontal_header_labels([])
-                self.preview_data_updated.emit(self._preview_table_model.columnCount())
-                return
-            if not header:
-                header = list(range(1, len(data[0]) + 1))
-            # Set header data before reseting model because the header needs to be there for some slots...
-            self._preview_table_model.set_horizontal_header_labels(header)
-            self._preview_table_model.reset_model(main_data=data)
-            types = self._connector.table_types.get(self._connector.current_table, {})
-            row_types = self._connector.table_row_types.get(self._connector.current_table, {})
-            for col in range(len(header)):
-                col_type = types.get(col, "string")
-                self._preview_table_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Horizontal)
-            for row, row_type in row_types.items():
-                self._preview_table_model.set_type(row, value_to_convert_spec(row_type), orientation=Qt.Vertical)
-        else:
-            self._preview_table_model.reset_model()
-            self._preview_table_model.set_horizontal_header_labels([])
+        if not data:
+            self._clear_preview_table_model()
+            return
+        try:
+            data = _sanitize_data(data, header)
+        except RuntimeError as error:
+            self._ui_error.showMessage(str(error))
+            self._clear_preview_table_model()
+            return
+        if not header:
+            header = list(range(1, len(data[0]) + 1))
+        # Set header data before reseting model because the header needs to be there for some slots...
+        self._preview_table_model.set_horizontal_header_labels(header)
+        self._preview_table_model.reset_model(main_data=data)
+        types = self._connector.table_types.get(self._connector.current_table, {})
+        row_types = self._connector.table_row_types.get(self._connector.current_table, {})
+        for col in range(len(header)):
+            col_type = types.get(col, "string")
+            self._preview_table_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Horizontal)
+        for row, row_type in row_types.items():
+            self._preview_table_model.set_type(row, value_to_convert_spec(row_type), orientation=Qt.Vertical)
         self.preview_data_updated.emit(self._preview_table_model.columnCount())
+
+    def _clear_preview_table_model(self):
+        self._preview_table_model.set_horizontal_header_labels([])
+        self._preview_table_model.clear()
+        self.preview_data_updated.emit(0)
 
     def _restore_mapping(self, mapping):
         try:
