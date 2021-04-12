@@ -369,6 +369,8 @@ class ImportEditorWindow(QMainWindow):
         if not self._call_add_specification():
             return False
         self._undo_stack.setClean()
+        if self._item:
+            self._item.set_specification(self._specification)
         return True
 
     @Slot()
@@ -376,8 +378,6 @@ class ImportEditorWindow(QMainWindow):
         """Saves changes and close window."""
         if not self._save():
             return
-        if self._item:
-            self._item.set_specification(self._specification)
         self.close()
 
     @Slot()

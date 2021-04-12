@@ -818,8 +818,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
         """Saves changes and close window."""
         if not self._save():
             return
-        if self._item:
-            self._item.set_specification(self._new_spec)
         self.close()
 
     def _save(self):
@@ -859,6 +857,8 @@ class ToolSpecificationEditorWindow(QMainWindow):
         if not self.call_add_tool_specification():
             return False
         self._undo_stack.setClean()
+        if self._item:
+            self._item.set_specification(self._new_spec)
         return True
 
     def _make_tool_specification(self, new_spec_dict):

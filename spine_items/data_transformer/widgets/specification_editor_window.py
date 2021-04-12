@@ -161,8 +161,6 @@ class SpecificationEditorWindow(QMainWindow):
         """Stores the specification to Toolbox' specification list, sets the spec for the item, and closes the window."""
         if not self._save():
             return
-        if self._item:
-            self._item.set_specification(self._specification)
         self.close()
 
     def _save(self):
@@ -181,6 +179,8 @@ class SpecificationEditorWindow(QMainWindow):
         if not self._call_add_specification():
             return False
         self._undo_stack.setClean()
+        if self._item:
+            self._item.set_specification(self._specification)
         return True
 
     def _call_add_specification(self):

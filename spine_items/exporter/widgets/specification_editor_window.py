@@ -764,8 +764,6 @@ class SpecificationEditorWindow(QMainWindow):
         """Stores the specification to Toolbox' specification list and closes the window."""
         if not self._save():
             return
-        if self._item:
-            self._item.set_specification(self._specification)
         self.close()
 
     @Slot()
@@ -792,6 +790,8 @@ class SpecificationEditorWindow(QMainWindow):
         if not self._toolbox.add_specification(self._specification, update_existing, self):
             return False
         self._undo_stack.setClean()
+        if self._item:
+            self._item.set_specification(self._specification)
         return True
 
     def _populate_toolbar_menu(self):
