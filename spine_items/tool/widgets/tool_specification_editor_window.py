@@ -886,15 +886,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
         update_existing = self._new_spec.name == self._original_spec_name
         return self._toolbox.add_specification(self._new_spec, update_existing, self)
 
-    def keyPressEvent(self, e):
-        """Close Setup form when escape key is pressed.
-
-        Args:
-            e (QKeyEvent): Received key press event.
-        """
-        if e.key() == Qt.Key_Escape:
-            self.close()
-
     def showEvent(self, event):
         super().showEvent(event)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
