@@ -41,12 +41,14 @@ class TestWithCsvWriter(unittest.TestCase):
 
     def test_export_database(self):
         root_mapping = object_export(class_position=0, object_position=1)
-        mapping_specification = MappingSpecification(MappingType.objects, True, False, False, root_mapping)
+        mapping_specification = MappingSpecification(MappingType.objects, True, True, False, False, root_mapping)
         specification = Specification("name", "description", {"mapping": mapping_specification})
         databases = {self._url: "test_export_database.csv"}
         logger = MagicMock()
         self.assertTrue(
-            do_work(specification.to_dict(), False, False, "", self._temp_dir.name, databases, {self._url: set()}, logger)
+            do_work(
+                specification.to_dict(), False, False, "", self._temp_dir.name, databases, {self._url: set()}, logger
+            )
         )
         out_path = os.path.join(self._temp_dir.name, "test_export_database.csv")
         self.assertTrue(os.path.exists(out_path))

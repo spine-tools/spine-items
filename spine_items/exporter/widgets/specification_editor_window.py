@@ -56,6 +56,7 @@ from ..commands import (
     EnableAllMappings,
     NewMapping,
     RemoveMapping,
+    SetAlwaysExportHeader,
     SetMappingEnabled,
     SetMappingType,
     SetExportFormat,
@@ -178,6 +179,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.item_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
         self._ui.parameter_dimensions_spin_box.valueChanged.connect(self._change_parameter_dimensions)
+        self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
         self._ui.export_objects_check_box.stateChanged.connect(self._change_export_objects_flag)
         self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
@@ -191,8 +193,6 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self._ui.mapping_table_view.horizontalHeader().setMinimumSectionSize(position_section_width())
         self._enable_mapping_specification_editing()
-        if self._mapping_list_model.rowCount() > 1:
-            self._ui.mapping_list.setCurrentIndex(self._mapping_list_model.index(1, 0))
         self._button_box = QDialogButtonBox(self)
         self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
         self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -204,6 +204,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
         if specification is None:
             self._mapping_list_model.extend(_new_mapping_specification(MappingType.objects))
+        if self._mapping_list_model.rowCount() > 1:
+            self._ui.mapping_list.setCurrentIndex(self._mapping_list_model.index(1, 0))
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
         self._preview_updater = PreviewUpdater(
             self,
@@ -313,6 +315,7 @@ class SpecificationEditorWindow(QMainWindow):
         mapping_type = current.data(MappingListModel.MAPPING_TYPE_ROLE)
         self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
         self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
+        self._set_always_export_header_silently(current.data(MappingListModel.ALWAYS_EXPORT_HEADER_ROLE))
         if mapping_type in (
             MappingType.relationships,
             MappingType.relationship_parameter_values,
@@ -365,6 +368,8 @@ class SpecificationEditorWindow(QMainWindow):
             mapping_type = top_left.data(MappingListModel.MAPPING_TYPE_ROLE)
             self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
             self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
+        if MappingListModel.ALWAYS_EXPORT_HEADER_ROLE in roles:
+            self._set_always_export_header_silently(top_left.data(MappingListModel.ALWAYS_EXPORT_HEADER_ROLE))
         if MappingListModel.EXPORT_OBJECTS_FLAG_ROLE in roles:
             self._set_export_objects_flag_silently(top_left.data(MappingListModel.EXPORT_OBJECTS_FLAG_ROLE))
         if MappingListModel.USE_FIXED_TABLE_NAME_FLAG_ROLE in roles:
@@ -537,6 +542,29 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.parameter_type_combo_box.setCurrentText(type_name)
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
         self._enable_parameter_controls()
+
+    @Slot(int)
+    def _change_always_export_header(self, checked):
+        """Pushes corresponding command to undo stack.
+
+        Args:
+            checked (int): checked state
+        """
+        index = self._ui.mapping_list.currentIndex()
+        self._undo_stack.push(SetAlwaysExportHeader(index, checked == Qt.Checked))
+
+    def _set_always_export_header_silently(self, always_export_header):
+        """
+        Changes the always export header check box  without any side effects.
+
+        Args:
+            always_export_header (bool): True to check the box, false otherwise
+        """
+        if always_export_header == self._ui.always_export_header_check_box.isChecked():
+            return
+        self._ui.always_export_header_check_box.stateChanged.disconnect(self._change_always_export_header)
+        self._ui.always_export_header_check_box.setCheckState(Qt.Checked if always_export_header else Qt.Unchecked)
+        self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
 
     @Slot(int)
     def _change_parameter_dimensions(self, dimensions):
@@ -795,38 +823,45 @@ def _new_mapping_specification(mapping_type):
         MappingSpecification: an export mapping specification
     """
     if mapping_type == MappingType.objects:
-        return MappingSpecification(mapping_type, True, False, False, object_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, False, False, object_export(0, 1))
     if mapping_type == MappingType.object_groups:
-        return MappingSpecification(mapping_type, True, False, False, object_group_export(0, 1, 2))
+        return MappingSpecification(mapping_type, True, True, False, False, object_group_export(0, 1, 2))
     if mapping_type == MappingType.object_group_parameter_values:
         return MappingSpecification(
             mapping_type,
+            True,
             True,
             False,
             False,
             object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, Position.hidden, 5, None),
         )
     if mapping_type == MappingType.object_parameter_default_values:
-        return MappingSpecification(mapping_type, True, False, False, object_parameter_default_value_export(0, 1, 2))
+        return MappingSpecification(
+            mapping_type, True, True, False, False, object_parameter_default_value_export(0, 1, 2)
+        )
     if mapping_type == MappingType.object_parameter_values:
         return MappingSpecification(
             mapping_type,
+            True,
             True,
             False,
             False,
             object_parameter_export(0, 2, Position.hidden, 1, 3, Position.hidden, 4, None),
         )
     if mapping_type == MappingType.parameter_value_lists:
-        return MappingSpecification(mapping_type, True, False, False, parameter_value_list_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, False, False, parameter_value_list_export(0, 1))
     if mapping_type == MappingType.relationships:
-        return MappingSpecification(mapping_type, True, True, False, relationship_export(0, Position.hidden, [1], [2]))
+        return MappingSpecification(
+            mapping_type, True, True, True, False, relationship_export(0, Position.hidden, [1], [2])
+        )
     if mapping_type == MappingType.relationship_parameter_default_values:
         return MappingSpecification(
-            mapping_type, True, False, False, relationship_parameter_default_value_export(0, 1, 2)
+            mapping_type, True, True, False, False, relationship_parameter_default_value_export(0, 1, 2)
         )
     if mapping_type == MappingType.relationship_parameter_values:
         return MappingSpecification(
             mapping_type,
+            True,
             True,
             True,
             False,
@@ -835,19 +870,19 @@ def _new_mapping_specification(mapping_type):
             ),
         )
     if mapping_type == MappingType.alternatives:
-        return MappingSpecification(mapping_type, True, False, False, alternative_export(0))
+        return MappingSpecification(mapping_type, True, True, False, False, alternative_export(0))
     if mapping_type == MappingType.scenario_alternatives:
-        return MappingSpecification(mapping_type, True, False, False, scenario_alternative_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, False, False, scenario_alternative_export(0, 1))
     if mapping_type == MappingType.scenarios:
-        return MappingSpecification(mapping_type, True, False, False, scenario_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, False, False, scenario_export(0, 1))
     if mapping_type == MappingType.features:
-        return MappingSpecification(mapping_type, True, False, False, feature_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, False, False, feature_export(0, 1))
     if mapping_type == MappingType.tools:
-        return MappingSpecification(mapping_type, True, False, False, tool_export(0))
+        return MappingSpecification(mapping_type, True, True, False, False, tool_export(0))
     if mapping_type == MappingType.tool_features:
-        return MappingSpecification(mapping_type, True, False, False, tool_feature_export(0, 1, 2, 3))
+        return MappingSpecification(mapping_type, True, True, False, False, tool_feature_export(0, 1, 2, 3))
     if mapping_type == MappingType.tool_feature_methods:
-        return MappingSpecification(mapping_type, True, False, False, tool_feature_method_export(0, 1, 2, 3))
+        return MappingSpecification(mapping_type, True, True, False, False, tool_feature_method_export(0, 1, 2, 3))
     raise NotImplementedError()
 
 
