@@ -22,6 +22,7 @@ from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping
 from spinetoolbox.helpers import busy_effect
 from ...models import FullUrlListModel
+from ..mvcmodels.mapping_list_model import MappingListModel
 from ..mvcmodels.preview_tree_model import PreviewTreeModel
 from ..mvcmodels.preview_table_model import PreviewTableModel
 from ..preview_table_writer import TableWriter
@@ -52,6 +53,7 @@ class PreviewUpdater:
         self._mapping_list_model.rowsAboutToBeRemoved.connect(self._remove_mappings)
         self._mapping_list_model.dataChanged.connect(self._rename_mapping)
         self._mapping_list_model.dataChanged.connect(self._enable_mapping)
+        self._mapping_list_model.dataChanged.connect(self._update_header_only_tables)
         self._mapping_table_model = mapping_table_model
         self._mapping_table_model.dataChanged.connect(lambda *_: self._reload_current_mapping())
         self._mapping_table_model.modelReset.connect(lambda: self._reload_current_mapping())
@@ -264,6 +266,20 @@ class PreviewUpdater:
             elif not self._preview_tree_model.has_name(name):
                 self._load_preview_data(name)
 
+    @Slot(QModelIndex, QModelIndex, list)
+    def _update_header_only_tables(self, top_left, bottom_right, roles):
+        """
+        Updates mappings according to the always write header flag.
+
+        Args:
+            top_left (QModelIndex): top left corner of modified mappings' in mapping list model
+            bottom_right (QModelIndex): top left corner of modified mappings' in mapping list model
+            roles (list of int): changed data's role
+        """
+        if MappingListModel.ALWAYS_EXPORT_HEADER_ROLE not in roles:
+            return
+        self._reload_current_mapping()
+
     def _reload_current_mapping(self):
         """Reloads mapping that is currently selected on mapping list."""
         if self._current_url is None:
@@ -294,13 +310,21 @@ class PreviewUpdater:
         """
         if self._current_url is None or not self._ui.live_preview_check_box.isChecked():
             return
-        mapping = self._mapping_list_model.mapping(mapping_name)
+        mapping_spec = self._mapping_list_model.mapping_specification(mapping_name)
         max_tables = self._ui.max_preview_tables_spin_box.value()
         max_rows = self._ui.max_preview_rows_spin_box.value()
         id_ = (self._current_url, mapping_name)
         stamp = monotonic()
         self._stamps[id_] = stamp
-        worker = _Worker(self._current_url, mapping_name, deepcopy(mapping), stamp, max_tables, max_rows)
+        worker = _Worker(
+            self._current_url,
+            mapping_name,
+            deepcopy(mapping_spec.root),
+            mapping_spec.always_export_header,
+            stamp,
+            max_tables,
+            max_rows,
+        )
         worker.signals.table_written.connect(self._add_or_update_data)
         self._thread_pool.start(worker)
 
@@ -355,11 +379,12 @@ class _Worker(QRunnable):
     class Signals(QObject):
         table_written = Signal(tuple, str, dict, float)
 
-    def __init__(self, url, mapping_name, mapping, stamp, max_tables=20, max_rows=20):
+    def __init__(self, url, mapping_name, mapping, always_export_header, stamp, max_tables=20, max_rows=20):
         super().__init__()
         self._url = url
         self._mapping_name = mapping_name
         self._mapping = mapping
+        self._always_export_header = always_export_header
         self._max_tables = max_tables
         self._max_rows = max_rows
         self._stamp = stamp
@@ -370,7 +395,7 @@ class _Worker(QRunnable):
         db_map = DatabaseMapping(self._url)
         try:
             writer = TableWriter(self._max_tables, self._max_rows)
-            write(db_map, writer, self._mapping)
+            write(db_map, writer, self._mapping, empty_data_header=self._always_export_header)
             self.signals.table_written.emit(
                 (self._url, self._mapping_name), self._mapping_name, writer.tables, self._stamp
             )

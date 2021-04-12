@@ -57,6 +57,7 @@ class OutputFormat(Enum):
 class MappingSpecification:
     type: MappingType
     enabled: bool
+    always_export_header: bool
     export_objects_flag: bool
     use_fixed_table_name_flag: bool
     root: Mapping
@@ -155,6 +156,7 @@ class Specification(ProjectItemSpecification):
                 "type": mapping_spec.type.value,
                 "mapping": mapping_to_dict(mapping_spec.root),
                 "enabled": mapping_spec.enabled,
+                "always_export_header": mapping_spec.always_export_header,
                 "use_fixed_table_name": mapping_spec.use_fixed_table_name_flag,
             }
             if mapping_spec.type in (MappingType.relationships,):
@@ -183,6 +185,7 @@ class Specification(ProjectItemSpecification):
             name: MappingSpecification(
                 MappingType(spec_dict["type"]),
                 spec_dict.get("enabled", True),
+                spec_dict.get("always_export_header", True),
                 spec_dict.get("export_objects_flag", False),
                 spec_dict.get("use_fixed_table_name", False),
                 mapping_from_dict(spec_dict["mapping"]),

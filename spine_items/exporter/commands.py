@@ -152,6 +152,24 @@ class SetMappingType(QUndoCommand):
         self._index.model().setData(self._index, self._previous_type, MappingListModel.MAPPING_TYPE_ROLE)
 
 
+class SetAlwaysExportHeader(QUndoCommand):
+    def __init__(self, index, always_export_header):
+        """
+        Args:
+            index (QModelIndex): mapping's row index
+            always_export_header (bool): always export header flag
+        """
+        super().__init__(("check" if always_export_header else "uncheck") + " always export header checkbox")
+        self._index = index
+        self._flag = always_export_header
+
+    def redo(self):
+        self._index.model().setData(self._index, self._flag, MappingListModel.ALWAYS_EXPORT_HEADER_ROLE)
+
+    def undo(self):
+        self._index.model().setData(self._index, not self._flag, MappingListModel.ALWAYS_EXPORT_HEADER_ROLE)
+
+
 class SetExportObjectsFlag(QUndoCommand):
     def __init__(self, index, flag):
         """

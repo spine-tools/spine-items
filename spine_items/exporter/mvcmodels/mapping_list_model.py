@@ -36,10 +36,11 @@ class MappingListModel(QAbstractListModel):
     MAPPING_SPECIFICATION_ROLE = Qt.UserRole + 1
     MAPPING_TYPE_ROLE = Qt.UserRole + 2
     MAPPING_ROOT_ROLE = Qt.UserRole + 3
-    EXPORT_OBJECTS_FLAG_ROLE = Qt.UserRole + 4
-    RELATIONSHIP_DIMENSIONS_ROLE = Qt.UserRole + 5
-    USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.UserRole + 6
-    PARAMETER_DIMENSIONS_ROLE = Qt.UserRole + 7
+    ALWAYS_EXPORT_HEADER_ROLE = Qt.UserRole + 4
+    EXPORT_OBJECTS_FLAG_ROLE = Qt.UserRole + 5
+    RELATIONSHIP_DIMENSIONS_ROLE = Qt.UserRole + 6
+    USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.UserRole + 7
+    PARAMETER_DIMENSIONS_ROLE = Qt.UserRole + 8
 
     def __init__(self, mappings=None):
         """
@@ -93,6 +94,8 @@ class MappingListModel(QAbstractListModel):
                 return spec.type
             if role == self.MAPPING_ROOT_ROLE:
                 return spec.root
+            if role == self.ALWAYS_EXPORT_HEADER_ROLE:
+                return spec.always_export_header
             if role == self.EXPORT_OBJECTS_FLAG_ROLE:
                 return spec.export_objects_flag
             if role == self.RELATIONSHIP_DIMENSIONS_ROLE:
@@ -111,17 +114,17 @@ class MappingListModel(QAbstractListModel):
             return super().flags(index) | Qt.ItemIsUserCheckable
         return super().flags(index) | Qt.ItemIsEditable | Qt.ItemIsUserCheckable
 
-    def mapping(self, name):
+    def mapping_specification(self, name):
         """
-        Returns root mapping for given name.
+        Returns a mapping specification for given name.
 
         Args:
             name (str): mapping's name
 
         Returns:
-            Mapping: root mapping
+            MappingSpecification: mapping specification
         """
-        return self._mappings[name].root
+        return self._mappings[name]
 
     def index_of(self, name):
         """
@@ -160,6 +163,9 @@ class MappingListModel(QAbstractListModel):
             elif role == self.MAPPING_TYPE_ROLE:
                 spec.type = value
                 self.dataChanged.emit(index, index, [self.MAPPING_TYPE_ROLE])
+            elif role == self.ALWAYS_EXPORT_HEADER_ROLE:
+                spec.always_export_header = value
+                self.dataChanged.emit(index, index, [self.ALWAYS_EXPORT_HEADER_ROLE])
             elif role == self.EXPORT_OBJECTS_FLAG_ROLE:
                 spec.export_objects_flag = value
                 self.dataChanged.emit(index, index, [self.EXPORT_OBJECTS_FLAG_ROLE])

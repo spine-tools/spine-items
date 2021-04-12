@@ -65,8 +65,10 @@ def do_work(specification, output_time_stamps, cancel_on_error, gams_path, out_d
                 if file.exists():
                     file.unlink()
                 writer = make_writer(specification.output_format, out_path, gams_path)
-                mappings = (m.root for m in specification.enabled_specifications().values())
-                write(database_map, writer, *mappings)
+                specifications = specification.enabled_specifications().values()
+                mappings = (m.root for m in specifications)
+                header_always = (m.always_export_header for m in specifications)
+                write(database_map, writer, *mappings, empty_data_header=header_always)
             except (PermissionError, WriterException) as e:
                 logger.msg_error.emit(str(e))
                 if cancel_on_error:
