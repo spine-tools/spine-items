@@ -200,12 +200,13 @@ class NotebookSpecificationEditorWindow(QWidget):
                 self.output_files_model.appendRow(qitem)
 
     def populate_available_kernel_list(self):
-        # ker = Path(sys.executable).as_posix().split('/')[-2]
         ksm = KernelSpecManager()
         specs = ksm.find_kernel_specs()
         available_kernels = list()
         for k_name, k_path in specs.items():
             available_kernels.append(k_name)
+            # TODO find way to add kernels for the selected language only, currently k_spec.language
+            #  is python for all kernels where Jupyter can detect the correct language.
             # k_spec = ksm.get_kernel_spec(k_name)
             # print(f"language {k_spec.language}")
             # print(f"k_display_name {k_spec.display_name}")
