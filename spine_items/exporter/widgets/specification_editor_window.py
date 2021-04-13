@@ -67,7 +67,8 @@ from ..commands import (
 from ..mvcmodels.mapping_list_model import MappingListModel
 from ..mvcmodels.mapping_table_model import MappingTableModel
 from ..specification import MappingSpecification, MappingType, OutputFormat, Specification
-from .position_edit import PositionEditDelegate, position_section_width
+from .filter_edit_delegate import FilterEditDelegate
+from .position_edit_delegate import PositionEditDelegate, position_section_width
 
 
 mapping_type_to_combo_box_label = {
@@ -185,8 +186,10 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
         self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
         self._ui.mapping_table_view.setModel(self._mapping_model)
-        self._position_edit_delegate = PositionEditDelegate()
+        self._position_edit_delegate = PositionEditDelegate(self)
         self._ui.mapping_table_view.setItemDelegateForColumn(1, self._position_edit_delegate)
+        self._filter_edit_delegate = FilterEditDelegate(self)
+        self._ui.mapping_table_view.setItemDelegateForColumn(4, self._filter_edit_delegate)
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)

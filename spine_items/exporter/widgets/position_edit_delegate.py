@@ -9,7 +9,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains mapping position editor.
+Contains mapping position editor delegate.
 
 :author: A. Soininen (VTT)
 :date:   5.1.2021
@@ -38,7 +38,6 @@ class PositionEditDelegate(QStyledItemDelegate):
         return _PositionEdit(parent)
 
     def setEditorData(self, editor, index):
-        model = index.model()
         editor.set(index.data())
 
 
@@ -53,7 +52,7 @@ class _PositionEdit(QComboBox):
         self.setEditable(True)
         self.setInsertPolicy(QComboBox.NoInsert)
         self.currentTextChanged.connect(self._insert)
-        self.setLineEdit(SelectingLineEdit())
+        self.setLineEdit(_SelectingLineEdit())
 
     @Slot(str)
     def _insert(self, text):
@@ -83,7 +82,7 @@ class _PositionEdit(QComboBox):
             self.setCurrentIndex(0)
 
 
-class SelectingLineEdit(QLineEdit):
+class _SelectingLineEdit(QLineEdit):
     """Line editor that selects all text when focussed."""
 
     def focusInEvent(self, e):

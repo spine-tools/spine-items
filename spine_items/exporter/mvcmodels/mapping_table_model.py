@@ -62,6 +62,9 @@ POSITION_DISPLAY_TEXT = {Position.hidden: "hidden", Position.table_name: "table 
 
 
 class MappingTableModel(QAbstractTableModel):
+
+    MAPPING_ITEM_ROLE = Qt.UserRole + 1
+
     def __init__(self, mapping_name, root_mapping, undo_stack, mapping_provider):
         """
         Args:
@@ -116,6 +119,8 @@ class MappingTableModel(QAbstractTableModel):
                 return QColor(250, 250, 250)
         elif role == Qt.ToolTipRole and column == 4:
             return "Regular expression"
+        if role == self.MAPPING_ITEM_ROLE:
+            return self._mappings[index.row()]
         return None
 
     def flags(self, index=QModelIndex()):
@@ -150,7 +155,7 @@ class MappingTableModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return dict(enumerate(["Mapping type", "Map to", "Pivoted", "Header", "Filter"]))[section]
+            return ("Mapping type", "Map to", "Pivoted", "Header", "Filter")[section]
         return None
 
     def root_mapping(self):
