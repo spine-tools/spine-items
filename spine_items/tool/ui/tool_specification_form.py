@@ -87,6 +87,9 @@ class Ui_MainWindow(object):
         self.actionNew_program_file = QAction(MainWindow)
         self.actionNew_program_file.setObjectName(u"actionNew_program_file")
         self.actionNew_program_file.setIcon(icon)
+        self.actionSave_program_file = QAction(MainWindow)
+        self.actionSave_program_file.setObjectName(u"actionSave_program_file")
+        self.actionSave_program_file.setEnabled(False)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
@@ -151,14 +154,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_7.addWidget(self.checkBox_execute_in_work)
 
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QMenuBar(MainWindow)
-        self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 991, 27))
-        self.menuEdit = QMenu(self.menubar)
-        self.menuEdit.setObjectName(u"menuEdit")
-        self.menuFile = QMenu(self.menubar)
-        self.menuFile.setObjectName(u"menuFile")
-        MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
@@ -232,64 +227,8 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_8.addWidget(self.textEdit_program)
 
-        self.horizontalLayout_6 = QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.label = QLabel(self.dockWidgetContents)
-        self.label.setObjectName(u"label")
-        self.label.setMaximumSize(QSize(16777215, 16777215))
-        font1 = QFont()
-        font1.setPointSize(10)
-        self.label.setFont(font1)
-
-        self.horizontalLayout_6.addWidget(self.label)
-
-        self.label_mainpath = QLabel(self.dockWidgetContents)
-        self.label_mainpath.setObjectName(u"label_mainpath")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.label_mainpath.sizePolicy().hasHeightForWidth())
-        self.label_mainpath.setSizePolicy(sizePolicy4)
-        font2 = QFont()
-        font2.setPointSize(10)
-        font2.setBold(True)
-        font2.setWeight(75)
-        self.label_mainpath.setFont(font2)
-
-        self.horizontalLayout_6.addWidget(self.label_mainpath)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_6.addItem(self.horizontalSpacer)
-
-        self.toolButton_save_program = QToolButton(self.dockWidgetContents)
-        self.toolButton_save_program.setObjectName(u"toolButton_save_program")
-        self.toolButton_save_program.setEnabled(False)
-
-        self.horizontalLayout_6.addWidget(self.toolButton_save_program)
-
-
-        self.verticalLayout_8.addLayout(self.horizontalLayout_6)
-
         self.dockWidget_program.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(Qt.BottomDockWidgetArea, self.dockWidget_program)
-
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuEdit.menuAction())
-        self.menuEdit.addAction(self.actionNew_main_program_file)
-        self.menuEdit.addAction(self.actionSelect_main_program_file)
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionNew_program_file)
-        self.menuEdit.addAction(self.actionAdd_program_file)
-        self.menuEdit.addAction(self.actionAdd_program_directory)
-        self.menuEdit.addAction(self.actionRemove_selected_program_files)
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionAdd_input_files)
-        self.menuEdit.addAction(self.actionRemove_selected_input_files)
-        self.menuEdit.addAction(self.actionAdd_opt_input_files)
-        self.menuEdit.addAction(self.actionRemove_selected_opt_input_files)
-        self.menuEdit.addAction(self.actionAdd_output_files)
-        self.menuEdit.addAction(self.actionRemove_selected_output_files)
 
         self.retranslateUi(MainWindow)
 
@@ -370,6 +309,10 @@ class Ui_MainWindow(object):
 "</style></head><body style=\" font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Create new additional program file</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
+        self.actionSave_program_file.setText(QCoreApplication.translate("MainWindow", u"Save program file", None))
+#if QT_CONFIG(shortcut)
+        self.actionSave_program_file.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Shift+S", None))
+#endif // QT_CONFIG(shortcut)
         self.label_tooltype.setText(QCoreApplication.translate("MainWindow", u"Tool type", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_tooltype.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Tool specification type</p></body></html>", None))
@@ -384,13 +327,8 @@ class Ui_MainWindow(object):
         self.checkBox_execute_in_work.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>If checked, Tool specification is executed in a work directory (default).</p><p>If unchecked, Tool specification is executed in main program file directory.</p><p>It is recommended to uncheck this for <span style=\" font-weight:600;\">Executable</span> Tool specifications.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.checkBox_execute_in_work.setText(QCoreApplication.translate("MainWindow", u"Execute in work directory", None))
-        self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
-        self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.dockWidget_program_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Program files", None))
         self.dockWidget_io_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Input & output files", None))
         self.dockWidget_program.setWindowTitle("")
-        self.label.setText(QCoreApplication.translate("MainWindow", u"Main program directory:", None))
-        self.label_mainpath.setText("")
-        self.toolButton_save_program.setText(QCoreApplication.translate("MainWindow", u"Save program file", None))
     # retranslateUi
 
