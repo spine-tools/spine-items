@@ -376,8 +376,7 @@ class ImportEditorWindow(QMainWindow):
             event (QEvent): Closing event if 'X' is clicked.
         """
         self.focusWidget().clearFocus()
-        save_spec = int(self._toolbox.qsettings().value("appSettings/saveSpecBeforeClosing", defaultValue="0"))
-        if save_spec == Qt.Checked and not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
+        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
             event.ignore()
             return
         if self._import_sources:
