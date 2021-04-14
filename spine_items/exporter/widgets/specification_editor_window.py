@@ -17,7 +17,7 @@ Contains :class:`SpecificationEditorWindow`.
 from copy import deepcopy
 from PySide2.QtCore import QModelIndex, Qt, Slot
 from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QAction, QDialogButtonBox, QHeaderView, QMainWindow, QMessageBox, QUndoStack
+from PySide2.QtWidgets import QAction, QHeaderView, QMainWindow, QMessageBox, QUndoStack
 from spinedb_api.export_mapping import (
     alternative_export,
     feature_export,
@@ -158,7 +158,6 @@ class SpecificationEditorWindow(QMainWindow):
         self._specification_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._specification_toolbar)
         self._populate_toolbar_menu()
-        self.addAction(self._specification_toolbar.menu_action)
         self._apply_default_dock_layout()
         restore_ui(self, self._toolbox.qsettings(), self._APP_SETTINGS_GROUP)
         self._ui.export_format_combo_box.addItems([format.value for format in OutputFormat])
@@ -196,15 +195,8 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.mapping_table_view.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self._ui.mapping_table_view.horizontalHeader().setMinimumSectionSize(position_section_width())
         self._enable_mapping_specification_editing()
-        self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
-        self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        self._button_box.button(QDialogButtonBox.Save).setEnabled(False)
-        self._ui.status_bar.addPermanentWidget(self._button_box)
-        self._ui.status_bar.layout().setContentsMargins(6, 6, 6, 6)
-        self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self._save_and_close)
-        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self._discard_and_close)
-        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
+        self._specification_toolbar.save_action.triggered.connect(self._save)
+        self._specification_toolbar.close_action.triggered.connect(self.close)
         if specification is None:
             self._mapping_list_model.extend(_new_mapping_specification(MappingType.objects))
         if self._mapping_list_model.rowCount() > 1:
@@ -222,8 +214,7 @@ class SpecificationEditorWindow(QMainWindow):
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
-        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
-        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
+        self._specification_toolbar.save_action.setEnabled(not clean)
 
     def _restore_dock_widgets(self):
         """Docks all floating and or hidden QDockWidgets back to the window."""
@@ -762,19 +753,6 @@ class SpecificationEditorWindow(QMainWindow):
             self._ui.parameter_type_combo_box.setEnabled(False)
             self._ui.parameter_dimensions_spin_box.setEnabled(False)
 
-    @Slot()
-    def _save_and_close(self):
-        """Stores the specification to Toolbox' specification list and closes the window."""
-        if not self._save():
-            return
-        self.close()
-
-    @Slot()
-    def _discard_and_close(self):
-        """Discards changes and close window."""
-        self._undo_stack.setClean()
-        self.close()
-
     def _save(self):
         """
         Saves the specification.
@@ -799,7 +777,9 @@ class SpecificationEditorWindow(QMainWindow):
 
     def _populate_toolbar_menu(self):
         menu = self._specification_toolbar.menu
-        menu.addActions([self._undo_action, self._redo_action])
+        before = self._specification_toolbar.save_action
+        menu.insertActions(before, [self._undo_action, self._redo_action])
+        menu.insertSeparator(before)
 
     def closeEvent(self, event):
         """Handles close window.
@@ -807,7 +787,9 @@ class SpecificationEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
-        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
+        self.focusWidget().clearFocus()
+        save_spec = int(self._toolbox.qsettings().value("appSettings/saveSpecBeforeClosing", defaultValue="0"))
+        if save_spec == Qt.Checked and not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
             event.ignore()
             return
         self._preview_updater.tear_down()

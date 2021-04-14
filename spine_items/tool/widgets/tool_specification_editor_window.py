@@ -21,15 +21,7 @@ is filled with all the information from the specification being edited.
 import os
 from copy import deepcopy
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QTextDocument
-from PySide2.QtWidgets import (
-    QMainWindow,
-    QDialogButtonBox,
-    QInputDialog,
-    QFileDialog,
-    QFileIconProvider,
-    QMessageBox,
-    QUndoStack,
-)
+from PySide2.QtWidgets import QMainWindow, QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QUndoStack
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer
 from spinetoolbox.config import STATUSBAR_SS
 from spinetoolbox.helpers import busy_effect, open_url
@@ -114,13 +106,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.populate_outputfiles_list(outputfiles)
         if self.includes_main_path is not None:
             self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
-        # Add button box
-        self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
-        self._button_box.button(QDialogButtonBox.Save).setEnabled(False)
-        self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.ui.statusbar.addPermanentWidget(self._button_box)
-        self.ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self.ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self.connect_signals()
 
@@ -135,14 +120,13 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.resizeDocks(docks, [height * x for x in (0.6, 0.4)], Qt.Vertical)
 
     def _populate_main_menu(self):
-        menu = self._spec_toolbar.menu
         undo_action = self._undo_stack.createUndoAction(self)
         redo_action = self._undo_stack.createRedoAction(self)
         undo_action.setShortcuts(QKeySequence.Undo)
         redo_action.setShortcuts(QKeySequence.Redo)
-        menu.addActions([redo_action, undo_action])
+        self._spec_toolbar.menu.insertActions(self._spec_toolbar.save_action, [redo_action, undo_action])
+        self._spec_toolbar.menu.insertSeparator(self._spec_toolbar.save_action)
         self.ui.menubar.hide()
-        self.addAction(self._spec_toolbar.menu_action)
 
     def init_programfile_list(self):
         """List program files in QTreeView."""
@@ -308,9 +292,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.ui.actionRemove_selected_opt_input_files.triggered.connect(self.remove_inputfiles_opt)
         self.ui.actionAdd_output_files.triggered.connect(self.add_outputfiles)
         self.ui.actionRemove_selected_output_files.triggered.connect(self.remove_outputfiles)
-        self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
-        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
-        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
         # Enable removing items from QTreeViews by pressing the Delete key
         self.ui.treeView_programfiles.del_key_pressed.connect(self.remove_program_files_with_del)
         self.ui.treeView_io_files.del_key_pressed.connect(self.remove_io_files_with_del)
@@ -324,12 +305,13 @@ class ToolSpecificationEditorWindow(QMainWindow):
             self._handle_programfile_selection_changed
         )
         self.ui.treeView_io_files.selectionModel().selectionChanged.connect(self._handle_io_file_selection_changed)
+        self._spec_toolbar.save_action.triggered.connect(self._save)
+        self._spec_toolbar.close_action.triggered.connect(self.close)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
-        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
-        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
+        self._spec_toolbar.save_action.setEnabled(not clean)
 
     @Slot(int)
     def _push_change_tooltype_command(self, index):
@@ -807,19 +789,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.remove_inputfiles_opt()
         self.remove_outputfiles()
 
-    @Slot(bool)
-    def discard_and_close(self, _=False):
-        """Discards changes and close window."""
-        self._undo_stack.setClean()
-        self.close()
-
-    @Slot(bool)
-    def save_and_close(self, _=False):
-        """Saves changes and close window."""
-        if not self._save():
-            return
-        self.close()
-
     def _save(self):
         """Checks that everything is valid, creates Tool spec dictionary and adds Tool spec to project."""
         # Check that tool type is selected
@@ -896,7 +865,9 @@ class ToolSpecificationEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
-        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
+        self.focusWidget().clearFocus()
+        save_spec = int(self._toolbox.qsettings().value("appSettings/saveddSpecBeforeClosing", defaultValue="0"))
+        if save_spec == Qt.Checked and not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
             event.ignore()
             return
         self._undo_stack.cleanChanged.disconnect(self._update_window_modified)

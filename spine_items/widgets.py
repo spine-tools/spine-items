@@ -199,7 +199,12 @@ class SpecNameDescriptionToolbar(QToolBar):
         layout.setStretchFactor(self._line_edit_name, 1)
         layout.setStretchFactor(self._line_edit_description, 3)
         self.addWidget(widget)
-        self.menu, self.menu_action = self._make_main_menu()
+        self.menu = self._make_main_menu()
+        self.save_action = self.menu.addAction("Save")
+        self.save_action.setEnabled(False)
+        self.close_action = self.menu.addAction("Close")
+        self.save_action.setShortcut(QKeySequence.Save)
+        self.close_action.setShortcut(QKeySequence.Close)
         self.setObjectName("SpecNameDescriptionToolbar")
         if spec:
             self.do_set_name(spec.name)
@@ -217,9 +222,10 @@ class SpecNameDescriptionToolbar(QToolBar):
         action.triggered.connect(menu_button.showMenu)
         keys = [QKeySequence(Qt.ALT + Qt.Key_F), QKeySequence(Qt.ALT + Qt.Key_E)]
         action.setShortcuts(keys)
+        self._parent.addAction(action)
         keys_str = ", ".join([key.toString() for key in keys])
         menu_button.setToolTip(f"<p>Main menu ({keys_str})</p>")
-        return menu, action
+        return menu
 
     @Slot()
     def _set_name(self):
