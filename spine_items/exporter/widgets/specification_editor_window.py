@@ -131,7 +131,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._specification = deepcopy(specification) if specification is not None else Specification()
         self._item = item
         self._undo_stack = QUndoStack(self)
-        self._change_notifier = ChangeNotifier(self._undo_stack, self)
+        self._change_notifier = ChangeNotifier(self, self._undo_stack, toolbox.qsettings(), "appSettings/specShowUndo")
         self._undo_action = self._undo_stack.createUndoAction(self)
         self._undo_action.setShortcut(QKeySequence.Undo)
         self.addAction(self._undo_action)
@@ -787,7 +787,8 @@ class SpecificationEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
-        self.focusWidget().clearFocus()
+        if self.focusWidget():
+            self.focusWidget().clearFocus()
         if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
             event.ignore()
             return

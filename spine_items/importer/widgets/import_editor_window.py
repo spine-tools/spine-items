@@ -31,6 +31,7 @@ from PySide2.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QListWidget,
+    QDialogButtonBox,
 )
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
@@ -82,7 +83,7 @@ class ImportEditorWindow(QMainWindow):
         self._app_settings = self._toolbox.qsettings()
         self.settings_group = "mappingPreviewWindow"
         self._undo_stack = QUndoStack(self)
-        self._change_notifier = ChangeNotifier(self._undo_stack, self)
+        self._change_notifier = ChangeNotifier(self, self._undo_stack, self._app_settings, "appSettings/specShowUndo")
         self._ui_error = QErrorMessage(self)
         self._ui_error.setWindowTitle("Error")
         self._ui_error.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
@@ -375,7 +376,8 @@ class ImportEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
-        self.focusWidget().clearFocus()
+        if self.focusWidget():
+            self.focusWidget().clearFocus()
         if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
             event.ignore()
             return

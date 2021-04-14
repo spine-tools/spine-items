@@ -63,7 +63,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self._undo_stack = QUndoStack(self)
-        self._change_notifier = ChangeNotifier(self._undo_stack, self)
+        self._change_notifier = ChangeNotifier(self, self._undo_stack, self._app_settings, "appSettings/specShowUndo")
         self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
@@ -179,7 +179,8 @@ class SpecificationEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
-        self.focusWidget().clearFocus()
+        if self.focusWidget():
+            self.focusWidget().clearFocus()
         if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
             event.ignore()
             return
