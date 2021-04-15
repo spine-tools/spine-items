@@ -17,7 +17,7 @@ Contains mapping filter editor delegate.
 from PySide2.QtCore import Property, Qt
 from PySide2.QtWidgets import QStyledItemDelegate, QWidget
 from spinedb_api.export_mapping.export_mapping import ParameterValueTypeMapping
-from ..mvcmodels.mapping_table_model import MappingTableModel
+from ..mvcmodels.mapping_editor_table_model import MappingEditorTableModel
 from ..ui import default_filter_editor, value_type_filter_editor
 
 
@@ -25,7 +25,7 @@ class FilterEditDelegate(QStyledItemDelegate):
     """Edit delegate for Mapping table's filter column."""
 
     def createEditor(self, parent, option, index):
-        mapping = index.data(MappingTableModel.MAPPING_ITEM_ROLE)
+        mapping = index.data(MappingEditorTableModel.MAPPING_ITEM_ROLE)
         if isinstance(mapping, ParameterValueTypeMapping):
             return _FilterEdit(value_type_filter_editor.Ui_Form(), parent)
         return _FilterEdit(default_filter_editor.Ui_Form(), parent)

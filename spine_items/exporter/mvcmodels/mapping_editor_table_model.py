@@ -61,19 +61,20 @@ from ..commands import SetFixedTitle, SetMappingPositions, SetMappingProperty
 POSITION_DISPLAY_TEXT = {Position.hidden: "hidden", Position.table_name: "table name", Position.header: "column header"}
 
 
-class MappingTableModel(QAbstractTableModel):
+class MappingEditorTableModel(QAbstractTableModel):
 
     MAPPING_ITEM_ROLE = Qt.UserRole + 1
 
-    def __init__(self, mapping_name, root_mapping, undo_stack, mapping_provider):
+    def __init__(self, mapping_name, root_mapping, undo_stack, mapping_provider, parent=None):
         """
         Args:
             mapping_name (str): mapping's name
             root_mapping (Mapping, optional): root mapping
             undo_stack (QUndoStack): undo stack
             mapping_provider (SpecificationEditorWindow): window that can provide data for different mappings
+            parent (QObject): parent object
         """
-        super().__init__()
+        super().__init__(parent)
         self._mappings = [] if root_mapping is None else root_mapping.flatten()
         self._non_leaf_mapping_is_pivoted = self._is_non_leaf_pivoted()
         self._undo_stack = undo_stack

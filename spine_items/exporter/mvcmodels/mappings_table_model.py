@@ -14,7 +14,7 @@ Contains the :class:`MappingListModel` model.
 :authors: A. Soininen (VTT)
 :date:    30.12.2020
 """
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
+from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
@@ -23,8 +23,8 @@ from spinedb_api.export_mapping.export_mapping import (
 from spinetoolbox.helpers import unique_name
 
 
-class MappingListModel(QAbstractListModel):
-    """A list model that holds export mappings."""
+class MappingsTableModel(QAbstractTableModel):
+    """A table model that holds export mappings."""
 
     rename_requested = Signal(int, str)
     """Emitted when mapping's name should be changed."""
@@ -32,6 +32,10 @@ class MappingListModel(QAbstractListModel):
     """Emitted when mapping's enabled state should be changed."""
     set_all_mappings_enabled_requested = Signal(bool)
     """Emitted when all mappings should be enabled/disabled."""
+    write_order_about_to_change = Signal()
+    """Emitted before changing the write order."""
+    write_order_changed = Signal()
+    """Emitted after the write order has changed."""
 
     MAPPING_SPECIFICATION_ROLE = Qt.UserRole + 1
     MAPPING_TYPE_ROLE = Qt.UserRole + 2
@@ -42,20 +46,24 @@ class MappingListModel(QAbstractListModel):
     USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.UserRole + 7
     PARAMETER_DIMENSIONS_ROLE = Qt.UserRole + 8
 
-    def __init__(self, mappings=None):
+    def __init__(self, mappings=None, parent=None):
         """
         Args:
             mappings (dict, optional): mapping from name to ``MappingSpecification``
+            parent (QObject, optional): parent object
         """
-        super().__init__()
+        super().__init__(parent)
         if mappings is None:
             mappings = dict()
         self._names = list(mappings)
         self._mappings = mappings
 
+    def columnCount(self, parent):
+        return 2
+
     def extend(self, mapping_specification):
         """
-        Appends a new mapping to the list.
+        Appends a new mapping to the table.
 
         Args:
             mapping_specification (MappingSpecification): specification to add
@@ -64,30 +72,37 @@ class MappingListModel(QAbstractListModel):
             int: row index of the new mapping
         """
         position = len(self._names)
-        all_enabled = all(m.enabled for m in self._mappings.values())
         self.beginInsertRows(QModelIndex(), position, position)
         name = unique_name("Mapping", self._names)
         self._mappings[name] = mapping_specification
         self._names.append(name)
-        if all_enabled:
-            mapping_specification.enabled = True
         self.endInsertRows()
         return position
 
     def data(self, index, role=Qt.DisplayRole):
-        if role in (Qt.DisplayRole, Qt.EditRole):
-            row = index.row()
-            if row == 0:
-                return "Select All"
-            return self._names[row - 1]
-        if role == Qt.CheckStateRole:
-            row = index.row()
-            if row == 0:
-                return Qt.Checked if all(m.enabled for m in self._mappings.values()) else Qt.Unchecked
-            spec = self._mappings[self._names[row - 1]]
-            return Qt.Checked if spec.enabled else Qt.Unchecked
+        column = index.column()
+        if column == 0:
+            if role == Qt.CheckStateRole:
+                spec = self._mappings[self._names[index.row()]]
+                return Qt.Checked if spec.enabled else Qt.Unchecked
+            if role in (Qt.DisplayRole, Qt.EditRole):
+                return self._names[index.row()]
+        if column == 1:
+            if role in (Qt.DisplayRole, Qt.EditRole):
+                order = str(index.row() + 1)
+                if order.endswith(("11", "12", "13")):
+                    return order + "th"
+                if order.endswith("1"):
+                    return order + "st"
+                if order.endswith("2"):
+                    return order + "nd"
+                if order.endswith("3"):
+                    return order + "rd"
+                return order + "th"
+            if role == Qt.TextAlignmentRole:
+                return Qt.AlignCenter
         if role >= Qt.UserRole:
-            spec = self._mappings[self._names[index.row() - 1]]
+            spec = self._mappings[self._names[index.row()]]
             if role == self.MAPPING_SPECIFICATION_ROLE:
                 return spec
             if role == self.MAPPING_TYPE_ROLE:
@@ -110,9 +125,14 @@ class MappingListModel(QAbstractListModel):
         return None
 
     def flags(self, index):
-        if index.row() == 0:
-            return super().flags(index) | Qt.ItemIsUserCheckable
-        return super().flags(index) | Qt.ItemIsEditable | Qt.ItemIsUserCheckable
+        if index.column() == 0:
+            return super().flags(index) | Qt.ItemIsUserCheckable | Qt.ItemIsEditable
+        return super().flags(index)
+
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return ("Name", "Write order")[section]
+        return None
 
     def mapping_specification(self, name):
         """
@@ -136,26 +156,52 @@ class MappingListModel(QAbstractListModel):
         Returns:
             QModelIndex: index
         """
-        return self.index(self._names.index(name) + 1, 0)
+        return self.index(self._names.index(name), 0)
+
+    def reorder_writing(self, row, earlier):
+        """Reorders writings.
+
+        Args:
+            row (int): row to reorder
+            earlier (bool): True to write earlier, False to write later
+        """
+        moved = [self._names[row]]
+        if earlier:
+            before = self._names[: row - 1]
+            after = [self._names[row - 1]] + self._names[row + 1 :]
+        else:
+            before = self._names[:row] + [self._names[row + 1]]
+            after = self._names[row + 2 :]
+        self.write_order_about_to_change.emit()
+        self.beginRemoveRows(QModelIndex(), row, row)
+        self._names = before + after
+        self.endRemoveRows()
+        insert_row = row - 1 if earlier else row + 1
+        self.beginInsertRows(QModelIndex(), insert_row, insert_row)
+        self._names = before + moved + after
+        self.endInsertRows()
+        reordered_mappings = {name: self._mappings[name] for name in self._names}
+        self._mappings.clear()
+        self._mappings.update(reordered_mappings)
+        self.write_order_changed.emit()
 
     def rowCount(self, parent=QModelIndex()):
-        return len(self._names) + 1
+        return len(self._names)
 
     def setData(self, index, value, role=Qt.EditRole):
-        if role == Qt.EditRole:
-            if value in self._names:
-                return False
-            self.rename_requested.emit(index.row(), value)
-            return True
-        if role == Qt.CheckStateRole:
-            row = index.row()
-            if row == 0:
-                self.set_all_mappings_enabled_requested.emit(value == Qt.Checked)
+        column = index.column()
+        if column == 0:
+            if role == Qt.CheckStateRole:
+                row = index.row()
+                self.mapping_enabled_state_change_requested.emit(row)
                 return True
-            self.mapping_enabled_state_change_requested.emit(row)
-            return True
+            if role == Qt.EditRole:
+                if value in self._names:
+                    return False
+                self.rename_requested.emit(index.row(), value)
+                return True
         if role > Qt.UserRole:
-            name = self._names[index.row() - 1]
+            name = self._names[index.row()]
             spec = self._mappings[name]
             if role == self.MAPPING_ROOT_ROLE:
                 spec.root = value
@@ -185,19 +231,20 @@ class MappingListModel(QAbstractListModel):
             mapping_specification (MappingSpecification): mapping specification
         """
         self.beginInsertRows(QModelIndex(), row, row)
-        self._names.insert(row - 1, name)
+        self._names.insert(row, name)
         self._mappings[name] = mapping_specification
         self.endInsertRows()
 
-    def remove_mapping(self, row):
+    def remove_mapping(self, name):
         """
         Deletes a mapping.
 
         Args:
-            row (int): row index
+            name (str): mapping's name
         """
+        row = self._names.index(name)
         self.beginRemoveRows(QModelIndex(), row, row)
-        name = self._names.pop(row - 1)
+        name = self._names.pop(row)
         del self._mappings[name]
         self.endRemoveRows()
 
@@ -209,10 +256,10 @@ class MappingListModel(QAbstractListModel):
             row (int): row index
             new_name (str): item's new name
         """
-        previous = self._names[row - 1]
-        self._names[row - 1] = new_name
+        previous = self._names[row]
+        self._names[row] = new_name
         self._mappings[new_name] = self._mappings.pop(previous)
-        index = self.index(row, 0)
+        index = self.index(row, 1)
         self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
     def set_mapping_enabled(self, row, enabled):
@@ -222,12 +269,10 @@ class MappingListModel(QAbstractListModel):
             row (int): row index
             enabled (bool): True to enable mapping, False to disable
         """
-        name = self._names[row - 1]
+        name = self._names[row]
         spec = self._mappings[name]
         spec.enabled = enabled
         index = self.index(row, 0)
-        self.dataChanged.emit(index, index, [Qt.CheckStateRole])
-        index = self.index(0, 0)
         self.dataChanged.emit(index, index, [Qt.CheckStateRole])
 
     def set_all_enabled(self, enabled):
@@ -236,15 +281,19 @@ class MappingListModel(QAbstractListModel):
         Args:
             enabled (bool): True to enable, False to disable
         """
+        first = None
         last = 0
         for i in range(len(self._names)):
             mapping = self._mappings[self._names[i]]
             if mapping.enabled != enabled:
-                last = i + 1
                 mapping.enabled = enabled
-        top_left = self.index(0, 0)
-        bottom_right = self.index(last, 0)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
+                if first is None:
+                    first = i
+                last = i
+        if first is not None:
+            top_left = self.index(first, 0)
+            bottom_right = self.index(last, 0)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
 
     def enable_mapping_rows(self, rows):
         """Enables mappings on given rows and disables the rest.
@@ -252,17 +301,20 @@ class MappingListModel(QAbstractListModel):
         Args:
             rows (set of int): row indexes to enable
         """
+        first = None
         last = 0
-        for i in range(len(self._names)):
-            mapping = self._mappings[self._names[i]]
-            row = i + 1
+        for row in range(len(self._names)):
+            mapping = self._mappings[self._names[row]]
             enabled = row in rows
             if mapping.enabled != enabled:
                 mapping.enabled = enabled
+                if first is None:
+                    first = row
                 last = row
-        top_left = self.index(0, 0)
-        bottom_right = self.index(last, 0)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
+        if first is not None:
+            top_left = self.index(first, 0)
+            bottom_right = self.index(last, 0)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
 
     def enabled_mapping_rows(self):
         """Returns enabled mapping rows.
@@ -271,9 +323,9 @@ class MappingListModel(QAbstractListModel):
             set of int: enabled mapping row indexes.
         """
         rows = set()
-        for i in range(len(self._names)):
-            if self._mappings[self._names[i]].enabled:
-                rows.add(i + 1)
+        for row in range(len(self._names)):
+            if self._mappings[self._names[row]].enabled:
+                rows.add(row)
         return rows
 
     def reset(self, mappings):

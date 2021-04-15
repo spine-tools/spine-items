@@ -22,21 +22,24 @@ from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping
 from spinetoolbox.helpers import busy_effect
 from ...models import FullUrlListModel
-from ..mvcmodels.mapping_list_model import MappingListModel
+from ..mvcmodels.mappings_table_model import MappingsTableModel
 from ..mvcmodels.preview_tree_model import PreviewTreeModel
 from ..mvcmodels.preview_table_model import PreviewTableModel
 from ..preview_table_writer import TableWriter
 
 
 class PreviewUpdater:
-    def __init__(self, window, ui, url_model, mapping_list_model, mapping_table_model, project_dir):
+    def __init__(
+        self, window, ui, url_model, mappings_table_model, mappings_proxy_model, mapping_editor_table_model, project_dir
+    ):
         """
         Args:
-            window (QMainWindow): specification editor's window
+            window (SpecificationEditorWindow): specification editor's window
             ui (Ui_Form): specification editor's UI
             url_model (FullUrlListModel, optional): URL model
-            mapping_list_model (MappingListModel): mapping list model
-            mapping_table_model (MappingTableModel): mapping table model
+            mappings_table_model (MappingsTableModel): mappings table model
+            mappings_proxy_model (QAbstractProxyModel): proxy model for mappings table
+            mapping_editor_table_model (MappingEditorTableModel): mapping table model
             project_dir (str): path to initial directory from which to load databases
         """
         self._current_url = None
@@ -49,14 +52,21 @@ class PreviewUpdater:
         self._url_model.rowsInserted.connect(lambda *_: self._enable_controls())
         self._url_model.modelReset.connect(self._enable_controls)
         self._ui.database_url_combo_box.setModel(self._url_model)
-        self._mapping_list_model = mapping_list_model
-        self._mapping_list_model.rowsAboutToBeRemoved.connect(self._remove_mappings)
-        self._mapping_list_model.dataChanged.connect(self._rename_mapping)
-        self._mapping_list_model.dataChanged.connect(self._enable_mapping)
-        self._mapping_list_model.dataChanged.connect(self._update_header_only_tables)
-        self._mapping_table_model = mapping_table_model
-        self._mapping_table_model.dataChanged.connect(lambda *_: self._reload_current_mapping())
-        self._mapping_table_model.modelReset.connect(lambda: self._reload_current_mapping())
+        self._mappings_table_model = mappings_table_model
+        self._set_expect_removals_and_inserts(False)
+        self._mappings_table_model.write_order_about_to_change.connect(
+            lambda: self._set_expect_removals_and_inserts(True)
+        )
+        self._mappings_table_model.write_order_changed.connect(lambda: self._set_expect_removals_and_inserts(False))
+        self._mappings_table_model.dataChanged.connect(self._rename_mapping)
+        self._mappings_table_model.dataChanged.connect(self._enable_mapping)
+        self._mappings_table_model.dataChanged.connect(self._update_header_only_tables)
+        self._mappings_proxy_model = mappings_proxy_model
+        self._mapping_editor_table_model = mapping_editor_table_model
+        self._mapping_editor_table_model.dataChanged.connect(lambda *_: self._update_current_mappings_tables())
+        self._expect_mapping_editor_resets(False)
+        self._window.current_mapping_about_to_change.connect(lambda: self._expect_mapping_editor_resets(True))
+        self._window.current_mapping_changed.connect(lambda: self._expect_mapping_editor_resets(False))
         self._preview_tree_model = PreviewTreeModel()
         self._preview_tree_model.dataChanged.connect(self._update_table)
         self._preview_tree_model.dataChanged.connect(self._expand_tree_after_table_change)
@@ -73,7 +83,7 @@ class PreviewUpdater:
         self._ui.max_preview_rows_spin_box.valueChanged.connect(self._reload_preview)
         self._ui.max_preview_tables_spin_box.valueChanged.connect(self._reload_preview)
         self._ui.load_url_from_fs_button.clicked.connect(self._load_url_from_filesystem)
-        self._ui.mapping_list.selectionModel().currentChanged.connect(self._change_selected_table)
+        self._ui.mappings_table.selectionModel().currentChanged.connect(self._change_selected_table)
         self._enable_controls()
         if self._url_model.rowCount() > 0:
             self._reload_preview()
@@ -86,8 +96,8 @@ class PreviewUpdater:
             return
         self._current_url = current_url
         self._stamps.clear()
-        for row in range(1, self._mapping_list_model.rowCount()):
-            index = self._mapping_list_model.index(row, 0)
+        for row in range(self._mappings_table_model.rowCount()):
+            index = self._mappings_table_model.index(row, 0)
             if index.data(Qt.CheckStateRole) == Qt.Checked:
                 self._load_preview_data(index.data())
 
@@ -107,6 +117,18 @@ class PreviewUpdater:
             self._preview_table_model.reset(mapping_name, table_name, table)
         else:
             self._preview_table_model.clear()
+        current_parent = self._preview_tree_model.parent(current)
+        if not current_parent.isValid():
+            current_parent = current
+        previous_parent = self._preview_tree_model.parent(previous)
+        if not previous_parent.isValid():
+            previous_parent = previous
+        if current_parent != previous_parent:
+            name = self._preview_tree_model.data(current_parent)
+            index = self._mappings_proxy_model.mapFromSource(self._mappings_table_model.index_of(name))
+            self._ui.mappings_table.selectionModel().currentChanged.disconnect(self._change_selected_table)
+            self._ui.mappings_table.setCurrentIndex(index)
+            self._ui.mappings_table.selectionModel().currentChanged.connect(self._change_selected_table)
 
     @Slot(QModelIndex, QModelIndex)
     def _change_selected_table(self, current, previous):
@@ -117,10 +139,12 @@ class PreviewUpdater:
             current (QModelIndex): index to selected mapping on mapping list
             previous (QModelIndex): index to previously selected mapping on mapping list
         """
-        if current.data(Qt.CheckStateRole) == Qt.Unchecked:
+        current = self._mappings_proxy_model.mapToSource(current)
+        mappings_index = self._mappings_table_model.index(current.row(), 0)
+        if mappings_index.data(Qt.CheckStateRole) == Qt.Unchecked:
             return
         current_preview = self._ui.preview_tree_view.selectionModel().currentIndex()
-        mapping_name = current.data()
+        mapping_name = mappings_index.data()
         if current_preview.parent().data() == mapping_name:
             return
         self._set_current_table(mapping_name)
@@ -198,6 +222,19 @@ class PreviewUpdater:
             self._preview_table_model.reset(mapping_name, table_name, index.data(PreviewTreeModel.TABLE_ROLE))
             break
 
+    def _set_expect_removals_and_inserts(self, except_removals):
+        """Connects and disconnects signals with regarding mapping removals.
+
+        Args:
+            except_removals (bool): True means that a mapping removal is expected
+        """
+        if except_removals:
+            self._mappings_table_model.rowsAboutToBeRemoved.disconnect(self._remove_mappings)
+            self._mappings_table_model.rowsInserted.disconnect(self._add_mappings)
+        else:
+            self._mappings_table_model.rowsAboutToBeRemoved.connect(self._remove_mappings)
+            self._mappings_table_model.rowsInserted.connect(self._add_mappings)
+
     @Slot(int, int, QModelIndex)
     def _remove_mappings(self, parent, first, last):
         """
@@ -208,10 +245,8 @@ class PreviewUpdater:
             first (int): first mapping list row to be removed
             last (int): last mapping list row to be removed
         """
-        if self._current_url is None:
-            return
         for row in range(first, last + 1):
-            index = self._mapping_list_model.index(row, 0)
+            index = self._mappings_table_model.index(row, 0)
             if index.data(Qt.CheckStateRole) == Qt.Unchecked:
                 continue
             removed_name = index.data()
@@ -230,9 +265,8 @@ class PreviewUpdater:
         """
         if Qt.DisplayRole not in roles or self._current_url is None:
             return
-        mapping_list_model = self._ui.mapping_list.model()
-        make_index = mapping_list_model.index
-        indexes = [make_index(row, 0) for row in range(1, mapping_list_model.rowCount())]
+        make_index = self._mappings_table_model.index
+        indexes = [make_index(row, 0) for row in range(self._mappings_table_model.rowCount())]
         names = [index.data() for index in indexes if index.data(Qt.CheckStateRole) == Qt.Checked]
         old_name, new_name = self._preview_tree_model.rename_mappings(names)
         if not old_name:
@@ -253,11 +287,9 @@ class PreviewUpdater:
         if Qt.CheckStateRole not in roles or self._current_url is None:
             return
         first = top_left.row()
-        if first == 0:
-            first = 1
         last = bottom_right.row()
         for row in range(first, last + 1):
-            index = self._mapping_list_model.index(row, 0)
+            index = self._mappings_table_model.index(row, 0)
             enabled = index.data(Qt.CheckStateRole) == Qt.Checked
             name = index.data()
             if not enabled and self._preview_tree_model.has_name(name):
@@ -276,22 +308,58 @@ class PreviewUpdater:
             bottom_right (QModelIndex): top left corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
-        if MappingListModel.ALWAYS_EXPORT_HEADER_ROLE not in roles:
+        if MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE not in roles:
             return
-        self._reload_current_mapping()
+        row = self._mappings_proxy_model.mapToSource(self._ui.mappings_table.currentIndex()).row()
+        index = self._mappings_table_model.index(row, 0)
+        if index.data(Qt.CheckStateRole) == Qt.Unchecked:
+            return
+        name = index.data()
+        self._load_preview_data(name)
 
-    def _reload_current_mapping(self):
+    @Slot()
+    def _update_current_mappings_tables(self):
         """Reloads mapping that is currently selected on mapping list."""
         if self._current_url is None:
             return
-        index = self._ui.mapping_list.currentIndex()
-        if not index.isValid() or index.row() == 0:
+        current_index = self._ui.mappings_table.currentIndex()
+        if not current_index.isValid():
             return
+        row = self._mappings_proxy_model.mapToSource(current_index).row()
+        index = self._mappings_table_model.index(row, 0)
         if index.data(Qt.CheckStateRole) == Qt.Unchecked:
-            self._ui.preview_tree_view.selectionModel().setCurrentIndex(QModelIndex(), QItemSelectionModel.Clear)
             return
         mapping_name = index.data()
         self._load_preview_data(mapping_name)
+
+    @Slot(QModelIndex, int, int)
+    def _add_mappings(self, parent, first, last):
+        """Adds new mapping for preview.
+
+        Args:
+            parent (QModelIndex): parent index - unused
+            first (int): first row added to mappings table
+            last (int): last row added to mappings table
+        """
+        if self._current_url is None:
+            return
+        for row in range(first, last + 1):
+            index = self._mappings_table_model.index(first, 0)
+            if index.data(Qt.CheckStateRole) == Qt.Unchecked:
+                continue
+            mapping_name = index.data()
+            self._load_preview_data(mapping_name)
+
+    def _expect_mapping_editor_resets(self, expect_resets):
+        """Connects and disconnects signals that handle mapping editor resets.
+
+        Args:
+            expect_resets (bool): True to except editor resets
+        """
+        if expect_resets:
+            self._mapping_editor_table_model.modelReset.disconnect(self._update_current_mappings_tables)
+        else:
+            self._mapping_editor_table_model.modelReset.connect(self._update_current_mappings_tables)
 
     @Slot()
     def _enable_controls(self):
@@ -308,9 +376,9 @@ class PreviewUpdater:
         Args:
             mapping_name (str): mapping's name
         """
-        if self._current_url is None or not self._ui.live_preview_check_box.isChecked():
+        if self._current_url is None or not self._ui.live_preview_check_box.isChecked() or not mapping_name:
             return
-        mapping_spec = self._mapping_list_model.mapping_specification(mapping_name)
+        mapping_spec = self._mappings_table_model.mapping_specification(mapping_name)
         max_tables = self._ui.max_preview_tables_spin_box.value()
         max_rows = self._ui.max_preview_rows_spin_box.value()
         id_ = (self._current_url, mapping_name)
@@ -345,7 +413,7 @@ class PreviewUpdater:
                 self._stamps[worker_id] = current_stamp
             return
         self._preview_tree_model.add_or_update_tables(mapping_name, data)
-        mapping_index = self._ui.mapping_list.selectionModel().currentIndex()
+        mapping_index = self._ui.mappings_table.selectionModel().currentIndex()
         self._change_selected_table(mapping_index, mapping_index)
 
     @Slot(bool)
