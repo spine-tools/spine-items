@@ -462,6 +462,7 @@ class NotebookSpecificationEditorWindow(QWidget):
             return
         new_spec_dict = {}
         new_spec_dict["name"] = self.ui.lineEdit_name.text()
+        new_spec_dict["item_type"] = ItemInfo.item_type()
         new_spec_dict["description"] = self.ui.textEdit_description.toPlainText()
         new_spec_dict["notebook_type"] = self.ui.comboBox_notebook_type.currentText().lower()
         new_spec_dict["kernel_name"] = self.ui.comboBox_notebook_kernel.currentText()

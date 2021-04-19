@@ -113,6 +113,7 @@ class NotebookSpecification(ProjectItemSpecification):
     def to_dict(self):
         return {
             "name": self.name,
+            "item_type": ItemInfo.item_type(),
             "notebook_type": self.notebook_type,
             "includes": self.includes,
             "description": self.description,
