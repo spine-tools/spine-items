@@ -442,7 +442,7 @@ class Notebook(ProjectItem):
             spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
             spec_menu = NotebookSpecificationMenu(self._toolbox, spec_model_index)
             actions = {a.text(): a for a in spec_menu.actions()}
-            self._actions = [actions["Edit specification"], actions["Open jupyter notebook"]]
+            self._actions = [actions["Edit specification"], actions["Open Jupyter notebook"]]
         else:
             action = QAction("New specification")
             action.triggered.connect(self.show_specification_window)
