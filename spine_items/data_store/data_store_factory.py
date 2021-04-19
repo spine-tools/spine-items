@@ -16,6 +16,7 @@ The DataStoreFactory class.
 :date:   15.4.2020
 """
 
+from PySide2.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .data_store import DataStore
 from .data_store_icon import DataStoreIcon
@@ -33,12 +34,16 @@ class DataStoreFactory(ProjectItemFactory):
         return ":/icons/item_icons/database.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("magenta")
+
+    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddDataStoreWidget(toolbox, x, y, specification)
 
     @staticmethod
     def make_icon(toolbox):
-        return DataStoreIcon(toolbox, DataStoreFactory.icon())
+        return DataStoreIcon(toolbox, DataStoreFactory.icon(), DataStoreFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):

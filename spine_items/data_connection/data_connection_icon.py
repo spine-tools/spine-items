@@ -17,7 +17,6 @@ Module for data connection icon class.
 """
 
 import os
-from PySide2.QtGui import QColor
 from PySide2.QtCore import QObject, Qt, QTimer, Signal
 from PySide2.QtWidgets import QGraphicsItem
 from spinetoolbox.project_item_icon import ProjectItemIcon
@@ -28,14 +27,15 @@ class DataConnectionIcon(ProjectItemIcon):
         files_dropped_on_icon = Signal(QGraphicsItem, list)
         """A signal that it triggered when files are dragged and dropped on the item."""
 
-    def __init__(self, toolbox, icon):
+    def __init__(self, toolbox, icon, icon_color):
         """Data Connection icon for the Design View.
 
         Args:
             toolbox (ToolboxUI): main window instance
             icon (str): icon resource path
+            icon_color (QColor): Icon's color
         """
-        super().__init__(toolbox, icon, icon_color=QColor(0, 0, 255), background_color=QColor("#e6e6ff"))
+        super().__init__(toolbox, icon, icon_color)
         self.setAcceptDrops(True)
         self._drag_over = False
         self._signal_holder = DataConnectionIcon._SignalHolder()

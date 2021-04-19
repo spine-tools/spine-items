@@ -16,6 +16,7 @@ The ExporterFactory class.
 :date:   15.4.2020
 """
 
+from PySide2.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .gdx_exporter import GdxExporter
 from .gdx_exporter_icon import GdxExporterIcon
@@ -33,12 +34,16 @@ class GdxExporterFactory(ProjectItemFactory):
         return ":/icons/item_icons/database-export-gdx.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("maroon")
+
+    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddGdxExporterWidget(toolbox, x, y, specification)
 
     @staticmethod
     def make_icon(toolbox):
-        return GdxExporterIcon(toolbox, GdxExporterFactory.icon())
+        return GdxExporterIcon(toolbox, GdxExporterFactory.icon(), GdxExporterFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):

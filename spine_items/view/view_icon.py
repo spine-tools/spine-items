@@ -16,16 +16,16 @@ Module for view icon class.
 :date:   4.4.2018
 """
 
-from PySide2.QtGui import QColor
 from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
 class ViewIcon(ProjectItemIcon):
-    def __init__(self, toolbox, icon):
+    def __init__(self, toolbox, icon, icon_color):
         """View icon for the Design View.
 
         Args:
             toolbox (ToolBoxUI): QMainWindow instance
             icon (str): icon resource path
+            icon_color (QColor): Icon's color
         """
-        super().__init__(toolbox, icon, icon_color=QColor("#33cc33"), background_color=QColor("#ebfaeb"))
+        super().__init__(toolbox, icon, icon_color)

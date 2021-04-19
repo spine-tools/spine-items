@@ -16,6 +16,7 @@ Contains :class:`ExporterFactory`.
 :date:   10.12.2020
 """
 
+from PySide2.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .exporter import Exporter
 from .exporter_icon import ExporterIcon
@@ -40,6 +41,10 @@ class ExporterFactory(ProjectItemFactory):
         return ":/icons/item_icons/database-export.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("maroon")
+
+    @staticmethod
     def supports_specifications():
         """See base class."""
         return True
@@ -52,7 +57,7 @@ class ExporterFactory(ProjectItemFactory):
     @staticmethod
     def make_icon(toolbox):
         """See base class."""
-        return ExporterIcon(toolbox, ExporterFactory.icon())
+        return ExporterIcon(toolbox, ExporterFactory.icon(), ExporterFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):
