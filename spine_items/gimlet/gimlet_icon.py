@@ -26,5 +26,6 @@ class GimletIcon(ProjectItemIcon):
         Args:
             toolbox (ToolBoxUI): QMainWindow instance
             icon (str): Icon resource path
+            icon_color (QColor): Icon's color
         """
         super().__init__(toolbox, icon, icon_color)

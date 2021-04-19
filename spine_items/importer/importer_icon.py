@@ -27,6 +27,7 @@ class ImporterIcon(ProjectItemIcon):
         Args:
             toolbox (ToolBoxUI): QMainWindow instance
             icon (str): icon resource path
+            icon_color (QColor): Icon's color
         """
         super().__init__(toolbox, icon, icon_color)
         self.animation = ImporterAnimation(self, x_shift=4)
