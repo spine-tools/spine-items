@@ -18,6 +18,7 @@ The ToolFactory class.
 
 import os
 import uuid
+from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QFileDialog
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .notebook import Notebook
@@ -38,6 +39,10 @@ class NotebookFactory(ProjectItemFactory):
         return ":/icons/item_icons/hammer.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("green")
+
+    @staticmethod
     def supports_specifications():
         return True
 
@@ -47,7 +52,7 @@ class NotebookFactory(ProjectItemFactory):
 
     @staticmethod
     def make_icon(toolbox):
-        return NotebookIcon(toolbox, NotebookFactory.icon())
+        return NotebookIcon(toolbox, NotebookFactory.icon(), NotebookFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):
@@ -82,20 +87,20 @@ class NotebookFactory(ProjectItemFactory):
                 url, lambda t=toolbox, f=filename, s=specification: _find_main_program_file(t, filename, specification)
             )
             toolbox.msg_error.emit(
-                f"Tool spec <b>{specification.name}</b> won't work because "
-                f"main program file <b>{full_path}</b> doesn't exist. "
+                f"Notebook spec <b>{specification.name}</b> won't work because "
+                f".ipynb file <b>{full_path}</b> doesn't exist. "
                 f"<a style='color:white;' href='{url}'><b>[find it]</b></a>"
             )
 
 
 def _find_main_program_file(toolbox, filename, specification):
-    """Shows a file dialog where the user can find the missing main program file of a tool spec.
+    """Shows a file dialog where the user can find the missing .ipynb file of a notebook spec.
     Updates the spec if good.
 
     Args:
         toolbox (ToolboxUI): The toolbox QMainWindow
-        filename (str): The name of the main program file
-        specification (ToolSpecification): The spec to update
+        filename (str): The name of the .ipynb file
+        specification (NotebookSpecification): The spec to update
     """
     answer = QFileDialog.getOpenFileName(toolbox, f"Select {filename}", toolbox._project.project_dir)
     if answer[0] == "":  # Cancel button clicked

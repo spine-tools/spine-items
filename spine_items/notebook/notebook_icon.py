@@ -30,7 +30,7 @@ class NotebookIcon(ProjectItemIcon):
             toolbox (ToolBoxUI): QMainWindow instance
             icon (str): icon resource path
         """
-        super().__init__(toolbox, icon, icon_color=QColor("green"), background_color=QColor("#ffe6e6"))
+        super().__init__(toolbox, icon, icon_color)
         self.time_line = QTimeLine()
         self.time_line.setLoopCount(0)  # loop forever
         self.time_line.setFrameRange(0, 10)
@@ -54,7 +54,7 @@ class NotebookIcon(ProjectItemIcon):
         delta = QPointF(self._anim_delta_x_factor * value, delta_y)
         self.svg_item.setPos(self._svg_item_pos + delta)
 
-    @Slot("QTimeLine::State")
+    @Slot(int)
     def _handle_time_line_state_changed(self, new_state):
         if new_state == QTimeLine.Running:
             self.svg_item.setTransformOriginPoint(0, self._anim_transformation_origin_point_y)
@@ -77,3 +77,13 @@ class NotebookIcon(ProjectItemIcon):
         if self.time_line.state() != QTimeLine.Running:
             return
         self.time_line.stop()
+
+    def mouseDoubleClickEvent(self, e):
+        """Opens Notebook Specification editor when this Notebook icon is double-clicked.
+
+        Args:
+            e (QGraphicsSceneMouseEvent): Event
+        """
+        super().mouseDoubleClickEvent(e)
+        item = self._toolbox.project_item_model.get_item(self._name)
+        item.project_item.show_specification_window()
