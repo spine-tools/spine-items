@@ -16,6 +16,7 @@ The ImporterFactory class.
 :date:   15.4.2020
 """
 
+from PySide2.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .widgets.import_editor_window import ImportEditorWindow
 from .importer import Importer
@@ -39,12 +40,16 @@ class ImporterFactory(ProjectItemFactory):
         return ":/icons/item_icons/database-import.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("purple")
+
+    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddImporterWidget(toolbox, x, y, specification)
 
     @staticmethod
     def make_icon(toolbox):
-        return ImporterIcon(toolbox, ImporterFactory.icon())
+        return ImporterIcon(toolbox, ImporterFactory.icon(), ImporterFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):

@@ -19,9 +19,8 @@ from dataclasses import dataclass
 from enum import Enum, unique
 import json
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
-from spinedb_api.mapping import Mapping
 from spinedb_api.mapping import to_dict as mapping_to_dict
-from spinedb_api.export_mapping.export_mapping import from_dict as mapping_from_dict
+from spinedb_api.export_mapping.export_mapping import ExportMapping, from_dict as mapping_from_dict
 from .item_info import ItemInfo
 
 
@@ -60,7 +59,7 @@ class MappingSpecification:
     always_export_header: bool
     export_objects_flag: bool
     use_fixed_table_name_flag: bool
-    root: Mapping
+    root: ExportMapping
 
 
 class Specification(ProjectItemSpecification):

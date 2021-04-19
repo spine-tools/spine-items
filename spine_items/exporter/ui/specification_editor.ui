@@ -66,6 +66,27 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="toggle_enabled_button">
+         <property name="text">
+          <string>Enable or disable all</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="write_earlier_button">
+         <property name="text">
+          <string>Write earlier</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="write_later_button">
+         <property name="text">
+          <string>Write later</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_2">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -81,7 +102,17 @@
       </layout>
      </item>
      <item>
-      <widget class="QListView" name="mapping_list"/>
+      <widget class="QTableView" name="mappings_table">
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <property name="showGrid">
+        <bool>false</bool>
+       </property>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+      </widget>
      </item>
     </layout>
    </widget>

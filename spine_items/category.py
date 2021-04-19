@@ -1,7 +1,7 @@
 ######################################################################################################################
 # Copyright (C) 2017-2021 Spine project consortium
 # This file is part of Spine Items.
-# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
 # any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
@@ -10,22 +10,21 @@
 ######################################################################################################################
 
 """
-Module for view icon class.
+This module defines the available project item categories.
 
-:authors: M. Marin (KTH), P. Savolainen (VTT)
-:date:   4.4.2018
+:author: A.Soininen (VTT)
+:date:   6.5.2020
 """
+# The categories will appear in the main window in the same order they are declared here.
+CATEGORIES = ("Data Stores", "Data Connections", "Tools", "Views", "Importers", "Exporters", "Manipulators")
 
-from spinetoolbox.project_item_icon import ProjectItemIcon
 
-
-class ViewIcon(ProjectItemIcon):
-    def __init__(self, toolbox, icon, icon_color):
-        """View icon for the Design View.
-
-        Args:
-            toolbox (ToolBoxUI): QMainWindow instance
-            icon (str): icon resource path
-            icon_color (QColor): Icon's color
-        """
-        super().__init__(toolbox, icon, icon_color)
+CATEGORY_DESCRIPTIONS = {
+    "Data Connections": "Generic data source",
+    "Data Stores": "Data in the Spine generic format",
+    "Exporters": "Data conversion from Spine to an external format",
+    "Importers": "Data conversion from an external format to Spine",
+    "Tools": "Custom data processing",
+    "Views": "Data visualization",
+    "Manipulators": "Data conversion from Spine to Spine",
+}

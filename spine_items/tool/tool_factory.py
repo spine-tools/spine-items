@@ -18,6 +18,7 @@ The ToolFactory class.
 
 import os
 import uuid
+from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QFileDialog
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .tool import Tool
@@ -41,12 +42,16 @@ class ToolFactory(ProjectItemFactory):
         return ":/icons/item_icons/hammer.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("red")
+
+    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddToolWidget(toolbox, x, y, specification)
 
     @staticmethod
     def make_icon(toolbox):
-        return ToolIcon(toolbox, ToolFactory.icon())
+        return ToolIcon(toolbox, ToolFactory.icon(), ToolFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):

@@ -16,20 +16,20 @@ Contains :class:`ExporterIcon`.
 :date:    10.12.2020
 """
 
-from PySide2.QtGui import QColor
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import ExporterAnimation, AnimationSignaller
 
 
 class ExporterIcon(ProjectItemIcon):
-    def __init__(self, toolbox, icon):
+    def __init__(self, toolbox, icon, icon_color):
         """Exporter icon for the Design View.
 
         Args:
             toolbox (ToolBoxUI): QMainWindow instance
             icon (str): icon resource path
+            icon_color (QColor): Icon's color
         """
-        super().__init__(toolbox, icon, icon_color=QColor("#990000"), background_color=QColor("#ffcccc"))
+        super().__init__(toolbox, icon, icon_color)
         self.animation = ExporterAnimation(self, x_shift=-10)
         self.animation_signaller = AnimationSignaller()
         self.animation_signaller.animation_started.connect(self.animation.start)

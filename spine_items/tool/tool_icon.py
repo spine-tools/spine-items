@@ -16,21 +16,21 @@ Module for tool icon class.
 :date:   4.4.2018
 """
 
-from PySide2.QtGui import QColor
 from PySide2.QtCore import QTimeLine, Slot, QPointF
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import AnimationSignaller
 
 
 class ToolIcon(ProjectItemIcon):
-    def __init__(self, toolbox, icon):
+    def __init__(self, toolbox, icon, icon_color):
         """Tool icon for the Design View.
 
         Args:
             toolbox (ToolBoxUI): QMainWindow instance
             icon (str): icon resource path
+            icon_color (QColor): Icon's color
         """
-        super().__init__(toolbox, icon, icon_color=QColor("red"), background_color=QColor("#ffe6e6"))
+        super().__init__(toolbox, icon, icon_color)
         self.time_line = QTimeLine()
         self.time_line.setLoopCount(0)  # loop forever
         self.time_line.setFrameRange(0, 10)

@@ -16,7 +16,7 @@ Contains :class:`SpecificationEditorWindow`.
 """
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QMainWindow, QDialogButtonBox, QUndoStack
+from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QMainWindow, QUndoStack
 from spinetoolbox.config import STATUSBAR_SS
 from spinetoolbox.widgets.notification import ChangeNotifier
 from .entity_class_renaming_widget import EntityClassRenamingWidget
@@ -63,14 +63,10 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self._undo_stack = QUndoStack(self)
-        self._change_notifier = ChangeNotifier(self._undo_stack, self)
+        self._change_notifier = ChangeNotifier(self, self._undo_stack, self._app_settings, "appSettings/specShowUndo")
         self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
-        self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
-        self._ui.statusbar.addPermanentWidget(self._button_box)
-        self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         title = "Data transformer specification editor[*]"
         if item is not None:
@@ -90,26 +86,23 @@ class SpecificationEditorWindow(QMainWindow):
         )
         self._ui.database_url_combo_box.addItems(urls if urls is not None else [])
         self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
-        self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
-        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
-        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
+        self._spec_toolbar.save_action.triggered.connect(self._save)
+        self._spec_toolbar.close_action.triggered.connect(self.close)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
 
     def _populate_main_menu(self):
-        menu = self._spec_toolbar.menu
         undo_action = self._undo_stack.createUndoAction(self)
         redo_action = self._undo_stack.createRedoAction(self)
         undo_action.setShortcuts(QKeySequence.Undo)
         redo_action.setShortcuts(QKeySequence.Redo)
-        menu.addActions([redo_action, undo_action])
+        self._spec_toolbar.menu.insertActions(self._spec_toolbar.save_action, [redo_action, undo_action])
+        self._spec_toolbar.menu.insertSeparator(self._spec_toolbar.save_action)
         self._ui.menubar.hide()
-        self.addAction(self._spec_toolbar.menu_action)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
-        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
-        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
+        self._spec_toolbar.save_action.setEnabled(not clean)
 
     @Slot(str)
     def _change_filter_widget(self, filter_name):
@@ -151,20 +144,6 @@ class SpecificationEditorWindow(QMainWindow):
         widget.show()
         self._ui.filter_stack.setCurrentIndex(1)
 
-    @Slot(bool)
-    def discard_and_close(self, _=False):
-        self._undo_stack.setClean()
-        self.close()
-
-    @Slot(bool)
-    def save_and_close(self, _=False):
-        """Stores the specification to Toolbox' specification list, sets the spec for the item, and closes the window."""
-        if not self._save():
-            return
-        if self._item:
-            self._item.set_specification(self._specification)
-        self.close()
-
     def _save(self):
         specification_name = self._spec_toolbar.name()
         if not specification_name:
@@ -181,6 +160,8 @@ class SpecificationEditorWindow(QMainWindow):
         if not self._call_add_specification():
             return False
         self._undo_stack.setClean()
+        if self._item:
+            self._item.set_specification(self._specification)
         return True
 
     def _call_add_specification(self):
@@ -198,7 +179,9 @@ class SpecificationEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
-        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
+        if self.focusWidget():
+            self.focusWidget().clearFocus()
+        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
             event.ignore()
             return
         for widget in self._filter_widgets.values():

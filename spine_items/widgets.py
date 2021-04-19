@@ -29,6 +29,7 @@ from PySide2.QtWidgets import (
     QAction,
     QMenu,
     QLineEdit,
+    QCheckBox,
 )
 from PySide2.QtGui import QDrag, QGuiApplication, QKeySequence, QIcon
 from spinetoolbox.helpers import ensure_window_is_on_screen, CharIconEngine
@@ -199,7 +200,12 @@ class SpecNameDescriptionToolbar(QToolBar):
         layout.setStretchFactor(self._line_edit_name, 1)
         layout.setStretchFactor(self._line_edit_description, 3)
         self.addWidget(widget)
-        self.menu, self.menu_action = self._make_main_menu()
+        self.menu = self._make_main_menu()
+        self.save_action = self.menu.addAction("Save")
+        self.save_action.setEnabled(False)
+        self.close_action = self.menu.addAction("Close")
+        self.save_action.setShortcut(QKeySequence.Save)
+        self.close_action.setShortcut(QKeySequence.Close)
         self.setObjectName("SpecNameDescriptionToolbar")
         if spec:
             self.do_set_name(spec.name)
@@ -217,9 +223,10 @@ class SpecNameDescriptionToolbar(QToolBar):
         action.triggered.connect(menu_button.showMenu)
         keys = [QKeySequence(Qt.ALT + Qt.Key_F), QKeySequence(Qt.ALT + Qt.Key_E)]
         action.setShortcuts(keys)
+        self._parent.addAction(action)
         keys_str = ", ".join([key.toString() for key in keys])
         menu_button.setToolTip(f"<p>Main menu ({keys_str})</p>")
-        return menu, action
+        return menu
 
     @Slot()
     def _set_name(self):
@@ -257,25 +264,38 @@ class SpecNameDescriptionToolbar(QToolBar):
         return self._line_edit_description.text()
 
 
-def prompt_to_save_changes(parent, save_callback):
+def prompt_to_save_changes(parent, settings, save_callback):
     """Prompts to save changes.
 
     Args:
-        parent (QWidget)
+        parent (QWidget): Spec editor widget
+        settings (QSettings): Toolbox settings
         save_callback (Callable): A function to call if the user chooses Save.
             It must return True or False depending on the outcome of the 'saving'.
 
     Returns:
         bool: False if the user chooses to cancel, in which case we don't close the form.
     """
+    save_spec = int(settings.value("appSettings/saveSpecBeforeClosing", defaultValue="1"))
+    if save_spec == 0:
+        return True
+    if save_spec == 2:
+        return save_callback()
     msg = QMessageBox(parent)
     msg.setIcon(QMessageBox.Question)
     msg.setWindowTitle(parent.windowTitle())
     msg.setText("Do you want to save your changes to the specification?")
     msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+    chkbox = QCheckBox()
+    chkbox.setText("Do not ask me again")
+    msg.setCheckBox(chkbox)
     answer = msg.exec_()
     if answer == QMessageBox.Cancel:
         return False
+    if chkbox.checkState() == 2:
+        # Save preference
+        preference = "2" if answer == QMessageBox.Yes else "0"
+        settings.setValue("appSettings/saveSpecBeforeClosing", preference)
     if answer == QMessageBox.Yes:
         return save_callback()
     return True

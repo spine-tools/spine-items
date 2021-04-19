@@ -26,12 +26,12 @@ from PySide2.QtWidgets import (
     QMainWindow,
     QErrorMessage,
     QFileDialog,
-    QDialogButtonBox,
     QDockWidget,
     QUndoStack,
     QDialog,
     QVBoxLayout,
     QListWidget,
+    QDialogButtonBox,
 )
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
@@ -83,7 +83,7 @@ class ImportEditorWindow(QMainWindow):
         self._app_settings = self._toolbox.qsettings()
         self.settings_group = "mappingPreviewWindow"
         self._undo_stack = QUndoStack(self)
-        self._change_notifier = ChangeNotifier(self._undo_stack, self)
+        self._change_notifier = ChangeNotifier(self, self._undo_stack, self._app_settings, "appSettings/specShowUndo")
         self._ui_error = QErrorMessage(self)
         self._ui_error.setWindowTitle("Error")
         self._ui_error.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
@@ -108,44 +108,37 @@ class ImportEditorWindow(QMainWindow):
         self.restore_ui()
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Import Editor[*]")
-        self._button_box = QDialogButtonBox(self)
-        self._button_box.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Save | QDialogButtonBox.Ok)
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
-        self._ui.statusbar.addPermanentWidget(self._button_box)
-        self._ui.statusbar.layout().setContentsMargins(6, 6, 6, 6)
-        self._button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        self._button_box.button(QDialogButtonBox.Save).setEnabled(False)
-        self._button_box.button(QDialogButtonBox.Ok).clicked.connect(self.save_and_close)
-        self._button_box.button(QDialogButtonBox.Save).clicked.connect(self._save)
-        self._button_box.button(QDialogButtonBox.Cancel).clicked.connect(self.discard_and_close)
         self._ui.actionLoad_file.triggered.connect(self._show_open_file_dialog)
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
         self.connection_failed.connect(self.show_error)
+        self._spec_toolbar.save_action.triggered.connect(self._save)
+        self._spec_toolbar.close_action.triggered.connect(self.close)
         self._undo_stack.cleanChanged.connect(self._update_window_modified)
         if filepath:
             self.start_ui(filepath)
 
     def _populate_main_menu(self):
         menu = self._spec_toolbar.menu
-        menu.addActions([self._ui.actionLoad_file, self._ui.actionSwitch_connector])
-        menu.addSeparator()
-        menu.addActions([self._ui.import_mappings_action, self._ui.export_mappings_action])
-        menu.addSeparator()
+        before = self._spec_toolbar.save_action
+        menu.insertActions(before, [self._ui.actionLoad_file, self._ui.actionSwitch_connector])
+        menu.insertSeparator(before)
+        menu.insertActions(before, [self._ui.import_mappings_action, self._ui.export_mappings_action])
+        menu.insertSeparator(before)
         undo_action = self._undo_stack.createUndoAction(self)
         redo_action = self._undo_stack.createRedoAction(self)
         undo_action.setShortcuts(QKeySequence.Undo)
         redo_action.setShortcuts(QKeySequence.Redo)
-        menu.addActions([redo_action, undo_action])
+        menu.insertActions(before, [redo_action, undo_action])
+        menu.insertSeparator(before)
         self._ui.menubar.hide()
-        self.addAction(self._spec_toolbar.menu_action)
 
     @Slot(bool)
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
-        self._button_box.button(QDialogButtonBox.Ok).setEnabled(not clean)
-        self._button_box.button(QDialogButtonBox.Save).setEnabled(not clean)
+        self._spec_toolbar.save_action.setEnabled(not clean)
 
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):
@@ -369,22 +362,9 @@ class ImportEditorWindow(QMainWindow):
         if not self._call_add_specification():
             return False
         self._undo_stack.setClean()
-        return True
-
-    @Slot()
-    def save_and_close(self):
-        """Saves changes and close window."""
-        if not self._save():
-            return
         if self._item:
             self._item.set_specification(self._specification)
-        self.close()
-
-    @Slot()
-    def discard_and_close(self):
-        """Discards changes and close window."""
-        self._undo_stack.setClean()
-        self.close()
+        return True
 
     def restore_ui(self):
         """Restore UI state from previous session."""
@@ -396,7 +376,9 @@ class ImportEditorWindow(QMainWindow):
         Args:
             event (QEvent): Closing event if 'X' is clicked.
         """
-        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._save):
+        if self.focusWidget():
+            self.focusWidget().clearFocus()
+        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
             event.ignore()
             return
         if self._import_sources:

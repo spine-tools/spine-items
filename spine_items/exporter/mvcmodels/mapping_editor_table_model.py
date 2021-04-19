@@ -61,16 +61,20 @@ from ..commands import SetFixedTitle, SetMappingPositions, SetMappingProperty
 POSITION_DISPLAY_TEXT = {Position.hidden: "hidden", Position.table_name: "table name", Position.header: "column header"}
 
 
-class MappingTableModel(QAbstractTableModel):
-    def __init__(self, mapping_name, root_mapping, undo_stack, mapping_provider):
+class MappingEditorTableModel(QAbstractTableModel):
+
+    MAPPING_ITEM_ROLE = Qt.UserRole + 1
+
+    def __init__(self, mapping_name, root_mapping, undo_stack, mapping_provider, parent=None):
         """
         Args:
             mapping_name (str): mapping's name
             root_mapping (Mapping, optional): root mapping
             undo_stack (QUndoStack): undo stack
             mapping_provider (SpecificationEditorWindow): window that can provide data for different mappings
+            parent (QObject): parent object
         """
-        super().__init__()
+        super().__init__(parent)
         self._mappings = [] if root_mapping is None else root_mapping.flatten()
         self._non_leaf_mapping_is_pivoted = self._is_non_leaf_pivoted()
         self._undo_stack = undo_stack
@@ -116,6 +120,8 @@ class MappingTableModel(QAbstractTableModel):
                 return QColor(250, 250, 250)
         elif role == Qt.ToolTipRole and column == 4:
             return "Regular expression"
+        if role == self.MAPPING_ITEM_ROLE:
+            return self._mappings[index.row()]
         return None
 
     def flags(self, index=QModelIndex()):
@@ -150,7 +156,7 @@ class MappingTableModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return dict(enumerate(["Mapping type", "Map to", "Pivoted", "Header", "Filter"]))[section]
+            return ("Mapping type", "Map to", "Pivoted", "Header", "Filter")[section]
         return None
 
     def root_mapping(self):

@@ -63,6 +63,21 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.remove_mapping_button)
 
+        self.toggle_enabled_button = QPushButton(self.dockWidgetContents)
+        self.toggle_enabled_button.setObjectName(u"toggle_enabled_button")
+
+        self.horizontalLayout_2.addWidget(self.toggle_enabled_button)
+
+        self.write_earlier_button = QPushButton(self.dockWidgetContents)
+        self.write_earlier_button.setObjectName(u"write_earlier_button")
+
+        self.horizontalLayout_2.addWidget(self.write_earlier_button)
+
+        self.write_later_button = QPushButton(self.dockWidgetContents)
+        self.write_later_button.setObjectName(u"write_later_button")
+
+        self.horizontalLayout_2.addWidget(self.write_later_button)
+
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
@@ -70,10 +85,13 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
-        self.mapping_list = QListView(self.dockWidgetContents)
-        self.mapping_list.setObjectName(u"mapping_list")
+        self.mappings_table = QTableView(self.dockWidgetContents)
+        self.mappings_table.setObjectName(u"mappings_table")
+        self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.mappings_table.setShowGrid(False)
+        self.mappings_table.verticalHeader().setVisible(False)
 
-        self.verticalLayout.addWidget(self.mapping_list)
+        self.verticalLayout.addWidget(self.mappings_table)
 
         self.mappings_dock.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mappings_dock)
@@ -341,6 +359,9 @@ class Ui_MainWindow(object):
         self.mappings_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mappings", None))
         self.add_mapping_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.remove_mapping_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
+        self.toggle_enabled_button.setText(QCoreApplication.translate("MainWindow", u"Enable or disable all", None))
+        self.write_earlier_button.setText(QCoreApplication.translate("MainWindow", u"Write earlier", None))
+        self.write_later_button.setText(QCoreApplication.translate("MainWindow", u"Write later", None))
         self.mapping_options_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping options", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Parameter dimensions:", None))
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"Group function:", None))

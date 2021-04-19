@@ -16,6 +16,7 @@ The DataConnectionFactory class.
 :date:   15.4.2020
 """
 
+from PySide2.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .data_connection_icon import DataConnectionIcon
 from .data_connection import DataConnection
@@ -33,12 +34,16 @@ class DataConnectionFactory(ProjectItemFactory):
         return ":/icons/item_icons/file-alt.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("blue")
+
+    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddDataConnectionWidget(toolbox, x, y, specification)
 
     @staticmethod
     def make_icon(toolbox):
-        return DataConnectionIcon(toolbox, DataConnectionFactory.icon())
+        return DataConnectionIcon(toolbox, DataConnectionFactory.icon(), DataConnectionFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):

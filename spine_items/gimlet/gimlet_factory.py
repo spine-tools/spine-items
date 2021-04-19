@@ -16,6 +16,7 @@ The GimletFactory class.
 :date:   22.4.2020
 """
 
+from PySide2.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .gimlet import Gimlet
 from .gimlet_icon import GimletIcon
@@ -33,12 +34,16 @@ class GimletFactory(ProjectItemFactory):
         return ":/icons/item_icons/screwdriver.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("orange")
+
+    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddGimletWidget(toolbox, x, y, specification)
 
     @staticmethod
     def make_icon(toolbox):
-        return GimletIcon(toolbox, GimletFactory.icon())
+        return GimletIcon(toolbox, GimletFactory.icon(), GimletFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):

@@ -19,7 +19,7 @@ from unittest.mock import MagicMock
 from PySide2.QtWidgets import QApplication, QUndoStack
 from spinedb_api.mapping import Position
 from spinedb_api.export_mapping import object_export
-from spine_items.exporter.mvcmodels.mapping_table_model import MappingTableModel
+from spine_items.exporter.mvcmodels.mapping_editor_table_model import MappingEditorTableModel
 
 
 class TestMappingTableModel(unittest.TestCase):
@@ -32,18 +32,18 @@ class TestMappingTableModel(unittest.TestCase):
         self._undo_stack = QUndoStack()
 
     def test_columnCount(self):
-        model = MappingTableModel(
+        model = MappingEditorTableModel(
             "mapping", object_export(Position.hidden, Position.hidden), self._undo_stack, MagicMock()
         )
         self.assertEqual(model.rowCount(), 2)
 
     def test_rowCount(self):
         mapping_root = object_export(Position.hidden, Position.hidden)
-        model = MappingTableModel("mapping", mapping_root, self._undo_stack, MagicMock())
+        model = MappingEditorTableModel("mapping", mapping_root, self._undo_stack, MagicMock())
         self.assertEqual(model.rowCount(), mapping_root.count_mappings())
 
     def test_data(self):
-        model = MappingTableModel("mapping", object_export(1, 2), self._undo_stack, MagicMock())
+        model = MappingEditorTableModel("mapping", object_export(1, 2), self._undo_stack, MagicMock())
         self.assertEqual(model.rowCount(), 2)
         self.assertEqual(model.index(0, 0).data(), "Object classes")
         self.assertEqual(model.index(0, 1).data(), "2")
@@ -51,7 +51,7 @@ class TestMappingTableModel(unittest.TestCase):
         self.assertEqual(model.index(1, 1).data(), "3")
 
     def test_setData_column_number(self):
-        model = MappingTableModel(
+        model = MappingEditorTableModel(
             "mapping", object_export(Position.hidden, Position.hidden), self._undo_stack, MagicMock()
         )
         self.assertTrue(model.setData(model.index(0, 1), "23"))

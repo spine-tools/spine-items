@@ -15,103 +15,123 @@ Contains Exporter's undo commands.
 :date:    11.12.2020
 """
 from copy import deepcopy
-from PySide2.QtCore import Qt
+from PySide2.QtCore import QModelIndex, Qt
 from PySide2.QtWidgets import QUndoCommand
-from .mvcmodels.mapping_list_model import MappingListModel
+from .mvcmodels.mappings_table_model import MappingsTableModel
 
 
 class NewMapping(QUndoCommand):
-    def __init__(self, mapping_list_model, mapping_specification):
+    def __init__(self, mappings_table_model, mapping_specification):
         """
         Args:
-            mapping_list_model (MappingListModel): mapping list model
+            mappings_table_model (MappingsTableModel): mapping table model
             mapping_specification (MappingSpecification): new mapping specification
         """
         super().__init__("add mapping")
-        self._mapping_list_model = mapping_list_model
+        self._mappings_table_model = mappings_table_model
         self._mapping_specification = mapping_specification
-        self._row = 0
+        self._mapping_name = None
 
     def redo(self):
-        self._row = self._mapping_list_model.extend(deepcopy(self._mapping_specification))
+        self._mappings_table_model.extend(deepcopy(self._mapping_specification))
+        self._mapping_name = self._mappings_table_model.index(self._mappings_table_model.rowCount() - 1, 0).data()
 
     def undo(self):
-        self._mapping_list_model.remove_mapping(self._row)
+        self._mappings_table_model.remove_mapping(self._mapping_name)
 
 
 class RemoveMapping(QUndoCommand):
-    def __init__(self, row, mapping_list_model):
+    def __init__(self, row, mappings_table_model):
         """
         Args:
             row (int): row index of mapping's name
-            mapping_list_model (MappingListModel): mapping list model
+            mappings_table_model (MappingsTableModel): mapping list model
         """
         super().__init__("remove mapping")
-        self._mapping_list_model = mapping_list_model
+        self._mappings_table_model = mappings_table_model
         self._row = row
-        self._name = self._mapping_list_model.index(row, 0).data()
-        self._mapping_specification = self._mapping_list_model.index(row, 0).data(
-            MappingListModel.MAPPING_SPECIFICATION_ROLE
-        )
+        index = self._mappings_table_model.index(row, 0)
+        self._name = index.data()
+        self._mapping_specification = index.data(MappingsTableModel.MAPPING_SPECIFICATION_ROLE)
 
     def redo(self):
-        self._mapping_list_model.remove_mapping(self._row)
+        self._mappings_table_model.remove_mapping(self._name)
 
     def undo(self):
-        self._mapping_list_model.insert_mapping(self._row, self._name, self._mapping_specification)
+        self._mappings_table_model.insert_mapping(self._row, self._name, self._mapping_specification)
 
 
 class SetMappingEnabled(QUndoCommand):
-    def __init__(self, row, mapping_list_model):
+    def __init__(self, row, mappings_table_model):
         """
         Args:
             row (int): row index of mapping's name
-            mapping_list_model (MappingListModel): mapping list model
+            mappings_table_model (MappingsTableModel): mapping list model
         """
-        self._mapping_list_model = mapping_list_model
-        name = self._mapping_list_model.index(row, 0).data()
+        self._mappings_table_model = mappings_table_model
+        name = self._mappings_table_model.index(row, 0).data()
         self._row = row
-        self._previously_enabled = self._mapping_list_model.index(self._row, 0).data(Qt.CheckStateRole) == Qt.Checked
+        self._previously_enabled = self._mappings_table_model.index(self._row, 0).data(Qt.CheckStateRole) == Qt.Checked
         super().__init__(("disable" if self._previously_enabled else "enable") + f" '{name}'")
 
     def redo(self):
-        self._mapping_list_model.set_mapping_enabled(self._row, not self._previously_enabled)
+        self._mappings_table_model.set_mapping_enabled(self._row, not self._previously_enabled)
 
     def undo(self):
-        self._mapping_list_model.set_mapping_enabled(self._row, self._previously_enabled)
+        self._mappings_table_model.set_mapping_enabled(self._row, self._previously_enabled)
 
 
 class EnableAllMappings(QUndoCommand):
-    def __init__(self, mapping_list_model):
+    def __init__(self, mappings_table_model):
         """
         Args:
-            mapping_list_model (MappingListModel): mapping list model
+            mappings_table_model (MappingsTableModel): mapping list model
         """
         super().__init__("enable all mappings")
-        self._mapping_list_model = mapping_list_model
-        self._previously_enabled = self._mapping_list_model.enabled_mapping_rows()
+        self._mappings_table_model = mappings_table_model
+        self._previously_enabled = self._mappings_table_model.enabled_mapping_rows()
 
     def redo(self):
-        self._mapping_list_model.set_all_enabled(True)
+        self._mappings_table_model.set_all_enabled(True)
 
     def undo(self):
-        self._mapping_list_model.enable_mapping_rows(self._previously_enabled)
+        self._mappings_table_model.enable_mapping_rows(self._previously_enabled)
 
 
 class DisableAllMappings(QUndoCommand):
-    def __init__(self, mapping_list_model):
+    def __init__(self, mappings_table_model):
         """
         Args:
-            mapping_list_model (MappingListModel): mapping list model
+            mappings_table_model (MappingsTableModel): mapping list model
         """
         super().__init__("disable all mappings")
-        self._mapping_list_model = mapping_list_model
+        self._mappings_table_model = mappings_table_model
 
     def redo(self):
-        self._mapping_list_model.set_all_enabled(False)
+        self._mappings_table_model.set_all_enabled(False)
 
     def undo(self):
-        self._mapping_list_model.set_all_enabled(True)
+        self._mappings_table_model.set_all_enabled(True)
+
+
+class ChangeWriteOrder(QUndoCommand):
+    def __init__(self, row, earlier, mappings_table_model):
+        """
+        Args:
+            row (int): row index of mapping's name
+            earlier (bool): True to write mapping earlier, False to write later
+            mappings_table_model (MappingsTableModel): mappings table model
+        """
+        super().__init__("change writing order")
+        self._row = row
+        self._earlier = earlier
+        self._mappings_table_model = mappings_table_model
+
+    def redo(self):
+        self._mappings_table_model.reorder_writing(self._row, self._earlier)
+
+    def undo(self):
+        self._mappings_table_model.reorder_writing(self._row - 1 if self._earlier else self._row + 1, not self._earlier)
 
 
 class SetMapping(QUndoCommand):
@@ -124,13 +144,13 @@ class SetMapping(QUndoCommand):
         super().__init__("mapping change")
         self._index = index
         self._mapping = mapping
-        self._previous_mapping = self._index.data(MappingListModel.MAPPING_ROOT_ROLE)
+        self._previous_mapping = self._index.data(MappingsTableModel.MAPPING_ROOT_ROLE)
 
     def redo(self):
-        self._index.model().setData(self._index, deepcopy(self._mapping), MappingListModel.MAPPING_ROOT_ROLE)
+        self._index.model().setData(self._index, deepcopy(self._mapping), MappingsTableModel.MAPPING_ROOT_ROLE)
 
     def undo(self):
-        self._index.model().setData(self._index, deepcopy(self._previous_mapping), MappingListModel.MAPPING_ROOT_ROLE)
+        self._index.model().setData(self._index, deepcopy(self._previous_mapping), MappingsTableModel.MAPPING_ROOT_ROLE)
 
 
 class SetMappingType(QUndoCommand):
@@ -143,13 +163,13 @@ class SetMappingType(QUndoCommand):
         super().__init__("mapping type change")
         self._index = index
         self._type = type_
-        self._previous_type = self._index.data(MappingListModel.MAPPING_TYPE_ROLE)
+        self._previous_type = self._index.data(MappingsTableModel.MAPPING_TYPE_ROLE)
 
     def redo(self):
-        self._index.model().setData(self._index, self._type, MappingListModel.MAPPING_TYPE_ROLE)
+        self._index.model().setData(self._index, self._type, MappingsTableModel.MAPPING_TYPE_ROLE)
 
     def undo(self):
-        self._index.model().setData(self._index, self._previous_type, MappingListModel.MAPPING_TYPE_ROLE)
+        self._index.model().setData(self._index, self._previous_type, MappingsTableModel.MAPPING_TYPE_ROLE)
 
 
 class SetAlwaysExportHeader(QUndoCommand):
@@ -164,10 +184,10 @@ class SetAlwaysExportHeader(QUndoCommand):
         self._flag = always_export_header
 
     def redo(self):
-        self._index.model().setData(self._index, self._flag, MappingListModel.ALWAYS_EXPORT_HEADER_ROLE)
+        self._index.model().setData(self._index, self._flag, MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE)
 
     def undo(self):
-        self._index.model().setData(self._index, not self._flag, MappingListModel.ALWAYS_EXPORT_HEADER_ROLE)
+        self._index.model().setData(self._index, not self._flag, MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE)
 
 
 class SetExportObjectsFlag(QUndoCommand):
@@ -182,10 +202,10 @@ class SetExportObjectsFlag(QUndoCommand):
         self._flag = flag
 
     def redo(self):
-        self._index.model().setData(self._index, self._flag, MappingListModel.EXPORT_OBJECTS_FLAG_ROLE)
+        self._index.model().setData(self._index, self._flag, MappingsTableModel.EXPORT_OBJECTS_FLAG_ROLE)
 
     def undo(self):
-        self._index.model().setData(self._index, not self._flag, MappingListModel.EXPORT_OBJECTS_FLAG_ROLE)
+        self._index.model().setData(self._index, not self._flag, MappingsTableModel.EXPORT_OBJECTS_FLAG_ROLE)
 
 
 class SetUseFixedTableNameFlag(QUndoCommand):
@@ -200,17 +220,17 @@ class SetUseFixedTableNameFlag(QUndoCommand):
         self._flag = flag
 
     def redo(self):
-        self._index.model().setData(self._index, self._flag, MappingListModel.USE_FIXED_TABLE_NAME_FLAG_ROLE)
+        self._index.model().setData(self._index, self._flag, MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE)
 
     def undo(self):
-        self._index.model().setData(self._index, not self._flag, MappingListModel.USE_FIXED_TABLE_NAME_FLAG_ROLE)
+        self._index.model().setData(self._index, not self._flag, MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE)
 
 
 class SetFixedTitle(QUndoCommand):
     def __init__(self, model, title, previous_title):
         """
         Args:
-            model (MappingTableModel): mapping model
+            model (MappingEditorTableModel): editor model
             title (str): table name
             previous_title (str): previous table name
         """
@@ -230,22 +250,22 @@ class SetMappingPositions(QUndoCommand):
     def __init__(self, model, mapping_name, positions, previous_positions):
         """
         Args:
-            model (MappingTableModel): mapping model
+            model (MappingEditorTableModel): editor model
             mapping_name (str): mapping's name
             positions (list of Position): new positions
             previous_positions (list of Position): previous positions
         """
         super().__init__("change mapping position")
-        self._mapping_table_model = model
+        self._mapping_editor_table_model = model
         self._mapping_name = mapping_name
         self._positions = positions
         self._previous_positions = previous_positions
 
     def redo(self):
-        self._mapping_table_model.set_positions(self._positions, self._mapping_name)
+        self._mapping_editor_table_model.set_positions(self._positions, self._mapping_name)
 
     def undo(self):
-        self._mapping_table_model.set_positions(self._previous_positions, self._mapping_name)
+        self._mapping_editor_table_model.set_positions(self._previous_positions, self._mapping_name)
 
 
 class SetMappingProperty(QUndoCommand):

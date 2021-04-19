@@ -16,6 +16,7 @@ The ViewFactory class.
 :date:   15.4.2020
 """
 
+from PySide2.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .view import View
 from .view_icon import ViewIcon
@@ -33,12 +34,16 @@ class ViewFactory(ProjectItemFactory):
         return ":/icons/item_icons/binoculars.svg"
 
     @staticmethod
+    def icon_color():
+        return QColor("green")
+
+    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddViewWidget(toolbox, x, y, specification)
 
     @staticmethod
     def make_icon(toolbox):
-        return ViewIcon(toolbox, ViewFactory.icon())
+        return ViewIcon(toolbox, ViewFactory.icon(), ViewFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):
