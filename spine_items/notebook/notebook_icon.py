@@ -23,7 +23,7 @@ from ..animations import AnimationSignaller
 
 
 class NotebookIcon(ProjectItemIcon):
-    def __init__(self, toolbox, icon):
+    def __init__(self, toolbox, icon, icon_color):
         """Tool icon for the Design View.
 
         Args:

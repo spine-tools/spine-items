@@ -27,7 +27,9 @@ from .widgets.notebook_properties_widget import NotebookPropertiesWidget
 from .widgets.notebook_specification_editor_window import NotebookSpecificationEditorWindow
 from .widgets.add_notebook_widget import AddNotebookWidget
 from .widgets.custom_menus import NotebookSpecificationMenu
+from ..widgets import SpecEditorManager
 
+_tool_spec_editor_manager = SpecEditorManager(NotebookSpecificationEditorWindow)
 
 class NotebookFactory(ProjectItemFactory):
     @staticmethod
@@ -69,7 +71,7 @@ class NotebookFactory(ProjectItemFactory):
     @staticmethod
     def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
-        NotebookSpecificationEditorWindow(toolbox, specification, item).show()
+        _tool_spec_editor_manager.create_editor(toolbox, specification, item)
 
     @staticmethod
     def repair_specification(toolbox, specification):
