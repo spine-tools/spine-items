@@ -12,7 +12,7 @@ In the context of this project item there are two classes of environment:
    This enables the user to configure environments per notebook they would like to execute.
    
 
-2. Notebook environment:  A notebook env is configured with the desired packages required by a notebook in their workflow.
+2. Notebook environment:  A notebook env is configured with the desired packages required by a notebook to execute.
     
    To make a notebook env discoverable to the base env some setup is required. The notebook env requires ipykernel, 
    with ipykernel installed the kernelspec for the env needs to be installed, this allows the base env to discover it. <br>
@@ -43,6 +43,21 @@ The test_env will now be available to select from the notebook specification edi
 The **--display-name** argument determines what is shown in the dropdown menu, so for the above env **Python (test_env)** <br>
 will be listed. 
 
+#### Configure environment for executing papermill
+For python environment setup 
+> pip install papermill
+
+Julia environment setup, in julia terminal.
+> add Conda
+> 
+> Conda.pip_interop(true)
+> 
+> Conda.pip("install", "papermill")
+> 
+> add PyCall
+
+See Julia packages [Conda](https://github.com/JuliaPy/Conda.jl) and [PyCall](https://github.com/JuliaPy/PyCall.jl)
+
 #### Discovering kernels on backend
 To discover installed kernel specs and add them to the drop down menu in the notebook specification editor <br>
 the notebook item uses **jupyter_client.kernelspec.KernelSpec** and **jupyter_client.kernelspec.KernelSpecManager** <br>
@@ -60,7 +75,6 @@ kernels are discovered and added to the dropdown menu using the method **populat
             available_kernels.append(k_name)
         return available_kernels
 ```
-
 
 ### Configure Jupyter notebook for execution
 For passing resources to the notebook at runtime, the notebook requires cell tags to be enabled, and a cell defined <br> 
