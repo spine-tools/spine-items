@@ -139,6 +139,8 @@ class PreviewUpdater:
             current (QModelIndex): index to selected mapping on mapping list
             previous (QModelIndex): index to previously selected mapping on mapping list
         """
+        if not current.isValid():
+            return
         current = self._mappings_proxy_model.mapToSource(current)
         mappings_index = self._mappings_table_model.index(current.row(), 0)
         if mappings_index.data(Qt.CheckStateRole) == Qt.Unchecked:
@@ -245,6 +247,8 @@ class PreviewUpdater:
             first (int): first mapping list row to be removed
             last (int): last mapping list row to be removed
         """
+        if self._current_url is None:
+            return
         for row in range(first, last + 1):
             index = self._mappings_table_model.index(row, 0)
             if index.data(Qt.CheckStateRole) == Qt.Unchecked:
