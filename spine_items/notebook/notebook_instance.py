@@ -16,8 +16,7 @@ Contains NotebookInstance class.
 :date:   05.02.2021
 """
 import os
-from spine_engine.utils.helpers import python_interpreter
-from spine_engine.execution_managers import StandardExecutionManager, KernelExecutionManager
+from spine_engine.execution_managers import KernelExecutionManager
 
 
 class NotebookInstance:
@@ -52,14 +51,14 @@ class NotebookInstance:
         return self._owner
 
     def is_running(self):
-        return self.exec_manager is not None
+        return self.exec_mngr is not None
 
     def terminate_instance(self):
         """Terminates Notebook instance execution."""
-        if not self.exec_manager:
+        if not self.exec_mngr:
             return
-        self.exec_manager.stop_execution()
-        self.exec_manager = None#
+        self.exec_mngr.stop_execution()
+        self.exec_mngr = None
 
     def set_notebook_out_path(self):
         """
@@ -68,7 +67,7 @@ class NotebookInstance:
         append_out = "_out"
         nb_filename_split = os.path.splitext(self.notebook_specification.includes[0])
         nb_out_filename = nb_filename_split[0] + append_out + nb_filename_split[1]
-        return os.path.join(self.basedir, nb_out_filename).replace('\\', '/')
+        return os.path.join(self.basedir, nb_out_filename).replace(os.sep, '/')
 
     def prepare(self, nb_src_dst_mapping, args):
         """See base class."""
