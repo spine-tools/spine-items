@@ -190,24 +190,6 @@ class SetAlwaysExportHeader(QUndoCommand):
         self._index.model().setData(self._index, not self._flag, MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE)
 
 
-class SetExportObjectsFlag(QUndoCommand):
-    def __init__(self, index, flag):
-        """
-        Args:
-            index (QModelIndex): mapping's row index
-            flag (bool): export object flag
-        """
-        super().__init__(("check" if flag else "uncheck") + " export objects checkbox")
-        self._index = index
-        self._flag = flag
-
-    def redo(self):
-        self._index.model().setData(self._index, self._flag, MappingsTableModel.EXPORT_OBJECTS_FLAG_ROLE)
-
-    def undo(self):
-        self._index.model().setData(self._index, not self._flag, MappingsTableModel.EXPORT_OBJECTS_FLAG_ROLE)
-
-
 class SetUseFixedTableNameFlag(QUndoCommand):
     def __init__(self, index, flag):
         """

@@ -41,7 +41,7 @@ class TestWithCsvWriter(unittest.TestCase):
 
     def test_export_database(self):
         root_mapping = object_export(class_position=0, object_position=1)
-        mapping_specification = MappingSpecification(MappingType.objects, True, True, False, False, root_mapping)
+        mapping_specification = MappingSpecification(MappingType.objects, True, True, False, root_mapping)
         specification = Specification("name", "description", {"mapping": mapping_specification})
         databases = {self._url: "test_export_database.csv"}
         logger = MagicMock()

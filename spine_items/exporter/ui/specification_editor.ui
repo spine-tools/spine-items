@@ -125,167 +125,177 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="mapping_options_contents">
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_10">
-       <property name="text">
-        <string>Parameter dimensions:</string>
-       </property>
-      </widget>
+    <layout class="QVBoxLayout" name="verticalLayout_7">
+     <item>
+      <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Item type:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="item_type_combo_box">
+         <item>
+          <property name="text">
+           <string>Object class</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Relationship class</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Object group</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Alternative</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Scenario</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Scenario alternative</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Parameter value list</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Feature</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Tool</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Tool feature</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Tool feature method</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QCheckBox" name="always_export_header_check_box">
+         <property name="toolTip">
+          <string>Export header even when a table is otherwise empty.</string>
+         </property>
+         <property name="text">
+          <string>Always export header</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Number of dimensions:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QSpinBox" name="relationship_dimensions_spin_box">
+         <property name="toolTip">
+          <string>Number of relationship dimensions.</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Parameter type:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="parameter_type_combo_box">
+         <item>
+          <property name="text">
+           <string>Value</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Default value</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>None</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Parameter dimensions:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QSpinBox" name="parameter_dimensions_spin_box">
+         <property name="toolTip">
+          <string>Maximum number of expected parameter value dimensions.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QCheckBox" name="fix_table_name_check_box">
+         <property name="text">
+          <string>Fixed table name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Group function:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QComboBox" name="group_fn_combo_box">
+         <property name="toolTip">
+          <string>Data groping in pivot tables.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>Group function:</string>
+     <item>
+      <spacer name="verticalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
        </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QCheckBox" name="fix_table_name_check_box">
-       <property name="text">
-        <string>Fixed table name</string>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>12</height>
+        </size>
        </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QSpinBox" name="relationship_dimensions_spin_box">
-       <property name="toolTip">
-        <string>Number of relationship dimensions.</string>
-       </property>
-       <property name="minimum">
-        <number>1</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_8">
-       <property name="text">
-        <string>Number of dimensions:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QCheckBox" name="export_objects_check_box">
-       <property name="text">
-        <string>Export objects</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QComboBox" name="item_type_combo_box">
-       <item>
-        <property name="text">
-         <string>Object class</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Relationship class</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Object group</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Alternative</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Scenario</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Scenario alternative</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Parameter value list</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Feature</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Tool</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Tool feature</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Tool feature method</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="7" column="1">
-      <widget class="QComboBox" name="group_fn_combo_box">
-       <property name="toolTip">
-        <string>Data groping in pivot tables.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QSpinBox" name="parameter_dimensions_spin_box">
-       <property name="toolTip">
-        <string>Maximum number of expected parameter value dimensions.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QComboBox" name="parameter_type_combo_box">
-       <item>
-        <property name="text">
-         <string>Value</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Default value</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>None</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Item type:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Parameter type:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QCheckBox" name="always_export_header_check_box">
-       <property name="toolTip">
-        <string>Export header even when a table is otherwise empty.</string>
-       </property>
-       <property name="text">
-        <string>Always export header</string>
-       </property>
-      </widget>
+      </spacer>
      </item>
     </layout>
    </widget>
