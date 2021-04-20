@@ -83,26 +83,41 @@ class TestImporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="Data Connection")
         self.importer.notify_destination(source_item)
         self.importer.logger.msg.emit.assert_called_with(
-            "Link established. You can define mappings on data from <b>source name</b> using item <b>I</b>."
+            "Link established. You can define mappings on data from <b>source name</b> using <b>I</b>."
         )
         source_item.item_type = MagicMock(return_value="Data Store")
         self.importer.notify_destination(source_item)
         self.importer.logger.msg.emit.assert_called_with("Link established")
-        source_item.item_type = MagicMock(return_value="GdxExporter")
+        source_item.item_type = MagicMock(return_value="Data Transformer")
         self.importer.notify_destination(source_item)
         self.importer.logger.msg_warning.emit.assert_called_with(
             "Link established. Interaction between a "
-            "<b>GdxExporter</b> and a <b>Importer</b> has not been implemented yet."
+            "<b>Data Transformer</b> and a <b>Importer</b> has not been implemented yet."
+        )
+        source_item.item_type = MagicMock(return_value="GdxExporter")
+        self.importer.notify_destination(source_item)
+        self.importer.logger.msg.emit.assert_called_with(
+            "Link established. You can define mappings on data from <b>source name</b> using <b>I</b>."
+        )
+        source_item.item_type = MagicMock(return_value="Exporter")
+        self.importer.notify_destination(source_item)
+        self.importer.logger.msg.emit.assert_called_with(
+            "Link established. You can define mappings on data from <b>source name</b> using <b>I</b>."
+        )
+        source_item.item_type = MagicMock(return_value="Gimlet")
+        self.importer.notify_destination(source_item)
+        self.importer.logger.msg.emit.assert_called_with(
+            "Link established. You can define mappings on data from <b>source name</b> using <b>I</b>."
         )
         source_item.item_type = MagicMock(return_value="Tool")
         self.importer.notify_destination(source_item)
         self.importer.logger.msg.emit.assert_called_with(
-            "Link established." " You can define mappings on output files from <b>source name</b> using item <b>I</b>."
+            "Link established. You can define mappings on data from <b>source name</b> using <b>I</b>."
         )
         source_item.item_type = MagicMock(return_value="View")
         self.importer.notify_destination(source_item)
         self.importer.logger.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a " "<b>View</b> and a <b>Importer</b> has not been implemented yet."
+            "Link established. Interaction between a <b>View</b> and a <b>Importer</b> has not been implemented yet."
         )
 
     def test_rename(self):

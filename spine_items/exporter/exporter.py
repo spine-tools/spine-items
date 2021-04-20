@@ -143,13 +143,13 @@ class Exporter(ExporterBase):
         """See base class."""
         if source_item.item_type() == "Data Store":
             self._toolbox.msg.emit(
-                "Link established. You can now export the database in Data Store "
-                f"<b>{source_item.name}</b> in Exporter <b>{self.name}</b>."
+                "Link established. You can now export the database in "
+                f"<b>{source_item.name}</b> in <b>{self.name}</b>."
             )
         elif source_item.item_type() == "Data Transformer":
             self._toolbox.msg.emit(
                 f"Link established. You can now export the database transformed by <b>{source_item.name}</b> "
-                f"in Exporter <b>{self.name}</b>."
+                f"in <b>{self.name}</b>."
             )
         else:
             super().notify_destination(source_item)

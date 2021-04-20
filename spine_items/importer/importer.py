@@ -279,23 +279,13 @@ class Importer(ProjectItem):
 
     def notify_destination(self, source_item):
         """See base class."""
-        if source_item.item_type() == "Data Connection":
+        if source_item.item_type() in ("Data Connection", "Tool", "Gimlet", "GdxExporter", "Exporter"):
             self._logger.msg.emit(
                 "Link established. You can define mappings on data from "
-                f"<b>{source_item.name}</b> using item <b>{self.name}</b>."
-            )
-        elif source_item.item_type() == "Tool":
-            self._logger.msg.emit(
-                "Link established. You can define mappings on output files from "
-                f"<b>{source_item.name}</b> using item <b>{self.name}</b>."
+                f"<b>{source_item.name}</b> using <b>{self.name}</b>."
             )
         elif source_item.item_type() == "Data Store":
             self._logger.msg.emit("Link established")
-        elif source_item.item_type() == "Gimlet":
-            self._logger.msg.emit(
-                "Link established. You can define mappings on output files from "
-                f"<b>{source_item.name}</b> using item <b>{self.name}</b>."
-            )
         else:
             super().notify_destination(source_item)
 

@@ -83,12 +83,12 @@ class TestExporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="Data Store")
         self._exporter.notify_destination(source_item)
         self._exporter._toolbox.msg.emit.assert_called_with(
-            "Link established. You can now export the database in Data Store <b>source name</b> in Exporter <b>exporter</b>."
+            "Link established. You can now export the database in <b>source name</b> in <b>exporter</b>."
         )
         source_item.item_type = MagicMock(return_value="Data Transformer")
         self._exporter.notify_destination(source_item)
         self._exporter._toolbox.msg.emit.assert_called_with(
-            "Link established. You can now export the database transformed by <b>source name</b> in Exporter <b>exporter</b>."
+            "Link established. You can now export the database transformed by <b>source name</b> in <b>exporter</b>."
         )
         source_item.item_type = MagicMock(return_value="Exporter")
         self._exporter.notify_destination(source_item)

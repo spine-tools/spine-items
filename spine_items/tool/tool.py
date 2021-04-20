@@ -425,8 +425,8 @@ class Tool(ProjectItem):
             )
         elif source_item.item_type() in ("GdxExporter", "Exporter"):
             self._logger.msg.emit(
-                f"Link established. The file exported by <b>{source_item.name}</b> will "
-                f"be available in <b>{self.name}</b>."
+                f"Link established. The file exported by <b>{source_item.name}</b> are now "
+                f"available in <b>{self.name}</b>."
             )
         elif source_item.item_type() in ["Data Transformer", "Tool"]:
             self._logger.msg.emit("Link established")
