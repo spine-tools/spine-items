@@ -77,11 +77,6 @@ class MainProgramTextEdit(QPlainTextEdit):
         self.setFont(font)
         foreground_color = style.styles[Token.Text]
         self.setStyleSheet(f"QPlainTextEdit {{background-color: {style.background_color}; color: {foreground_color};}}")
-        self.save_action = QAction(self)
-        self.save_action.setShortcut(QKeySequence.Save)
-        self.save_action.setShortcutContext(Qt.WidgetShortcut)
-        self.save_action.setEnabled(False)
-        self.addAction(self.save_action)
 
     def insertFromMimeData(self, source):
         if source.hasText():
@@ -101,4 +96,3 @@ class MainProgramTextEdit(QPlainTextEdit):
         self._highlighter.setDocument(doc)
         doc.setDefaultFont(self.font())
         self.setTabStopDistance(QFontMetrics(self.font()).horizontalAdvance(4 * " "))
-        doc.modificationChanged.connect(self.save_action.setEnabled)
