@@ -331,9 +331,6 @@ class ExecutableItem(ExecutableItemBase):
         """
         if not super().execute(forward_resources, backward_resources):
             return ItemExecutionFinishState.FAILURE
-        # if self._tool_specification is None:
-        #     self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no specification to execute")
-        #     return ItemExecutionFinishState.FAILURE
         execution_dir = _execution_directory(self._work_dir, self._tool_specification)
         if execution_dir is None:
             return ItemExecutionFinishState.FAILURE
