@@ -209,7 +209,12 @@ class MappingEditorTableModel(QAbstractTableModel):
                     return False
                 previous_filter_re = mapping.filter_re
                 command = SetMappingProperty(
-                    "change mapping item's filter", self.set_filter_re, self._mapping_name, row, value, previous_filter_re
+                    "change mapping item's filter",
+                    self.set_filter_re,
+                    self._mapping_name,
+                    row,
+                    value,
+                    previous_filter_re,
                 )
                 self._undo_stack.push(command)
                 return True
