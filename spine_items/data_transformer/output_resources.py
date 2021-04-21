@@ -9,7 +9,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains utilities to scan for Tool's output resources.
+Contains utilities to scan for Data Transformer's output resources.
 
 :authors: A. Soininen (VTT)
 :date:    4.12.2020

@@ -21,6 +21,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
+from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.project_item.project_item_resource import file_resource
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
@@ -127,7 +128,7 @@ class TestToolExecutable(unittest.TestCase):
         )
         self.assertIsInstance(item, ExecutableItem)
 
-    def test_execute_without_specification_fails(self):
+    def test_ready_to_execute(self):
         logger = mock.MagicMock()
         executable = ExecutableItem(
             "executable name",
@@ -138,8 +139,7 @@ class TestToolExecutable(unittest.TestCase):
             project_dir=self._temp_dir.name,
             logger=logger,
         )
-        self.assertFalse(executable.execute([], []))
-        logger.msg_warning.emit.assert_called_with("Tool <b>executable name</b> has no Tool specification to execute")
+        self.assertFalse(executable.ready_to_execute())
 
     def test_execute_archives_output_files(self):
         script_dir = pathlib.Path(self._temp_dir.name, "scripts")

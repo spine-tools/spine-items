@@ -27,6 +27,7 @@ import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.spine_engine import ItemExecutionFinishState
 from .item_info import ItemInfo
 from .utils import (
     file_paths_from_resources,
@@ -313,6 +314,13 @@ class ExecutableItem(ExecutableItemBase):
                 return False
         return True
 
+    def ready_to_execute(self):
+        """Returns False if this Tool does not have a specification."""
+        if self._tool_specification is None:
+            self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> not ready for execution. No specification.")
+            return False
+        return True
+
     def execute(self, forward_resources, backward_resources):
         """See base class.
 
@@ -322,13 +330,13 @@ class ExecutableItem(ExecutableItemBase):
         After execution archives the output files.
         """
         if not super().execute(forward_resources, backward_resources):
-            return False
-        if self._tool_specification is None:
-            self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no Tool specification to execute")
-            return False
+            return ItemExecutionFinishState.FAILURE
+        # if self._tool_specification is None:
+        #     self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no specification to execute")
+        #     return ItemExecutionFinishState.FAILURE
         execution_dir = _execution_directory(self._work_dir, self._tool_specification)
         if execution_dir is None:
-            return False
+            return ItemExecutionFinishState.FAILURE
         if self._work_dir is not None:
             work_or_source = "work"
             # Make work directory anchor with path as tooltip
@@ -345,7 +353,7 @@ class ExecutableItem(ExecutableItemBase):
             )
             if not self._copy_program_files(execution_dir):
                 self._logger.msg_error.emit("Copying program files to work directory failed.")
-                return False
+                return ItemExecutionFinishState.FAILURE
         else:
             work_or_source = "source"
         # Make source directory anchor with path as tooltip
@@ -368,18 +376,18 @@ class ExecutableItem(ExecutableItemBase):
                 not_found = [k for k, v in file_paths.items() if v is None]
                 if not_found:
                     self._logger.msg_error.emit(f"Required file(s) <b>{', '.join(not_found)}</b> not found")
-                    return False
+                    return ItemExecutionFinishState.FAILURE
                 self._logger.msg.emit(f"*** Copying input files to {work_or_source} directory ***")
                 # Copy input files to ToolInstance work or source directory
                 if not self._copy_input_files(file_paths, execution_dir):
                     self._logger.msg_error.emit("Copying input files failed. Tool execution aborted.")
-                    return False
+                    return ItemExecutionFinishState.FAILURE
             if n_dirs > 0:
                 self._logger.msg.emit(f"*** Creating input subdirectories to {work_or_source} directory ***")
                 if not self._create_input_dirs(execution_dir):
                     # Creating directories failed -> abort
                     self._logger.msg_error.emit("Creating input subdirectories failed. Tool execution aborted.")
-                    return False
+                    return ItemExecutionFinishState.FAILURE
         if self._tool_specification.inputfiles_opt:
             self._logger.msg.emit("*** Searching for optional input files ***")
             optional_file_paths = self._find_optional_input_files(forward_resources)
@@ -389,7 +397,7 @@ class ExecutableItem(ExecutableItemBase):
             self._copy_optional_input_files(optional_file_copy_paths)
         if not self._create_output_dirs(execution_dir):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
-            return False
+            return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         # Find out SpineInterface version, and whether or not we can use DB server
         spine_iface_ver = get_spine_interface_version(self._tool_specification)
@@ -403,7 +411,7 @@ class ExecutableItem(ExecutableItemBase):
                 self._tool_instance.prepare(expanded_args)
             except RuntimeError as error:
                 self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
-                return False
+                return ItemExecutionFinishState.FAILURE
             self._logger.msg.emit(
                 f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***"
             )
@@ -418,7 +426,8 @@ class ExecutableItem(ExecutableItemBase):
                 "or any packages that depend on it, including SpineOpt.</p>"
                 f'<p>Please run `import Pkg; Pkg.update("SpineInterface")` from the julia prompt to update SpineInterface.</p>'
             )
-        return return_code == 0
+        # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
+        return ItemExecutionFinishState.SUCCESS if return_code == 0 else ItemExecutionFinishState.FAILURE
 
     def _find_input_files(self, resources):
         """

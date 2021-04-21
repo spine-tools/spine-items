@@ -20,6 +20,7 @@ import sys
 import unittest
 from tempfile import TemporaryDirectory
 from unittest import mock
+from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine import ExecutionDirection
 from spine_engine.execution_managers import StandardExecutionManager
 from spine_items.gimlet.executable_item import ExecutableItem
@@ -101,11 +102,17 @@ class TestGimletExecutable(unittest.TestCase):
     def test_execute(self):
         # Test executing command 'cd' in cmd.exe.
         executable = ExecutableItem("name", "cmd.exe", ["cd"], None, [], self._temp_dir.name, mock.MagicMock())
-        expected_result = sys.platform == "win32"
+        if sys.platform == "win32":
+            expected_result = ItemExecutionFinishState.SUCCESS
+        else:
+            expected_result = ItemExecutionFinishState.FAILURE
         self.assertEqual(expected_result, executable.execute([], []))
         # Test that bash shell execution works on Linux.
         executable = ExecutableItem("name", "bash", ["ls"], None, [], self._temp_dir.name, mock.MagicMock())
-        expected_result = sys.platform == "linux"
+        if sys.platform == "linux":
+            expected_result = ItemExecutionFinishState.SUCCESS
+        else:
+            expected_result = ItemExecutionFinishState.FAILURE
         self.assertEqual(expected_result, executable.execute([], []))
 
     def test_output_resources_backward(self):

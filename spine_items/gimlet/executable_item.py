@@ -25,6 +25,7 @@ from spine_engine.config import GIMLET_WORK_DIR_NAME
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.execution_managers import StandardExecutionManager
+from spine_engine.spine_engine import ItemExecutionFinishState
 from .item_info import ItemInfo
 from .utils import SHELLS
 from ..utils import (
@@ -101,19 +102,19 @@ class ExecutableItem(ExecutableItemBase):
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
-            return False
+            return ItemExecutionFinishState.FAILURE
         if not self._work_dir:
             self._logger.msg_warning.emit("Work directory not set.")
-            return False
+            return ItemExecutionFinishState.FAILURE
         if not self.cmd_list:
             self._logger.msg_warning.emit("No command to execute.")
-            return False
+            return ItemExecutionFinishState.FAILURE
         if sys.platform == "win32" and self.shell_name == "bash":
             self._logger.msg_warning.emit("Sorry, Bash shell is not supported on Windows.")
-            return False
+            return ItemExecutionFinishState.FAILURE
         if sys.platform != "win32" and (self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
-            return False
+            return ItemExecutionFinishState.FAILURE
         with labelled_resource_args(forward_resources + backward_resources) as labelled_args:
             cmd_list = expand_cmd_line_args(self.cmd_list, labelled_args, self._logger)
         if not self.shell_name or self.shell_name == "bash":
@@ -127,7 +128,7 @@ class ExecutableItem(ExecutableItemBase):
                 shell_prgm = "powershell.exe"
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
-                return False
+                return ItemExecutionFinishState.FAILURE
             self._exec_mngr = StandardExecutionManager(self._logger, shell_prgm, *cmd_list, workdir=self._work_dir)
         # Copy selected files to work_dir
         selected_files = self._selected_files.copy()
@@ -137,7 +138,7 @@ class ExecutableItem(ExecutableItemBase):
             if filepath is not None:
                 selected_files[k] = filepath
         if not self._copy_files(selected_files, self._work_dir):
-            return False
+            return ItemExecutionFinishState.FAILURE
         # Make work directory anchor with path as tooltip
         work_anchor = (
             "<a style='color:#99CCFF;' title='"
@@ -148,10 +149,11 @@ class ExecutableItem(ExecutableItemBase):
         )
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
         ret = self._exec_mngr.run_until_complete()
+        finish_state = ItemExecutionFinishState.SUCCESS if ret == 0 else ItemExecutionFinishState.FAILURE
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = forward_resources.copy()
         self._exec_mngr = None
-        return ret == 0
+        return finish_state
 
     def _output_resources_forward(self):
         """Returns output resources for forward execution.

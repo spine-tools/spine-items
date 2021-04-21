@@ -20,8 +20,9 @@ from pathlib import Path
 from spinedb_api.spine_io.exporters import gdx
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
+from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_items.utils import Database
-from ..executable_item_base import ExporterExecutableItemBase
+from ..exporter_executable_item_base import ExporterExecutableItemBase
 from .do_work import do_work
 from .item_info import ItemInfo
 from .settings_pack import SettingsPack
@@ -53,15 +54,15 @@ class ExecutableItem(ExporterExecutableItemBase):
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
-            return False
+            return ItemExecutionFinishState.FAILURE
         if self._settings_pack.settings is None:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")
-            return True
+            return ItemExecutionFinishState.SKIPPED
         database_urls = [r.url for r in forward_resources if r.type_ == "database"]
         gams_system_directory = self._resolve_gams_system_directory()
         if gams_system_directory is None:
             self._logger.msg_error.emit(f"<b>{self.name}</b>: Cannot proceed. No GAMS installation found.")
-            return False
+            return ItemExecutionFinishState.FAILURE
         databases, self._forks = self._databases_and_forks(database_urls)
         self._process = ReturningProcess(
             target=do_work,
@@ -77,7 +78,6 @@ class ExecutableItem(ExporterExecutableItemBase):
             ),
         )
         result = self._process.run_until_complete()
-        success = result[0]
         # result contains only the success flag if execution was forcibly stopped.
         if len(result) > 1:
             self._result_files = result[1]
@@ -85,7 +85,7 @@ class ExecutableItem(ExporterExecutableItemBase):
             with open(Path(self._data_dir, file_name), "w") as manifest:
                 dump(self._result_files, manifest)
         self._process = None
-        return success
+        return ItemExecutionFinishState.SUCCESS if result[0] else ItemExecutionFinishState.FAILURE
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):

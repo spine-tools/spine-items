@@ -16,6 +16,7 @@ Contains Data transformer's executable item as well as support utilities.
 :date:    2.10.2020
 """
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.spine_engine import ItemExecutionFinishState
 from .filter_config_path import filter_config_path
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
@@ -47,9 +48,9 @@ class ExecutableItem(ExecutableItemBase):
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
-            return False
+            return ItemExecutionFinishState.FAILURE
         self._db_resources = [r for r in forward_resources if r.type_ == "database"]
-        return True
+        return ItemExecutionFinishState.SUCCESS
 
     # pylint: disable=no-self-use
     def skip_execution(self, forward_resources, backward_resources):

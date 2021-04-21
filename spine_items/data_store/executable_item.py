@@ -16,9 +16,11 @@ Contains Data Store's executable item as well as support utilities.
 :date:   1.4.2020
 """
 
+import os
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
+from spine_engine.spine_engine import ItemExecutionFinishState
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url
 from .do_work import do_work
@@ -67,19 +69,33 @@ class ExecutableItem(ExecutableItemBase):
     def _urls_from_resources(resources):
         return [r.url for r in resources if r.type_ == "database"]
 
+    def ready_to_execute(self):
+        """See base class.
+
+        Returns:
+            bool: False when url is invalid, True otherwise
+        """
+        # TODO: Should return False when db .sqlite file is empty (0 kB)
+        # TODO: Should return False when db revision is outdated
+        if not self._url:  # _url is None if convert_to_sqlalchemy() fails in from_dict()
+            return False
+        return True
+
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
-            return False
+            return ItemExecutionFinishState.FAILURE
         from_urls = self._urls_from_resources(forward_resources)
         if not from_urls:
-            return True
+            return ItemExecutionFinishState.SUCCESS
         self._process = ReturningProcess(
             target=do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, str(self._url), self._logger)
         )
         return_value = self._process.run_until_complete()
         self._process = None
-        return return_value[0]
+        if return_value[0]:
+            return ItemExecutionFinishState.SUCCESS
+        return ItemExecutionFinishState.FAILURE
 
     def stop_execution(self):
         """Stops executing this DS."""

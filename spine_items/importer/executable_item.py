@@ -26,6 +26,7 @@ from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnect
 from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.returning_process import ReturningProcess
+from spine_engine.spine_engine import ItemExecutionFinishState
 from .item_info import ItemInfo
 from .do_work import do_work
 from ..utils import labelled_resource_filepaths
@@ -65,9 +66,10 @@ class ExecutableItem(ExecutableItemBase):
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
-            return False
+            return ItemExecutionFinishState.FAILURE
         if not self._mapping:
-            return True
+            self._logger.msg_warning.emit(f"<b>{self.name}</b>: No mappings configured. Skipping.")
+            return ItemExecutionFinishState.SKIPPED
         labelled_filepaths = labelled_resource_filepaths(forward_resources)
         source_filepaths = list()
         for label in self._selected_files:
@@ -102,7 +104,7 @@ class ExecutableItem(ExecutableItemBase):
         )
         return_value = self._process.run_until_complete()
         self._process = None
-        return return_value[0]
+        return ItemExecutionFinishState.SUCCESS if return_value[0] else ItemExecutionFinishState.FAILURE
 
     def _gams_system_directory(self):
         """Returns GAMS system path or None if GAMS default is to be used."""
