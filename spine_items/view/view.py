@@ -43,7 +43,6 @@ class View(ProjectItem):
         self._references = dict()
         self.reference_model = QStandardItemModel()  # References to databases
         self._spine_ref_icon = QIcon(QPixmap(":/icons/Spine_db_ref_icon.png"))
-        self._spine_db_editor = None
 
     @staticmethod
     def item_type():
@@ -89,8 +88,7 @@ class View(ProjectItem):
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
-        self._spine_db_editor = MultiSpineDBEditor(self._toolbox.db_mngr, db_url_codenames)
-        self._spine_db_editor.show()
+        MultiSpineDBEditor(self._toolbox.db_mngr, db_url_codenames).show()
 
     def populate_reference_list(self):
         """Populates reference list."""

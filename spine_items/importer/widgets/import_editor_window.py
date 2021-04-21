@@ -78,8 +78,9 @@ class ImportEditorWindow(QMainWindow):
         super().__init__(parent=toolbox, flags=Qt.Window)
         self._toolbox = toolbox
         self._original_spec_name = None if specification is None else specification.name
-        self._specification = specification
-        self._item = item
+        self.specification = specification
+        self.item = item
+        self._new_spec = specification
         self._app_settings = self._toolbox.qsettings()
         self.settings_group = "mappingPreviewWindow"
         self._undo_stack = QUndoStack(self)
@@ -90,7 +91,7 @@ class ImportEditorWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.takeCentralWidget()
-        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
+        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._new_spec, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
         self._import_sources = None
@@ -106,8 +107,7 @@ class ImportEditorWindow(QMainWindow):
         self._size = None
         self.apply_classic_ui_style()
         self.restore_ui()
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowTitle("Import Editor[*]")
+        self.setWindowTitle(specification.name if specification else "")
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self._ui.actionLoad_file.triggered.connect(self._show_open_file_dialog)
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
@@ -139,11 +139,12 @@ class ImportEditorWindow(QMainWindow):
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
         self._spec_toolbar.save_action.setEnabled(not clean)
+        self.windowTitleChanged.emit(self.windowTitle())
 
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):
         filter_ = ";;".join([conn.FILE_EXTENSIONS for conn in _CONNECTOR_NAME_TO_CLASS.values()])
-        key = f"selectInputDataFileFor{self._specification.name if self._specification else None}"
+        key = f"selectInputDataFileFor{self._new_spec.name if self._new_spec else None}"
         filepath, _ = get_open_file_name_in_last_dir(
             self._toolbox.qsettings(),
             key,
@@ -161,15 +162,15 @@ class ImportEditorWindow(QMainWindow):
     @Slot(bool)
     def _switch_connector(self, _=False):
         filepath = self._connection_manager.source
-        if self._specification:
-            self._specification.mapping.pop("source_type", None)
+        if self._new_spec:
+            self._new_spec.mapping.pop("source_type", None)
         self._memoized_connectors.pop(filepath, None)
         self.start_ui(filepath)
 
     def _get_connector_from_mapping(self, filepath):
-        if not self._specification:
+        if not self._new_spec:
             return None
-        mapping = self._specification.mapping
+        mapping = self._new_spec.mapping
         source_type = mapping.get("source_type")
         if source_type is None:
             return None
@@ -196,7 +197,7 @@ class ImportEditorWindow(QMainWindow):
         connector_settings = {"gams_directory": _gams_system_directory(self._toolbox)}
         self._connection_manager = ConnectionManager(connector, connector_settings)
         self._connection_manager.source = filepath
-        mapping = self._specification.mapping if self._specification else {}
+        mapping = self._new_spec.mapping if self._new_spec else {}
         self._import_sources = ImportSources(self, mapping)
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
         self._connection_manager.error.connect(self.show_error)
@@ -261,8 +262,8 @@ class ImportEditorWindow(QMainWindow):
         return connector
 
     def _call_add_specification(self):
-        update_existing = self._specification.name == self._original_spec_name
-        return self._toolbox.add_specification(self._specification, update_existing, self)
+        update_existing = self._new_spec.name == self._original_spec_name
+        return self._toolbox.add_specification(self._new_spec, update_existing, self)
 
     @Slot(str)
     def show_error(self, message):
@@ -358,12 +359,14 @@ class ImportEditorWindow(QMainWindow):
         mapping = self._import_sources.get_mapping_dict() if self._import_sources else {}
         description = self._spec_toolbar.description()
         spec_dict = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
-        self._specification = self._toolbox.load_specification(spec_dict)
+        self._new_spec = self._toolbox.load_specification(spec_dict)
         if not self._call_add_specification():
             return False
         self._undo_stack.setClean()
-        if self._item:
-            self._item.set_specification(self._specification)
+        if self.item:
+            self.item.set_specification(self._new_spec)
+        self.specification = self._new_spec
+        self.setWindowTitle(self.specification.name)
         return True
 
     def restore_ui(self):

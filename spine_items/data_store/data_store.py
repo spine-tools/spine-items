@@ -58,7 +58,6 @@ class DataStore(ProjectItem):
             url = dict()
         self._url = self.parse_url(url)
         self._additional_resource_metadata = None
-        self._spine_db_editor = None
         self._multi_db_editors_open = {}
         self._open_url_menu = QMenu("Open URL in Spine DB editor", self._toolbox)
         self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
@@ -358,8 +357,7 @@ class DataStore(ProjectItem):
     def _open_url_in_new_db_editor(self, checked=False):
         sa_url = self.sql_alchemy_url()
         if sa_url is not None:
-            self._spine_db_editor = MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name})
-            self._spine_db_editor.show()
+            MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name}).show()
 
     def _open_url_in_existing_db_editor(self, db_editor):
         sa_url = self.sql_alchemy_url()

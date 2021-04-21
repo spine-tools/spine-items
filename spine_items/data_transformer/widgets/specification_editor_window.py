@@ -48,13 +48,13 @@ class SpecificationEditorWindow(QMainWindow):
         from ..ui.specification_editor_widget import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent=toolbox)
-        self._item = item
-        self.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.specification = specification
+        self.item = item
         self._toolbox = toolbox
         self._original_spec_name = None if specification is None else specification.name
         if specification is None:
             specification = DataTransformerSpecification(name="")
-        self._specification = specification
+        self._new_spec = specification
         self._app_settings = self._toolbox.qsettings()
         self.settings_group = "dataTransformerSpecificationWindow"
         self._urls = dict()
@@ -64,17 +64,14 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.setupUi(self)
         self._undo_stack = QUndoStack(self)
         self._change_notifier = ChangeNotifier(self, self._undo_stack, self._app_settings, "appSettings/specShowUndo")
-        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
+        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._new_spec, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
         self._populate_main_menu()
         self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
-        title = "Data transformer specification editor[*]"
-        if item is not None:
-            title = title + f"    -- {item.name} --"
-        self.setWindowTitle(title)
+        self.setWindowTitle(specification.name if specification else "")
         self._ui.filter_combo_box.addItems(_FILTER_NAMES)
-        if self._specification.settings is not None:
-            filter_name = _CLASSES_TO_DISPLAY_NAMES[type(self._specification.settings)]
+        if self._new_spec.settings is not None:
+            filter_name = _CLASSES_TO_DISPLAY_NAMES[type(self._new_spec.settings)]
         else:
             filter_name = ""
         self._set_current_filter_name(filter_name)
@@ -103,6 +100,7 @@ class SpecificationEditorWindow(QMainWindow):
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
         self._spec_toolbar.save_action.setEnabled(not clean)
+        self.windowTitleChanged.emit(self.windowTitle())
 
     @Slot(str)
     def _change_filter_widget(self, filter_name):
@@ -130,7 +128,7 @@ class SpecificationEditorWindow(QMainWindow):
         widget = self._filter_widgets.get(filter_name)
         if widget is None:
             widget = dict(zip(_FILTER_NAMES, (EntityClassRenamingWidget, ParameterRenamingWidget)))[filter_name](
-                self._undo_stack, self._specification.settings
+                self._undo_stack, self._new_spec.settings
             )
             self._filter_widgets[filter_name] = widget
         layout = self._ui.filter_widget.layout()
@@ -156,12 +154,14 @@ class SpecificationEditorWindow(QMainWindow):
         else:
             filter_widget = self._filter_widgets[filter_name]
             filter_settings = filter_widget.settings()
-        self._specification = DataTransformerSpecification(specification_name, filter_settings, description)
+        self._new_spec = DataTransformerSpecification(specification_name, filter_settings, description)
         if not self._call_add_specification():
             return False
         self._undo_stack.setClean()
-        if self._item:
-            self._item.set_specification(self._specification)
+        if self.item:
+            self.item.set_specification(self._new_spec)
+        self.specification = self._new_spec
+        self.setWindowTitle(self.specification.name)
         return True
 
     def _call_add_specification(self):
@@ -170,8 +170,8 @@ class SpecificationEditorWindow(QMainWindow):
         Returns:
             bool: True if the operation was successful, False otherwise
         """
-        update_existing = self._specification.name == self._original_spec_name
-        return self._toolbox.add_specification(self._specification, update_existing, self)
+        update_existing = self._new_spec.name == self._original_spec_name
+        return self._toolbox.add_specification(self._new_spec, update_existing, self)
 
     def closeEvent(self, event=None):
         """Handles close window.

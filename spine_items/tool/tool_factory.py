@@ -27,9 +27,6 @@ from .widgets.tool_properties_widget import ToolPropertiesWidget
 from .widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from .widgets.add_tool_widget import AddToolWidget
 from .widgets.custom_menus import ToolSpecificationMenu
-from ..widgets import SpecEditorManager
-
-_tool_spec_editor_manager = SpecEditorManager(ToolSpecificationEditorWindow)
 
 
 class ToolFactory(ProjectItemFactory):
@@ -66,9 +63,8 @@ class ToolFactory(ProjectItemFactory):
         return ToolSpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
-        """See base class."""
-        _tool_spec_editor_manager.create_editor(toolbox, specification, item)
+    def make_specification_editor(toolbox, specification=None, item=None, **kwargs):
+        return ToolSpecificationEditorWindow(toolbox, specification, item, **kwargs)
 
     @staticmethod
     def repair_specification(toolbox, specification):

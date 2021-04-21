@@ -46,14 +46,15 @@ class ToolSpecificationEditorWindow(QMainWindow):
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent=toolbox)  # Inherit stylesheet from ToolboxUI
-        self._item = item
+        self.specification = specification
+        self.item = item
         self._new_spec = None
         self._app_settings = toolbox.qsettings()
         self.settings_group = "toolSpecificationEditorWindow"
         # Setup UI from Qt Designer file
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setWindowTitle("Tool Specification Editor[*]")
+        self.setWindowTitle(specification.name if specification else "")
         # Restore ui
         self._restore_dock_widgets()
         restore_ui(self, self._app_settings, self.settings_group)
@@ -327,6 +328,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
         self._spec_toolbar.save_action.setEnabled(not clean)
+        self.windowTitleChanged.emit(self.windowTitle())
 
     @Slot(int)
     def _push_change_tooltype_command(self, index):
@@ -843,8 +845,10 @@ class ToolSpecificationEditorWindow(QMainWindow):
         if not self.call_add_tool_specification():
             return False
         self._undo_stack.setClean()
-        if self._item:
-            self._item.set_specification(self._new_spec)
+        if self.item:
+            self.item.set_specification(self._new_spec)
+        self.specification = self._new_spec
+        self.setWindowTitle(self.specification.name)
         return True
 
     def _make_tool_specification(self, new_spec_dict):

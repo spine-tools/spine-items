@@ -24,10 +24,6 @@ from .data_transformer_icon import DataTransformerIcon
 from .widgets.data_transformer_properties_widget import DataTransformerPropertiesWidget
 from .widgets.specification_editor_window import SpecificationEditorWindow
 from .widgets.add_data_transformer_widget import AddDataTransformerWidget
-from ..widgets import SpecEditorManager
-
-
-_dt_spec_editor_manager = SpecEditorManager(SpecificationEditorWindow)
 
 
 class DataTransformerFactory(ProjectItemFactory):
@@ -71,11 +67,6 @@ class DataTransformerFactory(ProjectItemFactory):
         return ItemSpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
+    def make_specification_editor(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
-        _dt_spec_editor_manager.create_editor(toolbox, specification, item, **kwargs)
-
-    @staticmethod
-    def tear_down():
-        """Closes all preview widgets."""
-        _dt_spec_editor_manager.close_all_editors()
+        return SpecificationEditorWindow(toolbox, specification, item, **kwargs)

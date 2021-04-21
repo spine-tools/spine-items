@@ -24,10 +24,6 @@ from .importer_icon import ImporterIcon
 from .widgets.importer_properties_widget import ImporterPropertiesWidget
 from .widgets.add_importer_widget import AddImporterWidget
 from .widgets.custom_menus import SpecificationMenu
-from ..widgets import SpecEditorManager
-
-
-_import_editor_manager = SpecEditorManager(ImportEditorWindow)
 
 
 class ImporterFactory(ProjectItemFactory):
@@ -64,18 +60,7 @@ class ImporterFactory(ProjectItemFactory):
         return SpecificationMenu(parent, index)
 
     @staticmethod
-    def show_specification_widget(toolbox, specification=None, item=None, **kwargs):
+    def make_specification_editor(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
         filepath = kwargs.get("filepath")
-        _import_editor_manager.create_editor(toolbox, specification, item, filepath)
-        msg = "Opening Import editor"
-        if specification:
-            msg += f" for specification {specification.name}"
-            if filepath is not None:
-                msg += f" with working file {filepath}"
-        toolbox.msg.emit(msg)
-
-    @staticmethod
-    def tear_down():
-        """Closes all preview widgets."""
-        _import_editor_manager.close_all_editors()
+        return ImportEditorWindow(toolbox, specification, item, filepath)

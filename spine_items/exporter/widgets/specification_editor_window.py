@@ -128,12 +128,11 @@ class SpecificationEditorWindow(QMainWindow):
             url_model (QAbstractListModel): model that provides URLs of connected databases
         """
         super().__init__(parent=toolbox)
-        self.setAttribute(Qt.WA_DeleteOnClose, True)
-
+        self.specification = specification
+        self.item = item
         self._toolbox = toolbox
         self._original_spec_name = None if specification is None else specification.name
-        self._specification = deepcopy(specification) if specification is not None else Specification()
-        self._item = item
+        self._new_spec = deepcopy(specification) if specification is not None else Specification()
         self._undo_stack = QUndoStack(self)
         self._change_notifier = ChangeNotifier(self, self._undo_stack, toolbox.qsettings(), "appSettings/specShowUndo")
         self._undo_action = self._undo_stack.createUndoAction(self)
@@ -143,7 +142,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._redo_action.setShortcut(QKeySequence.Redo)
         self.addAction(self._redo_action)
         self._activated_mapping_name = None
-        self._mappings_table_model = MappingsTableModel(self._specification.mapping_specifications(), self)
+        self._mappings_table_model = MappingsTableModel(self._new_spec.mapping_specifications(), self)
         self._mappings_table_model.dataChanged.connect(self._update_ui_after_mapping_change)
         self._mappings_table_model.rename_requested.connect(self._rename_mapping)
         self._mappings_table_model.mapping_enabled_state_change_requested.connect(self._set_mapping_enabled)
@@ -163,16 +162,16 @@ class SpecificationEditorWindow(QMainWindow):
 
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
-        self.setWindowTitle("Exporter specification editor[*]" + (f"   -- {item.name} --" if item is not None else ""))
+        self.setWindowTitle(specification.name if specification else "")
         central_widget = self.takeCentralWidget()
         central_widget.deleteLater()
-        self._specification_toolbar = SpecNameDescriptionToolbar(self, self._specification, self._undo_stack)
+        self._specification_toolbar = SpecNameDescriptionToolbar(self, self._new_spec, self._undo_stack)
         self.addToolBar(Qt.TopToolBarArea, self._specification_toolbar)
         self._populate_toolbar_menu()
         self._apply_default_dock_layout()
         restore_ui(self, self._toolbox.qsettings(), self._APP_SETTINGS_GROUP)
         self._ui.export_format_combo_box.addItems([format.value for format in OutputFormat])
-        self._ui.export_format_combo_box.setCurrentText(self._specification.output_format.value)
+        self._ui.export_format_combo_box.setCurrentText(self._new_spec.output_format.value)
         self._ui.export_format_combo_box.currentTextChanged.connect(self._change_format)
         self._add_mapping_action = QAction("Add Mapping", self)
         self._add_mapping_action.triggered.connect(self._new_mapping)
@@ -241,6 +240,7 @@ class SpecificationEditorWindow(QMainWindow):
     def _update_window_modified(self, clean):
         self.setWindowModified(not clean)
         self._specification_toolbar.save_action.setEnabled(not clean)
+        self.windowTitleChanged.emit(self.windowTitle())
 
     def _restore_dock_widgets(self):
         """Docks all floating and or hidden QDockWidgets back to the window."""
@@ -296,7 +296,7 @@ class SpecificationEditorWindow(QMainWindow):
             current (str): new export format
         """
         output_format = OutputFormat(current)
-        self._undo_stack.push(SetExportFormat(self, output_format, self._specification.output_format))
+        self._undo_stack.push(SetExportFormat(self, output_format, self._new_spec.output_format))
 
     def set_export_format_silently(self, export_format):
         """
@@ -305,7 +305,7 @@ class SpecificationEditorWindow(QMainWindow):
         Args:
             export_format (ExportFormat): new format
         """
-        self._specification.output_format = export_format
+        self._new_spec.output_format = export_format
         if export_format.value != self._ui.export_format_combo_box.currentText():
             self._ui.export_format_combo_box.currentTextChanged.disconnect(self._change_format)
             self._ui.export_format_combo_box.setCurrentText(export_format.value)
@@ -810,14 +810,16 @@ class SpecificationEditorWindow(QMainWindow):
             QMessageBox.information(self, "Specification name missing", "Please enter a name for the specification.")
             return False
         description = self._specification_toolbar.description()
-        self._specification.name = specification_name
-        self._specification.description = description
-        update_existing = self._specification.name == self._original_spec_name
-        if not self._toolbox.add_specification(self._specification, update_existing, self):
+        self._new_spec.name = specification_name
+        self._new_spec.description = description
+        update_existing = self._new_spec.name == self._original_spec_name
+        if not self._toolbox.add_specification(self._new_spec, update_existing, self):
             return False
         self._undo_stack.setClean()
-        if self._item:
-            self._item.set_specification(self._specification)
+        if self.item:
+            self.item.set_specification(self._new_spec)
+        self.specification = self._new_spec
+        self.setWindowTitle(self.specification.name)
         return True
 
     def _populate_toolbar_menu(self):
