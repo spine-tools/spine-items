@@ -20,8 +20,7 @@ from pygments.styles import get_style_by_name
 from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 from pygments.token import Token
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QPlainTextEdit, QPlainTextDocumentLayout, QAction
+from PySide2.QtWidgets import QWidget, QPlainTextEdit, QPlainTextDocumentLayout
 from PySide2.QtGui import (
     QSyntaxHighlighter,
     QTextCharFormat,
@@ -30,8 +29,9 @@ from PySide2.QtGui import (
     QFontMetrics,
     QFontDatabase,
     QFont,
-    QKeySequence,
+    QPainter,
 )
+from PySide2.QtCore import QSize, Slot, QRect, Qt
 
 
 class CustomSyntaxHighlighter(QSyntaxHighlighter):
@@ -71,12 +71,19 @@ class MainProgramTextEdit(QPlainTextEdit):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self._highlighter = CustomSyntaxHighlighter(self)
-        style = get_style_by_name("monokai")
-        self._highlighter.set_style(style)
+        self._style = get_style_by_name("monokai")
+        self._highlighter.set_style(self._style)
+        self._line_number_area = LineNumberArea(self)
+        self._right_margin = 16
         font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
         self.setFont(font)
-        foreground_color = style.styles[Token.Text]
-        self.setStyleSheet(f"QPlainTextEdit {{background-color: {style.background_color}; color: {foreground_color};}}")
+        foreground_color = self._style.styles[Token.Text]
+        self.setStyleSheet(
+            f"QPlainTextEdit {{background-color: {self._style.background_color}; color: {foreground_color};}}"
+        )
+        self.blockCountChanged.connect(self._update_line_number_area_width)
+        self.updateRequest.connect(self._update_line_number_area)
+        self._update_line_number_area_width()
 
     def insertFromMimeData(self, source):
         if source.hasText():
@@ -96,3 +103,71 @@ class MainProgramTextEdit(QPlainTextEdit):
         self._highlighter.setDocument(doc)
         doc.setDefaultFont(self.font())
         self.setTabStopDistance(QFontMetrics(self.font()).horizontalAdvance(4 * " "))
+
+    def line_number_area_width(self):
+        digits = 1
+        m = max(1, self.blockCount())
+        while m > 10:
+            m /= 10
+            digits += 1
+        return self._right_margin / 2 + self.fontMetrics().horizontalAdvance("9") * digits + self._right_margin
+
+    @Slot(int)
+    def _update_line_number_area_width(self, _new_block_count=0):
+        self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
+
+    @Slot(QRect, int)
+    def _update_line_number_area(self, rect, dy):
+        if dy:
+            self._line_number_area.scroll(0, dy)
+        else:
+            self._line_number_area.update(0, rect.y(), self._line_number_area.width(), rect.height())
+        if rect.contains(self.viewport().rect()):
+            self._update_line_number_area_width()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        rect = self.contentsRect()
+        self._line_number_area.setGeometry(QRect(rect.left(), rect.top(), self.line_number_area_width(), rect.height()))
+
+    def line_number_area_paint_event(self, ev):
+        foreground_color = QColor(self._style.styles[Token.Text]).darker()
+        painter = QPainter(self._line_number_area)
+        painter.setFont(self.font())
+        block = self.firstVisibleBlock()
+        block_number = block.blockNumber()
+        top = round(self.blockBoundingGeometry(block).translated(self.contentOffset()).top())
+        bottom = top + round(self.blockBoundingRect(block).height())
+        while block.isValid() and top <= ev.rect().bottom():
+            if block.isVisible() and bottom >= ev.rect().top():
+                if block == self.textCursor().block():
+                    painter.fillRect(
+                        0, top, self._line_number_area.width(), self.fontMetrics().height(), foreground_color.darker()
+                    )
+                number = str(block_number + 1)
+                painter.setPen(foreground_color)
+                painter.drawText(
+                    0,
+                    top,
+                    self._line_number_area.width() - self._right_margin,
+                    self.fontMetrics().height(),
+                    Qt.AlignRight,
+                    number,
+                )
+            block = block.next()
+            top = bottom
+            bottom = top + round(self.blockBoundingRect(block).height())
+            block_number += 1
+        painter.end()
+
+
+class LineNumberArea(QWidget):
+    def __init__(self, editor):
+        super().__init__(editor)
+        self._editor = editor
+
+    def sizeHint(self):
+        return QSize(self._editor.line_number_area_width(), 0)
+
+    def paintEvent(self, ev):
+        self._editor.line_number_area_paint_event(ev)
