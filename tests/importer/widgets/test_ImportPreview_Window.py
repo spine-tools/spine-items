@@ -37,7 +37,7 @@ class TestImportEditorWindow(unittest.TestCase):
         toolbox.qsettings = mock.MagicMock(return_value=QSettings())
         widget = ImportEditorWindow(toolbox, spec)
         widget._app_settings = mock.NonCallableMagicMock()
-        widget.closeEvent()
+        widget.close()
         widget._app_settings.beginGroup.assert_called_once_with("mappingPreviewWindow")
         widget._app_settings.endGroup.assert_called_once_with()
         qsettings_save_calls = widget._app_settings.setValue.call_args_list

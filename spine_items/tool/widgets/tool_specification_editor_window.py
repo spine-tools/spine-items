@@ -44,6 +44,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             item (ProjectItem, optional): Sets the spec for this item if accepted
         """
         super().__init__(toolbox, specification, item)  # Inherit stylesheet from ToolboxUI
+        self._project = self._toolbox.project()
         # Customize text edit main program
         self._ui.textEdit_program.setEnabled(False)
         self._current_programfile_path = None
