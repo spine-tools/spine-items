@@ -277,6 +277,25 @@ class SetMappingProperty(QUndoCommand):
         self._setter(self._previous_value, self._row, self._mapping_name)
 
 
+class CompactMapping(QUndoCommand):
+    def __init__(self, model, mapping_name):
+        """
+        Args:
+            model (MappingEditorTableModel): editor model
+            mapping_name (str): mapping's name
+        """
+        super().__init__("compact mapping")
+        self._model = model
+        self._mapping_name = mapping_name
+        self._previous_positions = self._model.positions()
+
+    def redo(self):
+        self._model.compact()
+
+    def undo(self):
+        self._model.set_positions(self._previous_positions, self._mapping_name)
+
+
 class SetExportFormat(QUndoCommand):
     def __init__(self, editor, export_format, previous_format):
         """

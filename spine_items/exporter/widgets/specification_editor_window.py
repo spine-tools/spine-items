@@ -53,6 +53,7 @@ from ...widgets import prompt_to_save_changes, restore_ui, save_ui, SpecNameDesc
 from .preview_updater import PreviewUpdater
 from ..commands import (
     ChangeWriteOrder,
+    CompactMapping,
     DisableAllMappings,
     EnableAllMappings,
     NewMapping,
@@ -205,6 +206,9 @@ class SpecificationEditorWindow(QMainWindow):
         self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
         self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
+        self._compact_mapping_action = QAction("Compact mapping", self)
+        self._compact_mapping_action.triggered.connect(self._compact_mapping)
+        self._ui.compact_button.clicked.connect(self._compact_mapping_action.trigger)
         self._ui.mapping_table_view.setModel(self._mapping_editor_model)
         self._position_edit_delegate = PositionEditDelegate(self)
         self._ui.mapping_table_view.setItemDelegateForColumn(1, self._position_edit_delegate)
@@ -330,6 +334,7 @@ class SpecificationEditorWindow(QMainWindow):
             return
         if not current.isValid():
             self._mapping_editor_model.set_mapping("", None)
+            self._ui.mapping_spec_contents.setEnabled(False)
             return
         self.current_mapping_about_to_change.emit()
         current = self._sort_mappings_table_model.mapToSource(current)
@@ -361,6 +366,7 @@ class SpecificationEditorWindow(QMainWindow):
         self._mapping_editor_model.set_mapping(mapping_name, root_mapping)
         self._enable_relationship_controls()
         self._enable_parameter_controls()
+        self._ui.mapping_spec_contents.setEnabled(True)
         self.current_mapping_changed.emit()
 
     def _expect_current_mapping_change(self, expect_change):
@@ -783,6 +789,15 @@ class SpecificationEditorWindow(QMainWindow):
             self._ui.parameter_type_combo_box.setEnabled(False)
             self._ui.parameter_dimensions_spin_box.setEnabled(False)
 
+    @Slot()
+    def _compact_mapping(self):
+        """Pushes a CompactMapping command to the undo stack."""
+        if not self._mapping_editor_model.can_compact():
+            return
+        row = self._ui.mappings_table.selectionModel().currentIndex().row()
+        mapping_name = self._sort_mappings_table_model.mapToSource(self._sort_mappings_table_model.index(row, 0)).data()
+        self._undo_stack.push(CompactMapping(self._mapping_editor_model, mapping_name))
+
     def _save(self):
         """
         Saves the specification.
@@ -822,6 +837,7 @@ class SpecificationEditorWindow(QMainWindow):
         if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
             event.ignore()
             return
+        self._undo_stack.cleanChanged.disconnect(self._update_window_modified)
         self._preview_updater.tear_down()
         save_ui(self, self._toolbox.qsettings(), self._APP_SETTINGS_GROUP)
         event.accept()

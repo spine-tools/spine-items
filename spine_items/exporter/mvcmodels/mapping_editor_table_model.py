@@ -254,6 +254,14 @@ class MappingEditorTableModel(QAbstractTableModel):
         self._undo_stack.push(command)
         return True
 
+    def positions(self):
+        """Returns mapping positions.
+
+        Returns:
+            list: positions
+        """
+        return [m.position for m in self._mappings]
+
     def set_positions(self, positions, mapping_name):
         """
         Sets mapping position for given row.
@@ -340,6 +348,46 @@ class MappingEditorTableModel(QAbstractTableModel):
         """
         return any(is_pivoted(m.position) for m in self._mappings[: _value_row(self._mappings)])
 
+    def can_compact(self):
+        """Checks if the mapping can be compacted.
+
+        Returns:
+            bool: True if the mapping can be compacted, False otherwise
+        """
+        regular_positions = sorted([m.position for m in self._mappings if is_regular(m.position)])
+        for i, position in enumerate(regular_positions):
+            if i != position:
+                return True
+        pivoted_positions = sorted([m.position for m in self._mappings if is_pivoted(m.position)])
+        for i, position in enumerate(pivoted_positions):
+            if i != position:
+                return True
+        return False
+
+    def compact(self):
+        """Compacts the mapping."""
+        if self._is_non_leaf_pivoted():
+            value_row = _value_row(self._mappings)
+            pivoted_mappings = [
+                (m.position, m) for row, m in enumerate(self._mappings) if is_pivoted(m.position) and row != value_row
+            ]
+            pivoted_mappings.sort(reverse=True, key=lambda x: x[0])
+            for row, item in enumerate(pivoted_mappings):
+                item[1].position = -(row + 1)
+            regular_mappings = [
+                (m.position, m) for row, m in enumerate(self._mappings) if is_regular(m.position) and row != value_row
+            ]
+            last_column = max(regular_mappings, key=lambda x: x[0], default=-1)[0]
+            regular_mappings.append((last_column + 1, self._mappings[value_row]))
+        else:
+            regular_mappings = [(m.position, m) for m in self._mappings if is_regular(m.position)]
+        regular_mappings.sort(key=lambda x: x[0])
+        for column, item in enumerate(regular_mappings):
+            item[1].position = column
+        top_left = self.index(0, 1)
+        bottom_right = self.index(self.rowCount() - 1, 1)
+        self.dataChanged.emit(top_left, bottom_right, Qt.DisplayRole)
+
 
 _names = {
     AlternativeDescriptionMapping: "Alternatives description",
@@ -392,26 +440,26 @@ def _value_row(mappings):
     return len(mappings) - 1 - len(list(takewhile(lambda m: m.position == Position.hidden, reversed(mappings))))
 
 
-def _propose_toggled_pivot(mappings, target_index):
+def _propose_toggled_pivot(mappings, toggled_index):
     """Proposes new positions after toggling a mapping's pivoted status.
 
     Args:
         mappings (list of Mapping): flattened mappings
-        target_index (int): target mapping's index
+        toggled_index (int): toggled index in mappings
 
     Returns:
         list of Position: positions after toggling
     """
-    previous_position = mappings[target_index].position
+    positions = [m.position for m in mappings]
+    previous_position = positions[toggled_index]
     if previous_position in (Position.hidden, Position.table_name, Position.header):
         previous_position = 0
     new_position = -previous_position - 1
-    positions = [m.position for m in mappings]
     if new_position < 0:
-        positions[target_index] = new_position
+        positions[toggled_index] = new_position
         _remove_column(positions, previous_position)
     else:
-        _insert_into_position(positions, target_index, new_position)
+        _insert_into_position(positions, toggled_index, new_position)
     return positions
 
 

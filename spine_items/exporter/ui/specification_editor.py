@@ -201,6 +201,20 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.mapping_table_view)
 
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_5.addItem(self.horizontalSpacer)
+
+        self.compact_button = QPushButton(self.mapping_spec_contents)
+        self.compact_button.setObjectName(u"compact_button")
+
+        self.horizontalLayout_5.addWidget(self.compact_button)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_5)
+
         self.mapping_spec_dock.setWidget(self.mapping_spec_contents)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mapping_spec_dock)
         self.preview_tables_dock = QDockWidget(MainWindow)
@@ -403,6 +417,10 @@ class Ui_MainWindow(object):
         self.group_fn_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Data groping in pivot tables.", None))
 #endif // QT_CONFIG(tooltip)
         self.mapping_spec_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping specification", None))
+#if QT_CONFIG(tooltip)
+        self.compact_button.setToolTip(QCoreApplication.translate("MainWindow", u"Compact mapping by removing empty columns and rows.", None))
+#endif // QT_CONFIG(tooltip)
+        self.compact_button.setText(QCoreApplication.translate("MainWindow", u"Compact", None))
         self.preview_tables_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Preview tables", None))
         self.preview_contents_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Preview contents", None))
         self.export_options_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Export options", None))
