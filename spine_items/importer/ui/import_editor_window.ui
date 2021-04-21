@@ -29,34 +29,6 @@
    <bool>true</bool>
   </property>
   <widget class="QWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1197</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="file_menu">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="actionLoad_file"/>
-    <addaction name="actionSwitch_connector"/>
-    <addaction name="separator"/>
-    <addaction name="export_mappings_action"/>
-    <addaction name="import_mappings_action"/>
-    <addaction name="separator"/>
-   </widget>
-   <widget class="QMenu" name="edit_menu">
-    <property name="title">
-     <string>Edit</string>
-    </property>
-   </widget>
-   <addaction name="file_menu"/>
-   <addaction name="edit_menu"/>
-  </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="sizeGripEnabled">
     <bool>false</bool>

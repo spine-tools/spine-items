@@ -33,18 +33,18 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1108, 801)
+        MainWindow.resize(1146, 801)
         MainWindow.setDockNestingEnabled(True)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1108, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1146, 27))
         MainWindow.setMenuBar(self.menubar)
-        self.status_bar = QStatusBar(MainWindow)
-        self.status_bar.setObjectName(u"status_bar")
-        MainWindow.setStatusBar(self.status_bar)
+        self.statusbar = QStatusBar(MainWindow)
+        self.statusbar.setObjectName(u"statusbar")
+        MainWindow.setStatusBar(self.statusbar)
         self.mappings_dock = QDockWidget(MainWindow)
         self.mappings_dock.setObjectName(u"mappings_dock")
         self.dockWidgetContents = QWidget()
@@ -58,29 +58,23 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.add_mapping_button)
 
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
+
         self.remove_mapping_button = QPushButton(self.dockWidgetContents)
         self.remove_mapping_button.setObjectName(u"remove_mapping_button")
 
         self.horizontalLayout_2.addWidget(self.remove_mapping_button)
 
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_5)
+
         self.toggle_enabled_button = QPushButton(self.dockWidgetContents)
         self.toggle_enabled_button.setObjectName(u"toggle_enabled_button")
 
         self.horizontalLayout_2.addWidget(self.toggle_enabled_button)
-
-        self.write_earlier_button = QPushButton(self.dockWidgetContents)
-        self.write_earlier_button.setObjectName(u"write_earlier_button")
-
-        self.horizontalLayout_2.addWidget(self.write_earlier_button)
-
-        self.write_later_button = QPushButton(self.dockWidgetContents)
-        self.write_later_button.setObjectName(u"write_later_button")
-
-        self.horizontalLayout_2.addWidget(self.write_later_button)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
@@ -92,6 +86,25 @@ class Ui_MainWindow(object):
         self.mappings_table.verticalHeader().setVisible(False)
 
         self.verticalLayout.addWidget(self.mappings_table)
+
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.write_earlier_button = QPushButton(self.dockWidgetContents)
+        self.write_earlier_button.setObjectName(u"write_earlier_button")
+
+        self.horizontalLayout_6.addWidget(self.write_earlier_button)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_6.addItem(self.horizontalSpacer_4)
+
+        self.write_later_button = QPushButton(self.dockWidgetContents)
+        self.write_later_button.setObjectName(u"write_later_button")
+
+        self.horizontalLayout_6.addWidget(self.write_later_button)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_6)
 
         self.mappings_dock.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mappings_dock)
@@ -191,6 +204,7 @@ class Ui_MainWindow(object):
         self.mapping_spec_dock.setObjectName(u"mapping_spec_dock")
         self.mapping_spec_contents = QWidget()
         self.mapping_spec_contents.setObjectName(u"mapping_spec_contents")
+        self.mapping_spec_contents.setEnabled(False)
         self.verticalLayout_2 = QVBoxLayout(self.mapping_spec_contents)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.mapping_table_view = QTableView(self.mapping_spec_contents)

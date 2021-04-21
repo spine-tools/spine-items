@@ -20,21 +20,21 @@ is filled with all the information from the specification being edited.
 
 import os
 from copy import deepcopy
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QTextDocument, QFont
-from PySide2.QtWidgets import QMainWindow, QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QUndoStack, QLabel
+from PySide2.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
+from PySide2.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer
-from spinetoolbox.config import STATUSBAR_SS
 from spinetoolbox.helpers import busy_effect, open_url
-from spinetoolbox.widgets.notification import ChangeNotifier
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
+from spinetoolbox.project_item.specification_editor_window import (
+    SpecificationEditorWindowBase,
+    ChangeSpecPropertyCommand,
+)
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from ...widgets import SpecNameDescriptionToolbar, prompt_to_save_changes, save_ui, restore_ui
-from ...commands import ChangeSpecPropertyCommand
 from ..item_info import ItemInfo
 from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS
 
 
-class ToolSpecificationEditorWindow(QMainWindow):
+class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def __init__(self, toolbox, specification=None, item=None):
         """A widget to query user's preferences for a new tool specification.
 
@@ -43,34 +43,12 @@ class ToolSpecificationEditorWindow(QMainWindow):
             specification (ToolSpecification, optional): If given, the form is pre-filled with this specification
             item (ProjectItem, optional): Sets the spec for this item if accepted
         """
-        from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
-
-        super().__init__(parent=toolbox)  # Inherit stylesheet from ToolboxUI
-        self.specification = specification
-        self.item = item
-        self._new_spec = None
-        self._app_settings = toolbox.qsettings()
-        self.settings_group = "toolSpecificationEditorWindow"
-        # Setup UI from Qt Designer file
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-        self.setWindowTitle(specification.name if specification else "")
-        # Restore ui
-        self._restore_dock_widgets()
-        restore_ui(self, self._app_settings, self.settings_group)
-        # Setup undo stack and change notifier
-        self._undo_stack = QUndoStack(self)
-        self._change_notifier = ChangeNotifier(self, self._undo_stack, self._app_settings, "appSettings/specShowUndo")
-        # Setup toolbar
-        self._spec_toolbar = SpecNameDescriptionToolbar(self, specification, self._undo_stack)
-        self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
-        self._populate_main_menu()
+        super().__init__(toolbox, specification, item)  # Inherit stylesheet from ToolboxUI
         # Customize text edit main program
-        self.ui.textEdit_program.setEnabled(False)
+        self._ui.textEdit_program.setEnabled(False)
         self._curren_programfile_path = None
         self._programfile_documents = {}
         # Setup statusbar
-        self.ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self._label_main_path = QLabel()
         label = QLabel("Main program dir:")
         font = QFont()
@@ -79,28 +57,24 @@ class ToolSpecificationEditorWindow(QMainWindow):
         font = QFont(font)
         font.setBold(True)
         self._label_main_path.setFont(font)
-        self.ui.statusbar.addPermanentWidget(label)
-        self.ui.statusbar.addPermanentWidget(self._label_main_path)
-        # Class attributes
-        self._toolbox = toolbox
-        self._project = self._toolbox.project()
-        self._original_spec_name = None if specification is None else specification.name
+        self._ui.statusbar.addPermanentWidget(label)
+        self._ui.statusbar.addPermanentWidget(self._label_main_path)
         # init models
         self.programfiles_model = QStandardItemModel()
         self.io_files_model = QStandardItemModel()
         # init ui
-        self.ui.treeView_programfiles.setModel(self.programfiles_model)
-        self.ui.treeView_io_files.setModel(self.io_files_model)
-        self.ui.comboBox_tooltype.addItems(TOOL_TYPES)
-        self.ui.comboBox_tooltype.setCurrentIndex(-1)
+        self._ui.treeView_programfiles.setModel(self.programfiles_model)
+        self._ui.treeView_io_files.setModel(self.io_files_model)
+        self._ui.comboBox_tooltype.addItems(TOOL_TYPES)
+        self._ui.comboBox_tooltype.setCurrentIndex(-1)
         # if a specification is given, fill the form with data from it
         if specification is not None:
-            self.ui.checkBox_execute_in_work.setChecked(specification.execute_in_work)
-            self.ui.lineEdit_args.setText(" ".join(specification.cmdline_args))
+            self._ui.checkBox_execute_in_work.setChecked(specification.execute_in_work)
+            self._ui.lineEdit_args.setText(" ".join(specification.cmdline_args))
             tooltype = specification.tooltype.lower()
             index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == tooltype), -1)
-            self.ui.comboBox_tooltype.setCurrentIndex(index)
-            self.ui.textEdit_program.set_lexer_name(tooltype.lower())
+            self._ui.comboBox_tooltype.setCurrentIndex(index)
+            self._ui.textEdit_program.set_lexer_name(tooltype.lower())
         # Init lists
         programfiles = list(specification.includes) if specification else list()
         # Get first item from programfiles list as the main program file
@@ -124,26 +98,73 @@ class ToolSpecificationEditorWindow(QMainWindow):
             self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
         self.connect_signals()
 
+    def _make_ui(self):
+        from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
+
+        return Ui_MainWindow()
+
+    @property
+    def settings_group(self):
+        return "toolSpecificationEditorWindow"
+
     def _restore_dock_widgets(self):
-        docks = (self.ui.dockWidget_program_files, self.ui.dockWidget_program)
+        docks = (self._ui.dockWidget_program_files, self._ui.dockWidget_program)
         self.splitDockWidget(*docks, Qt.Horizontal)
         width = sum(d.width() for d in docks)
         self.resizeDocks(docks, [width * x for x in (0.3, 0.7)], Qt.Horizontal)
-        docks = (self.ui.dockWidget_program_files, self.ui.dockWidget_io_files)
+        docks = (self._ui.dockWidget_program_files, self._ui.dockWidget_io_files)
         self.splitDockWidget(*docks, Qt.Vertical)
         height = sum(d.height() for d in docks)
         self.resizeDocks(docks, [height * x for x in (0.6, 0.4)], Qt.Vertical)
 
     def _populate_main_menu(self):
+        super()._populate_main_menu()
         self._spec_toolbar.save_action.setText("Save specification")
-        undo_action = self._undo_stack.createUndoAction(self)
-        redo_action = self._undo_stack.createRedoAction(self)
-        undo_action.setShortcuts(QKeySequence.Undo)
-        redo_action.setShortcuts(QKeySequence.Redo)
-        self._spec_toolbar.menu.insertActions(self._spec_toolbar.save_action, [redo_action, undo_action])
+        self._spec_toolbar.menu.insertAction(self._spec_toolbar.save_action, self._ui.actionSave_program_file)
         self._spec_toolbar.menu.insertSeparator(self._spec_toolbar.save_action)
-        self._spec_toolbar.menu.insertAction(self._spec_toolbar.save_action, self.ui.actionSave_program_file)
-        self._spec_toolbar.menu.insertSeparator(self._spec_toolbar.save_action)
+
+    def _make_new_specification(self):
+        """See base class."""
+        specification_name = self._spec_toolbar.name()
+        if not specification_name:
+            self._show_error("Please enter a name for the specification.")
+            return None
+        # Check that tool type is selected
+        if self._ui.comboBox_tooltype.currentIndex() == -1:
+            self._show_error("Tool type not selected")
+            return None
+        # Check that path of main program file is valid before saving it
+        main_program = self._current_main_program_file().strip()
+        if not os.path.isfile(main_program):
+            self._show_error("Main program file is not valid")
+            return None
+        new_spec_dict = {}
+        new_spec_dict["name"] = specification_name
+        new_spec_dict["description"] = self._spec_toolbar.description()
+        new_spec_dict["tooltype"] = self._ui.comboBox_tooltype.currentText().lower()
+        # Fix for issue #241
+        folder_path, file_path = os.path.split(main_program)
+        self.includes_main_path = os.path.abspath(folder_path)
+        self._label_main_path.setText(self.includes_main_path)
+        new_spec_dict["execute_in_work"] = self._ui.checkBox_execute_in_work.isChecked()
+        new_spec_dict["includes"] = [file_path]
+        new_spec_dict["includes"] += self._additional_program_file_list()
+        new_spec_dict["inputfiles"] = self._input_file_list()
+        new_spec_dict["inputfiles_opt"] = self._opt_input_file_list()
+        new_spec_dict["outputfiles"] = self._output_file_list()
+        # Strip whitespace from args before saving it to JSON
+        new_spec_dict["cmdline_args"] = split_cmdline_args(self._ui.lineEdit_args.text())
+        for k in REQUIRED_KEYS:
+            if not new_spec_dict[k]:
+                self._show_error(f"Missing mandatory field '{k}'")
+                return None
+        # Create new Tool specification
+        new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/")
+        tool_spec = self._toolbox.load_specification(new_spec_dict)
+        if not tool_spec:
+            self._show_error("Creating Tool specification failed")
+            return None
+        return tool_spec
 
     def init_programfile_list(self):
         """List program files in QTreeView."""
@@ -154,23 +175,23 @@ class ToolSpecificationEditorWindow(QMainWindow):
         # Setup 'Main' item
         index = self.programfiles_model.index(0, 0)
         widget = ToolBarWidget("Main program file", self)
-        widget.tool_bar.addActions([self.ui.actionNew_main_program_file, self.ui.actionSelect_main_program_file])
+        widget.tool_bar.addActions([self._ui.actionNew_main_program_file, self._ui.actionSelect_main_program_file])
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self.ui.treeView_programfiles.setIndexWidget(index, widget)
+        self._ui.treeView_programfiles.setIndexWidget(index, widget)
         # Setup 'Additional...' item
         index = self.programfiles_model.index(1, 0)
         widget = ToolBarWidget("Additional program files", self)
         widget.tool_bar.addActions(
             [
-                self.ui.actionNew_program_file,
-                self.ui.actionAdd_program_file,
-                self.ui.actionAdd_program_directory,
-                self.ui.actionRemove_selected_program_files,
+                self._ui.actionNew_program_file,
+                self._ui.actionAdd_program_file,
+                self._ui.actionAdd_program_directory,
+                self._ui.actionRemove_selected_program_files,
             ]
         )
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self.ui.treeView_programfiles.setIndexWidget(index, widget)
-        self.ui.treeView_programfiles.expandAll()
+        self._ui.treeView_programfiles.setIndexWidget(index, widget)
+        self._ui.treeView_programfiles.expandAll()
         tool_tip = (
             '<p>Other program files and/or directories (in addition to the main program file) required by the tool.</p>'
             '<p><span style=" font-weight:600;">Tip</span>: '
@@ -213,7 +234,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         for item in self.programfiles_model.findItems("", Qt.MatchContains | Qt.MatchRecursive):
             if not item.rowCount():
                 index = self.programfiles_model.indexFromItem(item)
-                if self.ui.treeView_programfiles.isExpanded(index.parent()):
+                if self._ui.treeView_programfiles.isExpanded(index.parent()):
                     visible.add(self._programfile_path_from_index(index))
         # Repopulate
         index = self.programfiles_model.index(1, 0)
@@ -226,7 +247,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
             if not item.rowCount():
                 index = self.programfiles_model.indexFromItem(item)
                 if self._programfile_path_from_index(index) in visible:
-                    self.ui.treeView_programfiles.expand(index.parent())
+                    self._ui.treeView_programfiles.expand(index.parent())
 
     def init_io_file_list(self):
         for name in ("Input files", "Optional input files", "Output files"):
@@ -236,21 +257,21 @@ class ToolSpecificationEditorWindow(QMainWindow):
         # Setup 'Input' item
         index = self.io_files_model.index(0, 0)
         widget = ToolBarWidget("Input files", self)
-        widget.tool_bar.addActions([self.ui.actionAdd_input_files, self.ui.actionRemove_selected_input_files])
+        widget.tool_bar.addActions([self._ui.actionAdd_input_files, self._ui.actionRemove_selected_input_files])
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self.ui.treeView_io_files.setIndexWidget(index, widget)
+        self._ui.treeView_io_files.setIndexWidget(index, widget)
         # Setup 'Optional' item
         index = self.io_files_model.index(1, 0)
         widget = ToolBarWidget("Optional input files", self)
-        widget.tool_bar.addActions([self.ui.actionAdd_opt_input_files, self.ui.actionRemove_selected_opt_input_files])
+        widget.tool_bar.addActions([self._ui.actionAdd_opt_input_files, self._ui.actionRemove_selected_opt_input_files])
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self.ui.treeView_io_files.setIndexWidget(index, widget)
+        self._ui.treeView_io_files.setIndexWidget(index, widget)
         # Setup 'Output' item
         index = self.io_files_model.index(2, 0)
         widget = ToolBarWidget("Output files", self)
-        widget.tool_bar.addActions([self.ui.actionAdd_output_files, self.ui.actionRemove_selected_output_files])
+        widget.tool_bar.addActions([self._ui.actionAdd_output_files, self._ui.actionRemove_selected_output_files])
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self.ui.treeView_io_files.setIndexWidget(index, widget)
+        self._ui.treeView_io_files.setIndexWidget(index, widget)
 
     def _input_file_list(self):
         return self.spec_dict.get("inputfiles", [])
@@ -268,7 +289,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
             item = QStandardItem(name)
             item.setData(QFileIconProvider().icon(QFileInfo(name)), Qt.DecorationRole)
             root_item.appendRow(item)
-        self.ui.treeView_io_files.expand(index)
+        self._ui.treeView_io_files.expand(index)
 
     def populate_inputfiles_list(self, names):
         """List input files in QTreeView.
@@ -293,42 +314,33 @@ class ToolSpecificationEditorWindow(QMainWindow):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.actionNew_main_program_file.triggered.connect(self.new_main_program_file)
-        self.ui.actionSelect_main_program_file.triggered.connect(self.browse_main_program_file)
-        self.ui.actionNew_program_file.triggered.connect(self.new_program_file)
-        self.ui.actionAdd_program_file.triggered.connect(self.show_add_program_files_dialog)
-        self.ui.actionAdd_program_directory.triggered.connect(self.show_add_program_dirs_dialog)
-        self.ui.actionRemove_selected_program_files.triggered.connect(self.remove_program_files)
-        self.ui.treeView_programfiles.files_dropped.connect(self.add_dropped_program_files)
-        self.ui.treeView_programfiles.doubleClicked.connect(self.open_program_file)
-        self.ui.actionAdd_input_files.triggered.connect(self.add_inputfiles)
-        self.ui.actionRemove_selected_input_files.triggered.connect(self.remove_inputfiles)
-        self.ui.actionAdd_opt_input_files.triggered.connect(self.add_inputfiles_opt)
-        self.ui.actionRemove_selected_opt_input_files.triggered.connect(self.remove_inputfiles_opt)
-        self.ui.actionAdd_output_files.triggered.connect(self.add_outputfiles)
-        self.ui.actionRemove_selected_output_files.triggered.connect(self.remove_outputfiles)
+        self._ui.actionNew_main_program_file.triggered.connect(self.new_main_program_file)
+        self._ui.actionSelect_main_program_file.triggered.connect(self.browse_main_program_file)
+        self._ui.actionNew_program_file.triggered.connect(self.new_program_file)
+        self._ui.actionAdd_program_file.triggered.connect(self.show_add_program_files_dialog)
+        self._ui.actionAdd_program_directory.triggered.connect(self.show_add_program_dirs_dialog)
+        self._ui.actionRemove_selected_program_files.triggered.connect(self.remove_program_files)
+        self._ui.treeView_programfiles.files_dropped.connect(self.add_dropped_program_files)
+        self._ui.treeView_programfiles.doubleClicked.connect(self.open_program_file)
+        self._ui.actionAdd_input_files.triggered.connect(self.add_inputfiles)
+        self._ui.actionRemove_selected_input_files.triggered.connect(self.remove_inputfiles)
+        self._ui.actionAdd_opt_input_files.triggered.connect(self.add_inputfiles_opt)
+        self._ui.actionRemove_selected_opt_input_files.triggered.connect(self.remove_inputfiles_opt)
+        self._ui.actionAdd_output_files.triggered.connect(self.add_outputfiles)
+        self._ui.actionRemove_selected_output_files.triggered.connect(self.remove_outputfiles)
         # Enable removing items from QTreeViews by pressing the Delete key
-        self.ui.treeView_programfiles.del_key_pressed.connect(self.remove_program_files_with_del)
-        self.ui.treeView_io_files.del_key_pressed.connect(self.remove_io_files_with_del)
+        self._ui.treeView_programfiles.del_key_pressed.connect(self.remove_program_files_with_del)
+        self._ui.treeView_io_files.del_key_pressed.connect(self.remove_io_files_with_del)
         # Push undo commands
-        self.ui.comboBox_tooltype.activated.connect(self._push_change_tooltype_command)
-        self.ui.checkBox_execute_in_work.toggled.connect(self._push_change_execute_in_work_command)
-        self.ui.lineEdit_args.editingFinished.connect(self._push_change_args_command)
-        self._undo_stack.cleanChanged.connect(self._update_window_modified)
+        self._ui.comboBox_tooltype.activated.connect(self._push_change_tooltype_command)
+        self._ui.checkBox_execute_in_work.toggled.connect(self._push_change_execute_in_work_command)
+        self._ui.lineEdit_args.editingFinished.connect(self._push_change_args_command)
         # Selection changed
-        self.ui.treeView_programfiles.selectionModel().selectionChanged.connect(
+        self._ui.treeView_programfiles.selectionModel().selectionChanged.connect(
             self._handle_programfile_selection_changed
         )
-        self.ui.treeView_io_files.selectionModel().selectionChanged.connect(self._handle_io_file_selection_changed)
-        self._spec_toolbar.save_action.triggered.connect(self._save)
-        self._spec_toolbar.close_action.triggered.connect(self.close)
-        self.ui.actionSave_program_file.triggered.connect(self.save_program_file)
-
-    @Slot(bool)
-    def _update_window_modified(self, clean):
-        self.setWindowModified(not clean)
-        self._spec_toolbar.save_action.setEnabled(not clean)
-        self.windowTitleChanged.emit(self.windowTitle())
+        self._ui.treeView_io_files.selectionModel().selectionChanged.connect(self._handle_io_file_selection_changed)
+        self._ui.actionSave_program_file.triggered.connect(self.save_program_file)
 
     @Slot(int)
     def _push_change_tooltype_command(self, index):
@@ -341,9 +353,9 @@ class ToolSpecificationEditorWindow(QMainWindow):
     def _set_tooltype(self, value):
         value = value.lower()
         self.spec_dict["tooltype"] = value
-        self.ui.textEdit_program.set_lexer_name(value)
+        self._ui.textEdit_program.set_lexer_name(value)
         index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == value), -1)
-        self.ui.comboBox_tooltype.setCurrentIndex(index)
+        self._ui.comboBox_tooltype.setCurrentIndex(index)
 
     @Slot(bool)
     def _push_change_execute_in_work_command(self, new_value):
@@ -356,12 +368,12 @@ class ToolSpecificationEditorWindow(QMainWindow):
 
     def _set_execute_in_work(self, value):
         self.spec_dict["execute_in_work"] = value
-        self.ui.checkBox_execute_in_work.setChecked(value)
+        self._ui.checkBox_execute_in_work.setChecked(value)
 
     @Slot()
     def _push_change_args_command(self):
         old_value = self.spec_dict.get("cmdline_args", [])
-        new_value = split_cmdline_args(self.ui.lineEdit_args.text())
+        new_value = split_cmdline_args(self._ui.lineEdit_args.text())
         if new_value == old_value:
             return
         self._undo_stack.push(
@@ -370,7 +382,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
 
     def _set_cmdline_args(self, value):
         self.spec_dict["cmdline_args"] = value
-        self.ui.lineEdit_args.setText(" ".join(value))
+        self._ui.lineEdit_args.setText(" ".join(value))
 
     @Slot()
     def _push_change_main_program_file_command(self):
@@ -418,9 +430,9 @@ class ToolSpecificationEditorWindow(QMainWindow):
     def _handle_programfile_selection_changed(self, _selected, _deselected):
         # Set remove action enabled
         indexes = self._selected_program_file_indexes()
-        self.ui.actionRemove_selected_program_files.setEnabled(bool(indexes))
+        self._ui.actionRemove_selected_program_files.setEnabled(bool(indexes))
         # Load selected file code on text edit
-        current = self.ui.treeView_programfiles.selectionModel().currentIndex()
+        current = self._ui.treeView_programfiles.selectionModel().currentIndex()
         if self.programfiles_model.rowCount(current):
             # Not a leaf
             self._clear_program_text_edit()
@@ -443,16 +455,16 @@ class ToolSpecificationEditorWindow(QMainWindow):
         return os.path.join(self.includes_main_path, *components)
 
     def _clear_program_text_edit(self):
-        self.ui.textEdit_program.setDocument(QTextDocument())
-        self.ui.textEdit_program.setEnabled(False)
-        self.ui.actionSave_program_file.setEnabled(False)
-        self.ui.actionSave_program_file.setText("Save program file")
-        self.ui.dockWidget_program.setWindowTitle("")
+        self._ui.textEdit_program.setDocument(QTextDocument())
+        self._ui.textEdit_program.setEnabled(False)
+        self._ui.actionSave_program_file.setEnabled(False)
+        self._ui.actionSave_program_file.setText("Save program file")
+        self._ui.dockWidget_program.setWindowTitle("")
 
     def _load_programfile_in_editor(self, file_path):
         self._curren_programfile_path = file_path
         if not os.path.isfile(file_path):
-            self.show_status_bar_msg(f"Program file {file_path} is not valid")
+            self._show_status_bar_msg(f"Program file {file_path} is not valid")
             self._clear_program_text_edit()
             return
         if file_path not in self._programfile_documents:
@@ -460,21 +472,21 @@ class ToolSpecificationEditorWindow(QMainWindow):
                 with open(file_path, 'r') as file:
                     text = file.read()
             except (IOError, UnicodeDecodeError) as e:
-                self.show_status_bar_msg(str(e))
+                self._show_status_bar_msg(str(e))
                 return
-            document = self._programfile_documents[file_path] = QTextDocument(self.ui.textEdit_program)
+            document = self._programfile_documents[file_path] = QTextDocument(self._ui.textEdit_program)
             document.setPlainText(text)
             document.setModified(False)
-            document.modificationChanged.connect(self.ui.actionSave_program_file.setEnabled)
-            document.modificationChanged.connect(self.ui.dockWidget_program.setWindowModified)
+            document.modificationChanged.connect(self._ui.actionSave_program_file.setEnabled)
+            document.modificationChanged.connect(self._ui.dockWidget_program.setWindowModified)
         else:
             document = self._programfile_documents[file_path]
-        self.ui.actionSave_program_file.setText(f"Save {os.path.basename(file_path)}")
-        self.ui.actionSave_program_file.setEnabled(document.isModified())
-        self.ui.dockWidget_program.setWindowModified(document.isModified())
-        self.ui.textEdit_program.setDocument(document)
-        self.ui.textEdit_program.setEnabled(True)
-        self.ui.dockWidget_program.setWindowTitle(os.path.basename(file_path) + "[*]")
+        self._ui.actionSave_program_file.setText(f"Save {os.path.basename(file_path)}")
+        self._ui.actionSave_program_file.setEnabled(document.isModified())
+        self._ui.dockWidget_program.setWindowModified(document.isModified())
+        self._ui.textEdit_program.setDocument(document)
+        self._ui.textEdit_program.setEnabled(True)
+        self._ui.dockWidget_program.setWindowTitle(os.path.basename(file_path) + "[*]")
 
     @Slot(bool)
     def browse_main_program_file(self, checked=False):
@@ -493,12 +505,12 @@ class ToolSpecificationEditorWindow(QMainWindow):
         """Saves program file."""
         try:
             with open(self._curren_programfile_path, "w") as file:
-                file.write(self.ui.textEdit_program.toPlainText())
-            self.ui.textEdit_program.document().setModified(False)
+                file.write(self._ui.textEdit_program.toPlainText())
+            self._ui.textEdit_program.document().setModified(False)
             basename = os.path.basename(self._curren_programfile_path)
-            self.show_status_bar_msg(f"Program file '{basename}' saved successfully")
+            self._show_status_bar_msg(f"Program file '{basename}' saved successfully")
         except IOError as e:
-            self.show_status_bar_msg(e)
+            self._show_status_bar_msg(e)
 
     @Slot(bool)
     def new_main_program_file(self, _=False):
@@ -582,10 +594,10 @@ class ToolSpecificationEditorWindow(QMainWindow):
             valid_files.append(file)
         if dupes:
             dupes = ", ".join(dupes)
-            self.show_status_bar_msg(f"Program file(s) '{dupes}' already added")
+            self._show_status_bar_msg(f"Program file(s) '{dupes}' already added")
         if invalid:
             invalid = ", ".join(invalid)
-            self.show_status_bar_msg(f"Program file(s) '{invalid}' not in main directory")
+            self._show_status_bar_msg(f"Program file(s) '{invalid}' not in main directory")
         return valid_files
 
     def add_program_files(self, *new_files):
@@ -613,7 +625,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.remove_program_files()
 
     def _selected_program_file_indexes(self):
-        indexes = set(self.ui.treeView_programfiles.selectedIndexes())
+        indexes = set(self._ui.treeView_programfiles.selectedIndexes())
         # discard main program file
         parent = self.programfiles_model.index(0, 0)
         indexes.discard(self.programfiles_model.index(0, 0, parent))
@@ -625,7 +637,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         """Removes selected program files from program_file list."""
         indexes = self._selected_program_file_indexes()
         if not indexes:  # Nothing removable selected
-            self.show_status_bar_msg("Please select program files to remove")
+            self._show_status_bar_msg("Please select program files to remove")
             return
         removed_files = {os.path.join(*_path_components_from_index(ind)) for ind in indexes}
         old_program_files = self.spec_dict.get("includes", [""])
@@ -733,20 +745,20 @@ class ToolSpecificationEditorWindow(QMainWindow):
         )
 
     def _selected_io_file_indexes(self, parent):
-        indexes = self.ui.treeView_io_files.selectedIndexes()
+        indexes = self._ui.treeView_io_files.selectedIndexes()
         return [ind for ind in indexes if ind.parent() == parent]
 
     @Slot("QItemSelection", "QItemSelection")
     def _handle_io_file_selection_changed(self, _deselected, _selected):
         parent = self.io_files_model.index(0, 0)
         indexes = self._selected_io_file_indexes(parent)
-        self.ui.actionRemove_selected_input_files.setEnabled(bool(indexes))
+        self._ui.actionRemove_selected_input_files.setEnabled(bool(indexes))
         parent = self.io_files_model.index(1, 0)
         indexes = self._selected_io_file_indexes(parent)
-        self.ui.actionRemove_selected_opt_input_files.setEnabled(bool(indexes))
+        self._ui.actionRemove_selected_opt_input_files.setEnabled(bool(indexes))
         parent = self.io_files_model.index(2, 0)
         indexes = self._selected_io_file_indexes(parent)
-        self.ui.actionRemove_selected_output_files.setEnabled(bool(indexes))
+        self._ui.actionRemove_selected_output_files.setEnabled(bool(indexes))
 
     @Slot(bool)
     def remove_inputfiles(self, checked=False):
@@ -756,7 +768,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         parent = self.io_files_model.index(0, 0)
         indexes = self._selected_io_file_indexes(parent)
         if not indexes:  # Nothing selected
-            self.show_status_bar_msg("Please select the input files to remove")
+            self._show_status_bar_msg("Please select the input files to remove")
             return
         removed_files = {ind.data(Qt.DisplayRole) for ind in indexes}
         old_files = self.spec_dict.get("inputfiles", [])
@@ -773,7 +785,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         parent = self.io_files_model.index(1, 0)
         indexes = self._selected_io_file_indexes(parent)
         if not indexes:  # Nothing selected
-            self.show_status_bar_msg("Please select the optional input files to remove")
+            self._show_status_bar_msg("Please select the optional input files to remove")
             return
         removed_files = {ind.data(Qt.DisplayRole) for ind in indexes}
         old_files = self.spec_dict.get("inputfiles_opt", [])
@@ -792,7 +804,7 @@ class ToolSpecificationEditorWindow(QMainWindow):
         parent = self.io_files_model.index(2, 0)
         indexes = self._selected_io_file_indexes(parent)
         if not indexes:  # Nothing selected
-            self.show_status_bar_msg("Please select the output files to remove")
+            self._show_status_bar_msg("Please select the output files to remove")
             return
         removed_files = {ind.data(Qt.DisplayRole) for ind in indexes}
         old_files = self.spec_dict.get("outputfiles", [])
@@ -807,100 +819,6 @@ class ToolSpecificationEditorWindow(QMainWindow):
         self.remove_inputfiles()
         self.remove_inputfiles_opt()
         self.remove_outputfiles()
-
-    def _save(self):
-        """Checks that everything is valid, creates Tool spec dictionary and adds Tool spec to project."""
-        # Check that tool type is selected
-        if self.ui.comboBox_tooltype.currentIndex() == -1:
-            self.show_status_bar_msg("Tool type not selected")
-            return False
-        # Check that path of main program file is valid before saving it
-        main_program = self._current_main_program_file().strip()
-        if not os.path.isfile(main_program):
-            self.show_status_bar_msg("Main program file is not valid")
-            return False
-        new_spec_dict = {}
-        new_spec_dict["name"] = self._spec_toolbar.name()
-        new_spec_dict["description"] = self._spec_toolbar.description()
-        new_spec_dict["tooltype"] = self.ui.comboBox_tooltype.currentText().lower()
-        # Fix for issue #241
-        folder_path, file_path = os.path.split(main_program)
-        self.includes_main_path = os.path.abspath(folder_path)
-        self._label_main_path.setText(self.includes_main_path)
-        new_spec_dict["execute_in_work"] = self.ui.checkBox_execute_in_work.isChecked()
-        new_spec_dict["includes"] = [file_path]
-        new_spec_dict["includes"] += self._additional_program_file_list()
-        new_spec_dict["inputfiles"] = self._input_file_list()
-        new_spec_dict["inputfiles_opt"] = self._opt_input_file_list()
-        new_spec_dict["outputfiles"] = self._output_file_list()
-        # Strip whitespace from args before saving it to JSON
-        new_spec_dict["cmdline_args"] = split_cmdline_args(self.ui.lineEdit_args.text())
-        for k in REQUIRED_KEYS:
-            if not new_spec_dict[k]:
-                self.show_status_bar_msg(f"Missing mandatory field '{k}'")
-                return False
-        # Create new Tool specification
-        new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/")
-        self._new_spec = self._make_tool_specification(new_spec_dict)
-        if not self.call_add_tool_specification():
-            return False
-        self._undo_stack.setClean()
-        if self.item:
-            self.item.set_specification(self._new_spec)
-        self.specification = self._new_spec
-        self.setWindowTitle(self.specification.name)
-        return True
-
-    def _make_tool_specification(self, new_spec_dict):
-        """Returns a ToolSpecification from current form settings.
-
-        Args:
-            new_spec_dict (dcit)
-
-        Returns:
-            ToolSpecification
-        """
-        tool_spec = self._toolbox.load_specification(new_spec_dict)
-        if not tool_spec:
-            self.show_status_bar_msg("Creating Tool specification failed")
-        return tool_spec
-
-    def call_add_tool_specification(self):
-        """Adds new Tool specification to project.
-
-        Returns:
-            bool
-        """
-        if self._new_spec is None:
-            return False
-        update_existing = self._new_spec.name == self._original_spec_name
-        return self._toolbox.add_specification(self._new_spec, update_existing, self)
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        self._undo_stack.cleanChanged.connect(self._update_window_modified)
-
-    def closeEvent(self, event=None):
-        """Handle close window.
-
-        Args:
-            event (QEvent): Closing event if 'X' is clicked.
-        """
-        if self.focusWidget():
-            self.focusWidget().clearFocus()
-        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
-            event.ignore()
-            return
-        self._undo_stack.cleanChanged.disconnect(self._update_window_modified)
-        save_ui(self, self._app_settings, self.settings_group)
-        if event:
-            event.accept()
-
-    def show_status_bar_msg(self, msg):
-        word_count = len(msg.split(" "))
-        mspw = 60000 / 140  # Assume people can read ~140 words per minute
-        duration = mspw * word_count
-        self.ui.statusbar.showMessage(msg, duration)
 
 
 def _path_components(path):

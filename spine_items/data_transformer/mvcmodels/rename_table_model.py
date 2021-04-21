@@ -17,7 +17,7 @@ Contains the :class:`RenameTableModel` class.
 """
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide2.QtGui import QFont
-from ...commands import ChangeSpecPropertyCommand
+from spinetoolbox.project_item.specification_editor_window import ChangeSpecPropertyCommand
 
 
 class RenameTableModel(QAbstractTableModel):

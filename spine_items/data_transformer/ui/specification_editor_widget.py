@@ -143,17 +143,9 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.filter_stack)
 
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QMenuBar(MainWindow)
-        self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 800, 27))
-        self.menuFile = QMenu(self.menubar)
-        self.menuFile.setObjectName(u"menuFile")
-        MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
-
-        self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
 
@@ -173,6 +165,5 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.load_url_from_fs_button.setText(QCoreApplication.translate("MainWindow", u"...", None))
         self.load_data_button.setText(QCoreApplication.translate("MainWindow", u"Load filter data from database", None))
-        self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
     # retranslateUi
 

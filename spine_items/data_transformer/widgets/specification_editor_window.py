@@ -14,17 +14,16 @@ Contains :class:`SpecificationEditorWindow`.
 :author: A. Soininen (VTT)
 :date:   2.10.2020
 """
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QFileDialog, QMessageBox, QVBoxLayout, QMainWindow, QUndoStack
-from spinetoolbox.config import STATUSBAR_SS
-from spinetoolbox.widgets.notification import ChangeNotifier
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QFileDialog, QVBoxLayout
+from spinetoolbox.project_item.specification_editor_window import (
+    SpecificationEditorWindowBase,
+    ChangeSpecPropertyCommand,
+)
 from .entity_class_renaming_widget import EntityClassRenamingWidget
 from .parameter_renaming_widget import ParameterRenamingWidget
 from ..data_transformer_specification import DataTransformerSpecification
 from ..settings import EntityClassRenamingSettings, ParameterRenamingSettings
-from ...widgets import SpecNameDescriptionToolbar, prompt_to_save_changes, save_ui, restore_ui
-from ...commands import ChangeSpecPropertyCommand
 
 
 _FILTER_NAMES = ("Rename entity classes", "Rename parameters")
@@ -34,7 +33,7 @@ _SETTINGS_CLASSES = dict(zip(_FILTER_NAMES, (EntityClassRenamingSettings, Parame
 _CLASSES_TO_DISPLAY_NAMES = {class_: name for name, class_ in _SETTINGS_CLASSES.items()}
 
 
-class SpecificationEditorWindow(QMainWindow):
+class SpecificationEditorWindow(SpecificationEditorWindowBase):
     """Data transformer's specification editor."""
 
     def __init__(self, toolbox, specification=None, item=None, urls=None):
@@ -45,37 +44,20 @@ class SpecificationEditorWindow(QMainWindow):
             item (ProjectItem, optional): invoking project item, if window was opened from its properties tab
             urls (dict, optional): a mapping from provider name to database URL
         """
-        from ..ui.specification_editor_widget import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
-        super().__init__(parent=toolbox)
-        self.specification = specification
-        self.item = item
-        self._toolbox = toolbox
-        self._original_spec_name = None if specification is None else specification.name
+        super().__init__(toolbox, specification, item)
         if specification is None:
             specification = DataTransformerSpecification(name="")
         self._new_spec = specification
-        self._app_settings = self._toolbox.qsettings()
-        self.settings_group = "dataTransformerSpecificationWindow"
         self._urls = dict()
         self._filter_widgets = dict()
         self._current_filter_name = None
-        self._ui = Ui_MainWindow()
-        self._ui.setupUi(self)
-        self._undo_stack = QUndoStack(self)
-        self._change_notifier = ChangeNotifier(self, self._undo_stack, self._app_settings, "appSettings/specShowUndo")
-        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._new_spec, self._undo_stack)
-        self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
-        self._populate_main_menu()
-        self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
-        self.setWindowTitle(specification.name if specification else "")
         self._ui.filter_combo_box.addItems(_FILTER_NAMES)
         if self._new_spec.settings is not None:
             filter_name = _CLASSES_TO_DISPLAY_NAMES[type(self._new_spec.settings)]
         else:
             filter_name = ""
         self._set_current_filter_name(filter_name)
-        restore_ui(self, self._app_settings, self.settings_group)
         self._ui.load_url_from_fs_button.clicked.connect(self._load_url_from_filesystem)
         self._ui.load_data_button.clicked.connect(self._load_data)
         self._ui.database_url_combo_box.model().rowsInserted.connect(
@@ -83,24 +65,30 @@ class SpecificationEditorWindow(QMainWindow):
         )
         self._ui.database_url_combo_box.addItems(urls if urls is not None else [])
         self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
-        self._spec_toolbar.save_action.triggered.connect(self._save)
-        self._spec_toolbar.close_action.triggered.connect(self.close)
-        self._undo_stack.cleanChanged.connect(self._update_window_modified)
 
-    def _populate_main_menu(self):
-        undo_action = self._undo_stack.createUndoAction(self)
-        redo_action = self._undo_stack.createRedoAction(self)
-        undo_action.setShortcuts(QKeySequence.Undo)
-        redo_action.setShortcuts(QKeySequence.Redo)
-        self._spec_toolbar.menu.insertActions(self._spec_toolbar.save_action, [redo_action, undo_action])
-        self._spec_toolbar.menu.insertSeparator(self._spec_toolbar.save_action)
-        self._ui.menubar.hide()
+    @property
+    def settings_group(self):
+        return "dataTransformerSpecificationWindow"
 
-    @Slot(bool)
-    def _update_window_modified(self, clean):
-        self.setWindowModified(not clean)
-        self._spec_toolbar.save_action.setEnabled(not clean)
-        self.windowTitleChanged.emit(self.windowTitle())
+    def _make_ui(self):
+        from ..ui.specification_editor_widget import Ui_MainWindow  # pylint: disable=import-outside-toplevel
+
+        return Ui_MainWindow()
+
+    def _make_new_specification(self):
+        """See base class."""
+        specification_name = self._spec_toolbar.name()
+        if not specification_name:
+            self._show_error("Please enter a name for the specification.")
+            return False
+        description = self._spec_toolbar.description()
+        filter_name = self._ui.filter_combo_box.currentText()
+        if not filter_name:
+            filter_settings = None
+        else:
+            filter_widget = self._filter_widgets[filter_name]
+            filter_settings = filter_widget.settings()
+        return DataTransformerSpecification(specification_name, filter_settings, description)
 
     @Slot(str)
     def _change_filter_widget(self, filter_name):
@@ -142,55 +130,6 @@ class SpecificationEditorWindow(QMainWindow):
         widget.show()
         self._ui.filter_stack.setCurrentIndex(1)
 
-    def _save(self):
-        specification_name = self._spec_toolbar.name()
-        if not specification_name:
-            QMessageBox.information(self, "Specification name missing", "Please enter a name for the specification.")
-            return False
-        description = self._spec_toolbar.description()
-        filter_name = self._ui.filter_combo_box.currentText()
-        if not filter_name:
-            filter_settings = None
-        else:
-            filter_widget = self._filter_widgets[filter_name]
-            filter_settings = filter_widget.settings()
-        self._new_spec = DataTransformerSpecification(specification_name, filter_settings, description)
-        if not self._call_add_specification():
-            return False
-        self._undo_stack.setClean()
-        if self.item:
-            self.item.set_specification(self._new_spec)
-        self.specification = self._new_spec
-        self.setWindowTitle(self.specification.name)
-        return True
-
-    def _call_add_specification(self):
-        """Adds the specification to the project.
-
-        Returns:
-            bool: True if the operation was successful, False otherwise
-        """
-        update_existing = self._new_spec.name == self._original_spec_name
-        return self._toolbox.add_specification(self._new_spec, update_existing, self)
-
-    def closeEvent(self, event=None):
-        """Handles close window.
-
-        Args:
-            event (QEvent): Closing event if 'X' is clicked.
-        """
-        if self.focusWidget():
-            self.focusWidget().clearFocus()
-        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
-            event.ignore()
-            return
-        for widget in self._filter_widgets.values():
-            widget.deleteLater()
-        self._undo_stack.cleanChanged.disconnect(self._update_window_modified)
-        save_ui(self, self._app_settings, self.settings_group)
-        if event:
-            event.accept()
-
     @Slot(bool)
     def _load_url_from_filesystem(self, _):
         path = self._browse_database()
@@ -216,3 +155,10 @@ class SpecificationEditorWindow(QMainWindow):
         filter_name = self._ui.filter_combo_box.currentText()
         widget = self._filter_widgets[filter_name]
         widget.load_data(self._ui.database_url_combo_box.currentText())
+
+    def tear_down(self):
+        if not super().tear_down():
+            return False
+        for widget in self._filter_widgets.values():
+            widget.deleteLater()
+        return True

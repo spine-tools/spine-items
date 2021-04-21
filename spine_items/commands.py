@@ -84,22 +84,6 @@ class UpdateCmdLineArgsCommand(SpineToolboxCommand):
         self.item.update_cmd_line_args(self.undo_cmd_line_args)
 
 
-class ChangeSpecPropertyCommand(QUndoCommand):
-    def __init__(self, callback, new_value, old_value, cmd_name):
-        super().__init__()
-        self._callback = callback
-        self._new_value = new_value
-        self._old_value = old_value
-        self.setText(cmd_name)
-        self.setObsolete(new_value == old_value)
-
-    def redo(self):
-        self._callback(self._new_value)
-
-    def undo(self):
-        self._callback(self._old_value)
-
-
 class RenameMapping(QUndoCommand):
     """A command to change the name of a mapping."""
 

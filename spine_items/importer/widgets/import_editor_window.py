@@ -21,21 +21,10 @@ import json
 import fnmatch
 from copy import deepcopy
 from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import (
-    QMainWindow,
-    QErrorMessage,
-    QFileDialog,
-    QDockWidget,
-    QUndoStack,
-    QDialog,
-    QVBoxLayout,
-    QListWidget,
-    QDialogButtonBox,
-)
+from PySide2.QtWidgets import QFileDialog, QDockWidget, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
+from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
-from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
-from spinetoolbox.widgets.notification import ChangeNotifier
+from spinetoolbox.config import APPLICATION_PATH
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
 from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
@@ -45,7 +34,6 @@ from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnec
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from ..connection_manager import ConnectionManager
 from ..commands import RestoreMappingsFromDict
-from ...widgets import SpecNameDescriptionToolbar, prompt_to_save_changes, save_ui, restore_ui
 from .import_sources import ImportSources
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
@@ -61,7 +49,7 @@ _CONNECTOR_NAME_TO_CLASS = {
 }
 
 
-class ImportEditorWindow(QMainWindow):
+class ImportEditorWindow(SpecificationEditorWindowBase):
     """A QMainWindow to let users define Mappings for an Importer item."""
 
     connection_failed = Signal(str)
@@ -73,27 +61,8 @@ class ImportEditorWindow(QMainWindow):
             specification (ImporterSpecification)
             filepath (str, optional): Importee path
         """
-        from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
-
-        super().__init__(parent=toolbox, flags=Qt.Window)
-        self._toolbox = toolbox
-        self._original_spec_name = None if specification is None else specification.name
-        self.specification = specification
-        self.item = item
-        self._new_spec = specification
-        self._app_settings = self._toolbox.qsettings()
-        self.settings_group = "mappingPreviewWindow"
-        self._undo_stack = QUndoStack(self)
-        self._change_notifier = ChangeNotifier(self, self._undo_stack, self._app_settings, "appSettings/specShowUndo")
-        self._ui_error = QErrorMessage(self)
-        self._ui_error.setWindowTitle("Error")
-        self._ui_error.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
-        self._ui = Ui_MainWindow()
-        self._ui.setupUi(self)
-        self.takeCentralWidget()
-        self._spec_toolbar = SpecNameDescriptionToolbar(self, self._new_spec, self._undo_stack)
-        self.addToolBar(Qt.TopToolBarArea, self._spec_toolbar)
-        self._populate_main_menu()
+        super().__init__(toolbox, specification, item)
+        self.takeCentralWidget().deleteLater()
         self._import_sources = None
         self._connection_manager = None
         self._memoized_connectors = {}
@@ -104,47 +73,70 @@ class ImportEditorWindow(QMainWindow):
             self._import_mapping_options.set_mapping_specification_model
         )
         self._import_mapping_options.about_to_undo.connect(self._import_mappings.focus_on_changing_specification)
-        self._size = None
-        self.apply_classic_ui_style()
-        self.restore_ui()
-        self.setWindowTitle(specification.name if specification else "")
-        self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         self._ui.actionLoad_file.triggered.connect(self._show_open_file_dialog)
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
-        self.connection_failed.connect(self.show_error)
-        self._spec_toolbar.save_action.triggered.connect(self._save)
-        self._spec_toolbar.close_action.triggered.connect(self.close)
-        self._undo_stack.cleanChanged.connect(self._update_window_modified)
+        self.connection_failed.connect(self._show_error)
         if filepath:
             self.start_ui(filepath)
 
+    @property
+    def settings_group(self):
+        return "mappingPreviewWindow"
+
+    def _make_ui(self):
+        from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
+
+        return Ui_MainWindow()
+
+    def _restore_dock_widgets(self):
+        """Applies the classic UI style."""
+        size = self.size()
+        for dock in self.findChildren(QDockWidget):
+            dock.setVisible(True)
+            dock.setFloating(False)
+            self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        docks = (self._ui.dockWidget_sources, self._ui.dockWidget_mappings)
+        self.splitDockWidget(*docks, Qt.Horizontal)
+        width = sum(d.size().width() for d in docks)
+        self.resizeDocks(docks, [0.9 * width, 0.1 * width], Qt.Horizontal)
+        docks = (self._ui.dockWidget_sources, self._ui.dockWidget_source_data)
+        self.splitDockWidget(*docks, Qt.Vertical)
+        height = sum(d.size().height() for d in docks)
+        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
+        self.splitDockWidget(self._ui.dockWidget_sources, self._ui.dockWidget_source_options, Qt.Horizontal)
+        self.splitDockWidget(self._ui.dockWidget_mappings, self._ui.dockWidget_mapping_options, Qt.Vertical)
+        self.splitDockWidget(self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec, Qt.Vertical)
+        docks = (self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec)
+        height = sum(d.size().height() for d in docks)
+        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
+        qApp.processEvents()  # pylint: disable=undefined-variable
+        self.resize(size)
+
+    def _make_new_specification(self):
+        name = self._spec_toolbar.name()
+        if not name:
+            self._show_error("Please enter a name for the specification.")
+            return None
+        mapping = self._import_sources.get_mapping_dict() if self._import_sources else {}
+        description = self._spec_toolbar.description()
+        spec_dict = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
+        return self._toolbox.load_specification(spec_dict)
+
     def _populate_main_menu(self):
+        super()._populate_main_menu()
         menu = self._spec_toolbar.menu
         before = self._spec_toolbar.save_action
         menu.insertActions(before, [self._ui.actionLoad_file, self._ui.actionSwitch_connector])
         menu.insertSeparator(before)
         menu.insertActions(before, [self._ui.import_mappings_action, self._ui.export_mappings_action])
         menu.insertSeparator(before)
-        undo_action = self._undo_stack.createUndoAction(self)
-        redo_action = self._undo_stack.createRedoAction(self)
-        undo_action.setShortcuts(QKeySequence.Undo)
-        redo_action.setShortcuts(QKeySequence.Redo)
-        menu.insertActions(before, [redo_action, undo_action])
-        menu.insertSeparator(before)
-        self._ui.menubar.hide()
-
-    @Slot(bool)
-    def _update_window_modified(self, clean):
-        self.setWindowModified(not clean)
-        self._spec_toolbar.save_action.setEnabled(not clean)
-        self.windowTitleChanged.emit(self.windowTitle())
 
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):
         filter_ = ";;".join([conn.FILE_EXTENSIONS for conn in _CONNECTOR_NAME_TO_CLASS.values()])
-        key = f"selectInputDataFileFor{self._new_spec.name if self._new_spec else None}"
+        key = f"selectInputDataFileFor{self.specification.name if self.specification else None}"
         filepath, _ = get_open_file_name_in_last_dir(
             self._toolbox.qsettings(),
             key,
@@ -162,15 +154,15 @@ class ImportEditorWindow(QMainWindow):
     @Slot(bool)
     def _switch_connector(self, _=False):
         filepath = self._connection_manager.source
-        if self._new_spec:
-            self._new_spec.mapping.pop("source_type", None)
+        if self.specification:
+            self.specification.mapping.pop("source_type", None)
         self._memoized_connectors.pop(filepath, None)
         self.start_ui(filepath)
 
     def _get_connector_from_mapping(self, filepath):
-        if not self._new_spec:
+        if not self.specification:
             return None
-        mapping = self._new_spec.mapping
+        mapping = self.specification.mapping
         source_type = mapping.get("source_type")
         if source_type is None:
             return None
@@ -197,10 +189,10 @@ class ImportEditorWindow(QMainWindow):
         connector_settings = {"gams_directory": _gams_system_directory(self._toolbox)}
         self._connection_manager = ConnectionManager(connector, connector_settings)
         self._connection_manager.source = filepath
-        mapping = self._new_spec.mapping if self._new_spec else {}
+        mapping = self.specification.mapping if self.specification else {}
         self._import_sources = ImportSources(self, mapping)
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
-        self._connection_manager.error.connect(self.show_error)
+        self._connection_manager.error.connect(self._show_error)
         self._ui.source_data_table.set_undo_stack(self._undo_stack, self._import_sources.select_table)
         self._import_mappings.mapping_selection_changed.connect(self._import_sources.set_model)
         self._import_mappings.mapping_selection_changed.connect(self._import_sources.set_mapping)
@@ -261,42 +253,6 @@ class ImportEditorWindow(QMainWindow):
         connector = self._memoized_connectors[filepath] = connector_list[row]
         return connector
 
-    def _call_add_specification(self):
-        update_existing = self._new_spec.name == self._original_spec_name
-        return self._toolbox.add_specification(self._new_spec, update_existing, self)
-
-    @Slot(str)
-    def show_error(self, message):
-        self._ui_error.showMessage(message)
-
-    def restore_dock_widgets(self):
-        """Docks all floating and or hidden QDockWidgets back to the window."""
-        for dock in self.findChildren(QDockWidget):
-            dock.setVisible(True)
-            dock.setFloating(False)
-            self.addDockWidget(Qt.RightDockWidgetArea, dock)
-
-    def apply_classic_ui_style(self):
-        """Applies the classic UI style."""
-        size = self.size()
-        self.restore_dock_widgets()
-        docks = (self._ui.dockWidget_sources, self._ui.dockWidget_mappings)
-        self.splitDockWidget(*docks, Qt.Horizontal)
-        width = sum(d.size().width() for d in docks)
-        self.resizeDocks(docks, [0.9 * width, 0.1 * width], Qt.Horizontal)
-        docks = (self._ui.dockWidget_sources, self._ui.dockWidget_source_data)
-        self.splitDockWidget(*docks, Qt.Vertical)
-        height = sum(d.size().height() for d in docks)
-        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
-        self.splitDockWidget(self._ui.dockWidget_sources, self._ui.dockWidget_source_options, Qt.Horizontal)
-        self.splitDockWidget(self._ui.dockWidget_mappings, self._ui.dockWidget_mapping_options, Qt.Vertical)
-        self.splitDockWidget(self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec, Qt.Vertical)
-        docks = (self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec)
-        height = sum(d.size().height() for d in docks)
-        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
-        qApp.processEvents()  # pylint: disable=undefined-variable
-        self.resize(size)
-
     @Slot()
     def import_mapping_from_file(self):
         """Imports mapping spec from a user selected .json file to the preview window."""
@@ -311,13 +267,13 @@ class ImportEditorWindow(QMainWindow):
             try:
                 settings = json.load(file_p)
             except json.JSONDecodeError:
-                self._ui.statusbar.showMessage(f"Could not open {filename[0]}", 10000)
+                self._show_status_bar_msg(f"Could not open {filename[0]}", 10000)
                 return
         expected_options = ("table_mappings", "table_types", "table_row_types", "table_options", "selected_tables")
         if not isinstance(settings, dict) or not any(key in expected_options for key in settings.keys()):
-            self._ui.statusbar.showMessage(f"{filename[0]} does not contain and import mapping", 10000)
+            self._show_status_bar_msg(f"{filename[0]} does not contain and import mapping", 10000)
         self._undo_stack.push(RestoreMappingsFromDict(self._import_sources, settings))
-        self._ui.statusbar.showMessage(f"Mapping loaded from {filename[0]}", 10000)
+        self._show_status_bar_msg(f"Mapping loaded from {filename[0]}", 10000)
 
     @Slot()
     def export_mapping_to_file(self):
@@ -332,7 +288,7 @@ class ImportEditorWindow(QMainWindow):
         with open(filename[0], 'w') as file_p:
             settings = self._import_sources.get_mapping_dict()
             json.dump(settings, file_p)
-        self._ui.statusbar.showMessage(f"Mapping saved to: {filename[0]}", 10000)
+        self._show_status_bar_msg(f"Mapping saved to: {filename[0]}", 10000)
 
     def paste_mappings(self, table, mappings):
         """
@@ -350,46 +306,12 @@ class ImportEditorWindow(QMainWindow):
         else:
             self._import_sources.select_table(table)
 
-    def _save(self):
-        """Saves changes."""
-        name = self._spec_toolbar.name()
-        if not name:
-            self.show_error("Please enter a name for the specification.")
+    def tear_down(self):
+        if not super().tear_down():
             return False
-        mapping = self._import_sources.get_mapping_dict() if self._import_sources else {}
-        description = self._spec_toolbar.description()
-        spec_dict = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
-        self._new_spec = self._toolbox.load_specification(spec_dict)
-        if not self._call_add_specification():
-            return False
-        self._undo_stack.setClean()
-        if self.item:
-            self.item.set_specification(self._new_spec)
-        self.specification = self._new_spec
-        self.setWindowTitle(self.specification.name)
-        return True
-
-    def restore_ui(self):
-        """Restore UI state from previous session."""
-        restore_ui(self, self._app_settings, self.settings_group)
-
-    def closeEvent(self, event=None):
-        """Handles close window.
-
-        Args:
-            event (QEvent): Closing event if 'X' is clicked.
-        """
-        if self.focusWidget():
-            self.focusWidget().clearFocus()
-        if not self._undo_stack.isClean() and not prompt_to_save_changes(self, self._toolbox.qsettings(), self._save):
-            event.ignore()
-            return
         if self._import_sources:
             self._import_sources.close_connection()
-        self._undo_stack.cleanChanged.disconnect(self._update_window_modified)
-        save_ui(self, self._app_settings, self.settings_group)
-        if event:
-            event.accept()
+        return True
 
 
 def _gams_system_directory(toolbox):
