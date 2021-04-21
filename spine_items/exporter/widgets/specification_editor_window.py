@@ -256,13 +256,10 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         qApp.processEvents()  # pylint: disable=undefined-variable
         self.resize(size)
 
-    def _make_new_specification(self):
+    def _make_new_specification(self, spec_name):
         """See base class."""
-        specification_name = self._spec_toolbar.name()
-        if not specification_name:
-            self._show_error("Please enter a name for the specification.")
         description = self._spec_toolbar.description()
-        self._new_spec.name = specification_name
+        self._new_spec.name = spec_name
         self._new_spec.description = description
         return self._new_spec
 

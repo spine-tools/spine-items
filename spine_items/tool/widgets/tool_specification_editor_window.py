@@ -123,12 +123,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._spec_toolbar.menu.insertAction(self._spec_toolbar.save_action, self._ui.actionSave_program_file)
         self._spec_toolbar.menu.insertSeparator(self._spec_toolbar.save_action)
 
-    def _make_new_specification(self):
+    def _make_new_specification(self, spec_name):
         """See base class."""
-        specification_name = self._spec_toolbar.name()
-        if not specification_name:
-            self._show_error("Please enter a name for the specification.")
-            return None
         # Check that tool type is selected
         if self._ui.comboBox_tooltype.currentIndex() == -1:
             self._show_error("Tool type not selected")
@@ -139,7 +135,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._show_error("Main program file is not valid")
             return None
         new_spec_dict = {}
-        new_spec_dict["name"] = specification_name
+        new_spec_dict["name"] = spec_name
         new_spec_dict["description"] = self._spec_toolbar.description()
         new_spec_dict["tooltype"] = self._ui.comboBox_tooltype.currentText().lower()
         # Fix for issue #241

@@ -75,12 +75,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
 
         return Ui_MainWindow()
 
-    def _make_new_specification(self):
+    def _make_new_specification(self, spec_name):
         """See base class."""
-        specification_name = self._spec_toolbar.name()
-        if not specification_name:
-            self._show_error("Please enter a name for the specification.")
-            return False
         description = self._spec_toolbar.description()
         filter_name = self._ui.filter_combo_box.currentText()
         if not filter_name:
@@ -88,7 +84,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         else:
             filter_widget = self._filter_widgets[filter_name]
             filter_settings = filter_widget.settings()
-        return DataTransformerSpecification(specification_name, filter_settings, description)
+        return DataTransformerSpecification(spec_name, filter_settings, description)
 
     @Slot(str)
     def _change_filter_widget(self, filter_name):

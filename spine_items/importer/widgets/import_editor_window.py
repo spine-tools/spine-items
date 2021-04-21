@@ -114,14 +114,10 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         qApp.processEvents()  # pylint: disable=undefined-variable
         self.resize(size)
 
-    def _make_new_specification(self):
-        name = self._spec_toolbar.name()
-        if not name:
-            self._show_error("Please enter a name for the specification.")
-            return None
+    def _make_new_specification(self, spec_name):
         mapping = self._import_sources.get_mapping_dict() if self._import_sources else {}
         description = self._spec_toolbar.description()
-        spec_dict = {"name": name, "mapping": mapping, "description": description, "item_type": "Importer"}
+        spec_dict = {"name": spec_name, "mapping": mapping, "description": description, "item_type": "Importer"}
         return self._toolbox.load_specification(spec_dict)
 
     def _populate_main_menu(self):
