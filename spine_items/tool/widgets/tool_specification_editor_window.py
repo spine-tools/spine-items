@@ -46,7 +46,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         super().__init__(toolbox, specification, item)  # Inherit stylesheet from ToolboxUI
         # Customize text edit main program
         self._ui.textEdit_program.setEnabled(False)
-        self._curren_programfile_path = None
+        self._current_programfile_path = None
         self._programfile_documents = {}
         # Setup statusbar
         self._label_main_path = QLabel()
@@ -97,6 +97,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if self.includes_main_path is not None:
             self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
         self.connect_signals()
+        # Select main program file index
+        parent = self.programfiles_model.index(0, 0)
+        index = self.programfiles_model.index(0, 0, parent)
+        selection_model = self._ui.treeView_programfiles.selectionModel()
+        selection_model.setCurrentIndex(index, selection_model.Select)
 
     def _make_ui(self):
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
@@ -458,7 +463,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.dockWidget_program.setWindowTitle("")
 
     def _load_programfile_in_editor(self, file_path):
-        self._curren_programfile_path = file_path
+        self._current_programfile_path = file_path
         if not os.path.isfile(file_path):
             self._show_status_bar_msg(f"Program file {file_path} is not valid")
             self._clear_program_text_edit()
@@ -500,10 +505,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def save_program_file(self, _=False):
         """Saves program file."""
         try:
-            with open(self._curren_programfile_path, "w") as file:
+            with open(self._current_programfile_path, "w") as file:
                 file.write(self._ui.textEdit_program.toPlainText())
             self._ui.textEdit_program.document().setModified(False)
-            basename = os.path.basename(self._curren_programfile_path)
+            basename = os.path.basename(self._current_programfile_path)
             self._show_status_bar_msg(f"Program file '{basename}' saved successfully")
         except IOError as e:
             self._show_status_bar_msg(e)
