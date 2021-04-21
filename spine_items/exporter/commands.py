@@ -209,23 +209,25 @@ class SetUseFixedTableNameFlag(QUndoCommand):
 
 
 class SetFixedTitle(QUndoCommand):
-    def __init__(self, model, title, previous_title):
+    def __init__(self, model, mapping_name, title, previous_title):
         """
         Args:
             model (MappingEditorTableModel): editor model
+            mapping_name (str): mapping's name
             title (str): table name
             previous_title (str): previous table name
         """
         super().__init__("change table name")
         self._model = model
+        self._mapping_name = mapping_name
         self._title = title
         self._previous_title = previous_title
 
     def redo(self):
-        self._model.set_fixed_title(self._title)
+        self._model.set_fixed_title(self._title, self._mapping_name)
 
     def undo(self):
-        self._model.set_fixed_title(self._previous_title)
+        self._model.set_fixed_title(self._previous_title, self._mapping_name)
 
 
 class SetMappingPositions(QUndoCommand):
@@ -237,7 +239,7 @@ class SetMappingPositions(QUndoCommand):
             positions (list of Position): new positions
             previous_positions (list of Position): previous positions
         """
-        super().__init__("change mapping position")
+        super().__init__("change mapping item's position")
         self._mapping_editor_table_model = model
         self._mapping_name = mapping_name
         self._positions = positions
@@ -275,6 +277,28 @@ class SetMappingProperty(QUndoCommand):
 
     def undo(self):
         self._setter(self._previous_value, self._row, self._mapping_name)
+
+
+class SetMappingNullable(QUndoCommand):
+    def __init__(self, model, mapping_name, row, nullable):
+        """
+        Args:
+            model (MappingEditorTableModel): editor model
+            mapping_name (str): mapping's name
+            row (int): row index in model
+            nullable (bool): True to set, False to unset
+        """
+        super().__init__(("set " if nullable else "unset ") + " mapping item nullable")
+        self._model = model
+        self._mapping_name = mapping_name
+        self._row = row
+        self._nullable = nullable
+
+    def redo(self):
+        self._model.set_nullable(self._nullable, self._row, self._mapping_name)
+
+    def undo(self):
+        self._model.set_nullable(not self._nullable, self._row, self._mapping_name)
 
 
 class CompactMapping(QUndoCommand):

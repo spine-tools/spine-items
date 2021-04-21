@@ -14,6 +14,7 @@ Contains model for export mapping setup table.
 :author: A. Soininen (VTT)
 :date:   11.12.2020
 """
+from enum import IntEnum, unique
 from itertools import takewhile
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide2.QtGui import QColor, QFont
@@ -55,10 +56,20 @@ from spinedb_api.export_mapping.export_mapping import (
     ToolFeatureRequiredFlagMapping,
     ToolMapping,
 )
-from ..commands import SetFixedTitle, SetMappingPositions, SetMappingProperty
+from ..commands import SetFixedTitle, SetMappingNullable, SetMappingPositions, SetMappingProperty
 
 
 POSITION_DISPLAY_TEXT = {Position.hidden: "hidden", Position.table_name: "table name", Position.header: "column header"}
+
+
+@unique
+class EditorColumn(IntEnum):
+    ROW_LABEL = 0
+    POSITION = 1
+    PIVOTED = 2
+    NULLABLE = 3
+    HEADER = 4
+    FILTER = 5
 
 
 class MappingEditorTableModel(QAbstractTableModel):
@@ -82,18 +93,18 @@ class MappingEditorTableModel(QAbstractTableModel):
         self._mapping_provider = mapping_provider
 
     def columnCount(self, paren=QModelIndex()):
-        return 5
+        return len(EditorColumn)
 
     def data(self, index, role=Qt.DisplayRole):
         column = index.column()
         if role in (Qt.DisplayRole, Qt.EditRole):
             row = index.row()
-            if column == 0:
+            if column == EditorColumn.ROW_LABEL:
                 mapping = self._mappings[row]
                 if row == 0 and isinstance(mapping, FixedValueMapping):
                     return mapping.value
                 return _names[type(mapping)]
-            if column == 1:
+            if column == EditorColumn.POSITION:
                 if row == _value_row(self._mappings) and self._non_leaf_mapping_is_pivoted:
                     return "in pivot"
                 position = self._mappings[row].position
@@ -102,24 +113,27 @@ class MappingEditorTableModel(QAbstractTableModel):
                 if is_pivoted(position):
                     return str(-position)
                 return POSITION_DISPLAY_TEXT.get(position, "unrecognized")
-            if column == 3:
+            if column == EditorColumn.HEADER:
                 return self._mappings[row].header
-            if column == 4:
+            if column == EditorColumn.FILTER:
                 return self._mappings[row].filter_re
-        elif role == Qt.CheckStateRole and index.column() == 2:
-            if is_pivoted(self._mappings[index.row()].position):
-                return Qt.Checked
-            return Qt.Unchecked
-        elif role == Qt.FontRole and column == 0:
+        elif role == Qt.CheckStateRole:
+            if column == EditorColumn.PIVOTED:
+                if is_pivoted(self._mappings[index.row()].position):
+                    return Qt.Checked
+                return Qt.Unchecked
+            if column == EditorColumn.NULLABLE:
+                return Qt.Checked if self._mappings[index.row()].is_ignorable() else Qt.Unchecked
+        elif role == Qt.FontRole and column == EditorColumn.ROW_LABEL:
             if index.row() != 0 or not isinstance(self._mappings[0], FixedValueMapping):
                 font = QFont()
                 font.setBold(True)
                 return font
-        elif role == Qt.BackgroundRole and column == 0:
+        elif role == Qt.BackgroundRole and column == EditorColumn.ROW_LABEL:
             if index.row() != 0 or not isinstance(self._mappings[0], FixedValueMapping):
                 return QColor(250, 250, 250)
-        elif role == Qt.ToolTipRole and column == 4:
-            return "Regular expression"
+        elif role == Qt.ToolTipRole and column == EditorColumn.FILTER:
+            return "Regular expression to filter database items."
         if role == self.MAPPING_ITEM_ROLE:
             return self._mappings[index.row()]
         return None
@@ -128,22 +142,24 @@ class MappingEditorTableModel(QAbstractTableModel):
         row = index.row()
         column = index.column()
         if row == 0 and isinstance(self._mappings[row], FixedValueMapping):
-            if column == 0:
+            if column == EditorColumn.ROW_LABEL:
                 return super().flags(index) | Qt.ItemIsEditable
             return super().flags(index) & ~Qt.ItemIsEnabled
         value_row = _value_row(self._mappings)
-        if row >= value_row and column == 2:
+        if row >= value_row and column == EditorColumn.PIVOTED:
             return super().flags(index) & ~Qt.ItemIsEnabled
-        if column == 0:
+        if column == EditorColumn.ROW_LABEL:
             return super().flags(index) & ~Qt.ItemIsSelectable
-        if column in (1, 4):
+        if column in (EditorColumn.POSITION, EditorColumn.FILTER):
             return super().flags(index) | Qt.ItemIsEditable
-        if column == 2:
+        if column == EditorColumn.PIVOTED:
             return super().flags(index) | Qt.ItemIsUserCheckable
-        if column == 3:
+        if column == EditorColumn.HEADER:
             if self._mappings[row].position == Position.header:
                 return super().flags(index) & ~Qt.ItemIsEnabled
             return super().flags(index) | Qt.ItemIsEditable
+        if column == EditorColumn.NULLABLE:
+            return super().flags(index) | Qt.ItemIsUserCheckable
         return super().flags(index)
 
     def has_table_name(self):
@@ -156,7 +172,7 @@ class MappingEditorTableModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return ("Mapping type", "Map to", "Pivoted", "Header", "Filter")[section]
+            return ("Mapping type", "Map to", "Pivoted", "Nullable", "Header", "Filter")[section]
         return None
 
     def root_mapping(self):
@@ -170,40 +186,46 @@ class MappingEditorTableModel(QAbstractTableModel):
         return len(self._mappings)
 
     def setData(self, index, value, role=Qt.EditRole):
+        column = index.column()
         if role == Qt.EditRole:
             row = index.row()
-            column = index.column()
             mapping = self._mappings[row]
-            if column == 0 and isinstance(mapping, FixedValueMapping):
-                self._undo_stack.push(SetFixedTitle(self, value, mapping.value))
+            if column == EditorColumn.ROW_LABEL and isinstance(mapping, FixedValueMapping):
+                self._undo_stack.push(SetFixedTitle(self, self._mapping_name, value, mapping.value))
                 return True
-            if column == 1:
+            if column == EditorColumn.POSITION:
                 return self._push_set_positions_command(value, row, mapping)
-            if column == 3:
+            if column == EditorColumn.HEADER:
                 if value == mapping.header:
                     return False
                 previous_header = mapping.header
                 command = SetMappingProperty(
-                    "change mapping header", self.set_header, self._mapping_name, row, value, previous_header
+                    "change mapping item's header", self.set_header, self._mapping_name, row, value, previous_header
                 )
                 self._undo_stack.push(command)
                 return True
-            if column == 4:
+            if column == EditorColumn.FILTER:
                 if value == mapping.filter_re:
                     return False
                 previous_filter_re = mapping.filter_re
                 command = SetMappingProperty(
-                    "change mapping filter", self.set_filter_re, self._mapping_name, row, value, previous_filter_re
+                    "change mapping item's filter", self.set_filter_re, self._mapping_name, row, value, previous_filter_re
                 )
                 self._undo_stack.push(command)
                 return True
         elif role == Qt.CheckStateRole:
-            row = index.row()
-            new_positions = _propose_toggled_pivot(self._mappings, row)
-            previous_positions = [m.position for m in self._mappings]
-            command = SetMappingPositions(self, self._mapping_name, new_positions, previous_positions)
-            self._undo_stack.push(command)
-            return True
+            if column == EditorColumn.PIVOTED:
+                row = index.row()
+                new_positions = _propose_toggled_pivot(self._mappings, row)
+                previous_positions = [m.position for m in self._mappings]
+                command = SetMappingPositions(self, self._mapping_name, new_positions, previous_positions)
+                self._undo_stack.push(command)
+                return True
+            if column == EditorColumn.NULLABLE:
+                row = index.row()
+                nullable = self._mappings[row].is_ignorable()
+                self._undo_stack.push(SetMappingNullable(self, self._mapping_name, row, not nullable))
+                return True
         return False
 
     def set_mapping(self, mapping_name, root_mapping):
@@ -286,17 +308,17 @@ class MappingEditorTableModel(QAbstractTableModel):
                     pivot_top = row
                     pivot_bottom = min(pivot_bottom, row)
                 mapping.position = position
-        top_left = self.index(top, 1)
-        bottom_right = self.index(bottom, 1)
+        top_left = self.index(top, EditorColumn.POSITION)
+        bottom_right = self.index(bottom, EditorColumn.POSITION)
         self.dataChanged.emit(top_left, bottom_right, [Qt.DisplayRole])
         if pivot_bottom <= pivot_top:
-            top_left = self.index(pivot_top, 2)
-            bottom_right = self.index(pivot_bottom, 2)
+            top_left = self.index(pivot_top, EditorColumn.PIVOTED)
+            bottom_right = self.index(pivot_bottom, EditorColumn.PIVOTED)
             self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
         non_leaf_pivoted = self._is_non_leaf_pivoted()
         if non_leaf_pivoted != self._non_leaf_mapping_is_pivoted:
             self._non_leaf_mapping_is_pivoted = non_leaf_pivoted
-            index = self.index(_value_row(self._mappings), 1)
+            index = self.index(_value_row(self._mappings), EditorColumn.POSITION)
             self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
     def set_header(self, header, row, mapping_name):
@@ -311,7 +333,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         if mapping_name != self._mapping_name:
             self._mapping_provider.show_on_table(mapping_name)
         self._mappings[row].header = header
-        index = self.index(row, 3)
+        index = self.index(row, EditorColumn.HEADER)
         self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
     def set_filter_re(self, filter_re, row, mapping_name):
@@ -326,19 +348,37 @@ class MappingEditorTableModel(QAbstractTableModel):
         if mapping_name != self._mapping_name:
             self._mapping_provider.show_on_table(mapping_name)
         self._mappings[row].filter_re = filter_re
-        index = self.index(row, 4)
+        index = self.index(row, EditorColumn.FILTER)
         self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
-    def set_fixed_title(self, title):
+    def set_fixed_title(self, title, mapping_name):
         """
         Sets fixed table name.
 
         Args:
             title (str): fixed table name
+            mapping_name (str): mapping's name
         """
+        if mapping_name != self._mapping_name:
+            self._mapping_provider.show_on_table(mapping_name)
         self._mappings[0].value = title
-        index = self.index(0, 0)
+        index = self.index(0, EditorColumn.ROW_LABEL)
         self.dataChanged.emit(index, index, [Qt.DisplayRole])
+
+    def set_nullable(self, nullable, row, mapping_name):
+        """
+        Sets mapping filter_re for given row.
+
+        Args:
+            nullable (bool): mapping filter_re
+            row (int): row index
+            mapping_name (str): mapping's name
+        """
+        if mapping_name != self._mapping_name:
+            self._mapping_provider.show_on_table(mapping_name)
+        self._mappings[row].set_ignorable(nullable)
+        index = self.index(row, EditorColumn.NULLABLE)
+        self.dataChanged.emit(index, index, [Qt.CheckStateRole])
 
     def _is_non_leaf_pivoted(self):
         """Checks if a non-leaf mapping is pivoted.
@@ -384,8 +424,8 @@ class MappingEditorTableModel(QAbstractTableModel):
         regular_mappings.sort(key=lambda x: x[0])
         for column, item in enumerate(regular_mappings):
             item[1].position = column
-        top_left = self.index(0, 1)
-        bottom_right = self.index(self.rowCount() - 1, 1)
+        top_left = self.index(0, EditorColumn.POSITION)
+        bottom_right = self.index(self.rowCount() - 1, EditorColumn.POSITION)
         self.dataChanged.emit(top_left, bottom_right, Qt.DisplayRole)
 
 

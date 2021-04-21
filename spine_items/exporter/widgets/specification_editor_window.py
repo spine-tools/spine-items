@@ -66,7 +66,7 @@ from ..commands import (
     SetUseFixedTableNameFlag,
 )
 from ..mvcmodels.mappings_table_model import MappingsTableModel
-from ..mvcmodels.mapping_editor_table_model import MappingEditorTableModel
+from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel
 from ..specification import MappingSpecification, MappingType, OutputFormat, Specification
 from .filter_edit_delegate import FilterEditDelegate
 from .position_edit_delegate import PositionEditDelegate, position_section_width
@@ -214,10 +214,11 @@ class SpecificationEditorWindow(QMainWindow):
         self._filter_edit_delegate = FilterEditDelegate(self)
         self._ui.mapping_table_view.setItemDelegateForColumn(4, self._filter_edit_delegate)
         table_header = self._ui.mapping_table_view.horizontalHeader()
-        table_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        table_header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        table_header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        table_header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.ROW_LABEL, QHeaderView.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.PIVOTED, QHeaderView.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.NULLABLE, QHeaderView.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.HEADER, QHeaderView.ResizeToContents)
         table_header.setMinimumSectionSize(position_section_width())
         self._enable_mapping_specification_editing()
         self._specification_toolbar.save_action.triggered.connect(self._save)
