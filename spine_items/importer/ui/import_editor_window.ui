@@ -18,8 +18,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1197</width>
-    <height>697</height>
+    <width>964</width>
+    <height>665</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,9 +34,9 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_sources">
+  <widget class="QDockWidget" name="dockWidget_source_tables">
    <property name="windowTitle">
-    <string>Sources</string>
+    <string>Source tables</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
@@ -44,7 +44,7 @@
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <property name="spacing">
-      <number>0</number>
+      <number>3</number>
      </property>
      <property name="leftMargin">
       <number>0</number>
@@ -68,6 +68,9 @@
        </property>
        <property name="textElideMode">
         <enum>Qt::ElideLeft</enum>
+       </property>
+       <property name="indentation">
+        <number>0</number>
        </property>
        <property name="rootIsDecorated">
         <bool>true</bool>
@@ -564,6 +567,74 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="dockWidget_source_files">
+   <property name="windowTitle">
+    <string>Source files</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_7">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>File path:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="ElidedCombobox" name="comboBox_source_file">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+         </property>
+         <property name="minimumContentsLength">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="toolButton_browse_source_file">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../../ui/resources/resources_icons.qrc">
+           <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>78</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+  </widget>
   <action name="export_mappings_action">
    <property name="enabled">
     <bool>false</bool>
@@ -578,11 +649,6 @@
    </property>
    <property name="text">
     <string>Import mappings...</string>
-   </property>
-  </action>
-  <action name="actionLoad_file">
-   <property name="text">
-    <string>Load file...</string>
    </property>
   </action>
   <action name="actionSwitch_connector">
@@ -605,6 +671,11 @@
    <extends>QTreeView</extends>
    <header>spine_items/importer/widgets/multi_checkable_tree_view.h</header>
   </customwidget>
+  <customwidget>
+   <class>ElidedCombobox</class>
+   <extends>QComboBox</extends>
+   <header>spinetoolbox/widgets/custom_combobox.h</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>source_data_table</tabstop>
@@ -621,6 +692,8 @@
   <tabstop>map_dimension_spin_box</tabstop>
   <tabstop>mapping_spec_table</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="../../ui/resources/resources_icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

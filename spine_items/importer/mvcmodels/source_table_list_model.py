@@ -16,55 +16,73 @@ Contains SourceTableListModel and associated list item classes
 :date:   6.8.2019
 """
 
-from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt
-from ..commands import SetTableChecked
+from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
+from ..commands import SetTableChecked, UpdateTableItem
 
 
 class SourceTableItem:
-    """A list item for :class:`_SourceTableListModel`"""
+    """A list item for :class:`SourceTableListModel`"""
 
-    def __init__(self, name, checked):
+    def __init__(self, name, checked, checkable=True, editable=False, real=True):
         self.name = name
         self.checked = checked
+        self.checkable = checkable
+        self.editable = editable
+        self.real = real
+
+    def update_from_dict(self, d):
+        self.name = d["name"]
+        self.checked = d["checked"]
+        self.checkable = d["checkable"]
+        self.editable = d["editable"]
+        self.real = d["real"]
+
+    def to_dict(self):
+        return dict(
+            name=self.name, checked=self.checked, checkable=self.checkable, editable=self.editable, real=self.real
+        )
 
 
 class SourceTableListModel(QAbstractItemModel):
     """Model for source table lists which supports undo/redo functionality."""
 
-    def __init__(self, source, undo_stack):
+    msg_error = Signal(str)
+    table_created = Signal(int)
+
+    def __init__(self, undo_stack):
         """
         Args:
             undo_stack (QUndoStack): undo stack
         """
         super().__init__()
-        self._root_item = SourceTableItem(source, None)
-        self._select_all_item = SourceTableItem("Select All", None)
+        self._select_all_item = SourceTableItem("Select All", None, real=False)
         self._tables = []
         self._undo_stack = undo_stack
 
-    @property
-    def _root_index(self):
-        return self.createIndex(0, 0, self._root_item)
+    def add_empty_row(self):
+        self.beginInsertRows(QModelIndex(), self.rowCount() - 1, self.rowCount() - 1)
+        empty_item = SourceTableItem("<unnamed table>", False, checkable=False, editable=True, real=False)
+        self._tables.append(empty_item)
+        self.endInsertRows()
+
+    def _remove_empty_row(self):
+        self.beginRemoveRows(QModelIndex(), self.rowCount() - 1, self.rowCount() - 1)
+        self._tables.pop(self.rowCount() - 1)
+        self.endRemoveRows()
 
     def columnCount(self, parent=QModelIndex()):
         return 1
 
     def rowCount(self, parent=QModelIndex()):
         if not parent.isValid():
-            return 1
-        if parent.internalPointer() == self._root_item:
             return len(self._tables)
         return 0
 
     def index(self, row, column, parent=QModelIndex()):
-        if not parent.isValid():
-            return self.createIndex(row, column, self._root_item)
         return self.createIndex(row, column, self._tables[row])
 
-    def parent(self, index):
-        if index.internalPointer() == self._root_item:
-            return QModelIndex()
-        return self.createIndex(0, 0, self._root_item)
+    def parent(self, _index):
+        return QModelIndex()
 
     def checked_table_names(self):
         return [table.name for table in self._tables if table.checked]
@@ -72,7 +90,7 @@ class SourceTableListModel(QAbstractItemModel):
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
-        if role == Qt.DisplayRole:
+        if role in (Qt.DisplayRole, Qt.EditRole):
             return index.internalPointer().name
         if role == Qt.CheckStateRole:
             if index.flags() & Qt.ItemIsUserCheckable:
@@ -80,9 +98,12 @@ class SourceTableListModel(QAbstractItemModel):
         return None
 
     def flags(self, index):
-        if index.internalPointer() == self._root_item:
-            return Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        if index.internalPointer().checkable:
+            flags |= Qt.ItemIsUserCheckable
+        if index.internalPointer().editable:
+            flags |= Qt.ItemIsEditable
+        return flags
 
     def reset(self, items):
         self.beginResetModel()
@@ -92,15 +113,48 @@ class SourceTableListModel(QAbstractItemModel):
     def setData(self, index, value, role=Qt.EditRole):
         if not index.isValid():
             return False
+        row = index.row()
+        item = self._tables[row]
         if role == Qt.CheckStateRole:
-            row = index.row()
-            item = self._tables[row]
             checked = value == Qt.Checked
             if row == 0:
                 self.set_multiple_checked_undoable(checked, *range(1, len(self._tables)))
             else:
                 self._undo_stack.push(SetTableChecked(item.name, self, checked, row))
+        if role == Qt.EditRole:
+            if value == item.name:
+                return True
+            if value in self.table_names():
+                self.msg_error.emit(f"There's already a table called {value}")
+                return False
+            item_dict = item.to_dict()
+            new_item_dict = item_dict.copy()
+            new_item_dict["name"] = value
+            new_item_dict["real"] = True
+            new_item_dict["checkable"] = True
+            self._undo_stack.push(UpdateTableItem(self, row, item_dict, new_item_dict, row == self.rowCount() - 1))
+            return True
         return True
+
+    def update_item(self, row, item_dict, add_empty_row=False, remove_empty_row=False):
+        """
+        Updates item. This only happens in file-less mode, when the user is creating tables.
+
+        Args:
+            rows (int): item row
+            item_dict (dict): new item dict
+            add_empty_row (bool): whether or not to add an empty row
+            remove_empty_row (bool): whether or not to remove the empty row
+        """
+        item = self._tables[row]
+        item.update_from_dict(item_dict)
+        index = self.index(row, 0)
+        if add_empty_row:
+            self.add_empty_row()
+            self.table_created.emit(row)
+        if remove_empty_row:
+            self._remove_empty_row()
+        self.dataChanged.emit(index, index)
 
     def set_checked(self, checked, *rows):
         """
@@ -114,11 +168,11 @@ class SourceTableListModel(QAbstractItemModel):
             if self._tables[row].checked == checked:
                 continue
             self._tables[row].checked = checked
-            index = self.index(row, 0, parent=self._root_index)
+            index = self.index(row, 0)
             self.dataChanged.emit(index, index, [Qt.CheckStateRole])
         # Update select all state
         self._select_all_item.checked = all(self._tables[row].checked for row in range(1, len(self._tables)))
-        index = self.index(0, 0, parent=self._root_index)
+        index = self.index(0, 0)
         self.dataChanged.emit(index, index, [Qt.CheckStateRole])
 
     def set_multiple_checked_undoable(self, checked, *rows):
@@ -135,16 +189,14 @@ class SourceTableListModel(QAbstractItemModel):
         self._undo_stack.push(SetTableChecked("All", self, checked, *rows))
 
     def table_at(self, index):
-        if index.internalPointer() == self._root_item:
-            return None
         return self._tables[index.row()]
 
     def table_index(self, table):
         rows = {table.name: i for i, table in enumerate(self._tables)}
         try:
-            return self.index(rows[table], 0, parent=self._root_index)
+            return self.index(rows[table], 0)
         except KeyError:
             return QModelIndex()
 
     def table_names(self):
-        return [table.name for table in self._tables]
+        return [table.name for table in self._tables if table.real]

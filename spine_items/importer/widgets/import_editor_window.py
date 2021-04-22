@@ -31,6 +31,7 @@ from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
 from spinedb_api.spine_io.importers.json_reader import JSONConnector
 from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
 from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
+from spinedb_api.spine_io.importers.reader import SourceConnection
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from ..connection_manager import ConnectionManager
 from ..commands import RestoreMappingsFromDict
@@ -54,6 +55,26 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     connection_failed = Signal(str)
 
+    _FILE_LESS = "anonymous file"
+    """Name of the 'file-less' entry in the file path combobox."""
+
+    class _FileLessConnector(SourceConnection):
+        """A connector that has no tables nor contents, used for the file-less mode."""
+
+        FILE_EXTENSIONS = ""
+
+        def connect_to_source(self, _source):
+            pass
+
+        def disconnect(self):
+            pass
+
+        def get_tables(self):
+            return []
+
+        def get_data_iterator(self, table, options, max_rows=-1):
+            return iter([]), ()
+
     def __init__(self, toolbox, specification, item=None, filepath=None):
         """
         Args:
@@ -63,6 +84,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         """
         super().__init__(toolbox, specification, item)
         self.takeCentralWidget().deleteLater()
+        self._filepath = filepath
         self._import_sources = None
         self._connection_manager = None
         self._memoized_connectors = {}
@@ -73,13 +95,25 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             self._import_mapping_options.set_mapping_specification_model
         )
         self._import_mapping_options.about_to_undo.connect(self._import_mappings.focus_on_changing_specification)
-        self._ui.actionLoad_file.triggered.connect(self._show_open_file_dialog)
+        self._ui.comboBox_source_file.addItem(self._FILE_LESS)
+        if filepath:
+            self._ui.comboBox_source_file.addItem(filepath)
+        self._ui.comboBox_source_file.setCurrentIndex(-1)
+        self._ui.comboBox_source_file.currentTextChanged.connect(self.start_ui)
+        self._ui.toolButton_browse_source_file.clicked.connect(self._show_open_file_dialog)
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
         self.connection_failed.connect(self._show_error)
-        if filepath:
-            self.start_ui(filepath)
+
+    def showEvent(self, ev):
+        """Select file path in the combobox, which calls the ``start_ui`` slot."""
+        super().showEvent(ev)
+        if self._filepath:
+            self._ui.comboBox_source_file.setCurrentText(self._filepath)
+
+    def is_file_less(self):
+        return self._ui.comboBox_source_file.currentText() == self._FILE_LESS
 
     @property
     def settings_group(self):
@@ -97,15 +131,16 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             dock.setVisible(True)
             dock.setFloating(False)
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
-        docks = (self._ui.dockWidget_sources, self._ui.dockWidget_mappings)
+        docks = (self._ui.dockWidget_source_files, self._ui.dockWidget_mappings)
         self.splitDockWidget(*docks, Qt.Horizontal)
         width = sum(d.size().width() for d in docks)
         self.resizeDocks(docks, [0.9 * width, 0.1 * width], Qt.Horizontal)
-        docks = (self._ui.dockWidget_sources, self._ui.dockWidget_source_data)
-        self.splitDockWidget(*docks, Qt.Vertical)
+        docks = (self._ui.dockWidget_source_files, self._ui.dockWidget_source_tables, self._ui.dockWidget_source_data)
+        self.splitDockWidget(*docks[:-1], Qt.Vertical)
+        self.splitDockWidget(*docks[1:], Qt.Vertical)
         height = sum(d.size().height() for d in docks)
-        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
-        self.splitDockWidget(self._ui.dockWidget_sources, self._ui.dockWidget_source_options, Qt.Horizontal)
+        self.resizeDocks(docks, [0.1 * height, 0.2 * height, 0.7 * height], Qt.Vertical)
+        self.splitDockWidget(self._ui.dockWidget_source_tables, self._ui.dockWidget_source_options, Qt.Horizontal)
         self.splitDockWidget(self._ui.dockWidget_mappings, self._ui.dockWidget_mapping_options, Qt.Vertical)
         self.splitDockWidget(self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec, Qt.Vertical)
         docks = (self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec)
@@ -124,7 +159,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         super()._populate_main_menu()
         menu = self._spec_toolbar.menu
         before = self._spec_toolbar.save_action
-        menu.insertActions(before, [self._ui.actionLoad_file, self._ui.actionSwitch_connector])
+        menu.insertAction(before, self._ui.actionSwitch_connector)
         menu.insertSeparator(before)
         menu.insertActions(before, [self._ui.import_mappings_action, self._ui.export_mappings_action])
         menu.insertSeparator(before)
@@ -143,9 +178,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         )
         if not filepath:
             return
-        if self._connection_manager:
-            self._connection_manager.close_connection()
-        self.start_ui(filepath)
+        self._ui.comboBox_source_file.addItem(filepath)
+        self._ui.comboBox_source_file.setCurrentText(filepath)
 
     @Slot(bool)
     def _switch_connector(self, _=False):
@@ -178,11 +212,14 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             # Ask user
             connector = self._get_connector(filepath)
             if not connector:
-                if not self.isVisible():
-                    self.close()
                 return
+        if filepath == self._FILE_LESS:
+            self._FileLessConnector.__name__ = connector.__name__
+            connector = self._FileLessConnector
         self._ui.actionSwitch_connector.setEnabled(True)
         connector_settings = {"gams_directory": _gams_system_directory(self._toolbox)}
+        if self._connection_manager:
+            self._connection_manager.close_connection()
         self._connection_manager = ConnectionManager(connector, connector_settings)
         self._connection_manager.source = filepath
         mapping = self.specification.mapping if self.specification else {}
@@ -195,10 +232,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._import_mappings.mapping_data_changed.connect(self._import_sources.set_mapping)
         self._import_mappings.about_to_undo.connect(self._import_sources.select_table)
         self._import_sources.source_table_selected.connect(self._import_mappings.set_mappings_model)
-        self._import_sources.source_table_selected.connect(
-            self._ui.source_data_table.horizontalHeader().set_source_table
-        )
-        self._import_sources.source_table_selected.connect(self._ui.source_data_table.verticalHeader().set_source_table)
+        for header in (self._ui.source_data_table.horizontalHeader(), self._ui.source_data_table.verticalHeader()):
+            self._import_sources.source_table_selected.connect(header.set_source_table)
         self._import_sources.preview_data_updated.connect(self._import_mapping_options.set_num_available_columns)
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
         self._connection_manager.init_connection()
@@ -207,7 +242,6 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     def _handle_connection_ready(self):
         self._ui.export_mappings_action.setEnabled(True)
         self._ui.import_mappings_action.setEnabled(True)
-        self._ui.actionLoad_file.setText("Switch file...")
 
     def _get_connector(self, filepath):
         """Shows a QDialog to select a connector for the given source file.

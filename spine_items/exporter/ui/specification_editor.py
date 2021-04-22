@@ -274,6 +274,9 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
         self.label.setSizePolicy(sizePolicy)
+        font = QFont()
+        font.setPointSize(10)
+        self.label.setFont(font)
 
         self.horizontalLayout_4.addWidget(self.label)
 
@@ -306,8 +309,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.label_9 = QLabel(self.dockWidgetContents_4)
         self.label_9.setObjectName(u"label_9")
-        font = QFont()
-        font.setPointSize(9)
         self.label_9.setFont(font)
 
         self.horizontalLayout_3.addWidget(self.label_9)
@@ -320,7 +321,7 @@ class Ui_MainWindow(object):
         sizePolicy2.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
         self.database_url_combo_box.setSizePolicy(sizePolicy2)
         self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLength)
-        self.database_url_combo_box.setMinimumContentsLength(32)
+        self.database_url_combo_box.setMinimumContentsLength(0)
 
         self.horizontalLayout_3.addWidget(self.database_url_combo_box)
 

@@ -94,12 +94,17 @@ class ImportMappings(QObject):
             source_table_name (str): newly selected source table's name
             model (MappingListModel): mapping list model attached to that source table.
         """
-        self._ui.new_button.setEnabled(True)
+        self._ui.new_button.setEnabled(False)
+        self._ui.remove_button.setEnabled(False)
+        self._ui.duplicate_button.setEnabled(False)
         self._source_table = source_table_name
         if self._mappings_model is not None:
             self._mappings_model.dataChanged.disconnect(self.data_changed)
         self._mappings_model = model
         self._ui.mapping_list.setModel(model)
+        if self._mappings_model is None:
+            return
+        self._ui.new_button.setEnabled(True)
         for specification in self._mappings_model.mapping_specifications:
             specification.about_to_undo.connect(self.focus_on_changing_specification)
         self._ui.mapping_list.selectionModel().currentChanged.connect(self.change_mapping)

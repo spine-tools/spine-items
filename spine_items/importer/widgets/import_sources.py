@@ -60,10 +60,12 @@ class ImportSources(QObject):
         self._copied_options = {}
         self._undo_stack = parent._undo_stack
         self._preview_table_model = SourceDataTableModel()
-        self._source_table_model = SourceTableListModel(self._connector.source, self._undo_stack)
+        self._source_table_model = SourceTableListModel(self._undo_stack)
         self._restore_mapping(mapping)
         self._ui.source_list.setModel(self._source_table_model)
         self._source_table_model.modelReset.connect(self._ui.source_list.expandAll)
+        self._source_table_model.msg_error.connect(self._parent._show_error)
+        self._source_table_model.table_created.connect(self._select_table_row)
         # create ui
         self._ui.source_data_table.setModel(self._preview_table_model)
         self._ui_source_data_table_menu = SourceDataTableMenu(self._ui.source_data_table)
@@ -146,7 +148,8 @@ class ImportSources(QObject):
         Sets selected table and requests data from connector
         """
         item = self._source_table_model.table_at(selected)
-        if item is None:
+        if not item.real:
+            self.source_table_selected.emit("", None)
             return
         if item.name not in self._table_mappings:
             specification = MappingSpecificationModel(
@@ -185,6 +188,9 @@ class ImportSources(QObject):
         """
         Updates list of tables
         """
+        is_file_less = self._parent.is_file_less()
+        if is_file_less:
+            tables = self._table_mappings
         new_tables = list()
         for t_name, t_mapping in tables.items():
             if t_name not in self._table_mappings:
@@ -196,16 +202,15 @@ class ImportSources(QObject):
         for k in list(self._table_mappings.keys()):
             if k not in tables:
                 self._table_mappings.pop(k)
-
         if not tables:
-            self._ui.source_list.clear()
             self._ui.source_list.clearSelection()
-            return
 
         # empty tables list and add new tables
         tables_to_select = set(self.checked_tables + new_tables)
-        table_items = [SourceTableItem(name, name in tables_to_select) for name in tables]
+        table_items = [SourceTableItem(name, name in tables_to_select, editable=is_file_less) for name in tables]
         self._source_table_model.reset(table_items)
+        if is_file_less:
+            self._source_table_model.add_empty_row()
 
         # current selected table
         current_index = self._ui.source_list.selectionModel().currentIndex()

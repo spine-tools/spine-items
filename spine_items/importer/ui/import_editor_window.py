@@ -27,13 +27,15 @@ from PySide2.QtWidgets import *
 
 from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
 from spine_items.importer.widgets.multi_checkable_tree_view import MultiCheckableTreeView
+from spinetoolbox.widgets.custom_combobox import ElidedCombobox
 
+from spine_items import resources_icons_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1197, 697)
+        MainWindow.resize(964, 665)
         MainWindow.setDockNestingEnabled(True)
         self.export_mappings_action = QAction(MainWindow)
         self.export_mappings_action.setObjectName(u"export_mappings_action")
@@ -41,8 +43,6 @@ class Ui_MainWindow(object):
         self.import_mappings_action = QAction(MainWindow)
         self.import_mappings_action.setObjectName(u"import_mappings_action")
         self.import_mappings_action.setEnabled(False)
-        self.actionLoad_file = QAction(MainWindow)
-        self.actionLoad_file.setObjectName(u"actionLoad_file")
         self.actionSwitch_connector = QAction(MainWindow)
         self.actionSwitch_connector.setObjectName(u"actionSwitch_connector")
         self.actionSwitch_connector.setEnabled(False)
@@ -53,12 +53,12 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName(u"statusbar")
         self.statusbar.setSizeGripEnabled(False)
         MainWindow.setStatusBar(self.statusbar)
-        self.dockWidget_sources = QDockWidget(MainWindow)
-        self.dockWidget_sources.setObjectName(u"dockWidget_sources")
+        self.dockWidget_source_tables = QDockWidget(MainWindow)
+        self.dockWidget_source_tables.setObjectName(u"dockWidget_source_tables")
         self.dockWidgetContents = QWidget()
         self.dockWidgetContents.setObjectName(u"dockWidgetContents")
         self.verticalLayout_2 = QVBoxLayout(self.dockWidgetContents)
-        self.verticalLayout_2.setSpacing(0)
+        self.verticalLayout_2.setSpacing(3)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.source_list = MultiCheckableTreeView(self.dockWidgetContents)
@@ -66,13 +66,14 @@ class Ui_MainWindow(object):
         self.source_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.source_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.source_list.setTextElideMode(Qt.ElideLeft)
+        self.source_list.setIndentation(0)
         self.source_list.setRootIsDecorated(True)
         self.source_list.setHeaderHidden(True)
 
         self.verticalLayout_2.addWidget(self.source_list)
 
-        self.dockWidget_sources.setWidget(self.dockWidgetContents)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_sources)
+        self.dockWidget_source_tables.setWidget(self.dockWidgetContents)
+        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_source_tables)
         self.dockWidget_source_options = QDockWidget(MainWindow)
         self.dockWidget_source_options.setObjectName(u"dockWidget_source_options")
         self.dockWidgetContents_2 = QWidget()
@@ -307,6 +308,51 @@ class Ui_MainWindow(object):
 
         self.dockWidget_mapping_spec.setWidget(self.dockWidgetContents_6)
         MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_mapping_spec)
+        self.dockWidget_source_files = QDockWidget(MainWindow)
+        self.dockWidget_source_files.setObjectName(u"dockWidget_source_files")
+        self.dockWidgetContents_7 = QWidget()
+        self.dockWidgetContents_7.setObjectName(u"dockWidgetContents_7")
+        self.verticalLayout = QVBoxLayout(self.dockWidgetContents_7)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.label = QLabel(self.dockWidgetContents_7)
+        self.label.setObjectName(u"label")
+        font = QFont()
+        font.setPointSize(10)
+        self.label.setFont(font)
+
+        self.horizontalLayout_2.addWidget(self.label)
+
+        self.comboBox_source_file = ElidedCombobox(self.dockWidgetContents_7)
+        self.comboBox_source_file.setObjectName(u"comboBox_source_file")
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.comboBox_source_file.sizePolicy().hasHeightForWidth())
+        self.comboBox_source_file.setSizePolicy(sizePolicy)
+        self.comboBox_source_file.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLength)
+        self.comboBox_source_file.setMinimumContentsLength(0)
+
+        self.horizontalLayout_2.addWidget(self.comboBox_source_file)
+
+        self.toolButton_browse_source_file = QToolButton(self.dockWidgetContents_7)
+        self.toolButton_browse_source_file.setObjectName(u"toolButton_browse_source_file")
+        icon = QIcon()
+        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_browse_source_file.setIcon(icon)
+
+        self.horizontalLayout_2.addWidget(self.toolButton_browse_source_file)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+
+        self.verticalSpacer = QSpacerItem(20, 78, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout.addItem(self.verticalSpacer)
+
+        self.dockWidget_source_files.setWidget(self.dockWidgetContents_7)
+        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_source_files)
         QWidget.setTabOrder(self.source_data_table, self.new_button)
         QWidget.setTabOrder(self.new_button, self.remove_button)
         QWidget.setTabOrder(self.remove_button, self.mapping_list)
@@ -332,9 +378,8 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Import Editor", None))
         self.export_mappings_action.setText(QCoreApplication.translate("MainWindow", u"Export mappings...", None))
         self.import_mappings_action.setText(QCoreApplication.translate("MainWindow", u"Import mappings...", None))
-        self.actionLoad_file.setText(QCoreApplication.translate("MainWindow", u"Load file...", None))
         self.actionSwitch_connector.setText(QCoreApplication.translate("MainWindow", u"Switch connector...", None))
-        self.dockWidget_sources.setWindowTitle(QCoreApplication.translate("MainWindow", u"Sources", None))
+        self.dockWidget_source_tables.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source tables", None))
         self.dockWidget_source_options.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source options", None))
         self.dockWidget_source_data.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source data", None))
         self.waiting_label.setText(QCoreApplication.translate("MainWindow", u"Loading preview...", None))
@@ -380,5 +425,8 @@ class Ui_MainWindow(object):
         self.parameter_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"None", None))
 
         self.dockWidget_mapping_spec.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping specification", None))
+        self.dockWidget_source_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source files", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"File path:", None))
+        self.toolButton_browse_source_file.setText(QCoreApplication.translate("MainWindow", u"...", None))
     # retranslateUi
 

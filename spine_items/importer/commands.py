@@ -103,6 +103,32 @@ class SetTableChecked(QUndoCommand):
         self._model.set_checked(not self._checked, *self._rows)
 
 
+class UpdateTableItem(QUndoCommand):
+    """Command to update table name and state in file-less mode."""
+
+    def __init__(self, table_list_model, row, old_item, new_item, is_empty_row):
+        """
+        Args:
+            table_list_model (SourceTableListModel): source table model
+            row (int): table row on the list
+            old_item (dict): old item dictionary
+            new_item (dict): new item dictionary
+        """
+        text = "rename table" if not is_empty_row else "add table"
+        super().__init__(text)
+        self._model = table_list_model
+        self._row = row
+        self._old_item = old_item
+        self._new_item = new_item
+        self._is_empty_row = is_empty_row
+
+    def redo(self):
+        self._model.update_item(self._row, self._new_item, add_empty_row=self._is_empty_row)
+
+    def undo(self):
+        self._model.update_item(self._row, self._old_item, remove_empty_row=self._is_empty_row)
+
+
 class SetComponentMappingType(QUndoCommand):
     """Sets the type of a component mapping."""
 

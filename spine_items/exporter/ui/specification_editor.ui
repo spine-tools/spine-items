@@ -441,6 +441,11 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Format:</string>
          </property>
@@ -489,7 +494,7 @@
         <widget class="QLabel" name="label_9">
          <property name="font">
           <font>
-           <pointsize>9</pointsize>
+           <pointsize>10</pointsize>
           </font>
          </property>
          <property name="text">
@@ -509,7 +514,7 @@
           <enum>QComboBox::AdjustToMinimumContentsLength</enum>
          </property>
          <property name="minimumContentsLength">
-          <number>32</number>
+          <number>0</number>
          </property>
         </widget>
        </item>
