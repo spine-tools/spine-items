@@ -101,9 +101,18 @@
       </layout>
      </item>
      <item>
-      <widget class="QTableView" name="mappings_table">
+      <widget class="MappingsTableView" name="mappings_table">
+       <property name="dragDropOverwriteMode">
+        <bool>false</bool>
+       </property>
+       <property name="dragDropMode">
+        <enum>QAbstractItemView::DragOnly</enum>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
        <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectRows</enum>
+        <enum>QAbstractItemView::SelectItems</enum>
        </property>
        <property name="showGrid">
         <bool>false</bool>
@@ -112,37 +121,6 @@
         <bool>false</bool>
        </attribute>
       </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_6">
-       <item>
-        <widget class="QPushButton" name="write_earlier_button">
-         <property name="text">
-          <string>Write earlier</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write_later_button">
-         <property name="text">
-          <string>Write later</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </item>
     </layout>
    </widget>
@@ -618,6 +596,11 @@
    <class>ElidedCombobox</class>
    <extends>QComboBox</extends>
    <header>spinetoolbox/widgets/custom_combobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MappingsTableView</class>
+   <extends>QTableView</extends>
+   <header>spine_items/exporter/widgets/mappings_table_view.h</header>
   </customwidget>
  </customwidgets>
  <resources>

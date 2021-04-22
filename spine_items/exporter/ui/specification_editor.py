@@ -26,6 +26,7 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
 from PySide2.QtWidgets import *
 
 from spinetoolbox.widgets.custom_combobox import ElidedCombobox
+from spine_items.exporter.widgets.mappings_table_view import MappingsTableView
 
 from spine_items import resources_icons_rc
 
@@ -79,32 +80,16 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
-        self.mappings_table = QTableView(self.dockWidgetContents)
+        self.mappings_table = MappingsTableView(self.dockWidgetContents)
         self.mappings_table.setObjectName(u"mappings_table")
-        self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.mappings_table.setDragDropOverwriteMode(False)
+        self.mappings_table.setDragDropMode(QAbstractItemView.DragOnly)
+        self.mappings_table.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.mappings_table.setShowGrid(False)
         self.mappings_table.verticalHeader().setVisible(False)
 
         self.verticalLayout.addWidget(self.mappings_table)
-
-        self.horizontalLayout_6 = QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.write_earlier_button = QPushButton(self.dockWidgetContents)
-        self.write_earlier_button.setObjectName(u"write_earlier_button")
-
-        self.horizontalLayout_6.addWidget(self.write_earlier_button)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_6.addItem(self.horizontalSpacer_4)
-
-        self.write_later_button = QPushButton(self.dockWidgetContents)
-        self.write_later_button.setObjectName(u"write_later_button")
-
-        self.horizontalLayout_6.addWidget(self.write_later_button)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_6)
 
         self.mappings_dock.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mappings_dock)
@@ -394,8 +379,6 @@ class Ui_MainWindow(object):
         self.add_mapping_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.remove_mapping_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
         self.toggle_enabled_button.setText(QCoreApplication.translate("MainWindow", u"Enable or disable all", None))
-        self.write_earlier_button.setText(QCoreApplication.translate("MainWindow", u"Write earlier", None))
-        self.write_later_button.setText(QCoreApplication.translate("MainWindow", u"Write later", None))
         self.mapping_options_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping options", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Item type:", None))
         self.item_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Object class", None))
