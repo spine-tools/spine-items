@@ -149,6 +149,8 @@ class ExecutableItem(ExecutableItemBase):
         )
         self._logger.msg.emit(f"*** Executing in <b>{work_anchor}</b> ***")
         ret = self._exec_mngr.run_until_complete()
+        if ret != 0:
+            self._logger.msg_error.emit(f"Return code:{ret}")
         finish_state = ItemExecutionFinishState.SUCCESS if ret == 0 else ItemExecutionFinishState.FAILURE
         # Copy predecessor's resources so they can be passed to Gimlet's successors
         self._resources = forward_resources.copy()
