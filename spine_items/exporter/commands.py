@@ -115,23 +115,23 @@ class DisableAllMappings(QUndoCommand):
 
 
 class ChangeWriteOrder(QUndoCommand):
-    def __init__(self, from_row, to_row, mappings_table_model):
+    def __init__(self, row, earlier, mappings_table_model):
         """
         Args:
-            from_row (int): row to take
-            to_row (int): where to put it
+            row (int): row index of mapping's name
+            earlier (bool): True to write mapping earlier, False to write later
             mappings_table_model (MappingsTableModel): mappings table model
         """
         super().__init__("change writing order")
-        self._from_row = from_row
-        self._to_row = to_row
+        self._row = row
+        self._earlier = earlier
         self._mappings_table_model = mappings_table_model
 
     def redo(self):
-        self._mappings_table_model.reorder_writing(self._from_row, self._to_row)
+        self._mappings_table_model.reorder_writing(self._row, self._earlier)
 
     def undo(self):
-        self._mappings_table_model.reorder_writing(self._to_row, self._from_row)
+        self._mappings_table_model.reorder_writing(self._row - 1 if self._earlier else self._row + 1, not self._earlier)
 
 
 class SetMapping(QUndoCommand):

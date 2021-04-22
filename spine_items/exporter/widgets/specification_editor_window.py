@@ -157,13 +157,17 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._toggle_all_enabled_action = QAction("Toggle all mappings enabled", self)
         self._toggle_all_enabled_action.triggered.connect(self._toggle_all_enabled)
         self._ui.toggle_enabled_button.clicked.connect(self._toggle_all_enabled_action.trigger)
+        self._write_earlier_action = QAction("Write earlier", self)
+        self._write_earlier_action.triggered.connect(self._write_earlier)
+        self._ui.write_earlier_button.clicked.connect(self._write_earlier_action.trigger)
+        self._write_later_action = QAction("Write later", self)
+        self._write_later_action.triggered.connect(self._write_later)
+        self._ui.write_later_button.clicked.connect(self._write_later_action.trigger)
         self._ui.mappings_table.addAction(self._add_mapping_action)
         self._ui.mappings_table.addAction(self._remove_mapping_action)
         self._ui.mappings_table.setModel(self._sort_mappings_table_model)
         self._ui.mappings_table.setSortingEnabled(True)
         self._ui.mappings_table.sortByColumn(0, Qt.AscendingOrder)
-        self._ui.mappings_table.setAcceptDrops(True)
-        self._ui.mappings_table.write_order_changed.connect(self._reorder_writing)
         self._expect_current_mapping_change(False)
         self._ui.mappings_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self._ui.group_fn_combo_box.addItems(GROUP_FUNCTION_DISPLAY_NAMES)
@@ -442,10 +446,23 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 return
         self._undo_stack.push(DisableAllMappings(self._mappings_table_model))
 
-    @Slot(int, int)
-    def _reorder_writing(self, from_row, to_row):
+    @Slot()
+    def _write_earlier(self):
         """Pushes a command that modifies mapping's write order."""
-        self._undo_stack.push(ChangeWriteOrder(from_row, to_row, self._mappings_table_model))
+        index = self._ui.mappings_table.selectionModel().currentIndex()
+        row = self._sort_mappings_table_model.mapToSource(index).row()
+        if row == 0:
+            return
+        self._undo_stack.push(ChangeWriteOrder(row, True, self._mappings_table_model))
+
+    @Slot()
+    def _write_later(self):
+        """Pushes a command that modifies mapping's write order."""
+        index = self._ui.mappings_table.selectionModel().currentIndex()
+        row = self._sort_mappings_table_model.mapToSource(index).row()
+        if row == self._mappings_table_model.rowCount() - 1:
+            return
+        self._undo_stack.push(ChangeWriteOrder(row, False, self._mappings_table_model))
 
     @Slot(QModelIndex, int, int)
     def _check_for_empty_mappings_list(self, parent_index, first_row, last_row):

@@ -14,7 +14,7 @@ Contains the :class:`MappingListModel` model.
 :authors: A. Soininen (VTT)
 :date:    30.12.2020
 """
-from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal, QMimeData
+from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
@@ -100,8 +100,6 @@ class MappingsTableModel(QAbstractTableModel):
                 return order + "th"
             if role == Qt.TextAlignmentRole:
                 return Qt.AlignCenter
-            if role == Qt.ToolTipRole:
-                return "<p>Drag and drop this label to arrange write order</p>"
         if role >= Qt.UserRole:
             spec = self._mappings[self._names[index.row()]]
             if role == self.MAPPING_SPECIFICATION_ROLE:
@@ -126,8 +124,6 @@ class MappingsTableModel(QAbstractTableModel):
     def flags(self, index):
         if index.column() == 0:
             return super().flags(index) | Qt.ItemIsUserCheckable | Qt.ItemIsEditable
-        if index.column() == 1:
-            return super().flags(index) | Qt.ItemIsDragEnabled
         return super().flags(index)
 
     def headerData(self, section, orientation, role):
@@ -159,33 +155,27 @@ class MappingsTableModel(QAbstractTableModel):
         """
         return self.index(self._names.index(name), 0)
 
-    def mimeData(self, indexes):
-        """Returns a QMimeData with text equal to the row being dragged.
-        The rest of the drag and drop is handled in the view (see :class:``MappingsTableView``).
-
-        Returns:
-            QMimeData
-        """
-        if len(indexes) != 1:
-            return None
-        data = QMimeData()
-        index = indexes[0]
-        data.setText(str(index.row()))
-        return data
-
-    def reorder_writing(self, from_row, to_row):
+    def reorder_writing(self, row, earlier):
         """Reorders writings.
 
         Args:
-            from_row (int): row to take
-            to_row (int): where to put it
+            row (int): row to reorder
+            earlier (bool): True to write earlier, False to write later
         """
+        moved = [self._names[row]]
+        if earlier:
+            before = self._names[: row - 1]
+            after = [self._names[row - 1]] + self._names[row + 1 :]
+        else:
+            before = self._names[:row] + [self._names[row + 1]]
+            after = self._names[row + 2 :]
         self.write_order_about_to_change.emit()
-        self.beginRemoveRows(QModelIndex(), from_row, from_row)
-        moved = self._names.pop(from_row)
+        self.beginRemoveRows(QModelIndex(), row, row)
+        self._names = before + after
         self.endRemoveRows()
-        self.beginInsertRows(QModelIndex(), to_row, to_row)
-        self._names.insert(to_row, moved)
+        insert_row = row - 1 if earlier else row + 1
+        self.beginInsertRows(QModelIndex(), insert_row, insert_row)
+        self._names = before + moved + after
         self.endInsertRows()
         reordered_mappings = {name: self._mappings[name] for name in self._names}
         self._mappings.clear()
