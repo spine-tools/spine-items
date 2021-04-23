@@ -38,4 +38,4 @@ class MultiCheckableTreeView(QTreeView):
             model.setData(selected[0], check_state, Qt.CheckStateRole)
         else:
             rows = [index.row() for index in selected]
-            model.set_multiple_checked_undoable(rows, check_state)
+            model.set_multiple_checked_undoable(check_state, *rows)

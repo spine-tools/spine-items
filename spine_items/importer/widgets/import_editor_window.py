@@ -59,9 +59,10 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     """Name of the 'file-less' entry in the file path combobox."""
 
     class _FileLessConnector(SourceConnection):
-        """A connector that has no tables nor contents, used for the file-less mode."""
+        """A connector that has no tables or contents, used for the file-less mode."""
 
         FILE_EXTENSIONS = ""
+        OPTIONS = {}
 
         def connect_to_source(self, _source):
             pass
@@ -215,6 +216,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
                 return
         if filepath == self._FILE_LESS:
             self._FileLessConnector.__name__ = connector.__name__
+            self._FileLessConnector.OPTIONS = connector.OPTIONS
             connector = self._FileLessConnector
         self._ui.actionSwitch_connector.setEnabled(True)
         connector_settings = {"gams_directory": _gams_system_directory(self._toolbox)}
@@ -274,8 +276,10 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         connector_list_wg.doubleClicked.connect(dialog.accept)
         dialog.layout().addWidget(connector_list_wg)
         dialog.layout().addWidget(button_box)
-        _dirname, filename = os.path.split(filepath)
-        dialog.setWindowTitle("Select connector for '{}'".format(filename))
+        spec_name = self._spec_toolbar.name()
+        if not spec_name:
+            spec_name = "unnamed specification"
+        dialog.setWindowTitle(f"Select connector for {spec_name}")
         answer = dialog.exec_()
         if not answer:
             return None

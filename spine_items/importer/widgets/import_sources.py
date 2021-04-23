@@ -59,7 +59,7 @@ class ImportSources(QObject):
         self._copied_mappings = parent._copied_mappings
         self._copied_options = {}
         self._undo_stack = parent._undo_stack
-        self._preview_table_model = SourceDataTableModel()
+        self._source_data_model = SourceDataTableModel()
         self._source_table_model = SourceTableListModel(self._undo_stack)
         self._restore_mapping(mapping)
         self._ui.source_list.setModel(self._source_table_model)
@@ -67,7 +67,7 @@ class ImportSources(QObject):
         self._source_table_model.msg_error.connect(self._parent._show_error)
         self._source_table_model.table_created.connect(self._select_table_row)
         # create ui
-        self._ui.source_data_table.setModel(self._preview_table_model)
+        self._ui.source_data_table.setModel(self._source_data_model)
         self._ui_source_data_table_menu = SourceDataTableMenu(self._ui.source_data_table)
         self._ui_options_widget = OptionsWidget(self._connector, self._undo_stack)
         self._ui.dockWidget_source_options.setWidget(self._ui_options_widget)
@@ -82,7 +82,7 @@ class ImportSources(QObject):
 
         # signals for connector
         self._connector.connection_ready.connect(self.request_new_tables_from_connector)
-        self._connector.data_ready.connect(self.update_preview_data)
+        self._connector.data_ready.connect(self._update_source_data)
         self._connector.tables_ready.connect(self.update_tables)
         self._connector.mapped_data_ready.connect(self.mapped_data_ready.emit)
         self._connector.default_mapping_ready.connect(self._set_default_mapping)
@@ -96,12 +96,10 @@ class ImportSources(QObject):
         # set loading status to False if error.
         self._connector.error.connect(lambda: self.set_loading_status(False))
 
-        # current mapping changed
-        self._preview_table_model.mapping_changed.connect(self._update_display_row_types)
-
-        # data preview table
-        self._preview_table_model.column_types_updated.connect(self._new_column_types)
-        self._preview_table_model.row_types_updated.connect(self._new_row_types)
+        # source data table
+        self._source_data_model.mapping_data_changed.connect(self._update_display_row_types)
+        self._source_data_model.column_types_updated.connect(self._new_column_types)
+        self._source_data_model.row_types_updated.connect(self._new_row_types)
 
     @property
     def checked_tables(self):
@@ -113,7 +111,7 @@ class ImportSources(QObject):
 
     @Slot(object)
     def set_mapping(self, model):
-        self._preview_table_model.set_mapping(model)
+        self._source_data_model.set_mapping(model)
 
     def set_loading_status(self, status):
         """
@@ -163,6 +161,7 @@ class ImportSources(QObject):
     def _select_table_row(self, row):
         selection_model = self._ui.source_list.selectionModel()
         index = self._source_table_model.index(row, 0)
+        selection_model.clearSelection()
         selection_model.setCurrentIndex(index, QItemSelectionModel.Select)
 
     @Slot(str)
@@ -222,33 +221,33 @@ class ImportSources(QObject):
         self.table_checked.emit()
 
     @Slot(list, list)
-    def update_preview_data(self, data, header):
+    def _update_source_data(self, data, header):
         if not data:
-            self._clear_preview_table_model()
+            self._clear_source_data_model()
             return
         try:
             data = _sanitize_data(data, header)
         except RuntimeError as error:
             self._ui_error.showMessage(str(error))
-            self._clear_preview_table_model()
+            self._clear_source_data_model()
             return
         if not header:
             header = list(range(1, len(data[0]) + 1))
         # Set header data before reseting model because the header needs to be there for some slots...
-        self._preview_table_model.set_horizontal_header_labels(header)
-        self._preview_table_model.reset_model(main_data=data)
+        self._source_data_model.set_horizontal_header_labels(header)
+        self._source_data_model.reset_model(main_data=data)
         types = self._connector.table_types.get(self._connector.current_table, {})
         row_types = self._connector.table_row_types.get(self._connector.current_table, {})
         for col in range(len(header)):
             col_type = types.get(col, "string")
-            self._preview_table_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Horizontal)
+            self._source_data_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Horizontal)
         for row, row_type in row_types.items():
-            self._preview_table_model.set_type(row, value_to_convert_spec(row_type), orientation=Qt.Vertical)
-        self.preview_data_updated.emit(self._preview_table_model.columnCount())
+            self._source_data_model.set_type(row, value_to_convert_spec(row_type), orientation=Qt.Vertical)
+        self.preview_data_updated.emit(self._source_data_model.columnCount())
 
-    def _clear_preview_table_model(self):
-        self._preview_table_model.set_horizontal_header_labels([])
-        self._preview_table_model.clear()
+    def _clear_source_data_model(self):
+        self._source_data_model.set_horizontal_header_labels([])
+        self._source_data_model.clear()
         self.preview_data_updated.emit(0)
 
     def _restore_mapping(self, mapping):
@@ -339,17 +338,17 @@ class ImportSources(QObject):
 
     @Slot()
     def _new_column_types(self):
-        new_types = self._preview_table_model.get_types(orientation=Qt.Horizontal)
+        new_types = self._source_data_model.get_types(orientation=Qt.Horizontal)
         self._connector.set_table_types({self._connector.current_table: new_types})
 
     @Slot()
     def _new_row_types(self):
-        new_types = self._preview_table_model.get_types(orientation=Qt.Vertical)
+        new_types = self._source_data_model.get_types(orientation=Qt.Vertical)
         self._connector.set_table_row_types({self._connector.current_table: new_types})
 
     @Slot()
     def _update_display_row_types(self):
-        mapping_specification = self._preview_table_model.mapping_specification()
+        mapping_specification = self._source_data_model.mapping_specification()
         if mapping_specification is None:
             return
         last_pivot_row = mapping_specification.last_pivot_row()

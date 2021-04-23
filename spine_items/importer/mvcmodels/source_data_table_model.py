@@ -32,7 +32,7 @@ class SourceDataTableModel(MinimalTableModel):
 
     column_types_updated = Signal()
     row_types_updated = Signal()
-    mapping_changed = Signal()
+    mapping_data_changed = Signal()
     about_to_undo = Signal(str)
     """Emitted when an undo/redo command is going to be executed."""
 
@@ -95,19 +95,19 @@ class SourceDataTableModel(MinimalTableModel):
             mapping (MappingSpecificationModel): mapping model
         """
         if self._mapping_specification is not None:
-            self._mapping_specification.dataChanged.disconnect(self._mapping_data_changed)
-            self._mapping_specification.mapping_read_start_row_changed.disconnect(self._mapping_data_changed)
+            self._mapping_specification.dataChanged.disconnect(self._handle_mapping_data_changed)
+            self._mapping_specification.mapping_read_start_row_changed.disconnect(self._handle_mapping_data_changed)
             self._mapping_specification.row_or_column_type_recommended.disconnect(self.set_type)
             self._mapping_specification.multi_column_type_recommended.disconnect(self.set_all_column_types)
         self._mapping_specification = mapping
         if self._mapping_specification is not None:
-            self._mapping_specification.dataChanged.connect(self._mapping_data_changed)
-            self._mapping_specification.modelReset.connect(self._mapping_data_changed)
-            self._mapping_specification.mapping_read_start_row_changed.connect(self._mapping_data_changed)
+            self._mapping_specification.dataChanged.connect(self._handle_mapping_data_changed)
+            self._mapping_specification.modelReset.connect(self._handle_mapping_data_changed)
+            self._mapping_specification.mapping_read_start_row_changed.connect(self._handle_mapping_data_changed)
             self._mapping_specification.row_or_column_type_recommended.connect(self.set_type)
             self._mapping_specification.multi_column_type_recommended.connect(self.set_all_column_types)
         self._polish_mapping()
-        self._mapping_data_changed()
+        self._handle_mapping_data_changed()
 
     def validate(self, section, orientation=Qt.Horizontal):
         converter = self.get_type(section, orientation)
@@ -191,9 +191,9 @@ class SourceDataTableModel(MinimalTableModel):
         self.column_types_updated.emit()
 
     @Slot()
-    def _mapping_data_changed(self):
+    def _handle_mapping_data_changed(self):
         self.update_colors()
-        self.mapping_changed.emit()
+        self.mapping_data_changed.emit()
 
     def update_colors(self):
         top_left = self.index(0, 0)
