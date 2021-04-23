@@ -261,7 +261,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         description = self._spec_toolbar.description()
         self._new_spec.name = spec_name
         self._new_spec.description = description
-        return self._new_spec
+        return deepcopy(self._new_spec)
 
     @Slot(str)
     def _change_format(self, current):
