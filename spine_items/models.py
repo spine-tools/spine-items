@@ -531,11 +531,15 @@ class DatabaseListModel(QAbstractListModel):
 
         Args:
             url (str): database URL
+
+        Returns:
+            Database: removed database or None if not found
         """
         for row, db in enumerate(self._databases):
             if db.url == url:
                 self.removeRows(row, 1)
-                break
+                return db
+        return None
 
     def removeRows(self, row, count, parent=QModelIndex()):
         self.beginRemoveRows(parent, row, row + count - 1)

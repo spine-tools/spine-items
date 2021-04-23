@@ -57,6 +57,7 @@ class ExporterBase(ProjectItem):
         if databases is None:
             databases = list()
         self._database_model = DatabaseListModel(databases)
+        self._inactive_databases = dict()
         self._output_filenames = dict()
         self._export_list_items = dict()
         self._full_url_model = FullUrlListModel()
@@ -177,10 +178,12 @@ class ExporterBase(ProjectItem):
                     self._database_model.update_url(oldie, newbie)
             useless_oldies |= old_urls - database_urls
             for url in useless_oldies:
-                self._database_model.remove(url)
+                self._inactive_databases[url] = self._database_model.remove(url)
             for url in homeless_new_urls:
-                db = Database()
-                db.url = url
+                db = self._inactive_databases.get(url)
+                if db is None:
+                    db = Database()
+                    db.url = url
                 self._database_model.add(db)
         self._full_url_model.set_urls(full_urls)
         if self._active:
@@ -313,3 +316,8 @@ class ExporterBase(ProjectItem):
             self.name, self._exported_files, self.data_dir, self._database_model.items()
         )
         return resources
+
+    def tear_down(self):
+        super().tear_down()
+        self._database_model.deleteLater()
+        self._full_url_model.deleteLater()

@@ -16,11 +16,11 @@ Contains utilities shared between project items.
 :date:    1.4.2020
 """
 
+from dataclasses import dataclass
 from datetime import datetime
 import json
 import os.path
 from pathlib import Path
-import re
 from time import time
 from contextlib import contextmanager
 from spinedb_api.spine_db_server import start_spine_db_server, shutdown_spine_db_server
@@ -155,18 +155,16 @@ def database_label(provider_name):
     return "db_url@" + provider_name
 
 
+@dataclass
 class Database:
     """
     Database specific export settings.
-
-    Attributes:
-        url (str): database URL
-        output_file_name (str): output file name (relative to item's data dir)
     """
 
-    def __init__(self):
-        self.url = ""
-        self.output_file_name = ""
+    url: str = ""
+    """Database URL."""
+    output_file_name: str = ""
+    """Output file name; relative to item's data dir."""
 
     def to_dict(self):
         """
