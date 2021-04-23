@@ -98,9 +98,7 @@ class SourceTableListModel(QAbstractItemModel):
         return None
 
     def flags(self, index):
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        if index.internalPointer().checkable:
-            flags |= Qt.ItemIsUserCheckable
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable
         if index.internalPointer().editable:
             flags |= Qt.ItemIsEditable
         return flags
@@ -115,7 +113,7 @@ class SourceTableListModel(QAbstractItemModel):
             return False
         row = index.row()
         item = self._tables[row]
-        if role == Qt.CheckStateRole:
+        if role == Qt.CheckStateRole and item.checkable:
             checked = value == Qt.Checked
             if row == 0:
                 self.set_multiple_checked_undoable(checked, *range(1, len(self._tables)))
