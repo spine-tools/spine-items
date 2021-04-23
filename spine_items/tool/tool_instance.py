@@ -20,7 +20,7 @@ import os
 import sys
 import shutil
 from spine_engine.config import GAMS_EXECUTABLE
-from spine_engine.utils.helpers import python_interpreter, resolve_julia_executable
+from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, resolve_gams_executable
 from spine_engine.execution_managers import StandardExecutionManager, KernelExecutionManager
 
 
@@ -96,11 +96,7 @@ class GAMSToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         gams_path = self._settings.value("appSettings/gamsPath", defaultValue="")
-        if gams_path != "":
-            gams_exe = gams_path
-        else:
-            gams_exe = GAMS_EXECUTABLE
-        self.program = gams_exe
+        self.program = resolve_gams_executable(gams_path)
         self.args.append(self.tool_specification.main_prgm)
         self.args.append("curDir=")
         self.args.append(self.basedir)
@@ -199,7 +195,8 @@ class PythonToolInstance(ToolInstance):
         else:
             # Prepare command "python <script.py> <script_arguments>"
             script_path = self.tool_specification.main_prgm
-            self.program = python_interpreter(self._settings)
+            python_path = self._settings.value("appSettings/pythonPath", defaultValue="")
+            self.program = resolve_python_interpreter(python_path)
             self.args.append(script_path)  # First argument for the Python interpreter is path to the tool script
             self.append_cmdline_args(args)
             self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)

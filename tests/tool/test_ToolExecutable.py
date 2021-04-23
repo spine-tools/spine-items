@@ -139,7 +139,7 @@ class TestToolExecutable(unittest.TestCase):
             project_dir=self._temp_dir.name,
             logger=logger,
         )
-        self.assertFalse(executable.ready_to_execute())
+        self.assertFalse(executable.ready_to_execute(settings=dict()))
 
     def test_execute_archives_output_files(self):
         script_dir = pathlib.Path(self._temp_dir.name, "scripts")

@@ -28,6 +28,7 @@ import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
+from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_executable
 from .item_info import ItemInfo
 from .utils import (
     file_paths_from_resources,
@@ -331,25 +332,29 @@ class ExecutableItem(ExecutableItemBase):
             use_embedded_python = settings.value("appSettings/useEmbeddedPython", defaultValue="0")
             python_kernel = settings.value("appSettings/pythonKernel", defaultValue="")
             if use_embedded_python == "2" and python_kernel == "":
-                self._logger.msg_error.emit(f"No Python kernel spec selected. Please select one from Settings->Tools.")
+                self._logger.msg_error.emit(f"No Python kernel spec selected. Please select one in Settings->Tools.")
                 return False
             # Note: no check for python path == "" because this should never happen
         elif self._tool_specification.tooltype.lower() == "julia":
             use_embedded_julia = settings.value("appSettings/useEmbeddedJulia", defaultValue="0")
             julia_kernel = settings.value("appSettings/juliaKernel", defaultValue="")
-            julia_path = settings.value("appSettings/juliaPath", defaultValue="")
+            julia_path = resolve_julia_executable(settings.value("appSettings/juliaPath", defaultValue=""))
             if use_embedded_julia == "2" and julia_kernel == "":
-                self._logger.msg_error.emit(f"No Julia kernel spec selected. Please select one from Settings->Tools.")
+                self._logger.msg_error.emit(f"No Julia kernel spec selected. Please select one in Settings->Tools.")
                 return False
             elif use_embedded_julia == "0" and julia_path == "":
                 if not julia_path:
                     self._logger.msg_error.emit(
-                        f"Julia not found in PATH. Please set the path to your Julia in Settings->Tools."
+                        f"Julia not found in PATH. Please select the Julia you want to use in Settings->Tools."
                     )
                     return False
         elif self._tool_specification.tooltype.lower() == "gams":
-            # TODO
-            pass
+            gams_path = resolve_gams_executable(settings.value("appSettings/gamsPath", defaultValue=""))
+            if not gams_path:
+                self._logger.msg_error.emit(
+                    f"Gams not found in PATH. Please select the Gams you want to use in Settings->Tools."
+                )
+                return False
         return True
 
     def execute(self, forward_resources, backward_resources):
