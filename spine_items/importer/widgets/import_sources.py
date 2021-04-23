@@ -247,7 +247,7 @@ class ImportSources(QObject):
 
     def _clear_source_data_model(self):
         self._source_data_model.set_horizontal_header_labels([])
-        self._source_data_model.clear()
+        self._source_data_model.clear(infinite=self._parent.is_file_less())
         self.preview_data_updated.emit(0)
 
     def _restore_mapping(self, mapping):

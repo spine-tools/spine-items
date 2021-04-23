@@ -14,7 +14,7 @@ Contains the source data table model.
 :author: P. Vennström (VTT)
 :date:   1.6.2019
 """
-from PySide2.QtCore import Qt, Signal, Slot
+from PySide2.QtCore import Qt, Signal, Slot, QModelIndex
 from spinedb_api import ParameterValueFormatError
 from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel
@@ -38,7 +38,6 @@ class SourceDataTableModel(MinimalTableModel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.default_flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         self._unfetched_data = []
         self._mapping_specification = None
         self._column_types = {}
@@ -46,17 +45,26 @@ class SourceDataTableModel(MinimalTableModel):
         self._column_type_errors = {}
         self._row_type_errors = {}
         self._converted_data = {}
+        self._infinite = False
+        self._infinite_extent = 0
+
+    def flags(self, index):
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable & ~Qt.ItemIsEditable
 
     def mapping_specification(self):
         return self._mapping_specification
 
-    def clear(self):
+    def clear(self, infinite=False):
         self._column_type_errors = {}
         self._row_type_errors = {}
         self._column_types = {}
         self._row_types = {}
         self._converted_data = {}
-        super().clear()
+        self._infinite = infinite
+        if self._infinite:
+            self._infinite_extent = 0
+        else:
+            super().clear()
 
     def reset_model(self, main_data=None):
         self._column_type_errors = {}
@@ -64,18 +72,36 @@ class SourceDataTableModel(MinimalTableModel):
         self._column_types = {}
         self._row_types = {}
         self._converted_data = {}
-        super().reset_model(main_data[: self._FETCH_CHUNK_SIZE])
-        self._unfetched_data = main_data[self._FETCH_CHUNK_SIZE :]
+        if self._infinite:
+            self._infinite_extent = 0
+        else:
+            super().reset_model(main_data[: self._FETCH_CHUNK_SIZE])
+            self._unfetched_data = main_data[self._FETCH_CHUNK_SIZE :]
         self._polish_mapping()
 
     def canFetchMore(self, parent):
+        if self._infinite:
+            return True
         return bool(self._unfetched_data)
 
     def fetchMore(self, parent):
         self.beginResetModel()
-        self._main_data += self._unfetched_data[: self._FETCH_CHUNK_SIZE]
-        self._unfetched_data[: self._FETCH_CHUNK_SIZE] = []
+        if self._infinite:
+            self._infinite_extent += self._FETCH_CHUNK_SIZE // 10
+        else:
+            self._main_data += self._unfetched_data[: self._FETCH_CHUNK_SIZE]
+            self._unfetched_data[: self._FETCH_CHUNK_SIZE] = []
         self.endResetModel()
+
+    def rowCount(self, parent=QModelIndex()):
+        if self._infinite:
+            return self._infinite_extent
+        return super().rowCount(parent)
+
+    def columnCount(self, parent=QModelIndex()):
+        if self._infinite:
+            return self._infinite_extent
+        return super().rowCount(parent)
 
     def _polish_mapping(self):
         if (
@@ -233,6 +259,9 @@ class SourceDataTableModel(MinimalTableModel):
             converted_data = self._converted_data.get((index.row(), index.column()))
             if converted_data is not None:
                 return str(converted_data)
+        if self._infinite and role == Qt.DisplayRole:
+            row, column = index.row(), index.column()
+            return f"item_{row + 1}_{column + 1}"
         return super().data(index, role)
 
     def _non_pivoted_and_skipped_columns(self):
@@ -291,14 +320,14 @@ class SourceDataTableModel(MinimalTableModel):
         return index.column() == mapping.position
 
     def headerData(self, section, orientation=Qt.Horizontal, role=Qt.DisplayRole):
-        if orientation != Qt.Horizontal or role != Qt.BackgroundRole:
-            return super().headerData(section, orientation, role)
-        if self._mapping_specification is None:
-            return super().headerData(section, orientation, role)
-        for k in range(self._mapping_specification.rowCount()):
-            component_mapping = self._mapping_specification.get_component_mapping(k)
-            if self.section_in_mapping(component_mapping, section):
-                return self._mapping_specification.get_color(k)
+        if orientation == Qt.Horizontal and role == Qt.BackgroundRole and self._mapping_specification is not None:
+            for k in range(self._mapping_specification.rowCount()):
+                component_mapping = self._mapping_specification.get_component_mapping(k)
+                if self.section_in_mapping(component_mapping, section):
+                    return self._mapping_specification.get_color(k)
+        if self._infinite and orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return f"header_{section + 1}"
+        return super().headerData(section, orientation, role)
 
     def section_in_mapping(self, mapping, section):
         if mapping.position == Position.header and mapping.value is None:
