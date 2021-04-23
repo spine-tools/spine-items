@@ -17,7 +17,7 @@ Contains model for export mapping setup table.
 from enum import IntEnum, unique
 from itertools import takewhile
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide2.QtGui import QColor, QFont
+from PySide2.QtGui import QFont
 from spinedb_api.mapping import is_pivoted, is_regular, Position
 from spinedb_api.export_mapping.export_mapping import (
     AlternativeDescriptionMapping,
@@ -56,6 +56,7 @@ from spinedb_api.export_mapping.export_mapping import (
     ToolFeatureRequiredFlagMapping,
     ToolMapping,
 )
+from spinetoolbox.helpers import color_from_index
 from ..commands import SetMappingNullable, SetMappingPositions, SetMappingProperty
 
 
@@ -86,29 +87,30 @@ class MappingEditorTableModel(QAbstractTableModel):
             parent (QObject): parent object
         """
         super().__init__(parent)
-        self._root_mapping = root_mapping
-        self._mappings = self._unpack_mapping(root_mapping)
+        self._root_mapping = None
+        self._mappings = []
+        self._mapping_colors = []
+        self._reset_mapping(root_mapping)
         self._non_leaf_mapping_is_pivoted = self._is_non_leaf_pivoted()
         self._undo_stack = undo_stack
         self._mapping_name = mapping_name
         self._mapping_provider = mapping_provider
 
-    def _unpack_mapping(self, root_mapping):
-        """Flattens the root mapping and pops the first element if is a FixedValueMapping.
-        We don't want to have the fixed table name here.
+    def _reset_mapping(self, root_mapping):
+        """Sets the root mapping attribute, then updates mappings and colors."""
+        self._root_mapping = root_mapping
+        if self._root_mapping is None:
+            self._mappings = []
+            self._mapping_colors = []
+            return
+        self._mappings = self._root_mapping.flatten()
+        if self._mappings and isinstance(self._mappings[0], FixedValueMapping):
+            # Pop the first element if it's a FixedValueMapping. We don't want to have the fixed table name here.
+            self._mappings.pop(0)
+        self._mapping_colors = [color_from_index(i, len(self._mappings)).lighter() for i in range(len(self._mappings))]
 
-        Args:
-            root_mapping (ExportMapping, optional): root mapping
-
-        Returns:
-            list(ExportMapping)
-        """
-        if root_mapping is None:
-            return []
-        mappings = root_mapping.flatten()
-        if mappings and isinstance(mappings[0], FixedValueMapping):
-            mappings.pop(0)
-        return mappings
+    def mappings_and_colors(self):
+        return self._mappings, self._mapping_colors
 
     def columnCount(self, paren=QModelIndex()):
         return len(EditorColumn)
@@ -145,7 +147,7 @@ class MappingEditorTableModel(QAbstractTableModel):
             font.setBold(True)
             return font
         elif role == Qt.BackgroundRole and column == EditorColumn.ROW_LABEL:
-            return QColor(250, 250, 250)
+            return self._mapping_colors[index.row()]
         elif role == Qt.ToolTipRole and column == EditorColumn.FILTER:
             return "Regular expression to filter database items."
         if role == self.MAPPING_ITEM_ROLE:
@@ -242,8 +244,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         """
         self.beginResetModel()
         self._mapping_name = mapping_name
-        self._root_mapping = root_mapping
-        self._mappings = self._unpack_mapping(root_mapping)
+        self._reset_mapping(root_mapping)
         self._non_leaf_mapping_is_pivoted = self._is_non_leaf_pivoted()
         self.endResetModel()
 
