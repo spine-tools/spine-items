@@ -137,11 +137,6 @@ class Ui_MainWindow(object):
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.item_type_combo_box)
 
-        self.always_export_header_check_box = QCheckBox(self.mapping_options_contents)
-        self.always_export_header_check_box.setObjectName(u"always_export_header_check_box")
-
-        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.always_export_header_check_box)
-
         self.label_8 = QLabel(self.mapping_options_contents)
         self.label_8.setObjectName(u"label_8")
 
@@ -176,11 +171,6 @@ class Ui_MainWindow(object):
 
         self.formLayout.setWidget(4, QFormLayout.FieldRole, self.parameter_dimensions_spin_box)
 
-        self.fix_table_name_check_box = QCheckBox(self.mapping_options_contents)
-        self.fix_table_name_check_box.setObjectName(u"fix_table_name_check_box")
-
-        self.formLayout.setWidget(5, QFormLayout.FieldRole, self.fix_table_name_check_box)
-
         self.label_6 = QLabel(self.mapping_options_contents)
         self.label_6.setObjectName(u"label_6")
 
@@ -190,6 +180,21 @@ class Ui_MainWindow(object):
         self.group_fn_combo_box.setObjectName(u"group_fn_combo_box")
 
         self.formLayout.setWidget(6, QFormLayout.FieldRole, self.group_fn_combo_box)
+
+        self.always_export_header_check_box = QCheckBox(self.mapping_options_contents)
+        self.always_export_header_check_box.setObjectName(u"always_export_header_check_box")
+
+        self.formLayout.setWidget(1, QFormLayout.SpanningRole, self.always_export_header_check_box)
+
+        self.fix_table_name_check_box = QCheckBox(self.mapping_options_contents)
+        self.fix_table_name_check_box.setObjectName(u"fix_table_name_check_box")
+
+        self.formLayout.setWidget(5, QFormLayout.LabelRole, self.fix_table_name_check_box)
+
+        self.fix_table_name_line_edit = QLineEdit(self.mapping_options_contents)
+        self.fix_table_name_line_edit.setObjectName(u"fix_table_name_line_edit")
+
+        self.formLayout.setWidget(5, QFormLayout.FieldRole, self.fix_table_name_line_edit)
 
 
         self.verticalLayout_7.addLayout(self.formLayout)
@@ -411,10 +416,6 @@ class Ui_MainWindow(object):
         self.item_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool feature", None))
         self.item_type_combo_box.setItemText(10, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
 
-#if QT_CONFIG(tooltip)
-        self.always_export_header_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Export header even when a table is otherwise empty.", None))
-#endif // QT_CONFIG(tooltip)
-        self.always_export_header_check_box.setText(QCoreApplication.translate("MainWindow", u"Always export header", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Number of dimensions:", None))
 #if QT_CONFIG(tooltip)
         self.relationship_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of relationship dimensions.", None))
@@ -428,11 +429,15 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(tooltip)
         self.parameter_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Maximum number of expected parameter value dimensions.", None))
 #endif // QT_CONFIG(tooltip)
-        self.fix_table_name_check_box.setText(QCoreApplication.translate("MainWindow", u"Fixed table name", None))
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"Group function:", None))
 #if QT_CONFIG(tooltip)
         self.group_fn_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Data groping in pivot tables.", None))
 #endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.always_export_header_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Export header even when a table is otherwise empty.", None))
+#endif // QT_CONFIG(tooltip)
+        self.always_export_header_check_box.setText(QCoreApplication.translate("MainWindow", u"Always export header", None))
+        self.fix_table_name_check_box.setText(QCoreApplication.translate("MainWindow", u"Fixed table name:", None))
         self.mapping_spec_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping specification", None))
 #if QT_CONFIG(tooltip)
         self.compact_button.setToolTip(QCoreApplication.translate("MainWindow", u"Compact mapping by removing empty columns and rows.", None))

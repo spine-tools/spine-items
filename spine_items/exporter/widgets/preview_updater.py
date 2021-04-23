@@ -60,7 +60,7 @@ class PreviewUpdater:
         self._mappings_table_model.write_order_changed.connect(lambda: self._set_expect_removals_and_inserts(False))
         self._mappings_table_model.dataChanged.connect(self._rename_mapping)
         self._mappings_table_model.dataChanged.connect(self._enable_mapping)
-        self._mappings_table_model.dataChanged.connect(self._update_header_only_tables)
+        self._mappings_table_model.dataChanged.connect(self._update_changed_tables)
         self._mappings_proxy_model = mappings_proxy_model
         self._mapping_editor_table_model = mapping_editor_table_model
         self._mapping_editor_table_model.dataChanged.connect(lambda *_: self._update_current_mappings_tables())
@@ -264,7 +264,7 @@ class PreviewUpdater:
 
         Args:
             top_left (QModelIndex): top left corner of modified mappings' in mapping list model
-            bottom_right (QModelIndex): top left corner of modified mappings' in mapping list model
+            bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
         if Qt.DisplayRole not in roles or self._current_url is None:
@@ -285,7 +285,7 @@ class PreviewUpdater:
 
         Args:
             top_left (QModelIndex): top left corner of modified mappings' in mapping list model
-            bottom_right (QModelIndex): top left corner of modified mappings' in mapping list model
+            bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
         if Qt.CheckStateRole not in roles or self._current_url is None:
@@ -303,16 +303,16 @@ class PreviewUpdater:
                 self._load_preview_data(name)
 
     @Slot(QModelIndex, QModelIndex, list)
-    def _update_header_only_tables(self, top_left, bottom_right, roles):
+    def _update_changed_tables(self, top_left, bottom_right, roles):
         """
-        Updates mappings according to the always write header flag.
+        Updates mappings whenever the always write header flag or fixed table name changes.
 
         Args:
             top_left (QModelIndex): top left corner of modified mappings' in mapping list model
-            bottom_right (QModelIndex): top left corner of modified mappings' in mapping list model
+            bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
-        if MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE not in roles:
+        if not {MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE, MappingsTableModel.FIXED_TABLE_NAME_ROLE} & set(roles):
             return
         row = self._mappings_proxy_model.mapToSource(self._ui.mappings_table.currentIndex()).row()
         index = self._mappings_table_model.index(row, 0)

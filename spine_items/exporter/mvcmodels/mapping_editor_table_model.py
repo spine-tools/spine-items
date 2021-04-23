@@ -56,7 +56,7 @@ from spinedb_api.export_mapping.export_mapping import (
     ToolFeatureRequiredFlagMapping,
     ToolMapping,
 )
-from ..commands import SetFixedTitle, SetMappingNullable, SetMappingPositions, SetMappingProperty
+from ..commands import SetMappingNullable, SetMappingPositions, SetMappingProperty
 
 
 POSITION_DISPLAY_TEXT = {Position.hidden: "hidden", Position.table_name: "table name", Position.header: "column header"}
@@ -80,17 +80,35 @@ class MappingEditorTableModel(QAbstractTableModel):
         """
         Args:
             mapping_name (str): mapping's name
-            root_mapping (Mapping, optional): root mapping
+            root_mapping (ExportMapping, optional): root mapping
             undo_stack (QUndoStack): undo stack
             mapping_provider (SpecificationEditorWindow): window that can provide data for different mappings
             parent (QObject): parent object
         """
         super().__init__(parent)
-        self._mappings = [] if root_mapping is None else root_mapping.flatten()
+        self._root_mapping = root_mapping
+        self._mappings = self._unpack_mapping(root_mapping)
         self._non_leaf_mapping_is_pivoted = self._is_non_leaf_pivoted()
         self._undo_stack = undo_stack
         self._mapping_name = mapping_name
         self._mapping_provider = mapping_provider
+
+    def _unpack_mapping(self, root_mapping):
+        """Flattens the root mapping and pops the first element if is a FixedValueMapping.
+        We don't want to have the fixed table name here.
+
+        Args:
+            root_mapping (ExportMapping, optional): root mapping
+
+        Returns:
+            list(ExportMapping)
+        """
+        if root_mapping is None:
+            return []
+        mappings = root_mapping.flatten()
+        if mappings and isinstance(mappings[0], FixedValueMapping):
+            mappings.pop(0)
+        return mappings
 
     def columnCount(self, paren=QModelIndex()):
         return len(EditorColumn)
@@ -101,8 +119,6 @@ class MappingEditorTableModel(QAbstractTableModel):
             row = index.row()
             if column == EditorColumn.ROW_LABEL:
                 mapping = self._mappings[row]
-                if row == 0 and isinstance(mapping, FixedValueMapping):
-                    return mapping.value
                 return _names[type(mapping)]
             if column == EditorColumn.POSITION:
                 if row == _value_row(self._mappings) and self._non_leaf_mapping_is_pivoted:
@@ -125,13 +141,11 @@ class MappingEditorTableModel(QAbstractTableModel):
             if column == EditorColumn.NULLABLE:
                 return Qt.Checked if self._mappings[index.row()].is_ignorable() else Qt.Unchecked
         elif role == Qt.FontRole and column == EditorColumn.ROW_LABEL:
-            if index.row() != 0 or not isinstance(self._mappings[0], FixedValueMapping):
-                font = QFont()
-                font.setBold(True)
-                return font
+            font = QFont()
+            font.setBold(True)
+            return font
         elif role == Qt.BackgroundRole and column == EditorColumn.ROW_LABEL:
-            if index.row() != 0 or not isinstance(self._mappings[0], FixedValueMapping):
-                return QColor(250, 250, 250)
+            return QColor(250, 250, 250)
         elif role == Qt.ToolTipRole and column == EditorColumn.FILTER:
             return "Regular expression to filter database items."
         if role == self.MAPPING_ITEM_ROLE:
@@ -141,10 +155,6 @@ class MappingEditorTableModel(QAbstractTableModel):
     def flags(self, index=QModelIndex()):
         row = index.row()
         column = index.column()
-        if row == 0 and isinstance(self._mappings[row], FixedValueMapping):
-            if column == EditorColumn.ROW_LABEL:
-                return super().flags(index) | Qt.ItemIsEditable
-            return super().flags(index) & ~Qt.ItemIsEnabled
         value_row = _value_row(self._mappings)
         if row >= value_row and column == EditorColumn.PIVOTED:
             return super().flags(index) & ~Qt.ItemIsEnabled
@@ -162,14 +172,6 @@ class MappingEditorTableModel(QAbstractTableModel):
             return super().flags(index) | Qt.ItemIsUserCheckable
         return super().flags(index)
 
-    def has_table_name(self):
-        """Checks if current mappings have a table name.
-
-        Returns:
-            bool: True if mappings have a table name, False otherwise
-        """
-        return any(m.position == Position.table_name for m in self._mappings)
-
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
             return ("Mapping type", "Map to", "Pivoted", "Nullable", "Header", "Filter")[section]
@@ -180,7 +182,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         Returns:
             Mapping: root mapping
         """
-        return self._mappings[0]
+        return self._root_mapping
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._mappings)
@@ -190,9 +192,6 @@ class MappingEditorTableModel(QAbstractTableModel):
         if role == Qt.EditRole:
             row = index.row()
             mapping = self._mappings[row]
-            if column == EditorColumn.ROW_LABEL and isinstance(mapping, FixedValueMapping):
-                self._undo_stack.push(SetFixedTitle(self, self._mapping_name, value, mapping.value))
-                return True
             if column == EditorColumn.POSITION:
                 return self._push_set_positions_command(value, row, mapping)
             if column == EditorColumn.HEADER:
@@ -243,7 +242,8 @@ class MappingEditorTableModel(QAbstractTableModel):
         """
         self.beginResetModel()
         self._mapping_name = mapping_name
-        self._mappings = [] if root_mapping is None else root_mapping.flatten()
+        self._root_mapping = root_mapping
+        self._mappings = self._unpack_mapping(root_mapping)
         self._non_leaf_mapping_is_pivoted = self._is_non_leaf_pivoted()
         self.endResetModel()
 
@@ -264,8 +264,6 @@ class MappingEditorTableModel(QAbstractTableModel):
         except ValueError:
             value = value.strip().lower()
             if value.startswith("t"):
-                if isinstance(self._mappings[0], FixedValueMapping):
-                    return False
                 value = Position.table_name
             elif value.startswith("h"):
                 value = Position.hidden
@@ -354,20 +352,6 @@ class MappingEditorTableModel(QAbstractTableModel):
             self._mapping_provider.show_on_table(mapping_name)
         self._mappings[row].filter_re = filter_re
         index = self.index(row, EditorColumn.FILTER)
-        self.dataChanged.emit(index, index, [Qt.DisplayRole])
-
-    def set_fixed_title(self, title, mapping_name):
-        """
-        Sets fixed table name.
-
-        Args:
-            title (str): fixed table name
-            mapping_name (str): mapping's name
-        """
-        if mapping_name != self._mapping_name:
-            self._mapping_provider.show_on_table(mapping_name)
-        self._mappings[0].value = title
-        index = self.index(0, EditorColumn.ROW_LABEL)
         self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
     def set_nullable(self, nullable, row, mapping_name):

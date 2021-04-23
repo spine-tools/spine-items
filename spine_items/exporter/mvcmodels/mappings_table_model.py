@@ -43,7 +43,8 @@ class MappingsTableModel(QAbstractTableModel):
     ALWAYS_EXPORT_HEADER_ROLE = Qt.UserRole + 4
     RELATIONSHIP_DIMENSIONS_ROLE = Qt.UserRole + 5
     USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.UserRole + 6
-    PARAMETER_DIMENSIONS_ROLE = Qt.UserRole + 7
+    FIXED_TABLE_NAME_ROLE = Qt.UserRole + 7
+    PARAMETER_DIMENSIONS_ROLE = Qt.UserRole + 8
 
     def __init__(self, mappings=None, parent=None):
         """
@@ -114,6 +115,8 @@ class MappingsTableModel(QAbstractTableModel):
                 return _instance_occurrences(spec.root, RelationshipClassObjectClassMapping)
             if role == self.USE_FIXED_TABLE_NAME_FLAG_ROLE:
                 return spec.use_fixed_table_name_flag
+            if role == self.FIXED_TABLE_NAME_ROLE:
+                return spec.root.value
             if role == self.PARAMETER_DIMENSIONS_ROLE:
                 dimensions = _instance_occurrences(spec.root, ParameterValueIndexMapping)
                 if dimensions == 0:
@@ -212,6 +215,9 @@ class MappingsTableModel(QAbstractTableModel):
             elif role == self.USE_FIXED_TABLE_NAME_FLAG_ROLE:
                 spec.use_fixed_table_name_flag = value
                 self.dataChanged.emit(index, index, [self.USE_FIXED_TABLE_NAME_FLAG_ROLE])
+            elif role == self.FIXED_TABLE_NAME_ROLE:
+                spec.root.value = value
+                self.dataChanged.emit(index, index, [self.FIXED_TABLE_NAME_ROLE])
             return True
         return False
 

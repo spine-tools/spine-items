@@ -52,7 +52,7 @@ class OutputFormat(Enum):
     SQL = "SQL"
 
 
-@dataclass
+@dataclass(eq=False)
 class MappingSpecification:
     type: MappingType
     enabled: bool

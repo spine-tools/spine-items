@@ -208,26 +208,24 @@ class SetUseFixedTableNameFlag(QUndoCommand):
         self._index.model().setData(self._index, not self._flag, MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE)
 
 
-class SetFixedTitle(QUndoCommand):
-    def __init__(self, model, mapping_name, title, previous_title):
+class SetFixedTableName(QUndoCommand):
+    def __init__(self, index, old_name, new_name):
         """
         Args:
-            model (MappingEditorTableModel): editor model
-            mapping_name (str): mapping's name
-            title (str): table name
-            previous_title (str): previous table name
+            index (QModelIndex): mapping's row index
+            old_name (str): old fixed table name
+            new_name (str): new fixed table name
         """
-        super().__init__("change table name")
-        self._model = model
-        self._mapping_name = mapping_name
-        self._title = title
-        self._previous_title = previous_title
+        super().__init__("change fixed table name")
+        self._index = index
+        self._old_name = old_name
+        self._new_name = new_name
 
     def redo(self):
-        self._model.set_fixed_title(self._title, self._mapping_name)
+        self._index.model().setData(self._index, self._new_name, MappingsTableModel.FIXED_TABLE_NAME_ROLE)
 
     def undo(self):
-        self._model.set_fixed_title(self._previous_title, self._mapping_name)
+        self._index.model().setData(self._index, self._old_name, MappingsTableModel.FIXED_TABLE_NAME_ROLE)
 
 
 class SetMappingPositions(QUndoCommand):

@@ -63,6 +63,7 @@ from ..commands import (
     SetExportFormat,
     SetMapping,
     SetUseFixedTableNameFlag,
+    SetFixedTableName,
 )
 from ..mvcmodels.mappings_table_model import MappingsTableModel
 from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel
@@ -126,7 +127,6 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         super().__init__(toolbox, specification, item)
         self._new_spec = deepcopy(specification) if specification is not None else Specification()
-        self._activated_mapping_name = None
         self._mappings_table_model = MappingsTableModel(self._new_spec.mapping_specifications(), self)
         self._mappings_table_model.dataChanged.connect(self._update_ui_after_mapping_change)
         self._mappings_table_model.rename_requested.connect(self._rename_mapping)
@@ -177,6 +177,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
         self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
+        self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
         self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
         self._compact_mapping_action = QAction("Compact mapping", self)
         self._compact_mapping_action.triggered.connect(self._compact_mapping)
@@ -336,6 +337,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         else:
             self._set_parameter_dimensions_silently(0)
         self._set_use_fixed_table_name_flag_silently(current.data(MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE))
+        self._set_fixed_table_name_silently(current.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE))
         root_mapping = current.data(MappingsTableModel.MAPPING_ROOT_ROLE)
         self._set_root_mapping_group_fn_silently(group_function_display_from_name(root_mapping.group_fn))
         mapping_name = self._mappings_table_model.index(current.row(), 0).data()
@@ -360,6 +362,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     def _update_ui_after_mapping_change(self, top_left, bottom_right, roles):
         """
         Makes sure we show the correct mapping data on the window.
+        Receiver for ``self._mappings_table_model``'s dataChanged signal
 
         Args:
             top_left (QModelIndex): top index of modified mappings
@@ -390,6 +393,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_use_fixed_table_name_flag_silently(
                 top_left.data(MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE)
             )
+        if {MappingsTableModel.MAPPING_ROOT_ROLE, MappingsTableModel.FIXED_TABLE_NAME_ROLE} & set(roles):
+            self._set_fixed_table_name_silently(top_left.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE))
         self._enable_relationship_controls()
         self._enable_parameter_controls()
 
@@ -649,7 +654,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     @Slot(int)
     def _change_fix_table_name_flag(self, checked):
         """
-        Pushes commands to undo stack to to change enable/disable fixed table name.
+        Pushes commands to undo stack to change enable/disable fixed table name.
 
         Args:
             checked (int): check box state
@@ -666,6 +671,18 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._undo_stack.push(SetMapping(index, mapping))
         self._undo_stack.endMacro()
 
+    @Slot()
+    def _change_fix_table_name(self):
+        """
+        Pushes commands to undo stack to change fixed table name to text in corresponding line edit.
+        """
+        index = self._ui.mappings_table.currentIndex()
+        if not index.isValid():
+            return
+        new_name = self._ui.fix_table_name_line_edit.text()
+        old_name = index.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE)
+        self._undo_stack.push(SetFixedTableName(index, old_name, new_name))
+
     def _set_use_fixed_table_name_flag_silently(self, flag):
         """
         Changes the fixed table name check box without touching the undo stack.
@@ -673,11 +690,25 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         Args:
             flag (bool): True if the box should be checked, False otherwise
         """
+        self._ui.fix_table_name_line_edit.setEnabled(flag)
         if flag == self._ui.fix_table_name_check_box.isChecked():
             return
         self._ui.fix_table_name_check_box.stateChanged.disconnect(self._change_fix_table_name_flag)
         self._ui.fix_table_name_check_box.setCheckState(Qt.Checked if flag else Qt.Unchecked)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
+
+    def _set_fixed_table_name_silently(self, name):
+        """
+        Changes the fixed table name line edit without touching the undo stack.
+
+        Args:
+            name (str): text to go in the line edit
+        """
+        if name == self._ui.fix_table_name_line_edit.text():
+            return
+        self._ui.fix_table_name_line_edit.editingFinished.disconnect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.setText(name)
+        self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
 
     @Slot(str)
     def _change_root_mapping_group_fn(self, text):
