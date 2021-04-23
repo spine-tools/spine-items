@@ -314,11 +314,42 @@ class ExecutableItem(ExecutableItemBase):
                 return False
         return True
 
-    def ready_to_execute(self):
-        """Returns False if this Tool does not have a specification."""
+    def ready_to_execute(self, settings):
+        """See base class.
+
+        Returns False when
+        1. Tool has no specification
+        2. Python or Julia Kernel spec not selected (console mode)
+        3. Julia executable not set and not found in PATH (subprocess mode)
+
+        Returns True otherwise.
+        """
         if self._tool_specification is None:
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> not ready for execution. No specification.")
             return False
+        if self._tool_specification.tooltype.lower() == "python":
+            use_embedded_python = settings.value("appSettings/useEmbeddedPython", defaultValue="0")
+            python_kernel = settings.value("appSettings/pythonKernel", defaultValue="")
+            if use_embedded_python == "2" and python_kernel == "":
+                self._logger.msg_error.emit(f"No Python kernel spec selected. Please select one from Settings->Tools.")
+                return False
+            # Note: no check for python path == "" because this should never happen
+        elif self._tool_specification.tooltype.lower() == "julia":
+            use_embedded_julia = settings.value("appSettings/useEmbeddedJulia", defaultValue="0")
+            julia_kernel = settings.value("appSettings/juliaKernel", defaultValue="")
+            julia_path = settings.value("appSettings/juliaPath", defaultValue="")
+            if use_embedded_julia == "2" and julia_kernel == "":
+                self._logger.msg_error.emit(f"No Julia kernel spec selected. Please select one from Settings->Tools.")
+                return False
+            elif use_embedded_julia == "0" and julia_path == "":
+                if not julia_path:
+                    self._logger.msg_error.emit(
+                        f"Julia not found in PATH. Please set the path to your Julia in Settings->Tools."
+                    )
+                    return False
+        elif self._tool_specification.tooltype.lower() == "gams":
+            # TODO
+            pass
         return True
 
     def execute(self, forward_resources, backward_resources):

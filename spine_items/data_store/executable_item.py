@@ -69,11 +69,10 @@ class ExecutableItem(ExecutableItemBase):
     def _urls_from_resources(resources):
         return [r.url for r in resources if r.type_ == "database"]
 
-    def ready_to_execute(self):
+    def ready_to_execute(self, settings):
         """See base class.
 
-        Returns:
-            bool: False when url is invalid, True otherwise
+        Returns False when url is invalid, True otherwise.
         """
         # TODO: Should return False when db .sqlite file is empty (0 kB)
         # TODO: Should return False when db revision is outdated
