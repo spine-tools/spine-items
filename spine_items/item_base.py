@@ -180,7 +180,7 @@ class ExporterBase(ProjectItem):
             for url in useless_oldies:
                 self._inactive_databases[url] = self._database_model.remove(url)
             for url in homeless_new_urls:
-                db = self._inactive_databases.get(url)
+                db = self._inactive_databases.pop(url, None)
                 if db is None:
                     db = Database()
                     db.url = url
