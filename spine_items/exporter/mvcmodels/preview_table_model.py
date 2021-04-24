@@ -15,6 +15,7 @@ Contains model for a single export preview table.
 :date:   5.1.2021
 """
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
+from spinedb_api.mapping import Position
 
 
 class PreviewTableModel(QAbstractTableModel):
@@ -106,14 +107,16 @@ class PreviewTableModel(QAbstractTableModel):
         row_to_map_color = {}
         self._column_to_map_color = {}
         # Compute positions
-        positions = [m.position if isinstance(m.position, int) else None for m in mappings]
-        is_pivoted = any([p < 0 for p in positions[:-1] if p is not None])
+        positions = [m.position for m in mappings]
+        is_pivoted = any([p < 0 for p in positions[:-1] if isinstance(p, int)])
         if is_pivoted:
-            positions.pop(-1)
-            self._in_pivot_color = colors[-1]
+            k = 1
+            while positions.pop(-1) == Position.hidden:
+                k += 1
+            self._in_pivot_color = colors[-k]
         # Compute lookup dicts
         for position, color in zip(positions, colors):
-            if position is None:
+            if not isinstance(position, int):
                 continue
             if position < 0:
                 row = -(position + 1)
