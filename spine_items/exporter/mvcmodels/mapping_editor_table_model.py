@@ -17,7 +17,7 @@ Contains model for export mapping setup table.
 from enum import IntEnum, unique
 from itertools import takewhile
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide2.QtGui import QFont
+from PySide2.QtGui import QFont, QColor
 from spinedb_api.mapping import is_pivoted, is_regular, Position
 from spinedb_api.export_mapping.export_mapping import (
     AlternativeDescriptionMapping,
@@ -152,7 +152,7 @@ class MappingEditorTableModel(QAbstractTableModel):
             return font
         elif role == Qt.BackgroundRole and column == EditorColumn.ROW_LABEL:
             m = self._mappings[index.row()]
-            return self._mapping_colors.get(m.position)
+            return self._mapping_colors.get(m.position, QColor(Qt.gray).lighter())
         elif role == Qt.ToolTipRole and column == EditorColumn.FILTER:
             return "Regular expression to filter database items."
         if role == self.MAPPING_ITEM_ROLE:

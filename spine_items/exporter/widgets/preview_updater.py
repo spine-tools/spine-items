@@ -110,14 +110,6 @@ class PreviewUpdater:
             current (QModelIndex): index to the currently selected table on the list
             previous (QModelIndex): index to the previously selected table on the list
         """
-        table = current.data(PreviewTreeModel.TABLE_ROLE)
-        if table is not None:
-            table_name = current.data()
-            mapping_name = current.parent().data()
-            mapping_colors = self._mapping_editor_table_model.mapping_colors()
-            self._preview_table_model.reset(mapping_name, table_name, table, mapping_colors)
-        else:
-            self._preview_table_model.clear()
         current_parent = self._preview_tree_model.parent(current)
         if not current_parent.isValid():
             current_parent = current
@@ -130,6 +122,14 @@ class PreviewUpdater:
             self._ui.mappings_table.selectionModel().currentChanged.disconnect(self._change_selected_table)
             self._ui.mappings_table.setCurrentIndex(index)
             self._ui.mappings_table.selectionModel().currentChanged.connect(self._change_selected_table)
+        table = current.data(PreviewTreeModel.TABLE_ROLE)
+        if table is not None:
+            table_name = current.data()
+            mapping_name = current.parent().data()
+            mapping_colors = self._mapping_editor_table_model.mapping_colors()
+            self._preview_table_model.reset(mapping_name, table_name, table, mapping_colors)
+        else:
+            self._preview_table_model.clear()
 
     @Slot(QModelIndex, QModelIndex)
     def _change_selected_table(self, current, previous):

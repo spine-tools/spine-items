@@ -15,7 +15,6 @@ Contains model for a single export preview table.
 :date:   5.1.2021
 """
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
-from spinedb_api.mapping import Position
 
 
 class PreviewTableModel(QAbstractTableModel):
