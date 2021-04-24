@@ -56,9 +56,9 @@ class PreviewTableModel(QAbstractTableModel):
             if self._index_in_pivot(index):
                 return self._in_pivot_color
             color_row = self._row_to_map_color.get(index.row())
-            color_column = self._column_to_map_color.get(index.column())
             if color_row is not None and index.column() > self._max_mapping_column:
                 return color_row
+            color_column = self._column_to_map_color.get(index.column())
             if color_column is not None and index.row() > self._max_mapping_row:
                 return color_column
         return None
@@ -79,7 +79,7 @@ class PreviewTableModel(QAbstractTableModel):
         """
         return self._mapping_name
 
-    def reset(self, mapping_name, table_name, table, mappings, colors):
+    def reset(self, mapping_name, table_name, table, mapping_colors):
         """
         Resets model's data.
 
@@ -87,45 +87,42 @@ class PreviewTableModel(QAbstractTableModel):
             mapping_name (str): current mapping's name
             table_name (str): current table's name
             table (list): table data
-            mappings (list of ExportMapping): mappings
-            colors (list of QColor): colors
+            mapping_colors (dict): mapping int position to QColor
         """
         self.beginResetModel()
         self._mapping_name = mapping_name
         self._table_name = table_name
         self._table = table
-        self._reset_colors(mappings, colors)
+        self._reset_colors(mapping_colors)
         self.endResetModel()
 
-    def _reset_colors(self, mappings, colors):
-        """Updates attributes that define colors for rows and columns in the tables.
+    def _reset_colors(self, mapping_colors):
+        """Updates attributes for coloring cells.
 
         Args:
-            mappings (list of ExportMapping): mappings
-            colors (list of QColor): colors
+            mapping_colors (dict): mapping int position to QColor
         """
-        row_to_map_color = {}
+        self._row_to_map_color = {}
         self._column_to_map_color = {}
-        # Compute positions
-        positions = [m.position for m in mappings]
-        is_pivoted = any([p < 0 for p in positions[:-1] if isinstance(p, int)])
+        # Compute in-pivot color
+        positions = list(mapping_colors)
+        is_pivoted = any([p < 0 for p in positions[:-1]])
         if is_pivoted:
-            k = 1
-            while positions.pop(-1) == Position.hidden:
-                k += 1
-            self._in_pivot_color = colors[-k]
-        # Compute lookup dicts
-        for position, color in zip(positions, colors):
-            if not isinstance(position, int):
-                continue
+            p = positions.pop(-1)
+            self._in_pivot_color = mapping_colors[p]
+        # Compute row and column colors
+        for position in positions:
+            color = mapping_colors[position]
             if position < 0:
                 row = -(position + 1)
-                row_to_map_color[row] = color
+                self._row_to_map_color[row] = color
             else:
                 column = position
                 self._column_to_map_color[column] = color
-        sorted_row_to_map_color = {row: row_to_map_color[row] for row in sorted(row_to_map_color)}
+        # Compact the rows
+        sorted_row_to_map_color = {row: self._row_to_map_color[row] for row in sorted(self._row_to_map_color)}
         self._row_to_map_color = dict(enumerate(sorted_row_to_map_color.values()))
+        # Compute maxes
         self._max_mapping_row = max(self._row_to_map_color, default=-1)
         self._max_mapping_column = max(self._column_to_map_color, default=-1)
 

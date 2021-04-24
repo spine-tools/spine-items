@@ -89,7 +89,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         super().__init__(parent)
         self._root_mapping = None
         self._mappings = []
-        self._mapping_colors = []
+        self._mapping_colors = {}
         self._reset_mapping(root_mapping)
         self._non_leaf_mapping_is_pivoted = self._is_non_leaf_pivoted()
         self._undo_stack = undo_stack
@@ -101,16 +101,20 @@ class MappingEditorTableModel(QAbstractTableModel):
         self._root_mapping = root_mapping
         if self._root_mapping is None:
             self._mappings = []
-            self._mapping_colors = []
+            self._mapping_colors = {}
             return
         self._mappings = self._root_mapping.flatten()
         if self._mappings and isinstance(self._mappings[0], FixedValueMapping):
             # Pop the first element if it's a FixedValueMapping. We don't want to have the fixed table name here.
             self._mappings.pop(0)
-        self._mapping_colors = [color_from_index(i, len(self._mappings)).lighter() for i in range(len(self._mappings))]
+        self._reset_colors()
 
-    def mappings_and_colors(self):
-        return self._mappings, self._mapping_colors
+    def _reset_colors(self):
+        positions = [m.position for m in self._mappings if isinstance(m.position, int)]
+        self._mapping_colors = {p: color_from_index(i, len(positions)).lighter() for i, p in enumerate(positions)}
+
+    def mapping_colors(self):
+        return self._mapping_colors
 
     def columnCount(self, paren=QModelIndex()):
         return len(EditorColumn)
@@ -147,7 +151,8 @@ class MappingEditorTableModel(QAbstractTableModel):
             font.setBold(True)
             return font
         elif role == Qt.BackgroundRole and column == EditorColumn.ROW_LABEL:
-            return self._mapping_colors[index.row()]
+            m = self._mappings[index.row()]
+            return self._mapping_colors.get(m.position)
         elif role == Qt.ToolTipRole and column == EditorColumn.FILTER:
             return "Regular expression to filter database items."
         if role == self.MAPPING_ITEM_ROLE:
@@ -324,6 +329,7 @@ class MappingEditorTableModel(QAbstractTableModel):
             self._non_leaf_mapping_is_pivoted = non_leaf_pivoted
             index = self.index(_value_row(self._mappings), EditorColumn.POSITION)
             self.dataChanged.emit(index, index, [Qt.DisplayRole])
+        self._reset_colors()
 
     def set_header(self, header, row, mapping_name):
         """
@@ -417,6 +423,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         top_left = self.index(0, EditorColumn.POSITION)
         bottom_right = self.index(self.rowCount() - 1, EditorColumn.POSITION)
         self.dataChanged.emit(top_left, bottom_right, Qt.DisplayRole)
+        self._reset_colors()
 
 
 _names = {

@@ -114,8 +114,8 @@ class PreviewUpdater:
         if table is not None:
             table_name = current.data()
             mapping_name = current.parent().data()
-            mappings, colors = self._mapping_editor_table_model.mappings_and_colors()
-            self._preview_table_model.reset(mapping_name, table_name, table, mappings, colors)
+            mapping_colors = self._mapping_editor_table_model.mapping_colors()
+            self._preview_table_model.reset(mapping_name, table_name, table, mapping_colors)
         else:
             self._preview_table_model.clear()
         current_parent = self._preview_tree_model.parent(current)
@@ -222,10 +222,9 @@ class PreviewUpdater:
             mapping_name = index.parent().data()
             if current_table_name != table_name or current_mapping_name != mapping_name:
                 continue
-            mappings, colors = self._mapping_editor_table_model.mappings_and_colors()
-            self._preview_table_model.reset(
-                mapping_name, table_name, index.data(PreviewTreeModel.TABLE_ROLE), mappings, colors
-            )
+            table = index.data(PreviewTreeModel.TABLE_ROLE)
+            mapping_colors = self._mapping_editor_table_model.mapping_colors()
+            self._preview_table_model.reset(mapping_name, table_name, table, mapping_colors)
             break
 
     def _set_expect_removals_and_inserts(self, except_removals):
