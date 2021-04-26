@@ -53,7 +53,7 @@ class ExecutableItem(ExecutableItemBase):
         return ItemExecutionFinishState.SUCCESS
 
     # pylint: disable=no-self-use
-    def skip_execution(self, forward_resources, backward_resources):
+    def exclude_execution(self, forward_resources, backward_resources):
         """See base class."""
         self.execute(forward_resources, backward_resources)
 

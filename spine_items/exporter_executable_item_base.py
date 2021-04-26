@@ -58,7 +58,7 @@ class ExporterExecutableItemBase(ExecutableItemBase):
             self._process.terminate()
             self._process = None
 
-    def skip_execution(self, forward_resources, backward_resources):
+    def exclude_execution(self, forward_resources, backward_resources):
         """See base class."""
         database_urls = [r.url for r in forward_resources if r.type_ == "database"]
         _, forks = self._databases_and_forks(database_urls)
