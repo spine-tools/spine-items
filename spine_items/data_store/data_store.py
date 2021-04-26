@@ -20,6 +20,8 @@ import os
 from shutil import copyfile
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QAction, QFileDialog, QApplication, QMenu
+
+from spine_engine.project_item.project_item_resource import database_resource
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
@@ -30,6 +32,7 @@ from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url
 from .output_resources import scan_for_resources
+from ..utils import database_label
 
 
 class DataStore(ProjectItem):
@@ -57,7 +60,6 @@ class DataStore(ProjectItem):
         if url is None:
             url = dict()
         self._url = self.parse_url(url)
-        self._additional_resource_metadata = None
         self._multi_db_editors_open = {}
         self._open_url_menu = QMenu("Open URL in Spine DB editor", self._toolbox)
         self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
@@ -193,10 +195,18 @@ class DataStore(ProjectItem):
         return True
 
     def do_update_url(self, **kwargs):
+        old_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         self._url.update(kwargs)
+        new_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         self.load_url_into_selections(kwargs)
-        self._resources_to_predecessors_changed()
-        self._resources_to_successors_changed()
+        if old_url and new_url:
+            old = database_resource(self.name, str(old_url), label=database_label(self.name))
+            new = database_resource(self.name, str(new_url), label=database_label(self.name))
+            self._resource_to_predecessors_replaced(old, new)
+            self._resource_to_successors_replaced(old, new)
+        else:
+            self._resources_to_predecessors_changed()
+            self._resources_to_successors_changed()
         self._check_notifications()
 
     @Slot()
@@ -483,9 +493,6 @@ class DataStore(ProjectItem):
                 if os.path.exists(database):
                     self._url.update(database=database)
                     self.load_url_into_selections(self._url)
-            self._additional_resource_metadata = {"updated_from": old_url}
-        self._resources_to_predecessors_changed()
-        self._resources_to_successors_changed()
         return True
 
     def notify_destination(self, source_item):
@@ -515,8 +522,6 @@ class DataStore(ProjectItem):
         """See base class."""
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         resources = scan_for_resources(self, sa_url)
-        if self._additional_resource_metadata:
-            resources = [r.clone(additional_metadata=self._additional_resource_metadata) for r in resources]
         return resources
 
     def resources_for_direct_predecessors(self):

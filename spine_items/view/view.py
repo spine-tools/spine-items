@@ -108,7 +108,7 @@ class View(ProjectItem):
         """See base class."""
         self._references.clear()
         for resource in resources:
-            if resource.type_ == "database" and resource.scheme == "sqlite":
+            if resource.type_ == "database":
                 url = make_url(resource.url)
                 self._references[url.database] = (url, resource.provider_name)
             elif resource.type_ == "file":
@@ -116,6 +116,22 @@ class View(ProjectItem):
                 if os.path.splitext(filepath)[1] == ".sqlite":
                     url = URL("sqlite", database=filepath)
                     self._references[url.database] = (url, resource.provider_name)
+        self.populate_reference_list()
+
+    def replace_resource_from_upstream(self, old, new):
+        """See base class."""
+        if old.type_ == "database" and new.type_ == "database":
+            old_url = make_url(old.url)
+            new_url = make_url(new.url)
+        elif old.type_ == "file":
+            if os.path.splitext(old.path)[1] == ".sqlite" and os.path.splitext(new.path)[1] == ".sqlite":
+                old_url = URL("sqlite", database=old.path)
+                new_url = URL("sqlite", database=new.path)
+            else:
+                return
+        else:
+            return
+        self._references[new_url.database] = self._references.pop(old_url.database)
         self.populate_reference_list()
 
     def _selected_indexes(self):

@@ -185,8 +185,13 @@ class FileListModel(QAbstractItemModel):
         paths = single_paths + pack_paths
         duplicates = set()
         for p1, p2 in combinations(paths, 2):
-            if p1.samefile(p2):
-                duplicates.add(str(p2))
+            try:
+                if p1.samefile(p2):
+                    duplicates.add(str(p2))
+            except OSError:
+                # Sometimes file access fails e.g. in the middle of replacing
+                # resources when a connected DC is being renamed.
+                continue
         return duplicates
 
     def _pack_index(self, pack_label):
@@ -557,9 +562,11 @@ class DatabaseListModel(QAbstractListModel):
             old (str): old URL
             new (str): new URL
         """
-        for db in self._databases:
+        for row, db in enumerate(self._databases):
             if old == db.url:
                 db.url = new
+                index = self.index(row, 0)
+                self.dataChanged.emit(index, index, [Qt.DisplayRole])
                 return
 
     def urls(self):
@@ -613,3 +620,18 @@ class FullUrlListModel(QAbstractListModel):
         self.beginResetModel()
         self._urls = list(urls)
         self.endResetModel()
+
+    def update_url(self, old, new):
+        """
+        Updates a database URL.
+
+        Args:
+            old (str): old URL
+            new (str): new URL
+        """
+        for row, url in enumerate(self._urls):
+            if old == url:
+                self._urls[row] = new
+                index = self.index(row, 0)
+                self.dataChanged.emit(index, index, [Qt.DisplayRole])
+                return

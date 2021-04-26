@@ -63,13 +63,6 @@ class DataTransformer(ProjectItem):
     def executable_class(self):
         return ExecutableItem
 
-    def rename(self, new_name, rename_data_dir_message):
-        """See base class."""
-        if not super().rename(new_name, rename_data_dir_message):
-            return False
-        self._resources_to_successors_changed()
-        return True
-
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()
@@ -94,20 +87,30 @@ class DataTransformer(ProjectItem):
 
     def do_set_specification(self, specification):
         """see base class"""
+        self._dump_filter_configs()
+        old_resources = scan_for_resources(
+            self, self.specification(), self._db_resources, filter_config_path(self.data_dir)
+        )
         if not super().do_set_specification(specification):
             return False
         self._specification_name = specification.name if specification is not None else ""
         if self._active:
             self._update_ui()
-        if specification is None:
-            return True
-        path = filter_config_path(self.data_dir)
-        if specification.settings is not None:
-            with open(path, "w") as filter_config_file:
-                dump(specification.settings.filter_config(), filter_config_file)
-        self._resources_to_predecessors_changed()
+        self._dump_filter_configs()
+        new_resources = scan_for_resources(
+            self, self.specification(), self._db_resources, filter_config_path(self.data_dir)
+        )
+        for old, new in zip(old_resources, new_resources):
+            self._resource_to_successors_replaced(old, new)
         self._check_notifications()
         return True
+
+    def _dump_filter_configs(self):
+        """writes filter configs to disk."""
+        if self._specification is not None and self._specification.settings is not None:
+            path = filter_config_path(self.data_dir)
+            with open(path, "w") as filter_config_file:
+                dump(self._specification.settings.filter_config(), filter_config_file)
 
     def update_name_label(self):
         """Update properties tab name label. Used only when renaming project items."""
@@ -150,6 +153,24 @@ class DataTransformer(ProjectItem):
         """See base class."""
         self._db_resources = [r for r in resources if r.type_ == "database"]
         self._resources_to_successors_changed()
+
+    def replace_resource_from_upstream(self, old, new):
+        """See base class."""
+        old_resources = scan_for_resources(
+            self, self.specification(), self._db_resources, filter_config_path(self.data_dir)
+        )
+        db_resources = list()
+        for resource in self._db_resources:
+            if resource == old:
+                db_resources.append(new)
+            else:
+                db_resources.append(resource)
+        self._db_resources = db_resources
+        new_resources = scan_for_resources(
+            self, self.specification(), self._db_resources, filter_config_path(self.data_dir)
+        )
+        for old, new in zip(old_resources, new_resources):
+            self._resource_to_successors_replaced(old, new)
 
     def resources_for_direct_successors(self):
         """See base class."""

@@ -22,7 +22,9 @@ import logging
 from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex
 from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QStyle, QFileIconProvider, QInputDialog, QMessageBox
-from spine_engine.utils.serialization import deserialize_path, serialize_path
+
+from spine_engine.project_item.project_item_resource import file_resource
+from spine_engine.utils.serialization import deserialize_path, serialize_path, path_in_dir
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.custom_file_system_watcher import CustomFileSystemWatcher
 from spinetoolbox.helpers import open_url
@@ -57,7 +59,6 @@ class DataConnection(ProjectItem):
         self.populate_reference_list()
         # Populate data (files) model
         self.populate_data_list()
-        self._updated_from = {}
 
     def set_up(self):
         super().set_up()
@@ -227,10 +228,21 @@ class DataConnection(ProjectItem):
 
     @Slot(str, str)
     def _handle_file_renamed(self, old_path, new_path):
-        if self._rename_reference(old_path, new_path) or self._rename_data_file(old_path, new_path):
-            self._updated_from[new_path] = old_path
-            self._check_notifications()
-            self._resources_to_successors_changed()
+        renamed = self._rename_reference(old_path, new_path)
+        if not renamed:
+            renamed = self._rename_data_file(old_path, new_path)
+        if not renamed:
+            return
+        self._check_notifications()
+        if path_in_dir(new_path, self._project.project_dir):
+            old_label = os.path.basename(old_path)
+            new_label = os.path.basename(new_path)
+        else:
+            old_label = old_path
+            new_label = new_path
+        old = file_resource(self.name, old_path, label=old_label)
+        new = file_resource(self.name, new_path, label=new_label)
+        self._resource_to_successors_replaced(old, new)
 
     @Slot(str)
     def _handle_file_added(self, path):
@@ -404,11 +416,6 @@ class DataConnection(ProjectItem):
         refs = self.file_references()
         data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
         resources = scan_for_resources(self, refs + data_files, self._project.project_dir)
-        for k, resource in enumerate(resources):
-            updated_from = self._updated_from.pop(resource.path, None)
-            if not updated_from:
-                continue
-            resources[k] = resource.clone(additional_metadata={"updated_from": updated_from})
         return resources
 
     def _check_notifications(self):
@@ -441,7 +448,6 @@ class DataConnection(ProjectItem):
         self.file_system_watcher.remove_persistent_dir_path(old_data_dir)
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.populate_data_list()
-        self._resources_to_successors_changed()
         return True
 
     def tear_down(self):

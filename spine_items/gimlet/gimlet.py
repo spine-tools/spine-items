@@ -261,24 +261,63 @@ class Gimlet(ProjectItem):
         self._resources_from_upstream = list(resources)
         self._update_files_and_cmd_line_args()
 
+    def replace_resource_from_upstream(self, old, new):
+        """See base class."""
+        self._replace_resources(old, new, self._resources_from_upstream)
+
     def downstream_resources_updated(self, resources):
         self._resources_from_downstream = list(resources)
         self._update_files_and_cmd_line_args()
+
+    def replace_resource_from_downstream(self, old, new):
+        """See base class."""
+        self._replace_resources(old, new, self._resources_from_downstream)
+
+    def _replace_resources(self, old, new, resource_list):
+        """Replaces resources.
+
+        Modifies ``resource_list`` in-place!
+
+        Args:
+            old (ProjectItemResource): old resource
+            new (ProjectItemResource): new resource
+            resource_list (list of ProjectItemResource): current downstream or upstream resources
+        """
+        updated_resources = list()
+        for resource in resource_list:
+            if resource == old:
+                updated_resources.append(new)
+            else:
+                updated_resources.append(resource)
+        resource_list.clear()
+        resource_list += updated_resources
+        self._file_model.update(self._resources_from_upstream + self._resources_from_downstream)
+        self._check_notifications()
+        cmd_line_args = list()
+        for arg in self.cmd_line_args:
+            if arg.arg == old.label:
+                cmd_line_args.append(LabelArg(new.label))
+            else:
+                cmd_line_args.append(arg)
+        self.update_cmd_line_args(cmd_line_args)
 
     def _update_files_and_cmd_line_args(self):
         """Updates the file model and command line arguments with regards to available resources."""
         all_resources = self._resources_from_upstream + self._resources_from_downstream
         self._file_model.update(all_resources)
         self._check_notifications()
-        cmd_line_args = self.cmd_line_args.copy()
-        for resource in all_resources:
-            updated_from = resource.metadata.get("updated_from")
-            try:
-                i = cmd_line_args.index(updated_from)
-            except ValueError:
-                continue
-            cmd_line_args[i] = resource.label
-        self.update_cmd_line_args(cmd_line_args)
+        update_args = list()
+        resource_labels = {resource.label for resource in all_resources}
+        for arg in self.cmd_line_args:
+            if isinstance(arg, LabelArg):
+                if arg.arg in resource_labels:
+                    update_args.append(arg)
+                else:
+                    # The corresponding resource does not exist anymore so we drop the argument.
+                    continue
+            else:
+                update_args.append(arg)
+        self.update_cmd_line_args(update_args)
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""

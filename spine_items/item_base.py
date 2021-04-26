@@ -83,15 +83,6 @@ class ExporterBase(ProjectItem):
             return
         self._resources_to_successors_changed()
 
-    def rename(self, new_name, rename_data_dir_message):
-        """See base class."""
-        if not super().rename(new_name, rename_data_dir_message):
-            return False
-        if self._active:
-            self._properties_ui.item_name_label.setText(new_name)
-        self._resources_to_successors_changed()
-        return True
-
     def database(self, url):
         """
         Returns database information for given URL.
@@ -190,6 +181,13 @@ class ExporterBase(ProjectItem):
             self._update_properties_tab()
         self._check_notifications()
 
+    def replace_resource_from_upstream(self, old, new):
+        """See base class."""
+        if not old.type_ == "database":
+            return
+        self._database_model.update_url(clear_filter_configs(old.url), clear_filter_configs(new.url))
+        self._full_url_model.update_url(old.url, new.url)
+
     def _check_notifications(self):
         """
         Checks the status of database export settings.
@@ -281,11 +279,25 @@ class ExporterBase(ProjectItem):
         if self._active:
             export_list_item = self._export_list_items[database_path]
             export_list_item.out_file_name_edit.setText(file_name)
-        self._database_model.item(database_path).output_file_name = file_name
+        database = self._database_model.item(database_path)
+        old_file_name = database.output_file_name
+        old_resources = self.resources_for_direct_successors() if old_file_name else []
+        database.output_file_name = file_name
         self._notifications.missing_output_file_name = not file_name
         self._check_duplicate_file_names()
         self._report_notifications()
-        self._resources_to_successors_changed()
+        if self._exported_files is not None:
+            exported_files = self._exported_files.pop(old_file_name, None)
+            if exported_files is not None and file_name:
+                self._exported_files[file_name] = exported_files
+        if not old_file_name or not file_name:
+            self._resources_to_successors_changed()
+        else:
+            new_resources = self.resources_for_direct_successors()
+            olds = (resource for resource in old_resources if resource.label == old_file_name)
+            news = (resource for resource in new_resources if resource.label == file_name)
+            for old, new in zip(olds, news):
+                self._resource_to_successors_replaced(old, new)
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item's configuration."""
