@@ -49,6 +49,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.textEdit_program.setEnabled(False)
         self._current_programfile_path = None
         self._programfile_documents = {}
+        self._programfile_set_dirty_slots = {}
         # Setup statusbar
         self._label_main_path = QLabel()
         label = QLabel("Main program dir:")
@@ -123,11 +124,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         height = sum(d.height() for d in docks)
         self.resizeDocks(docks, [height * x for x in (0.6, 0.4)], Qt.Vertical)
 
-    def _populate_main_menu(self):
-        super()._populate_main_menu()
-        self._spec_toolbar.save_action.setText("Save specification")
-        self._spec_toolbar.menu.insertAction(self._spec_toolbar.save_action, self._ui.actionSave_program_file)
-        self._spec_toolbar.menu.insertSeparator(self._spec_toolbar.save_action)
+    @Slot(bool)
+    def _update_window_modified(self, _clean):
+        clean = self._undo_stack.isClean()
+        clean &= not any([doc.isModified() for doc in self._programfile_documents.values()])
+        super()._update_window_modified(clean)
 
     def _make_new_specification(self, spec_name):
         """See base class."""
@@ -167,6 +168,36 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._show_error("Creating Tool specification failed")
             return None
         return tool_spec
+
+    def _save(self):
+        """Saves spec. If successful, also saves all modified program files."""
+        if not super()._save():
+            return False
+        saved = []
+        for file_path, doc in self._programfile_documents.items():
+            if not doc.isModified():
+                continue
+            err = self._save_program_file(file_path, doc)
+            basename = os.path.basename(file_path)
+            if err is None:
+                doc.setModified(False)
+                saved.append(basename)
+                continue
+            self._show_error(f"Error while saving {basename}: {err}")
+            return True
+        if saved:
+            saved = ", ".join(saved)
+            self._show_status_bar_msg(f"Program files {saved} saved successfully")
+        return True
+
+    def _save_program_file(self, file_path, doc):
+        """Saves program file."""
+        try:
+            with open(file_path, "w") as file:
+                file.write(doc.toPlainText())
+            return None
+        except IOError as err:
+            return err
 
     def init_programfile_list(self):
         """List program files in QTreeView."""
@@ -211,45 +242,73 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def _additional_program_file_list(self):
         return self.spec_dict.get("includes", [])[1:]
 
-    def populate_main_programfile(self, name):
+    def populate_main_programfile(self, file_path):
         """List program files in QTreeView.
         Args:
-            name (str): *absolute* path
+            file_path (str): *absolute* path
         """
         index = self.programfiles_model.index(0, 0)
         root_item = self.programfiles_model.itemFromIndex(index)
         root_item.removeRows(0, root_item.rowCount())
-        if not name:
+        if not file_path:
             return
-        item = QStandardItem(os.path.basename(name))
+        item = QStandardItem(os.path.basename(file_path))
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-        item.setData(QFileIconProvider().icon(QFileInfo(name)), Qt.DecorationRole)
-        item.setData(name, Qt.UserRole)
+        item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.DecorationRole)
+        item.setData(file_path, Qt.UserRole)
         root_item.appendRow(item)
         QTimer.singleShot(0, self._push_change_main_program_file_command)
 
     def populate_programfile_list(self, names):
         """List program files in QTreeView.
         """
-        # Find visible indexes
+        # Find visible indexes, disconnect 'set program file dirty' slots
         visible = set()
         for item in self.programfiles_model.findItems("", Qt.MatchContains | Qt.MatchRecursive):
             if not item.rowCount():
                 index = self.programfiles_model.indexFromItem(item)
+                file_path = self._programfile_path_from_index(index)
                 if self._ui.treeView_programfiles.isExpanded(index.parent()):
-                    visible.add(self._programfile_path_from_index(index))
+                    visible.add(file_path)
+                doc = self._programfile_documents.get(file_path)
+                slot = self._programfile_set_dirty_slots.get(file_path)
+                if None not in (doc, slot):
+                    doc.modificationChanged.disconnect(slot)
         # Repopulate
         index = self.programfiles_model.index(1, 0)
         root_item = self.programfiles_model.itemFromIndex(index)
         root_item.removeRows(0, root_item.rowCount())
         components = _collect_components(names)
         _build_tree(root_item, components)
-        # Reexpand visible
+        # Reexpand visible, connect 'set program file dirty' slots
+        self._programfile_set_dirty_slots.clear()
         for item in self.programfiles_model.findItems("", Qt.MatchContains | Qt.MatchRecursive):
             if not item.rowCount():
                 index = self.programfiles_model.indexFromItem(item)
-                if self._programfile_path_from_index(index) in visible:
+                file_path = self._programfile_path_from_index(index)
+                if file_path in visible:
                     self._ui.treeView_programfiles.expand(index.parent())
+                self._programfile_set_dirty_slots[file_path] = index
+                doc = self._programfile_documents.get(file_path)
+                if doc is not None:
+                    slot = self._programfile_set_dirty_slots[
+                        file_path
+                    ] = lambda dirty, index=index: self._set_program_file_dirty(index, dirty)
+                    doc.modificationChanged.connect(slot)
+                    self._set_program_file_dirty(index, doc.isModified())
+
+    def _set_program_file_dirty(self, index, dirty):
+        """
+        Appends a * to the file name in program files tree view if dirty.
+
+        Args:
+            index (QModelIndex): index in program files model
+            dirty (bool)
+        """
+        basename = os.path.basename(index.data(Qt.UserRole))
+        if dirty:
+            basename += "*"
+        self.programfiles_model.setData(index, basename, role=Qt.DisplayRole)
 
     def init_io_file_list(self):
         for name in ("Input files", "Optional input files", "Output files"):
@@ -342,7 +401,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._handle_programfile_selection_changed
         )
         self._ui.treeView_io_files.selectionModel().selectionChanged.connect(self._handle_io_file_selection_changed)
-        self._ui.actionSave_program_file.triggered.connect(self.save_program_file)
 
     @Slot(int)
     def _push_change_tooltype_command(self, index):
@@ -439,8 +497,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             # Not a leaf
             self._clear_program_text_edit()
             return
-        file_path = self._programfile_path_from_index(current)
-        self._load_programfile_in_editor(file_path)
+        self._load_programfile_in_editor(current)
 
     def _programfile_path_from_index(self, index):
         """Return absolute path to a file pointed by index.
@@ -459,11 +516,14 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def _clear_program_text_edit(self):
         self._ui.textEdit_program.setDocument(QTextDocument())
         self._ui.textEdit_program.setEnabled(False)
-        self._ui.actionSave_program_file.setEnabled(False)
-        self._ui.actionSave_program_file.setText("Save program file")
         self._ui.dockWidget_program.setWindowTitle("")
 
-    def _load_programfile_in_editor(self, file_path):
+    def _load_programfile_in_editor(self, index):
+        """
+        Args:
+            index (QModelIndex): index in programfiles_model
+        """
+        file_path = self._programfile_path_from_index(index)
         self._current_programfile_path = file_path
         if not os.path.isfile(file_path):
             self._show_status_bar_msg(f"Program file {file_path} is not valid")
@@ -479,13 +539,13 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             document = self._programfile_documents[file_path] = QTextDocument(self._ui.textEdit_program)
             document.setPlainText(text)
             document.setModified(False)
-            document.modificationChanged.connect(self._ui.actionSave_program_file.setEnabled)
-            document.modificationChanged.connect(self._ui.dockWidget_program.setWindowModified)
+            slot = self._programfile_set_dirty_slots[
+                file_path
+            ] = lambda dirty, index=index: self._set_program_file_dirty(index, dirty)
+            document.modificationChanged.connect(slot)
+            document.modificationChanged.connect(self._update_window_modified)
         else:
             document = self._programfile_documents[file_path]
-        self._ui.actionSave_program_file.setText(f"Save {os.path.basename(file_path)}")
-        self._ui.actionSave_program_file.setEnabled(document.isModified())
-        self._ui.dockWidget_program.setWindowModified(document.isModified())
         self._ui.textEdit_program.setDocument(document)
         self._ui.textEdit_program.setEnabled(True)
         self._ui.dockWidget_program.setWindowTitle(os.path.basename(file_path) + "[*]")
@@ -501,18 +561,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if not file_path:  # Cancel button clicked
             return
         self.populate_main_programfile(file_path)
-
-    @Slot(bool)
-    def save_program_file(self, _=False):
-        """Saves program file."""
-        try:
-            with open(self._current_programfile_path, "w") as file:
-                file.write(self._ui.textEdit_program.toPlainText())
-            self._ui.textEdit_program.document().setModified(False)
-            basename = os.path.basename(self._current_programfile_path)
-            self._show_status_bar_msg(f"Program file '{basename}' saved successfully")
-        except IOError as e:
-            self._show_status_bar_msg(e)
 
     @Slot(bool)
     def new_main_program_file(self, _=False):
@@ -864,6 +912,7 @@ def _build_tree(root, components):
     leafs = []
     for parent, children in components.items():
         item = QStandardItem(parent)
+        item.setData(parent, Qt.UserRole)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         _build_tree(item, children)
         if item.hasChildren():
@@ -881,6 +930,6 @@ def _build_tree(root, components):
 def _path_components_from_index(index):
     components = []
     while index.parent().isValid():
-        components.insert(0, index.data())
+        components.insert(0, index.data(Qt.UserRole))
         index = index.parent()
     return components
