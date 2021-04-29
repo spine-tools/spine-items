@@ -40,7 +40,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1146, 27))
+        self.menubar.setGeometry(QRect(0, 0, 1146, 21))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -58,23 +58,19 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.add_mapping_button)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
-
         self.remove_mapping_button = QPushButton(self.dockWidgetContents)
         self.remove_mapping_button.setObjectName(u"remove_mapping_button")
 
         self.horizontalLayout_2.addWidget(self.remove_mapping_button)
 
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_2.addItem(self.horizontalSpacer_5)
-
         self.toggle_enabled_button = QPushButton(self.dockWidgetContents)
         self.toggle_enabled_button.setObjectName(u"toggle_enabled_button")
 
         self.horizontalLayout_2.addWidget(self.toggle_enabled_button)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
@@ -89,14 +85,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_6.addItem(self.horizontalSpacer_4)
+
         self.write_earlier_button = QPushButton(self.dockWidgetContents)
         self.write_earlier_button.setObjectName(u"write_earlier_button")
 
         self.horizontalLayout_6.addWidget(self.write_earlier_button)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_6.addItem(self.horizontalSpacer_4)
 
         self.write_later_button = QPushButton(self.dockWidgetContents)
         self.write_later_button.setObjectName(u"write_later_button")
@@ -399,8 +395,17 @@ class Ui_MainWindow(object):
         self.mappings_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mappings", None))
         self.add_mapping_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.remove_mapping_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
-        self.toggle_enabled_button.setText(QCoreApplication.translate("MainWindow", u"Enable or disable all", None))
+#if QT_CONFIG(tooltip)
+        self.toggle_enabled_button.setToolTip(QCoreApplication.translate("MainWindow", u"Enable or disable all mappings at once.", None))
+#endif // QT_CONFIG(tooltip)
+        self.toggle_enabled_button.setText(QCoreApplication.translate("MainWindow", u"Toggle enabled", None))
+#if QT_CONFIG(tooltip)
+        self.write_earlier_button.setToolTip(QCoreApplication.translate("MainWindow", u"Prioratize mapping.", None))
+#endif // QT_CONFIG(tooltip)
         self.write_earlier_button.setText(QCoreApplication.translate("MainWindow", u"Write earlier", None))
+#if QT_CONFIG(tooltip)
+        self.write_later_button.setToolTip(QCoreApplication.translate("MainWindow", u"Deprioratize mapping.", None))
+#endif // QT_CONFIG(tooltip)
         self.write_later_button.setText(QCoreApplication.translate("MainWindow", u"Write later", None))
         self.mapping_options_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping options", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Item type:", None))
@@ -416,9 +421,9 @@ class Ui_MainWindow(object):
         self.item_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool feature", None))
         self.item_type_combo_box.setItemText(10, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
 
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Number of dimensions:", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Relationship dimensions:", None))
 #if QT_CONFIG(tooltip)
-        self.relationship_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of relationship dimensions.", None))
+        self.relationship_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of expected relationship dimensions.", None))
 #endif // QT_CONFIG(tooltip)
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Parameter type:", None))
         self.parameter_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Value", None))
@@ -427,11 +432,11 @@ class Ui_MainWindow(object):
 
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Parameter dimensions:", None))
 #if QT_CONFIG(tooltip)
-        self.parameter_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Maximum number of expected parameter value dimensions.", None))
+        self.parameter_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of expected parameter value dimensions.", None))
 #endif // QT_CONFIG(tooltip)
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"Group function:", None))
 #if QT_CONFIG(tooltip)
-        self.group_fn_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Data groping in pivot tables.", None))
+        self.group_fn_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Group/aggregate data that ends up in the same cell in pivot tables.", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.always_export_header_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Export header even when a table is otherwise empty.", None))

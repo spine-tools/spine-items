@@ -35,7 +35,7 @@
      <x>0</x>
      <y>0</y>
      <width>1146</width>
-     <height>27</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -59,6 +59,23 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="remove_mapping_button">
+         <property name="text">
+          <string>Remove</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="toggle_enabled_button">
+         <property name="toolTip">
+          <string>Enable or disable all mappings at once.</string>
+         </property>
+         <property name="text">
+          <string>Toggle enabled</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_2">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -70,33 +87,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="remove_mapping_button">
-         <property name="text">
-          <string>Remove</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_5">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="toggle_enabled_button">
-         <property name="text">
-          <string>Enable or disable all</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </item>
@@ -116,13 +106,6 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_6">
        <item>
-        <widget class="QPushButton" name="write_earlier_button">
-         <property name="text">
-          <string>Write earlier</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <spacer name="horizontalSpacer_4">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -136,7 +119,20 @@
         </spacer>
        </item>
        <item>
+        <widget class="QPushButton" name="write_earlier_button">
+         <property name="toolTip">
+          <string>Prioratize mapping.</string>
+         </property>
+         <property name="text">
+          <string>Write earlier</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="write_later_button">
+         <property name="toolTip">
+          <string>Deprioratize mapping.</string>
+         </property>
          <property name="text">
           <string>Write later</string>
          </property>
@@ -227,14 +223,14 @@
        <item row="2" column="0">
         <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>Number of dimensions:</string>
+          <string>Relationship dimensions:</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
         <widget class="QSpinBox" name="relationship_dimensions_spin_box">
          <property name="toolTip">
-          <string>Number of relationship dimensions.</string>
+          <string>Number of expected relationship dimensions.</string>
          </property>
          <property name="minimum">
           <number>1</number>
@@ -277,7 +273,7 @@
        <item row="4" column="1">
         <widget class="QSpinBox" name="parameter_dimensions_spin_box">
          <property name="toolTip">
-          <string>Maximum number of expected parameter value dimensions.</string>
+          <string>Number of expected parameter value dimensions.</string>
          </property>
         </widget>
        </item>
@@ -291,7 +287,7 @@
        <item row="6" column="1">
         <widget class="QComboBox" name="group_fn_combo_box">
          <property name="toolTip">
-          <string>Data groping in pivot tables.</string>
+          <string>Group/aggregate data that ends up in the same cell in pivot tables.</string>
          </property>
         </widget>
        </item>
