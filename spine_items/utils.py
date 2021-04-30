@@ -47,6 +47,7 @@ class CmdLineArg:
             arg (str): command line argument
         """
         self.arg = arg
+        self.missing = False
 
     def __eq__(self, other):
         if not isinstance(other, CmdLineArg):
@@ -67,8 +68,6 @@ class CmdLineArg:
 
 class LabelArg(CmdLineArg):
     """Command line argument that gets replaced by a project item's resource URL/file path."""
-
-    missing = False
 
     def to_dict(self):
         """See base class."""
