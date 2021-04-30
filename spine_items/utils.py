@@ -68,6 +68,8 @@ class CmdLineArg:
 class LabelArg(CmdLineArg):
     """Command line argument that gets replaced by a project item's resource URL/file path."""
 
+    missing = False
+
     def to_dict(self):
         """See base class."""
         return {"type": "resource", "arg": self.arg}

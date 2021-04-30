@@ -24,7 +24,7 @@ import json
 from pathlib import Path
 from PySide2.QtCore import QAbstractItemModel, QAbstractListModel, QFileInfo, QModelIndex, Qt, Signal, QMimeData
 from PySide2.QtWidgets import QFileIconProvider
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QPixmap, QPainter, QIcon
+from PySide2.QtGui import QStandardItemModel, QStandardItem, QPixmap, QPainter, QIcon, QColor
 from spine_engine.project_item.project_item_resource import extract_packs
 from .utils import CmdLineArg, Database, LabelArg
 
@@ -434,6 +434,8 @@ class CommandLineArgsModel(QStandardItemModel):
             child = root.child(k)
             child.set_rank(k)
             child.setText(str(arg))
+            color = QColor("red") if arg.missing else None
+            child.setData(color, role=Qt.ForegroundRole)
 
 
 class GimletCommandLineArgsModel(CommandLineArgsModel):

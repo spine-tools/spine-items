@@ -207,6 +207,7 @@ class Tool(ProjectItem):
         """
         self.cmd_line_args = cmd_line_args
         self._populate_cmdline_args_model()
+        self._check_notifications()
 
     def _populate_cmdline_args_model(self):
         spec_args = [CmdLineArg(arg) for arg in self._specification.cmdline_args] if self._specification else []
@@ -344,6 +345,11 @@ class Tool(ProjectItem):
                 "File(s) {0} needed to execute this Tool are not provided by any input item. "
                 "Connect items that provide the required files to this Tool.".format(", ".join(not_found))
             )
+        missing_args = ", ".join(arg.arg for arg in self.cmd_line_args if isinstance(arg, LabelArg) and arg.missing)
+        if missing_args:
+            self.add_notification(
+                f"The following command line argument(s) don't match any available resources: {missing_args}"
+            )
 
     def handle_execution_successful(self, execution_direction, engine_state):
         """See base class."""
@@ -406,13 +412,8 @@ class Tool(ProjectItem):
         resource_labels = {resource.label for resource in resources}
         for arg in self.cmd_line_args:
             if isinstance(arg, LabelArg):
-                if arg.arg in resource_labels:
-                    update_args.append(arg)
-                else:
-                    # The corresponding resource does not exist anymore so we drop the argument.
-                    continue
-            else:
-                update_args.append(arg)
+                arg.missing = arg.arg not in resource_labels
+            update_args.append(arg)
         self.update_cmd_line_args(update_args)
 
     def item_dict(self):

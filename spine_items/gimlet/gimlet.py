@@ -217,6 +217,7 @@ class Gimlet(ProjectItem):
         """
         self.cmd_line_args = cmd_line_args
         self._populate_cmdline_args_model()
+        self._check_notifications()
 
     def _populate_cmdline_args_model(self):
         self._cmdline_args_model.reset_model(self.cmd_line_args)
@@ -310,13 +311,8 @@ class Gimlet(ProjectItem):
         resource_labels = {resource.label for resource in all_resources}
         for arg in self.cmd_line_args:
             if isinstance(arg, LabelArg):
-                if arg.arg in resource_labels:
-                    update_args.append(arg)
-                else:
-                    # The corresponding resource does not exist anymore so we drop the argument.
-                    continue
-            else:
-                update_args.append(arg)
+                arg.missing = arg.arg not in resource_labels
+            update_args.append(arg)
         self.update_cmd_line_args(update_args)
 
     def item_dict(self):
@@ -384,6 +380,11 @@ class Gimlet(ProjectItem):
         duplicates = self._file_model.duplicate_paths()
         if duplicates:
             self.add_notification("Duplicate input files from predecessor items:<br>{}".format("<br>".join(duplicates)))
+        missing_args = ", ".join(arg.arg for arg in self.cmd_line_args if isinstance(arg, LabelArg) and arg.missing)
+        if missing_args:
+            self.add_notification(
+                f"The following command line argument(s) don't match any available resources: {missing_args}"
+            )
 
     def update_name_label(self):
         """Updates the name label in Gimlet properties tab.
