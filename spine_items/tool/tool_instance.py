@@ -136,12 +136,7 @@ class JuliaToolInstance(ToolInstance):
             kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
             extra_switches = [f"--sysimage={sysimage}"] if os.path.isfile(sysimage) else None
             self.exec_mngr = KernelExecutionManager(
-                self._logger,
-                "julia",
-                kernel_name,
-                *self.args,
-                group_id=self.owner.group_id,
-                extra_switches=extra_switches,
+                self._logger, kernel_name, *self.args, group_id=self.owner.group_id, extra_switches=extra_switches
             )
         else:
             # Prepare command "julia --project={PROJECT_DIR} script.jl"
@@ -188,9 +183,7 @@ class PythonToolInstance(ToolInstance):
                 main_command += " " + '"' + '" "'.join(cmdline_args) + '"'
             self.args = [cd_command, main_command]
             kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-            self.exec_mngr = KernelExecutionManager(
-                self._logger, "python", kernel_name, *self.args, group_id=self.owner.group_id
-            )
+            self.exec_mngr = KernelExecutionManager(self._logger, kernel_name, *self.args, group_id=self.owner.group_id)
         else:
             # Prepare command "python <script.py> <script_arguments>"
             script_path = self.tool_specification.main_prgm

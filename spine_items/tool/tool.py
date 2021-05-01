@@ -35,8 +35,7 @@ from .output_resources import scan_for_resources
 
 class Tool(ProjectItem):
 
-    python_console_requested = Signal(str, str, str)
-    julia_console_requested = Signal(str, str, str)
+    jupyter_console_requested = Signal(str, str, str)
 
     def __init__(
         self,
@@ -84,8 +83,7 @@ class Tool(ProjectItem):
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_update_execution_mode(execute_in_work)
-        self.python_console_requested.connect(self._setup_python_console)
-        self.julia_console_requested.connect(self._setup_julia_console)
+        self.jupyter_console_requested.connect(self._setup_jupyter_console)
         self._specification_menu = None
         self._options = options if options is not None else {}
         self._resources_from_upstream = list()
@@ -439,8 +437,8 @@ class Tool(ProjectItem):
             super().notify_destination(source_item)
 
     @Slot(str, str, str)
-    def _setup_python_console(self, filter_id, kernel_name, connection_file):
-        """Sets up python console, eventually for a filter execution.
+    def _setup_jupyter_console(self, filter_id, kernel_name, connection_file):
+        """Sets up jupyter console, eventually for a filter execution.
 
         Args:
             filter_id (str): filter identifier
@@ -448,44 +446,18 @@ class Tool(ProjectItem):
             connection_file (str): path to connection file
         """
         if not filter_id:
-            self._setup_main_python_console(kernel_name, connection_file)
+            self._setup_main_jupyter_console(kernel_name, connection_file)
         else:
-            self._setup_filter_python_console(filter_id, kernel_name, connection_file)
+            self._setup_filter_jupyter_console(filter_id, kernel_name, connection_file)
 
-    def _setup_main_python_console(self, kernel_name, connection_file):
+    def _setup_main_jupyter_console(self, kernel_name, connection_file):
         # pylint: disable=attribute-defined-outside-init
-        self.python_console = self._toolbox.make_console("Python Console", self, kernel_name, connection_file)
-        self._project.toolbox().override_python_console()
+        self.console = self._toolbox.make_jupyter_console(self, kernel_name, connection_file)
+        self._project.toolbox().override_console()
 
-    def _setup_filter_python_console(self, filter_id, kernel_name, connection_file):
-        self._filter_consoles.setdefault(filter_id, {}).setdefault(
-            "python", self._toolbox.make_console("Python Console", self, kernel_name, connection_file)
-        )
-        self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
-
-    @Slot(str, str, str)
-    def _setup_julia_console(self, filter_id, kernel_name, connection_file):
-        """Sets up julia console, eventually for a filter execution.
-
-        Args:
-            filter_id (str): filter identifier
-            kernel_name (str): jupyter kernel name
-            connection_file (str): path to connection file
-        """
-        if not filter_id:
-            self._setup_main_julia_console(kernel_name, connection_file)
-        else:
-            self._setup_filter_julia_console(filter_id, kernel_name, connection_file)
-
-    def _setup_main_julia_console(self, kernel_name, connection_file):
-        # pylint: disable=attribute-defined-outside-init
-        self.julia_console = self._toolbox.make_console("Julia Console", self, kernel_name, connection_file)
-        self._project.toolbox().override_julia_console()
-
-    def _setup_filter_julia_console(self, filter_id, kernel_name, connection_file):
-        self._filter_consoles.setdefault(filter_id, {}).setdefault(
-            "julia", self._toolbox.make_console("Julia Console", self, kernel_name, connection_file)
-        )
+    def _setup_filter_jupyter_console(self, filter_id, kernel_name, connection_file):
+        if filter_id not in self._filter_consoles:
+            self._filter_consoles[filter_id] = self._toolbox.make_jupyter_console(self, kernel_name, connection_file)
         self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
 
     def actions(self):
