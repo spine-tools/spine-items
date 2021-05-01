@@ -24,7 +24,7 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from spine_engine.utils.helpers import shorten
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spine_engine.execution_managers import StandardExecutionManager
+from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
 from spine_engine.spine_engine import ItemExecutionFinishState
 from .item_info import ItemInfo
 from .utils import SHELLS
@@ -119,7 +119,7 @@ class ExecutableItem(ExecutableItemBase):
             cmd_list = expand_cmd_line_args(self.cmd_list, labelled_args, self._logger)
         if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)
-            self._exec_mngr = StandardExecutionManager(self._logger, prgm, *cmd_list, workdir=self._work_dir)
+            self._exec_mngr = ProcessExecutionManager(self._logger, prgm, *cmd_list, workdir=self._work_dir)
         else:
             if self.shell_name == "cmd.exe":
                 shell_prgm = "cmd.exe"
@@ -129,7 +129,7 @@ class ExecutableItem(ExecutableItemBase):
             else:
                 self._logger.msg_error.emit(f"Unsupported shell: '{self.shell_name}'")
                 return ItemExecutionFinishState.FAILURE
-            self._exec_mngr = StandardExecutionManager(self._logger, shell_prgm, *cmd_list, workdir=self._work_dir)
+            self._exec_mngr = ProcessExecutionManager(self._logger, shell_prgm, *cmd_list, workdir=self._work_dir)
         # Copy selected files to work_dir
         selected_files = self._selected_files.copy()
         labelled_filepaths = labelled_resource_filepaths(forward_resources + backward_resources)

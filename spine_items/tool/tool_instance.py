@@ -20,7 +20,9 @@ import os
 import sys
 import shutil
 from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, resolve_gams_executable
-from spine_engine.execution_managers import StandardExecutionManager, KernelExecutionManager
+from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager
+from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
+from spine_engine.execution_managers.terminal_execution_manager import JuliaTerminalExecutionManager
 
 
 class ToolInstance:
@@ -102,7 +104,7 @@ class GAMSToolInstance(ToolInstance):
         self.args.append("logoption=3")  # TODO: This should be an option in Settings
         self.append_cmdline_args(args)
         # TODO: Check if the below sets the curDir argument. Is the curDir arg now useless?
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+        self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
@@ -147,17 +149,20 @@ class JuliaToolInstance(ToolInstance):
             # Prepare command "julia --project={PROJECT_DIR} script.jl"
             julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
             julia_exe = resolve_julia_executable(julia_exe)
-            script_path = self.tool_specification.main_prgm
             julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
-            self.program = julia_exe
-            self.args.append(f"--project={julia_project_path}")
+            self.program = [julia_exe]
+            self.program.append(f"--project={julia_project_path}")
             if os.path.isfile(sysimage):
-                self.args.append(f"--sysimage={sysimage}")
-            if script_path:
-                # NOTE: This means we support script-less julia system prompt tools...!!!
-                self.args.append(script_path)
-            self.append_cmdline_args(args)
-            self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+                self.program.append(f"--sysimage={sysimage}")
+            cmdline_args = self.tool_specification.cmdline_args + args
+            if cmdline_args:
+                cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+                self.args += [f"empty!(ARGS); append!(ARGS, {cmdline_args});"]
+            self.args += [f'include("{self.tool_specification.main_prgm}")']
+            # FIXME: script-less tools?
+            self.exec_mngr = JuliaTerminalExecutionManager(
+                self._logger, self.program, self.args, group_id=self.owner.group_id, workdir=self.basedir
+            )
 
     def execute(self):
         """Executes a prepared instance."""
@@ -198,7 +203,7 @@ class PythonToolInstance(ToolInstance):
             self.program = resolve_python_interpreter(python_path)
             self.args.append(script_path)  # First argument for the Python interpreter is path to the tool script
             self.append_cmdline_args(args)
-            self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+            self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
@@ -225,7 +230,7 @@ class ExecutableToolInstance(ToolInstance):
         else:
             self.program = batch_path
         self.append_cmdline_args(args)
-        self.exec_mngr = StandardExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+        self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
