@@ -22,7 +22,10 @@ import shutil
 from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, resolve_gams_executable
 from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
-from spine_engine.execution_managers.persistent_execution_manager import JuliaPersistentExecutionManager
+from spine_engine.execution_managers.persistent_execution_manager import (
+    JuliaPersistentExecutionManager,
+    PythonPersistentExecutionManager,
+)
 
 
 class ToolInstance:
@@ -190,13 +193,17 @@ class PythonToolInstance(ToolInstance):
             kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
             self.exec_mngr = KernelExecutionManager(self._logger, kernel_name, *self.args, group_id=self.owner.group_id)
         else:
-            # Prepare command "python <script.py> <script_arguments>"
-            script_path = self.tool_specification.main_prgm
-            python_path = self._settings.value("appSettings/pythonPath", defaultValue="")
-            self.program = resolve_python_interpreter(python_path)
-            self.args.append(script_path)  # First argument for the Python interpreter is path to the tool script
-            self.append_cmdline_args(args)
-            self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+            python_exe = self._settings.value("appSettings/pythonPath", defaultValue="")
+            python_exe = resolve_python_interpreter(python_exe)
+            self.program = [python_exe, "-i"]
+            cmdline_args = self.tool_specification.cmdline_args + args
+            if cmdline_args:
+                cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+                self.args += [f"import sys; sys.argv = {cmdline_args};"]
+            self.args += [f'exec(open("{self.tool_specification.main_prgm}").read())']
+            self.exec_mngr = PythonPersistentExecutionManager(
+                self._logger, self.program, self.args, group_id=self.owner.group_id, workdir=self.basedir
+            )
 
     def execute(self):
         """Executes a prepared instance."""
