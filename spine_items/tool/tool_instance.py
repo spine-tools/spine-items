@@ -22,7 +22,7 @@ import shutil
 from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, resolve_gams_executable
 from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
-from spine_engine.execution_managers.terminal_execution_manager import JuliaTerminalExecutionManager
+from spine_engine.execution_managers.persistent_execution_manager import JuliaPersistentExecutionManager
 
 
 class ToolInstance:
@@ -155,7 +155,7 @@ class JuliaToolInstance(ToolInstance):
                 self.args += [f"empty!(ARGS); append!(ARGS, {cmdline_args});"]
             self.args += [f'include("{self.tool_specification.main_prgm}")']
             # FIXME: script-less tools?
-            self.exec_mngr = JuliaTerminalExecutionManager(
+            self.exec_mngr = JuliaPersistentExecutionManager(
                 self._logger, self.program, self.args, group_id=self.owner.group_id, workdir=self.basedir
             )
 

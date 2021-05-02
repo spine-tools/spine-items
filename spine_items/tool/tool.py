@@ -36,6 +36,10 @@ from .output_resources import scan_for_resources
 class Tool(ProjectItem):
 
     jupyter_console_requested = Signal(str, str, str)
+    persistent_console_requested = Signal(str, str, str, str)
+    persistent_stdin_available = Signal(str, str)
+    persistent_stdout_available = Signal(str, str)
+    persistent_stderr_available = Signal(str, str)
 
     def __init__(
         self,
@@ -88,6 +92,10 @@ class Tool(ProjectItem):
         self._options = options if options is not None else {}
         self._resources_from_upstream = list()
         self._resources_from_downstream = list()
+        self.persistent_console_requested.connect(self._setup_persistent_console)
+        self.persistent_stdin_available.connect(self._add_persistent_stdin)
+        self.persistent_stdout_available.connect(self._add_persistent_stdout)
+        self.persistent_stderr_available.connect(self._add_persistent_stderr)
 
     def _get_options_widget(self):
         """Returns a widget to specify the options for this tool.
@@ -498,6 +506,48 @@ class Tool(ProjectItem):
         if filter_id not in self._filter_consoles:
             self._filter_consoles[filter_id] = self._toolbox.make_jupyter_console(self, kernel_name, connection_file)
         self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
+
+    @Slot(str, str, str, str)
+    def _setup_persistent_console(self, filter_id, name, lexer_name, prompt):
+        """Sets up persistent console, eventually for a filter execution.
+
+        Args:
+            filter_id (str): filter identifier
+            name (str)
+            lexer_name (str)
+            prompt (str)
+        """
+        if not filter_id:
+            self._setup_main_persistent_console(name, lexer_name, prompt)
+        else:
+            self._setup_filter_persistent_console(filter_id, name, lexer_name, prompt)
+
+    def _setup_main_persistent_console(self, name, lexer_name, prompt):
+        # pylint: disable=attribute-defined-outside-init
+        self.console = self._toolbox.make_persistent_console(self, name, lexer_name, prompt)
+        self._project.toolbox().override_console()
+
+    def _setup_filter_persistent_console(self, filter_id, name, lexer_name, prompt):
+        if filter_id not in self._filter_consoles:
+            self._filter_consoles[filter_id] = self._toolbox.make_persistent_console(self, name, lexer_name, prompt)
+        self._project.toolbox().ui.listView_executions.model().layoutChanged.emit()
+
+    @Slot(str, str)
+    def _add_persistent_stdin(self, filter_id, data):
+        self._get_console(filter_id).add_stdin(data)
+
+    @Slot(str, str)
+    def _add_persistent_stdout(self, filter_id, data):
+        self._get_console(filter_id).add_stdout(data)
+
+    @Slot(str, str)
+    def _add_persistent_stderr(self, filter_id, data):
+        self._get_console(filter_id).add_stderr(data)
+
+    def _get_console(self, filter_id):
+        if not filter_id:
+            return self.console
+        return self._filter_consoles.get(filter_id)
 
     def actions(self):
         # pylint: disable=attribute-defined-outside-init

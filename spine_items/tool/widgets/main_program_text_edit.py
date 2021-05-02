@@ -21,50 +21,9 @@ from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 from pygments.token import Token
 from PySide2.QtWidgets import QWidget, QPlainTextEdit, QPlainTextDocumentLayout
-from PySide2.QtGui import (
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QBrush,
-    QColor,
-    QFontMetrics,
-    QFontDatabase,
-    QFont,
-    QPainter,
-)
+from PySide2.QtGui import QColor, QFontMetrics, QFontDatabase, QPainter
 from PySide2.QtCore import QSize, Slot, QRect, Qt
-
-
-class CustomSyntaxHighlighter(QSyntaxHighlighter):
-    def __init__(self, *arg, **kwargs):
-        super().__init__(*arg, **kwargs)
-        self.lexer = None
-        self._formats = {}
-
-    def set_style(self, style):
-        self._formats.clear()
-        for ttype, tstyle in style:
-            text_format = self._formats[ttype] = QTextCharFormat()
-            if tstyle['color']:
-                brush = QBrush(QColor("#" + tstyle['color']))
-                text_format.setForeground(brush)
-            if tstyle['bgcolor']:
-                brush = QBrush(QColor("#" + tstyle['bgcolor']))
-                text_format.setBackground(brush)
-            if tstyle['bold']:
-                text_format.setFontWeight(QFont.Bold)
-            if tstyle['italic']:
-                text_format.setFontItalic(True)
-            if tstyle['underline']:
-                text_format.setFontUnderline(True)
-
-    def highlightBlock(self, text):
-        if self.lexer is None:
-            return
-        for start, ttype, subtext in self.lexer.get_tokens_unprocessed(text):
-            while ttype not in self._formats:
-                ttype = ttype.parent
-            text_format = self._formats.get(ttype, QTextCharFormat())
-            self.setFormat(start, len(subtext), text_format)
+from spinetoolbox.helpers import CustomSyntaxHighlighter
 
 
 class MainProgramTextEdit(QPlainTextEdit):
