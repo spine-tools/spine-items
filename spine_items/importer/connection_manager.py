@@ -301,6 +301,7 @@ class ConnectionManager(QObject):
         if self._thread:
             self._thread.quit()
             self._thread.wait()
+            self._thread.deleteLater()
 
 
 class ConnectionWorker(QObject):
