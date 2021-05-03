@@ -234,7 +234,7 @@ class JuliaOptionsWidget(OptionsWidget):
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
         settings = make_settings_dict_for_engine(self._settings)
-        settings["appSettings/useEmbeddedJulia"] = "1"  # Don't use repl
+        settings["appSettings/useJuliaKernel"] = "1"  # Don't use julia kernel
         self.sysimage_worker = self._project.create_engine_worker(dag, execution_permits, dag_identifier, settings)
         # Use the modified spec
         engine_data = self.sysimage_worker.get_engine_data()

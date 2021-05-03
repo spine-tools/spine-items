@@ -128,8 +128,8 @@ class JuliaToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         sysimage = self._owner.options.get("julia_sysimage", "")
-        use_embedded_julia = self._settings.value("appSettings/useEmbeddedJulia", defaultValue="2")
-        if use_embedded_julia == "2":
+        use_julia_kernel = self._settings.value("appSettings/useJuliaKernel", defaultValue="2")
+        if use_julia_kernel == "2":
             # Prepare Julia REPL command
             mod_work_dir = repr(self.basedir).strip("'")
             self.args = [f'cd("{mod_work_dir}");']
@@ -181,8 +181,8 @@ class PythonToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         work_dir = self.basedir
-        use_embedded_python = self._settings.value("appSettings/useEmbeddedPython", defaultValue="0")
-        if use_embedded_python == "2":
+        use_python_kernel = self._settings.value("appSettings/usePythonKernel", defaultValue="0")
+        if use_python_kernel == "2":
             # Prepare command
             cd_command = f"%cd -q {work_dir}"  # -q: quiet
             main_command = f'%run "{self.tool_specification.main_prgm}"'
@@ -195,7 +195,7 @@ class PythonToolInstance(ToolInstance):
         else:
             python_exe = self._settings.value("appSettings/pythonPath", defaultValue="")
             python_exe = resolve_python_interpreter(python_exe)
-            self.program = [python_exe, "-i"]
+            self.program = [python_exe, "-i", "-q"]
             cmdline_args = self.tool_specification.cmdline_args + args
             if cmdline_args:
                 cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
