@@ -137,19 +137,6 @@ class TableViewWithButtonHeader(QTableView):
         if dy != 0:
             self._vertical_header.fix_widget_positions()
 
-    @Slot(object)
-    def update_buttons(self, orientation):
-        """
-        Updates the header buttons for given orientation.
-
-        Args:
-            orientation (int): Qt.Horizontal or Qt.Vertical
-        """
-        if orientation == Qt.Horizontal:
-            self._horizontal_header.update_buttons()
-        else:
-            self._vertical_header.update_buttons()
-
     def _create_horizontal_header_menu(self):
         """Returns a new menu for the horizontal header"""
         parent = self._horizontal_header
@@ -415,7 +402,7 @@ class HeaderWithButton(QHeaderView):
         """Paints a section of the QHeader view.
 
         Works by drawing a pixmap of the button to the left of the original paint rectangle.
-        Then shifts the original rect to the right so these two doesn't paint over each other.
+        Then shifts the original rect to the right so these two don't paint over each other.
         """
         if not self._display_all and logical_index not in self._display_sections:
             super().paintSection(painter, rect, logical_index)

@@ -80,10 +80,14 @@ class ParameterIndexSettingsWindow(QWidget):
         self._settings_widgets = dict()
         self._available_domains = {name: set_settings.records(name) for name in set_settings.domain_names}
         for parameter_name, by_dimensions in self._indexing_settings.items():
+            parameter_by_domains = self._parameters.get(parameter_name, {})
             for domain_names, indexing_setting in by_dimensions.items():
+                parameter = parameter_by_domains.get(domain_names)
+                if parameter is None:
+                    parameter = gdx.Parameter(domain_names, [], [])
                 settings_widget = ParameterIndexSettings(
                     parameter_name,
-                    self._parameters[parameter_name][domain_names],
+                    parameter,
                     indexing_setting,
                     self._available_domains,
                     self._ui.settings_area_contents,
