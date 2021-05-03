@@ -101,7 +101,7 @@ class SourceDataTableModel(MinimalTableModel):
     def columnCount(self, parent=QModelIndex()):
         if self._infinite:
             return self._infinite_extent
-        return super().rowCount(parent)
+        return min(super().columnCount(parent), self._FETCH_CHUNK_SIZE)
 
     def _polish_mapping(self):
         if (
