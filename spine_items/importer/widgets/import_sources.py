@@ -268,8 +268,8 @@ class ImportSources(QObject):
             for tn, cols in mapping.get("table_types", {}).items()
         }
         table_row_types = {
-            tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
-            for tn, cols in mapping.get("table_row_types", {}).items()
+            tn: {int(row): value_to_convert_spec(spec) for row, spec in rows.items()}
+            for tn, rows in mapping.get("table_row_types", {}).items()
         }
         self._connector.set_table_options(mapping.get("table_options", {}))
         self._connector.set_table_types(table_types)
