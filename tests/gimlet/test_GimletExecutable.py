@@ -22,7 +22,7 @@ from tempfile import TemporaryDirectory
 from unittest import mock
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine import ExecutionDirection
-from spine_engine.execution_managers import StandardExecutionManager
+from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
 from spine_items.gimlet.executable_item import ExecutableItem
 from spine_items.utils import CmdLineArg
 
@@ -129,7 +129,7 @@ class TestGimletExecutable(unittest.TestCase):
         prgm = "cmd.exe"
         cmd_list = ["dir"]
         executable = ExecutableItem("name", prgm, cmd_list, None, [], self._temp_dir.name, logger())
-        executable._exec_mngr = StandardExecutionManager(logger, prgm, *cmd_list)
+        executable._exec_mngr = ProcessExecutionManager(logger, prgm, *cmd_list)
         executable.stop_execution()
         self.assertIsNone(executable._exec_mngr)
 

@@ -158,7 +158,7 @@ class JuliaToolInstance(ToolInstance):
                 self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
             self.args += [f'include("{self.tool_specification.main_prgm}")']
             # FIXME: script-less tools?
-            alias = f"# Running 'julia {self.tool_specification.main_prgm} {' '.join(cmdline_args)}'"
+            alias = f"# Running 'julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}'"
             self.exec_mngr = JuliaPersistentExecutionManager(
                 self._logger, self.program, self.args, alias, group_id=self.owner.group_id, workdir=self.basedir
             )
@@ -202,7 +202,7 @@ class PythonToolInstance(ToolInstance):
                 self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
             exec_code = self._make_exec_code()
             self.args += [exec_code]
-            alias = f"# Running 'python {self.tool_specification.main_prgm} {' '.join(cmdline_args)}'"
+            alias = f"# Running 'python {' '.join([self.tool_specification.main_prgm, *cmdline_args])}'"
             self.exec_mngr = PythonPersistentExecutionManager(
                 self._logger, self.program, self.args, alias, group_id=self.owner.group_id, workdir=self.basedir
             )

@@ -22,29 +22,31 @@ from spine_items.tool.tool_specifications import PythonTool
 
 
 class TestPythonToolInstance(unittest.TestCase):
-    def test_prepare_with_cmd_line_arguments_in_embedded_console(self):
+    def test_prepare_with_cmd_line_arguments_in_jupyter_kernel(self):
         instance = self._make_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager"):
             instance.prepare(["arg1", "arg2"])
         self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py" "arg1" "arg2"'])
 
-    def test_prepare_with_empty_cmd_line_arguments_in_embedded_console(self):
+    def test_prepare_with_empty_cmd_line_arguments_in_jupyter_kernel(self):
         instance = self._make_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager"):
             instance.prepare([])
         self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py"'])
 
-    def test_prepare_with_cmd_line_arguments(self):
+    def test_prepare_with_cmd_line_arguments_in_persistent_process(self):
         instance = self._make_tool_instance(False)
-        instance.prepare(["arg1", "arg2"])
-        self.assertEqual(instance.program, "python_path/python.exe")
-        self.assertEqual(instance.args, ["main.py", "arg1", "arg2"])
+        with mock.patch("spine_engine.execution_managers.persistent_execution_manager.Popen"):
+            instance.prepare(["arg1", "arg2"])
+        self.assertEqual(instance.program, ['python_path/python.exe', '-i', '-q'])
+        self.assertEqual(instance.exec_mngr.alias, "# Running 'python main.py arg1 arg2'")
 
-    def test_prepare_without_cmd_line_arguments(self):
+    def test_prepare_without_cmd_line_arguments_in_persistent_process(self):
         instance = self._make_tool_instance(False)
-        instance.prepare([])
-        self.assertEqual(instance.program, "python_path/python.exe")
-        self.assertEqual(instance.args, ["main.py"])
+        with mock.patch("spine_engine.execution_managers.persistent_execution_manager.Popen"):
+            instance.prepare([])
+        self.assertEqual(instance.program, ['python_path/python.exe', '-i', '-q'])
+        self.assertEqual(instance.exec_mngr.alias, "# Running 'python main.py'")
 
     @staticmethod
     def _make_tool_instance(execute_in_embedded_console):
@@ -59,7 +61,7 @@ class TestPythonToolInstance(unittest.TestCase):
                 )
 
             settings.value = mock.MagicMock(side_effect=get_setting)
-        logger = None
+        logger = mock.Mock()
         path = ""
         source_files = ["main.py"]
         specification = PythonTool("specification name", "python", path, source_files, settings, logger)
