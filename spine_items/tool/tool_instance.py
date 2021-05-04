@@ -154,12 +154,13 @@ class JuliaToolInstance(ToolInstance):
                 self.program.append(f"--sysimage={sysimage}")
             cmdline_args = self.tool_specification.cmdline_args + args
             if cmdline_args:
-                cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
-                self.args += [f"empty!(ARGS); append!(ARGS, {cmdline_args});"]
+                fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+                self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
             self.args += [f'include("{self.tool_specification.main_prgm}")']
             # FIXME: script-less tools?
+            alias = f"# Running 'julia {self.tool_specification.main_prgm} {' '.join(cmdline_args)}'"
             self.exec_mngr = JuliaPersistentExecutionManager(
-                self._logger, self.program, self.args, group_id=self.owner.group_id, workdir=self.basedir
+                self._logger, self.program, self.args, alias, group_id=self.owner.group_id, workdir=self.basedir
             )
 
     def execute(self):
@@ -180,11 +181,10 @@ class PythonToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        work_dir = self.basedir
         use_python_kernel = self._settings.value("appSettings/usePythonKernel", defaultValue="0")
         if use_python_kernel == "2":
             # Prepare command
-            cd_command = f"%cd -q {work_dir}"  # -q: quiet
+            cd_command = f"%cd -q {self.basedir}"  # -q: quiet
             main_command = f'%run "{self.tool_specification.main_prgm}"'
             cmdline_args = self.tool_specification.cmdline_args + args
             if cmdline_args:
@@ -198,12 +198,21 @@ class PythonToolInstance(ToolInstance):
             self.program = [python_exe, "-i", "-q"]
             cmdline_args = self.tool_specification.cmdline_args + args
             if cmdline_args:
-                cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
-                self.args += [f"import sys; sys.argv = {cmdline_args};"]
-            self.args += [f'exec(open("{self.tool_specification.main_prgm}").read())']
+                fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+                self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
+            exec_code = self._make_exec_code()
+            self.args += [exec_code]
+            alias = f"# Running 'python {self.tool_specification.main_prgm} {' '.join(cmdline_args)}'"
             self.exec_mngr = PythonPersistentExecutionManager(
-                self._logger, self.program, self.args, group_id=self.owner.group_id, workdir=self.basedir
+                self._logger, self.program, self.args, alias, group_id=self.owner.group_id, workdir=self.basedir
             )
+
+    def _make_exec_code(self):
+        """Returns a string of code to run this tool instance in a python interactive session."""
+        fp = self.tool_specification.main_prgm
+        full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm)
+        glob = f'{{"__file__": "{full_fp}", "__name__": "__main__"}}'
+        return f"with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), {glob})"
 
     def execute(self):
         """Executes a prepared instance."""
