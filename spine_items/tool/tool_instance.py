@@ -148,7 +148,7 @@ class JuliaToolInstance(ToolInstance):
             julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
             julia_exe = resolve_julia_executable(julia_exe)
             julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
-            self.program = [julia_exe, "-i"]
+            self.program = [julia_exe]
             self.program.append(f"--project={julia_project_path}")
             if os.path.isfile(sysimage):
                 self.program.append(f"--sysimage={sysimage}")
@@ -195,7 +195,7 @@ class PythonToolInstance(ToolInstance):
         else:
             python_exe = self._settings.value("appSettings/pythonPath", defaultValue="")
             python_exe = resolve_python_interpreter(python_exe)
-            self.program = [python_exe, "-i", "-q"]
+            self.program = [python_exe]
             cmdline_args = self.tool_specification.cmdline_args + args
             if cmdline_args:
                 fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
