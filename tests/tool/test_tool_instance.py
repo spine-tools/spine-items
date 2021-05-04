@@ -38,14 +38,14 @@ class TestPythonToolInstance(unittest.TestCase):
         instance = self._make_tool_instance(False)
         with mock.patch("spine_engine.execution_managers.persistent_execution_manager.Popen"):
             instance.prepare(["arg1", "arg2"])
-        self.assertEqual(instance.program, ['python_path/python.exe', '-i', '-q'])
+        self.assertEqual(instance.program, ['python_path/python.exe'])
         self.assertEqual(instance.exec_mngr.alias, "# Running 'python main.py arg1 arg2'")
 
     def test_prepare_without_cmd_line_arguments_in_persistent_process(self):
         instance = self._make_tool_instance(False)
         with mock.patch("spine_engine.execution_managers.persistent_execution_manager.Popen"):
             instance.prepare([])
-        self.assertEqual(instance.program, ['python_path/python.exe', '-i', '-q'])
+        self.assertEqual(instance.program, ['python_path/python.exe'])
         self.assertEqual(instance.exec_mngr.alias, "# Running 'python main.py'")
 
     @staticmethod
