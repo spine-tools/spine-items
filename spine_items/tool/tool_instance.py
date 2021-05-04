@@ -210,7 +210,7 @@ class PythonToolInstance(ToolInstance):
     def _make_exec_code(self):
         """Returns a string of code to run this tool instance in a python interactive session."""
         fp = self.tool_specification.main_prgm
-        full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm)
+        full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm).replace(os.sep, "/")
         glob = f'{{"__file__": "{full_fp}", "__name__": "__main__"}}'
         return f"with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), {glob})"
 
