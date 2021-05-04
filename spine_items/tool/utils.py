@@ -65,10 +65,11 @@ def find_file(filename, resources):
     Returns:
         list: Full paths to file if found, None if not found
     """
+    filename = os.path.normcase(filename)
     found_file_paths = list()
     for file_path in file_paths_from_resources(resources):
         _, file_candidate = os.path.split(file_path)
-        if file_candidate == filename:
+        if os.path.normcase(file_candidate) == filename:
             found_file_paths.append(file_path)
     return found_file_paths if found_file_paths else None
 
