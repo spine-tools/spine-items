@@ -148,7 +148,7 @@ class JuliaToolInstance(ToolInstance):
             julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
             julia_exe = resolve_julia_executable(julia_exe)
             julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
-            self.program = [julia_exe]
+            self.program = [julia_exe, "-i"]
             self.program.append(f"--project={julia_project_path}")
             if os.path.isfile(sysimage):
                 self.program.append(f"--sysimage={sysimage}")
