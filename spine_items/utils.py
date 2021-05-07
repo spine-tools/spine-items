@@ -24,12 +24,8 @@ from pathlib import Path
 from time import time
 from contextlib import contextmanager
 from sqlalchemy.engine.url import make_url
-from spinedb_api.spine_db_server import (
-    DatabaseMapping,
-    SpineDBVersionError,
-    start_spine_db_server,
-    shutdown_spine_db_server,
-)
+from spinedb_api import DatabaseMapping, SpineDBVersionError
+from spinedb_api.spine_db_server import start_spine_db_server, shutdown_spine_db_server
 from spine_engine.project_item.project_item_resource import (
     extract_packs,
     file_resource_in_pack,
