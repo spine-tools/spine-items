@@ -16,11 +16,12 @@ Contains Data Store's executable item as well as support utilities.
 :date:   1.4.2020
 """
 
-import os
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
+from spinedb_api import DatabaseMapping
+from spinedb_api.exception import SpineDBAPIError, SpineDBVersionError
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url
 from .do_work import do_work
@@ -74,9 +75,13 @@ class ExecutableItem(ExecutableItemBase):
 
         Returns False when url is invalid, True otherwise.
         """
-        # TODO: Should return False when db .sqlite file is empty (0 kB)
-        # TODO: Should return False when db revision is outdated
         if not self._url:  # _url is None if convert_to_sqlalchemy() fails in from_dict()
+            return False
+        # NOTE: Don't return False if db is outdated, we will prompt the user about it
+        try:
+            DatabaseMapping.create_engine(self._url)
+        except SpineDBAPIError as err:
+            self._logger.msg_error.emit(str(err))
             return False
         return True
 

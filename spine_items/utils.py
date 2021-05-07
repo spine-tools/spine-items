@@ -23,7 +23,13 @@ import os.path
 from pathlib import Path
 from time import time
 from contextlib import contextmanager
-from spinedb_api.spine_db_server import start_spine_db_server, shutdown_spine_db_server
+from sqlalchemy.engine.url import make_url
+from spinedb_api.spine_db_server import (
+    DatabaseMapping,
+    SpineDBVersionError,
+    start_spine_db_server,
+    shutdown_spine_db_server,
+)
 from spine_engine.project_item.project_item_resource import (
     extract_packs,
     file_resource_in_pack,
@@ -89,7 +95,7 @@ def cmd_line_arg_from_dict(arg_dict):
 
 
 @contextmanager
-def labelled_resource_args(resources, use_db_server=False):
+def labelled_resource_args(resources):
     """
     Args:
         resources (Iterable of ProjectItemResource): resources to process
@@ -105,11 +111,8 @@ def labelled_resource_args(resources, use_db_server=False):
         if resource.type_ != "database":
             result[resource.label] = resource.path if resource.hasfilepath else ""
             continue
-        if use_db_server:
-            server_url = result[resource.label] = start_spine_db_server(resource.url)
-            server_urls.append(server_url)
-            continue
-        result[resource.label] = resource.url
+        server_url = result[resource.label] = start_spine_db_server(resource.url, upgrade=True)
+        server_urls.append(server_url)
     for label, resources_ in pack_resources.items():
         result[label] = " ".join(r.path for r in resources_ if r.hasfilepath)
     try:
@@ -137,11 +140,34 @@ def expand_cmd_line_args(args, label_to_arg, logger):
             continue
         expanded = label_to_arg.get(str(arg))
         if expanded is None:
-            logger.msg_warning.emit(f"Label '{arg}' used as command line argument not found in resources.")
+            logger.msg_warning.emit(f"No resources matching argument '{arg}'.")
             continue
         if expanded:
             expanded_args.append(expanded)
     return expanded_args
+
+
+def validate_database_version(resources, logger):
+    """Checks version of database resources, prompts user to upgrade if needed,
+    and returns False if the user rejects.
+
+    Args:
+        resources (list of ProjectItemResource)
+        logger (LoggerInterface)
+
+    Returns:
+        bool
+    """
+    for resource in resources:
+        if resource.type_ != "database":
+            continue
+        try:
+            DatabaseMapping.create_engine(make_url(resource.url))
+        except SpineDBVersionError as v_err:
+            prompt = {"type": "upgrade_db", "url": resource.label, "current": v_err.current, "expected": v_err.expected}
+            if not logger.prompt.emit(prompt):
+                return False
+    return True
 
 
 def database_label(provider_name):

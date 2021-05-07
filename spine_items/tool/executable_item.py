@@ -30,16 +30,9 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_executable
 from .item_info import ItemInfo
-from .utils import (
-    file_paths_from_resources,
-    find_file,
-    flatten_file_path_duplicates,
-    is_pattern,
-    get_spine_interface_version,
-)
-from spinedb_api.spine_db_server import REQUIRED_SPINE_INTERFACE_VERSION as REQ_SPINE_IFACE_VER
+from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern
 from .output_resources import scan_for_resources
-from ..utils import cmd_line_arg_from_dict, expand_cmd_line_args, labelled_resource_args
+from ..utils import cmd_line_arg_from_dict, expand_cmd_line_args, labelled_resource_args, validate_database_version
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -320,7 +313,7 @@ class ExecutableItem(ExecutableItemBase):
 
         Returns False when
         1. Tool has no specification
-        2. Python or Julia Kernel spec not selected (console mode)
+        2. Python or Julia Kernel spec not selected (jupyter kernel mode)
         3. Julia executable not set and not found in PATH (subprocess mode)
 
         Returns True otherwise.
@@ -431,13 +424,11 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
             return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
-        # Find out SpineInterface version, and whether or not we can use DB server
-        spine_iface_ver = get_spine_interface_version(self._tool_specification)
-        spine_iface_outdated = spine_iface_ver and (
-            [int(x) for x in spine_iface_ver.split(".")] < [int(x) for x in REQ_SPINE_IFACE_VER.split(".")]
-        )
-        use_db_server = not spine_iface_outdated
-        with labelled_resource_args(forward_resources + backward_resources, use_db_server) as labelled_args:
+        resources = forward_resources + backward_resources
+        if not validate_database_version(resources, self._logger):
+            self._logger.msg_error.emit("Invalid database versions")
+            return ItemExecutionFinishState.FAILURE
+        with labelled_resource_args(resources) as labelled_args:
             expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
             try:
                 self._tool_instance.prepare(expanded_args)
@@ -450,14 +441,6 @@ class ExecutableItem(ExecutableItemBase):
             return_code = self._tool_instance.execute()
         self._handle_output_files(return_code, execution_dir)
         self._tool_instance = None
-        if spine_iface_outdated:
-            self._logger.msg_warning.emit(
-                "<p>SpineInterface is outdated.</p>"
-                f"<p>Current version is <b>{spine_iface_ver}</b>, whereas <b>{REQ_SPINE_IFACE_VER}</b> is required. "
-                "This may result in errors while using SpineInterface "
-                "or any packages that depend on it, including SpineOpt.</p>"
-                f'<p>Please run `import Pkg; Pkg.update("SpineInterface")` from the julia prompt to update SpineInterface.</p>'
-            )
         # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
         return ItemExecutionFinishState.SUCCESS if return_code == 0 else ItemExecutionFinishState.FAILURE
 

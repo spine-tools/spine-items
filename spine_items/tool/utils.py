@@ -17,8 +17,6 @@ Utility functions for the Tool project item.
 """
 import glob
 import os.path
-import subprocess
-from spine_engine.utils.helpers import get_julia_command
 
 
 def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):
@@ -132,32 +130,3 @@ class _LatestOutputFile:
         """Constructs a _LatestOutputFile object from an absolute path and archive directory."""
         label = os.path.relpath(path, archive_dir)
         return _LatestOutputFile(label, path)
-
-
-def get_spine_interface_version(tool_spec):
-    """Returns the SpineInterface version, if any, seen by the given tool specification.
-
-    Args:
-        tool_spec (ToolSpecification)
-
-    Returns:
-        str
-    """
-    if tool_spec.tooltype != "julia":
-        return ""
-    cmd = get_julia_command(tool_spec._settings)
-    if cmd is None:
-        return ""
-    cmd += [
-        "-e",
-        'import Pkg; '
-        'manifest = joinpath(dirname(Base.active_project()), "Manifest.toml");'
-        'pkgs = isfile(manifest) ? Pkg.TOML.parsefile(manifest) : Dict(); '
-        'spine_interface = get(pkgs, "SpineInterface", nothing); '
-        'if spine_interface != nothing println(spine_interface[1]["version"]) end',
-    ]
-    try:
-        p = subprocess.run(cmd, capture_output=True, check=True)
-    except subprocess.CalledProcessError:
-        return ""
-    return str(p.stdout, "utf-8").strip()
