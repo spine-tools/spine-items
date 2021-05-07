@@ -19,7 +19,7 @@ Contains Tool specification classes.
 from collections import OrderedDict
 import copy
 import logging
-import os
+import os.path
 import json
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spine_engine.utils.command_line_arguments import split_cmdline_args
@@ -56,10 +56,11 @@ def make_specification(definition, app_settings, logger):
         ToolSpecification: a tool specification constructed from the given definition,
             or None if there was an error
     """
-    path = definition.setdefault("includes_main_path", ".")
+    definition["includes_main_path"] = path = definition.setdefault("includes_main_path", ".").replace("/", os.path.sep)
     if not os.path.isabs(path):
         definition_file_path = definition["definition_file_path"]
         path = os.path.normpath(os.path.join(os.path.dirname(definition_file_path), path))
+    definition["includes"] = [src_file.replace("/", os.path.sep) for src_file in definition["includes"]]
     try:
         _tooltype = definition["tooltype"].lower()
     except KeyError:
@@ -77,7 +78,7 @@ def make_specification(definition, app_settings, logger):
     elif _tooltype == "executable":
         spec = ExecutableTool.load(path, definition, app_settings, logger)
     else:
-        logger.msg_warning.emit("Tool type <b>{}</b> not available".format(_tooltype))
+        logger.msg_warning.emit(f"Tool type <b>{_tooltype}</b> not available")
         return None
     return spec
 
@@ -137,7 +138,7 @@ class ToolSpecification(ProjectItemSpecification):
         self.execute_in_work = execute_in_work
 
     def _includes_main_path_relative(self):
-        return os.path.relpath(self.path, os.path.dirname(self.definition_file_path)).replace(os.sep, "/")
+        return os.path.relpath(self.path, os.path.dirname(self.definition_file_path)).replace(os.path.sep, "/")
 
     def clone(self):
         spec_dict = copy.deepcopy(self.to_dict())
@@ -148,7 +149,7 @@ class ToolSpecification(ProjectItemSpecification):
         return {
             "name": self.name,
             "tooltype": self.tooltype,
-            "includes": self.includes,
+            "includes": [src_file.replace(os.path.sep, "/") for src_file in self.includes],
             "description": self.description,
             "inputfiles": list(self.inputfiles),
             "inputfiles_opt": list(self.inputfiles_opt),
