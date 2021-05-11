@@ -282,7 +282,7 @@ def exported_files_as_resources(item_name, exported_files, data_dir, databases):
     if exported_files is not None:
         for db in databases:
             if db.output_file_name:
-                files = [f for f in exported_files.get(db.output_file_name, []) if Path(f).exists()]
+                files = {f for f in exported_files.get(db.output_file_name, []) if Path(f).exists()}
                 if files:
                     resources = [file_resource_in_pack(item_name, db.output_file_name, f) for f in files]
                 else:

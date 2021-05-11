@@ -78,7 +78,7 @@ def do_work(specification, output_time_stamps, cancel_on_error, gams_path, out_d
                 if isinstance(writer, CsvWriter):
                     files = writer.output_files()
                 else:
-                    files = [out_path]
+                    files = {out_path}
                 written_files[output_file_name] = files
                 if len(files) > 1:
                     anchors = list()

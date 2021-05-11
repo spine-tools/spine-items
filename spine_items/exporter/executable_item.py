@@ -54,7 +54,7 @@ class ExecutableItem(ExporterExecutableItemBase):
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
-            return False
+            return ItemExecutionFinishState.FAILURE
         if self._specification is None:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")
             return ItemExecutionFinishState.SKIPPED
@@ -88,7 +88,7 @@ class ExecutableItem(ExporterExecutableItemBase):
             self._result_files = result[1]
             file_name = "__export-manifest-" + self.filter_id + ".json" if self.filter_id else "__export-manifest.json"
             with open(Path(self._data_dir, file_name), "w") as manifest:
-                dump(self._result_files, manifest)
+                dump({label: list(files) for label, files in self._result_files.items()}, manifest)
         self._process = None
         return ItemExecutionFinishState.SUCCESS if result[0] else ItemExecutionFinishState.FAILURE
 
