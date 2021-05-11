@@ -21,7 +21,6 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
-from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.project_item.project_item_resource import file_resource
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
