@@ -196,21 +196,20 @@ class PythonToolInstance(ToolInstance):
             python_exe = self._settings.value("appSettings/pythonPath", defaultValue="")
             python_exe = resolve_python_interpreter(python_exe)
             self.program = [python_exe]
-            cmdline_args = self.tool_specification.cmdline_args + args
-            if cmdline_args:
-                fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
-                self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
-            exec_code = self._make_exec_code()
+            fp = self.tool_specification.main_prgm
+            full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm).replace(os.sep, "/")
+            cmdline_args = [full_fp] + self.tool_specification.cmdline_args + args
+            fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+            self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
+            exec_code = self._make_exec_code(fp, full_fp)
             self.args += [exec_code]
             alias = f"# Running 'python {' '.join([self.tool_specification.main_prgm, *cmdline_args])}'"
             self.exec_mngr = PythonPersistentExecutionManager(
                 self._logger, self.program, self.args, alias, group_id=self.owner.group_id, workdir=self.basedir
             )
 
-    def _make_exec_code(self):
+    def _make_exec_code(self, fp, full_fp):
         """Returns a string of code to run this tool instance in a python interactive session."""
-        fp = self.tool_specification.main_prgm
-        full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm).replace(os.sep, "/")
         glob = f'{{"__file__": "{full_fp}", "__name__": "__main__"}}'
         return f"with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), {glob})"
 
