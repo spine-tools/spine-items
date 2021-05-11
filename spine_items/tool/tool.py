@@ -76,7 +76,7 @@ class Tool(ProjectItem):
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
         self._cmdline_args_model = ToolCommandLineArgsModel(self)
-        self._specification = self._toolbox.specification_model.find_specification(specification_name)
+        self._specification = self._project.get_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
                 f"Tool <b>{self.name}</b> should have a Tool specification <b>{specification_name}</b> but it was not found"
@@ -185,7 +185,7 @@ class Tool(ProjectItem):
         Args:
             text (str): Tool specification name in the comboBox
         """
-        spec = self._toolbox.specification_model.find_specification(text)
+        spec = self._project.get_specification(text)
         self.set_specification(spec)
 
     @Slot(bool)

@@ -45,6 +45,7 @@ def create_mock_project(project_dir):
     mock_project = MagicMock()
     mock_project.project_dir = project_dir
     mock_project.items_dir = os.path.join(project_dir, ".spinetoolbox", "items")
+    mock_project.get_specification.side_effect = lambda x: None
     return mock_project
 
 

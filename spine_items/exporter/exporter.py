@@ -53,7 +53,7 @@ class Exporter(ExporterBase):
         """
         super().__init__(name, description, x, y, toolbox, project, databases, output_time_stamps, cancel_on_error)
         self._specification_name = specification_name
-        self._specification = self._toolbox.specification_model.find_specification(specification_name)
+        self._specification = self._project.get_specification(specification_name)
         if specification_name and not self._specification:
             self._toolbox.msg_error.emit(
                 f"Exporter <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
@@ -92,7 +92,7 @@ class Exporter(ExporterBase):
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         specification_name = item_dict.get("specification", "")
-        specification = toolbox.specification_model.find_specification(specification_name)
+        specification = project.get_specification(specification_name)
         if specification_name and not specification:
             toolbox.msg_error.emit(f"Exporter <b>{name}</b> specification <b>{specification_name}</b> not found")
         return Exporter(
@@ -162,7 +162,7 @@ class Exporter(ExporterBase):
         Args:
             specification_name (str): new specification name
         """
-        specification = self._toolbox.specification_model.find_specification(specification_name)
+        specification = self._project.get_specification(specification_name)
         self.set_specification(specification)
 
     def restore_selections(self):

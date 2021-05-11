@@ -443,7 +443,7 @@ class DataStore(ProjectItem):
         # If database key is a file, change the path to relative
         if d["url"]["dialect"] == "sqlite" and d["url"]["database"]:
             d["url"]["database"] = serialize_path(d["url"]["database"], self._project.project_dir)
-        d["cancel_on_error"] = self._properties_ui.cancel_on_error_checkBox.isChecked()
+        d["cancel_on_error"] = self.cancel_on_error
         return d
 
     def copy_local_data(self, original_data_dir, original_url, duplicate_items):

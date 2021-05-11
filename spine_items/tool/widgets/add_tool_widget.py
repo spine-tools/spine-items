@@ -48,4 +48,4 @@ class AddToolWidget(AddProjectItemWidget):
                 "execute_in_work": True,
             }
         }
-        self._project.add_project_items(item, set_selected=True)
+        self._toolbox.add_project_items(item)

@@ -94,9 +94,9 @@ def _find_main_program_file(toolbox, filename, specification):
         filename (str): The name of the main program file
         specification (ToolSpecification): The spec to update
     """
-    answer = QFileDialog.getOpenFileName(toolbox, f"Select {filename}", toolbox._project.project_dir)
+    answer = QFileDialog.getOpenFileName(toolbox, f"Select {filename}", toolbox.project().project_dir)
     if answer[0] == "":  # Cancel button clicked
         return
     specification = specification.clone()
     specification.path, specification.includes[0] = os.path.split(answer[0])
-    toolbox.add_specification(specification, update_existing=True)
+    toolbox.project().replace_specification(specification)

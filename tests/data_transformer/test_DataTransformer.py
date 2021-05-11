@@ -36,8 +36,6 @@ class TestDataTransformer(unittest.TestCase):
     def setUp(self):
         """Set up."""
         self.toolbox = create_mock_toolbox()
-        mock_spec_model = self.toolbox.specification_model = MagicMock()
-        mock_spec_model.find_specification.side_effect = lambda x: None
         factory = DataTransformerFactory()
         item_dict = {"type": "Data Transformer", "description": "", "specification": None, "x": 0, "y": 0}
         self._temp_dir = TemporaryDirectory()

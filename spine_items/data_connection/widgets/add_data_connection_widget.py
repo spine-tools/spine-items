@@ -45,4 +45,4 @@ class AddDataConnectionWidget(AddProjectItemWidget):
                 "references": list(),
             }
         }
-        self._project.add_project_items(item, set_selected=True)
+        self._toolbox.add_project_items(item)

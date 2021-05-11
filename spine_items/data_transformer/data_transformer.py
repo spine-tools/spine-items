@@ -42,7 +42,7 @@ class DataTransformer(ProjectItem):
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self._specification_name = specification_name
-        self._specification = self._toolbox.specification_model.find_specification(specification_name)
+        self._specification = self._project.get_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
                 f"Data Transformer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
@@ -146,7 +146,7 @@ class DataTransformer(ProjectItem):
         Args:
             specification_name (str): new specification name
         """
-        specification = self._toolbox.specification_model.find_specification(specification_name)
+        specification = self._project.get_specification(specification_name)
         self.set_specification(specification)
 
     def upstream_resources_updated(self, resources):

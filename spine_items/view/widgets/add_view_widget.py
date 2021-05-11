@@ -37,4 +37,4 @@ class AddViewWidget(AddProjectItemWidget):
     def call_add_item(self):
         """Creates new Item according to user's selections."""
         item = {self.name: {"type": ItemInfo.item_type(), "description": self.description, "x": self._x, "y": self._y}}
-        self._project.add_project_items(item, set_selected=True)
+        self._toolbox.add_project_items(item)

@@ -37,8 +37,40 @@ class TestTool(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self.toolbox = create_mock_toolbox()
         self.project = create_mock_project(self._temp_dir.name)
+        specifications = [
+            ExecutableTool(
+                name="simple_exec",
+                tooltype="executable",
+                path=self._temp_dir.name,
+                includes=["main.sh"],
+                settings=self.toolbox.qsettings(),
+                logger=self.toolbox,
+                description="A simple executable tool.",
+                inputfiles=["input1.csv", "input2.csv"],
+                inputfiles_opt=["opt_input.csv"],
+                outputfiles=["output1.csv", "output2.csv"],
+                cmdline_args="<args>",
+                execute_in_work=False,
+            ),
+            ExecutableTool(
+                name="complex_exec",
+                tooltype="executable",
+                path=self._temp_dir.name,
+                includes=["MakeFile", "src/a.c", "src/a.h", "src/subunit/x.c", "src/subunit/x.h"],
+                settings=self.toolbox.qsettings(),
+                logger=self.toolbox,
+                description="A more complex executable tool.",
+                inputfiles=["input1.csv", "input/input2.csv"],
+                inputfiles_opt=["opt/*.ini", "?abc.txt"],
+                outputfiles=["output1.csv", "output/output2.csv"],
+                cmdline_args="subunit",
+                execute_in_work=True,
+            ),
+        ]
+        self.specification_dict = {x.name: x for x in specifications}
+        self.project.get_specification = self.specification_dict.get
         self.toolbox.project.return_value = self.project
-        self.model = self.toolbox.specification_model = _MockToolSpecModel(self.toolbox, self._temp_dir.name)
+        self.model = _MockToolSpecModel(self.specification_dict)
 
     def tearDown(self):
         self._temp_dir.cleanup()
@@ -207,48 +239,10 @@ class TestTool(unittest.TestCase):
 
 class _MockToolSpecModel(QStandardItemModel):
     # Create a dictionary of tool specifications to 'populate' the mock model
-    def __init__(self, toolbox, path):
+    def __init__(self, specifications):
         super().__init__()
-        specifications = [
-            ExecutableTool(
-                name="simple_exec",
-                tooltype="executable",
-                path=path,
-                includes=["main.sh"],
-                settings=toolbox.qsettings(),
-                logger=toolbox,
-                description="A simple executable tool.",
-                inputfiles=["input1.csv", "input2.csv"],
-                inputfiles_opt=["opt_input.csv"],
-                outputfiles=["output1.csv", "output2.csv"],
-                cmdline_args="<args>",
-                execute_in_work=False,
-            ),
-            ExecutableTool(
-                name="complex_exec",
-                tooltype="executable",
-                path=path,
-                includes=["MakeFile", "src/a.c", "src/a.h", "src/subunit/x.c", "src/subunit/x.h"],
-                settings=toolbox.qsettings(),
-                logger=toolbox,
-                description="A more complex executable tool.",
-                inputfiles=["input1.csv", "input/input2.csv"],
-                inputfiles_opt=["opt/*.ini", "?abc.txt"],
-                outputfiles=["output1.csv", "output/output2.csv"],
-                cmdline_args="subunit",
-                execute_in_work=True,
-            ),
-        ]
-        specification_names = [x.name for x in specifications]
-        specification_dict = dict(zip(specification_names, specifications))
-        self.find_specification = specification_dict.get
-        self.specification = specifications.__getitem__
-        self.specification_row = specification_names.index
-        self.invisibleRootItem().appendRows([QStandardItem(x) for x in specification_dict])
-
-    def specification_index(self, spec_name):
-        row = self.specification_row(spec_name)
-        return self.invisibleRootItem().child(row)
+        self._specifications = specifications
+        self.invisibleRootItem().appendRows([QStandardItem(x) for x in self._specifications])
 
 
 if __name__ == "__main__":

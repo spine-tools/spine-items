@@ -38,7 +38,7 @@ from ..commands import RestoreMappingsFromDict
 from .import_sources import ImportSources
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
-
+from ..importer_specification import ImporterSpecification
 
 _CONNECTOR_NAME_TO_CLASS = {
     "CSVConnector": CSVConnector,
@@ -153,8 +153,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     def _make_new_specification(self, spec_name):
         mapping = self._import_sources.get_mapping_dict() if self._import_sources else {}
         description = self._spec_toolbar.description()
-        spec_dict = {"name": spec_name, "mapping": mapping, "description": description, "item_type": "Importer"}
-        return self._toolbox.load_specification(spec_dict)
+        return ImporterSpecification(spec_name, mapping, description)
 
     def _populate_main_menu(self):
         super()._populate_main_menu()

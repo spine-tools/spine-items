@@ -62,7 +62,7 @@ class Importer(ProjectItem):
         except OSError:
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         # Variables for saving selections when item is (de)activated
-        self._specification = self._toolbox.specification_model.find_specification(specification_name)
+        self._specification = self._project.get_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
                 f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
@@ -122,7 +122,7 @@ class Importer(ProjectItem):
         Args:
             specification_name (str): new specification name
         """
-        specification = self._toolbox.specification_model.find_specification(specification_name)
+        specification = self._project.get_specification(specification_name)
         self.set_specification(specification)
 
     @Slot(int)

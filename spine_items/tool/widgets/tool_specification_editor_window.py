@@ -31,7 +31,7 @@ from spinetoolbox.project_item.specification_editor_window import (
 )
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from ..item_info import ItemInfo
-from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS
+from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS, make_specification
 
 
 class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
@@ -137,6 +137,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._show_error("Tool type not selected")
             return None
         # Check that path of main program file is valid before saving it
+        main_program_file = self._current_main_program_file()
+        if main_program_file is None:
+            self._show_error("Please add a main program file.")
+            return None
         main_program = self._current_main_program_file().strip()
         if not os.path.isfile(main_program):
             self._show_error("Main program file is not valid")
@@ -163,7 +167,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 return None
         # Create new Tool specification
         new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/")
-        tool_spec = self._toolbox.load_specification(new_spec_dict)
+        tool_spec = make_specification(new_spec_dict, self._toolbox.qsettings(), self._toolbox)
         if not tool_spec:
             self._show_error("Creating Tool specification failed")
             return None
