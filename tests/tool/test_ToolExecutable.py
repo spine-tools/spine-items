@@ -22,6 +22,7 @@ import unittest
 from unittest import mock
 from PySide2.QtCore import QCoreApplication
 from spine_engine.project_item.project_item_resource import file_resource
+from spine_engine.execution_managers.persistent_execution_manager import kill_persistent_processes
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
 from spine_items.tool.utils import _LatestOutputFile
@@ -164,6 +165,7 @@ class TestToolExecutable(unittest.TestCase):
         self.assertNotEqual(archives[0].name, "failed")
         self.assertTrue(pathlib.Path(archives[0], "out.dat").exists())
         self.assertTrue(pathlib.Path(archives[0], "subdir", "out.txt").exists())
+        kill_persistent_processes()
 
     def test_find_optional_input_files_without_wildcards(self):
         optional_file = pathlib.Path(self._temp_dir.name, "1.txt")
