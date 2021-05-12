@@ -153,8 +153,11 @@ class MappingEditorTableModel(QAbstractTableModel):
         elif role == Qt.BackgroundRole and column == EditorColumn.ROW_LABEL:
             m = self._mappings[index.row()]
             return self._mapping_colors.get(m.position, QColor(Qt.gray).lighter())
-        elif role == Qt.ToolTipRole and column == EditorColumn.FILTER:
-            return "Regular expression to filter database items."
+        elif role == Qt.ToolTipRole:
+            if column == EditorColumn.FILTER:
+                return "Regular expression to filter database items."
+            elif column == EditorColumn.NULLABLE:
+                return "When checked, ignore this row if it yields nothing to export."
         if role == self.MAPPING_ITEM_ROLE:
             return self._mappings[index.row()]
         return None
