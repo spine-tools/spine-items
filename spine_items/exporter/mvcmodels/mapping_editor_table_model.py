@@ -15,7 +15,6 @@ Contains model for export mapping setup table.
 :date:   11.12.2020
 """
 from enum import IntEnum, unique
-from itertools import takewhile
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide2.QtGui import QFont, QColor
 from spinedb_api.mapping import is_pivoted, is_regular, Position, value_index

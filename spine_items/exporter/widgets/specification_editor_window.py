@@ -15,7 +15,7 @@ Contains :class:`SpecificationEditorWindow`.
 :date:   11.12.2020
 """
 from copy import deepcopy
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, QSortFilterProxyModel, Qt, Signal, Slot
+from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
 from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QAction, QHeaderView
 from spinedb_api.export_mapping import (
@@ -67,6 +67,7 @@ from ..commands import (
 )
 from ..mvcmodels.mappings_table_model import MappingsTableModel
 from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel
+from ..mvcmodels.mappings_table_proxy import MappingsTableProxy
 from ..specification import MappingSpecification, MappingType, OutputFormat, Specification
 from .filter_edit_delegate import FilterEditDelegate
 from .position_edit_delegate import PositionEditDelegate, position_section_width
@@ -137,7 +138,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         )
         self._mappings_table_model.write_order_changed.connect(lambda: self._expect_current_mapping_change(False))
         self._mapping_editor_model = MappingEditorTableModel("", None, self._undo_stack, self, self)
-        self._sort_mappings_table_model = QSortFilterProxyModel(self)
+        self._sort_mappings_table_model = MappingsTableProxy(self)
         self._sort_mappings_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
         self._sort_mappings_table_model.setSourceModel(self._mappings_table_model)
         self._sort_mappings_table_model.rowsInserted.connect(self._select_inserted_row)

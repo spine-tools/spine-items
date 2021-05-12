@@ -196,7 +196,7 @@ class MappingsTableModel(QAbstractTableModel):
                 self.mapping_enabled_state_change_requested.emit(row)
                 return True
             if role == Qt.EditRole:
-                if value in self._names:
+                if not value or value in self._names:
                     return False
                 self.rename_requested.emit(index.row(), value)
                 return True
