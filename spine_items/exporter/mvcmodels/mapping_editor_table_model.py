@@ -18,7 +18,7 @@ from enum import IntEnum, unique
 from itertools import takewhile
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide2.QtGui import QFont, QColor
-from spinedb_api.mapping import is_pivoted, is_regular, Position
+from spinedb_api.mapping import is_pivoted, is_regular, Position, value_index
 from spinedb_api.export_mapping.export_mapping import (
     AlternativeDescriptionMapping,
     AlternativeMapping,
@@ -127,7 +127,7 @@ class MappingEditorTableModel(QAbstractTableModel):
                 mapping = self._mappings[row]
                 return _names[type(mapping)]
             if column == EditorColumn.POSITION:
-                if row == _value_row(self._mappings) and self._non_leaf_mapping_is_pivoted:
+                if row == value_index(self._mappings) and self._non_leaf_mapping_is_pivoted:
                     return "in pivot"
                 position = self._mappings[row].position
                 if is_regular(position):
@@ -162,7 +162,7 @@ class MappingEditorTableModel(QAbstractTableModel):
     def flags(self, index=QModelIndex()):
         row = index.row()
         column = index.column()
-        value_row = _value_row(self._mappings)
+        value_row = value_index(self._mappings)
         if row >= value_row and column == EditorColumn.PIVOTED:
             return super().flags(index) & ~Qt.ItemIsEnabled
         if column == EditorColumn.ROW_LABEL:
@@ -277,7 +277,7 @@ class MappingEditorTableModel(QAbstractTableModel):
                 value = Position.header
             else:
                 return False
-        if value == mapping.position and (row != _value_row(self._mappings) or not self._non_leaf_mapping_is_pivoted):
+        if value == mapping.position and (row != value_index(self._mappings) or not self._non_leaf_mapping_is_pivoted):
             return False
         positions = _propose_positions(self._mappings, row, value)
         previous_positions = [m.position for m in self._mappings]
@@ -327,7 +327,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         non_leaf_pivoted = self._is_non_leaf_pivoted()
         if non_leaf_pivoted != self._non_leaf_mapping_is_pivoted:
             self._non_leaf_mapping_is_pivoted = non_leaf_pivoted
-            index = self.index(_value_row(self._mappings), EditorColumn.POSITION)
+            index = self.index(value_index(self._mappings), EditorColumn.POSITION)
             self.dataChanged.emit(index, index, [Qt.DisplayRole])
         self._reset_colors()
 
@@ -382,7 +382,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         Returns:
             bool: True if one or more non-leaf mappings are pivoted, False otherwise
         """
-        return any(is_pivoted(m.position) for m in self._mappings[: _value_row(self._mappings)])
+        return any(is_pivoted(m.position) for m in self._mappings[: value_index(self._mappings)])
 
     def can_compact(self):
         """Checks if the mapping can be compacted.
@@ -403,7 +403,7 @@ class MappingEditorTableModel(QAbstractTableModel):
     def compact(self):
         """Compacts the mapping."""
         if self._is_non_leaf_pivoted():
-            value_row = _value_row(self._mappings)
+            value_row = value_index(self._mappings)
             pivoted_mappings = [
                 (m.position, m) for row, m in enumerate(self._mappings) if is_pivoted(m.position) and row != value_row
             ]
@@ -464,19 +464,6 @@ _names = {
 }
 
 
-def _value_row(mappings):
-    """
-    Returns the last relevant row, i.e. the one that contains the leaf mapping.
-
-    Args:
-        mappings (list of Mapping): flattened mappings
-
-    Returns:
-        int: row index
-    """
-    return len(mappings) - 1 - len(list(takewhile(lambda m: m.position == Position.hidden, reversed(mappings))))
-
-
 def _propose_toggled_pivot(mappings, toggled_index):
     """Proposes new positions after toggling a mapping's pivoted status.
 
@@ -512,7 +499,7 @@ def _propose_positions(mappings, target_index, new_position):
         list of Position: positions after modification
     """
     positions = [m.position for m in mappings]
-    if target_index == _value_row(mappings):
+    if target_index == value_index(mappings):
         _turn_off_pivots(positions)
     if isinstance(new_position, int):
         _insert_into_position(positions, target_index, new_position)
