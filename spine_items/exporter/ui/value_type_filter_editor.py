@@ -35,6 +35,7 @@ class Ui_Form(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.regexp_line_edit = QLineEdit(Form)
         self.regexp_line_edit.setObjectName(u"regexp_line_edit")
+        self.regexp_line_edit.setClearButtonEnabled(True)
 
         self.verticalLayout.addWidget(self.regexp_line_edit)
 

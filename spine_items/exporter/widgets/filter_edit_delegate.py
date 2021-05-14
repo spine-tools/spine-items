@@ -52,10 +52,16 @@ class _FilterEdit(QWidget):
         self.setWindowFlags(Qt.Popup)
         self._ui = ui_form
         self._ui.setupUi(self)
+        self._focused = False
 
     def focusInEvent(self, e):
         self._ui.regexp_line_edit.setFocus()
+        self._ui.regexp_line_edit.selectAll()
         super().focusInEvent(e)
+
+    def keyPressEvent(self, event):
+        # Relay key press events to the regexp line edit. Otherwise we may lose the first letter.
+        return self._ui.regexp_line_edit.keyPressEvent(event)
 
     def regexp(self):
         """Returns the current regular expression.

@@ -31,6 +31,9 @@
      <property name="placeholderText">
       <string>Type regular expression here...</string>
      </property>
+     <property name="clearButtonEnabled">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>

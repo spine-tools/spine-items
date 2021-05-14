@@ -14,7 +14,7 @@ Contains mapping position editor delegate.
 :author: A. Soininen (VTT)
 :date:   5.1.2021
 """
-from PySide2.QtCore import Slot
+from PySide2.QtCore import Property, Slot
 from PySide2.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
 from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT
 
@@ -36,9 +36,6 @@ class PositionEditDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         return _PositionEdit(parent)
-
-    def setEditorData(self, editor, index):
-        editor.set(index.data())
 
 
 class _PositionEdit(QComboBox):
@@ -68,7 +65,7 @@ class _PositionEdit(QComboBox):
             else:
                 self.setItemText(0, text)
 
-    def set(self, position):
+    def set_position(self, position):
         """
         Sets the combo boxes value.
 
@@ -80,6 +77,17 @@ class _PositionEdit(QComboBox):
         else:
             self._insert(position)
             self.setCurrentIndex(0)
+
+    def position(self):
+        """Gets the position.
+
+        Returns:
+            str: position
+        """
+        return self.currentText()
+
+    regexp = Property(str, position, set_position, user=True)
+    """Property used to communicate with the editor delegate."""
 
 
 class _SelectingLineEdit(QLineEdit):
