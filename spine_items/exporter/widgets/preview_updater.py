@@ -469,8 +469,15 @@ class _Worker(QRunnable):
     def run(self):
         db_map = DatabaseMapping(self._url)
         try:
-            writer = TableWriter(self._max_tables, self._max_rows)
-            write(db_map, writer, self._mapping, empty_data_header=self._always_export_header)
+            writer = TableWriter()
+            write(
+                db_map,
+                writer,
+                self._mapping,
+                empty_data_header=self._always_export_header,
+                max_tables=self._max_tables,
+                max_rows=self._max_rows,
+            )
             self.signals.table_written.emit(
                 (self._url, self._mapping_name), self._mapping_name, writer.tables, self._stamp
             )
