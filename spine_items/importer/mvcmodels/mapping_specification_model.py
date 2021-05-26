@@ -22,6 +22,7 @@ from PySide2.QtCore import Qt, QAbstractTableModel, Signal, QTimer
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.mvcmodels.shared import PARSED_ROLE
 from spinetoolbox.spine_db_manager import SpineDBManager
+from spinetoolbox.helpers import join_value_and_type, split_value_and_type
 from spinedb_api.parameter_value import from_database, ParameterValueFormatError
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.mapping import Position
@@ -510,7 +511,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             if mapping.position == Position.hidden and mapping.value is not None:
                 # 2. Constant value: we want special database value support
                 try:
-                    value = from_database(mapping.value)
+                    value = from_database(*split_value_and_type(mapping.value))
                     return SpineDBManager.display_data_from_parsed(value)
                 except ParameterValueFormatError:
                     return None
@@ -532,10 +533,10 @@ class MappingSpecificationModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if role == PARSED_ROLE:
             # Only used for the ParameterValueEditor.
-            # At this point, the delegate has already checked that it's a constant parameter/default value mapping
+            # At this point, the delegate has already checked that it's a constant parameter (default) value mapping
             m = self._component_mappings[self._logical_row[index.row()]]
             try:
-                return from_database(m.value)
+                return from_database(*split_value_and_type(m.value))
             except ParameterValueFormatError:
                 return None
         column = index.column()
@@ -656,7 +657,7 @@ class MappingSpecificationModel(QAbstractTableModel):
                 SetComponentMappingReference(name, self, current_type, value, current_type, current_reference)
             )
             return False
-        # If type is "None", set it to something reasonable to save users work
+        # If type is "None", set it to something reasonable to try and help users
         try:
             value = int(value)
         except ValueError:
@@ -767,7 +768,6 @@ class MappingSpecificationModel(QAbstractTableModel):
         self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole, Qt.DisplayRole, Qt.ToolTipRole])
 
     def _recommend_types(self, name, mapping):
-        # Recommend data types
         self._recommend_float_type_for_values()
         if name.endswith("indexes") and self.is_time_series_value():
             self._recommend_date_time_type(mapping)
@@ -893,7 +893,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         Returns:
             function
         """
-        return lambda value, index=index: self.setData(index, value)
+        return lambda value_type_tup, index=index: self.setData(index, join_value_and_type(*value_type_tup))
 
     def index_name(self, index):
         return index.siblingAtColumn(0).data()

@@ -276,7 +276,7 @@ class ParameterConstantValueDelegate(QStyledItemDelegate):
         target = index.siblingAtColumn(0).data()
         ref_type = index.siblingAtColumn(1).data()
         if target.endswith("values") and ref_type == "Constant":
-            editor = ParameterValueEditor(index, self._parent)
+            editor = ParameterValueEditor(index, self._parent)  # TODO: plain=True for parameter value lists
             editor.show()
             return None
         return super().createEditor(parent, option, index)
