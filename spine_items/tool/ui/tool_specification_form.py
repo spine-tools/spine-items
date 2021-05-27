@@ -328,7 +328,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.checkBox_execute_in_work.setText(QCoreApplication.translate("MainWindow", u"Execute in work directory", None))
         self.dockWidget_program_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Program files", None))
-        self.dockWidget_io_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Input & output files", None))
+        self.dockWidget_io_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Input && output files", None))
         self.dockWidget_program.setWindowTitle("")
     # retranslateUi
 

@@ -22,13 +22,15 @@ from spinetoolbox.project_item.specification_editor_window import (
 )
 from .entity_class_renaming_widget import EntityClassRenamingWidget
 from .parameter_renaming_widget import ParameterRenamingWidget
+from .value_transforming_widget import ValueTransformingWidget
 from ..data_transformer_specification import DataTransformerSpecification
-from ..settings import EntityClassRenamingSettings, ParameterRenamingSettings
+from ..settings import EntityClassRenamingSettings, ParameterRenamingSettings, ValueTransformSettings
 
+_FILTER_NAMES = ("Rename entity classes", "Rename parameters", "Transform values")
 
-_FILTER_NAMES = ("Rename entity classes", "Rename parameters")
-
-_SETTINGS_CLASSES = dict(zip(_FILTER_NAMES, (EntityClassRenamingSettings, ParameterRenamingSettings)))
+_SETTINGS_CLASSES = dict(
+    zip(_FILTER_NAMES, (EntityClassRenamingSettings, ParameterRenamingSettings, ValueTransformSettings))
+)
 
 _CLASSES_TO_DISPLAY_NAMES = {class_: name for name, class_ in _SETTINGS_CLASSES.items()}
 
@@ -111,9 +113,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.filter_combo_box.setCurrentText(self._current_filter_name)
         widget = self._filter_widgets.get(filter_name)
         if widget is None:
-            widget = dict(zip(_FILTER_NAMES, (EntityClassRenamingWidget, ParameterRenamingWidget)))[filter_name](
-                self._undo_stack, self._new_spec.settings
-            )
+            widget = dict(
+                zip(_FILTER_NAMES, (EntityClassRenamingWidget, ParameterRenamingWidget, ValueTransformingWidget))
+            )[filter_name](self._undo_stack, self._new_spec.settings)
             self._filter_widgets[filter_name] = widget
         layout = self._ui.filter_widget.layout()
         if layout is None:

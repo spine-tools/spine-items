@@ -16,6 +16,7 @@ Contains settings classes for filters and manipulators.
 :date:    28.10.2020
 """
 from spinedb_api.filters.renamer import entity_class_renamer_config, parameter_renamer_config
+from spinedb_api.filters.value_transformer import value_transformer_config
 
 
 class FilterSettings:
@@ -162,6 +163,35 @@ class ParameterRenamingSettings(RenamingSettings):
         return "parameter_rename"
 
 
+class ValueTransformSettings(FilterSettings):
+    """Settings for value transformer manipulator."""
+
+    def __init__(self, instructions):
+        """
+        Args:
+            instructions (dict): transform instructions
+        """
+        self.instructions = instructions
+
+    def filter_config(self):
+        return value_transformer_config(self.instructions)
+
+    def to_dict(self):
+        return self.instructions
+
+    @staticmethod
+    def type():
+        return "value_transformer"
+
+    @staticmethod
+    def use_shorthand():
+        return False
+
+    @staticmethod
+    def from_dict(settings_dict):
+        return ValueTransformSettings(settings_dict)
+
+
 def settings_from_dict(settings_dict):
     """
     Restores filter settings.
@@ -175,5 +205,6 @@ def settings_from_dict(settings_dict):
     restorers = {
         EntityClassRenamingSettings.type(): EntityClassRenamingSettings.from_dict,
         ParameterRenamingSettings.type(): ParameterRenamingSettings.from_dict,
+        ValueTransformSettings.type(): ValueTransformSettings.from_dict,
     }
     return restorers.get(settings_dict["type"], lambda _: None)(settings_dict["settings"])
