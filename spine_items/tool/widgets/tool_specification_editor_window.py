@@ -22,7 +22,7 @@ import os
 from copy import deepcopy
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
 from PySide2.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
-from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer
+from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex
 from spinetoolbox.helpers import busy_effect, open_url
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from spinetoolbox.project_item.specification_editor_window import (
@@ -400,6 +400,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.comboBox_tooltype.activated.connect(self._push_change_tooltype_command)
         self._ui.checkBox_execute_in_work.toggled.connect(self._push_change_execute_in_work_command)
         self._ui.lineEdit_args.editingFinished.connect(self._push_change_args_command)
+        self.io_files_model.dataChanged.connect(self._push_io_file_renamed_command)
         # Selection changed
         self._ui.treeView_programfiles.selectionModel().selectionChanged.connect(
             self._handle_programfile_selection_changed
@@ -490,7 +491,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.populate_main_programfile(file_path)
         self._label_main_path.setText(self.includes_main_path)
 
-    @Slot("QItemSelection", "QItemSelection")
+    @Slot(QItemSelection, QItemSelection)
     def _handle_programfile_selection_changed(self, _selected, _deselected):
         # Set remove action enabled
         indexes = self._selected_program_file_indexes()
@@ -627,7 +628,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 file_paths.append(os.path.abspath(os.path.join(root, file)))
         self.add_program_files(*file_paths)
 
-    @Slot("QVariant")
+    @Slot(list)
     def add_dropped_program_files(self, file_paths):
         """Adds dropped file paths to Source files list."""
         self.add_program_files(*file_paths)
@@ -706,7 +707,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         )
 
     @busy_effect
-    @Slot("QModelIndex")
+    @Slot(QModelIndex)
     def open_program_file(self, index):
         """Open program file in default program."""
         if not index.isValid() or self.programfiles_model.rowCount(index):
@@ -798,11 +799,41 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             ChangeSpecPropertyCommand(self.populate_outputfiles_list, new_files, old_files, "add output file")
         )
 
+    @Slot(QModelIndex, QModelIndex, list)
+    def _push_io_file_renamed_command(self, top_left, bottom_right, roles):
+        """Pushes a command to rename input/output files to undo stack.
+
+        Args:
+            top_left (QModelIndex): top left index to renamed files
+            bottom_right (QModelIndex): bottom right index to renamed files
+            roles (list of int):
+        """
+        if Qt.DisplayRole not in roles:
+            return
+        parent_index = top_left.parent()
+        if parent_index.row() == 0:
+            old_files = self.spec_dict.get("inputfiles", [])
+            callback = self.populate_inputfiles_list
+            message = "rename input file"
+        elif parent_index.row() == 1:
+            old_files = self.spec_dict.get("inputfiles_opt", [])
+            callback = self.populate_inputfiles_opt_list
+            message = "rename optional input file"
+        else:
+            old_files = self.spec_dict.get("outputfiles", [])
+            callback = self.populate_outputfiles_list
+            message = "rename output file"
+        new_files = list(old_files)
+        for j in range(top_left.column(), bottom_right.column() + 1):
+            for i in range(top_left.row(), bottom_right.row() + 1):
+                new_files[i] = self.io_files_model.index(i, j, parent_index).data()
+        self._undo_stack.push(ChangeSpecPropertyCommand(callback, new_files, old_files, message))
+
     def _selected_io_file_indexes(self, parent):
         indexes = self._ui.treeView_io_files.selectedIndexes()
         return [ind for ind in indexes if ind.parent() == parent]
 
-    @Slot("QItemSelection", "QItemSelection")
+    @Slot(QItemSelection, QItemSelection)
     def _handle_io_file_selection_changed(self, _deselected, _selected):
         parent = self.io_files_model.index(0, 0)
         indexes = self._selected_io_file_indexes(parent)
