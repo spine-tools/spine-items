@@ -17,4 +17,4 @@ documentation and manual are released under the [Creative Commons BY-SA 4.0 lice
 
 To install Spine Items into an existing Python environment, run
 
-    $ pip install git+https://github.com/Spine-project/spine-items.git#egg=spine_items
+    $ pip install spine_items

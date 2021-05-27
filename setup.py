@@ -30,15 +30,29 @@ setup(
     version=version["__version__"],
     description="Spine project items",
     long_description=readme,
+    long_description_content_type="text/markdown",
     author="Spine Project consortium",
     author_email="spine_info@vtt.fi",
     url="https://github.com/Spine-project/spine-items",
     packages=find_packages(exclude=("tests",)),
+    install_requires=[
+        "spinedb_api >=0.12.3"
+        "spine_engine >=0.10.0",
+        "spinetoolbox >=0.6.0"
+    ],
     include_package_data=True,
     license="LGPL-3.0-or-later",
     zip_safe=False,
     keywords="",
-    classifiers=[],
     python_requires=">=3.6, <3.9",
     test_suite="tests",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+        "Operating System :: OS Independent",
+    ],
+    project_urls={
+        "Issue Tracker": "https://github.com/Spine-project/Spine-Toolbox/issues",
+        "Documentation": "https://spine-toolbox.readthedocs.io/en/latest/project_items.html"
+    },
 )
