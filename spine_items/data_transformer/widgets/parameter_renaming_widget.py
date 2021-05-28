@@ -14,29 +14,62 @@ Contains a widget to set up a renamer filter.
 :author: A. Soininen (VTT)
 :date:   30.10.2020
 """
-from PySide2.QtWidgets import QMessageBox, QWidget
-from spinedb_api import DatabaseMapping, SpineDBAPIError
-from ..mvcmodels.rename_table_model import RenameTableModel
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QWidget
+from ..commands import InsertRow, RemoveRow
+from ..mvcmodels.parameter_renames_table_model import ParameterRenamesTableModel, RenamesTableColumn
 from ..settings import ParameterRenamingSettings
 
 
 class ParameterRenamingWidget(QWidget):
-    """Widget for entity class renamer settings."""
+    """Widget for parameter renamer settings."""
 
     def __init__(self, undo_stack, settings=None):
         """
         Args:
             undo_stack (QUndoStack)
-            settings (ParameterRenamingSettings): filter settings
+            settings (ParameterRenamingSettings, optional): filter settings
         """
         super().__init__()
-        from ..ui.renamer_editor import Ui_Form  # pylint: disable=import-outside-toplevel
+        self._undo_stack = undo_stack
+        from ..ui.parameter_renamer_editor import Ui_Form  # pylint: disable=import-outside-toplevel
 
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        name_map = settings.name_map if isinstance(settings, ParameterRenamingSettings) else {}
-        self._rename_table_model = RenameTableModel(undo_stack, name_map)
-        self._ui.renaming_table.setModel(self._rename_table_model)
+        self._renames_table_model = ParameterRenamesTableModel(settings, self._undo_stack, self)
+        self._ui.renames_table_view.setModel(self._renames_table_model)
+        self._ui.add_parameter_button.clicked.connect(self._add_parameter)
+        self._ui.remove_parameter_button.clicked.connect(self._ui.remove_parameter_action.trigger)
+        self._ui.remove_parameter_action.triggered.connect(self._remove_parameters)
+
+    @Slot(bool)
+    def _add_parameter(self, checked):
+        """Adds a new parameter row.
+
+        Args:
+            checked (bool): unused
+        """
+        row = self._renames_table_model.rowCount()
+        self._undo_stack.push(InsertRow("add parameter", self._renames_table_model, row, ("class", "parameter", "")))
+
+    @Slot(bool)
+    def _remove_parameters(self, checked):
+        """Removes selected parameter row.
+
+        Args:
+            checked (bool): unused
+        """
+        indexes = self._ui.renames_table_view.selectionModel().selectedRows()
+        if not indexes:
+            return
+        rows = tuple(i.row() for i in indexes)
+        if len(rows) == 1:
+            self._undo_stack.push(RemoveRow("remove parameter", self._renames_table_model, rows[0]))
+        else:
+            self._undo_stack.beginMacro("remove parameters")
+            for row in reversed(sorted(rows)):
+                self._undo_stack.push(RemoveRow("", self._renames_table_model, row))
+            self._undo_stack.endMacro()
 
     def load_data(self, url):
         """
@@ -45,22 +78,7 @@ class ParameterRenamingWidget(QWidget):
         Args:
             url (str): database URL
         """
-        try:
-            db_map = DatabaseMapping(url)
-        except SpineDBAPIError as error:
-            QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
-            return
-        names = set()
-        try:
-            for definition_row in db_map.query(db_map.parameter_definition_sq).all():
-                names.add(definition_row.name)
-        except SpineDBAPIError as error:
-            QMessageBox.information(
-                self, "Error while reading database", f"Could not read from database {url}:\n{error}"
-            )
-        finally:
-            db_map.connection.close()
-        self._rename_table_model.reset_originals(names)
+        self._ui.available_parameters_tree_view.load_data(url)
 
     def settings(self):
         """
@@ -69,4 +87,10 @@ class ParameterRenamingWidget(QWidget):
         Returns:
             FilterSettings: settings
         """
-        return ParameterRenamingSettings(self._rename_table_model.renaming_settings())
+        settings = dict()
+        for row in range(self._renames_table_model.rowCount()):
+            entity_class = self._renames_table_model.index(row, RenamesTableColumn.CLASS).data()
+            parameter = self._renames_table_model.index(row, RenamesTableColumn.PARAMETER).data()
+            new_name = self._renames_table_model.index(row, RenamesTableColumn.NEW_NAME).data()
+            settings.setdefault(entity_class, {})[parameter] = new_name
+        return ParameterRenamingSettings(settings)

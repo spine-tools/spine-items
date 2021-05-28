@@ -25,8 +25,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
-from spine_items.data_transformer.widgets.value_transformations_table import ValueTransformationsTable
 from ..widgets.parameter_tree_widget import ParameterTreeWidget
+from spine_items.data_transformer.widgets.drop_target_table import DropTargetTable
 
 
 class Ui_Form(object):
@@ -45,16 +45,16 @@ class Ui_Form(object):
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Horizontal)
-        self.available_parameters_table_view = ParameterTreeWidget(self.splitter)
+        self.available_parameters_tree_view = ParameterTreeWidget(self.splitter)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setText(0, u"1");
-        self.available_parameters_table_view.setHeaderItem(__qtreewidgetitem)
-        self.available_parameters_table_view.setObjectName(u"available_parameters_table_view")
-        self.available_parameters_table_view.setDragEnabled(True)
-        self.available_parameters_table_view.setDragDropMode(QAbstractItemView.DragOnly)
-        self.available_parameters_table_view.setDefaultDropAction(Qt.CopyAction)
-        self.splitter.addWidget(self.available_parameters_table_view)
-        self.available_parameters_table_view.header().setVisible(False)
+        self.available_parameters_tree_view.setHeaderItem(__qtreewidgetitem)
+        self.available_parameters_tree_view.setObjectName(u"available_parameters_tree_view")
+        self.available_parameters_tree_view.setDragEnabled(True)
+        self.available_parameters_tree_view.setDragDropMode(QAbstractItemView.DragOnly)
+        self.available_parameters_tree_view.setDefaultDropAction(Qt.CopyAction)
+        self.splitter.addWidget(self.available_parameters_tree_view)
+        self.available_parameters_tree_view.header().setVisible(False)
         self.verticalLayoutWidget_2 = QWidget(self.splitter)
         self.verticalLayoutWidget_2.setObjectName(u"verticalLayoutWidget_2")
         self.verticalLayout_2 = QVBoxLayout(self.verticalLayoutWidget_2)
@@ -79,7 +79,7 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
-        self.transformations_table_view = ValueTransformationsTable(self.verticalLayoutWidget_2)
+        self.transformations_table_view = DropTargetTable(self.verticalLayoutWidget_2)
         self.transformations_table_view.setObjectName(u"transformations_table_view")
         self.transformations_table_view.setAcceptDrops(True)
         self.transformations_table_view.setDragDropMode(QAbstractItemView.DropOnly)

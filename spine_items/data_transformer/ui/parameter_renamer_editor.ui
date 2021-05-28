@@ -18,14 +18,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>938</width>
-    <height>368</height>
+    <width>616</width>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
@@ -50,10 +50,10 @@
        </property>
       </column>
      </widget>
-     <widget class="QWidget" name="verticalLayoutWidget_2">
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+     <widget class="QWidget" name="verticalLayoutWidget">
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QPushButton" name="add_parameter_button">
            <property name="text">
@@ -84,121 +84,20 @@
         </layout>
        </item>
        <item>
-        <widget class="DropTargetTable" name="transformations_table_view">
-         <property name="acceptDrops">
-          <bool>true</bool>
-         </property>
+        <widget class="DropTargetTable" name="renames_table_view">
          <property name="dragDropMode">
           <enum>QAbstractItemView::DropOnly</enum>
          </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-         <property name="showGrid">
-          <bool>false</bool>
-         </property>
-         <attribute name="horizontalHeaderStretchLastSection">
-          <bool>true</bool>
-         </attribute>
         </widget>
        </item>
       </layout>
      </widget>
     </widget>
    </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="QPushButton" name="add_instruction_button">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Add</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="remove_instruction_button">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Remove</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QListWidget" name="instructions_list_view">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QFormLayout" name="instruction_options_layout">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Operation:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QComboBox" name="operation_combo_box">
-         <item>
-          <property name="text">
-           <string>multiply</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>negate</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>invert</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
   </layout>
   <action name="remove_parameter_action">
    <property name="text">
     <string>Remove parameter</string>
-   </property>
-   <property name="shortcut">
-    <string>Del</string>
-   </property>
-   <property name="shortcutContext">
-    <enum>Qt::WidgetShortcut</enum>
-   </property>
-  </action>
-  <action name="remove_instruction_action">
-   <property name="text">
-    <string>Remove instruction</string>
    </property>
    <property name="shortcut">
     <string>Del</string>

@@ -9,19 +9,22 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains value transforms table widget.
+Contains a table view that can accept drops.
 
 :author: A. Soininen (VTT)
 :date:   25.5.2021
 """
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QTableView
-from ..widgets.parameter_tree_widget import ParameterTreeWidget
 
 
-class ValueTransformationsTable(QTableView):
+DROP_MIME_TYPE = "application/spine_items-dtdata"
+"""Mime type for drag and drop actions."""
+
+
+class DropTargetTable(QTableView):
     def dragEnterEvent(self, event):
         super().dragEnterEvent(event)
-        if event.mimeData().hasFormat(ParameterTreeWidget.MIME_TYPE):
+        if event.mimeData().hasFormat(DROP_MIME_TYPE):
             event.setDropAction(Qt.CopyAction)
             event.acceptProposedAction()

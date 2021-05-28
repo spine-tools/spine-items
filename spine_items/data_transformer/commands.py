@@ -17,6 +17,31 @@ Contains Data transformer's undo commands.
 from PySide2.QtWidgets import QUndoCommand
 
 
+class SetData(QUndoCommand):
+    """Sets model's value."""
+
+    def __init__(self, message, index, value, previous_value, callback):
+        """
+        Args:
+            message (str): undo message
+            index (QModelIndex): model index
+            value (Any): new value
+            previous_value (Any): undo value
+            callback (Callable): function to call to set the value
+        """
+        super().__init__(message)
+        self._index = index
+        self._value = value
+        self._previous_value = previous_value
+        self._set_value = callback
+
+    def redo(self):
+        self._set_value(self._index, self._value)
+
+    def undo(self):
+        self._set_value(self._index, self._previous_value)
+
+
 class InsertRow(QUndoCommand):
     """Inserts a row to value transformation model."""
 

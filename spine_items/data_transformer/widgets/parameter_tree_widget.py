@@ -16,14 +16,14 @@ Contains :class:`ParameterTreeWidget`.
 """
 import pickle
 from PySide2.QtCore import QMimeData
-from PySide2.QtWidgets import QTreeWidget
+from PySide2.QtWidgets import QTreeWidget, QMessageBox, QTreeWidgetItem
+
+from spinedb_api import DatabaseMapping, SpineDBAPIError
+from .drop_target_table import DROP_MIME_TYPE
 
 
 class ParameterTreeWidget(QTreeWidget):
     """A tree widget with drag capabilities to show entity classes and parameters."""
-
-    MIME_TYPE = "application/spine-parameters"
-    """Mime type for drag and drop actions."""
 
     def mimeData(self, items):
         mime_data = QMimeData()
@@ -34,5 +34,34 @@ class ParameterTreeWidget(QTreeWidget):
                     parameters.setdefault(item.text(0), []).append(item.child(i).text(0))
             else:
                 parameters.setdefault(item.parent().text(0), []).append(item.text(0))
-        mime_data.setData("application/spine-parameters", pickle.dumps(parameters))
+        mime_data.setData(DROP_MIME_TYPE, pickle.dumps(parameters))
         return mime_data
+
+    def load_data(self, url):
+        """
+        Loads parameter data from given URL.
+
+        Args:
+            url (str): database URL
+        """
+        try:
+            db_map = DatabaseMapping(url)
+        except SpineDBAPIError as error:
+            QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
+            return
+        parameters = dict()
+        try:
+            for definition_row in db_map.query(db_map.entity_parameter_definition_sq).all():
+                parameters.setdefault(definition_row.entity_class_name, list()).append(definition_row.parameter_name)
+        except SpineDBAPIError as error:
+            QMessageBox.information(
+                self, "Error while reading database", f"Could not read from database {url}:\n{error}"
+            )
+        finally:
+            db_map.connection.close()
+        self.clear()
+        for class_name, parameter_names in parameters.items():
+            class_item = QTreeWidgetItem([class_name])
+            for name in parameter_names:
+                QTreeWidgetItem(class_item, [name])
+            self.addTopLevelItem(class_item)
