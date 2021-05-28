@@ -190,3 +190,10 @@ class DataTransformer(ProjectItem):
         else:
             self._properties_ui.specification_combo_box.setCurrentIndex(-1)
             self._properties_ui.specification_button.setMenu(None)
+
+    def _check_notifications(self):
+        self.clear_notifications()
+        if self._specification is not None:
+            report = self._specification.settings.report_inconsistencies()
+            for message in report:
+                self.add_notification(message)

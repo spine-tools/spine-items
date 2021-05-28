@@ -31,11 +31,11 @@ from .instructions_editor import InstructionsEditor
 class ValueTransformingWidget(QWidget):
     """A widget to edit parameter value transformer settings."""
 
-    def __init__(self, undo_stack, settings):
+    def __init__(self, undo_stack, settings=None):
         """
         Args:
             undo_stack (QUndoStack)
-            settings (ValueTransformSettings): filter settings
+            settings (ValueTransformSettings, optional): filter settings
         """
         super().__init__()
         self._undo_stack = undo_stack
@@ -91,27 +91,7 @@ class ValueTransformingWidget(QWidget):
         Args:
             url (str): database URL
         """
-        try:
-            db_map = DatabaseMapping(url)
-        except SpineDBAPIError as error:
-            QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
-            return
-        parameters = dict()
-        try:
-            for definition_row in db_map.query(db_map.entity_parameter_definition_sq).all():
-                parameters.setdefault(definition_row.entity_class_name, list()).append(definition_row.parameter_name)
-        except SpineDBAPIError as error:
-            QMessageBox.information(
-                self, "Error while reading database", f"Could not read from database {url}:\n{error}"
-            )
-        finally:
-            db_map.connection.close()
-        self._ui.available_parameters_table_view.clear()
-        for class_name, parameter_names in parameters.items():
-            class_item = QTreeWidgetItem([class_name])
-            for name in parameter_names:
-                QTreeWidgetItem(class_item, [name])
-            self._ui.available_parameters_table_view.addTopLevelItem(class_item)
+        self._ui.available_parameters_tree_view.load_data(url)
 
     def settings(self):
         """
@@ -122,12 +102,8 @@ class ValueTransformingWidget(QWidget):
         """
         settings = dict()
         for row in range(self._transformations_table_model.rowCount()):
-            entity_class = self._transformations_table_model.index(row, TransformationsTableColumn.CLASS).data(
-                Qt.DisplayRole
-            )
-            parameter = self._transformations_table_model.index(row, TransformationsTableColumn.PARAMETER).data(
-                Qt.DisplayRole
-            )
+            entity_class = self._transformations_table_model.index(row, TransformationsTableColumn.CLASS).data()
+            parameter = self._transformations_table_model.index(row, TransformationsTableColumn.PARAMETER).data()
             instructions = self._transformations_table_model.index(row, TransformationsTableColumn.INSTRUCTIONS).data(
                 TransformationsTableRole.INSTRUCTIONS
             )

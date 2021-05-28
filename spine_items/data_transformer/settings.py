@@ -31,6 +31,14 @@ class FilterSettings:
         """
         raise NotImplementedError()
 
+    def report_inconsistencies(self):
+        """Checks and reports errors and inconsistencies in the settings.
+
+        Returns:
+            list of str: list of warning messages
+        """
+        return []
+
     def to_dict(self):
         """
         Serializes settings to JSON compatible dictionary.
@@ -117,22 +125,14 @@ class RenamingSettings(FilterSettings):
         """See base class."""
         raise NotImplementedError()
 
-    def _renaming_map(self):
-        """
-        Filters no-op names from name map.
-
-        Returns:
-            dict: renaming name map
-        """
-        return {name: rename for name, rename in self.name_map.items() if name != rename}
-
 
 class EntityClassRenamingSettings(RenamingSettings):
     """Settings for entity class renaming manipulator."""
 
     def filter_config(self):
         """See base class."""
-        return entity_class_renamer_config(**self._renaming_map())
+        useful = {name: rename for name, rename in self.name_map.items() if rename and name != rename}
+        return entity_class_renamer_config(**useful)
 
     @staticmethod
     def from_dict(settings_dict):
@@ -150,11 +150,25 @@ class ParameterRenamingSettings(RenamingSettings):
 
     def filter_config(self):
         """See base class."""
-        return parameter_renamer_config(**self._renaming_map())
+        name_map = dict()
+        for class_name, param_renames in self.name_map.items():
+            useful = {name: rename for name, rename in param_renames.items() if rename and name != rename}
+            if useful:
+                name_map[class_name] = useful
+        return parameter_renamer_config(name_map)
+
+    def report_inconsistencies(self):
+        messages = super().report_inconsistencies()
+        if any(not klass for klass in self.name_map):
+            messages.append("Class name(s) missing in specification.")
+        return messages
 
     @staticmethod
     def from_dict(settings_dict):
         """See base class."""
+        if settings_dict and isinstance(next(iter(settings_dict.values())), str):
+            # Legacy settings.
+            settings_dict = {"": settings_dict}
         return ParameterRenamingSettings(settings_dict)
 
     @staticmethod
@@ -174,7 +188,17 @@ class ValueTransformSettings(FilterSettings):
         self.instructions = instructions
 
     def filter_config(self):
-        return value_transformer_config(self.instructions)
+        # Remove no-op instructions.
+        instructions = dict()
+        for class_name, parameter_transformation in self.instructions.items():
+            useful = {
+                param_name: instructions
+                for param_name, instructions in parameter_transformation.items()
+                if instructions
+            }
+            if useful:
+                instructions[class_name] = useful
+        return value_transformer_config(instructions)
 
     def to_dict(self):
         return self.instructions
