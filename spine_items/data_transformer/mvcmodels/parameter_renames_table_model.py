@@ -27,10 +27,15 @@ class RenamesTableColumn(IntEnum):
     NEW_NAME = 2
 
 
+@unique
+class RenamesRoles(IntEnum):
+    SILENT_EDIT = Qt.UserRole + 1
+
+
 class ParameterRenamesTableModel(ParameterDropTargetTableModel):
 
     GET_DATA_ROLES = (Qt.DisplayRole, Qt.DisplayRole, Qt.DisplayRole)
-    SET_DATA_ROLES = (Qt.EditRole, Qt.EditRole, Qt.DisplayRole)
+    SET_DATA_ROLES = (RenamesRoles.SILENT_EDIT, RenamesRoles.SILENT_EDIT, RenamesRoles.SILENT_EDIT)
 
     def __init__(self, settings, undo_stack, parent):
         """
@@ -43,7 +48,7 @@ class ParameterRenamesTableModel(ParameterDropTargetTableModel):
         self._undo_stack = undo_stack
         if settings is not None:
             self._renames = [
-                (klass, param, new_name)
+                [klass, param, new_name]
                 for klass, param_renames in settings.name_map.items()
                 for param, new_name in param_renames.items()
             ]
@@ -67,7 +72,7 @@ class ParameterRenamesTableModel(ParameterDropTargetTableModel):
         return None
 
     def insertRows(self, row, count, parent=QModelIndex()):
-        rows = count * [("", "", "")]
+        rows = count * [["", "", ""]]
         self.beginInsertRows(parent, row, row + count - 1)
         self._renames = self._renames[:row] + rows + self._renames[row:]
         self.endInsertRows()
@@ -75,7 +80,7 @@ class ParameterRenamesTableModel(ParameterDropTargetTableModel):
 
     @staticmethod
     def _make_drop_row(entity_class, parameter):
-        return entity_class, parameter, ""
+        return [entity_class, parameter, ""]
 
     def removeRows(self, row, count, parent=QModelIndex()):
         self.beginRemoveRows(parent, row, row + count - 1)
@@ -87,28 +92,23 @@ class ParameterRenamesTableModel(ParameterDropTargetTableModel):
         return len(self._renames)
 
     def setData(self, index, value, role=Qt.EditRole):
-        if role != Qt.EditRole or not value:
-            return False
-        column = index.column()
-        if column == RenamesTableColumn.CLASS:
-            message = "change class name"
-        elif column == RenamesTableColumn.PARAMETER:
-            message = "change parameter name"
-        else:
-            message = "change parameter's new name"
-        previous = self._renames[index.row()][column]
-        self._undo_stack.push(SetData(message, index, value, previous, self._set_value))
-        return True
-
-    def _set_value(self, index, value):
-        """Sets class or parameter name.
-
-        Args:
-            index (QModelIndex): target index
-            value (str): new name
-        """
-        row = index.row()
-        data = self._renames[index.row()]
-        column = index.column()
-        self._renames[row] = data[:column] + (value,) + data[column + 1 :]
-        self.dataChanged.emit(index, index, [Qt.DisplayRole])
+        if role == Qt.EditRole:
+            column = index.column()
+            if column == RenamesTableColumn.CLASS:
+                message = "change class name"
+            elif column == RenamesTableColumn.PARAMETER:
+                message = "change parameter name"
+            else:
+                message = "change parameter's new name"
+            previous = self._renames[index.row()][column]
+            if value == previous:
+                return False
+            self._undo_stack.push(SetData(message, index, value, previous, RenamesRoles.SILENT_EDIT))
+            return True
+        if role == RenamesRoles.SILENT_EDIT:
+            row = index.row()
+            column = index.column()
+            self._renames[row][column] = value
+            self.dataChanged.emit(index, index, [Qt.DisplayRole])
+            return True
+        return False

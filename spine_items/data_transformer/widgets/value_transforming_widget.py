@@ -62,7 +62,7 @@ class ValueTransformingWidget(QWidget):
         """
         row = self._transformations_table_model.rowCount()
         self._undo_stack.push(
-            InsertRow("add parameter", self._transformations_table_model, row, ("class", "parameter", []))
+            InsertRow("add parameter", self._transformations_table_model, row, ["class", "parameter", []])
         )
 
     @Slot(bool)

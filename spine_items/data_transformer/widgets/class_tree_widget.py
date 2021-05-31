@@ -9,10 +9,10 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains :class:`ParameterTreeWidget`.
+Contains :class:`ClassTreeWidget`.
 
 :author: A. Soininen (VTT)
-:date:   25.5.2021
+:date:   31.5.2021
 """
 import pickle
 from PySide2.QtCore import QMimeData
@@ -22,19 +22,13 @@ from spinedb_api import DatabaseMapping, SpineDBAPIError
 from .drop_target_table import DROP_MIME_TYPE
 
 
-class ParameterTreeWidget(QTreeWidget):
-    """A tree widget with drag capabilities to show entity classes and parameters."""
+class ClassTreeWidget(QTreeWidget):
+    """A tree widget with drag capabilities to show entity classes."""
 
     def mimeData(self, items):
         mime_data = QMimeData()
-        parameters = dict()
-        for item in items:
-            if item.parent() is None:
-                for i in range(item.childCount()):
-                    parameters.setdefault(item.text(0), []).append(item.child(i).text(0))
-            else:
-                parameters.setdefault(item.parent().text(0), []).append(item.text(0))
-        mime_data.setData(DROP_MIME_TYPE, pickle.dumps(parameters))
+        classes = [item.text(0) for item in items]
+        mime_data.setData(DROP_MIME_TYPE, pickle.dumps(classes))
         return mime_data
 
     def load_data(self, url):
@@ -49,10 +43,10 @@ class ParameterTreeWidget(QTreeWidget):
         except SpineDBAPIError as error:
             QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
             return
-        parameters = dict()
+        classes = list()
         try:
-            for definition_row in db_map.query(db_map.entity_parameter_definition_sq):
-                parameters.setdefault(definition_row.entity_class_name, list()).append(definition_row.parameter_name)
+            for class_row in db_map.query(db_map.entity_class_sq):
+                classes.append(class_row.name)
         except SpineDBAPIError as error:
             QMessageBox.information(
                 self, "Error while reading database", f"Could not read from database {url}:\n{error}"
@@ -60,8 +54,5 @@ class ParameterTreeWidget(QTreeWidget):
         finally:
             db_map.connection.close()
         self.clear()
-        for class_name, parameter_names in parameters.items():
-            class_item = QTreeWidgetItem([class_name])
-            for name in parameter_names:
-                QTreeWidgetItem(class_item, [name])
-            self.addTopLevelItem(class_item)
+        for class_name in classes:
+            self.addTopLevelItem(QTreeWidgetItem([class_name]))

@@ -20,26 +20,26 @@ from PySide2.QtWidgets import QUndoCommand
 class SetData(QUndoCommand):
     """Sets model's value."""
 
-    def __init__(self, message, index, value, previous_value, callback):
+    def __init__(self, message, index, value, previous_value, role):
         """
         Args:
             message (str): undo message
             index (QModelIndex): model index
             value (Any): new value
             previous_value (Any): undo value
-            callback (Callable): function to call to set the value
+            role (int): set data role
         """
         super().__init__(message)
         self._index = index
         self._value = value
         self._previous_value = previous_value
-        self._set_value = callback
+        self._role = role
 
     def redo(self):
-        self._set_value(self._index, self._value)
+        self._index.model().setData(self._index, self._value, self._role)
 
     def undo(self):
-        self._set_value(self._index, self._previous_value)
+        self._index.model().setData(self._index, self._previous_value, self._role)
 
 
 class InsertRow(QUndoCommand):
@@ -51,8 +51,7 @@ class InsertRow(QUndoCommand):
             message (str): undo message
             model (ValueTransformationsTableModel): model
             row (int): row index
-            data (tuple): row data
-            roles (Iterable of int): data roles
+            data (Sequence): row data
         """
         super().__init__(message)
         self._model = model

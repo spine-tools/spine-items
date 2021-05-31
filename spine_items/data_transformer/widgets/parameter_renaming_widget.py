@@ -50,7 +50,7 @@ class ParameterRenamingWidget(QWidget):
             checked (bool): unused
         """
         row = self._renames_table_model.rowCount()
-        self._undo_stack.push(InsertRow("add parameter", self._renames_table_model, row, ("class", "parameter", "")))
+        self._undo_stack.push(InsertRow("add parameter", self._renames_table_model, row, ["class", "parameter", ""]))
 
     @Slot(bool)
     def _remove_parameters(self, checked):
@@ -59,12 +59,12 @@ class ParameterRenamingWidget(QWidget):
         Args:
             checked (bool): unused
         """
-        indexes = self._ui.renames_table_view.selectionModel().selectedRows()
+        indexes = self._ui.renames_table_view.selectionModel().selectedIndexes()
         if not indexes:
             return
-        rows = tuple(i.row() for i in indexes)
+        rows = set(i.row() for i in indexes)
         if len(rows) == 1:
-            self._undo_stack.push(RemoveRow("remove parameter", self._renames_table_model, rows[0]))
+            self._undo_stack.push(RemoveRow("remove parameter", self._renames_table_model, next(iter(rows))))
         else:
             self._undo_stack.beginMacro("remove parameters")
             for row in reversed(sorted(rows)):

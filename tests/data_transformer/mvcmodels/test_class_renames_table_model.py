@@ -9,7 +9,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Unit tests for :class:`RenameTableModel`.
+Unit tests for :class:`ClassRenamesTableModel`.
 
 :author: A. Soininen (VTT)
 :date:   7.1.2021
@@ -17,53 +17,50 @@ Unit tests for :class:`RenameTableModel`.
 import unittest
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QUndoStack
-from spine_items.data_transformer.mvcmodels.rename_table_model import RenameTableModel
+from spine_items.data_transformer.mvcmodels.class_renames_table_model import ClassRenamesTableModel
 
 
-class TestRenameTableModel(unittest.TestCase):
+class TestClassRenamesTableModel(unittest.TestCase):
+    def setUp(self):
+        self._undo_stack = QUndoStack()
+
+    def tearDown(self):
+        self._undo_stack.deleteLater()
+
     def test_columnCount_always_two(self):
-        model = RenameTableModel(QUndoStack(), {})
+        model = ClassRenamesTableModel(self._undo_stack, {})
         self.assertEqual(model.columnCount(), 2)
 
     def test_rowCount(self):
-        model = RenameTableModel(QUndoStack(), {})
+        model = ClassRenamesTableModel(self._undo_stack, {})
         self.assertEqual(model.rowCount(), 0)
-        model = RenameTableModel(QUndoStack(), {"a": "A", "b": "B"})
+        model = ClassRenamesTableModel(self._undo_stack, {"a": "A", "b": "B"})
         self.assertEqual(model.rowCount(), 2)
 
     def test_data(self):
-        model = RenameTableModel(QUndoStack(), {"a": "A", "b": "b"})
+        model = ClassRenamesTableModel(self._undo_stack, {"a": "A", "b": "b"})
         self.assertEqual(model.index(0, 0).data(), "a")
-        self.assertIsNone(model.index(0, 0).data(Qt.FontRole))
         self.assertEqual(model.index(0, 1).data(), "A")
-        self.assertTrue(model.index(0, 1).data(Qt.FontRole).bold())
         self.assertEqual(model.index(1, 0).data(), "b")
-        self.assertIsNone(model.index(1, 0).data(Qt.FontRole))
         self.assertEqual(model.index(1, 1).data(), "b")
-        self.assertIsNone(model.index(1, 1).data(Qt.FontRole))
 
-    def test_second_column_only_is_editable(self):
-        model = RenameTableModel(QUndoStack(), {"a": "A"})
-        self.assertFalse(model.index(0, 0).flags() & Qt.ItemIsEditable)
+    def test_both_columns_are_editable(self):
+        model = ClassRenamesTableModel(self._undo_stack, {"a": "A"})
+        self.assertTrue(model.index(0, 0).flags() & Qt.ItemIsEditable)
         self.assertTrue(model.index(0, 1).flags() & Qt.ItemIsEditable)
 
     def test_headers(self):
-        model = RenameTableModel(QUndoStack(), {"a": "A"})
+        model = ClassRenamesTableModel(self._undo_stack, {"a": "A"})
         self.assertIsNone(model.headerData(0, Qt.Vertical))
         self.assertEqual(model.headerData(0, Qt.Horizontal), "Original")
         self.assertEqual(model.headerData(1, Qt.Horizontal), "Renamed")
 
     def test_renaming_settings(self):
-        model = RenameTableModel(QUndoStack(), {"a": "A", "b": "b", "c": ""})
-        self.assertEqual(model.renaming_settings(), {"a": "A", "b": "b"})
-
-    def test_reset_originals(self):
-        model = RenameTableModel(QUndoStack(), {"a": "A", "b": "B", "c": "c", "d": "d"})
-        model.reset_originals({"a", "c", "e"})
-        self.assertEqual(model.renaming_settings(), {"a": "A", "c": "c", "e": "e"})
+        model = ClassRenamesTableModel(self._undo_stack, {"a": "A", "b": "b", "c": ""})
+        self.assertEqual(model.renaming_settings(), {"a": "A", "b": "b", "c": ""})
 
     def test_setData(self):
-        model = RenameTableModel(QUndoStack(), {"a": "A"})
+        model = ClassRenamesTableModel(self._undo_stack, {"a": "A"})
         self.assertTrue(model.setData(model.index(0, 1), "B"))
         self.assertEqual(model.renaming_settings(), {"a": "B"})
 

@@ -30,13 +30,18 @@ class TransformationsTableColumn(IntEnum):
 @unique
 class TransformationsTableRole(IntEnum):
     INSTRUCTIONS = Qt.UserRole + 1
+    SILENT_EDIT = Qt.UserRole + 2
 
 
 class ValueTransformationsTableModel(ParameterDropTargetTableModel):
     """A table model that contains parameter value transformations."""
 
     GET_DATA_ROLES = (Qt.DisplayRole, Qt.DisplayRole, TransformationsTableRole.INSTRUCTIONS)
-    SET_DATA_ROLES = (Qt.EditRole, Qt.EditRole, TransformationsTableRole.INSTRUCTIONS)
+    SET_DATA_ROLES = (
+        TransformationsTableRole.SILENT_EDIT,
+        TransformationsTableRole.SILENT_EDIT,
+        TransformationsTableRole.INSTRUCTIONS,
+    )
 
     def __init__(self, settings, undo_stack, parent):
         """
@@ -49,7 +54,7 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
         self._undo_stack = undo_stack
         if settings is not None:
             self._instructions = [
-                (klass, param, instr)
+                [klass, param, instr]
                 for klass, param_instr in settings.instructions.items()
                 for param, instr in param_instr.items()
             ]
@@ -82,7 +87,7 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
         return None
 
     def insertRows(self, row, count, parent=QModelIndex()):
-        rows = count * [("", "", [])]
+        rows = count * [["", "", []]]
         self.beginInsertRows(parent, row, row + count - 1)
         self._instructions = self._instructions[:row] + rows + self._instructions[row:]
         self.endInsertRows()
@@ -90,7 +95,7 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
 
     @staticmethod
     def _make_drop_row(entity_class, parameter):
-        return entity_class, parameter, []
+        return [entity_class, parameter, []]
 
     def removeRows(self, row, count, parent=QModelIndex()):
         self.beginRemoveRows(parent, row, row + count - 1)
@@ -108,25 +113,15 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
             column = index.column()
             message = "change class name" if column == TransformationsTableColumn.CLASS else "change parameter name"
             previous = self._instructions[index.row()][column]
-            self._undo_stack.push(SetData(message, index, value, previous, self._set_value))
+            self._undo_stack.push(SetData(message, index, value, previous, TransformationsTableRole.SILENT_EDIT))
+            return True
+        if role == TransformationsTableRole.SILENT_EDIT:
+            self._instructions[index.row()][index.column()] = value
+            self.dataChanged.emit(index, index, [Qt.DisplayRole])
             return True
         if role == TransformationsTableRole.INSTRUCTIONS and index.column() == TransformationsTableColumn.INSTRUCTIONS:
             row = index.row()
-            data = self._instructions[row]
-            self._instructions[row] = data[: TransformationsTableColumn.INSTRUCTIONS] + (value,)
+            self._instructions[row][index.column()] = value
             self.dataChanged.emit(index, index, [Qt.DisplayRole, TransformationsTableRole.INSTRUCTIONS])
             return True
         return False
-
-    def _set_value(self, index, value):
-        """Sets class or parameter name.
-
-        Args:
-            index (QModelIndex): target index
-            value (str): new name
-        """
-        row = index.row()
-        data = self._instructions[index.row()]
-        column = index.column()
-        self._instructions[row] = data[:column] + (value,) + data[column + 1 :]
-        self.dataChanged.emit(index, index, [Qt.DisplayRole])
