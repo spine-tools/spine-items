@@ -48,15 +48,15 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """
 
         super().__init__(toolbox, specification, item)
-        if specification is None:
-            specification = DataTransformerSpecification(name="")
-        self._new_spec = specification
+        self._settings = {name: None for name in _FILTER_NAMES}
         self._urls = dict()
         self._filter_widgets = dict()
         self._current_filter_name = None
         self._ui.filter_combo_box.addItems(_FILTER_NAMES)
-        if self._new_spec.settings is not None:
-            filter_name = _CLASSES_TO_DISPLAY_NAMES[type(self._new_spec.settings)]
+        if specification is not None and specification.settings is not None:
+            settings = specification.settings
+            filter_name = _CLASSES_TO_DISPLAY_NAMES[type(settings)]
+            self._settings[filter_name] = settings
         else:
             filter_name = ""
         self._set_current_filter_name(filter_name)
@@ -115,7 +115,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if widget is None:
             widget = dict(
                 zip(_FILTER_NAMES, (EntityClassRenamingWidget, ParameterRenamingWidget, ValueTransformingWidget))
-            )[filter_name](self._undo_stack, self._new_spec.settings)
+            )[filter_name](self._undo_stack, self._settings[filter_name])
             self._filter_widgets[filter_name] = widget
         layout = self._ui.filter_widget.layout()
         if layout is None:
