@@ -562,8 +562,8 @@ class SetItemMappingDimensionCount(QUndoCommand):
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
             options_widget (ImportMappingOptions): options widget
-            dimension_count (int): new dimension
-            previous_dimension (int): previous dimension
+            dimension_count (int): new dimension count
+            previous_dimension_count (int): previous dimension count
         """
         text = "mapping dimension count change"
         super().__init__(text)
@@ -572,28 +572,25 @@ class SetItemMappingDimensionCount(QUndoCommand):
         self._options_widget = options_widget
         self._dimension_count = dimension_count
         self._previous_dimension_count = previous_dimension_count
-        self._new_cls_mapping = None
-        self._new_obj_mapping = None
+        self._cls_mappings = []
+        self._obj_mappings = []
 
     def redo(self):
         """Changes the item mapping's dimension to the new value."""
-        self._new_cls_mapping, self._new_obj_mapping = self._options_widget.set_dimension_count(
-            self._source_table_name,
-            self._mapping_specification_name,
-            self._dimension_count,
-            self._new_cls_mapping,
-            self._new_obj_mapping,
+        self._cls_mappings, self._obj_mappings = self._options_widget.set_dimension_count(
+            self._source_table_name, self._mapping_specification_name, self._dimension_count
         )
 
     def undo(self):
         """Changes the item mapping's dimension to its previous value."""
-        self._new_cls_mapping, self._new_obj_mapping = self._options_widget.set_dimension_count(
-            self._source_table_name,
-            self._mapping_specification_name,
-            self._previous_dimension_count,
-            self._new_cls_mapping,
-            self._new_obj_mapping,
-        )
+        if self._cls_mappings or self._obj_mappings:
+            self._options_widget.restore_relationship_mappings(
+                self._source_table_name, self._mapping_specification_name, self._cls_mappings, self._obj_mappings
+            )
+        else:
+            self._options_widget.set_dimension_count(
+                self._source_table_name, self._mapping_specification_name, self._previous_dimension_count
+            )
 
 
 class SetTimeSeriesRepeatFlag(QUndoCommand):
@@ -648,22 +645,24 @@ class SetMapDimensionCount(QUndoCommand):
         self._options_widget = options_widget
         self._dimension_count = dimension_count
         self._previous_dimension_count = previous_dimension_count
-        self._new_index_mapping = None
+        self._removed_mappings = []
 
     def redo(self):
         """Sets the Map dimension_count to the new value."""
-        self._new_index_mapping = self._options_widget.set_map_dimension_count(
-            self._source_table_name, self._mapping_specification_name, self._dimension_count, self._new_index_mapping
+        self._removed_mappings = self._options_widget.set_map_dimension_count(
+            self._source_table_name, self._mapping_specification_name, self._dimension_count
         )
 
     def undo(self):
         """Restores the previous Map dimension_count value."""
-        self._new_index_mapping = self._options_widget.set_map_dimension_count(
-            self._source_table_name,
-            self._mapping_specification_name,
-            self._previous_dimension_count,
-            self._new_index_mapping,
-        )
+        if self._removed_mappings:
+            self._options_widget.restore_index_mappings(
+                self._source_table_name, self._mapping_specification_name, self._removed_mappings
+            )
+        else:
+            self._options_widget.set_map_dimension_count(
+                self._source_table_name, self._mapping_specification_name, self._previous_dimension_count
+            )
 
 
 class SetMapCompressFlag(QUndoCommand):
