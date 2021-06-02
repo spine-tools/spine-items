@@ -249,6 +249,8 @@ class InstructionsEditor(QObject):
             current (QModelIndex): new index in parameters table
             previous (QModelIndex): previous index in parameters table
         """
+        sorted_model = self._ui.transformations_table_view.model()
+        current = sorted_model.mapToSource(current)
         if current.row() == self._transformations_table_index.row():
             return
         self._remove_operation_widgets()

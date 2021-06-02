@@ -14,7 +14,7 @@ Contains classes to manage parameter renaming.
 :author: A. Soininen (VTT)
 :date:   31.5.2021
 """
-from PySide2.QtCore import QObject, Slot
+from PySide2.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.parameter_renames_table_model import ParameterRenamesTableModel, RenamesTableColumn
@@ -34,7 +34,10 @@ class ParameterRename(QObject):
         self._ui = ui
         self._undo_stack = undo_stack
         self._rename_table_model = ParameterRenamesTableModel(settings, self._undo_stack, self)
-        self._ui.parameter_rename_table_view.setModel(self._rename_table_model)
+        self._sorted_rename_table_model = QSortFilterProxyModel(self)
+        self._sorted_rename_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
+        self._sorted_rename_table_model.setSourceModel(self._rename_table_model)
+        self._ui.parameter_rename_table_view.setModel(self._sorted_rename_table_model)
         self._ui.parameter_rename_table_view.addAction(self._ui.remove_parameter_rename_action)
         self._ui.add_parameter_button.clicked.connect(self._add_parameter)
         self._ui.remove_parameter_button.clicked.connect(self._ui.remove_parameter_rename_action.trigger)
@@ -60,7 +63,7 @@ class ParameterRename(QObject):
         indexes = self._ui.parameter_rename_table_view.selectionModel().selectedIndexes()
         if not indexes:
             return
-        rows = set(i.row() for i in indexes)
+        rows = set(self._sorted_rename_table_model.mapToSource(i).row() for i in indexes)
         if len(rows) == 1:
             self._undo_stack.push(RemoveRow("remove parameter", self._rename_table_model, next(iter(rows))))
         else:

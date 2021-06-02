@@ -14,7 +14,7 @@ Contains classes to manage parameter value transformation.
 :author: A. Soininen (VTT)
 :date:   1.6.2021
 """
-from PySide2.QtCore import QObject, Slot
+from PySide2.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.value_transformations_table_model import (
@@ -39,7 +39,10 @@ class ValueTransformation(QObject):
         self._undo_stack = undo_stack
         self._ui = ui
         self._transformation_table_model = ValueTransformationsTableModel(settings, self._undo_stack, self)
-        self._ui.transformations_table_view.setModel(self._transformation_table_model)
+        self._sorted_transformation_table_model = QSortFilterProxyModel(self)
+        self._sorted_transformation_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
+        self._sorted_transformation_table_model.setSourceModel(self._transformation_table_model)
+        self._ui.transformations_table_view.setModel(self._sorted_transformation_table_model)
         self._instructions_editor = InstructionsEditor(
             self._ui, self._transformation_table_model, self._undo_stack, self
         )
@@ -70,7 +73,7 @@ class ValueTransformation(QObject):
         indexes = self._ui.transformations_table_view.selectionModel().selectedRows()
         if not indexes:
             return
-        rows = tuple(i.row() for i in indexes)
+        rows = tuple(self._sorted_transformation_table_model.mapToSource(i).row() for i in indexes)
         if len(rows) == 1:
             self._undo_stack.push(RemoveRow("remove parameter", self._transformation_table_model, rows[0]))
         else:

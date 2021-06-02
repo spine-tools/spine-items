@@ -197,6 +197,7 @@ class Ui_MainWindow(object):
         self.parameter_rename_table_view = DropTargetTable(self.dockWidgetContents_4)
         self.parameter_rename_table_view.setObjectName(u"parameter_rename_table_view")
         self.parameter_rename_table_view.setDragDropMode(QAbstractItemView.DropOnly)
+        self.parameter_rename_table_view.setSortingEnabled(True)
         self.parameter_rename_table_view.horizontalHeader().setStretchLastSection(True)
 
         self.verticalLayout_4.addWidget(self.parameter_rename_table_view)
@@ -235,6 +236,7 @@ class Ui_MainWindow(object):
         self.transformations_table_view.setDragDropMode(QAbstractItemView.DropOnly)
         self.transformations_table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.transformations_table_view.setShowGrid(False)
+        self.transformations_table_view.setSortingEnabled(True)
         self.transformations_table_view.horizontalHeader().setStretchLastSection(True)
 
         self.verticalLayout_5.addWidget(self.transformations_table_view)

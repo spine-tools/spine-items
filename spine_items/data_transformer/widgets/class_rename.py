@@ -14,7 +14,7 @@ Contains classes to manage entity class renaming.
 :author: A. Soininen (VTT)
 :date:   1.6.2021
 """
-from PySide2.QtCore import QObject, Slot, QSortFilterProxyModel
+from PySide2.QtCore import QObject, Qt, Slot, QSortFilterProxyModel
 
 from ..commands import RemoveRow, InsertRow
 from ..mvcmodels.class_renames_table_model import ClassRenamesTableModel
@@ -36,7 +36,7 @@ class ClassRename(QObject):
         name_map = settings.name_map if isinstance(settings, EntityClassRenamingSettings) else {}
         self._rename_table_model = ClassRenamesTableModel(undo_stack, name_map)
         self._sorted_rename_table_model = QSortFilterProxyModel(self)
-        self._sorted_rename_table_model.setSortCaseSensitivity(False)
+        self._sorted_rename_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
         self._sorted_rename_table_model.setSourceModel(self._rename_table_model)
         self._ui.class_rename_table_view.setModel(self._sorted_rename_table_model)
         self._ui.class_rename_table_view.addAction(self._ui.remove_class_rename_action)
