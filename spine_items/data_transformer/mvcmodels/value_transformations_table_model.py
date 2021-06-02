@@ -77,7 +77,7 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
 
     def flags(self, index):
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDropEnabled
-        if index.row() != TransformationsTableColumn.INSTRUCTIONS:
+        if index.column() != TransformationsTableColumn.INSTRUCTIONS:
             flags |= Qt.ItemIsEditable
         return flags
 
