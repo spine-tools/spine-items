@@ -9,49 +9,44 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains a widget to set up a value transformer manipulator.
+Contains classes to manage parameter value transformation.
 
 :author: A. Soininen (VTT)
-:date:   24.5.2021
+:date:   1.6.2021
 """
-from PySide2.QtCore import Slot, Qt
-from PySide2.QtWidgets import QWidget, QMessageBox, QTreeWidgetItem
+from PySide2.QtCore import QObject, Slot
 
-from spinedb_api import DatabaseMapping, SpineDBAPIError
 from ..commands import InsertRow, RemoveRow
-from ..settings import ValueTransformSettings
 from ..mvcmodels.value_transformations_table_model import (
     ValueTransformationsTableModel,
     TransformationsTableColumn,
     TransformationsTableRole,
 )
 from .instructions_editor import InstructionsEditor
+from ..settings import ValueTransformSettings
 
 
-class ValueTransformingWidget(QWidget):
-    """A widget to edit parameter value transformer settings."""
-
-    def __init__(self, undo_stack, settings=None):
+class ValueTransformation(QObject):
+    def __init__(self, ui, undo_stack, settings, parent):
         """
         Args:
-            undo_stack (QUndoStack)
-            settings (ValueTransformSettings, optional): filter settings
+            ui (Ui_Form): specification editor's UI
+            undo_stack (QUndoStack): undo stack
+            settings (ValueTransformSettings, optional): initial settings
+            parent (QObject): parent object
         """
-        super().__init__()
+        super().__init__(parent)
         self._undo_stack = undo_stack
-        from ..ui.value_transformer_editor import Ui_Form
-
-        self._ui = Ui_Form()
-        self._ui.setupUi(self)
-        self._transformations_table_model = ValueTransformationsTableModel(settings, self._undo_stack, self)
-        self._ui.transformations_table_view.setModel(self._transformations_table_model)
+        self._ui = ui
+        self._transformation_table_model = ValueTransformationsTableModel(settings, self._undo_stack, self)
+        self._ui.transformations_table_view.setModel(self._transformation_table_model)
         self._instructions_editor = InstructionsEditor(
-            self._ui, self._transformations_table_model, self._undo_stack, self
+            self._ui, self._transformation_table_model, self._undo_stack, self
         )
-        self._ui.add_parameter_button.clicked.connect(self._add_parameter)
-        self._ui.remove_parameter_button.clicked.connect(self._ui.remove_parameter_action.trigger)
-        self._ui.remove_parameter_action.triggered.connect(self._remove_parameters)
-        self._ui.transformations_table_view.addAction(self._ui.remove_parameter_action)
+        self._ui.add_transformation_button.clicked.connect(self._add_parameter)
+        self._ui.remove_transformation_button.clicked.connect(self._ui.remove_value_transformation_action.trigger)
+        self._ui.remove_value_transformation_action.triggered.connect(self._remove_parameters)
+        self._ui.transformations_table_view.addAction(self._ui.remove_value_transformation_action)
 
     @Slot(bool)
     def _add_parameter(self, checked):
@@ -60,9 +55,9 @@ class ValueTransformingWidget(QWidget):
         Args:
             checked (bool): unused
         """
-        row = self._transformations_table_model.rowCount()
+        row = self._transformation_table_model.rowCount()
         self._undo_stack.push(
-            InsertRow("add parameter", self._transformations_table_model, row, ["class", "parameter", []])
+            InsertRow("add parameter", self._transformation_table_model, row, ["class", "parameter", []])
         )
 
     @Slot(bool)
@@ -77,11 +72,11 @@ class ValueTransformingWidget(QWidget):
             return
         rows = tuple(i.row() for i in indexes)
         if len(rows) == 1:
-            self._undo_stack.push(RemoveRow("remove parameter", self._transformations_table_model, rows[0]))
+            self._undo_stack.push(RemoveRow("remove parameter", self._transformation_table_model, rows[0]))
         else:
             self._undo_stack.beginMacro("remove parameters")
             for row in reversed(sorted(rows)):
-                self._undo_stack.push(RemoveRow("", self._transformations_table_model, row))
+                self._undo_stack.push(RemoveRow("", self._transformation_table_model, row))
             self._undo_stack.endMacro()
 
     def load_data(self, url):
@@ -101,11 +96,25 @@ class ValueTransformingWidget(QWidget):
             FilterSettings: settings
         """
         settings = dict()
-        for row in range(self._transformations_table_model.rowCount()):
-            entity_class = self._transformations_table_model.index(row, TransformationsTableColumn.CLASS).data()
-            parameter = self._transformations_table_model.index(row, TransformationsTableColumn.PARAMETER).data()
-            instructions = self._transformations_table_model.index(row, TransformationsTableColumn.INSTRUCTIONS).data(
+        for row in range(self._transformation_table_model.rowCount()):
+            entity_class = self._transformation_table_model.index(row, TransformationsTableColumn.CLASS).data()
+            parameter = self._transformation_table_model.index(row, TransformationsTableColumn.PARAMETER).data()
+            instructions = self._transformation_table_model.index(row, TransformationsTableColumn.INSTRUCTIONS).data(
                 TransformationsTableRole.INSTRUCTIONS
             )
             settings.setdefault(entity_class, {})[parameter] = instructions
         return ValueTransformSettings(settings)
+
+    def show(self):
+        """Shows docks."""
+        self._ui.load_database_dock.show()
+        self._ui.possible_parameters_dock.show()
+        self._ui.value_transformation_dock.show()
+        self._ui.value_instructions_dock.show()
+
+    def tear_down(self):
+        """Hides docks and releases resources."""
+        self._ui.load_database_dock.hide()
+        self._ui.possible_parameters_dock.hide()
+        self._ui.value_transformation_dock.hide()
+        self._ui.value_instructions_dock.hide()

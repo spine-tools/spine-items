@@ -9,40 +9,37 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains a widget to set up a renamer filter.
+Contains classes to manage entity class renaming.
 
 :author: A. Soininen (VTT)
-:date:   30.10.2020
+:date:   1.6.2021
 """
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QWidget
+from PySide2.QtCore import QObject, Slot
+
+from ..commands import RemoveRow, InsertRow
 from ..mvcmodels.class_renames_table_model import ClassRenamesTableModel
 from ..settings import EntityClassRenamingSettings
-from ..commands import InsertRow, RemoveRow
 
 
-class EntityClassRenamingWidget(QWidget):
-    """Widget for entity class renamer settings."""
-
-    def __init__(self, undo_stack, settings=None):
+class ClassRename(QObject):
+    def __init__(self, ui, undo_stack, settings, parent):
         """
         Args:
+            ui (Ui_Form): specification editor's UI
             undo_stack (QUndoStack): undo stack
-            settings (EntityClassRenamingSettings): filter settings
+            settings (EntityClassRenamingSettings, optional): initial settings
+            parent (QObject): parent object
         """
-        super().__init__()
-        from ..ui.class_renamer_editor import Ui_Form  # pylint: disable=import-outside-toplevel
-
+        super().__init__(parent)
+        self._ui = ui
         self._undo_stack = undo_stack
-        self._ui = Ui_Form()
-        self._ui.setupUi(self)
         name_map = settings.name_map if isinstance(settings, EntityClassRenamingSettings) else {}
         self._rename_table_model = ClassRenamesTableModel(undo_stack, name_map)
-        self._ui.renaming_table_view.setModel(self._rename_table_model)
-        self._ui.renaming_table_view.addAction(self._ui.remove_class_action)
+        self._ui.class_rename_table_view.setModel(self._rename_table_model)
+        self._ui.class_rename_table_view.addAction(self._ui.remove_class_rename_action)
         self._ui.add_class_button.clicked.connect(self._add_class)
-        self._ui.remove_class_action.triggered.connect(self._remove_class)
-        self._ui.remove_class_button.clicked.connect(self._ui.remove_class_action.trigger)
+        self._ui.remove_class_rename_action.triggered.connect(self._remove_class)
+        self._ui.remove_class_button.clicked.connect(self._ui.remove_class_rename_action.trigger)
 
     @Slot(bool)
     def _add_class(self, checked):
@@ -61,7 +58,7 @@ class EntityClassRenamingWidget(QWidget):
         Args:
             checked (bool) unused
         """
-        indexes = self._ui.renaming_table_view.selectionModel().selectedIndexes()
+        indexes = self._ui.class_rename_table_view.selectionModel().selectedIndexes()
         if not indexes:
             return
         rows = set(i.row() for i in indexes)
@@ -90,3 +87,15 @@ class EntityClassRenamingWidget(QWidget):
             FilterSettings: settings
         """
         return EntityClassRenamingSettings(self._rename_table_model.renaming_settings())
+
+    def show(self):
+        """Shows docks."""
+        self._ui.load_database_dock.show()
+        self._ui.possible_classes_dock.show()
+        self._ui.class_rename_dock.show()
+
+    def tear_down(self):
+        """Hides docks and releases resources."""
+        self._ui.load_database_dock.hide()
+        self._ui.possible_classes_dock.hide()
+        self._ui.class_rename_dock.hide()
