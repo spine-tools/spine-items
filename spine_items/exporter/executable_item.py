@@ -21,7 +21,7 @@ from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spinedb_api import clear_filter_configs
-from spine_items.utils import Database
+from spine_items.utils import Database, EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 from .do_work import do_work
 from ..exporter_executable_item_base import ExporterExecutableItemBase
 from .item_info import ItemInfo
@@ -86,7 +86,11 @@ class ExecutableItem(ExporterExecutableItemBase):
         # result contains only the success flag if execution was forcibly stopped.
         if len(result) > 1:
             self._result_files = result[1]
-            file_name = "__export-manifest-" + self.filter_id + ".json" if self.filter_id else "__export-manifest.json"
+            file_name = (
+                (EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + self.filter_id)
+                if self.filter_id
+                else EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
+            ) + ".json"
             with open(Path(self._data_dir, file_name), "w") as manifest:
                 dump({label: list(files) for label, files in self._result_files.items()}, manifest)
         self._process = None
