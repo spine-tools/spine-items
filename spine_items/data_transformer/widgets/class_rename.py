@@ -14,7 +14,7 @@ Contains classes to manage entity class renaming.
 :author: A. Soininen (VTT)
 :date:   1.6.2021
 """
-from PySide2.QtCore import QObject, Slot
+from PySide2.QtCore import QObject, Slot, QSortFilterProxyModel
 
 from ..commands import RemoveRow, InsertRow
 from ..mvcmodels.class_renames_table_model import ClassRenamesTableModel
@@ -35,7 +35,10 @@ class ClassRename(QObject):
         self._undo_stack = undo_stack
         name_map = settings.name_map if isinstance(settings, EntityClassRenamingSettings) else {}
         self._rename_table_model = ClassRenamesTableModel(undo_stack, name_map)
-        self._ui.class_rename_table_view.setModel(self._rename_table_model)
+        self._sorted_rename_table_model = QSortFilterProxyModel(self)
+        self._sorted_rename_table_model.setSortCaseSensitivity(False)
+        self._sorted_rename_table_model.setSourceModel(self._rename_table_model)
+        self._ui.class_rename_table_view.setModel(self._sorted_rename_table_model)
         self._ui.class_rename_table_view.addAction(self._ui.remove_class_rename_action)
         self._ui.add_class_button.clicked.connect(self._add_class)
         self._ui.remove_class_rename_action.triggered.connect(self._remove_class)
@@ -61,7 +64,7 @@ class ClassRename(QObject):
         indexes = self._ui.class_rename_table_view.selectionModel().selectedIndexes()
         if not indexes:
             return
-        rows = set(i.row() for i in indexes)
+        rows = set(self._sorted_rename_table_model.mapToSource(i).row() for i in indexes)
         if len(rows) == 1:
             self._undo_stack.push(RemoveRow("remove class", self._rename_table_model, next(iter(rows))))
         else:
