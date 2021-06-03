@@ -19,9 +19,13 @@ from PySide2.QtCore import QObject, Qt, Slot, QSortFilterProxyModel
 from ..commands import RemoveRow, InsertRow
 from ..mvcmodels.class_renames_table_model import ClassRenamesTableModel
 from ..settings import EntityClassRenamingSettings
+from .copy_paste import copy_table_data, paste_table_data
 
 
 class ClassRename(QObject):
+
+    _MIME_TYPE = "application/spine-dtclassrename"
+
     def __init__(self, ui, undo_stack, settings, parent):
         """
         Args:
@@ -43,6 +47,10 @@ class ClassRename(QObject):
         self._ui.add_class_button.clicked.connect(self._add_class)
         self._ui.remove_class_rename_action.triggered.connect(self._remove_class)
         self._ui.remove_class_button.clicked.connect(self._ui.remove_class_rename_action.trigger)
+        self._ui.class_rename_table_view.addAction(self._ui.copy_class_rename_data_action)
+        self._ui.copy_class_rename_data_action.triggered.connect(self._copy_table_data)
+        self._ui.class_rename_table_view.addAction(self._ui.paste_class_rename_data_action)
+        self._ui.paste_class_rename_data_action.triggered.connect(self._paste_table_data)
 
     @Slot(bool)
     def _add_class(self, checked):
@@ -81,6 +89,24 @@ class ClassRename(QObject):
             url (str): database URL
         """
         self._ui.available_classes_tree_widget.load_data(url)
+
+    @Slot(bool)
+    def _copy_table_data(self, checked):
+        """Copies data to clipboard.
+
+        Args:
+            checked (bool): unused
+        """
+        copy_table_data(self._ui.class_rename_table_view, self._MIME_TYPE)
+
+    @Slot(bool)
+    def _paste_table_data(self, checked):
+        """Pastes data from clipboard.
+
+        Args:
+            checked (bool): unused
+        """
+        paste_table_data(self._ui.class_rename_table_view, self._MIME_TYPE, self._undo_stack)
 
     def settings(self):
         """

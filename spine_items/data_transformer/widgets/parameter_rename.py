@@ -19,9 +19,13 @@ from PySide2.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.parameter_renames_table_model import ParameterRenamesTableModel, RenamesTableColumn
 from ..settings import ParameterRenamingSettings
+from .copy_paste import copy_table_data, paste_table_data
 
 
 class ParameterRename(QObject):
+
+    _MIME_TYPE = "application/spine-dtparameterrename"
+
     def __init__(self, ui, undo_stack, settings, parent):
         """
         Args:
@@ -42,9 +46,13 @@ class ParameterRename(QObject):
         self._ui.add_parameter_button.clicked.connect(self._add_parameter)
         self._ui.remove_parameter_button.clicked.connect(self._ui.remove_parameter_rename_action.trigger)
         self._ui.remove_parameter_rename_action.triggered.connect(self._remove_parameters)
+        self._ui.parameter_rename_table_view.addAction(self._ui.copy_parameter_rename_data_action)
+        self._ui.copy_parameter_rename_data_action.triggered.connect(self._copy_table_data)
+        self._ui.parameter_rename_table_view.addAction(self._ui.paste_parameter_rename_data_action)
+        self._ui.paste_parameter_rename_data_action.triggered.connect(self._paste_table_data)
 
     @Slot(bool)
-    def _add_parameter(self, checked):
+    def _add_parameter(self, checked=True):
         """Adds a new parameter row.
 
         Args:
@@ -71,6 +79,24 @@ class ParameterRename(QObject):
             for row in reversed(sorted(rows)):
                 self._undo_stack.push(RemoveRow("", self._rename_table_model, row))
             self._undo_stack.endMacro()
+
+    @Slot(bool)
+    def _copy_table_data(self, checked):
+        """Copies data to clipboard.
+
+        Args:
+            checked (bool): unused
+        """
+        copy_table_data(self._ui.parameter_rename_table_view, self._MIME_TYPE)
+
+    @Slot(bool)
+    def _paste_table_data(self, checked):
+        """Pastes data from clipboard.
+
+        Args:
+            checked (bool): unused
+        """
+        paste_table_data(self._ui.parameter_rename_table_view, self._MIME_TYPE, self._undo_stack)
 
     def load_data(self, url):
         """

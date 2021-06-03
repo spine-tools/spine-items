@@ -22,11 +22,15 @@ from ..mvcmodels.value_transformations_table_model import (
     TransformationsTableColumn,
     TransformationsTableRole,
 )
+from .copy_paste import copy_table_data, paste_table_data
 from .instructions_editor import InstructionsEditor
 from ..settings import ValueTransformSettings
 
 
 class ValueTransformation(QObject):
+
+    _MIME_TYPE = "application/spine-dtparameterrename"
+
     def __init__(self, ui, undo_stack, settings, parent):
         """
         Args:
@@ -50,6 +54,10 @@ class ValueTransformation(QObject):
         self._ui.remove_transformation_button.clicked.connect(self._ui.remove_value_transformation_action.trigger)
         self._ui.remove_value_transformation_action.triggered.connect(self._remove_parameters)
         self._ui.transformations_table_view.addAction(self._ui.remove_value_transformation_action)
+        self._ui.transformations_table_view.addAction(self._ui.copy_value_transformation_data_action)
+        self._ui.copy_value_transformation_data_action.triggered.connect(self._copy_table_data)
+        self._ui.transformations_table_view.addAction(self._ui.paste_value_transformation_data_action)
+        self._ui.paste_value_transformation_data_action.triggered.connect(self._paste_table_data)
 
     @Slot(bool)
     def _add_parameter(self, checked):
@@ -90,6 +98,24 @@ class ValueTransformation(QObject):
             url (str): database URL
         """
         self._ui.available_parameters_tree_view.load_data(url)
+
+    @Slot(bool)
+    def _copy_table_data(self, checked):
+        """Copies data to clipboard.
+
+        Args:
+            checked (bool): unused
+        """
+        copy_table_data(self._ui.transformations_table_view, self._MIME_TYPE)
+
+    @Slot(bool)
+    def _paste_table_data(self, checked):
+        """Pastes data from clipboard.
+
+        Args:
+            checked (bool): unused
+        """
+        paste_table_data(self._ui.transformations_table_view, self._MIME_TYPE, self._undo_stack)
 
     def settings(self):
         """

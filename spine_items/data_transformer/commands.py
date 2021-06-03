@@ -36,7 +36,8 @@ class SetData(QUndoCommand):
         self._role = role
 
     def redo(self):
-        self._index.model().setData(self._index, self._value, self._role)
+        success = self._index.model().setData(self._index, self._value, self._role)
+        self.setObsolete(not success)
 
     def undo(self):
         self._index.model().setData(self._index, self._previous_value, self._role)
@@ -51,7 +52,7 @@ class InsertRow(QUndoCommand):
             message (str): undo message
             model (ValueTransformationsTableModel): model
             row (int): row index
-            data (Sequence): row data
+            data (Sequence, optional): row data
         """
         super().__init__(message)
         self._model = model
@@ -60,6 +61,8 @@ class InsertRow(QUndoCommand):
 
     def redo(self):
         self._model.insertRow(self._row)
+        if self._data is None:
+            return
         for column, (element, role) in enumerate(zip(self._data, self._model.SET_DATA_ROLES)):
             index = self._model.index(self._row, column)
             self._model.setData(index, element, role)

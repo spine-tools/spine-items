@@ -108,7 +108,7 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
 
     def setData(self, index, value, role=Qt.EditRole):
         if role == Qt.EditRole:
-            if not value:
+            if not value or not isinstance(value, str):
                 return False
             column = index.column()
             message = "change class name" if column == TransformationsTableColumn.CLASS else "change parameter name"
@@ -116,10 +116,14 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
             self._undo_stack.push(SetData(message, index, value, previous, TransformationsTableRole.SILENT_EDIT))
             return True
         if role == TransformationsTableRole.SILENT_EDIT:
+            if not isinstance(value, str):
+                return False
             self._instructions[index.row()][index.column()] = value
             self.dataChanged.emit(index, index, [Qt.DisplayRole])
             return True
         if role == TransformationsTableRole.INSTRUCTIONS and index.column() == TransformationsTableColumn.INSTRUCTIONS:
+            if not isinstance(value, list):
+                return False
             row = index.row()
             self._instructions[row][index.column()] = value
             self.dataChanged.emit(index, index, [Qt.DisplayRole, TransformationsTableRole.INSTRUCTIONS])
