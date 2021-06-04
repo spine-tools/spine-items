@@ -38,7 +38,6 @@ setup(
     install_requires=[
         "spinedb_api >=0.12.3",
         "spine_engine >=0.10.0",
-        "spinetoolbox >=0.6.0",
     ],
     include_package_data=True,
     license="LGPL-3.0-or-later",

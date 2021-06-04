@@ -1,0 +1,2 @@
+# Spine Toolbox is required but is not listed in setup.py due to circular dependency from the Toolbox
+spinetoolbox >=0.6.0
