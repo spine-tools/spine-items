@@ -302,9 +302,6 @@ class Ui_MainWindow(object):
         self.instruction_options_layout.setWidget(0, QFormLayout.LabelRole, self.label_2)
 
         self.operation_combo_box = QComboBox(self.dockWidgetContents_6)
-        self.operation_combo_box.addItem("")
-        self.operation_combo_box.addItem("")
-        self.operation_combo_box.addItem("")
         self.operation_combo_box.setObjectName(u"operation_combo_box")
 
         self.instruction_options_layout.setWidget(0, QFormLayout.FieldRole, self.operation_combo_box)
@@ -444,10 +441,6 @@ class Ui_MainWindow(object):
         self.add_instruction_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.remove_instruction_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Operation:", None))
-        self.operation_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"multiply", None))
-        self.operation_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"negate", None))
-        self.operation_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"invert", None))
-
         self.possible_classes_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Possible classes", None))
         self.class_rename_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Rename classes", None))
         self.add_class_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))

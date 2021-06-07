@@ -16,8 +16,18 @@ Contains controller that manages value transformations editor.
 """
 from PySide2.QtCore import QModelIndex, QObject, Slot
 from PySide2.QtWidgets import QLineEdit, QFormLayout
-from ..commands import AppendInstruction, ChangeMultiplier, ChangeOperation, RemoveInstruction
+from ..commands import AppendInstruction, ChangeInstructionParameter, ChangeOperation, RemoveInstruction
 from ..mvcmodels.value_transformations_table_model import TransformationsTableColumn, TransformationsTableRole
+
+
+_DISPLAY_TEXT_TO_OPERATION = {
+    "multiply": "multiply",
+    "invert": "invert,",
+    "negate": "negate",
+    "generate index": "generate_index",
+}
+
+_OPERATION_TO_DISPLAY_TEXT = {op: label for label, op in _DISPLAY_TEXT_TO_OPERATION.items()}
 
 
 class InstructionsEditor(QObject):
@@ -34,6 +44,8 @@ class InstructionsEditor(QObject):
         self._transformations_table_index = QModelIndex()
         self._undo_stack = undo_stack
         self._ui = ui
+        for operation_label in _DISPLAY_TEXT_TO_OPERATION:
+            self._ui.operation_combo_box.addItem(operation_label)
         self._ui.add_instruction_button.clicked.connect(self._add_instruction)
         self._ui.remove_instruction_button.clicked.connect(self._ui.remove_instruction_action.trigger)
         self._ui.remove_instruction_action.triggered.connect(self._remove_instruction)
@@ -49,9 +61,12 @@ class InstructionsEditor(QObject):
         Args:
             checked (bool): unused
         """
-        instruction = {"operation": self._ui.operation_combo_box.itemText(0)}
-        if instruction["operation"] == "multiply":
+        operation = _DISPLAY_TEXT_TO_OPERATION[self._ui.operation_combo_box.itemText(0)]
+        instruction = {"operation": operation}
+        if operation == "multiply":
             instruction["rhs"] = 1.0
+        elif operation == "generate_index":
+            instruction["expression"] = ""
         self._undo_stack.push(AppendInstruction(self, instruction))
 
     def append_instruction(self, instruction):
@@ -89,6 +104,8 @@ class InstructionsEditor(QObject):
             checked (bool): unused
         """
         row = self._ui.instructions_list_view.currentRow()
+        if row < 0:
+            return
         self._undo_stack.push(RemoveInstruction(self, row))
 
     def pop_instruction(self, i):
@@ -131,14 +148,14 @@ class InstructionsEditor(QObject):
         self._enable_widgets()
 
     @Slot(str)
-    def _change_operation(self, operation):
+    def _change_operation(self, operation_label):
         """Pushes a change operation command to undo stack.
 
         Args:
-            operation (str): operation
+            operation_label (str): operation's display text
         """
         row = self._ui.instructions_list_view.currentRow()
-        self._undo_stack.push(ChangeOperation(self, row, operation))
+        self._undo_stack.push(ChangeOperation(self, row, _DISPLAY_TEXT_TO_OPERATION[operation_label]))
 
     def set_operation(self, i, operation):
         """Sets an operation for instruction.
@@ -153,6 +170,8 @@ class InstructionsEditor(QObject):
         instruction = {"operation": operation}
         if operation == "multiply":
             instruction["rhs"] = 1.0
+        elif operation == "generate_index":
+            instruction["expression"] = ""
         instructions[i] = instruction
         self._transformations_table_model.setData(
             self._transformations_table_index, instructions, TransformationsTableRole.INSTRUCTIONS
@@ -218,7 +237,7 @@ class InstructionsEditor(QObject):
         instruction = instructions[row]
         operation = instruction["operation"]
         self._ui.operation_combo_box.currentTextChanged.disconnect(self._change_operation)
-        self._ui.operation_combo_box.setCurrentText(operation)
+        self._ui.operation_combo_box.setCurrentText(_OPERATION_TO_DISPLAY_TEXT[operation])
         self._ui.operation_combo_box.currentTextChanged.connect(self._change_operation)
         self._make_operation_widgets(operation)
         self._update_operation_widgets()
@@ -235,6 +254,12 @@ class InstructionsEditor(QObject):
             edit = QLineEdit()
             edit.editingFinished.connect(self._change_multiply_multiplier)
             self._ui.instruction_options_layout.addRow("Multiplier:", edit)
+        elif operation == "generate_index":
+            edit = QLineEdit()
+            edit.setPlaceholderText("Enter Python expression...")
+            edit.setToolTip("A Python expression, e.g. f'T{i:03}' for T001, T002,...")
+            edit.editingFinished.connect(self._change_index_generator_expression)
+            self._ui.instruction_options_layout.addRow("Expression:", edit)
 
     def _remove_operation_widgets(self):
         """Removes operation-specific widgets from instruction option layout."""
@@ -267,18 +292,23 @@ class InstructionsEditor(QObject):
         if operation == "multiply":
             edit = self._ui.instruction_options_layout.itemAt(1, QFormLayout.FieldRole).widget()
             edit.setText(str(instruction["rhs"]))
+        elif operation == "generate_index":
+            edit = self._ui.instruction_options_layout.itemAt(1, QFormLayout.FieldRole).widget()
+            edit.setText(str(instruction["expression"]))
 
     @Slot()
     def _change_multiply_multiplier(self):
+        """Pushes a command to change multiplier coefficient to undo stack."""
         row = self._ui.instructions_list_view.currentRow()
         edit = self._ui.instruction_options_layout.itemAt(1, QFormLayout.FieldRole).widget()
         try:
             multiplier = float(edit.text())
         except ValueError:
             return
-        self._undo_stack.push(ChangeMultiplier(self, row, multiplier))
+        previous_multiplier = self.instruction(row)["rhs"]
+        self._undo_stack.push(ChangeInstructionParameter(row, multiplier, previous_multiplier, self._set_multiplier))
 
-    def set_multiplier(self, i, multiplier):
+    def _set_multiplier(self, i, multiplier):
         """Sets multiply operation's multiplier.
 
         Args:
@@ -295,3 +325,38 @@ class InstructionsEditor(QObject):
         edit = self._ui.instruction_options_layout.itemAt(1, QFormLayout.FieldRole).widget()
         if i == self._ui.instructions_list_view.currentRow() and str(multiplier) != edit.text():
             edit.setText(str(multiplier))
+
+    @Slot()
+    def _change_index_generator_expression(self):
+        """Pushes a command that changes index generator expression to undo stack."""
+        row = self._ui.instructions_list_view.currentRow()
+        edit = self._ui.instruction_options_layout.itemAt(1, QFormLayout.FieldRole).widget()
+        expression = edit.text()
+        try:
+            eval(expression, {}, {"i": 1})
+        except (AttributeError, NameError, SyntaxError, ValueError):
+            self._ui.statusbar.showMessage("Invalid expression for index generator.", timeout=5000)
+            if not edit.hasFocus():
+                edit.setText(self.instruction(row)["expression"])
+            return
+        self._ui.statusbar.clearMessage()
+        previous_expression = self.instruction(row)["expression"]
+        self._undo_stack.push(ChangeInstructionParameter(row, expression, previous_expression, self._set_expression))
+
+    def _set_expression(self, i, expression):
+        """Sets index generator expression.
+
+        Args:
+            i (int): instruction index
+            expression (str): new expression
+        """
+        instructions = self._transformations_table_model.data(
+            self._transformations_table_index, TransformationsTableRole.INSTRUCTIONS
+        )
+        instructions[i]["expression"] = expression
+        self._transformations_table_model.setData(
+            self._transformations_table_index, instructions, TransformationsTableRole.INSTRUCTIONS
+        )
+        edit = self._ui.instruction_options_layout.itemAt(1, QFormLayout.FieldRole).widget()
+        if i == self._ui.instructions_list_view.currentRow() and str(expression) != edit.text():
+            edit.setText(expression)

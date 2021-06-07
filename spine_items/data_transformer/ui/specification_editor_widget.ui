@@ -421,23 +421,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QComboBox" name="operation_combo_box">
-         <item>
-          <property name="text">
-           <string>multiply</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>negate</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>invert</string>
-          </property>
-         </item>
-        </widget>
+        <widget class="QComboBox" name="operation_combo_box"/>
        </item>
       </layout>
      </item>

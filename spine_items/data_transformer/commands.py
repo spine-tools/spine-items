@@ -161,26 +161,27 @@ class ChangeOperation(QUndoCommand):
         self._editor.set_instruction(self._row, self._previous_instruction)
 
 
-class ChangeMultiplier(QUndoCommand):
+class ChangeInstructionParameter(QUndoCommand):
     """Changes multiply operations multiplier."""
 
-    def __init__(self, editor, row, multiplier):
+    def __init__(self, row, parameter, previous_parameter, callback):
         """
         Args:
-            editor (InstructionsEditor): instructions editor
             row (int): instruction row index
-            multiplier (float): operation's name
+            parameter (Any): parameter's new value
+            previous_parameter (Any): parameter's old value
+            callback (Callable): function to call to change the value
         """
         super().__init__("multiplier")
-        self._editor = editor
         self._row = row
-        self._previous_multiplier = self._editor.instruction(self._row)["rhs"]
-        self._multiplier = multiplier
-        if self._multiplier == self._previous_multiplier:
+        self._parameter = parameter
+        self._previous_parameter = previous_parameter
+        self._callback = callback
+        if self._parameter == self._previous_parameter:
             self.setObsolete(True)
 
     def redo(self):
-        self._editor.set_multiplier(self._row, self._multiplier)
+        self._callback(self._row, self._parameter)
 
     def undo(self):
-        self._editor.set_multiplier(self._row, self._previous_multiplier)
+        self._callback(self._row, self._previous_parameter)
