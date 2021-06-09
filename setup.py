@@ -34,7 +34,7 @@ setup(
     author="Spine Project consortium",
     author_email="spine_info@vtt.fi",
     url="https://github.com/Spine-project/spine-items",
-    packages=find_packages(exclude=("tests",)),
+    packages=find_packages(exclude=("tests", "tests.*")),
     install_requires=[
         "spinedb_api >=0.12.3",
         "spine_engine >=0.10.0",
