@@ -24,10 +24,10 @@ class ConnectionManager(QObject):
     """Class to manage data connections in another thread.
     """
 
-    start_table_get = Signal()
-    start_data_get = Signal(str, dict, int)
-    start_mapped_data_get = Signal(dict, dict, dict, dict, int)
-    start_default_mapping_get = Signal()
+    tables_requested = Signal()
+    data_requested = Signal(str, dict, int, int)
+    mapped_data_requested = Signal(dict, dict, dict, dict, int)
+    default_mapping_requested = Signal()
 
     connection_failed = Signal(str)
     """Signal with error message if connection fails  """
@@ -40,9 +40,6 @@ class ConnectionManager(QObject):
 
     error = Signal(str)
     """error while reading data or connection to data source  """
-
-    fetching_data = Signal()
-    """signal that the data connection is getting data  """
 
     data_ready = Signal(list, list)
     """data from source is ready, should send list of data and headers  """
@@ -123,29 +120,26 @@ class ConnectionManager(QObject):
         self.current_table_changed.emit()
 
     def request_tables(self):
-        """Get tables tables from source, emits two singals,
-        fetchingData: ConnectionManager is busy waiting for data
-        startTableGet: a signal that the worker in another thread is listening
-        to know when to run get a list of table names.
-        """
+        """Gets tables tables from source, emits tables_requested."""
         if self.is_connected:
-            self.fetching_data.emit()
-            self.start_table_get.emit()
+            self.tables_requested.emit()
 
-    def request_data(self, table=None, max_rows=-1):
-        """Request data from emits dataReady to with data
+    def request_data(self, table=None, max_rows=-1, start=0):
+        """Requests data from a table. Starts a process that emits data_ready with the fecthed data.
 
         Keyword Arguments:
             table {str} -- which table to get data from (default: {None})
             max_rows {int} -- how many rows to read (default: {-1})
         """
-        if self.is_connected:
-            options = self._table_options.get(self._current_table, {})
-            self.fetching_data.emit()
-            self.start_data_get.emit(table, options, max_rows)
+        if not self.is_connected:
+            return
+        if table is None:
+            table = self._current_table
+        options = self._table_options.get(self._current_table, {})
+        self.data_requested.emit(table, options, max_rows, start)
 
     def request_mapped_data(self, table_mappings, max_rows=-1):
-        """Get mapped data from csv file
+        """Gets mapped data from source.
 
         Args:
             table_mappings (dict): dict with filename as key and a list of mappings as value
@@ -159,17 +153,16 @@ class ConnectionManager(QObject):
                 options[table_name] = self._table_options.get(table_name, {})
                 types.setdefault(table_name, self._table_types.get(table_name, {}))
                 row_types.setdefault(table_name, self._table_row_types.get(table_name, {}))
-            self.fetching_data.emit()
-            self.start_mapped_data_get.emit(table_mappings, options, types, row_types, max_rows)
+            self.mapped_data_requested.emit(table_mappings, options, types, row_types, max_rows)
 
     def request_default_mapping(self):
         """Request default mapping from worker."""
         if self.is_connected:
-            self.start_default_mapping_get.emit()
+            self.default_mapping_requested.emit()
 
     def connection_ui(self):
         """
-        launches a modal ui that prompts the user to select source.
+        Launches a modal ui that prompts the user to select source.
 
         ex: fileselect if source is a file.
         """
@@ -199,10 +192,10 @@ class ConnectionManager(QObject):
         self._worker.error.connect(self.error.emit)
         self._worker.connectionFailed.connect(self.connection_failed.emit)
         # connect start working signals
-        self.start_table_get.connect(self._worker.tables)
-        self.start_data_get.connect(self._worker.data)
-        self.start_mapped_data_get.connect(self._worker.mapped_data)
-        self.start_default_mapping_get.connect(self._worker.default_mapping)
+        self.tables_requested.connect(self._worker.tables)
+        self.data_requested.connect(self._worker.data)
+        self.mapped_data_requested.connect(self._worker.mapped_data)
+        self.default_mapping_requested.connect(self._worker.default_mapping)
         self.connection_closed.connect(self._worker.disconnect)
 
         # when thread is started, connect worker to source
@@ -248,7 +241,6 @@ class ConnectionManager(QObject):
         if not self._current_table:
             return
         self._table_options.setdefault(self._current_table, {}).update(options)
-        self.request_data(self._current_table, 100)
 
     def get_current_options(self):
         if not self._current_table:
@@ -356,10 +348,10 @@ class ConnectionWorker(QObject):
             self.error.emit(f"Could not get tables from source: {error}")
             raise error
 
-    @Slot(list, dict, int)
-    def data(self, table, options, max_rows):
+    @Slot(list, dict, int, int)
+    def data(self, table, options, max_rows, start):
         try:
-            data, header = self._connection.get_data(table, options, max_rows)
+            data, header = self._connection.get_data(table, options, max_rows, start)
             self.dataReady.emit(data, header)
         except Exception as error:
             self.error.emit(f"Could not get data from source: {error}")

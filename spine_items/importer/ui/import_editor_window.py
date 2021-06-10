@@ -88,53 +88,15 @@ class Ui_MainWindow(object):
         self.dockWidget_source_data.setObjectName(u"dockWidget_source_data")
         self.dockWidgetContents_3 = QWidget()
         self.dockWidgetContents_3.setObjectName(u"dockWidgetContents_3")
-        self.verticalLayout_6 = QVBoxLayout(self.dockWidgetContents_3)
-        self.verticalLayout_6.setSpacing(0)
-        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
-        self.source_preview_widget_stack = QStackedWidget(self.dockWidgetContents_3)
-        self.source_preview_widget_stack.setObjectName(u"source_preview_widget_stack")
-        self.table_page = QWidget()
-        self.table_page.setObjectName(u"table_page")
-        self.verticalLayout_3 = QVBoxLayout(self.table_page)
-        self.verticalLayout_3.setSpacing(0)
+        self.verticalLayout_3 = QVBoxLayout(self.dockWidgetContents_3)
+        self.verticalLayout_3.setSpacing(3)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.source_data_table = TableViewWithButtonHeader(self.table_page)
+        self.source_data_table = TableViewWithButtonHeader(self.dockWidgetContents_3)
         self.source_data_table.setObjectName(u"source_data_table")
         self.source_data_table.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.verticalLayout_3.addWidget(self.source_data_table)
-
-        self.source_preview_widget_stack.addWidget(self.table_page)
-        self.loading_page = QWidget()
-        self.loading_page.setObjectName(u"loading_page")
-        self.verticalLayout_4 = QVBoxLayout(self.loading_page)
-        self.verticalLayout_4.setSpacing(0)
-        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
-        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setSpacing(0)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout.addItem(self.horizontalSpacer)
-
-        self.waiting_label = QLabel(self.loading_page)
-        self.waiting_label.setObjectName(u"waiting_label")
-
-        self.horizontalLayout.addWidget(self.waiting_label)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout.addItem(self.horizontalSpacer_2)
-
-
-        self.verticalLayout_4.addLayout(self.horizontalLayout)
-
-        self.source_preview_widget_stack.addWidget(self.loading_page)
-
-        self.verticalLayout_6.addWidget(self.source_preview_widget_stack)
 
         self.dockWidget_source_data.setWidget(self.dockWidgetContents_3)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_source_data)
@@ -353,7 +315,6 @@ class Ui_MainWindow(object):
 
         self.dockWidget_source_files.setWidget(self.dockWidgetContents_7)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_source_files)
-        QWidget.setTabOrder(self.source_data_table, self.new_button)
         QWidget.setTabOrder(self.new_button, self.remove_button)
         QWidget.setTabOrder(self.remove_button, self.mapping_list)
         QWidget.setTabOrder(self.mapping_list, self.class_type_combo_box)
@@ -368,9 +329,6 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.source_preview_widget_stack.setCurrentIndex(0)
-
-
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
 
@@ -382,7 +340,6 @@ class Ui_MainWindow(object):
         self.dockWidget_source_tables.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source tables", None))
         self.dockWidget_source_options.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source options", None))
         self.dockWidget_source_data.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source data", None))
-        self.waiting_label.setText(QCoreApplication.translate("MainWindow", u"Loading preview...", None))
         self.dockWidget_mappings.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mappings", None))
         self.new_button.setText(QCoreApplication.translate("MainWindow", u"New", None))
         self.remove_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
