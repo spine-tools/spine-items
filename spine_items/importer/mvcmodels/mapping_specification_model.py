@@ -25,7 +25,7 @@ from spinetoolbox.spine_db_manager import SpineDBManager
 from spinetoolbox.helpers import join_value_and_type, split_value_and_type
 from spinedb_api.parameter_value import from_database, ParameterValueFormatError
 from spinedb_api.helpers import fix_name_ambiguity
-from spinedb_api.mapping import Position
+from spinedb_api.mapping import Position, unflatten
 from spinedb_api.import_mapping.import_mapping_compat import (
     parse_named_mapping_spec,
     unparse_named_mapping_spec,
@@ -57,6 +57,8 @@ from spinedb_api.import_mapping.import_mapping import (
     ParameterDefaultValueTypeMapping,
     ParameterDefaultValueIndexMapping,
     check_validity,
+    IndexNameMapping,
+    DefaultValueIndexNameMapping,
 )
 from spinedb_api.import_mapping.type_conversion import DateTimeConvertSpec, FloatConvertSpec, StringConvertSpec
 from ..commands import SetComponentMappingReference, SetComponentMappingType
@@ -120,10 +122,12 @@ DISPLAY_MAPPING_NAMES = {
     "ParameterValue": "Parameter values",
     "ParameterValueType": None,
     "ParameterValueMetadata": "Parameter value metadata",
+    "IndexName": "Parameter index names",
     "ParameterValueIndex": "Parameter indexes",
     "ExpandedValue": "Parameter values",
     "ParameterDefaultValue": "Parameter default values",
     "ParameterDefaultValueType": None,
+    "DefaultValueIndexName": "Parameter index names",
     "ParameterDefaultValueIndex": "Parameter indexes",
     "ExpandedDefaultValue": "Parameter default values",
 }
@@ -851,19 +855,27 @@ class MappingSpecificationModel(QAbstractTableModel):
         previous_dimension_count = self.map_dimension_count()
         if dimension_count == previous_dimension_count:
             return
-        factory = ParameterValueIndexMapping if self.parameter_type == "Value" else ParameterDefaultValueIndexMapping
-        last_index_mapping = next(m for m in reversed(self._component_mappings) if isinstance(m, factory))
+        name_mapping_cls = IndexNameMapping if self.parameter_type == "Value" else DefaultValueIndexNameMapping
+        index_mapping_cls = (
+            ParameterValueIndexMapping if self.parameter_type == "Value" else ParameterDefaultValueIndexMapping
+        )
+        last_index_mapping = next(m for m in reversed(self._component_mappings) if isinstance(m, index_mapping_cls))
         last_index_mapping_child = last_index_mapping.child
         removed_mappings = []
         self.beginResetModel()
         if dimension_count > previous_dimension_count:
             for _ in range(previous_dimension_count, dimension_count):
-                last_index_mapping.child = factory(Position.hidden)
-                last_index_mapping = last_index_mapping.child
+                name_mapping = name_mapping_cls(Position.hidden)
+                last_index_mapping.child = name_mapping
+                index_mapping = index_mapping_cls(Position.hidden)
+                name_mapping.child = index_mapping
+                last_index_mapping = index_mapping
         else:
             for _ in range(dimension_count, previous_dimension_count):
                 removed_mappings.insert(0, last_index_mapping)
-                last_index_mapping = last_index_mapping.parent
+                name_mapping = last_index_mapping.parent
+                removed_mappings.insert(0, name_mapping)
+                last_index_mapping = name_mapping.parent
         last_index_mapping.child = last_index_mapping_child
         self.update_display_table()
         self.endResetModel()
@@ -921,6 +933,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             MappingSpecificationModel: mapping specification
         """
         name, mapping = parse_named_mapping_spec(named_mapping_spec)
+        mapping = _insert_index_name_mappings(mapping)
         return MappingSpecificationModel(table_name, name, mapping, undo_stack)
 
     def duplicate(self, table_name, undo_stack):
@@ -940,3 +953,29 @@ class MappingSpecificationModel(QAbstractTableModel):
 
     def index_name(self, index):
         return index.siblingAtColumn(0).data()
+
+
+def _insert_index_name_mappings(mapping):
+    """Inserts index name mappings if they are missing.
+
+    This fixes some legacy mappings.
+
+    Args:
+        mapping (ImportMapping): root mapping
+
+    Returns:
+        ImportMapping: fixed mapping
+    """
+    flattened = mapping.flatten()
+    if any(isinstance(m, (ParameterDefaultValueIndexMapping, ParameterValueIndexMapping)) for m in flattened) and all(
+        not isinstance(m, (DefaultValueIndexNameMapping, IndexNameMapping)) for m in flattened
+    ):
+        fixed = list()
+        for mapping in flattened:
+            if isinstance(mapping, ParameterDefaultValueIndexMapping):
+                fixed.append(DefaultValueIndexNameMapping(Position.hidden))
+            elif isinstance(mapping, ParameterValueIndexMapping):
+                fixed.append(IndexNameMapping(Position.hidden))
+            fixed.append(mapping)
+        mapping = unflatten(fixed)
+    return mapping
