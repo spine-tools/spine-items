@@ -1,2 +1,4 @@
-# Spine Toolbox is required but is not listed in setup.py due to circular dependency from the Toolbox
+# Spine Toolbox is not installing right package versions yet so list them here
+spinedb_api 
+spine_engine
 git+https://github.com/Spine-project/Spine-Toolbox.git#egg=spinetoolbox
