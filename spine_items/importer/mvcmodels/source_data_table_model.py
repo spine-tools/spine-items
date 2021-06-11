@@ -62,8 +62,8 @@ class SourceDataTableModel(MinimalTableModel):
         self._column_types = {}
         self._row_types = {}
         self._converted_data = {}
-        self._infinite_extent = 0
         self._infinite = infinite
+        self._infinite_extent = 0
         self._fetching = False
 
     def set_horizontal_header_labels(self, header):
@@ -74,19 +74,19 @@ class SourceDataTableModel(MinimalTableModel):
         return not self._fetching
 
     def fetchMore(self, parent):
-        if not self._infinite:
-            self._fetching = True
-            self.more_data_needed.emit(len(self._main_data) + self._FETCH_CHUNK_SIZE, len(self._main_data))
+        if self._infinite:
+            self.beginResetModel()
+            self._infinite_extent += self._FETCH_CHUNK_SIZE // 10
+            self.endResetModel()
             return
-        self.beginResetModel()
-        self._infinite_extent += self._FETCH_CHUNK_SIZE // 10
-        self.endResetModel()
+        self._fetching = True
+        self.more_data_needed.emit(len(self._main_data) + self._FETCH_CHUNK_SIZE, len(self._main_data))
 
     def append_rows(self, data):
         self._fetching = False
         if not data:
             return
-        self.beginInsertRows(QModelIndex(), len(self._main_data), len(data))
+        self.beginResetModel()
         self._main_data += data
         self.endResetModel()
 
