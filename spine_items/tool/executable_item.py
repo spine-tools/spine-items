@@ -38,7 +38,7 @@ from ..utils import cmd_line_arg_from_dict, expand_cmd_line_args, labelled_resou
 class ExecutableItem(ExecutableItemBase):
     """Tool project item's executable parts."""
 
-    def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, project_dir, logger):
+    def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, project_dir, logger, env):
         """
         Args:
             name (str): item's name
@@ -49,6 +49,7 @@ class ExecutableItem(ExecutableItemBase):
             options (dict): misc tool options. See ``Tool`` for details.
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
+            env (str): Kernel spec environment or something, u know
         """
         super().__init__(name, project_dir, logger)
         self._work_dir = work_dir
@@ -57,6 +58,7 @@ class ExecutableItem(ExecutableItemBase):
         self._cmd_line_args = cmd_line_args
         self._options = options
         self._tool_instance = None
+        self._env = env
 
     @property
     def options(self):
@@ -416,8 +418,9 @@ class ExecutableItem(ExecutableItemBase):
             return ItemExecutionFinishState.FAILURE
         with labelled_resource_args(resources) as labelled_args:
             expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
+            print(f"Executing Tool in '{self._env}'")
             try:
-                self._tool_instance.prepare(expanded_args)
+                self._tool_instance.prepare(expanded_args, self._env)
             except RuntimeError as error:
                 if str(error) != "":
                     self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
@@ -590,7 +593,8 @@ class ExecutableItem(ExecutableItemBase):
         )
         cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
-        return cls(name, work_dir, specification, cmd_line_args, options, project_dir, logger)
+        env = item_dict.get("environment", "")
+        return cls(name, work_dir, specification, cmd_line_args, options, project_dir, logger, env)
 
 
 def _count_files_and_dirs(paths):

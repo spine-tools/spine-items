@@ -179,7 +179,7 @@ class JuliaToolInstance(ToolInstance):
 class PythonToolInstance(ToolInstance):
     """Class for Python Tool instances."""
 
-    def prepare(self, args):
+    def prepare(self, args, env=""):
         """See base class."""
         use_python_kernel = self._settings.value("appSettings/usePythonKernel", defaultValue="0")
         if use_python_kernel == "2":
@@ -191,7 +191,11 @@ class PythonToolInstance(ToolInstance):
                 main_command += " " + '"' + '" "'.join(cmdline_args) + '"'
             self.args = [cd_command, main_command]
             kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-            self.exec_mngr = KernelExecutionManager(self._logger, kernel_name, *self.args, group_id=self.owner.group_id)
+            use_conda = False
+            if env != "":
+                kernel_name = env
+                use_conda = True
+            self.exec_mngr = KernelExecutionManager(self._logger, kernel_name, *self.args, group_id=self.owner.group_id, activate_env=use_conda)
         else:
             python_exe = self._settings.value("appSettings/pythonPath", defaultValue="")
             python_exe = resolve_python_interpreter(python_exe)

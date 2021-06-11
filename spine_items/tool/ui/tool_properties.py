@@ -67,8 +67,8 @@ class Ui_Form(object):
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
         self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 406, 429))
-        self.verticalLayout_17 = QVBoxLayout(self.scrollAreaWidgetContents_3)
-        self.verticalLayout_17.setObjectName(u"verticalLayout_17")
+        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents_3)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setSpacing(4)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
@@ -110,12 +110,32 @@ class Ui_Form(object):
         self.horizontalLayout_9.addWidget(self.toolButton_tool_specification)
 
 
-        self.verticalLayout_17.addLayout(self.horizontalLayout_9)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_9)
 
         self.horizontalLayout_options = QHBoxLayout()
         self.horizontalLayout_options.setObjectName(u"horizontalLayout_options")
 
-        self.verticalLayout_17.addLayout(self.horizontalLayout_options)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_options)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.comboBox_conda_envs = QComboBox(self.scrollAreaWidgetContents_3)
+        self.comboBox_conda_envs.setObjectName(u"comboBox_conda_envs")
+
+        self.horizontalLayout.addWidget(self.comboBox_conda_envs)
+
+        self.toolButton_refresh_envs = QToolButton(self.scrollAreaWidgetContents_3)
+        self.toolButton_refresh_envs.setObjectName(u"toolButton_refresh_envs")
+        self.toolButton_refresh_envs.setMinimumSize(QSize(22, 22))
+        self.toolButton_refresh_envs.setMaximumSize(QSize(22, 22))
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/sync.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_refresh_envs.setIcon(icon1)
+
+        self.horizontalLayout.addWidget(self.toolButton_refresh_envs)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout)
 
         self.splitter = QSplitter(self.scrollAreaWidgetContents_3)
         self.splitter.setObjectName(u"splitter")
@@ -148,9 +168,9 @@ class Ui_Form(object):
         self.toolButton_add_file_path_arg.setObjectName(u"toolButton_add_file_path_arg")
         self.toolButton_add_file_path_arg.setMinimumSize(QSize(22, 22))
         self.toolButton_add_file_path_arg.setMaximumSize(QSize(22, 22))
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/file-upload.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_add_file_path_arg.setIcon(icon1)
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/file-upload.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_add_file_path_arg.setIcon(icon2)
         self.toolButton_add_file_path_arg.setIconSize(QSize(16, 16))
         self.toolButton_add_file_path_arg.setPopupMode(QToolButton.InstantPopup)
 
@@ -158,9 +178,9 @@ class Ui_Form(object):
 
         self.toolButton_remove_arg = QToolButton(self.gridLayoutWidget)
         self.toolButton_remove_arg.setObjectName(u"toolButton_remove_arg")
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/minus.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_remove_arg.setIcon(icon2)
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/minus.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_remove_arg.setIcon(icon3)
 
         self.gridLayout.addWidget(self.toolButton_remove_arg, 0, 2, 1, 1)
 
@@ -181,7 +201,7 @@ class Ui_Form(object):
 
         self.splitter.addWidget(self.gridLayoutWidget)
 
-        self.verticalLayout_17.addWidget(self.splitter)
+        self.verticalLayout_2.addWidget(self.splitter)
 
         self.horizontalLayout_11 = QHBoxLayout()
         self.horizontalLayout_11.setSpacing(6)
@@ -203,14 +223,14 @@ class Ui_Form(object):
         self.horizontalLayout_11.addWidget(self.pushButton_tool_results)
 
 
-        self.verticalLayout_17.addLayout(self.horizontalLayout_11)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_11)
 
         self.line_4 = QFrame(self.scrollAreaWidgetContents_3)
         self.line_4.setObjectName(u"line_4")
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_17.addWidget(self.line_4)
+        self.verticalLayout_2.addWidget(self.line_4)
 
         self.horizontalLayout_15 = QHBoxLayout()
         self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
@@ -238,14 +258,14 @@ class Ui_Form(object):
         self.toolButton_tool_open_dir.setObjectName(u"toolButton_tool_open_dir")
         self.toolButton_tool_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_tool_open_dir.setMaximumSize(QSize(22, 22))
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_tool_open_dir.setIcon(icon3)
+        icon4 = QIcon()
+        icon4.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_tool_open_dir.setIcon(icon4)
 
         self.horizontalLayout_15.addWidget(self.toolButton_tool_open_dir)
 
 
-        self.verticalLayout_17.addLayout(self.horizontalLayout_15)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_15)
 
         self.scrollArea_3.setWidget(self.scrollAreaWidgetContents_3)
 
@@ -271,6 +291,7 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_tool_specification.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification options.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
+        self.toolButton_refresh_envs.setText("")
 #if QT_CONFIG(tooltip)
         self.toolButton_add_file_path_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Append selected input file paths to the list of command line args</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
