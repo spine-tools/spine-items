@@ -17,6 +17,32 @@ Contains Data transformer's undo commands.
 from PySide2.QtWidgets import QUndoCommand
 
 
+class SetData(QUndoCommand):
+    """Sets model's value."""
+
+    def __init__(self, message, index, value, previous_value, role):
+        """
+        Args:
+            message (str): undo message
+            index (QModelIndex): model index
+            value (Any): new value
+            previous_value (Any): undo value
+            role (int): set data role
+        """
+        super().__init__(message)
+        self._index = index
+        self._value = value
+        self._previous_value = previous_value
+        self._role = role
+
+    def redo(self):
+        success = self._index.model().setData(self._index, self._value, self._role)
+        self.setObsolete(not success)
+
+    def undo(self):
+        self._index.model().setData(self._index, self._previous_value, self._role)
+
+
 class InsertRow(QUndoCommand):
     """Inserts a row to value transformation model."""
 
@@ -26,8 +52,7 @@ class InsertRow(QUndoCommand):
             message (str): undo message
             model (ValueTransformationsTableModel): model
             row (int): row index
-            data (tuple): row data
-            roles (Iterable of int): data roles
+            data (Sequence, optional): row data
         """
         super().__init__(message)
         self._model = model
@@ -36,6 +61,8 @@ class InsertRow(QUndoCommand):
 
     def redo(self):
         self._model.insertRow(self._row)
+        if self._data is None:
+            return
         for column, (element, role) in enumerate(zip(self._data, self._model.SET_DATA_ROLES)):
             index = self._model.index(self._row, column)
             self._model.setData(index, element, role)
@@ -134,26 +161,27 @@ class ChangeOperation(QUndoCommand):
         self._editor.set_instruction(self._row, self._previous_instruction)
 
 
-class ChangeMultiplier(QUndoCommand):
+class ChangeInstructionParameter(QUndoCommand):
     """Changes multiply operations multiplier."""
 
-    def __init__(self, editor, row, multiplier):
+    def __init__(self, row, parameter, previous_parameter, callback):
         """
         Args:
-            editor (InstructionsEditor): instructions editor
             row (int): instruction row index
-            multiplier (float): operation's name
+            parameter (Any): parameter's new value
+            previous_parameter (Any): parameter's old value
+            callback (Callable): function to call to change the value
         """
         super().__init__("multiplier")
-        self._editor = editor
         self._row = row
-        self._previous_multiplier = self._editor.instruction(self._row)["rhs"]
-        self._multiplier = multiplier
-        if self._multiplier == self._previous_multiplier:
+        self._parameter = parameter
+        self._previous_parameter = previous_parameter
+        self._callback = callback
+        if self._parameter == self._previous_parameter:
             self.setObsolete(True)
 
     def redo(self):
-        self._editor.set_multiplier(self._row, self._multiplier)
+        self._callback(self._row, self._parameter)
 
     def undo(self):
-        self._editor.set_multiplier(self._row, self._previous_multiplier)
+        self._callback(self._row, self._previous_parameter)

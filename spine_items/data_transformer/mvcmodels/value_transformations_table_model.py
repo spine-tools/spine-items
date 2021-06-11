@@ -15,10 +15,9 @@ Contains :class:`ValueTransformTableModel`.
 :date:   25.5.2021
 """
 from enum import IntEnum, unique
-import pickle
-from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
-from ..widgets.parameter_tree_widget import ParameterTreeWidget
-from ..commands import InsertRow
+from PySide2.QtCore import QModelIndex, Qt
+from .parameter_drop_target_table_model import ParameterDropTargetTableModel
+from ..commands import SetData
 
 
 @unique
@@ -31,28 +30,36 @@ class TransformationsTableColumn(IntEnum):
 @unique
 class TransformationsTableRole(IntEnum):
     INSTRUCTIONS = Qt.UserRole + 1
+    SILENT_EDIT = Qt.UserRole + 2
 
 
-class ValueTransformationsTableModel(QAbstractTableModel):
+class ValueTransformationsTableModel(ParameterDropTargetTableModel):
     """A table model that contains parameter value transformations."""
 
     GET_DATA_ROLES = (Qt.DisplayRole, Qt.DisplayRole, TransformationsTableRole.INSTRUCTIONS)
-    SET_DATA_ROLES = (Qt.EditRole, Qt.EditRole, TransformationsTableRole.INSTRUCTIONS)
+    SET_DATA_ROLES = (
+        TransformationsTableRole.SILENT_EDIT,
+        TransformationsTableRole.SILENT_EDIT,
+        TransformationsTableRole.INSTRUCTIONS,
+    )
 
     def __init__(self, settings, undo_stack, parent):
         """
         Args:
-            settings (ValueTransformSettings): initial settings
+            settings (ValueTransformSettings, optional): initial settings
             undo_stack (QUndoStack): undo stack
             parent (QObject): parent object
         """
         super().__init__(parent)
         self._undo_stack = undo_stack
-        self._instructions = [
-            (klass, param, instr)
-            for klass, param_instr in settings.instructions.items()
-            for param, instr in param_instr.items()
-        ]
+        if settings is not None:
+            self._instructions = [
+                [klass, param, instr]
+                for klass, param_instr in settings.instructions.items()
+                for param, instr in param_instr.items()
+            ]
+        else:
+            self._instructions = []
 
     def columnCount(self, parent=QModelIndex()):
         return 3
@@ -68,26 +75,9 @@ class ValueTransformationsTableModel(QAbstractTableModel):
             return self._instructions[index.row()][TransformationsTableColumn.INSTRUCTIONS]
         return None
 
-    def dropMimeData(self, data, action, row, column, parent):
-        if row < 0:
-            row = len(self._instructions)
-        rows = list()
-        parameters = pickle.loads(data.data("application/spine-parameters"))
-        for entity_class, parameter_list in parameters.items():
-            for parameter in parameter_list:
-                rows.append((entity_class, parameter, []))
-        if len(rows) == 1:
-            self._undo_stack.push(InsertRow("add parameter", self, row, rows[0]))
-        else:
-            self._undo_stack.beginMacro("add parameters")
-            for i, row_data in enumerate(rows):
-                self._undo_stack.push(InsertRow("", self, row + i, row_data))
-            self._undo_stack.endMacro()
-        return True
-
     def flags(self, index):
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDropEnabled
-        if index.row() != TransformationsTableColumn.INSTRUCTIONS:
+        if index.column() != TransformationsTableColumn.INSTRUCTIONS:
             flags |= Qt.ItemIsEditable
         return flags
 
@@ -97,14 +87,15 @@ class ValueTransformationsTableModel(QAbstractTableModel):
         return None
 
     def insertRows(self, row, count, parent=QModelIndex()):
-        rows = count * [("", "", [])]
+        rows = count * [["", "", []]]
         self.beginInsertRows(parent, row, row + count - 1)
         self._instructions = self._instructions[:row] + rows + self._instructions[row:]
         self.endInsertRows()
         return True
 
-    def mimeTypes(self):
-        return [ParameterTreeWidget.MIME_TYPE]
+    @staticmethod
+    def _make_drop_row(entity_class, parameter):
+        return [entity_class, parameter, []]
 
     def removeRows(self, row, count, parent=QModelIndex()):
         self.beginRemoveRows(parent, row, row + count - 1)
@@ -117,17 +108,24 @@ class ValueTransformationsTableModel(QAbstractTableModel):
 
     def setData(self, index, value, role=Qt.EditRole):
         if role == Qt.EditRole:
-            column = index.column()
-            if column == TransformationsTableColumn.INSTRUCTIONS:
+            if not value or not isinstance(value, str):
                 return False
-            row = index.row()
-            data = self._instructions[row]
-            self._instructions[row] = data[:column] + (value,) + data[column + 1 :]
+            column = index.column()
+            message = "change class name" if column == TransformationsTableColumn.CLASS else "change parameter name"
+            previous = self._instructions[index.row()][column]
+            self._undo_stack.push(SetData(message, index, value, previous, TransformationsTableRole.SILENT_EDIT))
+            return True
+        if role == TransformationsTableRole.SILENT_EDIT:
+            if not isinstance(value, str):
+                return False
+            self._instructions[index.row()][index.column()] = value
             self.dataChanged.emit(index, index, [Qt.DisplayRole])
             return True
         if role == TransformationsTableRole.INSTRUCTIONS and index.column() == TransformationsTableColumn.INSTRUCTIONS:
+            if not isinstance(value, list):
+                return False
             row = index.row()
-            data = self._instructions[row]
-            self._instructions[row] = data[: TransformationsTableColumn.INSTRUCTIONS] + (value,)
+            self._instructions[row][index.column()] = value
             self.dataChanged.emit(index, index, [Qt.DisplayRole, TransformationsTableRole.INSTRUCTIONS])
+            return True
         return False

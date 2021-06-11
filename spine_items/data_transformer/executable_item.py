@@ -45,6 +45,16 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         return scan_for_resources(self, self._specification, self._db_resources, self._filter_config_path)
 
+    def ready_to_execute(self, settings):
+        if self._specification is None:
+            return True
+        messages = self._specification.settings.report_inconsistencies()
+        if messages:
+            for message in messages:
+                self._logger.msg_error.emit(message)
+            return False
+        return True
+
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):

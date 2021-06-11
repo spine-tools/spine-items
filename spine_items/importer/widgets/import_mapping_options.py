@@ -243,9 +243,7 @@ class ImportMappingOptions(QObject):
             )
         )
 
-    def set_dimension_count(
-        self, source_table_name, mapping_specification_name, dimension_count, new_cls_mapping, new_obj_mapping
-    ):
+    def set_dimension_count(self, source_table_name, mapping_specification_name, dimension_count):
         """
         Changes the item mapping's dimension count and emits about_to_undo.
 
@@ -253,18 +251,33 @@ class ImportMappingOptions(QObject):
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
             dimension_count (int): new dimension value
-            new_cls_mapping (RelationshipClassObjectClassMapping): mapping to undo previous dimension removal
-            new_obj_mapping (RelationshipObjectMapping): mapping to undo previous dimension removal
         """
         if self._mapping_specification_model is None:
             return
         self._executing_command = True
         self.about_to_undo.emit(source_table_name, mapping_specification_name)
-        new_cls_mapping, new_obj_mapping = self._mapping_specification_model.set_dimension_count(
-            dimension_count, new_cls_mapping, new_obj_mapping
-        )
+        cls_mappings, obj_mappings = self._mapping_specification_model.set_dimension_count(dimension_count)
         self._executing_command = False
-        return new_cls_mapping, new_obj_mapping
+        return cls_mappings, obj_mappings
+
+    def restore_relationship_mappings(self, source_table_name, mapping_specification_name, cls_mappings, obj_mappings):
+        """
+        Restores object class and object mappings previously removed.
+
+        Args:
+            source_table_name (str): name of the source table
+            mapping_specification_name (str): name of the mapping specification
+            cls_mappings (list(RelationshipClassObjectClassMapping)): object class mappings to be restored
+            obj_mappings (list(RelationshipObjectMapping)): object mappings to be restored
+        """
+        if self._mapping_specification_model is None:
+            return
+        self._executing_command = True
+        self.about_to_undo.emit(source_table_name, mapping_specification_name)
+        self._mapping_specification_model.restore_relationship_mappings(cls_mappings, obj_mappings)
+        dimension_count = self._mapping_specification_model.mapping_dimension_count()
+        self._ui.dimension_spin_box.setValue(dimension_count)
+        self._executing_command = False
 
     @Slot(str)
     def _change_parameter_type(self, new_type):
@@ -483,9 +496,7 @@ class ImportMappingOptions(QObject):
             SetMapDimensionCount(source_table_name, specification_name, self, dimension_count, previous_dimension_count)
         )
 
-    def set_map_dimension_count(
-        self, source_table_name, mapping_specification_name, dimension_count, new_index_mapping
-    ):
+    def set_map_dimension_count(self, source_table_name, mapping_specification_name, dimension_count):
         """
         Sets map dimension_count.
 
@@ -493,18 +504,33 @@ class ImportMappingOptions(QObject):
             source_table_name (str): name of the source table
             mapping_specification_name (str): name of the mapping specification
             dimension_count (int): new map dimension_count
-            new_index_mapping (...IndexMapping): Index mapping to undo previous dimension removing
         """
         if self._mapping_specification_model is None:
             return
         self._executing_command = True
         self.about_to_undo.emit(source_table_name, mapping_specification_name)
-        new_index_mapping = self._mapping_specification_model.set_map_dimension_count(
-            dimension_count, new_index_mapping
-        )
+        removed_mappings = self._mapping_specification_model.set_map_dimension_count(dimension_count)
         self._ui.map_dimension_spin_box.setValue(dimension_count)
         self._executing_command = False
-        return new_index_mapping
+        return removed_mappings
+
+    def restore_index_mappings(self, source_table_name, mapping_specification_name, mappings):
+        """
+        Restore index mappings previously removed.
+
+        Args:
+            source_table_name (str): name of the source table
+            mapping_specification_name (str): name of the mapping specification
+            mappings (list): IndexMappings to be restored
+        """
+        if self._mapping_specification_model is None:
+            return
+        self._executing_command = True
+        self.about_to_undo.emit(source_table_name, mapping_specification_name)
+        self._mapping_specification_model.restore_index_mappings(mappings)
+        dimension_count = self._mapping_specification_model.map_dimension_count()
+        self._ui.map_dimension_spin_box.setValue(dimension_count)
+        self._executing_command = False
 
     @Slot(bool)
     def _change_map_compression_flag(self, compress):

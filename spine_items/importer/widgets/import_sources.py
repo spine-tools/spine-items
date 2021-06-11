@@ -75,6 +75,7 @@ class ImportSources(QObject):
 
         # connect signals
         self._ui_options_widget.about_to_undo.connect(self.select_table)
+        self._ui_options_widget.options_changed.connect(lambda _: self._clear_source_data_model())
         self._ui_options_widget.load_default_mapping_requested.connect(self._load_default_mapping)
         self._ui.source_list.customContextMenuRequested.connect(self.show_source_list_context_menu)
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_selected_table)
@@ -86,17 +87,9 @@ class ImportSources(QObject):
         self._connector.tables_ready.connect(self.update_tables)
         self._connector.mapped_data_ready.connect(self.mapped_data_ready.emit)
         self._connector.default_mapping_ready.connect(self._set_default_mapping)
-        # when data is ready set loading status to False.
-        self._connector.connection_ready.connect(lambda: self.set_loading_status(False))
-        self._connector.data_ready.connect(lambda: self.set_loading_status(False))
-        self._connector.tables_ready.connect(lambda: self.set_loading_status(False))
-        self._connector.mapped_data_ready.connect(lambda: self.set_loading_status(False))
-        # when data is getting fetched set loading status to True
-        self._connector.fetching_data.connect(lambda: self.set_loading_status(True))
-        # set loading status to False if error.
-        self._connector.error.connect(lambda: self.set_loading_status(False))
 
         # source data table
+        self._source_data_model.more_data_needed.connect(self.fetch_more_data)
         self._source_data_model.mapping_data_changed.connect(self._update_display_row_types)
         self._source_data_model.column_types_updated.connect(self._new_column_types)
         self._source_data_model.row_types_updated.connect(self._new_row_types)
@@ -112,18 +105,6 @@ class ImportSources(QObject):
     @Slot(object)
     def set_mapping(self, model):
         self._source_data_model.set_mapping(model)
-
-    def set_loading_status(self, status):
-        """
-        Disables/hides widgets while status is True
-        """
-        self._ui.table_page.setDisabled(status)
-        preview_table = 0
-        loading_message = 1
-        self._ui.source_preview_widget_stack.setCurrentIndex(loading_message if status else preview_table)
-        self._ui.dockWidget_mappings.setDisabled(status)
-        self._ui.dockWidget_mapping_options.setDisabled(status)
-        self._ui.dockWidget_mapping_spec.setDisabled(status)
 
     @Slot()
     def _load_default_mapping(self):
@@ -156,7 +137,11 @@ class ImportSources(QObject):
             self._table_mappings[item.name] = MappingListModel([specification], item.name, self._undo_stack)
         self.source_table_selected.emit(item.name, self._table_mappings[item.name])
         self._connector.set_table(item.name)
-        self._connector.request_data(item.name)
+        self._clear_source_data_model()
+
+    @Slot(int, int)
+    def fetch_more_data(self, max_rows, start):
+        self._connector.request_data(max_rows=max_rows, start=start)
 
     def _select_table_row(self, row):
         selection_model = self._ui.source_list.selectionModel()
@@ -223,19 +208,17 @@ class ImportSources(QObject):
     @Slot(list, list)
     def _update_source_data(self, data, header):
         if not data:
-            self._clear_source_data_model()
             return
         try:
             data = _sanitize_data(data, header)
         except RuntimeError as error:
             self._ui_error.showMessage(str(error))
-            self._clear_source_data_model()
             return
         if not header:
             header = list(range(1, len(data[0]) + 1))
         # Set header data before reseting model because the header needs to be there for some slots...
         self._source_data_model.set_horizontal_header_labels(header)
-        self._source_data_model.reset_model(main_data=data)
+        self._source_data_model.append_rows(data)
         types = self._connector.table_types.get(self._connector.current_table, {})
         row_types = self._connector.table_row_types.get(self._connector.current_table, {})
         for col in range(len(header)):
@@ -453,7 +436,7 @@ class ImportSources(QObject):
 
 def _sanitize_data(data, header):
     """Fills empty data cells with None."""
-    expected_columns = len(header) if header else max(len(x) for x in data)
+    expected_columns = len(header) if header else max((len(x) for x in data))
     sanitized_data = list()
     for row in data:
         length_diff = expected_columns - len(row)

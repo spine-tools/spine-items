@@ -101,6 +101,13 @@ class GdxExporter(ExporterBase):
         s[self._properties_ui.settings_button.clicked] = self.show_settings
         return s
 
+    def _check_notifications(self):
+        super()._check_notifications()
+        self.add_notification(
+            "GdxExporter is deprecated and will be removed in a future release. "
+            "Please replace this item by general-purpose Exporter."
+        )
+
     def _check_missing_specification(self):
         self._notifications.missing_specification = (
             self._database_model.rowCount() != 0 and self._settings_pack.settings is None

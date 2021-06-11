@@ -14,15 +14,15 @@ Contains :class:`SpecificationEditorWindow`.
 :author: A. Soininen (VTT)
 :date:   2.10.2020
 """
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QFileDialog, QVBoxLayout
+from PySide2.QtCore import Qt, Slot
+from PySide2.QtWidgets import QFileDialog
 from spinetoolbox.project_item.specification_editor_window import (
     SpecificationEditorWindowBase,
     ChangeSpecPropertyCommand,
 )
-from .entity_class_renaming_widget import EntityClassRenamingWidget
-from .parameter_renaming_widget import ParameterRenamingWidget
-from .value_transforming_widget import ValueTransformingWidget
+from .class_rename import ClassRename
+from .parameter_rename import ParameterRename
+from .value_transformation import ValueTransformation
 from ..data_transformer_specification import DataTransformerSpecification
 from ..settings import EntityClassRenamingSettings, ParameterRenamingSettings, ValueTransformSettings
 
@@ -48,18 +48,29 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """
 
         super().__init__(toolbox, specification, item)
-        if specification is None:
-            specification = DataTransformerSpecification(name="")
-        self._new_spec = specification
+        self._settings = {name: None for name in _FILTER_NAMES}
+        self._changing_docks = [
+            self._ui.load_database_dock,
+            self._ui.possible_parameters_dock,
+            self._ui.parameter_rename_dock,
+            self._ui.value_transformation_dock,
+            self._ui.value_instructions_dock,
+            self._ui.possible_classes_dock,
+            self._ui.class_rename_dock,
+        ]
+        for dock in self._changing_docks:
+            dock.hide()
         self._urls = dict()
-        self._filter_widgets = dict()
+        self._filter_sub_interfaces = dict()
         self._current_filter_name = None
+        self.takeCentralWidget().deleteLater()
         self._ui.filter_combo_box.addItems(_FILTER_NAMES)
-        if self._new_spec.settings is not None:
-            filter_name = _CLASSES_TO_DISPLAY_NAMES[type(self._new_spec.settings)]
+        if specification is not None and specification.settings is not None:
+            settings = specification.settings
+            filter_name = _CLASSES_TO_DISPLAY_NAMES[type(settings)]
+            self._settings[filter_name] = settings
         else:
-            filter_name = ""
-        self._set_current_filter_name(filter_name)
+            filter_name = _FILTER_NAMES[0]
         self._ui.load_url_from_fs_button.clicked.connect(self._load_url_from_filesystem)
         self._ui.load_data_button.clicked.connect(self._load_data)
         self._ui.database_url_combo_box.model().rowsInserted.connect(
@@ -67,6 +78,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         )
         self._ui.database_url_combo_box.addItems(urls if urls is not None else [])
         self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
+        self._set_current_filter_name(filter_name)
 
     @property
     def settings_group(self):
@@ -84,14 +96,14 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if not filter_name:
             filter_settings = None
         else:
-            filter_widget = self._filter_widgets[filter_name]
-            filter_settings = filter_widget.settings()
+            interface = self._filter_sub_interfaces[filter_name]
+            filter_settings = interface.settings()
         return DataTransformerSpecification(spec_name, filter_settings, description)
 
     @Slot(str)
     def _change_filter_widget(self, filter_name):
         """
-        Changes the filter widget in ``filter_stack``.
+        Pushes a command to change the current interface to undo stack.
 
         Args:
             filter_name (str): widget's filter name
@@ -105,28 +117,25 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         )
 
     def _set_current_filter_name(self, filter_name):
+        """Shows/hides current dock widgets depending on selected filter.
+
+        Args:
+            filter_name (str): filter's name
+        """
+        previous_interface = self._filter_sub_interfaces.get(self._current_filter_name)
+        if previous_interface is not None:
+            previous_interface.tear_down()
         self._current_filter_name = filter_name
-        if not self._current_filter_name:
-            self._ui.filter_combo_box.setCurrentIndex(-1)
-            self._ui.filter_stack.setCurrentIndex(0)
-            return
-        self._ui.filter_combo_box.setCurrentText(self._current_filter_name)
-        widget = self._filter_widgets.get(filter_name)
-        if widget is None:
-            widget = dict(
-                zip(_FILTER_NAMES, (EntityClassRenamingWidget, ParameterRenamingWidget, ValueTransformingWidget))
-            )[filter_name](self._undo_stack, self._new_spec.settings)
-            self._filter_widgets[filter_name] = widget
-        layout = self._ui.filter_widget.layout()
-        if layout is None:
-            layout = QVBoxLayout()
-            self._ui.filter_widget.setLayout(layout)
-        for _ in range(layout.count()):
-            removed = layout.takeAt(0)
-            removed.widget().hide()
-        layout.addWidget(widget)
-        widget.show()
-        self._ui.filter_stack.setCurrentIndex(1)
+        self._ui.filter_combo_box.currentTextChanged.disconnect(self._change_filter_widget)
+        self._ui.filter_combo_box.setCurrentText(filter_name)
+        self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
+        interface = self._filter_sub_interfaces.get(filter_name)
+        if interface is None:
+            interface = dict(zip(_FILTER_NAMES, (ClassRename, ParameterRename, ValueTransformation)))[filter_name](
+                self._ui, self._undo_stack, self._settings[filter_name], self
+            )
+            self._filter_sub_interfaces[filter_name] = interface
+        interface.show()
 
     @Slot(bool)
     def _load_url_from_filesystem(self, _):
@@ -151,12 +160,24 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     def _load_data(self, _):
         """Sends selected database URL to current filter widget so it can load relevant data."""
         filter_name = self._ui.filter_combo_box.currentText()
-        widget = self._filter_widgets[filter_name]
-        widget.load_data(self._ui.database_url_combo_box.currentText())
+        interface = self._filter_sub_interfaces[filter_name]
+        interface.load_data(self._ui.database_url_combo_box.currentText())
 
-    def tear_down(self):
-        if not super().tear_down():
-            return False
-        for widget in self._filter_widgets.values():
-            widget.deleteLater()
-        return True
+    def _restore_dock_widgets(self):
+        docks = {
+            Qt.LeftDockWidgetArea: (
+                self._ui.type_dock,
+                self._ui.possible_classes_dock,
+                self._ui.possible_parameters_dock,
+                self._ui.load_database_dock,
+            ),
+            Qt.RightDockWidgetArea: (
+                self._ui.parameter_rename_dock,
+                self._ui.class_rename_dock,
+                self._ui.value_transformation_dock,
+                self._ui.value_instructions_dock,
+            ),
+        }
+        for area, area_docks in docks.items():
+            for dock in area_docks:
+                self.addDockWidget(area, dock)

@@ -22,6 +22,7 @@ from PySide2.QtCore import Qt, QAbstractTableModel, Signal, QTimer
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.mvcmodels.shared import PARSED_ROLE
 from spinetoolbox.spine_db_manager import SpineDBManager
+from spinetoolbox.helpers import join_value_and_type, split_value_and_type
 from spinedb_api.parameter_value import from_database, ParameterValueFormatError
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.mapping import Position
@@ -352,7 +353,7 @@ class MappingSpecificationModel(QAbstractTableModel):
     def last_object_mapping(self):
         return next(m for m in reversed(self._component_mappings) if isinstance(m, RelationshipObjectMapping))
 
-    def set_dimension_count(self, dimension_count, new_cls_mapping=None, new_obj_mapping=None):
+    def set_dimension_count(self, dimension_count):
         if not self.mapping_has_dimensions():
             return None, None
         curr_dimension_count = self.mapping_dimension_count()
@@ -360,26 +361,49 @@ class MappingSpecificationModel(QAbstractTableModel):
             return None, None
         last_cls_mapping = self.last_object_class_mapping()
         last_obj_mapping = self.last_object_mapping()
-        cls_mapping_child = last_cls_mapping.child
-        obj_mapping_child = last_obj_mapping.child
+        last_cls_mapping_child = last_cls_mapping.child
+        last_obj_mapping_child = last_obj_mapping.child
+        removed_cls_mappings = []
+        removed_obj_mappings = []
         self.beginResetModel()
         if dimension_count > curr_dimension_count:
-            if new_cls_mapping is None:
-                new_cls_mapping = RelationshipClassObjectClassMapping(Position.hidden)
-            if new_obj_mapping is None:
-                new_obj_mapping = RelationshipObjectMapping(Position.hidden)
-            last_cls_mapping.child = new_cls_mapping
-            new_cls_mapping.child = cls_mapping_child
-            last_obj_mapping.child = new_obj_mapping
-            new_obj_mapping.child = obj_mapping_child
+            for _ in range(curr_dimension_count, dimension_count):
+                last_cls_mapping.child = RelationshipClassObjectClassMapping(Position.hidden)
+                last_cls_mapping = last_cls_mapping.child
+                last_obj_mapping.child = RelationshipObjectMapping(Position.hidden)
+                last_obj_mapping = last_obj_mapping.child
         else:
-            new_cls_mapping = last_cls_mapping
-            new_obj_mapping = last_obj_mapping
-            last_cls_mapping.parent.child = cls_mapping_child
-            last_obj_mapping.parent.child = obj_mapping_child
+            for _ in range(dimension_count, curr_dimension_count):
+                removed_cls_mappings.insert(0, last_cls_mapping)
+                removed_obj_mappings.insert(0, last_obj_mapping)
+                last_cls_mapping = last_cls_mapping.parent
+                last_obj_mapping = last_obj_mapping.parent
+        last_cls_mapping.child = last_cls_mapping_child
+        last_obj_mapping.child = last_obj_mapping_child
         self.update_display_table()
         self.endResetModel()
-        return new_cls_mapping, new_obj_mapping
+        return removed_cls_mappings, removed_obj_mappings
+
+    def restore_relationship_mappings(self, cls_mappings, obj_mappings):
+        if not self.mapping_has_dimensions():
+            return
+        if not cls_mappings and not obj_mappings:
+            return
+        last_cls_mapping = self.last_object_class_mapping()
+        last_obj_mapping = self.last_object_mapping()
+        last_cls_mapping_child = last_cls_mapping.child
+        last_obj_mapping_child = last_obj_mapping.child
+        self.beginResetModel()
+        for m in cls_mappings:
+            last_cls_mapping.child = m
+            last_cls_mapping = m
+        for m in obj_mappings:
+            last_obj_mapping.child = m
+            last_obj_mapping = m
+        last_cls_mapping.child = last_cls_mapping_child
+        last_obj_mapping.child = last_obj_mapping_child
+        self.update_display_table()
+        self.endResetModel()
 
     def change_item_mapping_type(self, new_type):
         """
@@ -475,6 +499,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             self._component_names.pop(row)
         self._component_names = fix_name_ambiguity(self._component_names, prefix=" ")
         self._colors = self._make_colors()
+        self._row_issues = None  # Force recomputing the issues
 
     def update_display_table(self):
         self._update_component_mappings()
@@ -510,7 +535,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             if mapping.position == Position.hidden and mapping.value is not None:
                 # 2. Constant value: we want special database value support
                 try:
-                    value = from_database(mapping.value)
+                    value = from_database(*split_value_and_type(mapping.value))
                     return SpineDBManager.display_data_from_parsed(value)
                 except ParameterValueFormatError:
                     return None
@@ -532,10 +557,10 @@ class MappingSpecificationModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if role == PARSED_ROLE:
             # Only used for the ParameterValueEditor.
-            # At this point, the delegate has already checked that it's a constant parameter/default value mapping
+            # At this point, the delegate has already checked that it's a constant parameter (default) value mapping
             m = self._component_mappings[self._logical_row[index.row()]]
             try:
-                return from_database(m.value)
+                return from_database(*split_value_and_type(m.value))
             except ParameterValueFormatError:
                 return None
         column = index.column()
@@ -656,7 +681,7 @@ class MappingSpecificationModel(QAbstractTableModel):
                 SetComponentMappingReference(name, self, current_type, value, current_type, current_reference)
             )
             return False
-        # If type is "None", set it to something reasonable to save users work
+        # If type is "None", set it to something reasonable to try and help users
         try:
             value = int(value)
         except ValueError:
@@ -767,7 +792,6 @@ class MappingSpecificationModel(QAbstractTableModel):
         self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole, Qt.DisplayRole, Qt.ToolTipRole])
 
     def _recommend_types(self, name, mapping):
-        # Recommend data types
         self._recommend_float_type_for_values()
         if name.endswith("indexes") and self.is_time_series_value():
             self._recommend_date_time_type(mapping)
@@ -819,7 +843,7 @@ class MappingSpecificationModel(QAbstractTableModel):
             return
         self.value_mapping.options["repeat"] = repeat
 
-    def set_map_dimension_count(self, dimension_count, new_index_mapping=None):
+    def set_map_dimension_count(self, dimension_count):
         if self._root_mapping is None:
             return
         if not self.is_map_value():
@@ -827,22 +851,41 @@ class MappingSpecificationModel(QAbstractTableModel):
         previous_dimension_count = self.map_dimension_count()
         if dimension_count == previous_dimension_count:
             return
-        parameter_type = self.parameter_type
-        index_mapping = ParameterValueIndexMapping if parameter_type == "Value" else ParameterDefaultValueIndexMapping
-        last_index_mapping = next(m for m in reversed(self._component_mappings) if isinstance(m, index_mapping))
+        factory = ParameterValueIndexMapping if self.parameter_type == "Value" else ParameterDefaultValueIndexMapping
+        last_index_mapping = next(m for m in reversed(self._component_mappings) if isinstance(m, factory))
         last_index_mapping_child = last_index_mapping.child
+        removed_mappings = []
         self.beginResetModel()
         if dimension_count > previous_dimension_count:
-            if new_index_mapping is None:
-                new_index_mapping = index_mapping(Position.hidden)
-            last_index_mapping.child = new_index_mapping
-            new_index_mapping.child = last_index_mapping_child
+            for _ in range(previous_dimension_count, dimension_count):
+                last_index_mapping.child = factory(Position.hidden)
+                last_index_mapping = last_index_mapping.child
         else:
-            new_index_mapping = last_index_mapping
-            last_index_mapping.parent.child = last_index_mapping_child
+            for _ in range(dimension_count, previous_dimension_count):
+                removed_mappings.insert(0, last_index_mapping)
+                last_index_mapping = last_index_mapping.parent
+        last_index_mapping.child = last_index_mapping_child
         self.update_display_table()
         self.endResetModel()
-        return new_index_mapping
+        return removed_mappings
+
+    def restore_index_mappings(self, mappings):
+        if self._root_mapping is None:
+            return
+        if not self.is_map_value():
+            return
+        if not mappings:
+            return
+        factory = ParameterValueIndexMapping if self.parameter_type == "Value" else ParameterDefaultValueIndexMapping
+        last_index_mapping = next(m for m in reversed(self._component_mappings) if isinstance(m, factory))
+        last_index_mapping_child = last_index_mapping.child
+        self.beginResetModel()
+        for m in mappings:
+            last_index_mapping.child = m
+            last_index_mapping = m
+        last_index_mapping.child = last_index_mapping_child
+        self.update_display_table()
+        self.endResetModel()
 
     def set_map_compress_flag(self, compress):
         """
@@ -893,7 +936,7 @@ class MappingSpecificationModel(QAbstractTableModel):
         Returns:
             function
         """
-        return lambda value, index=index: self.setData(index, value)
+        return lambda value_type_tup, index=index: self.setData(index, join_value_and_type(*value_type_tup))
 
     def index_name(self, index):
         return index.siblingAtColumn(0).data()

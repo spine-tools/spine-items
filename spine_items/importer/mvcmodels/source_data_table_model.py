@@ -29,7 +29,7 @@ class SourceDataTableModel(MinimalTableModel):
     """
 
     _FETCH_CHUNK_SIZE = 100
-
+    more_data_needed = Signal(int, int)
     column_types_updated = Signal()
     row_types_updated = Signal()
     mapping_data_changed = Signal()
@@ -47,6 +47,7 @@ class SourceDataTableModel(MinimalTableModel):
         self._converted_data = {}
         self._infinite = False
         self._infinite_extent = 0
+        self._fetching = False
 
     def flags(self, index):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable & ~Qt.ItemIsEditable
@@ -55,42 +56,38 @@ class SourceDataTableModel(MinimalTableModel):
         return self._mapping_specification
 
     def clear(self, infinite=False):
+        super().clear()
         self._column_type_errors = {}
         self._row_type_errors = {}
         self._column_types = {}
         self._row_types = {}
         self._converted_data = {}
+        self._infinite_extent = 0
         self._infinite = infinite
-        if self._infinite:
-            self._infinite_extent = 0
-        else:
-            super().clear()
+        self._fetching = False
 
-    def reset_model(self, main_data=None):
-        self._column_type_errors = {}
-        self._row_type_errors = {}
-        self._column_types = {}
-        self._row_types = {}
-        self._converted_data = {}
-        if self._infinite:
-            self._infinite_extent = 0
-        else:
-            super().reset_model(main_data[: self._FETCH_CHUNK_SIZE])
-            self._unfetched_data = main_data[self._FETCH_CHUNK_SIZE :]
+    def set_horizontal_header_labels(self, header):
+        super().set_horizontal_header_labels(header)
         self._polish_mapping()
 
     def canFetchMore(self, parent):
-        if self._infinite:
-            return True
-        return bool(self._unfetched_data)
+        return not self._fetching
 
     def fetchMore(self, parent):
+        if not self._infinite:
+            self._fetching = True
+            self.more_data_needed.emit(len(self._main_data) + self._FETCH_CHUNK_SIZE, len(self._main_data))
+            return
         self.beginResetModel()
-        if self._infinite:
-            self._infinite_extent += self._FETCH_CHUNK_SIZE // 10
-        else:
-            self._main_data += self._unfetched_data[: self._FETCH_CHUNK_SIZE]
-            self._unfetched_data[: self._FETCH_CHUNK_SIZE] = []
+        self._infinite_extent += self._FETCH_CHUNK_SIZE // 10
+        self.endResetModel()
+
+    def append_rows(self, data):
+        self._fetching = False
+        if not data:
+            return
+        self.beginInsertRows(QModelIndex(), len(self._main_data), len(data))
+        self._main_data += data
         self.endResetModel()
 
     def rowCount(self, parent=QModelIndex()):
@@ -101,7 +98,7 @@ class SourceDataTableModel(MinimalTableModel):
     def columnCount(self, parent=QModelIndex()):
         if self._infinite:
             return self._infinite_extent
-        return min(super().columnCount(parent), self._FETCH_CHUNK_SIZE)
+        return super().columnCount(parent)
 
     def _polish_mapping(self):
         if (

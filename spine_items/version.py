@@ -8,7 +8,7 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-__version__ = "0.7.5"
-REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.0"
-REQUIRED_SPINE_ENGINE_VERSION = "0.10.0"
-REQUIRED_SPINEDB_API_VERSION = "0.12.0"
+__version__ = "0.7.6"
+REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.1"
+REQUIRED_SPINE_ENGINE_VERSION = "0.10.1"
+REQUIRED_SPINEDB_API_VERSION = "0.12.2"

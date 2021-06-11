@@ -32,6 +32,11 @@ from spine_engine.project_item.project_item_resource import (
     transient_file_resource,
 )
 
+EXPORTED_PATHS_FILE_NAME = ".exported.json"
+"""Name of the file that stores exporter's internal state."""
+EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX = ".export-manifest"
+"""Prefix for the temporary files that exporter's executable uses to communicate output paths."""
+
 
 def labelled_resource_filepaths(resources):
     """Returns a dict mapping resource labels to file paths available in given resources.
@@ -272,7 +277,7 @@ def exported_files_as_resources(item_name, exported_files, data_dir, databases):
         tuple: output resources and updated exported files cache
     """
     manifests = _collect_execution_manifests(data_dir)
-    exported_file_path = Path(data_dir, "exported.json")
+    exported_file_path = Path(data_dir, EXPORTED_PATHS_FILE_NAME)
     if manifests is not None:
         _write_exported_files_file(exported_file_path, manifests, data_dir)
         exported_files = manifests
@@ -307,7 +312,7 @@ def _collect_execution_manifests(data_dir):
     """
     manifests = None
     for path in Path(data_dir).iterdir():
-        if path.name.startswith("__export-manifest") and path.suffix == ".json":
+        if path.name.startswith(EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX) and path.suffix == ".json":
             with open(path) as manifest_file:
                 manifest = json.load(manifest_file)
             path.unlink()

@@ -9,38 +9,31 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains a widget to set up a renamer filter.
+Contains :class:`ClassTreeWidget`.
 
 :author: A. Soininen (VTT)
-:date:   30.10.2020
+:date:   31.5.2021
 """
-from PySide2.QtWidgets import QMessageBox, QWidget
+import pickle
+from PySide2.QtCore import QMimeData
+from PySide2.QtWidgets import QTreeWidget, QMessageBox, QTreeWidgetItem
+
 from spinedb_api import DatabaseMapping, SpineDBAPIError
-from ..mvcmodels.rename_table_model import RenameTableModel
-from ..settings import EntityClassRenamingSettings
+from .drop_target_table import DROP_MIME_TYPE
 
 
-class EntityClassRenamingWidget(QWidget):
-    """Widget for entity class renamer settings."""
+class ClassTreeWidget(QTreeWidget):
+    """A tree widget with drag capabilities to show entity classes."""
 
-    def __init__(self, undo_stack, settings=None):
-        """
-        Args:
-            undo_stack (QUndoStack)
-            settings (EntityClassRenamingSettings): filter settings
-        """
-        super().__init__()
-        from ..ui.renamer_editor import Ui_Form  # pylint: disable=import-outside-toplevel
-
-        self._ui = Ui_Form()
-        self._ui.setupUi(self)
-        name_map = settings.name_map if isinstance(settings, EntityClassRenamingSettings) else {}
-        self._rename_table_model = RenameTableModel(undo_stack, name_map)
-        self._ui.renaming_table.setModel(self._rename_table_model)
+    def mimeData(self, items):
+        mime_data = QMimeData()
+        classes = [item.text(0) for item in items]
+        mime_data.setData(DROP_MIME_TYPE, pickle.dumps(classes))
+        return mime_data
 
     def load_data(self, url):
         """
-        Loads entity class names from given URL.
+        Loads parameter data from given URL.
 
         Args:
             url (str): database URL
@@ -50,23 +43,16 @@ class EntityClassRenamingWidget(QWidget):
         except SpineDBAPIError as error:
             QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
             return
-        names = set()
+        classes = list()
         try:
-            for entity_class_row in db_map.query(db_map.entity_class_sq).all():
-                names.add(entity_class_row.name)
+            for class_row in db_map.query(db_map.entity_class_sq):
+                classes.append(class_row.name)
         except SpineDBAPIError as error:
             QMessageBox.information(
                 self, "Error while reading database", f"Could not read from database {url}:\n{error}"
             )
         finally:
             db_map.connection.close()
-        self._rename_table_model.reset_originals(names)
-
-    def settings(self):
-        """
-        Returns filter's settings.
-
-        Returns:
-            FilterSettings: settings
-        """
-        return EntityClassRenamingSettings(self._rename_table_model.renaming_settings())
+        self.clear()
+        for class_name in classes:
+            self.addTopLevelItem(QTreeWidgetItem([class_name]))

@@ -30,6 +30,10 @@ class GdxExporterFactory(ProjectItemFactory):
         return GdxExporter
 
     @staticmethod
+    def is_deprecated():
+        return True
+
+    @staticmethod
     def icon():
         return ":/icons/item_icons/database-export-gdx.svg"
 
