@@ -419,7 +419,8 @@ class ExecutableItem(ExecutableItemBase):
             try:
                 self._tool_instance.prepare(expanded_args)
             except RuntimeError as error:
-                self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
+                if str(error) != "":
+                    self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
                 return ItemExecutionFinishState.FAILURE
             return_code = self._tool_instance.execute()
         self._handle_output_files(return_code, execution_dir)
