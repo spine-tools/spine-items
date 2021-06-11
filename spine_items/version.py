@@ -10,5 +10,5 @@
 ######################################################################################################################
 __version__ = "0.7.6rc1"
 REQUIRED_SPINE_TOOLBOX_VERSION = "0.6.1"
-REQUIRED_SPINE_ENGINE_VERSION = "0.10.1"
-REQUIRED_SPINEDB_API_VERSION = "0.12.2"
+REQUIRED_SPINE_ENGINE_VERSION = "0.10.1rc1"
+REQUIRED_SPINEDB_API_VERSION = "0.12.2rc1"
