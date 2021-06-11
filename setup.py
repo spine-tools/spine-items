@@ -18,16 +18,20 @@ Setup script for Python's setuptools.
 
 from setuptools import setup, find_packages
 
+from spine_items.version import (
+    __version__,
+    REQUIRED_SPINEDB_API_VERSION,
+    REQUIRED_SPINE_ENGINE_VERSION,
+    REQUIRED_SPINE_TOOLBOX_VERSION,
+)
+
+
 with open("README.md", encoding="utf8") as readme_file:
     readme = readme_file.read()
 
-version = {}
-with open("spine_items/version.py") as fp:
-    exec(fp.read(), version)
-
 setup(
     name="spine_items",
-    version=version["__version__"],
+    version=__version__,
     description="Spine project items",
     long_description=readme,
     long_description_content_type="text/markdown",
@@ -36,8 +40,9 @@ setup(
     url="https://github.com/Spine-project/spine-items",
     packages=find_packages(exclude=("tests", "tests.*")),
     install_requires=[
-        "spinedb_api >=0.12.3",
-        "spine_engine >=0.10.0",
+        "spinedb_api >={}".format(REQUIRED_SPINEDB_API_VERSION),
+        "spine_engine >={}".format(REQUIRED_SPINE_ENGINE_VERSION),
+        "spinetoolbox >={}".format(REQUIRED_SPINE_TOOLBOX_VERSION),
     ],
     include_package_data=True,
     license="LGPL-3.0-or-later",
@@ -52,6 +57,6 @@ setup(
     ],
     project_urls={
         "Issue Tracker": "https://github.com/Spine-project/Spine-Toolbox/issues",
-        "Documentation": "https://spine-toolbox.readthedocs.io/en/latest/project_items.html"
+        "Documentation": "https://spine-toolbox.readthedocs.io/en/latest/project_items.html",
     },
 )
