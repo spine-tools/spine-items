@@ -19,8 +19,15 @@ from dataclasses import dataclass
 from enum import Enum, unique
 import json
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
-from spinedb_api.mapping import to_dict as mapping_to_dict
-from spinedb_api.export_mapping.export_mapping import ExportMapping, from_dict as mapping_from_dict
+from spinedb_api.mapping import to_dict as mapping_to_dict, Position, unflatten
+from spinedb_api.export_mapping.export_mapping import (
+    ExportMapping,
+    from_dict as mapping_from_dict,
+    ParameterValueIndexMapping,
+    ParameterDefaultValueIndexMapping,
+    IndexNameMapping,
+    DefaultValueIndexNameMapping,
+)
 from .item_info import ItemInfo
 
 
@@ -183,7 +190,7 @@ class Specification(ProjectItemSpecification):
                 spec_dict.get("enabled", True),
                 spec_dict.get("always_export_header", True),
                 spec_dict.get("use_fixed_table_name", False),
-                mapping_from_dict(spec_dict["mapping"]),
+                _add_index_names(mapping_from_dict(spec_dict["mapping"])),
             )
             for name, spec_dict in specification_dict["mappings"].items()
         }
@@ -194,3 +201,27 @@ class Specification(ProjectItemSpecification):
         return Specification(
             specification_dict["name"], specification_dict["description"], mapping_specifications, output_format
         )
+
+
+def _add_index_names(mapping):
+    """Adds index name mappings to legacy mappings that don't have them.
+
+    Args:
+        mapping (ExportMapping): mapping to modify
+
+    Returns:
+        mapping (ExportMapping): fixed mapping
+    """
+    flattened = mapping.flatten()
+    if any((isinstance(m, (IndexNameMapping, DefaultValueIndexNameMapping)) for m in flattened)):
+        return mapping
+    if any((isinstance(m, (ParameterValueIndexMapping, ParameterDefaultValueIndexMapping)) for m in flattened)):
+        fixed = list()
+        for m in flattened:
+            if isinstance(m, ParameterValueIndexMapping):
+                fixed.append(IndexNameMapping(Position.hidden))
+            elif isinstance(m, ParameterDefaultValueIndexMapping):
+                fixed.append(DefaultValueIndexNameMapping(Position.hidden))
+            fixed.append(m)
+        mapping = unflatten(fixed)
+    return mapping
