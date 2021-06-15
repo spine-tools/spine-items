@@ -22,8 +22,12 @@ from PySide2.QtCore import Qt, QAbstractTableModel, Signal, QTimer
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.mvcmodels.shared import PARSED_ROLE
 from spinetoolbox.spine_db_manager import SpineDBManager
-from spinetoolbox.helpers import join_value_and_type, split_value_and_type
-from spinedb_api.parameter_value import from_database, ParameterValueFormatError
+from spinedb_api.parameter_value import (
+    from_database,
+    join_value_and_type,
+    split_value_and_type,
+    ParameterValueFormatError,
+)
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.mapping import Position, unflatten
 from spinedb_api.import_mapping.import_mapping_compat import (
@@ -971,11 +975,11 @@ def _insert_index_name_mappings(mapping):
         not isinstance(m, (DefaultValueIndexNameMapping, IndexNameMapping)) for m in flattened
     ):
         fixed = list()
-        for mapping in flattened:
-            if isinstance(mapping, ParameterDefaultValueIndexMapping):
+        for m in flattened:
+            if isinstance(m, ParameterDefaultValueIndexMapping):
                 fixed.append(DefaultValueIndexNameMapping(Position.hidden))
-            elif isinstance(mapping, ParameterValueIndexMapping):
+            elif isinstance(m, ParameterValueIndexMapping):
                 fixed.append(IndexNameMapping(Position.hidden))
-            fixed.append(mapping)
+            fixed.append(m)
         mapping = unflatten(fixed)
     return mapping
