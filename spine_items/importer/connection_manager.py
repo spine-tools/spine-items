@@ -18,6 +18,7 @@ Contains ConnectionManager class.
 
 from PySide2.QtCore import QObject, QThread, Signal, Slot
 from PySide2.QtWidgets import QFileDialog
+from spinetoolbox.helpers import busy_effect
 
 
 class ConnectionManager(QObject):
@@ -348,6 +349,7 @@ class ConnectionWorker(QObject):
             self.error.emit(f"Could not get tables from source: {error}")
             raise error
 
+    @busy_effect
     @Slot(list, dict, int, int)
     def data(self, table, options, max_rows, start):
         try:

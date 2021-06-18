@@ -230,7 +230,6 @@ class ExecutableItem(ExecutableItemBase):
 
     def _copy_program_files(self, execution_dir):
         """Copies Tool specification source files to base directory."""
-        # Make work directory anchor with path as tooltip
         n_copied_files = 0
         for source_pattern in self._tool_specification.includes:
             dir_name, file_pattern = os.path.split(source_pattern)
@@ -362,26 +361,8 @@ class ExecutableItem(ExecutableItemBase):
         execution_dir = _execution_directory(self._work_dir, self._tool_specification)
         if execution_dir is None:
             return ItemExecutionFinishState.FAILURE
-        if self._work_dir is not None:
-            work_or_source = "work"
-            # Make work directory anchor with path as tooltip
-            work_anchor = (
-                "<a style='color:#99CCFF;' title='"
-                + execution_dir
-                + "' href='file:///"
-                + execution_dir
-                + "'>work directory</a>"
-            )
-            self._logger.msg.emit(
-                f"*** Copying Tool specification <b>{self._tool_specification.name}"
-                f"</b> program files to {work_anchor} ***"
-            )
-            if not self._copy_program_files(execution_dir):
-                self._logger.msg_error.emit("Copying program files to work directory failed.")
-                return ItemExecutionFinishState.FAILURE
-        else:
-            work_or_source = "source"
-        # Make source directory anchor with path as tooltip
+        work_or_source = "work" if self._work_dir is not None else "source"
+        # Make work/source directory anchor with path as tooltip
         anchor = (
             f"<a style='color:#99CCFF;' title='{execution_dir}'"
             f"href='file:///{execution_dir}'>{work_or_source} directory</a>"
@@ -389,6 +370,11 @@ class ExecutableItem(ExecutableItemBase):
         self._logger.msg.emit(
             f"*** Executing Tool specification <b>{self._tool_specification.name}</b> in {anchor} ***"
         )
+        if work_or_source == "work":
+            self._logger.msg.emit(f"*** Copying program files ***")
+            if not self._copy_program_files(execution_dir):
+                self._logger.msg_error.emit("Copying program files failed")
+                return ItemExecutionFinishState.FAILURE
         # Find required input files for ToolInstance (if any)
         if self._tool_specification.inputfiles:
             self._logger.msg.emit("*** Checking Tool specification requirements ***")
@@ -426,18 +412,16 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         resources = forward_resources + backward_resources
         if not validate_database_version(resources, self._logger):
-            self._logger.msg_error.emit("Invalid database versions")
+            self._logger.msg_error.emit("Invalid database version")
             return ItemExecutionFinishState.FAILURE
         with labelled_resource_args(resources) as labelled_args:
             expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
             try:
                 self._tool_instance.prepare(expanded_args)
             except RuntimeError as error:
-                self._logger.msg_error.emit(f"Failed to prepare tool instance: {error}")
+                if str(error) != "":
+                    self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
                 return ItemExecutionFinishState.FAILURE
-            self._logger.msg.emit(
-                f"*** Starting instance of Tool specification <b>{self._tool_specification.name}</b> ***"
-            )
             return_code = self._tool_instance.execute()
         self._handle_output_files(return_code, execution_dir)
         self._tool_instance = None
