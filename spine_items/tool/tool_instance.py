@@ -19,6 +19,7 @@ Contains ToolInstance class.
 import os
 import sys
 import shutil
+from spinetoolbox.widgets.settings_widget import resolve_conda_executable
 from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, resolve_gams_executable
 from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
@@ -68,13 +69,14 @@ class ToolInstance:
         """[Obsolete] Removes Tool instance files from work directory."""
         shutil.rmtree(self.basedir, ignore_errors=True)
 
-    def prepare(self, args):
+    def prepare(self, args, k_spec_dict=None):
         """Prepares this instance for execution.
 
         Implement in subclasses to perform specific initialization.
 
         Args:
             args (list): Tool cmd line args
+            k_spec_dict (dict): Kernel spec name and related settings
         """
         raise NotImplementedError()
 
@@ -97,7 +99,7 @@ class ToolInstance:
 class GAMSToolInstance(ToolInstance):
     """Class for GAMS Tool instances."""
 
-    def prepare(self, args):
+    def prepare(self, args, _=None):
         """See base class."""
         gams_path = self._settings.value("appSettings/gamsPath", defaultValue="")
         self.program = resolve_gams_executable(gams_path)
@@ -125,7 +127,7 @@ class GAMSToolInstance(ToolInstance):
 class JuliaToolInstance(ToolInstance):
     """Class for Julia Tool instances."""
 
-    def prepare(self, args):
+    def prepare(self, args, _=None):
         """See base class."""
         sysimage = self._owner.options.get("julia_sysimage", "")
         use_julia_kernel = self._settings.value("appSettings/useJuliaKernel", defaultValue="2")
@@ -179,7 +181,7 @@ class JuliaToolInstance(ToolInstance):
 class PythonToolInstance(ToolInstance):
     """Class for Python Tool instances."""
 
-    def prepare(self, args, env=""):
+    def prepare(self, args, k_spec_dict=None):
         """See base class."""
         use_python_kernel = self._settings.value("appSettings/usePythonKernel", defaultValue="0")
         if use_python_kernel == "2":
@@ -190,12 +192,14 @@ class PythonToolInstance(ToolInstance):
             if cmdline_args:
                 main_command += " " + '"' + '" "'.join(cmdline_args) + '"'
             self.args = [cd_command, main_command]
-            kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-            use_conda = False
-            if env != "":
-                kernel_name = env
-                use_conda = True
-            self.exec_mngr = KernelExecutionManager(self._logger, kernel_name, *self.args, group_id=self.owner.group_id, activate_env=use_conda)
+            # kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
+            conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
+            conda_exe = resolve_conda_executable(conda_exe)
+            kernel_name = k_spec_dict["kernel_name"]
+            activate_env = k_spec_dict["is_conda"]
+            self.exec_mngr = KernelExecutionManager(
+                self._logger, kernel_name, *self.args, group_id=self.owner.group_id, activate_env=activate_env, conda_exe=conda_exe
+            )
         else:
             python_exe = self._settings.value("appSettings/pythonPath", defaultValue="")
             python_exe = resolve_python_interpreter(python_exe)
@@ -233,7 +237,7 @@ class PythonToolInstance(ToolInstance):
 class ExecutableToolInstance(ToolInstance):
     """Class for Executable Tool instances."""
 
-    def prepare(self, args):
+    def prepare(self, args, _=None):
         """See base class."""
         batch_path = os.path.join(self.basedir, self.tool_specification.main_prgm)
         if sys.platform != "win32":

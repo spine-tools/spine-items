@@ -53,7 +53,7 @@ class Tool(ProjectItem):
         execute_in_work=True,
         cmd_line_args=None,
         options=None,
-        environment="",
+        k_spec_settings=None,
     ):
         """Tool class.
 
@@ -68,7 +68,7 @@ class Tool(ProjectItem):
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
             options (dict, optional): misc tool options. At the moment it just holds the location of the julia sysimage
-            environment (str): Selected environment in which to execute this Tool
+            k_spec_settings (dict): Kernel spec name and other settings
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -86,7 +86,10 @@ class Tool(ProjectItem):
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
-        self.env = environment
+        if not k_spec_settings:
+            self.update_kernel_spec_settings(0)
+        else:
+            self.kernel_spec_settings = k_spec_settings
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_update_execution_mode(execute_in_work)
@@ -139,7 +142,7 @@ class Tool(ProjectItem):
         s[self._properties_ui.toolButton_refresh_envs.clicked] = self.refresh_conda_envs
         s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
-        s[self._properties_ui.comboBox_conda_envs.textActivated] = self.update_environment
+        s[self._properties_ui.comboBox_conda_envs.currentIndexChanged] = self.update_kernel_spec_settings
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
         s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
         s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
@@ -187,9 +190,12 @@ class Tool(ProjectItem):
             self._properties_ui.radioButton_execute_in_source.setChecked(True)
         self._properties_ui.radioButton_execute_in_work.blockSignals(False)
 
-    @Slot(str)
-    def update_environment(self, txt):
-        self.env = txt
+    @Slot(int)
+    def update_kernel_spec_settings(self, row):
+        item = self._toolbox.conda_env_model.item(row)
+        d = item.data()
+        print(d)
+        self.kernel_spec_settings = d
 
     @Slot(str)
     def update_specification(self, text):
@@ -446,7 +452,7 @@ class Tool(ProjectItem):
         d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
         if self._options:
             d["options"] = self._options
-        d["environment"] = self.env
+        d["k_spec_settings"] = self.kernel_spec_settings
         return d
 
     @staticmethod
@@ -458,9 +464,9 @@ class Tool(ProjectItem):
         cmd_line_args = item_dict.get("cmd_line_args", [])
         cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in cmd_line_args]
         options = item_dict.get("options", {})
-        environment = item_dict.get("environment", "")
+        k = item_dict.get("k_spec_settings", dict())
         return Tool(
-            name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options, environment
+            name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options, k
         )
 
     def rename(self, new_name, rename_data_dir_message):
