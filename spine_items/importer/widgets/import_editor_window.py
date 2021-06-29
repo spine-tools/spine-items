@@ -85,7 +85,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         """
         super().__init__(toolbox, specification, item)
         self.takeCentralWidget().deleteLater()
-        self._filepath = filepath
+        self._filepath = filepath if filepath else self._FILE_LESS
         self._import_sources = None
         self._connection_manager = None
         self._memoized_connectors = {}
@@ -110,8 +110,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     def showEvent(self, ev):
         """Select file path in the combobox, which calls the ``start_ui`` slot."""
         super().showEvent(ev)
-        if self._filepath:
-            self._ui.comboBox_source_file.setCurrentText(self._filepath)
+        self._ui.comboBox_source_file.setCurrentText(self._filepath)
 
     def is_file_less(self):
         return self._ui.comboBox_source_file.currentText() == self._FILE_LESS
@@ -119,6 +118,10 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     @property
     def settings_group(self):
         return "mappingPreviewWindow"
+
+    @property
+    def _duplicate_kwargs(self):
+        return dict(filepath=self._filepath)
 
     def _make_ui(self):
         from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
