@@ -54,6 +54,9 @@ from spinedb_api.export_mapping.export_mapping import (
     ToolFeatureParameterDefinitionMapping,
     ToolFeatureRequiredFlagMapping,
     ToolMapping,
+    IndexNameMapping,
+    DefaultValueIndexNameMapping,
+    ParameterDefaultValueTypeMapping,
 )
 from spinetoolbox.helpers import color_from_index
 from ..commands import SetMappingNullable, SetMappingPositions, SetMappingProperty
@@ -431,16 +434,19 @@ class MappingEditorTableModel(QAbstractTableModel):
 _names = {
     AlternativeDescriptionMapping: "Alternatives description",
     AlternativeMapping: "Alternatives",
+    DefaultValueIndexNameMapping: "Default value index names",
     ExpandedParameterDefaultValueMapping: "Default values",
     ExpandedParameterValueMapping: "Parameter values",
     FeatureEntityClassMapping: "Entity classes",
     FeatureParameterDefinitionMapping: "Parameter definitions",
+    IndexNameMapping: "Parameter index names",
     ObjectClassMapping: "Object classes",
     ObjectGroupMapping: "Object groups",
     ObjectGroupObjectMapping: "Objects",
     ObjectMapping: "Objects",
     ParameterDefaultValueMapping: "Default values",
     ParameterDefaultValueIndexMapping: "Default value indexes",
+    ParameterDefaultValueTypeMapping: "Default value types",
     ParameterDefinitionMapping: "Parameter definitions",
     ParameterValueIndexMapping: "Parameter indexes",
     ParameterValueListMapping: "Value lists",

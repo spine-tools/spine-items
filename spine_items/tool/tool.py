@@ -72,7 +72,6 @@ class Tool(ProjectItem):
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self.execute_in_work = None
-        self.undo_execute_in_work = None
         if cmd_line_args is None:
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
@@ -224,6 +223,11 @@ class Tool(ProjectItem):
         if self._active:
             self._properties_ui.treeView_cmdline_args.setFocus()
 
+    def undo_specification(self):
+        undo_spec = None if self._specification is None else self._specification.clone()
+        undo_spec.execute_in_work = self.execute_in_work
+        return undo_spec
+
     def do_set_specification(self, specification):
         """see base class"""
         if not super().do_set_specification(specification):
@@ -231,19 +235,11 @@ class Tool(ProjectItem):
         self._populate_cmdline_args_model()
         if self._active:
             self._update_tool_ui()
-        if self.undo_execute_in_work is None:
-            self.undo_execute_in_work = self.execute_in_work
         if specification:
             self.do_update_execution_mode(specification.execute_in_work)
         self._resources_to_successors_changed()
         self._check_notifications()
         return True
-
-    def undo_set_specification(self):
-        """see base class"""
-        super().undo_set_specification()
-        self.do_update_execution_mode(self.undo_execute_in_work)
-        self.undo_execute_in_work = None
 
     def update_options(self, options):
         """Pushes a new UpdateToolOptionsCommand to the toolbox stack."""

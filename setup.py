@@ -16,29 +16,7 @@ Setup script for Python's setuptools.
 :date:   3.10.2019
 """
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
-with open("README.md", encoding="utf8") as readme_file:
-    readme = readme_file.read()
-
-version = {}
-with open("spine_items/version.py") as fp:
-    exec(fp.read(), version)
-
-setup(
-    name="spine_items",
-    version=version["__version__"],
-    description="Spine project items",
-    long_description=readme,
-    author="Spine Project consortium",
-    author_email="spine_info@vtt.fi",
-    url="https://github.com/Spine-project/spine-items",
-    packages=find_packages(exclude=("tests",)),
-    include_package_data=True,
-    license="LGPL-3.0-or-later",
-    zip_safe=False,
-    keywords="",
-    classifiers=[],
-    python_requires=">=3.6, <3.9",
-    test_suite="tests",
-)
+# NOTE: Package configuration in setup.cfg
+setup()

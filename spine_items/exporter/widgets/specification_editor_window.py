@@ -832,17 +832,19 @@ def _new_mapping_specification(mapping_type):
             True,
             True,
             False,
-            object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, Position.hidden, 5, None),
+            object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, Position.hidden, 5, None, None),
         )
     if mapping_type == MappingType.object_parameter_default_values:
-        return MappingSpecification(mapping_type, True, True, False, object_parameter_default_value_export(0, 1, 2))
+        return MappingSpecification(
+            mapping_type, True, True, False, object_parameter_default_value_export(0, 1, Position.hidden, 2, None, None)
+        )
     if mapping_type == MappingType.object_parameter_values:
         return MappingSpecification(
             mapping_type,
             True,
             True,
             False,
-            object_parameter_export(0, 2, Position.hidden, 1, 3, Position.hidden, 4, None),
+            object_parameter_export(0, 2, Position.hidden, 1, 3, Position.hidden, 4, None, None),
         )
     if mapping_type == MappingType.parameter_value_lists:
         return MappingSpecification(mapping_type, True, True, False, parameter_value_list_export(0, 1))
@@ -850,7 +852,11 @@ def _new_mapping_specification(mapping_type):
         return MappingSpecification(mapping_type, True, True, False, relationship_export(0, Position.hidden, [1], [2]))
     if mapping_type == MappingType.relationship_parameter_default_values:
         return MappingSpecification(
-            mapping_type, True, True, False, relationship_parameter_default_value_export(0, 1, 2)
+            mapping_type,
+            True,
+            True,
+            False,
+            relationship_parameter_default_value_export(0, 1, Position.hidden, 2, None, None),
         )
     if mapping_type == MappingType.relationship_parameter_values:
         return MappingSpecification(
@@ -859,7 +865,7 @@ def _new_mapping_specification(mapping_type):
             True,
             False,
             relationship_parameter_export(
-                0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None
+                0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None, None
             ),
         )
     if mapping_type == MappingType.alternatives:

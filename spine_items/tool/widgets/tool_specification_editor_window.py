@@ -228,11 +228,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         new_spec_dict["outputfiles"] = self._output_file_list()
         # Strip whitespace from args before saving it to JSON
         new_spec_dict["cmdline_args"] = split_cmdline_args(self._ui.lineEdit_args.text())
-        for k in REQUIRED_KEYS:
-            if not new_spec_dict[k]:
-                self._show_error(f"Missing mandatory field '{k}'")
-                return None
-        # Create new Tool specification
         new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/")
         try:
             new_spec_dict = self.insert_execution_settings(new_spec_dict)

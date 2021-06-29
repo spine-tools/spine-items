@@ -279,7 +279,7 @@ class ImportSources(QObject):
         mappings for tables, selected tables.
 
         Returns:
-            dict: dict with settings
+            dict
         """
         tables = self._source_table_model.table_names()
         selected_tables = self._source_table_model.checked_table_names()
@@ -304,7 +304,7 @@ class ImportSources(QObject):
 
         table_options = {t: o for t, o in self._connector.table_options.items() if t in tables}
 
-        settings = {
+        return {
             "table_mappings": table_mappings,
             "table_options": table_options,
             "table_types": table_types,
@@ -312,7 +312,6 @@ class ImportSources(QObject):
             "selected_tables": selected_tables,
             "source_type": self._connector.source_type,
         }
-        return settings
 
     @Slot()
     def close_connection(self):
