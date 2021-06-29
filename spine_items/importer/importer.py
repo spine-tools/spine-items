@@ -173,14 +173,10 @@ class Importer(ProjectItem):
 
     def do_set_specification(self, specification):
         """see base class"""
-        success = super().do_set_specification(specification)
-        self._check_notifications()
-        if not success:
+        if not super().do_set_specification(specification):
             return False
         if self._active:
             self._update_ui()
-        if specification is None:
-            return True
         self._check_notifications()
         return True
 
