@@ -223,6 +223,8 @@ class Tool(ProjectItem):
 
     def undo_specification(self):
         undo_spec = None if self._specification is None else self._specification.clone()
+        if not undo_spec:
+            return None
         undo_spec.execute_in_work = self.execute_in_work
         return undo_spec
 
