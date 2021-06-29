@@ -20,7 +20,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QWidget
 from PySide2.QtGui import QStandardItemModel, QStandardItem
 from spine_engine.utils.helpers import resolve_conda_executable, resolve_python_interpreter
-from spinetoolbox.cksm import CondaKernelSpecManager
+from spine_engine.cksm import CondaKernelSpecManager
 from spinetoolbox.helpers import busy_effect, file_is_valid, select_python_interpreter
 from spinetoolbox.widgets.notification import Notification
 from spinetoolbox.widgets.kernel_editor import KernelEditor, find_python_kernels
