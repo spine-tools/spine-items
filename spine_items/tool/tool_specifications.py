@@ -40,6 +40,7 @@ OPTIONAL_KEYS = [
     "outputfiles",
     "cmdline_args",
     "execute_in_work",
+    "execution_settings"
 ]
 LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]  # These should be lists
 
@@ -158,6 +159,9 @@ class ToolSpecification(ProjectItemSpecification):
             "execute_in_work": self.execute_in_work,
             "includes_main_path": self._includes_main_path_relative(),
         }
+
+    def set_execution_settings(self):
+        raise NotImplementedError
 
     def save(self):
         """See base class."""
@@ -450,6 +454,7 @@ class PythonTool(ToolSpecification):
         outputfiles=None,
         cmdline_args=None,
         execute_in_work=True,
+        execution_settings=None,
     ):
         """
         Args:
@@ -466,6 +471,7 @@ class PythonTool(ToolSpecification):
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (str, optional): Python tool command line arguments (read from tool definition file)
+            execution_settings (dict): Python kernel spec settings
         """
         super().__init__(
             name,
@@ -484,15 +490,48 @@ class PythonTool(ToolSpecification):
         main_file = includes[0]
         self.main_dir, self.main_prgm = os.path.split(main_file)
         self.python_options = OrderedDict()
+        self.execution_settings = execution_settings
         self.return_codes = {0: "Normal return"}  # Not official
 
-    def update_python_options(self, key, value):
-        """[OBSOLETE?] Updates Python command line options.
+    def to_dict(self):
+        """Adds kernel spec settings dict to Tool spec dict."""
+        d = super().to_dict()
+        d["execution_settings"] = self.execution_settings
+        return d
 
-        Args:
-            key (str): Option name
-            value (int, float): Option value
+    def set_execution_settings(self):
+        """Sets the execution_setting instance attribute to defaults if this
+        Python Tool spec has not been updated yet.
+
+        Returns:
+            void
         """
+        if not self.execution_settings:
+            # Use global (default) execution settings from Settings->Tools
+            # This part is for providing support for Python Tool specs that do not have
+            # the execution_settings dict yet
+            d = dict()
+            d["kernel_spec_name"] = self._settings.value("appSettings/pythonKernel", defaultValue="")
+            d["is_env"] = False
+            d["use_jupyter_console"] = bool(
+                int(self._settings.value("appSettings/usePythonKernel", defaultValue="0")))  # bool(int(str))
+            d["executable"] = self._settings.value("appSettings/pythonPath", defaultValue="")
+            self.execution_settings = d
+            print(f"Updating old Python Tool spec")
+        else:
+            # logging.debug(f"self.execution_settings: {self.execution_settings}")
+            # Make sure that required keys are included (for debugging)
+            if not isinstance(self.execution_settings, dict):
+                logging.error("self.execution_settings is not a dict")
+                return
+            if "use_jupyter_console" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 1")
+            elif "kernel_spec_name" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 2")
+            elif "is_env" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 3")
+            elif "executable" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 4")
 
     @staticmethod
     def load(path, data, settings, logger):

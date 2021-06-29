@@ -117,26 +117,6 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_options)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.comboBox_conda_envs = QComboBox(self.scrollAreaWidgetContents_3)
-        self.comboBox_conda_envs.setObjectName(u"comboBox_conda_envs")
-
-        self.horizontalLayout.addWidget(self.comboBox_conda_envs)
-
-        self.toolButton_refresh_envs = QToolButton(self.scrollAreaWidgetContents_3)
-        self.toolButton_refresh_envs.setObjectName(u"toolButton_refresh_envs")
-        self.toolButton_refresh_envs.setMinimumSize(QSize(22, 22))
-        self.toolButton_refresh_envs.setMaximumSize(QSize(22, 22))
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/sync.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_refresh_envs.setIcon(icon1)
-
-        self.horizontalLayout.addWidget(self.toolButton_refresh_envs)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout)
-
         self.splitter = QSplitter(self.scrollAreaWidgetContents_3)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Vertical)
@@ -168,9 +148,9 @@ class Ui_Form(object):
         self.toolButton_add_file_path_arg.setObjectName(u"toolButton_add_file_path_arg")
         self.toolButton_add_file_path_arg.setMinimumSize(QSize(22, 22))
         self.toolButton_add_file_path_arg.setMaximumSize(QSize(22, 22))
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/file-upload.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_add_file_path_arg.setIcon(icon2)
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/file-upload.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_add_file_path_arg.setIcon(icon1)
         self.toolButton_add_file_path_arg.setIconSize(QSize(16, 16))
         self.toolButton_add_file_path_arg.setPopupMode(QToolButton.InstantPopup)
 
@@ -178,9 +158,9 @@ class Ui_Form(object):
 
         self.toolButton_remove_arg = QToolButton(self.gridLayoutWidget)
         self.toolButton_remove_arg.setObjectName(u"toolButton_remove_arg")
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/minus.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_remove_arg.setIcon(icon3)
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/minus.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_remove_arg.setIcon(icon2)
 
         self.gridLayout.addWidget(self.toolButton_remove_arg, 0, 2, 1, 1)
 
@@ -232,6 +212,11 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addWidget(self.line_4)
 
+        self.label_jupyter = QLabel(self.scrollAreaWidgetContents_3)
+        self.label_jupyter.setObjectName(u"label_jupyter")
+
+        self.verticalLayout_2.addWidget(self.label_jupyter)
+
         self.horizontalLayout_15 = QHBoxLayout()
         self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
         self.label_2 = QLabel(self.scrollAreaWidgetContents_3)
@@ -258,9 +243,9 @@ class Ui_Form(object):
         self.toolButton_tool_open_dir.setObjectName(u"toolButton_tool_open_dir")
         self.toolButton_tool_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_tool_open_dir.setMaximumSize(QSize(22, 22))
-        icon4 = QIcon()
-        icon4.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_tool_open_dir.setIcon(icon4)
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_tool_open_dir.setIcon(icon3)
 
         self.horizontalLayout_15.addWidget(self.toolButton_tool_open_dir)
 
@@ -291,7 +276,6 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_tool_specification.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification options.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.toolButton_refresh_envs.setText("")
 #if QT_CONFIG(tooltip)
         self.toolButton_add_file_path_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Append selected input file paths to the list of command line args</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -304,6 +288,7 @@ class Ui_Form(object):
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_tool_results.setText(QCoreApplication.translate("Form", u"Results...", None))
+        self.label_jupyter.setText(QCoreApplication.translate("Form", u"TextLabel", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
         self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
         self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))

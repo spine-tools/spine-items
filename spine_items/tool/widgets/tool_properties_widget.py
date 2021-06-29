@@ -41,4 +41,3 @@ class ToolPropertiesWidget(QWidget):
         model = self._toolbox.filtered_spec_factory_models["Tool"]
         self.ui.comboBox_tool.setModel(model)
         self.ui.options_widgets = {}
-        self.ui.comboBox_conda_envs.setModel(self._toolbox.conda_env_model)

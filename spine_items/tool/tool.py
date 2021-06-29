@@ -21,6 +21,7 @@ from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spine_engine.config import TOOL_OUTPUT_DIR
+from spine_engine.utils.helpers import resolve_python_interpreter
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
 from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
@@ -53,7 +54,6 @@ class Tool(ProjectItem):
         execute_in_work=True,
         cmd_line_args=None,
         options=None,
-        k_spec_settings=None,
     ):
         """Tool class.
 
@@ -68,7 +68,6 @@ class Tool(ProjectItem):
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
             options (dict, optional): misc tool options. At the moment it just holds the location of the julia sysimage
-            k_spec_settings (dict): Kernel spec name and other settings
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -86,10 +85,6 @@ class Tool(ProjectItem):
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
-        if not k_spec_settings:
-            self.update_kernel_spec_settings(0)
-        else:
-            self.kernel_spec_settings = k_spec_settings
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_update_execution_mode(execute_in_work)
@@ -139,10 +134,8 @@ class Tool(ProjectItem):
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_tool_specification.clicked] = self.show_specification_window
         s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda checked=False: self.open_directory()
-        s[self._properties_ui.toolButton_refresh_envs.clicked] = self.refresh_conda_envs
         s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
-        s[self._properties_ui.comboBox_conda_envs.currentIndexChanged] = self.update_kernel_spec_settings
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
         s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
         s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
@@ -155,11 +148,8 @@ class Tool(ProjectItem):
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
+        self._properties_ui.label_jupyter.setText("")
         self._update_tool_ui()
-
-    @Slot(bool)
-    def refresh_conda_envs(self, _=False):
-        self._toolbox.refresh_conda_env_model()
 
     @Slot(bool)
     def show_specification_window(self, _=True):
@@ -189,13 +179,6 @@ class Tool(ProjectItem):
         else:
             self._properties_ui.radioButton_execute_in_source.setChecked(True)
         self._properties_ui.radioButton_execute_in_work.blockSignals(False)
-
-    @Slot(int)
-    def update_kernel_spec_settings(self, row):
-        item = self._toolbox.conda_env_model.item(row)
-        d = item.data()
-        print(d)
-        self.kernel_spec_settings = d
 
     @Slot(str)
     def update_specification(self, text):
@@ -277,7 +260,7 @@ class Tool(ProjectItem):
             _ = self._get_options_widget()
 
     def _update_tool_ui(self):
-        """Updates Tool UI to show Tool specification details. Used when Tool specification is changed.
+        """Updates Tool properties UI. Used when Tool specification is changed.
         Overrides execution mode (work or source) with the specification default."""
         options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
         if options_widget:
@@ -294,6 +277,17 @@ class Tool(ProjectItem):
             if options_widget:
                 self._properties_ui.horizontalLayout_options.addWidget(options_widget)
                 options_widget.show()
+            if self._specification.tooltype == "python":
+                self.specification().set_execution_settings()
+                k_spec_name = self.specification().execution_settings["kernel_spec_name"]
+                is_environment = self.specification().execution_settings["is_env"]
+                use_console = self.specification().execution_settings["use_jupyter_console"]
+                if not use_console:
+                    exe = self.specification().execution_settings["executable"]
+                    p = resolve_python_interpreter(exe)
+                    self._properties_ui.label_jupyter.setText(f"[Homemade console] {p}")
+                else:
+                    self._properties_ui.label_jupyter.setText("[" + k_spec_name + "] conda:" + str(is_environment))
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
@@ -452,7 +446,6 @@ class Tool(ProjectItem):
         d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
         if self._options:
             d["options"] = self._options
-        d["k_spec_settings"] = self.kernel_spec_settings
         return d
 
     @staticmethod
@@ -464,9 +457,8 @@ class Tool(ProjectItem):
         cmd_line_args = item_dict.get("cmd_line_args", [])
         cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in cmd_line_args]
         options = item_dict.get("options", {})
-        k = item_dict.get("k_spec_settings", dict())
         return Tool(
-            name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options, k
+            name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options
         )
 
     def rename(self, new_name, rename_data_dir_message):

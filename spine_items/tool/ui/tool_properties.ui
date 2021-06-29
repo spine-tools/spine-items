@@ -191,36 +191,6 @@
         <layout class="QHBoxLayout" name="horizontalLayout_options"/>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QComboBox" name="comboBox_conda_envs"/>
-         </item>
-         <item>
-          <widget class="QToolButton" name="toolButton_refresh_envs">
-           <property name="minimumSize">
-            <size>
-             <width>22</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>22</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="../../ui/resources/resources_icons.qrc">
-             <normaloff>:/icons/sync.svg</normaloff>:/icons/sync.svg</iconset>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
         <widget class="QSplitter" name="splitter">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -412,6 +382,13 @@
         <widget class="Line" name="line_4">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_jupyter">
+         <property name="text">
+          <string>TextLabel</string>
          </property>
         </widget>
        </item>
