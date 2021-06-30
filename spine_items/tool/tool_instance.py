@@ -209,6 +209,7 @@ class PythonToolInstance(ToolInstance):
             cmdline_args = [full_fp] + self.tool_specification.cmdline_args + args
             fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
             self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
+            self.args += [f"import os; os.chdir({repr(self.basedir)})"]
             exec_code = self._make_exec_code(fp, full_fp)
             self.args += [exec_code]
             alias = f"# Running 'python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}'"
