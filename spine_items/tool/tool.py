@@ -222,9 +222,9 @@ class Tool(ProjectItem):
             self._properties_ui.treeView_cmdline_args.setFocus()
 
     def undo_specification(self):
-        undo_spec = None if self._specification is None else self._specification.clone()
-        if not undo_spec:
+        if self._specification is None:
             return None
+        undo_spec = self._specification.clone()
         undo_spec.execute_in_work = self.execute_in_work
         return undo_spec
 
