@@ -405,14 +405,6 @@ class JuliaTool(ToolSpecification):
         self.julia_options = OrderedDict()
         self.return_codes = {0: "Normal return"}  # Not official
 
-    def update_julia_options(self, key, value):
-        """[OBSOLETE?] Updates Julia command line options.
-
-        Args:
-            key (str): Option name
-            value (int, float): Option value
-        """
-
     @staticmethod
     def load(path, data, settings, logger):
         """Creates a JuliaTool according to a tool specification file.
@@ -491,7 +483,7 @@ class PythonTool(ToolSpecification):
         self.main_dir, self.main_prgm = os.path.split(main_file)
         self.python_options = OrderedDict()
         self.execution_settings = execution_settings
-        self.return_codes = {0: "Normal return"}  # Not official
+        self.return_codes = {0: "Normal return", -1: "Failure"}  # Not official
 
     def to_dict(self):
         """Adds kernel spec settings dict to Tool spec dict."""
@@ -512,14 +504,12 @@ class PythonTool(ToolSpecification):
             # the execution_settings dict yet
             d = dict()
             d["kernel_spec_name"] = self._settings.value("appSettings/pythonKernel", defaultValue="")
-            d["is_env"] = False
+            d["env"] = ""
             d["use_jupyter_console"] = bool(
                 int(self._settings.value("appSettings/usePythonKernel", defaultValue="0")))  # bool(int(str))
             d["executable"] = self._settings.value("appSettings/pythonPath", defaultValue="")
             self.execution_settings = d
-            print(f"Updating old Python Tool spec")
         else:
-            # logging.debug(f"self.execution_settings: {self.execution_settings}")
             # Make sure that required keys are included (for debugging)
             if not isinstance(self.execution_settings, dict):
                 logging.error("self.execution_settings is not a dict")
@@ -528,7 +518,7 @@ class PythonTool(ToolSpecification):
                 logging.error("self.execution_settings error 1")
             elif "kernel_spec_name" not in self.execution_settings.keys():
                 logging.error("self.execution_settings error 2")
-            elif "is_env" not in self.execution_settings.keys():
+            elif "env" not in self.execution_settings.keys():
                 logging.error("self.execution_settings error 3")
             elif "executable" not in self.execution_settings.keys():
                 logging.error("self.execution_settings error 4")

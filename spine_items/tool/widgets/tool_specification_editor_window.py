@@ -83,9 +83,14 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             if opt_widget is not None:
                 specification.set_execution_settings()
                 use_jupyter_console = specification.execution_settings["use_jupyter_console"]
-                opt_widget.ui.checkBox_jupyter_console.blockSignals(True)
-                opt_widget.ui.checkBox_jupyter_console.setChecked(use_jupyter_console)
-                opt_widget.ui.checkBox_jupyter_console.blockSignals(False)
+                opt_widget.ui.radioButton_jupyter_console.blockSignals(True)
+                opt_widget.ui.radioButton_python_console.blockSignals(True)
+                if use_jupyter_console:
+                    opt_widget.ui.radioButton_jupyter_console.setChecked(True)
+                else:
+                    opt_widget.ui.radioButton_python_console.setChecked(True)
+                opt_widget.ui.radioButton_jupyter_console.blockSignals(False)
+                opt_widget.ui.radioButton_python_console.blockSignals(False)
                 opt_widget.set_ui_for_jupyter_console(not use_jupyter_console)
                 k_spec = specification.execution_settings["kernel_spec_name"]
                 row = opt_widget.find_index_by_data(k_spec)
@@ -188,9 +193,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         optional_widget = self._ui.horizontalLayout_options_placeholder.takeAt(0)
         if optional_widget:
-            # optional_widget.widget().ui.comboBox_kernel_specs.activated.disconnect(self._push_change_kernel_spec_command)
-            # optional_widget.widget().ui.checkBox_jupyter_console.toggled.disconnect(self._push_set_jupyter_console_mode)
-            optional_widget.widget().hide()
+            optional_widget.widget().close()
         tooltype = self._ui.comboBox_tooltype.itemText(row)
         optional_widget = self._make_optional_widget(tooltype)
         if optional_widget:
@@ -255,7 +258,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         item = opt_widget.ui.comboBox_kernel_specs.model().item(idx)
         k_spec_data = item.data()
         d["execution_settings"] = k_spec_data
-        d["execution_settings"]["use_jupyter_console"] = opt_widget.ui.checkBox_jupyter_console.isChecked()
+        d["execution_settings"]["use_jupyter_console"] = True if opt_widget.ui.radioButton_jupyter_console.isChecked() \
+            else False
         opt_widget.validate_executable()  # Validate Julia or Python path in the optional widgets line edit
         d["execution_settings"]["executable"] = opt_widget.get_executable()
         return d
@@ -511,13 +515,13 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.textEdit_program.set_lexer_name(value)
         index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == value), -1)
         self._ui.comboBox_tooltype.setCurrentIndex(index)
-        self.override_execution_settings(value)
+        self.clear_execution_settings(value)
 
-    def override_execution_settings(self, spec_type):
-        """Updates the current spec_dict based on selected tool spec type.
-        We need to do this because Python and Julia Tool spec dicts contain the
-        execution_settings dictionary and the other tool spec types
-        (Gams & Executable) do not support this."""
+    def clear_execution_settings(self, spec_type):
+        """Updates the execution settings dict based on selected tool spec type.
+        Sets the default execution settings into self.spec_dict when a Python
+        Tool spec type is selected. Removes execution settings from self.spec_dict
+        when any other Tool spec type is selected."""
         if spec_type == "python":
             if "execution_settings" not in self.spec_dict.keys():
                 self.spec_dict["execution_settings"] = dict()
@@ -527,7 +531,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             default_k_spec = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
             self.spec_dict["execution_settings"]["use_jupyter_console"] = default_use_jupyter_console
             self.spec_dict["execution_settings"]["kernel_spec_name"] = default_k_spec
-            self.spec_dict["execution_settings"]["is_env"] = False
+            self.spec_dict["execution_settings"]["env"] = ""
             default_python_exe = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
             self.spec_dict["execution_settings"]["executable"] = default_python_exe
         else:
@@ -568,7 +572,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.spec_dict["execution_settings"]["use_jupyter_console"] = value
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
-        opt_widget.ui.checkBox_jupyter_console.setChecked(value)
+        if value:
+            opt_widget.ui.radioButton_jupyter_console.setChecked(True)
+        else:
+            opt_widget.ui.radioButton_python_console.setChecked(True)
         opt_widget.set_ui_for_jupyter_console(not value)
 
     @Slot()

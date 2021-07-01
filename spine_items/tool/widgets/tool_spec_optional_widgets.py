@@ -24,6 +24,7 @@ from spine_engine.execution_managers.conda_kernel_spec_manager import CondaKerne
 from spinetoolbox.helpers import busy_effect, file_is_valid, select_python_interpreter
 from spinetoolbox.widgets.notification import Notification
 from spinetoolbox.widgets.kernel_editor import KernelEditor, find_python_kernels
+from spinetoolbox.widgets.conda_envs import CondaEnv
 
 
 class OptionalWidget(QWidget):
@@ -66,20 +67,29 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
         self._refresh_kernel_spec_model()
         self._kernel_spec_editor = None
+        self._conda_env_widget = None
         use_jupyter_console = int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
         if use_jupyter_console == 2:
-            self.ui.checkBox_jupyter_console.setChecked(True)
+            self.ui.radioButton_jupyter_console.setChecked(True)
+        else:
+            self.ui.radioButton_python_console.setChecked(True)
+        default_python_path = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
         self.ui.lineEdit_python_path.setPlaceholderText(resolve_python_interpreter(""))
+        self.ui.lineEdit_python_path.setText(default_python_path)
+        default_kernel_spec = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
+        row = self.find_index_by_data(default_kernel_spec)
+        self.ui.comboBox_kernel_specs.setCurrentIndex(row)
         self.set_ui_for_jupyter_console(not use_jupyter_console)
         self.connect_signals()
 
     def connect_signals(self):
         self.ui.toolButton_refresh_kernel_specs.clicked.connect(self._refresh_kernel_spec_model)
         self.ui.comboBox_kernel_specs.activated.connect(self._parent._push_change_kernel_spec_command)
-        self.ui.checkBox_jupyter_console.toggled.connect(self._parent._push_set_jupyter_console_mode)
+        self.ui.radioButton_jupyter_console.toggled.connect(self._parent._push_set_jupyter_console_mode)
         self.ui.toolButton_browse_python.clicked.connect(self.browse_python_button_clicked)
         self.ui.pushButton_open_kernel_spec_viewer.clicked.connect(self.show_python_kernel_spec_editor)
         self.ui.lineEdit_python_path.editingFinished.connect(self._parent._push_change_executable)
+        # self.ui.pushButton_conda.clicked.connect(self.show_conda_env_widget)  # Note: this button does not exist
 
     @Slot(bool)
     def browse_python_button_clicked(self, _=False):
@@ -168,16 +178,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         else:
             selected_kernel_spec = item.data()["kernel_spec_name"]  # Remember the selected kernel spec
         self.kernel_spec_model.clear()
-        conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
-        conda_exe = resolve_conda_executable(conda_exe)
-        ksm = CondaKernelSpecManager(conda_exe=conda_exe)
         first_item = QStandardItem("Select kernel spec...")
-        # Sneak the default kernel spec into first item's data for new Python Tool specs
-        spec_data = dict()
-        default_k_spec = self._settings.value("appSettings/pythonKernel", defaultValue="")
-        spec_data["kernel_spec_name"] = default_k_spec
-        spec_data["is_env"] = False
-        first_item.setData(spec_data)
         self.kernel_spec_model.appendRow(first_item)
         # Add Python kernel specs
         kernel_specs = find_python_kernels()
@@ -185,18 +186,22 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
             item = QStandardItem(n + " [Jupyter]")
             spec_data = dict()
             spec_data["kernel_spec_name"] = n
-            spec_data["is_env"] = False
+            spec_data["env"] = ""
             item.setData(spec_data)
             self.kernel_spec_model.appendRow(item)
         # Add auto-generated conda kernel spec names
-        conda_specs = ksm._all_specs()
-        for i in conda_specs.keys():
-            item = QStandardItem(i + " [Conda]")
-            spec_data = dict()
-            spec_data["kernel_spec_name"] = i
-            spec_data["is_env"] = True
-            item.setData(spec_data)
-            self.kernel_spec_model.appendRow(item)
+        conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
+        conda_exe = resolve_conda_executable(conda_exe)
+        if conda_exe != "":
+            ksm = CondaKernelSpecManager(conda_exe=conda_exe)
+            conda_specs = ksm._all_specs()
+            for i in conda_specs.keys():
+                item = QStandardItem(i + " [Conda]")
+                spec_data = dict()
+                spec_data["kernel_spec_name"] = i
+                spec_data["env"] = "conda"
+                item.setData(spec_data)
+                self.kernel_spec_model.appendRow(item)
         # Set the previously selected kernel spec as the current item after the model has been rebuilt
         if selected_kernel_spec is not None:
             row = self.find_index_by_data(selected_kernel_spec)
@@ -205,3 +210,12 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
                 self._parent._push_change_kernel_spec_command(0)
                 return
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
+
+    @Slot(bool)
+    def show_conda_env_widget(self, checked=False):
+        """Experimental widget for showing all Conda environments
+        and which ones are ready (have ipykernel installed) for
+        Jupyter Console execution."""
+        # Hook this to a pushbutton toggle for testing
+        self._conda_env_widget = CondaEnv(self._parent)
+        self._conda_env_widget.show()

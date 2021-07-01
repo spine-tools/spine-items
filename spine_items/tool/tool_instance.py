@@ -196,9 +196,9 @@ class PythonToolInstance(ToolInstance):
             conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
             conda_exe = resolve_conda_executable(conda_exe)
             k_spec = self.tool_specification.execution_settings["kernel_spec_name"]
-            act = self.tool_specification.execution_settings["is_env"]  # Activate environment if True
+            env = self.tool_specification.execution_settings["env"]  # Activate environment if "conda"
             self.exec_mngr = KernelExecutionManager(
-                self._logger, k_spec, *self.args, group_id=self.owner.group_id, activate_env=act, conda_exe=conda_exe
+                self._logger, k_spec, *self.args, group_id=self.owner.group_id, environment=env, conda_exe=conda_exe
             )
         else:
             python_exe = self.tool_specification.execution_settings["executable"]

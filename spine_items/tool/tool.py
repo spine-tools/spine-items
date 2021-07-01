@@ -278,14 +278,15 @@ class Tool(ProjectItem):
             if self._specification.tooltype == "python":
                 self.specification().set_execution_settings()
                 k_spec_name = self.specification().execution_settings["kernel_spec_name"]
-                is_environment = self.specification().execution_settings["is_env"]
+                env = self.specification().execution_settings["env"]
                 use_console = self.specification().execution_settings["use_jupyter_console"]
                 if not use_console:
                     exe = self.specification().execution_settings["executable"]
                     p = resolve_python_interpreter(exe)
-                    self._properties_ui.label_jupyter.setText(f"[Homemade console] {p}")
+                    self._properties_ui.label_jupyter.setText(f"[Python console] {p}")
                 else:
-                    self._properties_ui.label_jupyter.setText("[" + k_spec_name + "] conda:" + str(is_environment))
+                    env = "" if not env else f"[{env}]"
+                    self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)

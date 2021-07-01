@@ -31,19 +31,51 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(506, 72)
-        self.verticalLayout = QVBoxLayout(Form)
+        Form.resize(506, 63)
+        self.verticalLayout_3 = QVBoxLayout(Form)
+        self.verticalLayout_3.setSpacing(6)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.line_3 = QFrame(Form)
+        self.line_3.setObjectName(u"line_3")
+        self.line_3.setFrameShape(QFrame.HLine)
+        self.line_3.setFrameShadow(QFrame.Sunken)
+
+        self.verticalLayout_3.addWidget(self.line_3)
+
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setSpacing(6)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 6, 0, 0)
-        self.line_2 = QFrame(Form)
-        self.line_2.setObjectName(u"line_2")
-        self.line_2.setFrameShape(QFrame.HLine)
-        self.line_2.setFrameShadow(QFrame.Sunken)
+        self.radioButton_python_console = QRadioButton(Form)
+        self.radioButton_python_console.setObjectName(u"radioButton_python_console")
+        self.radioButton_python_console.setChecked(True)
 
-        self.verticalLayout.addWidget(self.line_2)
+        self.verticalLayout.addWidget(self.radioButton_python_console)
 
+        self.radioButton_jupyter_console = QRadioButton(Form)
+        self.radioButton_jupyter_console.setObjectName(u"radioButton_jupyter_console")
+
+        self.verticalLayout.addWidget(self.radioButton_jupyter_console)
+
+
+        self.horizontalLayout_3.addLayout(self.verticalLayout)
+
+        self.line = QFrame(Form)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.VLine)
+        self.line.setFrameShadow(QFrame.Sunken)
+
+        self.horizontalLayout_3.addWidget(self.line)
+
+        self.verticalLayout_2 = QVBoxLayout()
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setSpacing(6)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(6, -1, -1, -1)
         self.label_2 = QLabel(Form)
         self.label_2.setObjectName(u"label_2")
 
@@ -64,26 +96,16 @@ class Ui_Form(object):
         self.horizontalLayout_2.addWidget(self.toolButton_browse_python)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
         self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.checkBox_jupyter_console = QCheckBox(Form)
-        self.checkBox_jupyter_console.setObjectName(u"checkBox_jupyter_console")
-
-        self.horizontalLayout.addWidget(self.checkBox_jupyter_console)
-
-        self.line = QFrame(Form)
-        self.line.setObjectName(u"line")
-        self.line.setFrameShape(QFrame.VLine)
-        self.line.setFrameShadow(QFrame.Sunken)
-
-        self.horizontalLayout.addWidget(self.line)
-
+        self.horizontalLayout.setContentsMargins(6, -1, -1, -1)
         self.label = QLabel(Form)
         self.label.setObjectName(u"label")
         font = QFont()
-        font.setPointSize(10)
+        font.setPointSize(8)
         self.label.setFont(font)
 
         self.horizontalLayout.addWidget(self.label)
@@ -115,7 +137,13 @@ class Ui_Form(object):
         self.horizontalLayout.addWidget(self.pushButton_open_kernel_spec_viewer)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout_2.addLayout(self.horizontalLayout)
+
+
+        self.horizontalLayout_3.addLayout(self.verticalLayout_2)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_3)
 
 
         self.retranslateUi(Form)
@@ -124,6 +152,8 @@ class Ui_Form(object):
     # setupUi
 
     def retranslateUi(self, Form):
+        self.radioButton_python_console.setText(QCoreApplication.translate("Form", u"Python Console", None))
+        self.radioButton_jupyter_console.setText(QCoreApplication.translate("Form", u"Jupyter Console", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Interpreter", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_python_path.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Python interpreter for executing this Tool specification. Leave empty to select the Python that was used in launching Spine Toolbox.</p></body></html>", None))
@@ -132,7 +162,6 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_python.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Python interpreter using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.checkBox_jupyter_console.setText(QCoreApplication.translate("Form", u"Jupyter Console", None))
         self.label.setText(QCoreApplication.translate("Form", u"Kernel spec", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python Jupyter kernel spec for Jupyter Console.</p><p>Both Conda and Jupyter kernel specs are shown.</p></body></html>", None))
@@ -142,9 +171,9 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.toolButton_refresh_kernel_specs.setText("")
 #if QT_CONFIG(tooltip)
-        self.pushButton_open_kernel_spec_viewer.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Opens a kernel spec editor/viewer</p></body></html>", None))
+        self.pushButton_open_kernel_spec_viewer.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open Python kernel spec editor</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_open_kernel_spec_viewer.setText(QCoreApplication.translate("Form", u"View/Edit kernel specs", None))
+        self.pushButton_open_kernel_spec_viewer.setText(QCoreApplication.translate("Form", u"Kernel spec editor", None))
         pass
     # retranslateUi
 
