@@ -16,10 +16,12 @@ Classes and functions that can be shared among unit test modules.
 :date:   30.9.2020
 """
 import os.path
+from unittest import mock
 from unittest.mock import MagicMock
 from PySide2.QtGui import QStandardItemModel
-from PySide2.QtWidgets import QWidget
+from PySide2.QtWidgets import QWidget, QApplication
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
+from spinetoolbox.ui_main import ToolboxUI
 
 
 class MockQWidget(QWidget):
@@ -55,3 +57,47 @@ def mock_finish_project_item_construction(factory, project_item, mock_toolbox):
     properties_widget = factory.make_properties_widget(mock_toolbox)
     project_item.set_properties_ui(properties_widget.ui)
     project_item.set_up()
+
+
+def create_toolboxui_with_project(project_dir):
+    """Returns ToolboxUI with a project instance where
+    QSettings among others has been mocked."""
+    with mock.patch("spinetoolbox.ui_main.ToolboxUI.save_project"), mock.patch(
+        "spinetoolbox.ui_main.ToolboxUI.update_recent_projects"
+    ), mock.patch("spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value, mock.patch(
+        "spinetoolbox.widgets.open_project_widget.OpenProjectDialog.update_recents"
+    ), mock.patch(
+        "spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"
+    ):
+        mock_qsettings_value.side_effect = qsettings_value_side_effect
+        toolbox = ToolboxUI()
+        toolbox.create_project("UnitTest Project", "Project for unit tests.", project_dir)
+    return toolbox
+
+
+def qsettings_value_side_effect(key, defaultValue="0"):
+    """Side effect for calling QSettings.value() method. Used to
+    override default value for key 'appSettings/openPreviousProject'
+    so that previous project is not opened in background when
+    ToolboxUI is instantiated.
+
+    Args:
+        key (str): Key to read
+        defaultValue (QVariant): Default value if key is missing
+    """
+    if key == "appSettings/openPreviousProject":
+        return "0"  # Do not open previous project when instantiating ToolboxUI
+    return defaultValue
+
+
+def clean_up_toolbox(toolbox):
+    """Cleans up toolbox and project."""
+    if toolbox.project():
+        toolbox.close_project(ask_confirmation=False)
+        QApplication.processEvents()  # Makes sure Design view animations finish properly.
+    toolbox.db_mngr.close_all_sessions()
+    toolbox.db_mngr.clean_up()
+    toolbox.db_mngr = None
+    # Delete undo stack explicitly to prevent emitting certain signals well after ToolboxUI has been destroyed.
+    toolbox.undo_stack.deleteLater()
+    toolbox.deleteLater()
