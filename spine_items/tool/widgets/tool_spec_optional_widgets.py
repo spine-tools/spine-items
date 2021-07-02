@@ -78,7 +78,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.lineEdit_python_path.setText(default_python_path)
         default_kernel_spec = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
         row = self.find_index_by_data(default_kernel_spec)
-        self.ui.comboBox_kernel_specs.setCurrentIndex(row)
+        self.ui.comboBox_kernel_specs.setCurrentIndex(row+1)
         self.set_ui_for_jupyter_console(not use_jupyter_console)
         self.connect_signals()
 

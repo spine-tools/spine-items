@@ -25,6 +25,7 @@ from PySide2.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMes
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex
 from spinetoolbox.helpers import busy_effect, open_url
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
+from spinetoolbox.widgets.notification import Notification
 from spinetoolbox.project_item.specification_editor_window import (
     SpecificationEditorWindowBase,
     ChangeSpecPropertyCommand,
@@ -93,11 +94,16 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 opt_widget.ui.radioButton_python_console.blockSignals(False)
                 opt_widget.set_ui_for_jupyter_console(not use_jupyter_console)
                 k_spec = specification.execution_settings["kernel_spec_name"]
-                row = opt_widget.find_index_by_data(k_spec)
-                if row == -1:
-                    logging.error(f"Tool spec has '{k_spec}' saved but it could not be found.")
-                    # TODO: What to do when a kernel spec name that is saved to Tool spec is not found?
+                if k_spec == "":
+                    opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Set 'Select kernel spec...'
                 else:
+                    row = opt_widget.find_index_by_data(k_spec)
+                    if row == -1:
+                        notification = Notification(self, f"This Tool spec has kernel spec '{k_spec}' saved "
+                                                          f"but it could not be found.")
+                        notification.show()
+                        # TODO: What to do when a kernel spec name that is saved to Tool spec is not found?
+                        row += 1  # Set 'Select kernel spec...'
                     opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(row)
                 exe = specification.execution_settings["executable"]
                 opt_widget.set_executable(exe)
@@ -255,12 +261,17 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if not opt_widget:
             return d
         idx = opt_widget.ui.comboBox_kernel_specs.currentIndex()
-        item = opt_widget.ui.comboBox_kernel_specs.model().item(idx)
-        k_spec_data = item.data()
-        d["execution_settings"] = k_spec_data
+        if idx < 1:
+            d["execution_settings"] = dict()
+            d["execution_settings"]["kernel_spec_name"] = ""
+            d["execution_settings"]["env"] = ""
+        else:
+            item = opt_widget.ui.comboBox_kernel_specs.model().item(idx)
+            k_spec_data = item.data()
+            d["execution_settings"] = k_spec_data
         d["execution_settings"]["use_jupyter_console"] = True if opt_widget.ui.radioButton_jupyter_console.isChecked() \
             else False
-        opt_widget.validate_executable()  # Validate Julia or Python path in the optional widgets line edit
+        opt_widget.validate_executable()  # Raises NameError if Python path is not valid
         d["execution_settings"]["executable"] = opt_widget.get_executable()
         return d
 
