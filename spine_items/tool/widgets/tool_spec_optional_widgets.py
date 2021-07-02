@@ -187,7 +187,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
             item.setData(spec_data)
             self.kernel_spec_model.appendRow(item)
         # Add auto-generated conda kernel spec names
-        conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
+        conda_exe = self._toolbox.qsettings().value("appSettings/condaPath", defaultValue="")
         conda_exe = resolve_conda_executable(conda_exe)
         if conda_exe != "":
             ksm = CondaKernelSpecManager(conda_exe=conda_exe)
