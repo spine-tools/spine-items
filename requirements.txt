@@ -1,3 +1,3 @@
 git+https://github.com/Spine-project/Spine-Database-API.git@master#egg=spinedb_api
-git+https://github.com/Spine-project/spine-engine.git@issue_1047_activate_conda_envs#egg=spine_engine
-git+https://github.com/Spine-project/Spine-Toolbox.git@issue_1047_conda_env_activation#egg=spinetoolbox
+git+https://github.com/Spine-project/spine-engine.git@master#egg=spine_engine
+git+https://github.com/Spine-project/Spine-Toolbox.git@master#egg=spinetoolbox
