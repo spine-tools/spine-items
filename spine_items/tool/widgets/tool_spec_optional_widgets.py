@@ -62,7 +62,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         super().__init__(parent)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.kernel_spec_model = QStandardItemModel()
+        self.kernel_spec_model = QStandardItemModel(self)
         self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
         self._refresh_kernel_spec_model()
         self._kernel_spec_editor = None

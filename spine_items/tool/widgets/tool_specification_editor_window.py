@@ -64,8 +64,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.statusbar.addPermanentWidget(label)
         self._ui.statusbar.addPermanentWidget(self._label_main_path)
         # init models
-        self.programfiles_model = QStandardItemModel()
-        self.io_files_model = QStandardItemModel()
+        self.programfiles_model = QStandardItemModel(self)
+        self.io_files_model = QStandardItemModel(self)
         # init ui
         self._ui.treeView_programfiles.setModel(self.programfiles_model)
         self._ui.treeView_io_files.setModel(self.io_files_model)
