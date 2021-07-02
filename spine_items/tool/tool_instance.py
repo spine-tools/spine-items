@@ -19,7 +19,8 @@ Contains ToolInstance class.
 import os
 import sys
 import shutil
-from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, resolve_gams_executable
+from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, \
+    resolve_gams_executable, resolve_conda_executable
 from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
 from spine_engine.execution_managers.persistent_execution_manager import (
@@ -75,6 +76,7 @@ class ToolInstance:
 
         Args:
             args (list): Tool cmd line args
+            k_spec_dict (dict): Kernel spec name and related settings
         """
         raise NotImplementedError()
 
@@ -181,8 +183,9 @@ class PythonToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        use_python_kernel = self._settings.value("appSettings/usePythonKernel", defaultValue="0")
-        if use_python_kernel == "2":
+        self.tool_specification.set_execution_settings()  # Set default execution settings
+        use_jupyter_console = self.tool_specification.execution_settings["use_jupyter_console"]
+        if use_jupyter_console:
             # Prepare command
             cd_command = f"%cd -q {self.basedir}"  # -q: quiet
             main_command = f'%run "{self.tool_specification.main_prgm}"'
@@ -190,10 +193,15 @@ class PythonToolInstance(ToolInstance):
             if cmdline_args:
                 main_command += " " + '"' + '" "'.join(cmdline_args) + '"'
             self.args = [cd_command, main_command]
-            kernel_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
-            self.exec_mngr = KernelExecutionManager(self._logger, kernel_name, *self.args, group_id=self.owner.group_id)
+            conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
+            conda_exe = resolve_conda_executable(conda_exe)
+            k_spec = self.tool_specification.execution_settings["kernel_spec_name"]
+            env = self.tool_specification.execution_settings["env"]  # Activate environment if "conda"
+            self.exec_mngr = KernelExecutionManager(
+                self._logger, k_spec, *self.args, group_id=self.owner.group_id, environment=env, conda_exe=conda_exe
+            )
         else:
-            python_exe = self._settings.value("appSettings/pythonPath", defaultValue="")
+            python_exe = self.tool_specification.execution_settings["executable"]
             python_exe = resolve_python_interpreter(python_exe)
             self.program = [python_exe]
             fp = self.tool_specification.main_prgm

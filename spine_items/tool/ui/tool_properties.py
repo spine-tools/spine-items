@@ -67,8 +67,8 @@ class Ui_Form(object):
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
         self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 406, 429))
-        self.verticalLayout_17 = QVBoxLayout(self.scrollAreaWidgetContents_3)
-        self.verticalLayout_17.setObjectName(u"verticalLayout_17")
+        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents_3)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setSpacing(4)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
@@ -110,12 +110,12 @@ class Ui_Form(object):
         self.horizontalLayout_9.addWidget(self.toolButton_tool_specification)
 
 
-        self.verticalLayout_17.addLayout(self.horizontalLayout_9)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_9)
 
         self.horizontalLayout_options = QHBoxLayout()
         self.horizontalLayout_options.setObjectName(u"horizontalLayout_options")
 
-        self.verticalLayout_17.addLayout(self.horizontalLayout_options)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_options)
 
         self.splitter = QSplitter(self.scrollAreaWidgetContents_3)
         self.splitter.setObjectName(u"splitter")
@@ -181,7 +181,7 @@ class Ui_Form(object):
 
         self.splitter.addWidget(self.gridLayoutWidget)
 
-        self.verticalLayout_17.addWidget(self.splitter)
+        self.verticalLayout_2.addWidget(self.splitter)
 
         self.horizontalLayout_11 = QHBoxLayout()
         self.horizontalLayout_11.setSpacing(6)
@@ -203,14 +203,19 @@ class Ui_Form(object):
         self.horizontalLayout_11.addWidget(self.pushButton_tool_results)
 
 
-        self.verticalLayout_17.addLayout(self.horizontalLayout_11)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_11)
 
         self.line_4 = QFrame(self.scrollAreaWidgetContents_3)
         self.line_4.setObjectName(u"line_4")
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_17.addWidget(self.line_4)
+        self.verticalLayout_2.addWidget(self.line_4)
+
+        self.label_jupyter = QLabel(self.scrollAreaWidgetContents_3)
+        self.label_jupyter.setObjectName(u"label_jupyter")
+
+        self.verticalLayout_2.addWidget(self.label_jupyter)
 
         self.horizontalLayout_15 = QHBoxLayout()
         self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
@@ -245,7 +250,7 @@ class Ui_Form(object):
         self.horizontalLayout_15.addWidget(self.toolButton_tool_open_dir)
 
 
-        self.verticalLayout_17.addLayout(self.horizontalLayout_15)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_15)
 
         self.scrollArea_3.setWidget(self.scrollAreaWidgetContents_3)
 
@@ -283,6 +288,7 @@ class Ui_Form(object):
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_tool_results.setText(QCoreApplication.translate("Form", u"Results...", None))
+        self.label_jupyter.setText(QCoreApplication.translate("Form", u"TextLabel", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
         self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
         self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))

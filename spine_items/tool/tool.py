@@ -21,6 +21,7 @@ from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spine_engine.config import TOOL_OUTPUT_DIR
+from spine_engine.utils.helpers import resolve_python_interpreter
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
 from ..commands import UpdateCmdLineArgsCommand
 from .item_info import ItemInfo
@@ -146,6 +147,7 @@ class Tool(ProjectItem):
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
+        self._properties_ui.label_jupyter.setText("")
         self._update_tool_ui()
 
     @Slot(bool)
@@ -256,7 +258,7 @@ class Tool(ProjectItem):
             _ = self._get_options_widget()
 
     def _update_tool_ui(self):
-        """Updates Tool UI to show Tool specification details. Used when Tool specification is changed.
+        """Updates Tool properties UI. Used when Tool specification is changed.
         Overrides execution mode (work or source) with the specification default."""
         options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
         if options_widget:
@@ -273,6 +275,18 @@ class Tool(ProjectItem):
             if options_widget:
                 self._properties_ui.horizontalLayout_options.addWidget(options_widget)
                 options_widget.show()
+            if self._specification.tooltype == "python":
+                self.specification().set_execution_settings()
+                k_spec_name = self.specification().execution_settings["kernel_spec_name"]
+                env = self.specification().execution_settings["env"]
+                use_console = self.specification().execution_settings["use_jupyter_console"]
+                if not use_console:
+                    exe = self.specification().execution_settings["executable"]
+                    p = resolve_python_interpreter(exe)
+                    self._properties_ui.label_jupyter.setText(f"[Python console] {p}")
+                else:
+                    env = "" if not env else f"[{env}]"
+                    self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)

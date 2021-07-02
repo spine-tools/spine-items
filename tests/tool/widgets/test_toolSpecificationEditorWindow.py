@@ -10,31 +10,23 @@
 ######################################################################################################################
 
 """
-Unit tests for ToolSpecificationWidget class.
+Unit tests for ToolSpecificationEditorWindow class.
 
-:author: M. Marin (KTH)
+:author: M. Marin (KTH), P. Savolainen (VTT)
 :date:   8.1.2019
 """
 
 import unittest
-from unittest import mock
 import logging
 import sys
-from PySide2.QtWidgets import QApplication, QWidget
-from spine_items.tool.widgets.tool_specification_widget import ToolSpecificationWidget
-from ..mock_helpers import create_toolboxui
+from tempfile import TemporaryDirectory, NamedTemporaryFile
+from pathlib import Path
+from PySide2.QtWidgets import QApplication
+from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
+from tests.mock_helpers import create_toolboxui_with_project, clean_up_toolbox
 
 
-class MockQWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-
-    # noinspection PyMethodMayBeStatic
-    def test_push_vars(self):
-        return True
-
-
-class TestToolSpecificationWidget(unittest.TestCase):
+class TestToolSpecificationEditorWindow(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Overridden method. Runs once before all tests in this class."""
@@ -51,8 +43,9 @@ class TestToolSpecificationWidget(unittest.TestCase):
 
     def setUp(self):
         """Overridden method. Runs before each test."""
-        self.toolbox = create_toolboxui()
-        self.tool_specification_widget = ToolSpecificationWidget(self.toolbox)
+        with TemporaryDirectory() as temp_dir:
+            self.toolbox = create_toolboxui_with_project(temp_dir)
+        self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
 
     def tearDown(self):
         """Overridden method. Runs after each test.
@@ -60,65 +53,83 @@ class TestToolSpecificationWidget(unittest.TestCase):
         """
         self.tool_specification_widget.deleteLater()
         self.tool_specification_widget = None
-        self.toolbox.deleteLater()
-        self.toolbox = None
+        clean_up_toolbox(self.toolbox)
 
-    def test_create_minimal_tool_specification(self):
-        """Test that a minimal tool specification can be created by specifying name, type and main program file."""
-        with mock.patch(
-            "spine_items.tool.widgets.tool_specification_widget.QFileDialog"
-        ) as mock_file_dialog, mock.patch(
-            "spine_items.tool.widgets.tool_specification_widget.ToolSpecificationWidget.call_add_tool_specification"
-        ) as mock_add, mock.patch(
-            "spine_items.tool.widgets.tool_specification_widget.ToolSpecificationWidget.close"
-        ) as mock_close:
-            self.tool_specification_widget.ui.comboBox_tooltype.setCurrentIndex(1)
-            self.tool_specification_widget.ui.lineEdit_name.setText("test_tool")
-            self.tool_specification_widget.ui.lineEdit_main_program.setText(__file__)
-            mock_file_dialog.getSaveFileName.return_value = ["test_tool.json"]
-            self.tool_specification_widget.ui.pushButton_ok.click()
-        mock_add.assert_called_once()
-        mock_close.assert_called_once()
+    def test_create_minimal_julia_tool_specification(self):
+        """Test that a minimal Julia tool specification can be created by specifying name, type and main program file."""
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # 0: Julia
+        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_tool")
+        with NamedTemporaryFile(mode="r") as temp_file:
+            self.tool_specification_widget._set_main_program_file(str(Path(temp_file.name)))
+            self.tool_specification_widget._save()
 
+    def test_create_minimal_gams_tool_specification(self):
+        """Test that a minimal Gams tool specification can be created by specifying name, type and main program file."""
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(2)  # 2: gams
+        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_tool")
+        with NamedTemporaryFile(mode="r") as temp_file:
+            self.tool_specification_widget._set_main_program_file(str(Path(temp_file.name)))
+            self.tool_specification_widget._save()
+
+    def test_create_minimal_executable_tool_specification(self):
+        """Test that a minimal Executable tool specification can be created by specifying name, type and main program file."""
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(3)  # 3: executable
+        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_tool")
+        with NamedTemporaryFile(mode="r") as temp_file:
+            self.tool_specification_widget._set_main_program_file(str(Path(temp_file.name)))
+            self.tool_specification_widget._save()
+
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_url_inputs(self):
         self._test_add_cmdline_tag_on_empty_args_field("@@url_inputs@@")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_url_inputs_middle_of_other_tags(self):
         self._test_add_cmdline_tag_middle_of_other_tags("@@url_inputs@@")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_url_inputs_no_space_before_regular_arg(self):
         self._test_add_cmdline_tag_adds_no_space_before_regular_arg("@@url_inputs@@")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_url_outputs(self):
         self._test_add_cmdline_tag_on_empty_args_field("@@url_outputs@@")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_url_outputs_middle_of_other_tags(self):
         self._test_add_cmdline_tag_middle_of_other_tags("@@url_outputs@@")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_url_outputs_no_space_before_regular_arg(self):
         self._test_add_cmdline_tag_adds_no_space_before_regular_arg("@@url_outputs@@")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_data_store_url(self):
         self._test_add_cmdline_tag_on_empty_args_field("@@url:<data-store-name>@@")
         selection = self.tool_specification_widget.ui.lineEdit_args.selectedText()
         self.assertEqual(selection, "<data-store-name>")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_data_store_url_middle_of_other_tags(self):
         self._test_add_cmdline_tag_middle_of_other_tags("@@url:<data-store-name>@@")
         selection = self.tool_specification_widget.ui.lineEdit_args.selectedText()
         self.assertEqual(selection, "<data-store-name>")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_data_store_url_no_space_before_regular_arg(self):
         self._test_add_cmdline_tag_adds_no_space_before_regular_arg("@@url:<data-store-name>@@")
         selection = self.tool_specification_widget.ui.lineEdit_args.selectedText()
         self.assertEqual(selection, "<data-store-name>")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_optional_inputs(self):
         self._test_add_cmdline_tag_on_empty_args_field("@@optional_inputs@@")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_optional_inputs_middle_of_other_tags(self):
         self._test_add_cmdline_tag_middle_of_other_tags("@@optional_inputs@@")
 
+    @unittest.skip("Obsolete")
     def test_add_cmdline_tag_optional_inputs_no_space_before_regular_arg(self):
         self._test_add_cmdline_tag_adds_no_space_before_regular_arg("@@optional_inputs@@")
 

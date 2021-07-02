@@ -35,7 +35,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(991, 829)
+        MainWindow.resize(991, 643)
         MainWindow.setDockNestingEnabled(True)
         self.actionNew_main_program_file = QAction(MainWindow)
         self.actionNew_main_program_file.setObjectName(u"actionNew_main_program_file")
@@ -97,14 +97,16 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy)
-        self.horizontalLayout_7 = QHBoxLayout(self.centralwidget)
-        self.horizontalLayout_7.setSpacing(4)
-        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.horizontalLayout_7.setContentsMargins(6, 6, 6, 6)
+        self.verticalLayout_3 = QVBoxLayout(self.centralwidget)
+        self.verticalLayout_3.setSpacing(6)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(6, 6, 6, 6)
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.label_tooltype = QLabel(self.centralwidget)
         self.label_tooltype.setObjectName(u"label_tooltype")
 
-        self.horizontalLayout_7.addWidget(self.label_tooltype)
+        self.horizontalLayout_2.addWidget(self.label_tooltype)
 
         self.comboBox_tooltype = QComboBox(self.centralwidget)
         self.comboBox_tooltype.setObjectName(u"comboBox_tooltype")
@@ -113,19 +115,19 @@ class Ui_MainWindow(object):
         self.comboBox_tooltype.setMinimumSize(QSize(180, 24))
         self.comboBox_tooltype.setMaximumSize(QSize(16777215, 24))
 
-        self.horizontalLayout_7.addWidget(self.comboBox_tooltype)
+        self.horizontalLayout_2.addWidget(self.comboBox_tooltype)
 
         self.line = QFrame(self.centralwidget)
         self.line.setObjectName(u"line")
         self.line.setFrameShape(QFrame.VLine)
         self.line.setFrameShadow(QFrame.Sunken)
 
-        self.horizontalLayout_7.addWidget(self.line)
+        self.horizontalLayout_2.addWidget(self.line)
 
         self.label_3 = QLabel(self.centralwidget)
         self.label_3.setObjectName(u"label_3")
 
-        self.horizontalLayout_7.addWidget(self.label_3)
+        self.horizontalLayout_2.addWidget(self.label_3)
 
         self.lineEdit_args = QLineEdit(self.centralwidget)
         self.lineEdit_args.setObjectName(u"lineEdit_args")
@@ -138,20 +140,35 @@ class Ui_MainWindow(object):
         self.lineEdit_args.setMaximumSize(QSize(5000, 24))
         self.lineEdit_args.setClearButtonEnabled(True)
 
-        self.horizontalLayout_7.addWidget(self.lineEdit_args)
+        self.horizontalLayout_2.addWidget(self.lineEdit_args)
+
+        self.line_3 = QFrame(self.centralwidget)
+        self.line_3.setObjectName(u"line_3")
+        self.line_3.setFrameShape(QFrame.VLine)
+        self.line_3.setFrameShadow(QFrame.Sunken)
+
+        self.horizontalLayout_2.addWidget(self.line_3)
+
+        self.checkBox_execute_in_work = QCheckBox(self.centralwidget)
+        self.checkBox_execute_in_work.setObjectName(u"checkBox_execute_in_work")
+        self.checkBox_execute_in_work.setChecked(True)
+
+        self.horizontalLayout_2.addWidget(self.checkBox_execute_in_work)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_2)
+
+        self.horizontalLayout_options_placeholder = QHBoxLayout()
+        self.horizontalLayout_options_placeholder.setObjectName(u"horizontalLayout_options_placeholder")
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_options_placeholder)
 
         self.line_2 = QFrame(self.centralwidget)
         self.line_2.setObjectName(u"line_2")
         self.line_2.setFrameShape(QFrame.VLine)
         self.line_2.setFrameShadow(QFrame.Sunken)
 
-        self.horizontalLayout_7.addWidget(self.line_2)
-
-        self.checkBox_execute_in_work = QCheckBox(self.centralwidget)
-        self.checkBox_execute_in_work.setObjectName(u"checkBox_execute_in_work")
-        self.checkBox_execute_in_work.setChecked(True)
-
-        self.horizontalLayout_7.addWidget(self.checkBox_execute_in_work)
+        self.verticalLayout_3.addWidget(self.line_2)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
