@@ -24,7 +24,6 @@ from spine_engine.execution_managers.conda_kernel_spec_manager import CondaKerne
 from spinetoolbox.helpers import busy_effect, file_is_valid, select_python_interpreter
 from spinetoolbox.widgets.notification import Notification
 from spinetoolbox.widgets.kernel_editor import KernelEditor, find_python_kernels
-from spinetoolbox.widgets.conda_envs import CondaEnv
 
 
 class OptionalWidget(QWidget):
@@ -67,7 +66,6 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
         self._refresh_kernel_spec_model()
         self._kernel_spec_editor = None
-        self._conda_env_widget = None
         use_jupyter_console = int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
         if use_jupyter_console == 2:
             self.ui.radioButton_jupyter_console.setChecked(True)
@@ -89,7 +87,6 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.toolButton_browse_python.clicked.connect(self.browse_python_button_clicked)
         self.ui.pushButton_open_kernel_spec_viewer.clicked.connect(self.show_python_kernel_spec_editor)
         self.ui.lineEdit_python_path.editingFinished.connect(self._parent._push_change_executable)
-        # self.ui.pushButton_conda.clicked.connect(self.show_conda_env_widget)  # Note: this button does not exist
 
     @Slot(bool)
     def browse_python_button_clicked(self, _=False):
@@ -210,12 +207,3 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
                 self._parent._push_change_kernel_spec_command(0)
                 return
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
-
-    @Slot(bool)
-    def show_conda_env_widget(self, checked=False):
-        """Experimental widget for showing all Conda environments
-        and which ones are ready (have ipykernel installed) for
-        Jupyter Console execution."""
-        # Hook this to a pushbutton toggle for testing
-        self._conda_env_widget = CondaEnv(self._parent)
-        self._conda_env_widget.show()
