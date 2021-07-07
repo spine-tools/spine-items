@@ -40,7 +40,7 @@ OPTIONAL_KEYS = [
     "outputfiles",
     "cmdline_args",
     "execute_in_work",
-    "execution_settings"
+    "execution_settings",
 ]
 LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]  # These should be lists
 
@@ -506,7 +506,8 @@ class PythonTool(ToolSpecification):
             d["kernel_spec_name"] = self._settings.value("appSettings/pythonKernel", defaultValue="")
             d["env"] = ""
             d["use_jupyter_console"] = bool(
-                int(self._settings.value("appSettings/usePythonKernel", defaultValue="0")))  # bool(int(str))
+                int(self._settings.value("appSettings/usePythonKernel", defaultValue="0"))
+            )  # bool(int(str))
             d["executable"] = self._settings.value("appSettings/pythonPath", defaultValue="")
             self.execution_settings = d
         else:

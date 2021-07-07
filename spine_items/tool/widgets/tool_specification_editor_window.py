@@ -99,8 +99,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 else:
                     row = opt_widget.find_index_by_data(k_spec)
                     if row == -1:
-                        notification = Notification(self, f"This Tool spec has kernel spec '{k_spec}' saved "
-                                                          f"but it could not be found.")
+                        notification = Notification(
+                            self, f"This Tool spec has kernel spec '{k_spec}' saved " f"but it could not be found."
+                        )
                         notification.show()
                         # TODO: What to do when a kernel spec name that is saved to Tool spec is not found?
                         row += 1  # Set 'Select kernel spec...'
@@ -269,8 +270,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             item = opt_widget.ui.comboBox_kernel_specs.model().item(idx)
             k_spec_data = item.data()
             d["execution_settings"] = k_spec_data
-        d["execution_settings"]["use_jupyter_console"] = True if opt_widget.ui.radioButton_jupyter_console.isChecked() \
-            else False
+        d["execution_settings"]["use_jupyter_console"] = (
+            True if opt_widget.ui.radioButton_jupyter_console.isChecked() else False
+        )
         opt_widget.validate_executable()  # Raises NameError if Python path is not valid
         d["execution_settings"]["executable"] = opt_widget.get_executable()
         return d
@@ -499,8 +501,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.treeView_programfiles.del_key_pressed.connect(self.remove_program_files_with_del)
         self._ui.treeView_io_files.del_key_pressed.connect(self.remove_io_files_with_del)
         # Push undo commands
-        self._ui.comboBox_tooltype.activated.connect(self._push_change_tooltype_command)
-        self._ui.comboBox_tooltype.activated.connect(self._show_optional_widget)
+        self._ui.comboBox_tooltype.currentIndexChanged.connect(self._push_change_tooltype_command)
+        self._ui.comboBox_tooltype.currentIndexChanged.connect(self._show_optional_widget)
         self._ui.checkBox_execute_in_work.toggled.connect(self._push_change_execute_in_work_command)
         self._ui.lineEdit_args.editingFinished.connect(self._push_change_args_command)
         self.io_files_model.dataChanged.connect(self._push_io_file_renamed_command)
@@ -516,8 +518,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         old_type = self.spec_dict.get("tooltype", "")
         if new_type == old_type:
             return
-        self._undo_stack.push(ChangeSpecPropertyCommand(
-            self._set_tooltype, new_type, old_type, "change Tool specification type")
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(self._set_tooltype, new_type, old_type, "change Tool specification type")
         )
 
     def _set_tooltype(self, value):
@@ -558,8 +560,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         previous_kernel_spec = self.spec_dict["execution_settings"]["kernel_spec_name"]
         if new_kernel_spec == previous_kernel_spec:
             return
-        self._undo_stack.push(ChangeSpecPropertyCommand(
-            self._set_kernel_spec, new_kernel_spec, previous_kernel_spec, "change kernel spec")
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(
+                self._set_kernel_spec, new_kernel_spec, previous_kernel_spec, "change kernel spec"
+            )
         )
 
     def _set_kernel_spec(self, value):

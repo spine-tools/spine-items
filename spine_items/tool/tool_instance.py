@@ -19,8 +19,12 @@ Contains ToolInstance class.
 import os
 import sys
 import shutil
-from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, \
-    resolve_gams_executable, resolve_conda_executable
+from spine_engine.utils.helpers import (
+    resolve_python_interpreter,
+    resolve_julia_executable,
+    resolve_gams_executable,
+    resolve_conda_executable,
+)
 from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
 from spine_engine.execution_managers.persistent_execution_manager import (
