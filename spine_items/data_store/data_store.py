@@ -446,13 +446,18 @@ class DataStore(ProjectItem):
         d["cancel_on_error"] = self.cancel_on_error
         return d
 
-    def copy_local_data(self, original_data_dir, original_url, duplicate_items):
-        """See base class"""
+    def copy_local_data(self, item_dict):
+        """See base class."""
+        original_data_dir = item_dict.get("original_data_dir")  # (str) original dir of duplicated ProjectItem
+        original_db_url = item_dict.get("original_db_url")  # (dict) original url of the duplicated ProjectItem
+        duplicate_files = item_dict.get("duplicate_files")  # (bool) Flag indicating if linked files should be copied
+        if original_data_dir is None and original_db_url is None and duplicate_files is None:
+            return
         original_project_dir = original_data_dir.split(".spinetoolbox")[0]
-        linked_db_dialect = original_url.get("dialect")
+        linked_db_dialect = original_db_url.get("dialect")
         if linked_db_dialect != "sqlite":
             return
-        original_db = original_url.get("database")
+        original_db = original_db_url.get("database")
         if isinstance(original_db, dict):
             if original_db["relative"]:
                 linked_db_path = os.path.join(original_project_dir, original_db["path"])
@@ -460,7 +465,7 @@ class DataStore(ProjectItem):
                 linked_db_path = original_db["path"]
         else:
             linked_db_path = original_db
-        if duplicate_items:
+        if duplicate_files:
             db_copy_destination = os.path.join(self.data_dir, os.path.basename(linked_db_path))
             copyfile(linked_db_path, db_copy_destination)
             self._url["database"] = db_copy_destination
