@@ -403,7 +403,7 @@ class JuliaTool(ToolSpecification):
         main_file = includes[0]
         self.main_dir, self.main_prgm = os.path.split(main_file)
         self.julia_options = OrderedDict()
-        self.return_codes = {0: "Normal return"}  # Not official
+        self.return_codes = {0: "Normal return", -1: "Failure"}
 
     @staticmethod
     def load(path, data, settings, logger):
