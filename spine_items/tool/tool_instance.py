@@ -135,22 +135,21 @@ class JuliaToolInstance(ToolInstance):
         """See base class."""
         sysimage = self._owner.options.get("julia_sysimage", "")
         use_julia_kernel = self._settings.value("appSettings/useJuliaKernel", defaultValue="2")
+        # Prepare args
+        mod_work_dir = repr(self.basedir).strip("'")
+        self.args = [f'cd("{mod_work_dir}");']
+        cmdline_args = self.tool_specification.cmdline_args + args
+        if cmdline_args:
+            fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+            self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
+        self.args += [f'include("{self.tool_specification.main_prgm}")']
         if use_julia_kernel == "2":
-            # Prepare Julia REPL command
-            mod_work_dir = repr(self.basedir).strip("'")
-            self.args = [f'cd("{mod_work_dir}");']
-            cmdline_args = self.tool_specification.cmdline_args + args
-            if cmdline_args:
-                cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
-                self.args += [f"empty!(ARGS); append!(ARGS, {cmdline_args});"]
-            self.args += [f'include("{self.tool_specification.main_prgm}")']
             kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
             extra_switches = [f"--sysimage={sysimage}"] if os.path.isfile(sysimage) else None
             self.exec_mngr = KernelExecutionManager(
                 self._logger, kernel_name, *self.args, group_id=self.owner.group_id, extra_switches=extra_switches
             )
         else:
-            # Prepare command "julia --project={PROJECT_DIR} script.jl"
             julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
             julia_exe = resolve_julia_executable(julia_exe)
             julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
@@ -158,16 +157,11 @@ class JuliaToolInstance(ToolInstance):
             self.program.append(f"--project={julia_project_path}")
             if os.path.isfile(sysimage):
                 self.program.append(f"--sysimage={sysimage}")
-            cmdline_args = self.tool_specification.cmdline_args + args
-            if cmdline_args:
-                fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
-                self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
-            self.args += [f'include("{self.tool_specification.main_prgm}")']
-            # FIXME: script-less tools?
             alias = f"# Running 'julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}'"
             self.exec_mngr = JuliaPersistentExecutionManager(
-                self._logger, self.program, self.args, alias, group_id=self.owner.group_id, workdir=self.basedir
+                self._logger, self.program, self.args, alias, group_id=self.owner.group_id
             )
+        # FIXME: script-less tools?
 
     def execute(self):
         """Executes a prepared instance."""
@@ -218,7 +212,7 @@ class PythonToolInstance(ToolInstance):
             self.args += [exec_code]
             alias = f"# Running 'python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}'"
             self.exec_mngr = PythonPersistentExecutionManager(
-                self._logger, self.program, self.args, alias, group_id=self.owner.group_id, workdir=self.basedir
+                self._logger, self.program, self.args, alias, group_id=self.owner.group_id
             )
 
     def _make_exec_code(self, fp, full_fp):
