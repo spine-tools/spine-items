@@ -31,7 +31,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(506, 63)
+        Form.resize(506, 69)
         self.verticalLayout_3 = QVBoxLayout(Form)
         self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
@@ -104,9 +104,6 @@ class Ui_Form(object):
         self.horizontalLayout.setContentsMargins(6, -1, -1, -1)
         self.label = QLabel(Form)
         self.label.setObjectName(u"label")
-        font = QFont()
-        font.setPointSize(8)
-        self.label.setFont(font)
 
         self.horizontalLayout.addWidget(self.label)
 
