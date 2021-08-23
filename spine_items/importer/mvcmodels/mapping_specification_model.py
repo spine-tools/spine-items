@@ -69,9 +69,6 @@ from ..commands import SetComponentMappingReference, SetComponentMappingType
 from ..mapping_colors import ERROR_COLOR
 
 
-# FIXME: We need to use the Parameter Value Editor in constant vales
-
-
 @unique
 class MappingType(Enum):
     ObjectClass = "Object class"

@@ -32,7 +32,7 @@ from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_ex
 from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern
 from .output_resources import scan_for_resources
-from ..utils import cmd_line_arg_from_dict, expand_cmd_line_args, labelled_resource_args, validate_database_version
+from ..utils import cmd_line_arg_from_dict, expand_cmd_line_args, labelled_resource_args
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -411,9 +411,6 @@ class ExecutableItem(ExecutableItemBase):
             return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         resources = forward_resources + backward_resources
-        if not validate_database_version(resources, self._logger):
-            self._logger.msg_error.emit("Invalid database version")
-            return ItemExecutionFinishState.FAILURE
         with labelled_resource_args(resources) as labelled_args:
             expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
             try:

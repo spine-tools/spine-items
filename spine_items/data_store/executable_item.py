@@ -66,20 +66,21 @@ class ExecutableItem(ExecutableItemBase):
         cancel_on_error = item_dict["cancel_on_error"]
         return cls(name, url, cancel_on_error, project_dir, logger)
 
-    @staticmethod
-    def _urls_from_resources(resources):
-        return [r.url for r in resources if r.type_ == "database"]
-
     def ready_to_execute(self, settings):
         """See base class.
 
         Returns False when url is invalid, True otherwise.
         """
-        if not self._url:  # _url is None if convert_to_sqlalchemy() fails in from_dict()
+        if self._url is None:
             return False
-        # NOTE: Don't return False if db is outdated, we will prompt the user about it
         try:
             DatabaseMapping.create_engine(self._url)
+        except SpineDBVersionError as v_err:
+            prompt = {"type": "upgrade_db", "url": self._url, "current": v_err.current, "expected": v_err.expected}
+            if not self._logger.prompt.emit(prompt):
+                return False
+            DatabaseMapping.create_engine(self._url, upgrade=True)
+            return True
         except SpineDBAPIError as err:
             self._logger.msg_error.emit(str(err))
             return False
@@ -89,7 +90,7 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
             return ItemExecutionFinishState.FAILURE
-        from_urls = self._urls_from_resources(forward_resources)
+        from_urls = [r.url for r in forward_resources if r.type_ == "database"]
         if not from_urls:
             return ItemExecutionFinishState.SUCCESS
         self._process = ReturningProcess(
