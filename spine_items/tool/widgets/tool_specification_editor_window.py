@@ -514,7 +514,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(int)
     def _push_change_tooltype_command(self, index):
-        new_type = TOOL_TYPES[index]
+        new_type = TOOL_TYPES[index].lower()
         old_type = self.spec_dict.get("tooltype", "")
         if new_type == old_type:
             return
@@ -523,7 +523,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         )
 
     def _set_tooltype(self, value):
-        value = value.lower()
         self.spec_dict["tooltype"] = value
         self._ui.textEdit_program.set_lexer_name(value)
         index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == value), -1)
