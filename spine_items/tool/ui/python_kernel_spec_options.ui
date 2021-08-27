@@ -58,7 +58,7 @@
        <item>
         <widget class="QRadioButton" name="radioButton_python_console">
          <property name="text">
-          <string>Python Console</string>
+          <string>Basic Console</string>
          </property>
          <property name="checked">
           <bool>true</bool>

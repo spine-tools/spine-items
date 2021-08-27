@@ -149,7 +149,7 @@ class Ui_Form(object):
     # setupUi
 
     def retranslateUi(self, Form):
-        self.radioButton_python_console.setText(QCoreApplication.translate("Form", u"Python Console", None))
+        self.radioButton_python_console.setText(QCoreApplication.translate("Form", u"Basic Console", None))
         self.radioButton_jupyter_console.setText(QCoreApplication.translate("Form", u"Jupyter Console", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Interpreter", None))
 #if QT_CONFIG(tooltip)
