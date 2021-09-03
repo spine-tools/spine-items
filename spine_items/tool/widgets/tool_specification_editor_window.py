@@ -31,9 +31,9 @@ from spinetoolbox.project_item.specification_editor_window import (
     ChangeSpecPropertyCommand,
 )
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from ..item_info import ItemInfo
-from ..tool_specifications import TOOL_TYPES, REQUIRED_KEYS, make_specification
 from spine_items.tool.widgets.tool_spec_optional_widgets import PythonToolSpecOptionalWidget
+from ..item_info import ItemInfo
+from ..tool_specifications import TOOL_TYPES, make_specification
 
 
 class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
