@@ -16,6 +16,8 @@ Contains base classes for executable items.
 :date:    10.2.2021
 """
 import os.path
+
+from spine_engine.project_item.project_item_resource import file_resource_in_pack
 from spinedb_api import clear_filter_configs, load_filters
 from spinedb_api.filters.tools import filter_configs, name_from_dict
 from spinedb_api.spine_io import gdx_utils
@@ -98,9 +100,11 @@ class ExporterExecutableItemBase(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        resources, self._result_files = exported_files_as_resources(
-            self.name, self._result_files, self._data_dir, self._databases
-        )
+        if self._result_files is None:
+            return []
+        resources = list()
+        for label, output_files in self._result_files.items():
+            resources += [file_resource_in_pack(self.name, label, f) for f in output_files]
         return resources
 
     def _resolve_gams_system_directory(self):
