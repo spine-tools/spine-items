@@ -201,7 +201,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             return None
         connector = _CONNECTOR_NAME_TO_CLASS[source_type]
         file_extensions = connector.FILE_EXTENSIONS.split(";;")
-        if not any(fnmatch.fnmatch(filepath, ext) for ext in file_extensions):
+        if filepath != self._FILE_LESS and not any(fnmatch.fnmatch(filepath, ext) for ext in file_extensions):
             return None
         return connector
 
