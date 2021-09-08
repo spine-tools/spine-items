@@ -290,7 +290,6 @@ def _collect_execution_manifests(data_dir):
         if path.name.startswith(EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX) and path.suffix == ".json":
             with open(path) as manifest_file:
                 manifest = json.load(manifest_file)
-            path.unlink()
             for out_file_name, paths in manifest.items():
                 if manifests is None:
                     manifests = dict()
