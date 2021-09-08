@@ -15,14 +15,16 @@ Contains base classes for executable items.
 :authors: A. Soininen (VTT)
 :date:    10.2.2021
 """
+import json
 import os.path
+from pathlib import Path
 
 from spine_engine.project_item.project_item_resource import file_resource_in_pack
 from spinedb_api import clear_filter_configs, load_filters
 from spinedb_api.filters.tools import filter_configs, name_from_dict
 from spinedb_api.spine_io import gdx_utils
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from .utils import exported_files_as_resources
+from .utils import exported_files_as_resources, EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 
 
 class ExporterExecutableItemBase(ExecutableItemBase):
@@ -62,9 +64,17 @@ class ExporterExecutableItemBase(ExecutableItemBase):
 
     def exclude_execution(self, forward_resources, backward_resources):
         """See base class."""
-        database_urls = [r.url for r in forward_resources if r.type_ == "database"]
-        _, forks = self._databases_and_forks(database_urls)
-        self._forks.update(forks)
+        manifest_file_name = (
+            (EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + self.filter_id)
+            if self.filter_id
+            else EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
+        ) + ".json"
+        manifest_file_path = Path(self._data_dir, manifest_file_name)
+        if not manifest_file_path.exists():
+            return
+        with open(Path(self._data_dir, manifest_file_name)) as manifest_file:
+            manifest = json.load(manifest_file)
+        self._result_files = {label: set(files) for label, files in manifest.items()}
 
     def _databases_and_forks(self, database_urls):
         """
