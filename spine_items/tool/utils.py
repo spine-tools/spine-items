@@ -17,6 +17,7 @@ Utility functions for the Tool project item.
 """
 import glob
 import os.path
+import re
 
 
 def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):
@@ -91,9 +92,14 @@ def find_last_output_files(output_files, output_dir):
     if "failed" in archive_dirs:
         archive_dirs.remove("failed")
     archive_dirs.sort(reverse=True)
+    result_directory_pattern = re.compile(r"^\d\d\d\d-\d\d-\d\dT\d\d.\d\d.\d\d")
     for archive in archive_dirs:
+        full_archive_path = os.path.join(output_dir, archive)
+        archive_contents = os.listdir(full_archive_path)
+        if any(result_directory_pattern.match(d) is not None for d in archive_contents):
+            recent_output_files.update(find_last_output_files(output_files, full_archive_path))
+            break
         for pattern in list(file_patterns):
-            full_archive_path = os.path.join(output_dir, archive)
             full_path_pattern = os.path.join(full_archive_path, pattern)
             files_found = False
             for path in glob.glob(full_path_pattern):
