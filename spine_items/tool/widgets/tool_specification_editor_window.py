@@ -555,7 +555,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         item = opt_widget.kernel_spec_model.item(index)
-        new_kernel_spec = item.data()["kernel_spec_name"]
+        if not item.data():
+            new_kernel_spec = ""
+        else:
+            new_kernel_spec = item.data()["kernel_spec_name"]
         previous_kernel_spec = self.spec_dict["execution_settings"]["kernel_spec_name"]
         if new_kernel_spec == previous_kernel_spec:
             return

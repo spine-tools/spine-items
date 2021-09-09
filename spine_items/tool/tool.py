@@ -79,7 +79,8 @@ class Tool(ProjectItem):
         self._specification = self._project.get_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
-                f"Tool <b>{self.name}</b> should have a Tool specification <b>{specification_name}</b> but it was not found"
+                f"Tool <b>{self.name}</b> should have a Tool specification "
+                f"<b>{specification_name}</b> but it was not found"
             )
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
@@ -283,7 +284,7 @@ class Tool(ProjectItem):
                 if not use_console:
                     exe = self.specification().execution_settings["executable"]
                     p = resolve_python_interpreter(exe)
-                    self._properties_ui.label_jupyter.setText(f"[Python console] {p}")
+                    self._properties_ui.label_jupyter.setText(f"[Basic console] {p}")
                 else:
                     env = "" if not env else f"[{env}]"
                     self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")

@@ -164,7 +164,7 @@ class Ui_Form(object):
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python Jupyter kernel spec for Jupyter Console.</p><p>Both Conda and Jupyter kernel specs are shown.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
-        self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Create Julia sysimage for this Tool</p></body></html>", None))
+        self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh the list of Jupyter and Conda kernel specs</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_refresh_kernel_specs.setText("")
 #if QT_CONFIG(tooltip)

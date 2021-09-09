@@ -156,9 +156,9 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
     def find_index_by_data(self, string):
         """Searches the kernel spec model for the first item whose data matches the given string.
         Returns the items row number or -1 if not found."""
-        for row in range(self.kernel_spec_model.rowCount()):
-            if row == 0:  # Skip searching the 'header' item
-                continue
+        if string == "":
+            return 0
+        for row in range(1, self.kernel_spec_model.rowCount()):  # Start from index 1
             index = self.kernel_spec_model.index(row, 0)
             item = self.kernel_spec_model.itemFromIndex(index)
             d = item.data()
@@ -170,7 +170,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
     @Slot(bool)
     def _refresh_kernel_spec_model(self):
         item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
-        if not item:
+        if not item or not item.data():
             selected_kernel_spec = None
         else:
             selected_kernel_spec = item.data()["kernel_spec_name"]  # Remember the selected kernel spec
