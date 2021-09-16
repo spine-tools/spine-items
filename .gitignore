@@ -9,3 +9,5 @@ dist/
 docs/source/autoapi/
 pip-wheel-metadata/
 __pycache__/
+.coverage
+htmlcov/
