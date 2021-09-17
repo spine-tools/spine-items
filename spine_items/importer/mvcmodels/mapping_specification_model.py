@@ -836,9 +836,26 @@ class MappingSpecificationModel(QAbstractTableModel):
             self.row_or_column_type_recommended.emit(-(mapping.position + 1), convert_spec, Qt.Vertical)
 
     def set_skip_columns(self, columns=None):
+        previous_skip_columns = self._root_mapping.skip_columns
         if columns is None:
             columns = []
         self._root_mapping.skip_columns = list(set(columns))
+        if previous_skip_columns:
+            if columns:
+                min_column = min(min(previous_skip_columns), min(columns))
+                max_column = max(max(previous_skip_columns), max(columns))
+            else:
+                min_column = min(previous_skip_columns)
+                max_column = max(previous_skip_columns)
+        else:
+            if columns:
+                min_column = min(columns)
+                max_column = max(columns)
+            else:
+                return
+        top_left = self.index(min_column, 0)
+        bottom_right = self.index(max_column, self.rowCount() - 1)
+        self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole])
 
     def set_time_series_repeat(self, repeat):
         """Toggles the repeat flag in the parameter's options."""
