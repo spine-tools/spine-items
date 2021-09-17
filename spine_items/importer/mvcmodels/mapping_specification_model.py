@@ -150,6 +150,8 @@ class MappingSpecificationModel(QAbstractTableModel):
     mapping_changed = Signal()
     """Emitted whenever the user changes the mapping.
     Used to setup an index widget where the user can specify the type"""
+    skip_columns_changed = Signal(list)
+    """Emitted after new skip columns have been set."""
 
     def __init__(self, table_name, mapping_name, mapping, undo_stack):
         """
@@ -855,6 +857,7 @@ class MappingSpecificationModel(QAbstractTableModel):
                 return
         top_left = self.index(min_column, 0)
         bottom_right = self.index(max_column, self.rowCount() - 1)
+        self.skip_columns_changed.emit(columns)
         self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole])
 
     def set_time_series_repeat(self, repeat):

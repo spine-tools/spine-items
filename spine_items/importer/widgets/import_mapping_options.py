@@ -72,10 +72,10 @@ class ImportMappingOptions(QObject):
 
     @Slot(int)
     def set_num_available_columns(self, num):
-        selected = self._ui_ignore_columns_filtermenu._filter._filter_model.get_selected()
+        selected = self._mapping_specification_model.skip_columns
         # The filter menu is 1-based
         self._ui_ignore_columns_filtermenu._filter._filter_model.set_list(set(range(1, num + 1)))
-        self._ui_ignore_columns_filtermenu._filter._filter_model.set_selected(selected)
+        self._update_ignore_columns_button(selected)
 
     @Slot(object)
     def set_mapping_specification_model(self, model):
@@ -85,6 +85,7 @@ class ImportMappingOptions(QObject):
             self._mapping_specification_model.mapping_read_start_row_changed.disconnect(
                 self._ui.start_read_row_spin_box.setValue
             )
+            self._mapping_specification_model.skip_columns_changed.disconnect(self._update_ignore_columns_button)
         self._mapping_specification_model = model
         if self._mapping_specification_model is not None:
             self._mapping_specification_model.modelReset.connect(self.update_ui)
@@ -92,6 +93,7 @@ class ImportMappingOptions(QObject):
             self._mapping_specification_model.mapping_read_start_row_changed.connect(
                 self._ui.start_read_row_spin_box.setValue
             )
+            self._mapping_specification_model.skip_columns_changed.connect(self._update_ignore_columns_button)
         self.update_ui()
 
     def update_ui(self):
@@ -153,8 +155,7 @@ class ImportMappingOptions(QObject):
         # update ignore columns filter
         self._ui.ignore_columns_button.setEnabled(self._mapping_specification_model.is_pivoted)
         self._ui.ignore_columns_label.setEnabled(self._mapping_specification_model.is_pivoted)
-        skip_cols = self._mapping_specification_model.mapping.skip_columns
-        self._update_ignore_columns_button(skip_cols)
+        self._update_ignore_columns_button(self._mapping_specification_model.skip_columns)
 
         self._ui.start_read_row_spin_box.setValue(self._mapping_specification_model.read_start_row)
 
@@ -162,10 +163,11 @@ class ImportMappingOptions(QObject):
         self._update_map_options()
         self._block_signals = False
 
+    @Slot(list)
     def _update_ignore_columns_button(self, skip_cols):
         """
         Args:
-            skip_cols (list(int)): 0-based
+            skip_cols (list of int): 0-based list of ignored columns
         """
         # NOTE: We go from 0-based to 1-based, for visualization
         skip_cols = [c + 1 for c in skip_cols]
@@ -443,7 +445,6 @@ class ImportMappingOptions(QObject):
         self._executing_command = True
         self.about_to_undo.emit(source_table_name, mapping_spec_name)
         self._mapping_specification_model.set_skip_columns(skip_cols)
-        self._update_ignore_columns_button(skip_cols)
         self._executing_command = False
 
     @Slot(bool)
