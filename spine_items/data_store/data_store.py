@@ -144,10 +144,17 @@ class DataStore(ProjectItem):
     def select_sqlite_file(self, checked=False):
         """Open file browser where user can select the path to an SQLite
         file that they want to use."""
+        candidate_path = os.path.abspath(self._url["database"]) if self._url["database"] else self.data_dir
+        answer = QFileDialog.getOpenFileName(self._toolbox, "Select SQLite file", candidate_path)
+        file_path = answer[0]
+        if not file_path:  # Cancel button clicked
+            return False
+        self.set_path_to_sqlite_file(file_path)
+        return True
+
+    def _new_sqlite_file(self, checked=False):
         candidate_path = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
-        answer = QFileDialog.getSaveFileName(
-            self._toolbox, "Select SQLite file", candidate_path, options=QFileDialog.DontConfirmOverwrite
-        )
+        answer = QFileDialog.getSaveFileName(self._toolbox, "Create SQLite file", candidate_path)
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
             return False
@@ -398,7 +405,7 @@ class DataStore(ProjectItem):
         # Try to make an url from the current status
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
         if not sa_url:
-            if self._url["dialect"] != "sqlite" or not self.select_sqlite_file():
+            if self._url["dialect"] != "sqlite" or not self._new_sqlite_file():
                 return
             sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
         self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
