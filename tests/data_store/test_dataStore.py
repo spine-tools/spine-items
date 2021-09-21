@@ -199,9 +199,9 @@ class TestDataStore(unittest.TestCase):
         self.ds_properties_ui.comboBox_dialect.activated[str].emit("sqlite")
         # Browse to an existing db file
         with mock.patch("spine_items.data_store.data_store.QFileDialog") as mock_qfile_dialog:
-            mock_qfile_dialog.getSaveFileName.side_effect = lambda *args, **kwargs: [temp_db_path]
+            mock_qfile_dialog.getOpenFileName.side_effect = lambda *args, **kwargs: [temp_db_path]
             self.ds_properties_ui.toolButton_select_sqlite_file.click()
-            mock_qfile_dialog.getSaveFileName.assert_called_once()
+            mock_qfile_dialog.getOpenFileName.assert_called_once()
         # Open form
         self.toolbox.db_mngr = MagicMock()
         self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
