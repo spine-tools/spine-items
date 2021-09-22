@@ -88,11 +88,11 @@ class Tool(ProjectItem):
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self.do_update_execution_mode(execute_in_work)
-        self.jupyter_console_requested.connect(self._setup_jupyter_console)
         self._specification_menu = None
         self._options = options if options is not None else {}
         self._resources_from_upstream = list()
         self._resources_from_downstream = list()
+        self.jupyter_console_requested.connect(self._setup_jupyter_console)
         self.persistent_console_requested.connect(self._setup_persistent_console)
         self.persistent_stdin_available.connect(self._add_persistent_stdin)
         self.persistent_stdout_available.connect(self._add_persistent_stdout)
@@ -511,7 +511,7 @@ class Tool(ProjectItem):
             self._toolbox.override_console()
         else:
             self._filter_consoles[filter_id] = self._toolbox.make_jupyter_console(self, kernel_name, connection_file)
-            self._toolbox.ui.listView_executions.model().layoutChanged.emit()
+            self._toolbox.ui.listView_console_executions.model().layoutChanged.emit()
 
     @Slot(str, tuple, str)
     def _setup_persistent_console(self, filter_id, key, language):
@@ -528,7 +528,7 @@ class Tool(ProjectItem):
             self._toolbox.override_console()
         else:
             self._filter_consoles[filter_id] = self._toolbox.make_persistent_console(self, key, language)
-            self._toolbox.ui.listView_executions.model().layoutChanged.emit()
+            self._toolbox.ui.listView_console_executions.model().layoutChanged.emit()
 
     @Slot(str, str)
     def _add_persistent_stdin(self, filter_id, data):
