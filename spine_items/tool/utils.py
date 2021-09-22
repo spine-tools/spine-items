@@ -88,9 +88,11 @@ def find_last_output_files(output_files, output_dir):
         return dict()
     recent_output_files = dict()
     file_patterns = list(output_files)
-    archive_dirs = os.listdir(output_dir)
-    if "failed" in archive_dirs:
-        archive_dirs.remove("failed")
+    archive_dirs = [
+        entry
+        for entry in os.listdir(output_dir)
+        if os.path.isdir(os.path.join(output_dir, entry)) and entry != "failed"
+    ]
     archive_dirs.sort(reverse=True)
     result_directory_pattern = re.compile(r"^\d\d\d\d-\d\d-\d\dT\d\d.\d\d.\d\d")
     for archive in archive_dirs:
