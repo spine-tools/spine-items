@@ -72,7 +72,10 @@ class ImportMappingOptions(QObject):
 
     @Slot(int)
     def set_num_available_columns(self, num):
-        selected = self._mapping_specification_model.skip_columns
+        if self._mapping_specification_model is not None:
+            selected = self._mapping_specification_model.skip_columns
+        else:
+            selected = []
         # The filter menu is 1-based
         self._ui_ignore_columns_filtermenu._filter._filter_model.set_list(set(range(1, num + 1)))
         self._update_ignore_columns_button(selected)
