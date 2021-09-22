@@ -35,6 +35,7 @@ class TestImportEditorWindow(unittest.TestCase):
         spec.description = "spec_desc"
         toolbox = QWidget()
         toolbox.qsettings = mock.MagicMock(return_value=QSettings())
+        toolbox.restore_and_activate = mock.MagicMock()
         widget = ImportEditorWindow(toolbox, spec)
         widget._app_settings = mock.NonCallableMagicMock()
         widget.close()
