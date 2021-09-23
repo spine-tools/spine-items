@@ -329,6 +329,58 @@ class GAMSTool(ToolSpecification):
         else:
             logging.error("Updating GAMS options failed. Unknown key: %s", key)
 
+    def make_debug_project(self, basedir):
+        """Make a GAMS project file and return an anchor for the execution item log.
+
+        Args:
+            basedir (str): Full path to work or source dir depending on execution mode
+
+        Returns:
+            Anchor to gamside project anchor or None if operation failed
+        """
+        prj_file_path = os.path.join(self.path, self.short_name + "_autocreated.gpr")
+        try:
+            self.make_gamside_project_file(prj_file_path, basedir)
+        except OSError:
+            return None
+        anchor = (
+                "<a style='color:#99CCFF;' title='"
+                + prj_file_path
+                + "' href='file:///"
+                + prj_file_path
+                + "'>Click here to debug in GAMSIDE</a>"
+        )
+        return anchor
+
+    def make_gamside_project_file(self, prj_file_path, basedir):
+        """Make a GAMSIDE project file for debugging.
+
+        Args:
+            prj_file_path (str): Full path to GAMSIDE project file
+            basedir (str): Full path to work or source dir depending on execution mode
+
+        Returns:
+            Full path to GAMSIDE project file or None if operation failed
+        """
+        lst_file_path = os.path.join(basedir, self.lst_file)  # We need the latest from work dir or from source dir
+        main_prgm_path = os.path.join(self.path, self.main_prgm)  # Always get the one from source dir
+        try:
+            with open(prj_file_path, "w") as f:
+                f.write("[PROJECT]\n\n")
+                f.write("[MRUFILES]\n")  # Most Recently Used (MRU)
+                f.write("1=" + lst_file_path + "\n\n")
+                f.write("[OPENWINDOW_1]\n")
+                f.write("FILE0=" + main_prgm_path + "\n")
+                f.write("FILE1=" + lst_file_path + "\n")
+                f.write("FILE2=" + main_prgm_path + "\n")
+                f.write("MAXIM=0\n")
+                f.write("TOP=0\n")
+                f.write("LEFT=0\n")
+                f.write("HEIGHT=600\n")
+                f.write("WIDTH=1000\n")
+        except OSError:
+            raise
+
     @staticmethod
     def load(path, data, settings, logger):
         """Creates a GAMSTool according to a tool specification file.

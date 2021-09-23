@@ -121,9 +121,12 @@ class GAMSToolInstance(ToolInstance):
         if ret != 0:
             try:
                 return_msg = self.tool_specification.return_codes[ret]
-                self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
+                self._logger.msg_error.emit(f"<b>{return_msg}</b> [exit code:{ret}]")
             except KeyError:
-                self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
+                self._logger.msg_error.emit(f"Unknown return code ({ret})")
+            debug_anchor = self.tool_specification.make_debug_project(self.basedir)
+            if debug_anchor is not None:
+                self._logger.msg.emit(f"{debug_anchor}")
         self.exec_mngr = None
         return ret
 
