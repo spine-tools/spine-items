@@ -68,7 +68,7 @@ class Importer(ProjectItem):
                 f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
             )
         self.cancel_on_error = cancel_on_error
-        self._file_model = CheckableFileListModel(header_label="Source files")
+        self._file_model = CheckableFileListModel(header_label="Available resources")
         self._file_model.set_initial_state(file_selection if file_selection is not None else dict())
         self._file_model.checked_state_changed.connect(self._push_file_selection_change_to_undo_stack)
 

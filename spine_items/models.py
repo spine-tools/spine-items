@@ -367,7 +367,7 @@ class CommandLineArgItem(QStandardItem):
 
 class NewCommandLineArgItem(CommandLineArgItem):
     def __init__(self):
-        super().__init__("Type new arg here...", selectable=True, editable=True)
+        super().__init__("Type arg, or drag and drop from Available resources...", selectable=True, editable=True)
         gray_color = qApp.palette().text().color()  # pylint: disable=undefined-variable
         gray_color.setAlpha(128)
         self.setForeground(gray_color)

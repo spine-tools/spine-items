@@ -277,7 +277,7 @@ class Ui_Form(object):
         self.toolButton_tool_specification.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification options.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
-        self.toolButton_add_file_path_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Append selected input file paths to the list of command line args</p></body></html>", None))
+        self.toolButton_add_file_path_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Append selected Available resources to Tool arguments</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_add_file_path_arg.setText("")
 #if QT_CONFIG(tooltip)
