@@ -211,17 +211,29 @@ class PythonToolInstance(ToolInstance):
             fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
             self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
             self.args += [f"import os; os.chdir({repr(self.basedir)})"]
-            exec_code = self._make_exec_code(fp, full_fp)
-            self.args += [exec_code]
+            self.args += self._make_exec_code(fp, full_fp)
             alias = f"# Running 'python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}'"
             self.exec_mngr = PythonPersistentExecutionManager(
                 self._logger, self.program, self.args, alias, group_id=self.owner.group_id
             )
 
-    def _make_exec_code(self, fp, full_fp):
-        """Returns a string of code to run this tool instance in a python interactive session."""
-        glob = f'{{"__file__": "{full_fp}", "__name__": "__main__"}}'
-        return f"with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), {glob}, locals())"
+    @staticmethod
+    def _make_exec_code(fp, full_fp):
+        """Returns a list of lines of code to run this tool instance in a Python interactive session.
+
+        Args:
+            fp (str): relative path to main Python file
+            full_fp (str): absolute path to the main Python file
+
+        Returns:
+            list of str: lines of code
+        """
+        globals_dict = 'globals_dict = globals()'
+        update_globals_dict = f'globals_dict.update({{"__file__": "{full_fp}", "__name__": "__main__"}})'
+        compile_and_exec = (
+            f"with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), globals_dict, globals_dict)"
+        )
+        return [globals_dict, update_globals_dict, compile_and_exec]
 
     def execute(self):
         """Executes a prepared instance."""
