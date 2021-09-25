@@ -152,19 +152,29 @@ class JuliaToolInstance(ToolInstance):
             self.exec_mngr = KernelExecutionManager(
                 self._logger, kernel_name, *self.args, group_id=self.owner.group_id, extra_switches=extra_switches
             )
-        else:
-            julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
-            julia_exe = resolve_julia_executable(julia_exe)
-            julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
-            self.program = [julia_exe]
-            self.program.append(f"--project={julia_project_path}")
+            return
+        julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
+        julia_exe = resolve_julia_executable(julia_exe)
+        julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
+        if use_julia_kernel == "1":
+            self.program = julia_exe
+            self.args = []
+            self.args.append(f"--project={julia_project_path}")
             if os.path.isfile(sysimage):
-                self.program.append(f"--sysimage={sysimage}")
-            alias = f"# Running 'julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}'"
-            self.exec_mngr = JuliaPersistentExecutionManager(
-                self._logger, self.program, self.args, alias, group_id=self.owner.group_id
-            )
-        # FIXME: script-less tools?
+                self.args.append(f"--sysimage={sysimage}")
+            if self.tool_specification.main_prgm:
+                self.args.append(self.tool_specification.main_prgm)
+            self.append_cmdline_args(args)
+            self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+            return
+        self.program = [julia_exe]
+        self.program.append(f"--project={julia_project_path}")
+        if os.path.isfile(sysimage):
+            self.program.append(f"--sysimage={sysimage}")
+        alias = f"# Running 'julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}'"
+        self.exec_mngr = JuliaPersistentExecutionManager(
+            self._logger, self.program, self.args, alias, group_id=self.owner.group_id
+        )
 
     def execute(self):
         """Executes a prepared instance."""

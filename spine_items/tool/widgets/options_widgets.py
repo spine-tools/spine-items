@@ -234,7 +234,7 @@ class JuliaOptionsWidget(OptionsWidget):
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
         settings = make_settings_dict_for_engine(self._settings)
-        settings["appSettings/useJuliaKernel"] = "1"  # Don't use julia kernel
+        settings["appSettings/useJuliaKernel"] = "1"  # Use subprocess
         self.sysimage_worker = self._project.create_engine_worker(dag, execution_permits, dag_identifier, settings)
         # Use the modified spec
         engine_data = self.sysimage_worker.get_engine_data()
@@ -254,8 +254,7 @@ class JuliaOptionsWidget(OptionsWidget):
         self.sysimage_worker.start(silent=True)
         self._logger.msg_success.emit(
             f"Process to create <b>{self.sysimage_basename}</b> sucessfully started.\n"
-            "The process might take a long time, but you can keep using Spine Toolbox as normal while it runs."
-            "You will see a notification here whenever it's done."
+            "This process might take a while, but you can keep using Spine Toolbox as normal in the meantime."
         )
 
     def _get_precompile_statements_filepath(self):
@@ -282,7 +281,7 @@ class JuliaOptionsWidget(OptionsWidget):
         with open(original_program_file, 'r') as original:
             original_code = original.read()
         new_code = f"""
-        macro loaded_modules(ex)
+        macro write_loaded_modules(ex)
             return quote
                 local before = copy(Base.loaded_modules)
                 local val = $(esc(ex))
@@ -293,7 +292,7 @@ class JuliaOptionsWidget(OptionsWidget):
                 val
             end
         end
-        @loaded_modules begin 
+        @write_loaded_modules begin 
             {original_code}
         end
         """
@@ -329,18 +328,16 @@ class JuliaOptionsWidget(OptionsWidget):
             if tool == current_tool:
                 self._update_ui()
             return
-        julia_command = get_julia_command(self._settings)
         loaded_modules_file = self._get_loaded_modules_filepath()
         precompile_statements_file = self._get_precompile_statements_filepath()
         with open(loaded_modules_file, 'r') as f:
             modules = f.read()
         code = f"""
             using Pkg;
-            mktempdir() do temp_project_dir
-                active_project_dir = dirname(Base.active_project());
-                cp(joinpath(active_project_dir, "Project.toml"), joinpath(temp_project_dir, "Project.toml"));
-                cp(joinpath(active_project_dir, "Manifest.toml"), joinpath(temp_project_dir, "Manifest.toml"));
-                Pkg.activate(temp_project_dir);
+            project_dir = dirname(Base.active_project());
+            cp(joinpath(project_dir, "Project.toml"), joinpath(project_dir, "Project.backup"); force=true);
+            cp(joinpath(project_dir, "Manifest.toml"), joinpath(project_dir, "Manifest.backup"); force=true);
+            try
                 modules = split("{modules}", " ");
                 Pkg.add(modules);
                 Pkg.add("PackageCompiler");
@@ -351,15 +348,18 @@ class JuliaOptionsWidget(OptionsWidget):
                     sysimage_path="{self.sysimage_path}",
                     precompile_statements_file="{precompile_statements_file}"
                 )
+            finally
+                cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
+                cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
             end
         """
-        julia, *args = julia_command
+        julia, *args = get_julia_command(self._settings)
         args += ["-e", code]
         self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=True)
         self.sysimage_worker.execution_finished.connect(
             lambda ret, tool=tool: self._handle_sysimage_process_finished(ret, tool)
         )
-        self.sysimage_worker.start_execution()
+        self.sysimage_worker.start_execution(workdir=self._tool.specification().path)
         # Restore the current self._tool
         self._tool = current_tool
 
