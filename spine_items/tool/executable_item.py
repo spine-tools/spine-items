@@ -122,6 +122,10 @@ class ExecutableItem(ExecutableItemBase):
             try:
                 shutil.copyfile(src_path, dst_path)
                 n_copied_files += 1
+            except shutil.SameFileError:
+                # Happens in source dir exec mode when DC is passing a file as reference from the main program dir to
+                # source dir, which are equal
+                self._logger.msg_warning.emit("\tNo need to copy. File already available.")
             except OSError as e:
                 self._logger.msg_error.emit(f"Copying file <b>{src_path}</b> to <b>{dst_path}</b> failed")
                 self._logger.msg_error.emit(f"{e}")
