@@ -338,7 +338,7 @@ class GAMSTool(ToolSpecification):
         Returns:
             Anchor to gamside project anchor or None if operation failed
         """
-        prj_file_path = os.path.join(self.path, self.short_name + "_autocreated.gpr")
+        prj_file_path = os.path.abspath(os.path.join(self.path, self.short_name + "_autocreated.gpr"))
         try:
             self.make_gamside_project_file(prj_file_path, basedir)
         except OSError:
