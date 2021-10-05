@@ -70,6 +70,9 @@ class ToolFactory(ProjectItemFactory):
     def repair_specification(toolbox, specification):
         """See base class."""
         ProjectItemFactory.repair_specification(toolbox, specification)
+        # Skip for Executable Tool Specs because it is allowed to not have a main program
+        if specification.tooltype == "executable":
+            return
         # Check that main program file exists. If not, log a message with an anchor to find it
         filename = specification.includes[0]
         full_path = os.path.join(specification.path, filename)

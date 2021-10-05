@@ -49,6 +49,7 @@ class Ui_Form(object):
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(6, -1, -1, -1)
         self.radioButton_python_console = QRadioButton(Form)
         self.radioButton_python_console.setObjectName(u"radioButton_python_console")
         self.radioButton_python_console.setChecked(True)
@@ -72,6 +73,7 @@ class Ui_Form(object):
 
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(-1, -1, 6, -1)
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setSpacing(6)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")

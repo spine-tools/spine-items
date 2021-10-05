@@ -174,11 +174,13 @@ class Tool(ProjectItem):
         if not self._active:
             return
         self._properties_ui.radioButton_execute_in_work.blockSignals(True)
+        self._properties_ui.radioButton_execute_in_source.blockSignals(True)
         if self.execute_in_work:
             self._properties_ui.radioButton_execute_in_work.setChecked(True)
         else:
             self._properties_ui.radioButton_execute_in_source.setChecked(True)
         self._properties_ui.radioButton_execute_in_work.blockSignals(False)
+        self._properties_ui.radioButton_execute_in_source.blockSignals(False)
 
     @Slot(str)
     def update_specification(self, text):
@@ -348,7 +350,7 @@ class Tool(ProjectItem):
         self.clear_notifications()
         if not self.specification():
             self.add_notification("This Tool does not have a specification. Set it in the Tool Properties Panel.")
-        elif not self.specification().path:
+        elif self.specification().includes and not self.specification().path:
             n = self.specification().name
             self.add_notification(
                 f"Tool specification <b>{n}</b> path does not exist. Fix this in Tool specification editor."

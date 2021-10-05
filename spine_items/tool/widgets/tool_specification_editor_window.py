@@ -25,13 +25,13 @@ from PySide2.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMes
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex
 from spinetoolbox.helpers import busy_effect, open_url
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
-from spinetoolbox.widgets.notification import Notification
 from spinetoolbox.project_item.specification_editor_window import (
     SpecificationEditorWindowBase,
     ChangeSpecPropertyCommand,
 )
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spine_items.tool.widgets.tool_spec_optional_widgets import PythonToolSpecOptionalWidget
+from spine_items.tool.widgets.tool_spec_optional_widgets import PythonToolSpecOptionalWidget, \
+    ExecutableToolSpecOptionalWidget
 from ..item_info import ItemInfo
 from ..tool_specifications import TOOL_TYPES, make_specification
 
@@ -49,12 +49,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._project = self._toolbox.project()
         # Customize text edit main program
         self._ui.textEdit_program.setEnabled(False)
-        self._current_programfile_path = None
         self._programfile_documents = {}
         self._programfile_set_dirty_slots = {}
         # Setup statusbar
         self._label_main_path = QLabel()
-        label = QLabel("Main program dir:")
+        label = QLabel("Source dir:")
         font = QFont()
         font.setPointSize(10)
         label.setFont(font)
@@ -80,41 +79,12 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._ui.comboBox_tooltype.setCurrentIndex(index)
             self._ui.textEdit_program.set_lexer_name(tooltype.lower())
             self._show_optional_widget(index)
-            opt_widget = self._get_optional_widget(tooltype)
-            if opt_widget is not None:
-                specification.set_execution_settings()
-                use_jupyter_console = specification.execution_settings["use_jupyter_console"]
-                opt_widget.ui.radioButton_jupyter_console.blockSignals(True)
-                opt_widget.ui.radioButton_python_console.blockSignals(True)
-                if use_jupyter_console:
-                    opt_widget.ui.radioButton_jupyter_console.setChecked(True)
-                else:
-                    opt_widget.ui.radioButton_python_console.setChecked(True)
-                opt_widget.ui.radioButton_jupyter_console.blockSignals(False)
-                opt_widget.ui.radioButton_python_console.blockSignals(False)
-                opt_widget.set_ui_for_jupyter_console(not use_jupyter_console)
-                k_spec = specification.execution_settings["kernel_spec_name"]
-                if k_spec == "":
-                    opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Set 'Select kernel spec...'
-                else:
-                    row = opt_widget.find_index_by_data(k_spec)
-                    if row == -1:
-                        notification = Notification(
-                            self, f"This Tool spec has kernel spec '{k_spec}' saved " f"but it could not be found."
-                        )
-                        notification.show()
-                        # TODO: What to do when a kernel spec name that is saved to Tool spec is not found?
-                        row += 1  # Set 'Select kernel spec...'
-                    opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(row)
-                exe = specification.execution_settings["executable"]
-                opt_widget.set_executable(exe)
+            specification.set_execution_settings()  # Set default execution settings
+            self._init_optional_widget(specification)
         # Init lists
         programfiles = list(specification.includes) if specification else list()
         # Get first item from programfiles list as the main program file
-        try:
-            main_program_file = programfiles.pop(0)
-        except IndexError:
-            main_program_file = ""
+        main_program_file = programfiles.pop(0) if programfiles else None
         inputfiles = list(specification.inputfiles) if specification else list()
         inputfiles_opt = list(specification.inputfiles_opt) if specification else list()
         outputfiles = list(specification.outputfiles) if specification else list()
@@ -127,8 +97,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.populate_inputfiles_list(inputfiles)
         self.populate_inputfiles_opt_list(inputfiles_opt)
         self.populate_outputfiles_list(outputfiles)
-        if self.includes_main_path is not None:
+        if main_program_file:
             self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
+        else:
+            self._label_main_path.setText(self.includes_main_path)
         self.connect_signals()
         # Select main program file index
         parent = self.programfiles_model.index(0, 0)
@@ -178,15 +150,15 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # For Python Tool specs, return the jupyter kernel spec selector
         if toolspectype.lower() == "python":
             return PythonToolSpecOptionalWidget(self)
+        elif toolspectype.lower() == "executable":
+            return ExecutableToolSpecOptionalWidget(self)
         else:
-            # TODO: For Julia Tool specs, return the project and kernel spec selector
-            # TODO: For other Tool specs, return None
             return None
 
     def _get_optional_widget(self, toolspectype):
         """Returns the current optional widget for given tool
         spec type or None if unavailable."""
-        if toolspectype.lower() == "python":
+        if toolspectype.lower() == "python" or toolspectype.lower() == "executable":
             optional_widget = self._ui.horizontalLayout_options_placeholder.itemAt(0)
             return optional_widget.widget()
         return None
@@ -207,38 +179,50 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._ui.horizontalLayout_options_placeholder.addWidget(optional_widget)
             optional_widget.show()
 
+    def _init_optional_widget(self, specification):
+        """Initializes optional widget UI based on specification.
+
+        Args:
+            specification (ToolSpecification): Specification that is opened in the editor window
+        """
+        toolspectype = specification.tooltype.lower()
+        opt_widget = self._get_optional_widget(toolspectype)
+        if not opt_widget:
+            return
+        opt_widget.init_widget(specification)
+
     def _make_new_specification(self, spec_name):
         """See base class."""
         # Check that tool type is selected
         if self._ui.comboBox_tooltype.currentIndex() == -1:
-            self._show_error("Tool type not selected")
+            self._show_error("Tool spec type not selected")
             return None
-        # Check that path of main program file is valid before saving it
+        toolspectype = self._ui.comboBox_tooltype.currentText().lower()
+        # Check that Tool Spec has a main program file except for Executable Tool Specs
         main_program_file = self._current_main_program_file()
-        if main_program_file is None:
-            self._show_error("Please add a main program file.")
+        if main_program_file is None and toolspectype != "executable":
+            self._show_error("Please add a main program file")
             return None
-        main_program = self._current_main_program_file().strip()
-        if not os.path.isfile(main_program):
-            self._show_error("Main program file is not valid")
-            return None
-        new_spec_dict = {}
+        new_spec_dict = dict()
         new_spec_dict["name"] = spec_name
         new_spec_dict["description"] = self._spec_toolbar.description()
-        new_spec_dict["tooltype"] = self._ui.comboBox_tooltype.currentText().lower()
-        # Fix for issue #241
-        folder_path, file_path = os.path.split(main_program)
-        self.includes_main_path = os.path.abspath(folder_path)
+        new_spec_dict["tooltype"] = toolspectype
+        main_prgm_dir, main_prgm_file_name = os.path.split(main_program_file) if main_program_file else ("", "")
+        if not main_prgm_dir:
+            self.includes_main_path = None
+        else:
+            self.includes_main_path = os.path.abspath(main_prgm_dir)
         self._label_main_path.setText(self.includes_main_path)
         new_spec_dict["execute_in_work"] = self._ui.checkBox_execute_in_work.isChecked()
-        new_spec_dict["includes"] = [file_path]
+        new_spec_dict["includes"] = [main_prgm_file_name] if main_prgm_file_name else list()
         new_spec_dict["includes"] += self._additional_program_file_list()
         new_spec_dict["inputfiles"] = self._input_file_list()
         new_spec_dict["inputfiles_opt"] = self._opt_input_file_list()
         new_spec_dict["outputfiles"] = self._output_file_list()
         # Strip whitespace from args before saving it to JSON
         new_spec_dict["cmdline_args"] = split_cmdline_args(self._ui.lineEdit_args.text())
-        new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/")
+        new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/") if \
+            self.includes_main_path else None
         try:
             new_spec_dict = self.insert_execution_settings(new_spec_dict)
         except NameError:
@@ -258,24 +242,32 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         Args:
             d (dict): Tool spec dictionary where the extra settings (if available) are included
         """
-        opt_widget = self._get_optional_widget(d["tooltype"])
+        toolspectype = d["tooltype"]
+        opt_widget = self._get_optional_widget(toolspectype)
         if not opt_widget:
             return d
-        idx = opt_widget.ui.comboBox_kernel_specs.currentIndex()
-        if idx < 1:
-            d["execution_settings"] = dict()
-            d["execution_settings"]["kernel_spec_name"] = ""
-            d["execution_settings"]["env"] = ""
-        else:
-            item = opt_widget.ui.comboBox_kernel_specs.model().item(idx)
-            k_spec_data = item.data()
-            d["execution_settings"] = k_spec_data
-        d["execution_settings"]["use_jupyter_console"] = (
-            True if opt_widget.ui.radioButton_jupyter_console.isChecked() else False
-        )
-        opt_widget.validate_executable()  # Raises NameError if Python path is not valid
-        d["execution_settings"]["executable"] = opt_widget.get_executable()
+        d["execution_settings"] = opt_widget.add_execution_settings()
         return d
+        # if toolspectype == "python":
+        #     idx = opt_widget.ui.comboBox_kernel_specs.currentIndex()
+        #     if idx < 1:
+        #         d["execution_settings"] = dict()
+        #         d["execution_settings"]["kernel_spec_name"] = ""
+        #         d["execution_settings"]["env"] = ""
+        #     else:
+        #         item = opt_widget.ui.comboBox_kernel_specs.model().item(idx)
+        #         k_spec_data = item.data()
+        #         d["execution_settings"] = k_spec_data
+        #     d["execution_settings"]["use_jupyter_console"] = (
+        #         True if opt_widget.ui.radioButton_jupyter_console.isChecked() else False
+        #     )
+        #     opt_widget.validate_executable()  # Raises NameError if Python path is not valid
+        #     d["execution_settings"]["executable"] = opt_widget.get_executable()
+        # elif toolspectype == "executable":
+        #     d["execution_settings"] = dict()
+        #     d["execution_settings"]["cmd"] = opt_widget.ui.lineEdit_command.text()
+        #     d["execution_settings"]["shell"] = opt_widget.get_current_shell()
+        # return d
 
     def _save(self):
         """Saves spec. If successful, also saves all modified program files."""
@@ -316,7 +308,12 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # Setup 'Main' item
         index = self.programfiles_model.index(0, 0)
         widget = ToolBarWidget("Main program file", self)
-        widget.tool_bar.addActions([self._ui.actionNew_main_program_file, self._ui.actionSelect_main_program_file])
+        widget.tool_bar.addActions(
+            [
+                self._ui.actionNew_main_program_file,
+                self._ui.actionSelect_main_program_file,
+                self._ui.actionRemove_all_program_files],
+        )
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self._ui.treeView_programfiles.setIndexWidget(index, widget)
         # Setup 'Additional...' item
@@ -341,6 +338,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.programfiles_model.setData(index, tool_tip, role=Qt.ToolTipRole)
 
     def _current_main_program_file(self):
+        """Returns the full path to the current main program file or None if there's no main program."""
         index = self.programfiles_model.index(0, 0)
         root_item = self.programfiles_model.itemFromIndex(index)
         if not root_item.hasChildren():
@@ -351,25 +349,28 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return self.spec_dict.get("includes", [])[1:]
 
     def populate_main_programfile(self, file_path):
-        """List program files in QTreeView.
+        """Adds the main program item into the program files model.
 
         Args:
-            file_path (str): *absolute* path
+            file_path (str): *absolute* path to main program file
         """
         index = self.programfiles_model.index(0, 0)
         root_item = self.programfiles_model.itemFromIndex(index)
         root_item.removeRows(0, root_item.rowCount())
-        if not file_path:
-            return
-        item = QStandardItem(os.path.basename(file_path))
-        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-        item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.DecorationRole)
-        item.setData(file_path, Qt.UserRole)
-        root_item.appendRow(item)
-        QTimer.singleShot(0, self._push_change_main_program_file_command)
+        if file_path:  # Do only if the spec has a main program (Executable Tool specs may not have one)
+            item = QStandardItem(os.path.basename(file_path))
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.DecorationRole)
+            item.setData(file_path, Qt.UserRole)
+            root_item.appendRow(item)
+            QTimer.singleShot(0, self._push_change_main_program_file_command)
 
     def populate_programfile_list(self, names):
-        """List program files in QTreeView."""
+        """Adds additional program files into the program files model.
+
+        Args:
+            names (list): List of paths to additional program files
+        """
         # Find visible indexes, disconnect 'set program file dirty' slots
         visible = set()
         for item in self.programfiles_model.findItems("", Qt.MatchContains | Qt.MatchRecursive):
@@ -482,9 +483,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._populate_io_files_list(index, names)
 
     def connect_signals(self):
-        """Connect signals to slots."""
+        """Connects signals to slots."""
         self._ui.actionNew_main_program_file.triggered.connect(self.new_main_program_file)
         self._ui.actionSelect_main_program_file.triggered.connect(self.browse_main_program_file)
+        self._ui.actionRemove_all_program_files.triggered.connect(self.remove_all_program_files)
         self._ui.actionNew_program_file.triggered.connect(self.new_program_file)
         self._ui.actionAdd_program_file.triggered.connect(self.show_add_program_files_dialog)
         self._ui.actionAdd_program_directory.triggered.connect(self.show_add_program_dirs_dialog)
@@ -534,9 +536,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         Sets the default execution settings into self.spec_dict when a Python
         Tool spec type is selected. Removes execution settings from self.spec_dict
         when any other Tool spec type is selected."""
+        if "execution_settings" in self.spec_dict.keys():
+            self.spec_dict.pop("execution_settings")  # Clear execution settings
         if spec_type == "python":
-            if "execution_settings" not in self.spec_dict.keys():
-                self.spec_dict["execution_settings"] = dict()
+            self.spec_dict["execution_settings"] = dict()
             default_use_jupyter_console = bool(
                 int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
             )
@@ -546,9 +549,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self.spec_dict["execution_settings"]["env"] = ""
             default_python_exe = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
             self.spec_dict["execution_settings"]["executable"] = default_python_exe
-        else:
-            if "execution_settings" in self.spec_dict.keys():
-                self.spec_dict.pop("execution_settings")
+        elif spec_type == "executable":
+            self.spec_dict["execution_settings"] = dict()
+            self.spec_dict["execution_settings"]["cmd"] = ""
+            self.spec_dict["execution_settings"]["shell"] = ""
 
     @Slot(int)
     def _push_change_kernel_spec_command(self, index):
@@ -614,6 +618,24 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         opt_widget = self._get_optional_widget(toolspectype)
         opt_widget.set_executable(value)
 
+    @Slot(int)
+    def _push_change_shell_command(self, index):
+        toolspectype = self.spec_dict.get("tooltype", "")
+        opt_widget = self._get_optional_widget(toolspectype)
+        new_shell = opt_widget.shells[index] if index != 0 else ""
+        old_shell = self.spec_dict["execution_settings"]["shell"]
+        if new_shell == old_shell:
+            return
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(self._set_shell, new_shell, old_shell, "change shell")
+        )
+
+    def _set_shell(self, value):
+        self.spec_dict["execution_settings"]["shell"] = value
+        opt_widget = self._get_optional_widget("executable")
+        index = next(iter(k for k, t in enumerate(opt_widget.shells) if t.lower() == value), 0)
+        opt_widget.ui.comboBox_shell.setCurrentIndex(index)
+
     @Slot(bool)
     def _push_change_execute_in_work_command(self, new_value):
         old_value = self.spec_dict.get("execute_in_work", True)
@@ -642,19 +664,38 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.lineEdit_args.setText(" ".join(value))
 
     @Slot()
+    def _push_change_executable_command(self):
+        old_value = self.spec_dict["execution_settings"]["cmd"]
+        opt_widget = self._get_optional_widget("executable")
+        new_value = opt_widget.ui.lineEdit_command.text().strip()
+        if new_value == old_value:
+            return
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(self._set_cmd, new_value, old_value, "change command")
+        )
+
+    def _set_cmd(self, value):
+        self.spec_dict["execution_settings"]["cmd"] = value
+        opt_widget = self._get_optional_widget("executable")
+        opt_widget.ui.lineEdit_command.setText(value)
+
+    @Slot()
     def _push_change_main_program_file_command(self):
         new_value = self._current_main_program_file()
         old_program_files = self.spec_dict.get("includes", [])
         if self.includes_main_path is not None:
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
         old_value = old_program_files[0] if old_program_files else ""
-        if os.path.normcase(old_value) == os.path.normcase(new_value):
-            return
-        new_program_files = old_program_files.copy()
-        if new_program_files:
-            new_program_files[0] = new_value
-        elif new_value:
-            new_program_files.append(new_value)
+        if new_value is not None:  # Enables removing main program
+            if os.path.normcase(old_value) == os.path.normcase(new_value):
+                return
+            new_program_files = old_program_files.copy()
+            if new_program_files:
+                new_program_files[0] = new_value
+            elif new_value:
+                new_program_files.append(new_value)
+        else:
+            new_program_files = list()
         self._undo_stack.push(
             ChangeSpecPropertyCommand(
                 self._set_program_files, new_program_files, old_program_files, "change main program file"
@@ -697,7 +738,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._load_programfile_in_editor(current)
 
     def _programfile_path_from_index(self, index):
-        """Return absolute path to a file pointed by index.
+        """Returns absolute path to a file pointed by index.
 
         Args:
             index (QModelIndex): index
@@ -711,17 +752,18 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return os.path.join(self.includes_main_path, *components)
 
     def _clear_program_text_edit(self):
+        """Clears contents of the text editor."""
         self._ui.textEdit_program.setDocument(QTextDocument())
         self._ui.textEdit_program.setEnabled(False)
         self._ui.dockWidget_program.setWindowTitle("")
 
     def _load_programfile_in_editor(self, index):
-        """
+        """Loads contents of a program file into the text editor.
+
         Args:
             index (QModelIndex): index in programfiles_model
         """
         file_path = self._programfile_path_from_index(index)
-        self._current_programfile_path = file_path
         if not os.path.isfile(file_path):
             self._show_status_bar_msg(f"Program file {file_path} is not valid")
             self._clear_program_text_edit()
@@ -749,7 +791,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def browse_main_program_file(self, checked=False):
-        """Open file browser where user can select the path of the main program file."""
+        """Opens a file dialog where user can select the path of the main program file."""
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QFileDialog.getOpenFileName(
             self, "Select existing main program file", self._project.project_dir, "*.*"
@@ -853,7 +895,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         Args:
             *new_files (str): Absolute paths to append.
         """
-        old_program_files = self.spec_dict.get("includes", [""])
+        old_program_files = self.spec_dict.get("includes", [])
         if self.includes_main_path is not None:
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
         new_files = self._validate_additional_program_files(list(new_files), old_program_files)
@@ -868,16 +910,36 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot()
     def remove_program_files_with_del(self):
-        """Support for deleting items with the Delete key."""
+        """Adds support for deleting items with the Delete key."""
         self.remove_program_files()
 
     def _selected_program_file_indexes(self):
+        """Returns selected program file indexes in a dict excluding the main program file"""
         indexes = set(self._ui.treeView_programfiles.selectedIndexes())
         # discard main program file
         parent = self.programfiles_model.index(0, 0)
         indexes.discard(self.programfiles_model.index(0, 0, parent))
         # keep only leaves
         return {ind for ind in indexes if not self.programfiles_model.rowCount(ind)}
+
+    @Slot(bool)
+    def remove_all_program_files(self, checked=False):
+        """Removes all program files including main program. Useful with Executable Tool Specs."""
+        self._ui.treeView_programfiles.selectAll()
+        inds = set(self._ui.treeView_programfiles.selectedIndexes())
+        indexes = {ind for ind in inds if not self.programfiles_model.rowCount(ind)}  # keep only leaves
+        if not indexes:
+            self._show_status_bar_msg("No program files to remove")
+            return
+        old_program_files = self.spec_dict.get("includes", [])
+        new_program_files = list()
+        if self.includes_main_path is not None:
+            old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(
+                self._set_program_files, new_program_files, old_program_files, "remove all program files"
+            )
+        )
 
     @Slot(bool)
     def remove_program_files(self, checked=False):
@@ -887,7 +949,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._show_status_bar_msg("Please select program files to remove")
             return
         removed_files = {os.path.join(*_path_components_from_index(ind)) for ind in indexes}
-        old_program_files = self.spec_dict.get("includes", [""])
+        old_program_files = self.spec_dict.get("includes", [])
         new_program_files = [f for f in old_program_files if f not in removed_files]
         if self.includes_main_path is not None:
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
@@ -901,7 +963,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     @busy_effect
     @Slot(QModelIndex)
     def open_program_file(self, index):
-        """Open program file in default program."""
+        """Opens a program file in default program."""
         if not index.isValid() or self.programfiles_model.rowCount(index):
             return
         program_file = self._programfile_path_from_index(index)
@@ -920,7 +982,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def add_inputfiles(self, checked=False):
-        """Let user select input files for this tool specification."""
+        """Opens a file dialog for selecting input files for this tool specification."""
         msg = (
             "Add an input file or a directory required by your program. Wildcards "
             "<b>are not</b> supported.<br/><br/>"
@@ -943,7 +1005,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def add_inputfiles_opt(self, checked=False):
-        """Let user select optional input files for this tool specification."""
+        """Opens a file dialog for selecting optional input files for this tool specification."""
         msg = (
             "Add optional input files that may be utilized by your program. <br/>"
             "Wildcards are supported.<br/><br/>"
@@ -970,7 +1032,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def add_outputfiles(self, checked=False):
-        """Let user select output files for this tool specification."""
+        """Opens a file dialog for selecting output files for this tool specification."""
         msg = (
             "Add output files that will be archived into the Tool results directory after the <br/>"
             "Tool specification has finished execution. Wildcards are supported.<br/><br/>"
@@ -1039,9 +1101,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def remove_inputfiles(self, checked=False):
-        """Remove selected input files from list.
-        Do not remove anything if there are no items selected.
-        """
+        """Removes selected input files from list. Does not remove anything if no items selected."""
         parent = self.io_files_model.index(0, 0)
         indexes = self._selected_io_file_indexes(parent)
         if not indexes:  # Nothing selected
@@ -1056,9 +1116,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def remove_inputfiles_opt(self, checked=False):
-        """Remove selected optional input files from list.
-        Do not remove anything if there are no items selected.
-        """
+        """Removes selected optional input files from list. Does not remove anything if no items selected."""
         parent = self.io_files_model.index(1, 0)
         indexes = self._selected_io_file_indexes(parent)
         if not indexes:  # Nothing selected
@@ -1075,9 +1133,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def remove_outputfiles(self, checked=False):
-        """Remove selected output files from list.
-        Do not remove anything if there are no items selected.
-        """
+        """Removes selected output files from list. Does not remove anything if no items selected."""
         parent = self.io_files_model.index(2, 0)
         indexes = self._selected_io_file_indexes(parent)
         if not indexes:  # Nothing selected
@@ -1101,7 +1157,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 def _path_components(path):
     """
     Args:
-        path(str): a filesytem path, e.g. (/home/user/spine/toolbox/file.py)
+        path(str): a filesystem path, e.g. (/home/user/spine/toolbox/file.py)
 
     Yields:
         str: path components in 'reverse' order, e.g., file.py, toolbox, spine, user, home
@@ -1128,8 +1184,7 @@ def _collect_components(names):
 
 
 def _build_tree(root, components):
-    """
-    Appends rows from given components to given root item.
+    """Appends rows from given components to given root item.
 
     Args:
         root (QStandardItem): root item

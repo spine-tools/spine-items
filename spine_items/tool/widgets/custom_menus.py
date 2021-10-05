@@ -40,6 +40,9 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
     def _open_main_program_file(self):
         spec = self.parent().specification_model.specification(self.index.row())
         if not spec.path or not os.path.isdir(spec.path):
+            if not spec.includes:
+                self._toolbox.msg_warning.emit("No main program to open")
+                return
             self._toolbox.msg_error.emit(
                 f"Opening Tool spec main program file <b>{spec.includes[0]}</b> failed. "
                 f"Main program directory does not exist."
@@ -70,9 +73,12 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
 
     @Slot()
     def _open_main_program_dir(self):
-        tool_specification_path = self._toolbox.specification_model.specification(self.index.row()).path
-        if not tool_specification_path:
+        tool_specification = self._toolbox.specification_model.specification(self.index.row())
+        if not tool_specification.includes:
+            self._toolbox.msg_warning.emit("No main program directory to open")
+            return
+        if not tool_specification.path:
             self._toolbox.msg_error.emit("Main program directory does not exist. Fix this in Tool spec editor.")
             return
-        path_url = "file:///" + tool_specification_path
+        path_url = "file:///" + tool_specification.path
         self._toolbox.open_anchor(QUrl(path_url, QUrl.TolerantMode))

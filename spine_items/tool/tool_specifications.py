@@ -46,7 +46,7 @@ LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]
 
 
 def make_specification(definition, app_settings, logger):
-    """De-serializes and constructs a tool specification from definition.
+    """Deserializes and constructs a tool specification from definition.
 
     Args:
         definition (dict): a dictionary containing the serialized specification.
@@ -57,11 +57,14 @@ def make_specification(definition, app_settings, logger):
         ToolSpecification: a tool specification constructed from the given definition,
             or None if there was an error
     """
-    definition["includes_main_path"] = path = definition.setdefault("includes_main_path", ".").replace("/", os.path.sep)
-    if not os.path.isabs(path):
-        definition_file_path = definition["definition_file_path"]
-        path = os.path.normpath(os.path.join(os.path.dirname(definition_file_path), path))
-    definition["includes"] = [src_file.replace("/", os.path.sep) for src_file in definition["includes"]]
+    if not definition["includes_main_path"]:
+        path = None
+    else:
+        definition["includes_main_path"] = path = definition.setdefault("includes_main_path", ".").replace("/", os.path.sep)
+        if not os.path.isabs(path):
+            definition_file_path = definition["definition_file_path"]
+            path = os.path.normpath(os.path.join(os.path.dirname(definition_file_path), path))
+        definition["includes"] = [src_file.replace("/", os.path.sep) for src_file in definition["includes"]]
     try:
         _tooltype = definition["tooltype"].lower()
     except KeyError:
@@ -106,7 +109,7 @@ class ToolSpecification(ProjectItemSpecification):
 
         Args:
             name (str): Tool specification name
-            tooltype (str): Type of Tool (e.g. Python, Julia, ..)
+            tooltype (str): Type of Tool Specification (e.g. Python, Julia, ..)
             path (str): Path to Tool specification
             includes (list): List of files belonging to the tool specification (relative to 'path')
             settings (QSettings): Toolbox settings
@@ -161,7 +164,7 @@ class ToolSpecification(ProjectItemSpecification):
         }
 
     def set_execution_settings(self):
-        raise NotImplementedError
+        """Updates Tool specifications by adding the default execution settings dict for this specification."""
 
     def save(self):
         """See base class."""
@@ -230,9 +233,9 @@ class ToolSpecification(ProjectItemSpecification):
         """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
-            basedir (str): the path to the directory where the instance will run
-            logger (LoggerInterface)
-            owner (ExecutableItemBase): The item that owns the instance
+            basedir (str): Path to the directory where the instance will run
+            logger (LoggerInterface): Logger
+            owner (ExecutableItemBase): Project item that owns the instance
         """
         return self.tool_instance_factory(self, basedir, self._settings, logger, owner)
 
@@ -265,10 +268,10 @@ class GAMSTool(ToolSpecification):
             name (str): GAMS Tool name
             tooltype (str): Tool specification type
             path (str): Path to model main file
-            includes (list): List of files belonging to the tool (relative to 'path').  # TODO: Change to src_files
+            includes (list): List of files belonging to the tool (relative to 'path').
+                First file in the list is the main GAMS program.
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): a logger instance
-            First file in the list is the main GAMS program.
             description (str): GAMS Tool description
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
@@ -293,10 +296,7 @@ class GAMSTool(ToolSpecification):
         # Add .lst file to list of output files
         self.lst_file = os.path.splitext(main_file)[0] + ".lst"
         self.outputfiles.add(self.lst_file)
-        # Split main_prgm to main_dir and main_prgm
-        # because GAMS needs to run in the directory of the main program
-        # TODO: This does not work because main_file is always just file name
-        self.main_dir, self.main_prgm = os.path.split(main_file)
+        self.main_prgm = main_file
         self.gams_options = OrderedDict()
         self.return_codes = {
             0: "Normal return",
@@ -428,8 +428,8 @@ class JuliaTool(ToolSpecification):
             name (str): Julia Tool name
             tooltype (str): Tool specification type
             path (str): Path to model main file
-            includes (list): List of files belonging to the tool (relative to 'path').  # TODO: Change to src_files
-            First file in the list is the main Julia program.
+            includes (list): List of files belonging to the tool (relative to 'path')
+                First file in the list is the main Julia program.
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): A logger instance
             description (str): Julia Tool description
@@ -452,8 +452,7 @@ class JuliaTool(ToolSpecification):
             cmdline_args,
             execute_in_work,
         )
-        main_file = includes[0]
-        self.main_dir, self.main_prgm = os.path.split(main_file)
+        self.main_prgm = includes[0]
         self.julia_options = OrderedDict()
         self.return_codes = {0: "Normal return", -1: "Failure"}
 
@@ -506,10 +505,10 @@ class PythonTool(ToolSpecification):
             name (str): Python Tool name
             tooltype (str): Tool specification type
             path (str): Path to model main file
-            includes (list): List of files belonging to the tool (relative to 'path').  # TODO: Change to src_files
+            includes (list): List of files belonging to the tool (relative to 'path').
+                First file in the list is the main Python program.
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): A logger instance
-            First file in the list is the main Python program.
             description (str): Python Tool description
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
@@ -531,8 +530,7 @@ class PythonTool(ToolSpecification):
             cmdline_args,
             execute_in_work,
         )
-        main_file = includes[0]
-        self.main_dir, self.main_prgm = os.path.split(main_file)
+        self.main_prgm = includes[0]
         self.python_options = OrderedDict()
         self.execution_settings = execution_settings
         self.return_codes = {0: "Normal return", -1: "Failure"}  # Not official
@@ -617,6 +615,8 @@ class ExecutableTool(ToolSpecification):
         outputfiles=None,
         cmdline_args=None,
         execute_in_work=True,
+        execution_settings=None,
+        definition_file_path=None,
     ):
         """
         Args:
@@ -624,8 +624,8 @@ class ExecutableTool(ToolSpecification):
             name (str): Tool name
             tooltype (str): Tool specification type
             path (str): Path to main script file
-            includes (list): List of files belonging to the tool (relative to 'path').  # TODO: Change to src_files
-            First file in the list is the main script file.
+            includes (list): List of files belonging to the tool (relative to 'path')
+                First file in the list is the main program file.
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): A logger instance
             description (str): Tool description
@@ -633,6 +633,9 @@ class ExecutableTool(ToolSpecification):
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (str, optional): Tool command line arguments (read from tool definition file)
+            execution_settings (dict): Settings for executing a (shell) command instead of a file
+            definition_file_path (str): Absolute path to spec definition file. Only used when running a (shell) command
+                in 'source' execution mode
         """
         super().__init__(
             name,
@@ -648,11 +651,53 @@ class ExecutableTool(ToolSpecification):
             cmdline_args,
             execute_in_work,
         )
-        main_file = includes[0]
-        # TODO: This does not do anything because main_file is always just file name
-        self.main_dir, self.main_prgm = os.path.split(main_file)
+        try:
+            self.main_prgm = includes[0]
+        except IndexError:
+            self.main_prgm = None
+        self.execution_settings = execution_settings
+        if definition_file_path and not path:
+            # Set the default execution dir in source execution mode when running a command (no program files)
+            # This part is processed when Tool Specs are loaded at app startup or when Spine Engine loads them
+            # Note: When a Tool Spec is saved in Tool Spec Editor, definition_file_path == None
+            # Default execution dir is the directory of the definition file path
+            self.default_execution_dir, _ = os.path.split(definition_file_path)
         self.options = OrderedDict()
         self.return_codes = {0: "Normal exit", 1: "Error happened"}
+
+    def to_dict(self):
+        """Adds execution settings dict to Executable Tool spec dicts."""
+        d = super().to_dict()
+        d["execution_settings"] = self.execution_settings
+        return d
+
+    def _includes_main_path_relative(self):
+        if not self.path:
+            return None
+        else:
+            return super()._includes_main_path_relative()
+
+    def set_execution_settings(self):
+        """Updates old Executable Tool specifications by adding the
+        default execution settings dict for this specification.
+
+        Returns:
+            void
+        """
+        if not self.execution_settings:
+            d = dict()
+            d["cmd"] = ""
+            d["shell"] = ""
+            self.execution_settings = d
+        else:
+            # Make sure that required keys are included (for debugging)
+            if not isinstance(self.execution_settings, dict):
+                logging.error("self.execution_settings is not a dict")
+                return
+            if "cmd" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 1")
+            elif "shell" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 2")
 
     @staticmethod
     def load(path, data, settings, logger):
@@ -669,6 +714,9 @@ class ExecutableTool(ToolSpecification):
         """
         kwargs = ExecutableTool.check_definition(data, logger)
         if kwargs is not None:
+            # Add definition_file_path. 'data' does not have definition_file_path
+            # when creating a new Tool spec or editing an existing one in Tool Spec Editor.
+            kwargs["definition_file_path"] = data.get("definition_file_path", None)
             # Return an executable model instance
             return ExecutableTool(path=path, settings=settings, logger=logger, **kwargs)
         return None

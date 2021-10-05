@@ -121,6 +121,25 @@ def is_pattern(file_name):
     return "*" in file_name or "?" in file_name
 
 
+def make_dir_if_necessary(d, directory):
+    """Creates a directory if given dictionary contains any items.
+
+    Args:
+        d (dict): Dictionary to check
+        directory (str): Absolute path to directory that shall be created if necessary
+
+    Returns:
+        bool: True if directory was created successfully or dictionary is empty,
+        False if creating the directory failed.
+    """
+    if len(d.items()) > 0:
+        try:
+            os.makedirs(directory, exist_ok=True)
+        except OSError:
+            return False
+    return True
+
+
 class _LatestOutputFile:
     """
     A class to hold information on a latest output file.

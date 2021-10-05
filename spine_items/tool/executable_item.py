@@ -21,6 +21,7 @@ import fnmatch
 import glob
 import os
 import os.path
+import sys
 import pathlib
 import shutil
 import time
@@ -30,7 +31,7 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_executable
 from .item_info import ItemInfo
-from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern
+from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources
 from ..utils import cmd_line_arg_from_dict, expand_cmd_line_args, labelled_resource_args
 
@@ -98,6 +99,11 @@ class ExecutableItem(ExecutableItemBase):
             bool: True if the operation was successful, False otherwise
         """
         n_copied_files = 0
+        # Make sure that execution_dir (work dir) exists if there's something to copy.
+        # Needed by Executable tools running a shell command
+        if not make_dir_if_necessary(paths, execution_dir):
+            self._logger.msg_error.emit(f"Creating directory <b>{execution_dir}</b> failed")
+            return False
         for dst, src_path in paths.items():
             if not os.path.exists(src_path):
                 self._logger.msg_error.emit(f"\tFile <b>{src_path}</b> does not exist")
@@ -146,19 +152,32 @@ class ExecutableItem(ExecutableItemBase):
         self._logger.msg.emit(f"\tCopied <b>{n_copied_files}</b> input file(s)")
         return True
 
-    def _copy_optional_input_files(self, paths):
+    def _copy_optional_input_files(self, paths, execution_dir):
         """
         Copies optional input files from given paths to work or source directory, depending on
         where the Tool specification requires them to be.
 
         Args:
             paths (dict): key is the source path, value is the destination path
+            execution_dir (str): Absolute path to work or source directory
+
+        Returns:
+            bool: False if creating the execution directory failed, True otherwise
         """
         n_copied_files = 0
+        # Make sure that execution_dir (work dir) exists if there's something to copy.
+        # Needed by Executable tools running a shell command
+        if not make_dir_if_necessary(paths, execution_dir):
+            self._logger.msg_error.emit(f"Creating directory <b>{execution_dir}</b> failed")
+            return False
         for src_path, dst_path in paths.items():
             try:
                 shutil.copyfile(src_path, dst_path)
                 n_copied_files += 1
+            except shutil.SameFileError:
+                # Happens in source dir exec mode when DC is passing a file as reference from the main program dir to
+                # source dir, which are equal
+                self._logger.msg_warning.emit("\tNo need to copy. File already available.")
             except OSError as e:
                 self._logger.msg_error.emit(f"Copying optional file <b>{src_path}</b> to <b>{dst_path}</b> failed")
                 self._logger.msg_error.emit(f"{e}")
@@ -176,6 +195,7 @@ class ExecutableItem(ExecutableItemBase):
                     )
                     self._logger.msg_warning.emit(msg)
         self._logger.msg.emit(f"\tCopied <b>{n_copied_files}</b> optional input file(s)")
+        return True
 
     def _copy_output_files(self, target_dir, execution_dir):
         """Copies Tool specification output files from work directory to given target directory.
@@ -318,6 +338,8 @@ class ExecutableItem(ExecutableItemBase):
         1. Tool has no specification
         2. Python or Julia Kernel spec not selected (jupyter kernel mode)
         3. Julia executable not set and not found in PATH (subprocess mode)
+        4. Trying to execute an Executable Tool Spec using a shell that is not supported
+        by the user's OS.
 
         Returns True otherwise.
         """
@@ -350,6 +372,18 @@ class ExecutableItem(ExecutableItemBase):
                     "Gams not found in PATH. Please select the Gams you want to use in Settings->Tools."
                 )
                 return False
+        elif self._tool_specification.tooltype.lower() == "executable":
+            if not self._tool_specification.main_prgm:
+                shell = self._tool_specification.execution_settings["shell"]
+                if sys.platform == "win32" and shell == "bash":
+                    self._logger.msg_error.emit("Bash shell is not supported on Windows. Please select another shell.")
+                    return False
+                if sys.platform != "win32" and (shell == "cmd.exe" or shell == "powershell.exe"):
+                    self._logger.msg_error.emit(
+                        f"Selected shell is not supported on your platform [{sys.platform}]. "
+                        f"Please select another shell."
+                    )
+                    return False
         return True
 
     def execute(self, forward_resources, backward_resources):
@@ -409,9 +443,17 @@ class ExecutableItem(ExecutableItemBase):
             for k, v in optional_file_paths.items():
                 self._logger.msg.emit(f"\tFound <b>{len(v)}</b> files matching pattern <b>{k}</b>")
             optional_file_copy_paths = self._optional_output_destination_paths(optional_file_paths, execution_dir)
-            self._copy_optional_input_files(optional_file_copy_paths)
+            if not self._copy_optional_input_files(optional_file_copy_paths, execution_dir):
+                return False
         if not self._create_output_dirs(execution_dir):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
+            return ItemExecutionFinishState.FAILURE
+        if not os.path.isdir(execution_dir):
+            self._logger.msg_warning.emit(f"Work directory was not created because Tool Specification "
+                                          f"<b>{self._tool_specification.name}</b> does not contain any "
+                                          f"program files nor (optional) input files. Please <b>execute the "
+                                          f"Tool in source execution mode</b> or include files to the "
+                                          f"specification.")
             return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         resources = forward_resources + backward_resources
@@ -636,7 +678,9 @@ def _execution_directory(work_dir, tool_specification):
     Returns the path to the execution directory, depending on ``execute_in_work``.
 
     If ``execute_in_work`` is ``True``, a new unique path will be returned.
-    Otherwise, the main program file path from tool specification is returned.
+    If a main program file does not exist, Tool spec definition file path is
+    returned. Otherwise, the main program file path from tool specification
+    is returned.
 
     Returns:
         str: a full path to next basedir
@@ -644,6 +688,8 @@ def _execution_directory(work_dir, tool_specification):
     if work_dir is not None:
         basedir = os.path.join(work_dir, _unique_dir_name(tool_specification))
         return basedir
+    if not tool_specification.path:
+        return tool_specification.default_execution_dir
     return tool_specification.path
 
 

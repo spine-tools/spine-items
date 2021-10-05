@@ -47,10 +47,10 @@ class OptionalWidget(QWidget):
     def _logger(self):
         return self._toolbox._logger
 
-    def validate_executable(self):
+    def init_widget(self, specification):
         raise NotImplementedError
 
-    def get_executable(self):
+    def add_execution_settings(self):
         raise NotImplementedError
 
 
@@ -66,6 +66,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
         self._refresh_kernel_spec_model()
         self._kernel_spec_editor = None
+        # Initialize UI elements with defaults
         use_jupyter_console = int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
         if use_jupyter_console == 2:
             self.ui.radioButton_jupyter_console.setChecked(True)
@@ -76,17 +77,68 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.lineEdit_python_path.setText(default_python_path)
         default_kernel_spec = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
         row = self.find_index_by_data(default_kernel_spec)
-        self.ui.comboBox_kernel_specs.setCurrentIndex(row + 1)
+        if row == -1:
+            self.ui.comboBox_kernel_specs.setCurrentIndex(0)
+        else:
+            self.ui.comboBox_kernel_specs.setCurrentIndex(row)
         self.set_ui_for_jupyter_console(not use_jupyter_console)
         self.connect_signals()
 
     def connect_signals(self):
+        """Connects signals."""
         self.ui.toolButton_refresh_kernel_specs.clicked.connect(self._refresh_kernel_spec_model)
         self.ui.comboBox_kernel_specs.activated.connect(self._parent._push_change_kernel_spec_command)
         self.ui.radioButton_jupyter_console.toggled.connect(self._parent._push_set_jupyter_console_mode)
         self.ui.toolButton_browse_python.clicked.connect(self.browse_python_button_clicked)
         self.ui.pushButton_open_kernel_spec_viewer.clicked.connect(self.show_python_kernel_spec_editor)
         self.ui.lineEdit_python_path.editingFinished.connect(self._parent._push_change_executable)
+
+    def init_widget(self, specification):
+        """Initializes UI elements based on specification
+
+        Args:
+            specification (ToolSpecification): Specification to load
+        """
+        use_jupyter_console = specification.execution_settings["use_jupyter_console"]
+        self.ui.radioButton_jupyter_console.blockSignals(True)
+        self.ui.radioButton_python_console.blockSignals(True)
+        if use_jupyter_console:
+            self.ui.radioButton_jupyter_console.setChecked(True)
+        else:
+            self.ui.radioButton_python_console.setChecked(True)
+        self.ui.radioButton_jupyter_console.blockSignals(False)
+        self.ui.radioButton_python_console.blockSignals(False)
+        self.set_ui_for_jupyter_console(not use_jupyter_console)
+        k_spec = specification.execution_settings["kernel_spec_name"]
+        if k_spec == "":
+            self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Set 'Select kernel spec...'
+        else:
+            row = self.find_index_by_data(k_spec)
+            if row == -1:
+                notification = Notification(
+                    self._parent, f"This Tool spec has kernel spec '{k_spec}' saved " f"but it could not be found."
+                )
+                notification.show()
+                # TODO: What to do when a kernel spec name that is saved to Tool spec is not found?
+                row += 1  # Set 'Select kernel spec...'
+            self.ui.comboBox_kernel_specs.setCurrentIndex(row)
+        self.set_executable(specification.execution_settings["executable"])
+
+    def add_execution_settings(self):
+        """Collects execution settings based on optional widget state into a dictionary, which is returned."""
+        idx = self.ui.comboBox_kernel_specs.currentIndex()
+        if idx < 1:
+            d = dict()
+            d["kernel_spec_name"] = ""
+            d["env"] = ""
+        else:
+            item = self.ui.comboBox_kernel_specs.model().item(idx)
+            k_spec_data = item.data()
+            d = k_spec_data
+        d["use_jupyter_console"] = True if self.ui.radioButton_jupyter_console.isChecked() else False
+        self.validate_executable()  # Raises NameError if Python path is not valid
+        d["executable"] = self.get_executable()
+        return d
 
     @Slot(bool)
     def browse_python_button_clicked(self, _=False):
@@ -207,3 +259,41 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
                 self._parent._push_change_kernel_spec_command(0)
                 return
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
+
+
+class ExecutableToolSpecOptionalWidget(OptionalWidget):
+    def __init__(self, parent):
+        """Init class."""
+        from ..ui.executable_cmd_exec_options import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__(parent)
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
+        self.shells = ["No shell", "cmd.exe", "powershell.exe", "bash"]
+        self.ui.comboBox_shell.addItems(self.shells)
+        self.connect_signals()
+
+    def connect_signals(self):
+        self.ui.lineEdit_command.editingFinished.connect(self._parent._push_change_executable_command)
+        self.ui.comboBox_shell.activated.connect(self._parent._push_change_shell_command)
+
+    def init_widget(self, specification):
+        """Initializes UI elements based on specification."""
+        self.ui.lineEdit_command.setText(specification.execution_settings["cmd"])
+        shell = specification.execution_settings["shell"]
+        ind = next(iter(k for k, t in enumerate(self.shells) if t.lower() == shell), 0)
+        self.ui.comboBox_shell.setCurrentIndex(ind)
+
+    def add_execution_settings(self):
+        """Collects execution settings based on optional widget state into a dictionary, which is returned."""
+        d = dict()
+        d["cmd"] = self.ui.lineEdit_command.text()
+        d["shell"] = self.get_current_shell()
+        return d
+
+    def get_current_shell(self):
+        """Returns the selected shell in the shell combo box."""
+        ind = self.ui.comboBox_shell.currentIndex()
+        if ind < 1:
+            return ""
+        return self.ui.comboBox_shell.currentText()

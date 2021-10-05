@@ -90,6 +90,9 @@ class Ui_MainWindow(object):
         self.actionSave_program_file = QAction(MainWindow)
         self.actionSave_program_file.setObjectName(u"actionSave_program_file")
         self.actionSave_program_file.setEnabled(False)
+        self.actionRemove_all_program_files = QAction(MainWindow)
+        self.actionRemove_all_program_files.setObjectName(u"actionRemove_all_program_files")
+        self.actionRemove_all_program_files.setIcon(icon3)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
@@ -100,9 +103,10 @@ class Ui_MainWindow(object):
         self.verticalLayout_3 = QVBoxLayout(self.centralwidget)
         self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(6, 6, 6, 6)
+        self.verticalLayout_3.setContentsMargins(0, 6, 0, 6)
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(6, -1, 6, -1)
         self.label_tooltype = QLabel(self.centralwidget)
         self.label_tooltype.setObjectName(u"label_tooltype")
 
@@ -272,11 +276,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.actionRemove_selected_program_files.setText(QCoreApplication.translate("MainWindow", u"Remove selected program files", None))
 #if QT_CONFIG(tooltip)
-        self.actionRemove_selected_program_files.setToolTip(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Remove selected additional program files</p></body></html>", None))
+        self.actionRemove_selected_program_files.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Remove selected additional program files</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.actionAdd_input_files.setText(QCoreApplication.translate("MainWindow", u"Add input files", None))
 #if QT_CONFIG(tooltip)
@@ -288,48 +288,35 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.actionAdd_opt_input_files.setText(QCoreApplication.translate("MainWindow", u"Add optional input files", None))
 #if QT_CONFIG(tooltip)
-        self.actionAdd_opt_input_files.setToolTip(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Add optional input files</p></body></html>", None))
+        self.actionAdd_opt_input_files.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Add optional input files</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.actionRemove_selected_opt_input_files.setText(QCoreApplication.translate("MainWindow", u"Remove selected optional input files", None))
 #if QT_CONFIG(tooltip)
-        self.actionRemove_selected_opt_input_files.setToolTip(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Remove selected optional input files</p></body></html>", None))
+        self.actionRemove_selected_opt_input_files.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Remove selected optional input files</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.actionAdd_output_files.setText(QCoreApplication.translate("MainWindow", u"Add output files", None))
 #if QT_CONFIG(tooltip)
-        self.actionAdd_output_files.setToolTip(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Add output files</p></body></html>", None))
+        self.actionAdd_output_files.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Add output files</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.actionRemove_selected_output_files.setText(QCoreApplication.translate("MainWindow", u"Remove selected output files", None))
 #if QT_CONFIG(tooltip)
-        self.actionRemove_selected_output_files.setToolTip(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Remove selected output files</p></body></html>", None))
+        self.actionRemove_selected_output_files.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Remove selected output files</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.actionNew_program_file.setText(QCoreApplication.translate("MainWindow", u"New program file", None))
 #if QT_CONFIG(tooltip)
-        self.actionNew_program_file.setToolTip(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Create new additional program file</p></body></html>", None))
+        self.actionNew_program_file.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Create new additional program file</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.actionSave_program_file.setText(QCoreApplication.translate("MainWindow", u"Save program file", None))
+#if QT_CONFIG(tooltip)
+        self.actionSave_program_file.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Save program file</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(shortcut)
         self.actionSave_program_file.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Shift+S", None))
 #endif // QT_CONFIG(shortcut)
+        self.actionRemove_all_program_files.setText(QCoreApplication.translate("MainWindow", u"Remove all program files", None))
+#if QT_CONFIG(tooltip)
+        self.actionRemove_all_program_files.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Removes ALL program files. Useful with Executable Tool Specs.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.label_tooltype.setText(QCoreApplication.translate("MainWindow", u"Tool type", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_tooltype.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Tool specification type</p></body></html>", None))

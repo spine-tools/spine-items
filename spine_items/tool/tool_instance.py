@@ -80,7 +80,6 @@ class ToolInstance:
 
         Args:
             args (list): Tool cmd line args
-            k_spec_dict (dict): Kernel spec name and related settings
         """
         raise NotImplementedError()
 
@@ -267,13 +266,38 @@ class ExecutableToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        batch_path = os.path.join(self.basedir, self.tool_specification.main_prgm)
-        if sys.platform != "win32":
-            self.program = "sh"
-            self.args.append(batch_path)
-        else:
-            self.program = batch_path
-        self.append_cmdline_args(args)
+        if not self.tool_specification.main_prgm:  # Run command
+            cmd = self.tool_specification.execution_settings["cmd"].split() # Convert str to list
+            shell = self.tool_specification.execution_settings["shell"]
+            if not shell:
+                # If shell is not given (empty str), The first item in cmd list will be considered as self.program.
+                # The rest of the cmd list will be considered as cmd line args
+                self.program = cmd.pop(0)
+            else:
+                # If shell is given, the shell will be set as self.program and the cmd list will be considered
+                # as cmd line args
+                if shell == "bash":
+                    self.program = "sh"
+                else:
+                    self.program = shell
+            if self.program == "cmd.exe" or self.program == "cmd":
+                # If cmd.exe shell is not given the /C flag, it will just open cmd.exe in the Execution Log
+                if "/C" not in cmd:
+                    cmd = ["/C"] + cmd
+            # The final command line args list (self.args) consists of three (3) parts:
+            # 1. The first part is the cmd list
+            # 2. The second part is the Tool Specification cmd line args
+            # 3. The third part is the Tool cmd line args
+            self.args = cmd + self.tool_specification.cmdline_args + args
+        else:  # Run main program file
+            main_program_file = os.path.join(self.basedir, self.tool_specification.main_prgm)
+            if os.path.isfile(main_program_file):
+                if sys.platform != "win32":
+                    self.program = "sh"
+                    self.args.append(main_program_file)
+                else:
+                    self.program = main_program_file
+                self.append_cmdline_args(args)
         self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
