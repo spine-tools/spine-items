@@ -377,14 +377,8 @@ class Gimlet(ProjectItem):
     def _check_notifications(self):
         """See base class."""
         self.clear_notifications()
-        duplicates = self._file_model.duplicate_paths()
-        if duplicates:
-            self.add_notification("Duplicate input files from predecessor items:<br>{}".format("<br>".join(duplicates)))
-        missing_args = ", ".join(arg.arg for arg in self.cmd_line_args if isinstance(arg, LabelArg) and arg.missing)
-        if missing_args:
-            self.add_notification(
-                f"The following command line argument(s) don't match any available resources: {missing_args}"
-            )
+        self.add_notification("Gimlet is deprecated and will be removed in the future. Please replace this "
+                              "item with a <b>Tool</b> configured to run system commands.")
 
     def update_name_label(self):
         """Updates the name label in Gimlet properties tab.
