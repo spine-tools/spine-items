@@ -19,6 +19,7 @@ from spinedb_api import ParameterValueFormatError
 from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel
 from spinedb_api.import_mapping.type_conversion import ConvertSpec
+from .mappings_model import Role
 from ..mapping_colors import ERROR_COLOR
 
 
@@ -33,13 +34,19 @@ class SourceDataTableModel(MinimalTableModel):
     column_types_updated = Signal()
     row_types_updated = Signal()
     mapping_data_changed = Signal()
+    polish_mapping_requested = Signal()
+    """Emitted when mappings in the mapping list need polish."""
     about_to_undo = Signal(str)
     """Emitted when an undo/redo command is going to be executed."""
 
     def __init__(self, parent=None):
+        """
+        Args:
+            parent (QObject): parent object
+        """
         super().__init__(parent)
         self._unfetched_data = []
-        self._mapping_specification = None
+        self._mapping_list_index = QModelIndex()
         self._column_types = {}
         self._row_types = {}
         self._column_type_errors = {}
@@ -51,9 +58,6 @@ class SourceDataTableModel(MinimalTableModel):
 
     def flags(self, index):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable & ~Qt.ItemIsEditable
-
-    def mapping_specification(self):
-        return self._mapping_specification
 
     def clear(self, infinite=False):
         super().clear()
@@ -68,7 +72,7 @@ class SourceDataTableModel(MinimalTableModel):
 
     def set_horizontal_header_labels(self, header):
         super().set_horizontal_header_labels(header)
-        self._polish_mapping()
+        self.polish_mapping_requested.emit()
 
     def canFetchMore(self, parent):
         return not self._fetching
@@ -86,9 +90,9 @@ class SourceDataTableModel(MinimalTableModel):
         self._fetching = False
         if not data:
             return
-        self.beginResetModel()
+        self.beginInsertRows(QModelIndex(), len(self._main_data), len(self._main_data) + len(data) - 1)
         self._main_data += data
-        self.endResetModel()
+        self.endInsertRows()
 
     def rowCount(self, parent=QModelIndex()):
         if self._infinite:
@@ -100,37 +104,14 @@ class SourceDataTableModel(MinimalTableModel):
             return self._infinite_extent
         return super().columnCount(parent)
 
-    def _polish_mapping(self):
-        if (
-            not self.rowCount()
-            or not self.columnCount()
-            or self._mapping_specification is None
-            or self._mapping_specification.mapping is None
-        ):
-            return
-        tablename = self._mapping_specification.source_table_name
-        self._mapping_specification.mapping.polish(tablename, self.header, for_preview=True)
-
-    def set_mapping(self, mapping):
-        """Set mapping to display colors from
+    def set_mapping_list_index(self, index):
+        """Set index to mappings model.
 
         Args:
-            mapping (MappingSpecificationModel): mapping model
+            index (QModelIndex): index
         """
-        if self._mapping_specification is not None:
-            self._mapping_specification.dataChanged.disconnect(self._handle_mapping_data_changed)
-            self._mapping_specification.mapping_read_start_row_changed.disconnect(self._handle_mapping_data_changed)
-            self._mapping_specification.row_or_column_type_recommended.disconnect(self.set_type)
-            self._mapping_specification.multi_column_type_recommended.disconnect(self.set_all_column_types)
-        self._mapping_specification = mapping
-        if self._mapping_specification is not None:
-            self._mapping_specification.dataChanged.connect(self._handle_mapping_data_changed)
-            self._mapping_specification.modelReset.connect(self._handle_mapping_data_changed)
-            self._mapping_specification.mapping_read_start_row_changed.connect(self._handle_mapping_data_changed)
-            self._mapping_specification.row_or_column_type_recommended.connect(self.set_type)
-            self._mapping_specification.multi_column_type_recommended.connect(self.set_all_column_types)
-        self._polish_mapping()
-        self._handle_mapping_data_changed()
+        self._mapping_list_index = index
+        self.handle_mapping_data_changed()
 
     def validate(self, section, orientation=Qt.Horizontal):
         converter = self.get_type(section, orientation)
@@ -214,7 +195,7 @@ class SourceDataTableModel(MinimalTableModel):
         self.column_types_updated.emit()
 
     @Slot()
-    def _handle_mapping_data_changed(self):
+    def handle_mapping_data_changed(self):
         self.update_colors()
         self.mapping_data_changed.emit()
 
@@ -233,37 +214,44 @@ class SourceDataTableModel(MinimalTableModel):
             return ERROR_COLOR
 
     def data(self, index, role=Qt.DisplayRole):
-        if self._mapping_specification:
-            last_pivot_row = self._mapping_specification.last_pivot_row()
-            read_start_row = self._mapping_specification.read_start_row
-        else:
-            last_pivot_row = -1
-            read_start_row = 0
         if role in (Qt.ToolTipRole, Qt.BackgroundRole):
+            if self._mapping_list_index.isValid():
+                flattened_mappings = self._mapping_list_index.data(Role.ITEM).flattened_mappings
+                last_pivot_row = flattened_mappings.root_mapping.last_pivot_row()
+                read_start_row = flattened_mappings.root_mapping.read_start_row
+            else:
+                last_pivot_row = -1
+                read_start_row = 0
+            row = index.row()
+            column = index.column()
             if index.row() > max(last_pivot_row, read_start_row - 1):
-                error = self._column_type_errors.get((index.row(), index.column()))
+                error = self._column_type_errors.get((row, column))
                 if error is not None:
                     return self.data_error(error, index, role, orientation=Qt.Horizontal)
 
-            if index.row() <= last_pivot_row and index.column() not in self._non_pivoted_and_skipped_columns():
-                error = self._row_type_errors.get((index.row(), index.column()))
+            if row <= last_pivot_row and column not in self._non_pivoted_and_skipped_columns():
+                error = self._row_type_errors.get((row, column))
                 if error is not None:
                     return self.data_error(error, index, role, orientation=Qt.Vertical)
 
-        if role == Qt.BackgroundRole and self._mapping_specification:
+        if role == Qt.BackgroundRole and self._mapping_list_index.isValid():
             return self.data_color(index)
         if role == Qt.DisplayRole:
             converted_data = self._converted_data.get((index.row(), index.column()))
             if converted_data is not None:
                 return str(converted_data)
         if self._infinite and role == Qt.DisplayRole:
-            row, column = index.row(), index.column()
-            return f"item_{row + 1}_{column + 1}"
+            return f"item_{index.row() + 1}_{index.column() + 1}"
         return super().data(index, role)
 
     def _non_pivoted_and_skipped_columns(self):
-        mapping = self._mapping_specification.mapping
-        return set(mapping.non_pivoted_columns() + mapping.skip_columns)
+        """Returns a list of non-pivoted and skipped columns.
+
+        Returns:
+            set: non-pivoted and skipped columns
+        """
+        flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
+        return set(flattened_mappings.root_mapping.non_pivoted_columns() + flattened_mappings.root_mapping.skip_columns)
 
     def data_color(self, index):
         """
@@ -275,23 +263,35 @@ class SourceDataTableModel(MinimalTableModel):
         Returns:
             QColor: color of index
         """
+        flattened_mappings = self._mapping_list_index.data(Role.ITEM).flattened_mappings
         if self.index_below_last_pivot_row(index):
-            return self._mapping_specification.get_value_color()
-        for k in range(self._mapping_specification.rowCount()):
-            component_mapping = self._mapping_specification.get_component_mapping(k)
+            return flattened_mappings.get_value_color()
+        for k in range(len(flattened_mappings.display_names)):
+            component_mapping = flattened_mappings.component_at(k)
             if self.index_in_mapping(component_mapping, index):
-                return self._mapping_specification.get_color(k)
+                return flattened_mappings.display_colors[k]
         return None
 
     def _last_row(self):
-        mapping = self._mapping_specification.mapping
-        return max(mapping.last_pivot_row(), mapping.read_start_row - 1)
+        """Calculates last row when mapping is pivoted.
+
+        Returns:
+            int: last row
+        """
+        root_mapping = self._mapping_list_index.data(Role.ITEM).flattened_mappings.root_mapping
+        return max(root_mapping.last_pivot_row(), root_mapping.read_start_row - 1)
 
     def index_below_last_pivot_row(self, index):
-        if not self._mapping_specification.value_mapping:
-            return False
-        mapping = self._mapping_specification.mapping
-        if not mapping.is_pivoted():
+        """Checks if given index is outside pivot.
+
+        Args:
+            index (QModelIndex): index
+
+        Returns:
+            bool: True if index is below the pivot, False otherwise
+        """
+        flattened_mappings = self._mapping_list_index.data(Role.ITEM).flattened_mappings
+        if not flattened_mappings.has_value_component() or not flattened_mappings.root_mapping.is_pivoted():
             return False
         return index.row() > self._last_row() and index.column() not in self._non_pivoted_and_skipped_columns()
 
@@ -317,11 +317,12 @@ class SourceDataTableModel(MinimalTableModel):
         return index.column() == mapping.position
 
     def headerData(self, section, orientation=Qt.Horizontal, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.BackgroundRole and self._mapping_specification is not None:
-            for k in range(self._mapping_specification.rowCount()):
-                component_mapping = self._mapping_specification.get_component_mapping(k)
+        if orientation == Qt.Horizontal and role == Qt.BackgroundRole and self._mapping_list_index.isValid():
+            flattened_mappings = self._mapping_list_index.data(Role.ITEM).flattened_mappings
+            for k in range(len(flattened_mappings.display_names)):
+                component_mapping = flattened_mappings.component_at(k)
                 if self.section_in_mapping(component_mapping, section):
-                    return self._mapping_specification.get_color(k)
+                    return flattened_mappings.display_colors[k]
         if self._infinite and orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return f"header_{section + 1}"
         return super().headerData(section, orientation, role)

@@ -84,32 +84,6 @@ class UpdateCmdLineArgsCommand(SpineToolboxCommand):
         self.item.update_cmd_line_args(self.undo_cmd_line_args)
 
 
-class RenameMapping(QUndoCommand):
-    """A command to change the name of a mapping."""
-
-    def __init__(self, row, mapping_list_model, name):
-        """
-        Args:
-            row (int): row index
-            mapping_list_model (MappingListModel): model holding the mapping names
-            name (str): new name
-        """
-        text = "rename mapping"
-        super().__init__(text)
-        self._row = row
-        self._model = mapping_list_model
-        self._name = name
-        self._previous_name = self._model.index(self._row, 0).data()
-
-    def redo(self):
-        """Renames the mapping."""
-        self._model.rename_mapping(self._row, self._name)
-
-    def undo(self):
-        """Reverts renaming of the mapping."""
-        self._model.rename_mapping(self._row, self._previous_name)
-
-
 class UpdateOutFileName(SpineToolboxCommand):
     """Command to update exporter's output file name."""
 

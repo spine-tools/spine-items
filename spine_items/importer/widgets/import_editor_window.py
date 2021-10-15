@@ -19,7 +19,6 @@ Contains ImportPreviewWindow class.
 import os
 import json
 import fnmatch
-from copy import deepcopy
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import QFileDialog, QDockWidget, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
@@ -39,6 +38,7 @@ from .import_sources import ImportSources
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
 from ..importer_specification import ImporterSpecification
+from ..mvcmodels.mappings_model import MappingsModel
 
 _CONNECTOR_NAME_TO_CLASS = {
     "CSVConnector": CSVConnector,
@@ -86,16 +86,17 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         super().__init__(toolbox, specification, item)
         self.takeCentralWidget().deleteLater()
         self._filepath = filepath if filepath else self._FILE_LESS
-        self._import_sources = None
+        self._mappings_model = MappingsModel(self._undo_stack, self)
+        self._ui.source_list.setModel(self._mappings_model)
+        self._ui.mapping_list.setModel(self._mappings_model)
+        self._ui.mapping_list.setRootIndex(self._mappings_model.dummy_parent())
+        self._ui.mapping_spec_table.setModel(self._mappings_model)
+        self._ui.mapping_spec_table.setRootIndex(self._mappings_model.dummy_parent())
         self._connection_manager = None
         self._memoized_connectors = {}
-        self._copied_mappings = {}
-        self._import_mappings = ImportMappings(self)
-        self._import_mapping_options = ImportMappingOptions(self)
-        self._import_mappings.mapping_selection_changed.connect(
-            self._import_mapping_options.set_mapping_specification_model
-        )
-        self._import_mapping_options.about_to_undo.connect(self._import_mappings.focus_on_changing_specification)
+        self._import_mappings = ImportMappings(self._mappings_model, self._ui, self._undo_stack, self)
+        self._import_mapping_options = ImportMappingOptions(self._mappings_model, self._ui, self._undo_stack)
+        self._import_sources = ImportSources(self._mappings_model, self._ui, self._undo_stack, self)
         self._ui.comboBox_source_file.addItem(self._FILE_LESS)
         if filepath:
             self._ui.comboBox_source_file.addItem(filepath)
@@ -106,6 +107,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
         self.connection_failed.connect(self._show_error)
+        self._import_sources.preview_data_updated.connect(self._import_mapping_options.set_num_available_columns)
+        self._mappings_model.restore(self.specification.mapping if self.specification is not None else {})
 
     def showEvent(self, ev):
         """Select file path in the combobox, which calls the ``start_ui`` slot."""
@@ -154,9 +157,10 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self.resize(size)
 
     def _make_new_specification(self, spec_name):
-        mapping = self._import_sources.get_mapping_dict() if self._import_sources else {}
+        mappings_dict = self._mappings_model.store()
+        mappings_dict.update(self._import_sources.store_connectors())
         description = self._spec_toolbar.description()
-        return ImporterSpecification(spec_name, mapping, description)
+        return ImporterSpecification(spec_name, mappings_dict, description)
 
     def _populate_main_menu(self):
         super()._populate_main_menu()
@@ -224,22 +228,14 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         connector_settings = {"gams_directory": _gams_system_directory(self._toolbox)}
         if self._connection_manager:
             self._connection_manager.close_connection()
-        self._connection_manager = ConnectionManager(connector, connector_settings)
+        self._connection_manager = ConnectionManager(connector, connector_settings, self)
         self._connection_manager.source = filepath
-        mapping = self.specification.mapping if self.specification else {}
-        self._import_sources = ImportSources(self, mapping)
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
         self._connection_manager.error.connect(self._show_error)
-        self._ui.source_data_table.set_undo_stack(self._undo_stack, self._import_sources.select_table)
-        self._import_mappings.mapping_selection_changed.connect(self._import_sources.set_model)
-        self._import_mappings.mapping_selection_changed.connect(self._import_sources.set_mapping)
-        self._import_mappings.mapping_data_changed.connect(self._import_sources.set_mapping)
-        self._import_mappings.about_to_undo.connect(self._import_sources.select_table)
-        self._import_sources.source_table_selected.connect(self._import_mappings.set_mappings_model)
         for header in (self._ui.source_data_table.horizontalHeader(), self._ui.source_data_table.verticalHeader()):
-            self._import_sources.source_table_selected.connect(header.set_source_table)
-        self._import_sources.preview_data_updated.connect(self._import_mapping_options.set_num_available_columns)
+            self._ui.source_list.selectionModel().currentChanged.connect(header.set_source_table, Qt.UniqueConnection)
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
+        self._import_sources.set_connector(self._connection_manager)
         self._connection_manager.init_connection()
 
     @Slot()
@@ -303,13 +299,13 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             try:
                 settings = json.load(file_p)
             except json.JSONDecodeError:
-                self._show_status_bar_msg(f"Could not open {filename[0]}", 10000)
+                self._show_status_bar_msg(f"Could not open {filename[0]}")
                 return
         expected_options = ("table_mappings", "table_types", "table_row_types", "table_options", "selected_tables")
         if not isinstance(settings, dict) or not any(key in expected_options for key in settings.keys()):
-            self._show_status_bar_msg(f"{filename[0]} does not contain and import mapping", 10000)
-        self._undo_stack.push(RestoreMappingsFromDict(self._import_sources, settings))
-        self._show_status_bar_msg(f"Mapping loaded from {filename[0]}", 10000)
+            self._show_status_bar_msg(f"{filename[0]} does not contain and import mapping")
+        self._undo_stack.push(RestoreMappingsFromDict(self._import_sources, self._mappings_model, settings))
+        self._show_status_bar_msg(f"Mapping loaded from {filename[0]}")
 
     @Slot()
     def export_mapping_to_file(self):
@@ -322,25 +318,10 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if not filename[0]:
             return
         with open(filename[0], 'w') as file_p:
-            settings = self._import_sources.get_mapping_dict()
-            json.dump(settings, file_p)
-        self._show_status_bar_msg(f"Mapping saved to: {filename[0]}", 10000)
-
-    def paste_mappings(self, table, mappings):
-        """
-        Pastes mappings to given table
-
-        Args:
-            table (str): source table name
-            mappings (dict): mappings to paste
-        """
-        self._import_sources._table_mappings[table].reset(deepcopy(mappings), table)
-        index = self._ui.source_list.selectionModel().currentIndex()
-        current_table = index.data()
-        if table == current_table:
-            self._import_sources.source_table_selected.emit(table, self._import_sources._table_mappings[table])
-        else:
-            self._import_sources.select_table(table)
+            mappings_dict = self._mappings_model.store()
+            mappings_dict.update(self._import_sources.store_connectors())
+            json.dump(mappings_dict, file_p)
+        self._show_status_bar_msg(f"Mapping saved to: {filename[0]}")
 
     def tear_down(self):
         if not super().tear_down():

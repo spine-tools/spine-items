@@ -35,7 +35,8 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
-        widget = OptionsWidget(connector, self._undo_stack)
+        widget = OptionsWidget(self._undo_stack)
+        widget.set_connector(connector)
         layout = widget.form_layout
         checked = {"number": False}
         for item in (layout.itemAt(i).widget() for i in range(layout.count())):
@@ -51,7 +52,8 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
-        widget = OptionsWidget(connector, self._undo_stack)
+        widget = OptionsWidget(self._undo_stack)
+        widget.set_connector(connector)
         layout = widget.form_layout
         checked = False
         for item in (layout.itemAt(i).widget() for i in range(layout.count())):
@@ -69,7 +71,8 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
-        widget = OptionsWidget(connector, self._undo_stack)
+        widget = OptionsWidget(self._undo_stack)
+        widget.set_connector(connector)
         layout = widget.form_layout
         checked = False
         for item in (layout.itemAt(i).widget() for i in range(layout.count())):
@@ -85,7 +88,8 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
-        widget = OptionsWidget(connector, self._undo_stack)
+        widget = OptionsWidget(self._undo_stack)
+        widget.set_connector(connector)
         layout = widget.form_layout
         checked = False
         for item in (layout.itemAt(i).widget() for i in range(layout.count())):

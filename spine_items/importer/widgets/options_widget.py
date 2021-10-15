@@ -41,21 +41,17 @@ class OptionsWidget(QWidget):
     load_default_mapping_requested = Signal()
     """Emitted whenever the uses presses the button to Load default mapping."""
 
-    def __init__(self, connector, undo_stack):
+    def __init__(self, undo_stack):
         """
         Args:
-            connector (ConnectionManager): the connection manager whose current table's options are show on the widget
             undo_stack (QUndoStack): undo stack
         """
         super().__init__()
-        self._connector = connector
-        self._options = connector.connection.BASE_OPTIONS
-        self._options.update(connector.connection.OPTIONS)
+        self._options = {}
+        self._connector = None
         self._undo_stack = undo_stack
         self._undo_enabled = True
         self._current_source_table = None
-        connector.current_table_changed.connect(self._fetch_options_from_connector)
-        self.options_changed.connect(connector.update_options)
 
         # ui
         layout = QVBoxLayout(self)
@@ -65,7 +61,15 @@ class OptionsWidget(QWidget):
         self._ui_choices = {str: QLineEdit, list: QComboBox, int: QSpinBox, bool: QCheckBox}
         self._ui_elements = {}
         self._build_ui()
-        self._set_options(self._connector.current_table)
+
+    def _clear_ui(self):
+        """Clears UI."""
+        self._ui_elements.clear()
+        for _ in range(self.form_layout.rowCount()):
+            self.form_layout.removeRow(0)
+        layout = self.layout()
+        for _ in range(layout.count()):
+            layout.removeItem(layout.itemAt(0))
 
     def _build_ui(self):
         """Builds ui from specification in dict"""
@@ -102,16 +106,30 @@ class OptionsWidget(QWidget):
             # Add to layout:
             self.form_layout.addRow(QLabel(options['label'] + ':'), ui_element)
 
+    @property
+    def connector(self):
+        """The connection manager linked to this options widget."""
+        return self._connector
+
+    def set_connector(self, connector):
+        """Sets connection manager.
+
+        Args:
+            connector (ConnectionManager): connector
+        """
+        self._connector = connector
+        self._options = connector.connection.BASE_OPTIONS
+        self._options.update(connector.connection.OPTIONS)
+        connector.current_table_changed.connect(self._fetch_options_from_connector)
+        self.options_changed.connect(connector.update_options)
+        self._clear_ui()
+        self._build_ui()
+        self._set_options(self._connector.current_table)
         if hasattr(self._connector.connection, "create_default_mapping"):
             button = QPushButton("Load default mapping")
             self.layout().addStretch()
             self.layout().addWidget(button)
             button.clicked.connect(self.load_default_mapping_requested)
-
-    @property
-    def connector(self):
-        """The connection manager linked to this options widget."""
-        return self._connector
 
     @property
     def undo_stack(self):

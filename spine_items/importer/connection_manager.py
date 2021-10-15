@@ -56,13 +56,14 @@ class ConnectionManager(QObject):
     current_table_changed = Signal()
     """Emitted when the current table has changed."""
 
-    def __init__(self, connection, connection_settings):
+    def __init__(self, connection, connection_settings, parent):
         """
         Args:
             connection (Type): A class derived from `SourceConnection`, e.g. `CSVConnector`
             connection_settings (dict): connection specific settings
+            parent (QObject): parent object
         """
-        super().__init__()
+        super().__init__(parent)
         self._thread = None
         self._worker = None
         self._source = None
@@ -125,11 +126,11 @@ class ConnectionManager(QObject):
             self.tables_requested.emit()
 
     def request_data(self, table=None, max_rows=-1, start=0):
-        """Requests data from a table. Starts a process that emits data_ready with the fecthed data.
+        """Requests data from a table. Starts a process that emits data_ready with the fetched data.
 
-        Keyword Arguments:
-            table {str} -- which table to get data from (default: {None})
-            max_rows {int} -- how many rows to read (default: {-1})
+        Args:
+            table (str): which table to get data from (default: {None})
+            max_rows (int): how many rows to read (default: {-1})
         """
         if not self.is_connected:
             return

@@ -26,8 +26,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
 from PySide2.QtWidgets import *
 
 from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
-from spine_items.importer.widgets.multi_checkable_tree_view import MultiCheckableTreeView
 from spinetoolbox.widgets.custom_combobox import ElidedCombobox
+from spine_items.importer.widgets.multi_checkable_list_view import MultiCheckableListView
 
 from spine_items import resources_icons_rc
 
@@ -61,14 +61,11 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setSpacing(3)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.source_list = MultiCheckableTreeView(self.dockWidgetContents)
+        self.source_list = MultiCheckableListView(self.dockWidgetContents)
         self.source_list.setObjectName(u"source_list")
         self.source_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.source_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.source_list.setTextElideMode(Qt.ElideLeft)
-        self.source_list.setIndentation(0)
-        self.source_list.setRootIsDecorated(True)
-        self.source_list.setHeaderHidden(True)
 
         self.verticalLayout_2.addWidget(self.source_list)
 

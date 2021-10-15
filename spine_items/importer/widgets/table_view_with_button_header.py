@@ -17,7 +17,7 @@ Classes for handling models in PySide2's model/view framework.
 """
 from collections import namedtuple
 from collections.abc import Iterable
-from PySide2.QtCore import QPoint, Qt, Signal, Slot
+from PySide2.QtCore import QPoint, Qt, Signal, Slot, QModelIndex
 from PySide2.QtGui import QCursor, QFont, QIcon
 from PySide2.QtWidgets import (
     QAction,
@@ -189,7 +189,7 @@ class TableViewWithButtonHeader(QTableView):
 
         Args:
             undo_stack (QUndoStack): undo stack
-            about_to_undo_slot (object): a slot that takes the source table name as its argument
+            about_to_undo_slot (Callable): slot that should be called just before the undo operation
         """
         self._horizontal_header.set_undo_stack(undo_stack)
         self._horizontal_header.about_to_undo.connect(about_to_undo_slot)
@@ -498,15 +498,16 @@ class HeaderWithButton(QHeaderView):
         """
         self._undo_stack = undo_stack
 
-    @Slot(str)
-    def set_source_table(self, table_name):
+    @Slot(QModelIndex, QModelIndex)
+    def set_source_table(self, current, previous):
         """
         Sets the current source table.
 
         Args:
-            table_name (str): source table name
+            current (QModelIndex): current source table index
+            previous (QModelIndex): previous source table index
         """
-        self._source_table_name = table_name
+        self._source_table_name = current.data()
 
 
 def _create_allowed_types_menu(parent, trigger_slot):

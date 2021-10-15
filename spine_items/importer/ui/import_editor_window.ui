@@ -59,7 +59,7 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="MultiCheckableTreeView" name="source_list">
+      <widget class="MultiCheckableListView" name="source_list">
        <property name="contextMenuPolicy">
         <enum>Qt::CustomContextMenu</enum>
        </property>
@@ -68,15 +68,6 @@
        </property>
        <property name="textElideMode">
         <enum>Qt::ElideLeft</enum>
-       </property>
-       <property name="indentation">
-        <number>0</number>
-       </property>
-       <property name="rootIsDecorated">
-        <bool>true</bool>
-       </property>
-       <property name="headerHidden">
-        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -582,14 +573,14 @@
    <header>spine_items/importer/widgets/table_view_with_button_header.h</header>
   </customwidget>
   <customwidget>
-   <class>MultiCheckableTreeView</class>
-   <extends>QTreeView</extends>
-   <header>spine_items/importer/widgets/multi_checkable_tree_view.h</header>
-  </customwidget>
-  <customwidget>
    <class>ElidedCombobox</class>
    <extends>QComboBox</extends>
    <header>spinetoolbox/widgets/custom_combobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MultiCheckableListView</class>
+   <extends>QListView</extends>
+   <header>spine_items/importer/widgets/multi_checkable_list_view.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

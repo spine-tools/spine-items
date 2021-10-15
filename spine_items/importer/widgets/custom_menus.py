@@ -16,9 +16,12 @@ Classes for context menus used alongside the Importer project item.
 :date:   9.1.2018
 """
 
-from PySide2.QtCore import Qt, QPoint, Slot
-from PySide2.QtWidgets import QMenu
-from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu
+from PySide2.QtCore import Qt, QPoint, Slot, Signal
+from PySide2.QtWidgets import QMenu, QWidgetAction
+
+from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu, FilterMenuBase
+from ..mvcmodels.mappings_model_roles import Role
+from .simple_filter_widget import SimpleFilterWidget
 
 
 class FilesContextMenu(CustomContextMenu):
@@ -79,32 +82,21 @@ class SourceDataTableMenu(QMenu):
     A context menu for the source data table, to let users define a Mapping from a data table.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, model, ui):
         """
         Args:
-            parent (QWidget): parent widget
+            model (MappingsModel): model
+            ui (Any): import editor's UI
         """
-        super().__init__(parent)
-        self._model = None
-
-    def set_model(self, model):
-        """
-        Sets target mapping specification.
-
-        Args:
-            model (MappingSpecificationModel): mapping specification
-        """
+        super().__init__(ui.source_data_table)
         self._model = model
+        self._ui = ui
 
-    def set_mapping(self, name="", map_type=None, value=None):
-        if self._model is None:
-            return
-        self._model.change_component_mapping(name, map_type, value)
+    def _set_mapping(self, flattened_mappings, index, map_type=None, value=None):
+        self._model.change_component_mapping(flattened_mappings, index, map_type, value)
 
     @Slot(QPoint)
     def request_menu(self, pos=None):
-        if not self._model:
-            return
         indexes = self.parent().selectedIndexes()
         if not indexes:
             return
@@ -113,12 +105,19 @@ class SourceDataTableMenu(QMenu):
         row = index.row() + 1
         col = index.column() + 1
 
-        def create_callback(name, map_type, value):
-            return lambda: self.set_mapping(name, map_type, value)
+        list_index = self._ui.mapping_list.selectionModel().currentIndex()
+        if list_index.isValid():
+            mapping_names = [
+                self._model.index(row, 0, list_index).data() for row in range(self._model.rowCount(list_index))
+            ]
+            flattened_mappings = list_index.data(Role.FLATTENED_MAPPINGS)
+        else:
+            mapping_names = None
+            flattened_mappings = None
 
-        mapping_names = [
-            self._model.data(self._model.createIndex(i, 0), Qt.DisplayRole) for i in range(self._model.rowCount())
-        ]
+        def create_callback(row, map_type, value):
+            component_index = self._model.index(row, 0, list_index)
+            return lambda: self._set_mapping(flattened_mappings, component_index, map_type, value)
 
         menus = [
             ("Map column to...", "Column", col),
@@ -129,10 +128,33 @@ class SourceDataTableMenu(QMenu):
 
         for title, map_type, value in menus:
             m = self.addMenu(title)
-            for name in mapping_names:
-                m.addAction(name).triggered.connect(create_callback(name, map_type, value))
+            if mapping_names is not None:
+                for row, name in enumerate(mapping_names):
+                    m.addAction(name).triggered.connect(create_callback(row, map_type, value))
+            else:
+                m.addAction("<no mapping selected>").setEnabled(False)
 
         global_pos = self.parent().mapToGlobal(QPoint(5, 20))
         menu_pos = global_pos + pos
         self.move(menu_pos)
         self.show()
+
+
+class SimpleFilterMenu(FilterMenuBase):
+
+    filterChanged = Signal(set)
+
+    def __init__(self, parent, show_empty=True):
+        """
+        Args:
+            parent (SpineDBEditor)
+        """
+        super().__init__(parent)
+        self._filter = SimpleFilterWidget(self, show_empty=show_empty)
+        self._filter_action = QWidgetAction(parent)
+        self._filter_action.setDefaultWidget(self._filter)
+        self.addAction(self._filter_action)
+        self.connect_signals()
+
+    def emit_filter_changed(self, valid_values):
+        self.filterChanged.emit(valid_values)

@@ -8,34 +8,17 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
 """
-Contains :class:`MultiCheckableListView`.
+Contains user data roles for :class:`MappingsModel`.
 
 :author: A. Soininen (VTT)
-:date:   13.8.2020
+:date:   15.10.2021
 """
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QTreeView
+from enum import IntEnum, unique
 
 
-class MultiCheckableTreeView(QTreeView):
-    """A list view which allows all selected items to be checked/unchecked with space bar."""
-
-    def keyPressEvent(self, event):
-        """Handles key press events."""
-        if event.key() != Qt.Key_Space or event.modifiers() != Qt.NoModifier:
-            super().keyPressEvent(event)
-            return
-        selection_model = self.selectionModel()
-        if not selection_model.hasSelection():
-            super().keyPressEvent(event)
-            return
-        selected = selection_model.selectedIndexes()
-        model = self.model()
-        check_state = selected[0].data(Qt.CheckStateRole) != Qt.Checked
-        if len(selected) == 1:
-            model.setData(selected[0], check_state, Qt.CheckStateRole)
-        else:
-            rows = [index.row() for index in selected]
-            model.set_multiple_checked_undoable(check_state, *rows)
+@unique
+class Role(IntEnum):
+    ITEM = Qt.UserRole + 1
+    FLATTENED_MAPPINGS = Qt.UserRole + 2

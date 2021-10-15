@@ -48,7 +48,6 @@ from spinedb_api.export_mapping.group_functions import (
     group_function_display_from_name,
 )
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
-from ...commands import RenameMapping
 from .preview_updater import PreviewUpdater
 from ..commands import (
     ChangeWriteOrder,
@@ -57,6 +56,7 @@ from ..commands import (
     EnableAllMappings,
     NewMapping,
     RemoveMapping,
+    RenameMapping,
     SetAlwaysExportHeader,
     SetMappingEnabled,
     SetMappingType,
@@ -491,6 +491,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             row (int): row index in mapping list model
             new_name (str): mapping's new name
         """
+        previous_name = self._mappings_table_model.index(row, 0).data()
         self._undo_stack.push(RenameMapping(row, self._mappings_table_model, new_name))
         self._sort_mappings_table_model.invalidate()
 

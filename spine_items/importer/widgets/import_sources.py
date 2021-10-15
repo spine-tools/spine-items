@@ -15,18 +15,28 @@ Contains ImportSources widget and SourceDataTableMenu.
 :author: P. Vennström (VTT)
 :date:   1.6.2019
 """
+import pickle
+from PySide2.QtCore import (
+    QItemSelectionModel,
+    QModelIndex,
+    QObject,
+    QPoint,
+    Qt,
+    Signal,
+    Slot,
+    QMimeData,
+    QItemSelection,
+)
+from PySide2.QtWidgets import QApplication
 
-from copy import deepcopy
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QPoint, Qt, Signal, Slot, QPersistentModelIndex
-from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
+from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from .custom_menus import SourceListMenu, SourceDataTableMenu
+from .mime_types import MAPPING_LIST_MIME_TYPE, TABLE_OPTIONS_MIME_TYPE
 from .options_widget import OptionsWidget
-from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict
-from ..mvcmodels.mapping_list_model import MappingListModel
-from ..mvcmodels.mapping_specification_model import MappingSpecificationModel
+from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict, DeleteMapping
+from ..mvcmodels.mappings_model import Role
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
-from ..mvcmodels.source_table_list_model import SourceTableItem, SourceTableListModel
 
 
 class ImportSources(QObject):
@@ -35,76 +45,94 @@ class ImportSources(QObject):
     Loads the 'Mappings' part of the window as the user changes the source table.
     """
 
-    table_checked = Signal()
     mapped_data_ready = Signal(dict, list)
-    source_table_selected = Signal(str, object)
     preview_data_updated = Signal(int)
 
-    def __init__(self, parent, mapping):
+    def __init__(self, mappings_model, ui, undo_stack, parent):
         """
         Args:
-            parent (ImportEditorWindow): importer window's UI
-            mapping (dict): specification mapping
+            mappings_model (MappingsModel): mappings model
+            ui (Any): import editor window's UI
+            undo_stack (QUndoStack): undo stack
+            parent (ImportEditorWindow): import editor window
         """
-        super().__init__()
-        self._parent = parent
-        self._ui = parent._ui
-        self._ui_error = parent._ui_error
+        super().__init__(parent)
+        self._mappings_model = mappings_model
+        self._undo_stack = undo_stack
+        self._ui = ui
+        self._stored_source_list_row = 0
 
         # state
-        self._connector = parent._connection_manager
-        self._table_mappings = {}
-        self._table_updating = False
-        self._data_updating = False
-        self._copied_mappings = parent._copied_mappings
-        self._copied_options = {}
-        self._undo_stack = parent._undo_stack
-        self._source_data_model = SourceDataTableModel()
-        self._source_table_model = SourceTableListModel(self._undo_stack)
-        self._restore_mapping(mapping)
-        self._ui.source_list.setModel(self._source_table_model)
-        self._source_table_model.modelReset.connect(self._ui.source_list.expandAll)
-        self._source_table_model.msg_error.connect(self._parent._show_error)
-        self._source_table_model.table_created.connect(self._select_table_row)
+        self._connector = None
+        self._source_data_model = SourceDataTableModel(self)
         # create ui
         self._ui.source_data_table.setModel(self._source_data_model)
-        self._ui_source_data_table_menu = SourceDataTableMenu(self._ui.source_data_table)
-        self._ui_options_widget = OptionsWidget(self._connector, self._undo_stack)
+        self._ui.source_data_table.set_undo_stack(self._undo_stack, self._select_table_for_undo)
+        self._ui_source_data_table_menu = SourceDataTableMenu(self._mappings_model, self._ui)
+        self._ui_options_widget = OptionsWidget(self._undo_stack)
         self._ui.dockWidget_source_options.setWidget(self._ui_options_widget)
         self._ui.source_data_table.verticalHeader().display_all = False
-
         # connect signals
-        self._ui_options_widget.about_to_undo.connect(self.select_table)
+        self._mappings_model.modelAboutToBeReset.connect(self._store_source_list_current_index)
+        self._mappings_model.modelReset.connect(self._restore_source_list_current_index)
+        self._mappings_model.dataChanged.connect(self._update_source_table_colors)
+        self._mappings_model.row_or_column_type_recommended.connect(self._source_data_model.set_type)
+        self._mappings_model.multi_column_type_recommended.connect(self._source_data_model.set_all_column_types)
         self._ui_options_widget.options_changed.connect(lambda _: self._clear_source_data_model())
+        self._ui_options_widget.about_to_undo.connect(self._select_table_for_undo)
         self._ui_options_widget.load_default_mapping_requested.connect(self._load_default_mapping)
         self._ui.source_list.customContextMenuRequested.connect(self.show_source_list_context_menu)
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_selected_table)
+        self._ui.mapping_list.selectionModel().currentChanged.connect(self._change_selected_mapping)
         self._ui.source_data_table.customContextMenuRequested.connect(self._ui_source_data_table_menu.request_menu)
 
-        # signals for connector
-        self._connector.connection_ready.connect(self.request_new_tables_from_connector)
-        self._connector.data_ready.connect(self._update_source_data)
-        self._connector.tables_ready.connect(self.update_tables)
-        self._connector.mapped_data_ready.connect(self.mapped_data_ready.emit)
-        self._connector.default_mapping_ready.connect(self._set_default_mapping)
-
-        # source data table
-        self._source_data_model.more_data_needed.connect(self.fetch_more_data)
         self._source_data_model.mapping_data_changed.connect(self._update_display_row_types)
         self._source_data_model.column_types_updated.connect(self._new_column_types)
         self._source_data_model.row_types_updated.connect(self._new_row_types)
+        self._source_data_model.polish_mapping_requested.connect(self._polish_mappings_in_list)
 
     @property
     def checked_tables(self):
         return self._source_table_model.checked_table_names()
 
-    @Slot(object)
-    def set_model(self, model):
-        self._ui_source_data_table_menu.set_model(model)
+    def set_connector(self, connector):
+        """Sets connector.
 
-    @Slot(object)
-    def set_mapping(self, model):
-        self._source_data_model.set_mapping(model)
+        Args:
+            connector (ConnectionManager): connector
+        """
+        self._connector = connector
+        self._connector.connection_ready.connect(self.request_new_tables_from_connector)
+        self._connector.data_ready.connect(self._update_source_data)
+        self._connector.tables_ready.connect(self.update_tables)
+        self._connector.mapped_data_ready.connect(self.mapped_data_ready.emit)
+        self._connector.default_mapping_ready.connect(self._set_default_mapping)
+        self._ui_options_widget.set_connector(self._connector)
+        self._source_data_model.more_data_needed.connect(self.fetch_more_data, Qt.UniqueConnection)
+
+    @Slot()
+    def _polish_mappings_in_list(self):
+        """Polishes mappings in mapping list."""
+        table_index = self._ui.source_list.selectionModel().currentIndex()
+        if not table_index.isValid() or table_index.row() == 0:
+            return
+        header = self._source_data_model.header
+        for list_row in range(self._mappings_model.rowCount(table_index)):
+            list_index = self._mappings_model.index(list_row, 0, table_index)
+            self._mappings_model.polish_mapping(list_index, header)
+
+    @Slot(str)
+    def _select_table_for_undo(self, table_name):
+        """Selects source table to load correct values to the options widget.
+
+        Args:
+            table_name (str): table name
+        """
+        for row in range(self._mappings_model.rowCount()):
+            table_index = self._mappings_model.index(row, 0)
+            if table_index.data() == table_name:
+                self._ui.source_list.selectionModel().setCurrentIndex(table_index, QItemSelectionModel.ClearAndSelect)
+                break
 
     @Slot()
     def _load_default_mapping(self):
@@ -112,7 +140,7 @@ class ImportSources(QObject):
 
     @Slot(dict)
     def _set_default_mapping(self, mapping):
-        self._undo_stack.push(RestoreMappingsFromDict(self, mapping))
+        self._undo_stack.push(RestoreMappingsFromDict(self, self._mappings_model, mapping))
 
     @Slot()
     def request_new_tables_from_connector(self):
@@ -125,19 +153,49 @@ class ImportSources(QObject):
     def _change_selected_table(self, selected, _deselected):
         """
         Sets selected table and requests data from connector
+
+        Args:
+            selected (QModelIndex): current index
+            deselected (QModelIndex): previous index
         """
-        item = self._source_table_model.table_at(selected)
-        if not item.real:
-            self.source_table_selected.emit("", None)
+        if self._connector is None:
             return
-        if item.name not in self._table_mappings:
-            specification = MappingSpecificationModel(
-                item.name, "", import_mapping_from_dict({"map_type": "ObjectClass"}), self._undo_stack
-            )
-            self._table_mappings[item.name] = MappingListModel([specification], item.name, self._undo_stack)
-        self.source_table_selected.emit(item.name, self._table_mappings[item.name])
-        self._connector.set_table(item.name)
+        if not selected.isValid():
+            table_name = ""
+        else:
+            table_item = self._mappings_model.data(selected, Role.ITEM)
+            table_name = table_item.name if table_item.real else ""
+        self._connector.set_table(table_name)
         self._clear_source_data_model()
+
+    @Slot(QModelIndex, QModelIndex)
+    def _change_selected_mapping(self, current, previous):
+        """Updates source table according to newly selected mapping from mapping list.
+
+        Args:
+            current (QModelIndex): current mapping
+            previous (QModelIndex): previous mapping
+        """
+        self._source_data_model.set_mapping_list_index(current)
+
+    @Slot(QModelIndex, QModelIndex, list)
+    def _update_source_table_colors(self, top_left, bottom_right, roles):
+        """Notifies source table model that colors have changed.
+
+        Args:
+            top_left (QModelIndex): changed data's top left index in mappings model
+            bottom_right (QModelIndex): changed data's bottom right index in mappings model
+        """
+        mapping_list_index = self._ui.mapping_list.selectionModel().currentIndex()
+        if not mapping_list_index.isValid() or (
+            (
+                QItemSelection(top_left, bottom_right).contains(mapping_list_index)
+                and Role.FLATTENED_MAPPINGS not in roles
+            )
+            and top_left.parent() != mapping_list_index
+        ):
+            return
+        self._source_data_model.handle_mapping_data_changed()
 
     @Slot(int, int)
     def fetch_more_data(self, max_rows, start):
@@ -145,65 +203,35 @@ class ImportSources(QObject):
 
     def _select_table_row(self, row):
         selection_model = self._ui.source_list.selectionModel()
-        index = self._source_table_model.index(row, 0)
-        selection_model.clearSelection()
-        selection_model.setCurrentIndex(index, QItemSelectionModel.Select)
-
-    @Slot(str)
-    def select_table(self, table):
-        """
-        Selects given table in the source table list.
-
-        Args:
-            table (str): source table name
-        """
-        index = self._source_table_model.table_index(table)
-        selection_model = self._ui.source_list.selectionModel()
-        if selection_model.hasSelection() and index == selection_model.selection().indexes()[0]:
-            return
+        index = self._mappings_model.index(row, 0)
         selection_model.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
-
-    def request_mapped_data(self):
-        tables_mappings = {t: self._table_mappings[t].get_mappings() for t in self.checked_tables}
-        self._connector.request_mapped_data(tables_mappings, max_rows=-1)
 
     @Slot(dict)
     def update_tables(self, tables):
+        """Updates list of tables.
+
+        Args:
+            tables (dict): updated source tables
         """
-        Updates list of tables
-        """
-        is_file_less = self._parent.is_file_less()
+        selection_model = self._ui.source_list.selectionModel()
+        current_row = selection_model.currentIndex().row()
+        selection_model.setCurrentIndex(QModelIndex(), QItemSelectionModel.ClearAndSelect)
+        is_file_less = self.parent().is_file_less()
         if is_file_less:
-            tables = self._table_mappings
-        new_tables = list()
+            self._mappings_model.add_empty_row()
+            return
+        for row in reversed(range(1, self._mappings_model.rowCount())):
+            if self._mappings_model.index(row, 0).data() not in tables:
+                self._mappings_model.removeRow(row)
+        table_names = set(self._mappings_model.real_table_names())
         for t_name, t_mapping in tables.items():
-            if t_name not in self._table_mappings:
-                if t_mapping is None:
-                    t_mapping = import_mapping_from_dict({"map_type": "ObjectClass"})
-                specification = MappingSpecificationModel(t_name, "", t_mapping, self._undo_stack)
-                self._table_mappings[t_name] = MappingListModel([specification], t_name, self._undo_stack)
-                new_tables.append(t_name)
-        for k in list(self._table_mappings.keys()):
-            if k not in tables:
-                self._table_mappings.pop(k)
-        if not tables:
-            self._ui.source_list.clearSelection()
-
-        # empty tables list and add new tables
-        tables_to_select = set(self.checked_tables + new_tables)
-        table_items = [SourceTableItem(name, name in tables_to_select, editable=is_file_less) for name in tables]
-        self._source_table_model.reset(table_items)
-        if is_file_less:
-            self._source_table_model.add_empty_row()
-
-        # current selected table
-        current_index = self._ui.source_list.selectionModel().currentIndex()
-        # reselect table if existing otherwise select first table
-        if current_index.isValid():
-            self._select_table_row(current_index.row())
-        elif tables:
-            self._select_table_row(0)
-        self.table_checked.emit()
+            if t_name not in table_names:
+                self._mappings_model.append_new_table_with_mapping(t_name, t_mapping)
+        # reselect current table if existing otherwise select first table
+        if current_row >= 0:
+            self._select_table_row(min(current_row, self._mappings_model.rowCount() - 1))
+        else:
+            self._select_table_row(1 if self._mappings_model.rowCount() > 1 else 0)
 
     @Slot(list, list)
     def _update_source_data(self, data, header):
@@ -216,7 +244,7 @@ class ImportSources(QObject):
             return
         if not header:
             header = list(range(1, len(data[0]) + 1))
-        # Set header data before reseting model because the header needs to be there for some slots...
+        # Set header data before resetting model because the header needs to be there for some slots...
         self._source_data_model.set_horizontal_header_labels(header)
         self._source_data_model.append_rows(data)
         types = self._connector.table_types.get(self._connector.current_table, {})
@@ -229,94 +257,70 @@ class ImportSources(QObject):
         self.preview_data_updated.emit(self._source_data_model.columnCount())
 
     def _clear_source_data_model(self):
-        self._source_data_model.set_horizontal_header_labels([])
-        self._source_data_model.clear(infinite=self._parent.is_file_less())
+        self._source_data_model.clear(infinite=self.parent().is_file_less())
         self.preview_data_updated.emit(0)
 
-    def _restore_mapping(self, mapping):
-        try:
-            self._table_mappings = {
-                table: MappingListModel(
-                    [MappingSpecificationModel.from_dict(m, table, self._undo_stack) for m in mapping_specifications],
-                    table,
-                    self._undo_stack,
-                )
-                for table, mapping_specifications in mapping.get("table_mappings", {}).items()
-            }
-        except ValueError as error:
-            self._ui_error.showMessage(f"{error}")
-            return
+    def restore_connectors(self, mappings_dict):
+        """Restores connectors.
+
+        Args:
+            mappings_dict (dict): serialized data
+        """
         table_types = {
             tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
-            for tn, cols in mapping.get("table_types", {}).items()
+            for tn, cols in mappings_dict.get("table_types", {}).items()
         }
         table_row_types = {
             tn: {int(row): value_to_convert_spec(spec) for row, spec in rows.items()}
-            for tn, rows in mapping.get("table_row_types", {}).items()
+            for tn, rows in mappings_dict.get("table_row_types", {}).items()
         }
-        self._connector.set_table_options(mapping.get("table_options", {}))
+        self._connector.set_table_options(mappings_dict.get("table_options", {}))
         self._connector.set_table_types(table_types)
         self._connector.set_table_row_types(table_row_types)
-        selected_tables = mapping.get("selected_tables")
-        if selected_tables is None:
-            selected_tables = set(self._table_mappings.keys())
-        table_items = [SourceTableItem(name, name in selected_tables) for name in self._table_mappings]
-        self._source_table_model.reset(table_items)
 
-    def import_mappings(self, mapping):
-        """
-        Restores mappings from a dict.
+    @Slot()
+    def _store_source_list_current_index(self):
+        """Stores source table list's current index."""
+        self._stored_source_list_row = self._ui.source_list.selectionModel().currentIndex().row()
 
-        Args:
-            mapping (dict): mapping
-        """
-        current = QPersistentModelIndex(self._ui.source_list.selectionModel().currentIndex())
-        self._restore_mapping(mapping)
+    @Slot()
+    def _restore_source_list_current_index(self):
+        """Restores source table list's current index."""
+        row = min(self._stored_source_list_row, self._mappings_model.rowCount() - 1)
+        current = self._mappings_model.index(row, 0)
         self._ui.source_list.selectionModel().setCurrentIndex(current, QItemSelectionModel.ClearAndSelect)
 
-    def get_mapping_dict(self):
-        """Returns a dictionary with type of connector, connector options for tables,
-        mappings for tables, selected tables.
+    def store_connectors(self):
+        """Returns a dictionary with type of connector and connector options for tables.
 
         Returns:
-            dict
+            dict: stored connectors
         """
-        tables = self._source_table_model.table_names()
-        selected_tables = self._source_table_model.checked_table_names()
-
-        table_mappings = {
-            t: [m.to_dict() for m in mappings.mapping_specifications]
-            for t, mappings in self._table_mappings.items()
-            if t in tables
-        }
-
+        table_names = set(self._mappings_model.real_table_names())
         table_types = {
             tn: {col: spec.to_json_value() for col, spec in cols.items()}
             for tn, cols in self._connector.table_types.items()
             if cols
-            if tn in tables
+            if tn in table_names
         }
         table_row_types = {
             tn: {col: spec.to_json_value() for col, spec in cols.items()}
             for tn, cols in self._connector.table_row_types.items()
-            if cols and tn in tables
+            if cols and tn in table_names
         }
-
-        table_options = {t: o for t, o in self._connector.table_options.items() if t in tables}
-
+        table_options = {t: o for t, o in self._connector.table_options.items() if t in table_names}
         return {
-            "table_mappings": table_mappings,
             "table_options": table_options,
             "table_types": table_types,
             "table_row_types": table_row_types,
-            "selected_tables": selected_tables,
             "source_type": self._connector.source_type,
         }
 
     @Slot()
     def close_connection(self):
         """Close connector connection."""
-        self._connector.close_connection()
+        if self._connector is not None:
+            self._connector.close_connection()
 
     @Slot()
     def _new_column_types(self):
@@ -330,10 +334,12 @@ class ImportSources(QObject):
 
     @Slot()
     def _update_display_row_types(self):
-        mapping_specification = self._source_data_model.mapping_specification()
-        if mapping_specification is None:
+        """Updates displayed row types."""
+        list_index = self._ui.mapping_list.selectionModel().currentIndex()
+        if not list_index.isValid():
             return
-        last_pivot_row = mapping_specification.last_pivot_row()
+        flattened_mapping = list_index.data(Role.FLATTENED_MAPPINGS)
+        last_pivot_row = flattened_mapping.root_mapping.last_pivot_row()
         if last_pivot_row == -1:
             pivoted_rows = []
         else:
@@ -350,74 +356,128 @@ class ImportSources(QObject):
         """
         global_pos = self._ui.source_list.mapToGlobal(pos)
         index = self._ui.source_list.indexAt(pos)
-        source = index.data()
+        clipboard = QApplication.clipboard()
+        mime_data = clipboard.mimeData()
         source_list_menu = SourceListMenu(
-            self._ui.source_list, global_pos, bool(self._copied_options), bool(self._copied_mappings)
+            self._ui.source_list,
+            global_pos,
+            mime_data.hasFormat(TABLE_OPTIONS_MIME_TYPE),
+            mime_data.hasFormat(MAPPING_LIST_MIME_TYPE),
         )
         option = source_list_menu.get_action()
         source_list_menu.deleteLater()
         if option == "Copy mappings":
-            self._copied_mappings = self._copy_mappings(source)
+            self._copy_mapping_list_to_clipboard(index)
             return
         if option == "Copy options":
-            self._copied_options = self._options_to_dict(source)
+            self._copy_table_options_to_clipboard(index)
             return
         if option == "Copy options and mappings":
-            self._copied_options = self._options_to_dict(source)
-            self._copied_mappings = self._copy_mappings(source)
+            self._copy_mappings_and_options_to_clipboard(index)
             return
         if option == "Paste mappings":
-            previous = self._copy_mappings(source)
-            self._undo_stack.push(PasteMappings(self._parent, source, self._copied_mappings, previous))
+            self._paste_mapping_list_from_clipboard()
             return
         if option == "Paste options":
-            previous = self._options_to_dict(source)
-            self._undo_stack.push(PasteOptions(self, source, self._copied_options, previous))
+            self._paste_table_options_from_clipboard()
             return
         if option == "Paste options and mappings":
-            previous_mappings = [deepcopy(m) for m in self._table_mappings[source].get_mappings()]
-            previous_options = self._options_to_dict(source)
             self._undo_stack.beginMacro("paste options and mappings")
-            self._undo_stack.push(PasteMappings(self._parent, source, self._copied_mappings, previous_mappings))
-            self._undo_stack.push(PasteOptions(self, source, self._copied_options, previous_options))
+            self._paste_mapping_list_from_clipboard()
+            self._paste_table_options_from_clipboard()
             self._undo_stack.endMacro()
 
-    def _copy_mappings(self, table):
+    def _copy_mapping_list_to_clipboard(self, table_index):
         """
-        Copies the mappings of the given source table.
+        Copies the mappings of given source table to system clipboard.
 
         Args:
-            table (str): source table name
+            table_index (QModelIndex): table index
+        """
+        mime_data = QMimeData()
+        mime_data.setData(MAPPING_LIST_MIME_TYPE, self._pickle_mapping_list(table_index))
+        clipboard = QApplication.clipboard()
+        clipboard.setMimeData(mime_data)
+
+    def _pickle_mapping_list(self, table_index):
+        """Pickles mapping list of given table.
+
+        Args:
+            table_index (QModelIndex): table index
 
         Returns:
-            dict: copied mappings
+            bytes: pickled list
         """
-        mapping_list = self._table_mappings.get(table)
-        if mapping_list is None:
-            return {}
-        return {
-            specification.mapping_name: deepcopy(specification.mapping)
-            for specification in mapping_list.mapping_specifications
-        }
+        mapping_dicts = list()
+        for list_row in range(self._mappings_model.rowCount(table_index)):
+            list_index = self._mappings_model.index(list_row, 0, table_index)
+            name = list_index.data()
+            flattened_mappings = list_index.data(Role.FLATTENED_MAPPINGS)
+            mapping_dicts.append(unparse_named_mapping_spec(name, flattened_mappings.root_mapping))
+        return pickle.dumps(mapping_dicts)
 
-    def _options_to_dict(self, table):
+    def _paste_mapping_list_from_clipboard(self):
+        """Pastes mapping list from system clipboard to selected source tables."""
+        selection_model = self._ui.source_list.selectionModel()
+        clipboard = QApplication.clipboard()
+        mime_data = clipboard.mimeData()
+        mapping_dicts = pickle.loads(mime_data.data(MAPPING_LIST_MIME_TYPE))
+        self._undo_stack.beginMacro("paste mappings")
+        for table_index in selection_model.selectedIndexes():
+            table_row = table_index.row()
+            if table_row == 0:
+                continue
+            for list_row in reversed(range(self._mappings_model.rowCount(table_index))):
+                self._undo_stack.push(DeleteMapping(table_row, self._mappings_model, list_row))
+            target_row = self._mappings_model.rowCount(table_index)
+            self._undo_stack.push(PasteMappings(table_row, target_row, self._mappings_model, mapping_dicts))
+        self._undo_stack.endMacro()
+
+    def _copy_table_options_to_clipboard(self, table_index):
         """
         Serializes mapping options to a dict.
 
         Args:
-            table (str): source table name
+            table_index (QModelIndex): table index
+        """
+        mime_data = QMimeData()
+        mime_data.setData(TABLE_OPTIONS_MIME_TYPE, self._pickle_table_options(table_index))
+        clipboard = QApplication.clipboard()
+        clipboard.setMimeData(mime_data)
+
+    def _pickle_table_options(self, table_index):
+        """Pickles options from given table.
+
+        Args:
+            table_index (QModelIndex): table index
 
         Returns:
-            dict: serialized options
+            bytes: pickles options
         """
         options = self._connector.table_options
         col_types = self._connector.table_types
         row_types = self._connector.table_row_types
-        all_options = dict()
-        all_options["options"] = deepcopy(options.get(table, {}))
-        all_options["col_types"] = deepcopy(col_types.get(table, {}))
-        all_options["row_types"] = deepcopy(row_types.get(table, {}))
-        return all_options
+        table_name = table_index.data()
+        options_dict = dict()
+        options_dict["options"] = options.get(table_name, {})
+        options_dict["col_types"] = col_types.get(table_name, {})
+        options_dict["row_types"] = row_types.get(table_name, {})
+        return pickle.dumps(options_dict)
+
+    def _paste_table_options_from_clipboard(self):
+        selection_model = self._ui.source_list.selectionModel()
+        clipboard = QApplication.clipboard()
+        mime_data = clipboard.mimeData()
+        pickled_options = mime_data.data(TABLE_OPTIONS_MIME_TYPE)
+        self._undo_stack.beginMacro("paste table options")
+        for table_index in selection_model.selectedIndexes():
+            table_row = table_index.row()
+            if table_row == 0:
+                continue
+            pickled_previous_options = self._pickle_table_options(table_index)
+            table_name = table_index.data()
+            self._undo_stack.push(PasteOptions(self, table_name, pickled_options, pickled_previous_options))
+        self._undo_stack.endMacro()
 
     def paste_options(self, table, options):
         """
@@ -427,10 +487,21 @@ class ImportSources(QObject):
             table (str): source table name
             options (dict): options
         """
-        self._connector.set_table_options({table: deepcopy(options.get("options", {}))})
-        self._connector.set_table_types({table: deepcopy(options.get("col_types", {}))})
-        self._connector.set_table_row_types({table: deepcopy(options.get("row_types", {}))})
-        self.select_table(table)
+        self._connector.set_table_options({table: options.get("options", {})})
+        self._connector.set_table_types({table: options.get("col_types", {})})
+        self._connector.set_table_row_types({table: options.get("row_types", {})})
+
+    def _copy_mappings_and_options_to_clipboard(self, table_index):
+        """Copies table's mapping list and options to system clipboard.
+
+        Args:
+            table_index (QModelIndex): table index
+        """
+        mime_data = QMimeData()
+        mime_data.setData(MAPPING_LIST_MIME_TYPE, self._pickle_mapping_list(table_index))
+        mime_data.setData(TABLE_OPTIONS_MIME_TYPE, self._pickle_table_options(table_index))
+        clipboard = QApplication.clipboard()
+        clipboard.setMimeData(mime_data)
 
 
 def _sanitize_data(data, header):
