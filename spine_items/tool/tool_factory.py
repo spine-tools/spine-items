@@ -102,4 +102,4 @@ def _find_main_program_file(toolbox, filename, specification):
         return
     specification = specification.clone()
     specification.path, specification.includes[0] = os.path.split(answer[0])
-    toolbox.project().replace_specification(specification)
+    toolbox.project().replace_specification(specification.name, specification)
