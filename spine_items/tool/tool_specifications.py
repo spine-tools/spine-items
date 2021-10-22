@@ -531,7 +531,7 @@ class PythonTool(ToolSpecification):
         )
         self.main_prgm = includes[0]
         self.python_options = OrderedDict()
-        self.execution_settings = execution_settings
+        self.execution_settings = execution_settings if execution_settings is not None else {}
         self.return_codes = {0: "Normal return", -1: "Failure"}  # Not official
 
     def to_dict(self):

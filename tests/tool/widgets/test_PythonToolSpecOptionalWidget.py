@@ -40,12 +40,14 @@ class TestPythonToolSpecOptionalWidget(unittest.TestCase):
         )
 
     def test_constructor(self):
-        with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.PythonToolSpecOptionalWidget._toolbox") as mock_toolbox:
+        with mock.patch(
+            "spine_items.tool.widgets.tool_spec_optional_widgets.PythonToolSpecOptionalWidget._toolbox"
+        ) as mock_toolbox:
             mock_toolbox.qsettings.return_value = MockQSettings()
             opt_widget = PythonToolSpecOptionalWidget(mock_toolbox)
         self.assertIsInstance(opt_widget, PythonToolSpecOptionalWidget)
 
 
-class MockQSettings():
+class MockQSettings:
     def value(self, key, defaultValue=""):
         return defaultValue
