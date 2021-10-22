@@ -82,9 +82,7 @@ class ExecutableItem(ExporterExecutableItemBase):
         if len(result) > 1:
             self._result_files = result[1]
             file_name = (
-                (EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + self.filter_id)
-                if self.filter_id
-                else EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
+                EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")
             ) + ".json"
             with open(Path(self._data_dir, file_name), "w") as manifest:
                 dump(self._result_files, manifest)

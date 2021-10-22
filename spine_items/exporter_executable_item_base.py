@@ -65,9 +65,7 @@ class ExporterExecutableItemBase(ExecutableItemBase):
     def exclude_execution(self, forward_resources, backward_resources):
         """See base class."""
         manifest_file_name = (
-            (EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + self.filter_id)
-            if self.filter_id
-            else EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
+            EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")
         ) + ".json"
         manifest_file_path = Path(self._data_dir, manifest_file_name)
         if not manifest_file_path.exists():

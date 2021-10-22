@@ -67,7 +67,7 @@ class ExecutableItem(ExecutableItemBase):
     def filter_id(self, filter_id):
         self._filter_id = filter_id
         self._logger.set_filter_id(filter_id)
-        filter_output_dir = os.path.join(self._output_dir, filter_id)
+        filter_output_dir = os.path.join(self._output_dir, self.hash_filter_id())
         try:
             os.makedirs(filter_output_dir, exist_ok=True)
             self._output_dir = filter_output_dir
