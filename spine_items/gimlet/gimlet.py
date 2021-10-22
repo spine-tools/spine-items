@@ -377,8 +377,10 @@ class Gimlet(ProjectItem):
     def _check_notifications(self):
         """See base class."""
         self.clear_notifications()
-        self.add_notification("Gimlet is deprecated and will be removed in the future. Please replace this "
-                              "item with a <b>Tool</b> configured to run system commands.")
+        self.add_notification(
+            "Gimlet is deprecated and will be removed in the future. Please replace this "
+            "item with a <b>Tool</b> configured to run system commands."
+        )
 
     def update_name_label(self):
         """Updates the name label in Gimlet properties tab.

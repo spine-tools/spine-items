@@ -30,16 +30,19 @@ from spinetoolbox.project_item.specification_editor_window import (
     ChangeSpecPropertyCommand,
 )
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spine_items.tool.widgets.tool_spec_optional_widgets import PythonToolSpecOptionalWidget, \
-    ExecutableToolSpecOptionalWidget
+from spine_items.tool.widgets.tool_spec_optional_widgets import (
+    PythonToolSpecOptionalWidget,
+    ExecutableToolSpecOptionalWidget,
+)
 from ..item_info import ItemInfo
 from ..tool_specifications import TOOL_TYPES, make_specification
 
 
 class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
-    def __init__(self, toolbox, specification=None, item=None):
-        """A widget to query user's preferences for a new tool specification.
+    """A widget to query user's preferences for a new tool specification."""
 
+    def __init__(self, toolbox, specification=None, item=None):
+        """
         Args:
             toolbox (ToolboxUI): QMainWindow instance
             specification (ToolSpecification, optional): If given, the form is pre-filled with this specification
@@ -221,8 +224,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         new_spec_dict["outputfiles"] = self._output_file_list()
         # Strip whitespace from args before saving it to JSON
         new_spec_dict["cmdline_args"] = split_cmdline_args(self._ui.lineEdit_args.text())
-        new_spec_dict["includes_main_path"] = self.includes_main_path.replace(os.sep, "/") if \
-            self.includes_main_path else None
+        new_spec_dict["includes_main_path"] = (
+            self.includes_main_path.replace(os.sep, "/") if self.includes_main_path else None
+        )
         try:
             new_spec_dict = self.insert_execution_settings(new_spec_dict)
         except NameError:
@@ -248,26 +252,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             return d
         d["execution_settings"] = opt_widget.add_execution_settings()
         return d
-        # if toolspectype == "python":
-        #     idx = opt_widget.ui.comboBox_kernel_specs.currentIndex()
-        #     if idx < 1:
-        #         d["execution_settings"] = dict()
-        #         d["execution_settings"]["kernel_spec_name"] = ""
-        #         d["execution_settings"]["env"] = ""
-        #     else:
-        #         item = opt_widget.ui.comboBox_kernel_specs.model().item(idx)
-        #         k_spec_data = item.data()
-        #         d["execution_settings"] = k_spec_data
-        #     d["execution_settings"]["use_jupyter_console"] = (
-        #         True if opt_widget.ui.radioButton_jupyter_console.isChecked() else False
-        #     )
-        #     opt_widget.validate_executable()  # Raises NameError if Python path is not valid
-        #     d["execution_settings"]["executable"] = opt_widget.get_executable()
-        # elif toolspectype == "executable":
-        #     d["execution_settings"] = dict()
-        #     d["execution_settings"]["cmd"] = opt_widget.ui.lineEdit_command.text()
-        #     d["execution_settings"]["shell"] = opt_widget.get_current_shell()
-        # return d
 
     def _save(self):
         """Saves spec. If successful, also saves all modified program files."""
@@ -312,7 +296,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             [
                 self._ui.actionNew_main_program_file,
                 self._ui.actionSelect_main_program_file,
-                self._ui.actionRemove_all_program_files],
+                self._ui.actionRemove_all_program_files,
+            ]
         )
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self._ui.treeView_programfiles.setIndexWidget(index, widget)
@@ -599,6 +584,31 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             opt_widget.ui.radioButton_python_console.setChecked(True)
         opt_widget.set_ui_for_jupyter_console(not value)
 
+    @Slot(int)
+    def _push_set_fail_on_stderror(self, check_box_state):
+        """Pushes a command to change fail_on_stderror flag to undo stack.
+
+        Args:
+            check_box_state (int): check box state
+        """
+        fail_on_stderror = check_box_state == Qt.Checked
+        old_value = self.spec_dict["execution_settings"].get("fail_on_error", not check_box_state)
+        if fail_on_stderror == old_value:
+            return
+        text = ("check" if fail_on_stderror else "uncheck") + " 'Fail if...' check box"
+        self._undo_stack.push(ChangeSpecPropertyCommand(self._set_fail_on_stderror, fail_on_stderror, old_value, text))
+
+    def _set_fail_on_stderror(self, fail_on_stderror):
+        """Sets the fail_on_stderror flag in specification dict.
+
+        Args:
+            fail_on_stderror (bool): flag value
+        """
+        self.spec_dict["execution_settings"]["fail_on_error"] = fail_on_stderror
+        toolspectype = self.spec_dict.get("tooltype", "")
+        opt_widget = self._get_optional_widget(toolspectype)
+        opt_widget.ui.fail_on_stderror_check_box.setChecked(fail_on_stderror)
+
     @Slot()
     def _push_change_executable(self):
         old_value = self.spec_dict["execution_settings"]["executable"]
@@ -626,9 +636,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         old_shell = self.spec_dict["execution_settings"]["shell"]
         if new_shell == old_shell:
             return
-        self._undo_stack.push(
-            ChangeSpecPropertyCommand(self._set_shell, new_shell, old_shell, "change shell")
-        )
+        self._undo_stack.push(ChangeSpecPropertyCommand(self._set_shell, new_shell, old_shell, "change shell"))
 
     def _set_shell(self, value):
         self.spec_dict["execution_settings"]["shell"] = value
@@ -670,9 +678,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         new_value = opt_widget.ui.lineEdit_command.text().strip()
         if new_value == old_value:
             return
-        self._undo_stack.push(
-            ChangeSpecPropertyCommand(self._set_cmd, new_value, old_value, "change command")
-        )
+        self._undo_stack.push(ChangeSpecPropertyCommand(self._set_cmd, new_value, old_value, "change command"))
 
     def _set_cmd(self, value):
         self.spec_dict["execution_settings"]["cmd"] = value

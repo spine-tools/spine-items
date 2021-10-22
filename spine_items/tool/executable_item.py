@@ -449,11 +449,13 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
             return ItemExecutionFinishState.FAILURE
         if not os.path.isdir(execution_dir):
-            self._logger.msg_warning.emit(f"Work directory was not created because Tool Specification "
-                                          f"<b>{self._tool_specification.name}</b> does not contain any "
-                                          f"program files nor (optional) input files. Please <b>execute the "
-                                          f"Tool in source execution mode</b> or include files to the "
-                                          f"specification.")
+            self._logger.msg_warning.emit(
+                f"Work directory was not created because Tool Specification "
+                f"<b>{self._tool_specification.name}</b> does not contain any "
+                f"program files nor (optional) input files. Please <b>execute the "
+                f"Tool in source execution mode</b> or include files to the "
+                f"specification."
+            )
             return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         resources = forward_resources + backward_resources

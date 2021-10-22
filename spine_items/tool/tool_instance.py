@@ -38,7 +38,6 @@ class ToolInstance:
 
     def __init__(self, tool_specification, basedir, settings, logger, owner):
         """
-
         Args:
             tool_specification (ToolSpecification): the tool specification for this instance
             basedir (str): the path to the directory where this instance should run
@@ -172,7 +171,7 @@ class JuliaToolInstance(ToolInstance):
             self.program.append(f"--sysimage={sysimage}")
         alias = f"# Running 'julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}'"
         self.exec_mngr = JuliaPersistentExecutionManager(
-            self._logger, self.program, self.args, alias, group_id=self.owner.group_id
+            self._logger, self.program, self.args, alias, fail_run_on_stderror=True, group_id=self.owner.group_id
         )
 
     def execute(self):
@@ -190,6 +189,19 @@ class JuliaToolInstance(ToolInstance):
 
 class PythonToolInstance(ToolInstance):
     """Class for Python Tool instances."""
+
+    def __init__(self, tool_specification, basedir, settings, logger, owner, fail_on_stderror):
+        """
+        Args:
+            tool_specification (ToolSpecification): the tool specification for this instance
+            basedir (str): the path to the directory where this instance should run
+            settings (QSettings): Toolbox settings
+            logger (LoggerInterface): a logger instance
+            owner (ExecutableItemBase): The item that owns the instance
+            fail_on_stderror (bool): If True, fail run if last console message goes to stderror
+        """
+        super().__init__(tool_specification, basedir, settings, logger, owner)
+        self._fail_on_stderror = fail_on_stderror
 
     def prepare(self, args):
         """See base class."""
@@ -224,7 +236,12 @@ class PythonToolInstance(ToolInstance):
             self.args += [""]  # Needed to properly finish stuff in the console.
             alias = f"# Running 'python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}'"
             self.exec_mngr = PythonPersistentExecutionManager(
-                self._logger, self.program, self.args, alias, group_id=self.owner.group_id
+                self._logger,
+                self.program,
+                self.args,
+                alias,
+                fail_run_on_stderror=self._fail_on_stderror,
+                group_id=self.owner.group_id,
             )
 
     @staticmethod
@@ -267,7 +284,7 @@ class ExecutableToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         if not self.tool_specification.main_prgm:  # Run command
-            cmd = self.tool_specification.execution_settings["cmd"].split() # Convert str to list
+            cmd = self.tool_specification.execution_settings["cmd"].split()  # Convert str to list
             shell = self.tool_specification.execution_settings["shell"]
             if not shell:
                 # If shell is not given (empty str), The first item in cmd list will be considered as self.program.

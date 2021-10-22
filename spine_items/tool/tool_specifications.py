@@ -41,6 +41,7 @@ OPTIONAL_KEYS = [
     "cmdline_args",
     "execute_in_work",
     "execution_settings",
+    "fail_on_stderror",
 ]
 LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]  # These should be lists
 
@@ -60,7 +61,9 @@ def make_specification(definition, app_settings, logger):
     if not definition["includes_main_path"]:
         path = None
     else:
-        definition["includes_main_path"] = path = definition.setdefault("includes_main_path", ".").replace("/", os.path.sep)
+        definition["includes_main_path"] = path = definition.setdefault("includes_main_path", ".").replace(
+            "/", os.path.sep
+        )
         if not os.path.isabs(path):
             definition_file_path = definition["definition_file_path"]
             path = os.path.normpath(os.path.join(os.path.dirname(definition_file_path), path))
@@ -209,7 +212,7 @@ class ToolSpecification(ProjectItemSpecification):
             logger (LoggerInterface): A logger instance
 
         Returns:
-            Dictionary or None if there was a problem in the tool definition.
+            dict: definition or None if there was a problem in the tool definition.
         """
         kwargs = dict()
         for p in REQUIRED_KEYS + OPTIONAL_KEYS:
@@ -237,11 +240,7 @@ class ToolSpecification(ProjectItemSpecification):
             logger (LoggerInterface): Logger
             owner (ExecutableItemBase): Project item that owns the instance
         """
-        return self.tool_instance_factory(self, basedir, self._settings, logger, owner)
-
-    @property
-    def tool_instance_factory(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class GAMSTool(ToolSpecification):
@@ -400,9 +399,9 @@ class GAMSTool(ToolSpecification):
             return GAMSTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    @property
-    def tool_instance_factory(self):
-        return GAMSToolInstance
+    def create_tool_instance(self, basedir, logger, owner):
+        """See base class."""
+        return GAMSToolInstance(self, basedir, self._settings, logger, owner)
 
 
 class JuliaTool(ToolSpecification):
@@ -475,9 +474,9 @@ class JuliaTool(ToolSpecification):
             return JuliaTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    @property
-    def tool_instance_factory(self):
-        return JuliaToolInstance
+    def create_tool_instance(self, basedir, logger, owner):
+        """See base class."""
+        return JuliaToolInstance(self, basedir, self._settings, logger, owner)
 
 
 class PythonTool(ToolSpecification):
@@ -514,7 +513,7 @@ class PythonTool(ToolSpecification):
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (str, optional): Python tool command line arguments (read from tool definition file)
-            execution_settings (dict): Python kernel spec settings
+            execution_settings (dict, optional): Python kernel spec settings
         """
         super().__init__(
             name,
@@ -593,9 +592,11 @@ class PythonTool(ToolSpecification):
             return PythonTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    @property
-    def tool_instance_factory(self):
-        return PythonToolInstance
+    def create_tool_instance(self, basedir, logger, owner):
+        """See base class."""
+        return PythonToolInstance(
+            self, basedir, self._settings, logger, owner, self.execution_settings.get("fail_on_stderror", True)
+        )
 
 
 class ExecutableTool(ToolSpecification):
@@ -721,6 +722,6 @@ class ExecutableTool(ToolSpecification):
             return ExecutableTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    @property
-    def tool_instance_factory(self):
-        return ExecutableToolInstance
+    def create_tool_instance(self, basedir, logger, owner):
+        """See base class."""
+        return ExecutableToolInstance(self, basedir, self._settings, logger, owner)
