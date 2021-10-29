@@ -14,10 +14,12 @@ Contains unit tests for Import editor's SourceDataTableModel.
 import unittest
 from unittest.mock import MagicMock
 from PySide2.QtCore import Qt
-from spine_items.importer.mvcmodels.mapping_specification_model import MappingSpecificationModel
-from spine_items.importer.mvcmodels.source_data_table_model import SourceDataTableModel
+
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
+from spine_items.importer.mvcmodels.mappings_model_roles import Role
+from spine_items.importer.mvcmodels.mappings_model import MappingsModel
+from spine_items.importer.mvcmodels.source_data_table_model import SourceDataTableModel
 
 
 class TestSourceDataTableModel(unittest.TestCase):
@@ -61,24 +63,18 @@ class TestSourceDataTableModel(unittest.TestCase):
 
         # if we add a pivoted mapping for the row with the error, the error should not be
         undo_stack = MagicMock()
-        mapping = MappingSpecificationModel(
-            "source table",
-            "mapping",
-            import_mapping_from_dict({"map_type": "ObjectClass", "name": {"map_type": "row", "value_reference": 0}}),
-            undo_stack,
+        mappings_model = MappingsModel(undo_stack, None)
+        list_index = self._add_mapping(
+            mappings_model, {"map_type": "ObjectClass", "name": {"map_type": "row", "value_reference": 0}}
         )
-        model.set_mapping(mapping)
+        model.set_mapping_list_index(list_index)
         self.assertEqual(model.data(model.index(*error_index)), "Not a valid number")
 
-        # or if we add a mapping where there reading starts from a row bellow the error, the error should not be shown.
-        mapping = MappingSpecificationModel(
-            "source table",
-            "mapping",
-            import_mapping_from_dict({"map_type": "ObjectClass", "read_start_row": 1}),
-            undo_stack,
-        )
-        model.set_mapping(mapping)
+        # or if we add a mapping where there reading starts from a row below the error, the error should not be shown.
+        list_index = self._add_mapping(mappings_model, {"map_type": "ObjectClass", "read_start_row": 1})
+        model.set_mapping_list_index(list_index)
         self.assertEqual(model.data(model.index(*error_index)), "Not a valid number")
+        mappings_model.deleteLater()
 
     def test_row_type_checking_produces_error(self):
         model = SourceDataTableModel()
@@ -93,103 +89,97 @@ class TestSourceDataTableModel(unittest.TestCase):
 
         # if we add mapping error should be shown.
         undo_stack = MagicMock()
-        mapping = MappingSpecificationModel(
-            "source table",
-            "mapping",
-            import_mapping_from_dict({"map_type": "ObjectClass", "name": {"map_type": "row", "value_reference": 1}}),
-            undo_stack,
+        mappings_model = MappingsModel(undo_stack, None)
+        list_index = self._add_mapping(
+            mappings_model, {"map_type": "ObjectClass", "name": {"map_type": "row", "value_reference": 1}}
         )
-        model.set_mapping(mapping)
+        model.set_mapping_list_index(list_index)
         self.assertEqual(model.data(model.index(*error_index)), "Not a valid number")
+        mappings_model.deleteLater()
 
     def test_mapping_column_colors(self):
         model = SourceDataTableModel()
         model.reset_model([[1, 2], [3, 4]])
         # column mapping
         undo_stack = MagicMock()
-        mapping = MappingSpecificationModel(
-            "source table", "mapping", import_mapping_from_dict({"map_type": "ObjectClass", "name": 0}), undo_stack
-        )
-        model.set_mapping(mapping)
-        entity_class_color = mapping.data_color("Object class names")
+        mappings_model = MappingsModel(undo_stack, None)
+        list_index = self._add_mapping(mappings_model, {"map_type": "ObjectClass", "name": 0})
+        model.set_mapping_list_index(list_index)
+        entity_class_color = self._find_color(list_index, "Object class names")
         self.assertEqual(model.data(model.index(0, 0), role=Qt.BackgroundRole), entity_class_color)
         self.assertEqual(model.data(model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
         # row not showing color if the start reading row is specified
-        mapping = MappingSpecificationModel(
-            "source table",
-            "mapping",
-            import_mapping_from_dict({"map_type": "ObjectClass", "name": 0, "read_start_row": 1}),
-            undo_stack,
-        )
-        model.set_mapping(mapping)
-        entity_class_color = mapping.data_color("Object class names")
+        list_index = self._add_mapping(mappings_model, {"map_type": "ObjectClass", "name": 0, "read_start_row": 1})
+        model.set_mapping_list_index(list_index)
+        entity_class_color = self._find_color(list_index, "Object class names")
         self.assertEqual(model.data(model.index(0, 0), role=Qt.BackgroundRole), None)
         self.assertEqual(model.data(model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
         # row not showing color if the row is pivoted
-        mapping = MappingSpecificationModel(
-            "source table",
-            "mapping",
-            import_mapping_from_dict(
-                {"map_type": "ObjectClass", "name": 0, "object": {"map_type": "row", "value_reference": 0}}
-            ),
-            undo_stack,
+        list_index = self._add_mapping(
+            mappings_model, {"map_type": "ObjectClass", "name": 0, "object": {"map_type": "row", "value_reference": 0}}
         )
-        model.set_mapping(mapping)
+        model.set_mapping_list_index(list_index)
         self.assertNotEqual(model.data(model.index(0, 0), role=Qt.BackgroundRole), entity_class_color)
         self.assertEqual(model.data(model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
+        mappings_model.deleteLater()
 
     def test_mapping_pivoted_colors(self):
         model = SourceDataTableModel()
         model.reset_model([[1, 2], [3, 4]])
         # row mapping
         undo_stack = MagicMock()
-        mapping = MappingSpecificationModel(
-            "source table",
-            "mapping",
-            import_mapping_from_dict({"map_type": "ObjectClass", "object": {"map_type": "row", "value_reference": 0}}),
-            undo_stack,
+        mappings_model = MappingsModel(undo_stack, None)
+        list_index = self._add_mapping(
+            mappings_model, {"map_type": "ObjectClass", "object": {"map_type": "row", "value_reference": 0}}
         )
-        model.set_mapping(mapping)
-        entity_color = mapping.data_color("Object names")
+        model.set_mapping_list_index(list_index)
+        entity_color = self._find_color(list_index, "Object names")
         self.assertEqual(model.data(model.index(0, 0), role=Qt.BackgroundRole), entity_color)
         self.assertEqual(model.data(model.index(0, 1), role=Qt.BackgroundRole), entity_color)
         self.assertEqual(model.data(model.index(1, 0), role=Qt.BackgroundRole), None)
         # column not showing color if the columns is skipped
-        mapping = MappingSpecificationModel(
-            "source table",
-            "mapping",
-            import_mapping_from_dict(
-                {"map_type": "ObjectClass", "object": {"map_type": "row", "value_reference": 0}, "skip_columns": [0]}
-            ),
-            undo_stack,
+        list_index = self._add_mapping(
+            mappings_model,
+            {"map_type": "ObjectClass", "object": {"map_type": "row", "value_reference": 0}, "skip_columns": [0]},
         )
-        model.set_mapping(mapping)
-        entity_color = mapping.data_color("Object names")
+        model.set_mapping_list_index(list_index)
+        entity_color = self._find_color(list_index, "Object names")
         self.assertEqual(model.data(model.index(0, 0), role=Qt.BackgroundRole), None)
         self.assertEqual(model.data(model.index(0, 1), role=Qt.BackgroundRole), entity_color)
         self.assertEqual(model.data(model.index(1, 0), role=Qt.BackgroundRole), None)
+        mappings_model.deleteLater()
 
     def test_mapping_column_and_pivot_colors(self):
         model = SourceDataTableModel()
         model.reset_model([[1, 2], [3, 4]])
         # row mapping
         undo_stack = MagicMock()
-        mapping = MappingSpecificationModel(
-            "source table",
-            "mapping",
-            import_mapping_from_dict(
-                {"map_type": "ObjectClass", "name": 0, "object": {"map_type": "row", "value_reference": 0}}
-            ),
-            undo_stack,
+        mappings_model = MappingsModel(undo_stack, None)
+        list_index = self._add_mapping(
+            mappings_model, {"map_type": "ObjectClass", "name": 0, "object": {"map_type": "row", "value_reference": 0}}
         )
-        model.set_mapping(mapping)
+        model.set_mapping_list_index(list_index)
         # no color showing where row and column mapping intersect
-        entity_class_color = mapping.data_color("Object class names")
-        entity_color = mapping.data_color("Object names")
+        entity_class_color = self._find_color(list_index, "Object class names")
+        entity_color = self._find_color(list_index, "Object names")
         self.assertEqual(model.data(model.index(0, 0), role=Qt.BackgroundRole), None)
         self.assertEqual(model.data(model.index(0, 1), role=Qt.BackgroundRole), entity_color)
         self.assertEqual(model.data(model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
         self.assertEqual(model.data(model.index(1, 1), role=Qt.BackgroundRole), None)
+        mappings_model.deleteLater()
+
+    @staticmethod
+    def _find_color(list_index, item_name):
+        flattened_mappings = list_index.data(Role.FLATTENED_MAPPINGS)
+        row = flattened_mappings.display_names.index(item_name)
+        return flattened_mappings.display_colors[row]
+
+    @staticmethod
+    def _add_mapping(mappings_model, mapping_dict):
+        mapping = import_mapping_from_dict(mapping_dict)
+        mappings_model.append_new_table_with_mapping(f"source table {mappings_model.rowCount()}", mapping)
+        table_index = mappings_model.index(mappings_model.rowCount() - 1, 0)
+        return mappings_model.index(0, 0, table_index)
 
 
 if __name__ == '__main__':

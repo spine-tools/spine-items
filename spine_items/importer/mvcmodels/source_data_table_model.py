@@ -216,7 +216,7 @@ class SourceDataTableModel(MinimalTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if role in (Qt.ToolTipRole, Qt.BackgroundRole):
             if self._mapping_list_index.isValid():
-                flattened_mappings = self._mapping_list_index.data(Role.ITEM).flattened_mappings
+                flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
                 last_pivot_row = flattened_mappings.root_mapping.last_pivot_row()
                 read_start_row = flattened_mappings.root_mapping.read_start_row
             else:
@@ -263,7 +263,7 @@ class SourceDataTableModel(MinimalTableModel):
         Returns:
             QColor: color of index
         """
-        flattened_mappings = self._mapping_list_index.data(Role.ITEM).flattened_mappings
+        flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
         if self.index_below_last_pivot_row(index):
             return flattened_mappings.get_value_color()
         for k in range(len(flattened_mappings.display_names)):
@@ -278,7 +278,7 @@ class SourceDataTableModel(MinimalTableModel):
         Returns:
             int: last row
         """
-        root_mapping = self._mapping_list_index.data(Role.ITEM).flattened_mappings.root_mapping
+        root_mapping = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS).root_mapping
         return max(root_mapping.last_pivot_row(), root_mapping.read_start_row - 1)
 
     def index_below_last_pivot_row(self, index):
@@ -290,7 +290,7 @@ class SourceDataTableModel(MinimalTableModel):
         Returns:
             bool: True if index is below the pivot, False otherwise
         """
-        flattened_mappings = self._mapping_list_index.data(Role.ITEM).flattened_mappings
+        flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
         if not flattened_mappings.has_value_component() or not flattened_mappings.root_mapping.is_pivoted():
             return False
         return index.row() > self._last_row() and index.column() not in self._non_pivoted_and_skipped_columns()
@@ -318,7 +318,7 @@ class SourceDataTableModel(MinimalTableModel):
 
     def headerData(self, section, orientation=Qt.Horizontal, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.BackgroundRole and self._mapping_list_index.isValid():
-            flattened_mappings = self._mapping_list_index.data(Role.ITEM).flattened_mappings
+            flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
             for k in range(len(flattened_mappings.display_names)):
                 component_mapping = flattened_mappings.component_at(k)
                 if self.section_in_mapping(component_mapping, section):
