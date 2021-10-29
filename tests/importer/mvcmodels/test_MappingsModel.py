@@ -69,7 +69,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         root_mapping = import_mapping_from_dict({"map_type": "ObjectClass", "name": None, "object": None})
         self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), root_mapping)
         self.assertEqual(self._model.rowCount(self._list_index), 3)
-        self.assertEqual(self._model.columnCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
         self.assertEqual(index.data(), "Object class names")
         index = self._model.index(1, 0, self._list_index)
@@ -94,6 +94,9 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(index.data(), None)
         self.assertEqual(index.data(Qt.BackgroundRole), None)
         self.assertFalse(index.data(Qt.ToolTipRole))
+        self.assertEqual(self._model.index(0, 3, self._list_index).data(), "")
+        self.assertEqual(self._model.index(1, 3, self._list_index).data(), "")
+        self.assertEqual(self._model.index(2, 3, self._list_index).data(), "")
 
     def test_data_when_mapping_invalid_object_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
@@ -113,7 +116,7 @@ class TestMappingComponentsTable(unittest.TestCase):
             self._table_index.row(), self._list_index.row(), import_mapping_from_dict(mapping_dict)
         )
         self.assertEqual(self._model.rowCount(self._list_index), 9)
-        self.assertEqual(self._model.columnCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
         self.assertEqual(index.data(), "Object class names")
         index = self._model.index(1, 0, self._list_index)
@@ -139,6 +142,7 @@ class TestMappingComponentsTable(unittest.TestCase):
             self.assertEqual(index.data(), None)
             self.assertEqual(index.data(Qt.BackgroundRole), None)
             self.assertFalse(index.data(Qt.ToolTipRole))
+            self.assertEqual(self._model.index(row, 3, self._list_index).data(), "")
 
     def test_data_when_mapping_valid_object_class_with_pivoted_parameters(self):
         array_parameter_mapping_dict = {
@@ -152,7 +156,7 @@ class TestMappingComponentsTable(unittest.TestCase):
             self._table_index.row(), self._list_index.row(), import_mapping_from_dict(mapping_dict)
         )
         self.assertEqual(self._model.rowCount(self._list_index), 8)
-        self.assertEqual(self._model.columnCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
         self.assertEqual(index.data(), "Object class names")
         index = self._model.index(1, 0, self._list_index)
@@ -217,6 +221,8 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(index.data(), "Pivoted values")
         self.assertEqual(index.data(Qt.BackgroundRole), None)
         self.assertFalse(index.data(Qt.ToolTipRole))
+        for row in range(8):
+            self.assertEqual(self._model.index(row, 3, self._list_index).data(), "")
 
     def test_data_when_mapping_valid_object_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
@@ -238,7 +244,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         mapping.polish(table_name, header)
         self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), mapping)
         self.assertEqual(self._model.rowCount(self._list_index), 9)
-        self.assertEqual(self._model.columnCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
         self.assertEqual(index.data(), "Object class names")
         index = self._model.index(1, 0, self._list_index)
@@ -311,6 +317,8 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(index.data(), 23 + 1)
         self.assertEqual(index.data(Qt.BackgroundRole), None)
         self.assertFalse(index.data(Qt.ToolTipRole))
+        for row in range(9):
+            self.assertEqual(self._model.index(row, 3, self._list_index).data(), "")
 
     def test_data_when_valid_object_class_with_nested_map(self):
         indexed_parameter_mapping_dict = {
@@ -335,7 +343,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         mapping.polish(table_name, header)
         self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), mapping)
         self.assertEqual(self._model.rowCount(self._list_index), 11)
-        self.assertEqual(self._model.columnCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
         self.assertEqual(index.data(), "Object class names")
         index = self._model.index(1, 0, self._list_index)
@@ -424,6 +432,8 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(index.data(), 23 + 1)
         self.assertEqual(index.data(Qt.BackgroundRole), None)
         self.assertFalse(index.data(Qt.ToolTipRole))
+        for row in range(11):
+            self.assertEqual(self._model.index(row, 3, self._list_index).data(), "")
 
     def test_data_when_mapping_relationship_class_without_objects_or_parameters(self):
         mapping = import_mapping_from_dict(
@@ -431,7 +441,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         )
         self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), mapping)
         self.assertEqual(self._model.rowCount(self._list_index), 4)
-        self.assertEqual(self._model.columnCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
         self.assertEqual(index.data(), "Relationship class names")
         index = self._model.index(1, 0, self._list_index)
@@ -440,30 +450,14 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(index.data(), "Object names")
         index = self._model.index(3, 0, self._list_index)
         self.assertEqual(index.data(), "Relationship metadata")
-        index = self._model.index(0, 1, self._list_index)
-        self.assertEqual(index.data(), "None")
-        index = self._model.index(1, 1, self._list_index)
-        self.assertEqual(index.data(), "None")
-        index = self._model.index(2, 1, self._list_index)
-        self.assertEqual(index.data(), "None")
-        index = self._model.index(3, 1, self._list_index)
-        self.assertEqual(index.data(), "None")
-        index = self._model.index(0, 2, self._list_index)
-        self.assertEqual(index.data(), None)
-        self.assertEqual(index.data(Qt.BackgroundRole), None)
-        self.assertFalse(index.data(Qt.ToolTipRole))
-        index = self._model.index(1, 2, self._list_index)
-        self.assertEqual(index.data(), None)
-        self.assertEqual(index.data(Qt.BackgroundRole), None)
-        self.assertFalse(index.data(Qt.ToolTipRole))
-        index = self._model.index(2, 2, self._list_index)
-        self.assertEqual(index.data(), None)
-        self.assertEqual(index.data(Qt.BackgroundRole), None)
-        self.assertFalse(index.data(Qt.ToolTipRole))
-        index = self._model.index(3, 2, self._list_index)
-        self.assertEqual(index.data(), None)
-        self.assertEqual(index.data(Qt.BackgroundRole), None)
-        self.assertFalse(index.data(Qt.ToolTipRole))
+        for row in range(4):
+            index = self._model.index(row, 1, self._list_index)
+            self.assertEqual(index.data(), "None")
+            index = self._model.index(row, 2, self._list_index)
+            self.assertEqual(index.data(), None)
+            self.assertEqual(index.data(Qt.BackgroundRole), None)
+            self.assertFalse(index.data(Qt.ToolTipRole))
+            self.assertEqual(self._model.index(row, 3, self._list_index).data(), "")
 
     def test_data_when_mapping_invalid_relationship_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
@@ -484,7 +478,7 @@ class TestMappingComponentsTable(unittest.TestCase):
             self._table_index.row(), self._list_index.row(), import_mapping_from_dict(mapping_dict)
         )
         self.assertEqual(self._model.rowCount(self._list_index), 10)
-        self.assertEqual(self._model.columnCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
         self.assertEqual(index.data(), "Relationship class names")
         index = self._model.index(1, 0, self._list_index)
@@ -512,6 +506,7 @@ class TestMappingComponentsTable(unittest.TestCase):
             self.assertEqual(index.data(), None)
             self.assertEqual(index.data(Qt.BackgroundRole), None)
             self.assertFalse(index.data(Qt.ToolTipRole))
+            self.assertEqual(self._model.index(row, 3, self._list_index).data(), "")
 
     def test_data_when_mapping_multidimensional_relationship_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
@@ -537,7 +532,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         mapping.polish(table_name, header)
         self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), mapping)
         self.assertEqual(self._model.rowCount(self._list_index), 12)
-        self.assertEqual(self._model.columnCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
         self.assertEqual(index.data(), "Relationship class names")
         index = self._model.index(1, 0, self._list_index)
@@ -634,6 +629,19 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(index.data(), 23 + 1)
         self.assertEqual(index.data(Qt.BackgroundRole), None)
         self.assertFalse(index.data(Qt.ToolTipRole))
+        for row in range(12):
+            self.assertEqual(self._model.index(row, 3, self._list_index).data(), "")
+
+    def test_data_when_mapping_object_class_with_regular_expression(self):
+        root_mapping = import_mapping_from_dict({"map_type": "ObjectClass", "name": None, "object": None})
+        root_mapping.filter_re = "starred"
+        root_mapping.child.child.filter_re = "choose_me"
+        self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), root_mapping)
+        self.assertEqual(self._model.rowCount(self._list_index), 3)
+        self.assertEqual(self._model.columnCount(self._list_index), 4)
+        self.assertEqual(self._model.index(0, 3, self._list_index).data(), "starred")
+        self.assertEqual(self._model.index(1, 3, self._list_index).data(), "")
+        self.assertEqual(self._model.index(2, 3, self._list_index).data(), "choose_me")
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@ Contains a model to handle source tables and import mapping.
 :date:   7.10.2021
 """
 from dataclasses import dataclass, field
+from enum import IntEnum, unique
 import re
 
 from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
@@ -35,10 +36,25 @@ from spinedb_api.import_mapping.import_mapping_compat import (
 from spinedb_api.import_mapping.type_conversion import FloatConvertSpec, StringConvertSpec, DateTimeConvertSpec
 from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.shared import PARSED_ROLE
-from ..commands import RenameMapping, SetTableChecked, UpdateTableItem, SetMappingPositionType, SetMappingPosition
+from ..commands import (
+    RenameMapping,
+    SetTableChecked,
+    UpdateTableItem,
+    SetMappingPositionType,
+    SetMappingPosition,
+    SetFilterRe,
+)
 from ..flattened_mappings import FlattenedMappings, VALUE_TYPES
 from ..mapping_colors import ERROR_COLOR
 from .mappings_model_roles import Role
+
+
+@unique
+class FlattenedColumn(IntEnum):
+    NAME = 0
+    POSITION_TYPE = 1
+    POSITION = 2
+    REGEXP = 3
 
 
 @dataclass()
@@ -144,7 +160,7 @@ class MappingsModel(QAbstractItemModel):
         if isinstance(parent_item, SourceTableItem):
             return 1
         if isinstance(parent_item, MappingListItem):
-            return 3
+            return 4
         return 0
 
     def data(self, index, role=Qt.DisplayRole):
@@ -217,34 +233,39 @@ class MappingsModel(QAbstractItemModel):
                 return None
         column = index.column()
         if role in (Qt.DisplayRole, Qt.EditRole):
-            if column == 0:
+            if column == FlattenedColumn.NAME:
                 return flattened_mappings.display_names[index.row()]
-            if column == 1:
+            if column == FlattenedColumn.POSITION_TYPE:
                 return flattened_mappings.display_position_type(index.row())
-            if column == 2:
+            if column == FlattenedColumn.POSITION:
                 display = flattened_mappings.display_position(index.row())
                 if display == "<table name>":
                     return flattened_mappings.mapping_list_item.source_table_item.name
                 return display
+            if column == FlattenedColumn.REGEXP:
+                return flattened_mappings.component_at(index.row()).filter_re
             raise RuntimeError("Column out of bounds.")
         if role == Qt.BackgroundRole:
-            if column == 0:
+            if column == FlattenedColumn.NAME:
                 return flattened_mappings.display_colors[index.row()]
-            if column == 2:
+            if column == FlattenedColumn.POSITION:
                 issues = flattened_mappings.display_row_issues(index.row())
                 if issues:
                     return ERROR_COLOR
                 return None
-        if role == Qt.ToolTipRole and column == 2:
-            issues = flattened_mappings.display_row_issues(index.row())
-            if issues:
-                return issues
-            return None
+        if role == Qt.ToolTipRole:
+            if column == FlattenedColumn.POSITION:
+                issues = flattened_mappings.display_row_issues(index.row())
+                if issues:
+                    return issues
+                return None
+            if column == FlattenedColumn.REGEXP:
+                return "Enter regular expression to filter importer data."
         return None
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return ("Target", "Source type", "Source ref.")[section]
+            return ("Target", "Source type", "Source ref.", "Filter")[section]
         return None
 
     def flags(self, index):
@@ -294,25 +315,19 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             int: flags
         """
-        editable = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
         non_editable = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        if index.column() == 0:
+        editable = non_editable | Qt.ItemIsEditable
+        column = index.column()
+        if column == FlattenedColumn.NAME:
             return non_editable
-
         if flattened_item.root_mapping.is_pivoted():
             # special case where we have pivoted data, the values are columns under pivoted indexes
             if flattened_item.display_names[index.row()].endswith("values"):
                 return non_editable
-        component = flattened_item.component_at(index.row())
-        if component.value is None:
-            if component.position == Position.hidden:
-                if index.column() <= 2:
-                    return editable
+        if column == FlattenedColumn.POSITION:
+            component = flattened_item.component_at(index.row())
+            if component.value is None and component.position == Position.header:
                 return non_editable
-            if component.position == Position.header:
-                if index.column() == 2:
-                    return non_editable
-                return editable
         return editable
 
     def index(self, row, column, parent=QModelIndex()):
@@ -708,12 +723,12 @@ class MappingsModel(QAbstractItemModel):
         if role != Qt.EditRole:
             return False
         column = index.column()
-        if column < 1 or column > 2:
+        if column < FlattenedColumn.POSITION_TYPE:
             return False
         row = index.row()
         current_type = flattened_mappings.display_position_type(row)
         current_position = flattened_mappings.display_position(row)
-        if column == 1:
+        if column == FlattenedColumn.POSITION_TYPE:
             if value == current_type:
                 return False
             parent_index = index.parent()
@@ -723,27 +738,35 @@ class MappingsModel(QAbstractItemModel):
                 SetMappingPositionType(table_row, mapping_list_row, row, self, value, current_type, current_position)
             )
             return True
-        if current_type != "None":
-            if value == current_position:
-                return False
+        if column == FlattenedColumn.POSITION:
+            if current_type != "None":
+                if value == current_position:
+                    return False
+                parent_index = index.parent()
+                mapping_list_row = parent_index.row()
+                table_row = parent_index.parent().row()
+                self._undo_stack.push(
+                    SetMappingPosition(
+                        table_row, mapping_list_row, row, self, current_type, value, current_type, current_position
+                    )
+                )
+                return True
+            # If type is "None", set it to something reasonable to try and help users
+            try:
+                value = int(value)
+            except ValueError:
+                pass
+            if isinstance(value, int):
+                return self.change_component_mapping(flattened_mappings, index, "Column", value)
+            elif isinstance(value, str):
+                return self.change_component_mapping(flattened_mappings, index, "Constant", value)
+        if column == FlattenedColumn.REGEXP:
             parent_index = index.parent()
             mapping_list_row = parent_index.row()
             table_row = parent_index.parent().row()
-            self._undo_stack.push(
-                SetMappingPosition(
-                    table_row, mapping_list_row, row, self, current_type, value, current_type, current_position
-                )
-            )
+            current_re = flattened_mappings.component_at(row).filter_re
+            self._undo_stack.push(SetFilterRe(table_row, mapping_list_row, row, self, value, current_re))
             return True
-        # If type is "None", set it to something reasonable to try and help users
-        try:
-            value = int(value)
-        except ValueError:
-            pass
-        if isinstance(value, int):
-            return self.change_component_mapping(flattened_mappings, index, "Column", value)
-        elif isinstance(value, str):
-            return self.change_component_mapping(flattened_mappings, index, "Constant", value)
         return False
 
     def set_relationship_dimension_count(self, table_row, list_row, dimension_count):
@@ -998,6 +1021,22 @@ class MappingsModel(QAbstractItemModel):
         table_index = self.index(table_row, 0)
         list_index = self.index(list_row, 0, table_index)
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
+
+    def set_filter_re(self, table_row, list_row, row, filter_re):
+        """Sets filter regular expression.
+
+        Args:
+            table_row (int): source table row index
+            list_row (int): mapping list row index
+            row (int): mapping component row index
+            filter_re (str): filter regular expression
+        """
+        flattened_mappings = self._mappings[table_row].mapping_list[list_row].flattened_mappings
+        flattened_mappings.component_at(row).filter_re = filter_re
+        table_index = self.index(table_row, 0)
+        list_index = self.index(list_row, 0, table_index)
+        index = self.index(row, FlattenedColumn.REGEXP, list_index)
+        self.dataChanged.emit(index, index, [Qt.DisplayRole])
 
     @staticmethod
     def polish_mapping(list_index, header):

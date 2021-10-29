@@ -17,8 +17,8 @@ Contains common & shared (Q)widgets.
 """
 
 import os
-from PySide2.QtCore import Qt, Signal, QUrl, QMimeData
-from PySide2.QtWidgets import QApplication, QTreeView
+from PySide2.QtCore import Qt, Signal, QUrl, QMimeData, Property
+from PySide2.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget
 from PySide2.QtGui import QDrag
 
 
@@ -149,3 +149,62 @@ class DataTreeView(QTreeView):
         super().keyPressEvent(event)
         if event.key() == Qt.Key_Delete:
             self.del_key_pressed.emit()
+
+
+class FilterEditDelegateBase(QStyledItemDelegate):
+    """Base class for regexp filter edit delegates.
+
+    Derived classes should reimplement at least ``createEditor()``.
+    """
+
+    def updateEditorGeometry(self, editor, option, index):
+        top_left = option.rect.topLeft()
+        popup_position = editor.parent().mapToGlobal(top_left)
+        size_hint = editor.sizeHint()
+        editor.setGeometry(
+            popup_position.x(), popup_position.y(), max(option.rect.width(), size_hint.width()), size_hint.height()
+        )
+
+
+class FilterEdit(QWidget):
+    """Filter regular expression editor."""
+
+    def __init__(self, ui_form, parent):
+        """
+        Args:
+            ui_form (Any): an interface from created from a .ui file
+            parent (QWidget):
+        """
+        super().__init__(parent)
+        self.setWindowFlags(Qt.Popup)
+        self._ui = ui_form
+        self._ui.setupUi(self)
+        self._focused = False
+
+    def focusInEvent(self, e):
+        self._ui.regexp_line_edit.setFocus()
+        self._ui.regexp_line_edit.selectAll()
+        super().focusInEvent(e)
+
+    def keyPressEvent(self, event):
+        # Relay key press events to the regexp line edit. Otherwise we may lose the first letter.
+        return self._ui.regexp_line_edit.keyPressEvent(event)
+
+    def regexp(self):
+        """Returns the current regular expression.
+
+        Returns:
+            str: regular expression
+        """
+        return self._ui.regexp_line_edit.text()
+
+    def set_regexp(self, regexp):
+        """Sets a regular expression for editing.
+
+        Args:
+            regexp (str): new regular expression
+        """
+        self._ui.regexp_line_edit.setText(regexp)
+
+    regexp = Property(str, regexp, set_regexp, user=True)
+    """Property used to communicate with the editor delegate."""

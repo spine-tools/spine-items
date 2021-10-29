@@ -640,14 +640,6 @@ class FlattenedMappings:
             return "Value"
         return "Default value"
 
-    def is_time_series_value(self):
-        """Returns True if components contain a time series mapping.
-
-        Returns:
-            bool: True if components contain a time series mapping, False otherwise
-        """
-        return self._value_type == "Time series"
-
     def value_mapping(self):
         """Finds first parameter value mapping component from flattened mappings.
 

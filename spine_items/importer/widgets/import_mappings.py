@@ -23,9 +23,11 @@ from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mappi
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
 from spinetoolbox.widgets.parameter_value_editor import ParameterValueEditor
 from .custom_menus import MappingListMenu
+from .filter_edit_delegate import FilterEditDelegate
 from .mime_types import MAPPING_LIST_MIME_TYPE
 from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
 from ..mvcmodels.mappings_model_roles import Role
+from ..mvcmodels.mappings_model import FlattenedColumn
 
 SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "None")
 
@@ -51,8 +53,12 @@ class ImportMappings:
         # NOTE: We make the delegate an attribute so it's never accidentally gc'ed
         self._src_type_delegate = ComboBoxDelegate(SOURCE_TYPES)
         self._parameter_constant_value_delegate = ParameterConstantValueDelegate(self._editor_window)
-        self._ui.mapping_spec_table.setItemDelegateForColumn(1, self._src_type_delegate)
-        self._ui.mapping_spec_table.setItemDelegateForColumn(2, self._parameter_constant_value_delegate)
+        self._filter_edit_delegate = FilterEditDelegate(self._editor_window)
+        self._ui.mapping_spec_table.setItemDelegateForColumn(FlattenedColumn.POSITION_TYPE, self._src_type_delegate)
+        self._ui.mapping_spec_table.setItemDelegateForColumn(
+            FlattenedColumn.POSITION, self._parameter_constant_value_delegate
+        )
+        self._ui.mapping_spec_table.setItemDelegateForColumn(FlattenedColumn.REGEXP, self._filter_edit_delegate)
         # connect signals
         self._mappings_model.modelReset.connect(self._dummify_root_indexes)
         self._mappings_model.dataChanged.connect(self._select_changed_mapping)
@@ -143,7 +149,8 @@ class ImportMappings:
             self._ui.mapping_spec_table.setRootIndex(self._mappings_model.dummy_parent())
             return
         self._ui.mapping_spec_table.setRootIndex(current)
-        self._ui.mapping_spec_table.resizeColumnsToContents()
+        for column in range(0, self._mappings_model.columnCount(current) - 1):
+            self._ui.mapping_spec_table.resizeColumnToContents(column)
 
     @Slot()
     def _dummify_root_indexes(self):
@@ -168,7 +175,8 @@ class ImportMappings:
             list_selection = QItemSelection(top_left, bottom_right)
             if list_selection.contains(list_index):
                 if Role.FLATTENED_MAPPINGS in roles:
-                    self._ui.mapping_spec_table.resizeColumnsToContents()
+                    for column in range(0, self._mappings_model.columnCount(list_index) - 1):
+                        self._ui.mapping_spec_table.resizeColumnToContents(column)
                 return
             table_index = top_left.parent()
             table_selection_model = self._ui.source_list.selectionModel()

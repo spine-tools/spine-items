@@ -218,6 +218,34 @@ class SetMappingPosition(QUndoCommand):
             )
 
 
+class SetFilterRe(QUndoCommand):
+    """Sets mapping component's filter regular expression."""
+
+    def __init__(self, table_row, list_row, row, model, new_re, previous_re):
+        """
+        Args:
+            table_row (int): source table row index
+            list_row (int): mapping list row index
+            row (int): mapping component row index
+            model (MappingsModel): model
+            new_re (str): new filter regexp
+            previous_re (str): previous filter regexp
+        """
+        super().__init__("change source mapping reference")
+        self._table_row = table_row
+        self._list_row = list_row
+        self._row = row
+        self._model = model
+        self._re = new_re
+        self._previous_re = previous_re
+
+    def redo(self):
+        self._model.set_filter_re(self._table_row, self._list_row, self._row, self._re)
+
+    def undo(self):
+        self._model.set_filter_re(self._table_row, self._list_row, self._row, self._previous_re)
+
+
 class SetConnectorOption(QUndoCommand):
     """Command to set a :class:`ConnectorManager` option."""
 

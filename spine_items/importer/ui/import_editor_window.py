@@ -262,6 +262,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
         self.mapping_spec_table = QTableView(self.dockWidgetContents_6)
         self.mapping_spec_table.setObjectName(u"mapping_spec_table")
+        self.mapping_spec_table.horizontalHeader().setStretchLastSection(True)
 
         self.verticalLayout_8.addWidget(self.mapping_spec_table)
 

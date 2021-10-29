@@ -9,23 +9,17 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """
-Contains mapping filter editor delegate.
+Contains regular expression filter editor delegate.
 
 :author: A. Soininen (VTT)
-:date:   13.4.2021
+:date:   1.11.2021
 """
-from spinedb_api.export_mapping.export_mapping import ParameterValueTypeMapping
 from spine_items.ui import default_filter_editor
 from spine_items.widgets import FilterEdit, FilterEditDelegateBase
-from ..mvcmodels.mapping_editor_table_model import MappingEditorTableModel
-from ..ui import value_type_filter_editor
 
 
 class FilterEditDelegate(FilterEditDelegateBase):
-    """Edit delegate for Mapping table's filter column."""
+    """Edit delegate for mapping components' filter column."""
 
     def createEditor(self, parent, option, index):
-        mapping = index.data(MappingEditorTableModel.MAPPING_ITEM_ROLE)
-        if isinstance(mapping, ParameterValueTypeMapping):
-            return FilterEdit(value_type_filter_editor.Ui_Form(), parent)
         return FilterEdit(default_filter_editor.Ui_Form(), parent)
