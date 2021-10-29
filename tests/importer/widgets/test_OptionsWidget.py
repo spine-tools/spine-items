@@ -33,6 +33,7 @@ class TestOptionsWidget(unittest.TestCase):
     def test_spin_box_change_signalling(self):
         option_template = {"number": {"label": "int value", "type": int, "default": 0}}
         connector = MagicMock()
+        connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(connector, self._undo_stack)
         layout = widget.form_layout
@@ -48,6 +49,7 @@ class TestOptionsWidget(unittest.TestCase):
     def test_line_edit_change_signalling(self):
         option_template = {"text": {"label": "text value", "type": str, "default": ""}}
         connector = MagicMock()
+        connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(connector, self._undo_stack)
         layout = widget.form_layout
@@ -65,6 +67,7 @@ class TestOptionsWidget(unittest.TestCase):
             "choice": {"label": "a choice", "type": list, "Items": ["choice a", "choice b"], "default": "choice a"}
         }
         connector = MagicMock()
+        connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(connector, self._undo_stack)
         layout = widget.form_layout
@@ -80,6 +83,7 @@ class TestOptionsWidget(unittest.TestCase):
     def test_check_box_change_signalling(self):
         option_template = {"yesno": {"label": "check me", "type": bool, "default": True}}
         connector = MagicMock()
+        connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(connector, self._undo_stack)
         layout = widget.form_layout

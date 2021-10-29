@@ -122,7 +122,7 @@ class ImportSources(QObject):
         self._connector.request_tables()
 
     @Slot(QModelIndex, QModelIndex)
-    def _change_selected_table(self, selected, deselected):
+    def _change_selected_table(self, selected, _deselected):
         """
         Sets selected table and requests data from connector
         """

@@ -49,7 +49,8 @@ class OptionsWidget(QWidget):
         """
         super().__init__()
         self._connector = connector
-        self._options = connector.connection.OPTIONS
+        self._options = connector.connection.BASE_OPTIONS
+        self._options.update(connector.connection.OPTIONS)
         self._undo_stack = undo_stack
         self._undo_enabled = True
         self._current_source_table = None
@@ -67,8 +68,7 @@ class OptionsWidget(QWidget):
         self._set_options(self._connector.current_table)
 
     def _build_ui(self):
-        """Builds ui from specification in dict
-        """
+        """Builds ui from specification in dict"""
         for key, options in self._options.items():
             ui_element = self._ui_choices[options["type"]]()
             maximum = options.get('Maximum', None)
@@ -77,6 +77,9 @@ class OptionsWidget(QWidget):
             minimum = options.get('Minimum', None)
             if minimum is not None:
                 ui_element.setMinimum(minimum)
+            special_value_text = options.get('SpecialValueText', None)
+            if special_value_text is not None:
+                ui_element.setSpecialValueText(special_value_text)
             max_length = options.get('MaxLength', None)
             if max_length is not None:
                 ui_element.setMaxLength(max_length)

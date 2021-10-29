@@ -22,8 +22,7 @@ from spinetoolbox.helpers import busy_effect
 
 
 class ConnectionManager(QObject):
-    """Class to manage data connections in another thread.
-    """
+    """Class to manage data connections in another thread."""
 
     tables_requested = Signal()
     data_requested = Signal(str, dict, int, int)
@@ -146,15 +145,16 @@ class ConnectionManager(QObject):
             table_mappings (dict): dict with filename as key and a list of mappings as value
             max_rows (int): number of rows to read, if -1 read all rows
         """
-        if self.is_connected:
-            options = {}
-            types = {}
-            row_types = {}
-            for table_name in table_mappings:
-                options[table_name] = self._table_options.get(table_name, {})
-                types.setdefault(table_name, self._table_types.get(table_name, {}))
-                row_types.setdefault(table_name, self._table_row_types.get(table_name, {}))
-            self.mapped_data_requested.emit(table_mappings, options, types, row_types, max_rows)
+        if not self.is_connected:
+            return
+        options = {}
+        types = {}
+        row_types = {}
+        for table_name in table_mappings:
+            options[table_name] = self._table_options.get(table_name, {})
+            types.setdefault(table_name, self._table_types.get(table_name, {}))
+            row_types.setdefault(table_name, self._table_row_types.get(table_name, {}))
+        self.mapped_data_requested.emit(table_mappings, options, types, row_types, max_rows)
 
     def request_default_mapping(self):
         """Request default mapping from worker."""
@@ -253,7 +253,10 @@ class ConnectionManager(QObject):
         current_options = self._table_options.get(self._current_table, {})
         option_value = current_options.get(option_key)
         if option_value is None:
-            option_specification = self._connection.OPTIONS[option_key]
+            option_specification = self._connection.OPTIONS.get(option_key)
+            if option_specification is not None:
+                return option_specification["default"]
+            option_specification = self._connection.BASE_OPTIONS[option_key]
             return option_specification["default"]
         return option_value
 
@@ -284,8 +287,7 @@ class ConnectionManager(QObject):
         self._table_row_types.update(types)
 
     def close_connection(self):
-        """Closes and deletes thread and worker
-        """
+        """Closes and deletes thread and worker"""
         self._is_connected = False
         self.connection_closed.emit()
         if self._worker:

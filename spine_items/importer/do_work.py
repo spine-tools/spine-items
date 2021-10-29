@@ -53,7 +53,7 @@ def do_work(mapping, cancel_on_error, logs_dir, source_filepaths, connector, url
             return (False,)
         try:
             data, errors = connector.get_mapped_data(
-                table_mappings, table_options, table_column_convert_specs, table_row_convert_specs, max_rows=-1
+                table_mappings, table_options, table_column_convert_specs, table_row_convert_specs
             )
         except spinedb_api.InvalidMapping as error:
             logger.msg_error.emit(f"Failed to import: {error}")
