@@ -15,7 +15,7 @@ Contains a simple filter widget for skip column filtering in mapping options.
 :author: A. Soininen (VTT)
 :date:   20.10.2021
 """
-from mvcmodels.filter_checkbox_list_model import DataToValueFilterCheckboxListModel
+from spinetoolbox.mvcmodels.filter_checkbox_list_model import DataToValueFilterCheckboxListModel
 from spinetoolbox.widgets.custom_qwidgets import FilterWidgetBase
 
 
