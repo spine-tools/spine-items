@@ -74,6 +74,31 @@ class ExporterExecutableItemBase(ExecutableItemBase):
             manifest = json.load(manifest_file)
         self._result_files = {label: set(files) for label, files in manifest.items()}
 
+    def _database_output_file_names(self, database_urls):
+        """
+        Connects full database urls to output file names.
+
+        Args:
+            database_urls (Iterable of str): full database URLs including filters
+
+        Returns:
+            dict: a mapping from full database URL to output file name
+        """
+        databases = {}
+        for full_url in database_urls:
+            url = clear_filter_configs(full_url)
+            database = next((db for db in self._databases if db.url == url), None)
+            if database is None:
+                self._logger.msg_warning.emit(f"<b>{self.name}</b>: No settings for database {url}. Skipping.")
+                continue
+            if not database.output_file_name:
+                self._logger.msg_warning.emit(
+                    f"<b>{self.name}</b>: No file name given to export database {url}. Skipping."
+                )
+                continue
+            databases[full_url] = database.output_file_name
+        return databases
+
     def _databases_and_forks(self, database_urls):
         """
         Connects output file names to scenario and tool filters.

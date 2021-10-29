@@ -21,12 +21,15 @@ from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
 from spinedb_api.spine_io.exporters.excel_writer import ExcelWriter
 from spinedb_api.spine_io.exporters.gdx_writer import GdxWriter
 from spinedb_api.spine_io.exporters.sql_writer import SqlWriter
-from spinedb_api import clear_filter_configs, DatabaseMapping, SpineDBAPIError
+from spinedb_api import DatabaseMapping, SpineDBAPIError
+from spine_engine.utils.helpers import write_filter_id_file
 from spine_items.utils import subdirectory_for_fork
 from .specification import Specification, OutputFormat
 
 
-def do_work(specification, output_time_stamps, cancel_on_error, gams_path, out_dir, databases, forks, logger):
+def do_work(
+    specification, output_time_stamps, cancel_on_error, gams_path, out_dir, databases, filter_id, filter_id_hash, logger
+):
     """
     Exports databases using given specification as export mapping.
 
@@ -37,7 +40,8 @@ def do_work(specification, output_time_stamps, cancel_on_error, gams_path, out_d
         gams_path (str): path to GAMS installation
         out_dir (str): base output directory
         databases (dict): databases to export
-        forks (dict): mapping from base database URL to a set of fork names
+        filter_id (str): filter id
+        filter_id_hash (str): hashed filter id
         logger (LoggerInterface): a logger
 
     Returns:
@@ -47,9 +51,7 @@ def do_work(specification, output_time_stamps, cancel_on_error, gams_path, out_d
     successes = list()
     written_files = dict()
     for url, output_file_name in databases.items():
-        out_path = subdirectory_for_fork(
-            output_file_name, out_dir, output_time_stamps, forks[clear_filter_configs(url)]
-        )
+        out_path = subdirectory_for_fork(output_file_name, out_dir, output_time_stamps, filter_id_hash)
         try:
             database_map = DatabaseMapping(url)
         except SpineDBAPIError as error:
@@ -90,6 +92,8 @@ def do_work(specification, output_time_stamps, cancel_on_error, gams_path, out_d
                 else:
                     file_anchor = f"<a style='color:#BB99FF;' title='{file}' href='file:///{file}'>{file.name}</a>"
                     logger.msg_success.emit(f"File {file_anchor} written.")
+                if filter_id:
+                    write_filter_id_file(filter_id, Path(out_path).parent)
                 successes.append(True)
         finally:
             database_map.connection.close()

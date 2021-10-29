@@ -29,7 +29,7 @@ import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
-from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_executable
+from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_executable, write_filter_id_file
 from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources
@@ -468,7 +468,7 @@ class ExecutableItem(ExecutableItemBase):
                     self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
                 return ItemExecutionFinishState.FAILURE
             return_code = self._tool_instance.execute()
-        self._handle_output_files(return_code, execution_dir)
+        self._handle_output_files(return_code, self._filter_id, execution_dir)
         self._tool_instance = None
         # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
         return ItemExecutionFinishState.SUCCESS if return_code == 0 else ItemExecutionFinishState.FAILURE
@@ -517,7 +517,7 @@ class ExecutableItem(ExecutableItemBase):
                 file_paths[file_path] = found_files
         return file_paths
 
-    def _handle_output_files(self, return_code, execution_dir):
+    def _handle_output_files(self, return_code, filter_id, execution_dir):
         """Copies Tool specification output files from work directory to result directory.
 
         Args:
@@ -542,6 +542,8 @@ class ExecutableItem(ExecutableItemBase):
         result_anchor = (
             f"<a style='color:#BB99FF;' title='{result_path}'" f"href='file:///{result_path}'>results directory</a>"
         )
+        if filter_id:
+            write_filter_id_file(filter_id, os.path.dirname(result_path))
         self._logger.msg.emit(f"*** Archiving output files to {result_anchor} ***")
         if self._tool_specification.outputfiles:
             saved_files, failed_files = self._copy_output_files(result_path, execution_dir)

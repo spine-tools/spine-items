@@ -210,7 +210,7 @@ class ExporterNotifications:
         self.missing_specification = False
 
 
-def subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, fork):
+def subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, filter_id_hash):
     """
     Creates scenario/tool based output directory for forked workflow.
 
@@ -218,7 +218,7 @@ def subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, fork):
         output_file_name (str): file name
         data_dir (str): project item's data directory
         output_time_stamps (bool): True if time stamp data should be included in the output path
-        fork (list of str): list of scenario and tool names
+        filter_id_hash (str): hashed filter id
 
     Returns:
         str: absolute output path
@@ -228,12 +228,11 @@ def subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, fork):
         time_stamp = "run@" + stamp.isoformat(timespec="seconds").replace(":", ".")
     else:
         time_stamp = ""
-    fork_name = ".".join(fork)
-    if fork_name:
+    if filter_id_hash:
         if time_stamp:
-            path = os.path.join(data_dir, fork_name + "_" + time_stamp, output_file_name)
+            path = os.path.join(data_dir, filter_id_hash + "_" + time_stamp, output_file_name)
         else:
-            path = os.path.join(data_dir, fork_name, output_file_name)
+            path = os.path.join(data_dir, filter_id_hash, output_file_name)
     else:
         path = os.path.join(data_dir, time_stamp, output_file_name)
     return path

@@ -59,8 +59,8 @@ class ExecutableItem(ExporterExecutableItemBase):
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")
             return ItemExecutionFinishState.SKIPPED
         database_urls = [r.url for r in forward_resources if r.type_ == "database"]
-        databases, self._forks = self._databases_and_forks(database_urls)
-        if not databases and not self._forks:
+        databases = self._database_output_file_names(database_urls)
+        if not databases:
             return ItemExecutionFinishState.SKIPPED
         gams_system_directory = ""
         if self._specification.output_format == OutputFormat.GDX:
@@ -78,7 +78,8 @@ class ExecutableItem(ExporterExecutableItemBase):
                 gams_system_directory,
                 str(out_dir),
                 databases,
-                self._forks,
+                self._filter_id,
+                self.hash_filter_id(),
                 self._logger,
             ),
         )
