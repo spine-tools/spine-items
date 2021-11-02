@@ -14,7 +14,7 @@ Contains utilities to scan for Data Connection's output resources.
 :authors: A. Soininen (VTT)
 :date:    4.12.2020
 """
-import os.path
+from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource
 from spine_engine.utils.serialization import path_in_dir
 
@@ -33,8 +33,16 @@ def scan_for_resources(provider, files, project_dir):
     """
     resources = list()
     for ref in files:
-        if path_in_dir(ref, project_dir):
-            resource = file_resource(provider.name, ref, label=os.path.basename(ref))
+        if path_in_dir(ref, provider.data_dir):
+            resource = file_resource(
+                provider.name,
+                ref,
+                label=f"<{provider.name}>/" + Path(ref).relative_to(provider.data_dir).as_posix(),
+            )
+        elif path_in_dir(ref, project_dir):
+            resource = file_resource(
+                provider.name, ref, label="<project>/" + Path(ref).relative_to(project_dir).as_posix()
+            )
         else:
             resource = file_resource(provider.name, ref)
         resources.append(resource)
