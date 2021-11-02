@@ -35,9 +35,7 @@ def scan_for_resources(provider, files, project_dir):
     for ref in files:
         if path_in_dir(ref, provider.data_dir):
             resource = file_resource(
-                provider.name,
-                ref,
-                label=f"<{provider.name}>/" + Path(ref).relative_to(provider.data_dir).as_posix(),
+                provider.name, ref, label=f"<{provider.name}>/" + Path(ref).relative_to(provider.data_dir).as_posix()
             )
         elif path_in_dir(ref, project_dir):
             resource = file_resource(

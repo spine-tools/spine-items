@@ -61,12 +61,10 @@ class DcDataContextMenu(CustomContextMenu):
             # If no item at index
             self.add_action("New file...")
             self.addSeparator()
-            self.add_action("Open Spine Datapackage Editor")
             self.add_action("Open directory...")
         else:
             self.add_action("Edit...")
             self.add_action("New file...")
             self.add_action("Remove file(s)")
             self.addSeparator()
-            self.add_action("Open Spine Datapackage Editor")
             self.add_action("Open directory...")

@@ -109,8 +109,6 @@ class DataConnectionPropertiesWidget(QWidget):
             dc.open_data_file(ind)
         elif option == "Remove file(s)":
             dc.remove_files()
-        elif option == "Open Spine Datapackage Editor":
-            dc.show_spine_datapackage_form()
         elif option == "Open directory...":
             dc.open_directory()
         return

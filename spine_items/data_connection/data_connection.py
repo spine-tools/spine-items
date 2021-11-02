@@ -208,7 +208,7 @@ class DataConnection(ProjectItem):
 
     def _remove_data_file(self, path):
         for k in reversed(range(self.data_model.rowCount())):
-            data_filepath = self.data_model.item(k).text()
+            data_filepath = self.data_model.item(k).data(Qt.UserRole)
             if _samepath(data_filepath, path):
                 self.data_model.removeRow(k)
                 return True
@@ -293,8 +293,8 @@ class DataConnection(ProjectItem):
         if not index.isValid():
             logging.error("Index not valid")
             return
-        data_file = self.data_files()[index.row()]
-        url = "file:///" + os.path.join(self.data_dir, data_file)
+        data_file = index.data(Qt.UserRole)
+        url = "file:///" + data_file
         # noinspection PyTypeChecker, PyCallByClass, PyArgumentList
         res = open_url(url)
         if not res:
@@ -334,17 +334,10 @@ class DataConnection(ProjectItem):
         if not indexes:  # Nothing selected
             self._logger.msg.emit("Please select files to remove")
             return
-        file_list = list()
-        for index in indexes:
-            file_at_index = self.data_model.itemFromIndex(index).data(Qt.DisplayRole)
-            file_list.append(file_at_index)
+        file_list = [self.data_model.itemFromIndex(index).data(Qt.DisplayRole) for index in indexes]
         files = "\n".join(file_list)
-        msg = (
-            "The following files will be removed permanently from the project\n\n"
-            "{0}\n\n"
-            "Are you sure?".format(files)
-        )
-        title = "Remove {0} File(s)".format(len(file_list))
+        msg = "The following files will be removed permanently from the project\n\n" f"{files}\n\n" "Are you sure?"
+        title = f"Remove {len(file_list)} File(s)"
         message_box = QMessageBox(
             QMessageBox.Question, title, msg, QMessageBox.Ok | QMessageBox.Cancel, parent=self._toolbox
         )
@@ -368,12 +361,8 @@ class DataConnection(ProjectItem):
         """Returns a list of files that are in the data directory."""
         if not os.path.isdir(self.data_dir):
             return []
-        files = list()
         with os.scandir(self.data_dir) as scan_iterator:
-            for entry in scan_iterator:
-                if entry.is_file():
-                    files.append(entry.path)
-        return files
+            return [entry.path for entry in scan_iterator if entry.is_file()]
 
     def populate_reference_list(self):
         """List file references in QTreeView.
@@ -399,12 +388,11 @@ class DataConnection(ProjectItem):
 
     def _append_data_files_to_model(self, *paths):
         for path in paths:
-            item = QStandardItem(path)
+            item = QStandardItem(os.path.basename(path))
             item.setFlags(~Qt.ItemIsEditable)
             icon = QFileIconProvider().icon(QFileInfo(path))
             item.setData(icon, Qt.DecorationRole)
-            full_path = os.path.join(self.data_dir, path)  # For drag and drop
-            item.setData(full_path, Qt.UserRole)
+            item.setData(path, Qt.UserRole)
             self.data_model.appendRow(item)
 
     def update_name_label(self):
