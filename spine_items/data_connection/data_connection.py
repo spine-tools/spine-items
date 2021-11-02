@@ -55,7 +55,7 @@ class DataConnection(ProjectItem):
         self.reference_model = QStandardItemModel()  # References to files
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
         self.file_system_watcher = None
-        self.references = [ref for ref in references if os.path.isfile(ref)]
+        self.references = [ref for ref in references]
         self.populate_reference_list()
         # Populate data (files) model
         self.populate_data_list()
@@ -375,8 +375,15 @@ class DataConnection(ProjectItem):
         for path in paths:
             item = QStandardItem(path)
             item.setFlags(~Qt.ItemIsEditable)
-            item.setData(path, Qt.ToolTipRole)
-            item.setData(self._toolbox.style().standardIcon(QStyle.SP_FileLinkIcon), Qt.DecorationRole)
+            if os.path.exists(path):
+                tooltip = path
+                icon = self._toolbox.style().standardIcon(QStyle.SP_FileLinkIcon)
+            else:
+                self._logger.msg_error.emit(f"<b>{self.name}:</b> Could not find file reference {path}.")
+                tooltip = "The file is missing."
+                icon = self._toolbox.style().standardIcon(QStyle.SP_MessageBoxCritical)
+            item.setData(tooltip, Qt.ToolTipRole)
+            item.setData(icon, Qt.DecorationRole)
             self.reference_model.appendRow(item)
 
     def populate_data_list(self):
@@ -414,6 +421,9 @@ class DataConnection(ProjectItem):
                 "This Data Connection does not have any references or data. "
                 "Add some in the Data Connection Properties panel."
             )
+        missing_references = [ref for ref in self.references if not os.path.exists(ref)]
+        if missing_references:
+            self.add_notification("Cannot find some file references. Please, check that the files exist.")
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
