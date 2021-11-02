@@ -33,14 +33,14 @@ class DcRefContextMenu(CustomContextMenu):
         super().__init__(parent, position)
         if not index.isValid():
             # If no item at index
-            self.add_action("Add reference(s)")
+            self.add_action("Add reference(s)...")
             self.add_action("Remove reference(s)")
             self.add_action("Copy reference(s) to project")
         else:
             self.add_action("Edit...")
             self.add_action("Open containing directory...")
             self.addSeparator()
-            self.add_action("Add reference(s)")
+            self.add_action("Add reference(s)...")
             self.add_action("Remove reference(s)")
             self.add_action("Copy reference(s) to project")
 

@@ -77,8 +77,8 @@ class DataConnectionPropertiesWidget(QWidget):
             self._toolbox.open_anchor(QUrl(file_url, QUrl.TolerantMode))
         elif option == "Edit...":
             dc.open_reference(ind)
-        elif option == "Add reference(s)":
-            dc.add_references()
+        elif option == "Add reference(s)...":
+            dc.show_add_references_dialog()
         elif option == "Remove reference(s)":
             dc.remove_references()
         elif option == "Copy reference(s) to project":
