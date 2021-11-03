@@ -208,7 +208,9 @@ class TestDataConnection(unittest.TestCase):
             self.data_connection.show_add_references_dialog()
         self.data_connection.restore_selections()
         ref_index = self.data_connection.reference_model.index(0, 0)
-        self._properties_tab.ui.treeView_dc_references.selectionModel().select(ref_index, QItemSelectionModel.ClearAndSelect)
+        self._properties_tab.ui.treeView_dc_references.selectionModel().select(
+            ref_index, QItemSelectionModel.ClearAndSelect
+        )
         with signal_waiter(self.data_connection.file_system_watcher.file_added) as waiter:
             self.data_connection.copy_to_project()
             waiter.wait()
@@ -340,6 +342,7 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         index = model.index(0, 0)
         self.assertEqual(index.data(), "renamed.dat")
         self.assertEqual(index.data(Qt.UserRole), str(self._item_dir / "renamed.dat"))
+
 
 if __name__ == "__main__":
     unittest.main()
