@@ -22,8 +22,11 @@ from pathlib import Path
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock, NonCallableMagicMock
-from PySide2.QtWidgets import QApplication
+
+from PySide2.QtCore import QItemSelectionModel
+from PySide2.QtWidgets import QApplication, QMessageBox
 from PySide2.QtGui import QStandardItemModel, Qt
+from spinetoolbox.helpers import signal_waiter
 from spine_items.data_connection.data_connection import DataConnection
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.data_connection.item_info import ItemInfo
@@ -40,7 +43,7 @@ class TestDataConnection(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
+        self._properties_tab = mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
 
     def tearDown(self):
         self.data_connection.tear_down()
@@ -179,6 +182,55 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(0, len(self.data_connection.file_references()))
             self.assertEqual(0, self.data_connection.reference_model.rowCount())
 
+    def test_rename_reference(self):
+        temp_dir = Path(self._temp_dir.name, "references")
+        temp_dir.mkdir()
+        a = Path(temp_dir, "a.txt")
+        a.touch()
+        with mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames:
+            mock_filenames.return_value = ([str(a)], "*.*")
+            self.data_connection.show_add_references_dialog()
+        renamed_file = a.parent / "renamed.txt"
+        with signal_waiter(self.data_connection.file_system_watcher.file_renamed) as waiter:
+            a.rename(renamed_file)
+            waiter.wait()
+        index = self.data_connection.reference_model.index(0, 0)
+        self.assertEqual(index.data(), str(renamed_file))
+        self.assertEqual(self.data_connection.file_references(), [str(renamed_file)])
+
+    def test_copy_reference_to_project(self):
+        temp_dir = Path(self._temp_dir.name, "references")
+        temp_dir.mkdir()
+        a = Path(temp_dir, "a.txt")
+        a.touch()
+        with mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames:
+            mock_filenames.return_value = ([str(a)], "*.*")
+            self.data_connection.show_add_references_dialog()
+        self.data_connection.restore_selections()
+        ref_index = self.data_connection.reference_model.index(0, 0)
+        self._properties_tab.ui.treeView_dc_references.selectionModel().select(ref_index, QItemSelectionModel.ClearAndSelect)
+        with signal_waiter(self.data_connection.file_system_watcher.file_added) as waiter:
+            self.data_connection.copy_to_project()
+            waiter.wait()
+        self.assertEqual(self.data_connection.reference_model.rowCount(), 0)
+        self.assertTrue(Path(self.project.items_dir, "dc", "a.txt").exists())
+        self.assertEqual(self.data_connection.data_model.rowCount(), 1)
+        index = self.data_connection.data_model.index(0, 0)
+        self.assertEqual(index.data(), "a.txt")
+        self.assertEqual(index.data(Qt.UserRole), os.path.join(self.project.items_dir, "dc", "a.txt"))
+
+    def test_create_data_file(self):
+        with mock.patch("spine_items.data_connection.data_connection.QInputDialog") as mock_input_dialog:
+            mock_input_dialog.getText.return_value = ["data.csv"]
+            with signal_waiter(self.data_connection.file_system_watcher.file_added) as waiter:
+                self.data_connection.make_new_file()
+                waiter.wait()
+        model = self.data_connection.data_model
+        self.assertEqual(model.rowCount(), 1)
+        index = model.index(0, 0)
+        self.assertEqual(index.data(), "data.csv")
+        self.assertEqual(index.data(Qt.UserRole), os.path.join(self.project.items_dir, "dc", "data.csv"))
+
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.data_connection.item_dict()
@@ -234,6 +286,60 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(1, len(watched_dirs))
         self.assertEqual(self.data_connection.data_dir, watched_dirs[0])
 
+
+class TestDataConnectionWithInitialDataFile(unittest.TestCase):
+    def setUp(self):
+        """Set up."""
+        self.toolbox = create_mock_toolbox()
+        factory = DataConnectionFactory()
+        item_dict = {"type": "Data Connection", "description": "", "references": [], "x": 0, "y": 0}
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
+        self._item_dir = Path(self.project.items_dir, "dc")
+        self._item_dir.mkdir(parents=True)
+        self._data_file_path = self._item_dir / "data.csv"
+        self._data_file_path.touch()
+        self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
+        self._properties_tab = mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
+
+    def tearDown(self):
+        self.data_connection.tear_down()
+        self._temp_dir.cleanup()
+
+    @classmethod
+    def setUpClass(cls):
+        if not QApplication.instance():
+            QApplication()
+
+    def test_data_file_in_list(self):
+        model = self.data_connection.data_model
+        self.assertEqual(model.rowCount(), 1)
+        index = model.index(0, 0)
+        self.assertEqual(index.data(), "data.csv")
+        self.assertEqual(index.data(Qt.UserRole), str(self._data_file_path))
+
+    def test_remove_data_file(self):
+        self.data_connection.restore_selections()
+        index = self.data_connection.data_model.index(0, 0)
+        self._properties_tab.ui.treeView_dc_data.selectionModel().select(index, QItemSelectionModel.ClearAndSelect)
+        with mock.patch("spine_items.data_connection.data_connection.QMessageBox") as mock_message_box:
+            mock_message_box.exec_.return_value = QMessageBox.Ok
+            with signal_waiter(self.data_connection.file_system_watcher.file_removed) as waiter:
+                self.data_connection.remove_files()
+                waiter.wait()
+        model = self.data_connection.data_model
+        self.assertEqual(model.rowCount(), 0)
+
+    def test_rename_data_file(self):
+        with signal_waiter(self.data_connection.file_system_watcher.file_renamed) as waiter:
+            self._data_file_path.rename(self._item_dir / "renamed.dat")
+            waiter.wait()
+        model = self.data_connection.data_model
+        self.assertEqual(model.rowCount(), 1)
+        index = model.index(0, 0)
+        self.assertEqual(index.data(), "renamed.dat")
+        self.assertEqual(index.data(Qt.UserRole), str(self._item_dir / "renamed.dat"))
 
 if __name__ == "__main__":
     unittest.main()

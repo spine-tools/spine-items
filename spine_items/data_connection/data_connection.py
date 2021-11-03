@@ -26,10 +26,10 @@ from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QStyle, QFileIconProvi
 from spine_engine.project_item.project_item_resource import file_resource
 from spine_engine.utils.serialization import deserialize_path, serialize_path, path_in_dir
 from spinetoolbox.project_item.project_item import ProjectItem
-from spinetoolbox.custom_file_system_watcher import CustomFileSystemWatcher
 from spinetoolbox.helpers import open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand, MoveReferenceToData
+from .custom_file_system_watcher import CustomFileSystemWatcher
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
@@ -63,7 +63,7 @@ class DataConnection(ProjectItem):
     def set_up(self):
         super().set_up()
         self.file_system_watcher = CustomFileSystemWatcher(self)
-        self.file_system_watcher.add_persistent_file_paths(self.references)
+        self.file_system_watcher.add_persistent_file_paths(ref for ref in self.references if os.path.exists(ref))
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.file_system_watcher.file_removed.connect(self._handle_file_removed)
         self.file_system_watcher.file_renamed.connect(self._handle_file_renamed)
@@ -161,7 +161,7 @@ class DataConnection(ProjectItem):
     def do_add_references(self, paths):
         paths = [os.path.abspath(path) for path in paths]
         self.references += paths
-        self.file_system_watcher.add_persistent_file_paths(paths)
+        self.file_system_watcher.add_persistent_file_paths(path for path in paths if os.path.exists(path))
         self._append_references_to_model(*paths)
         self._check_notifications()
         self._resources_to_successors_changed()
@@ -205,6 +205,7 @@ class DataConnection(ProjectItem):
                 item.setText(new_path)
                 self.references[k] = new_path
                 return True
+        return False
 
     def _remove_data_file(self, path):
         for k in reversed(range(self.data_model.rowCount())):
@@ -212,13 +213,16 @@ class DataConnection(ProjectItem):
             if _samepath(data_filepath, path):
                 self.data_model.removeRow(k)
                 return True
+        return False
 
     def _rename_data_file(self, old_path, new_path):
         for k in range(self.data_model.rowCount()):
             item = self.data_model.item(k)
-            if _samepath(item.text(), old_path):
-                item.setText(new_path)
+            if _samepath(item.data(Qt.UserRole), old_path):
+                item.setText(os.path.basename(new_path))
+                item.setData(new_path, Qt.UserRole)
                 return True
+        return False
 
     @Slot(str)
     def _handle_file_removed(self, path):

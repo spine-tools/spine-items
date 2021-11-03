@@ -57,6 +57,7 @@ def mock_finish_project_item_construction(factory, project_item, mock_toolbox):
     properties_widget = factory.make_properties_widget(mock_toolbox)
     project_item.set_properties_ui(properties_widget.ui)
     project_item.set_up()
+    return properties_widget
 
 
 def create_toolboxui_with_project(project_dir):
