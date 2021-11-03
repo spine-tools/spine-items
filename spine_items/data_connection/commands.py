@@ -15,16 +15,18 @@ Undo/redo commands for the DataConnection project item.
 :authors: M. Marin (KTH)
 :date:   5.5.2020
 """
+from pathlib import Path
 from spine_items.commands import SpineToolboxCommand
 
 
 class AddDCReferencesCommand(SpineToolboxCommand):
-    def __init__(self, dc, paths):
-        """Command to add DC references.
+    """Command to add DC references."""
 
+    def __init__(self, dc, paths):
+        """
         Args:
             dc (DataConnection): the DC
-            paths (set(str)): set of paths to add
+            paths (set of str): set of paths to add
         """
         super().__init__()
         self.dc = dc
@@ -39,12 +41,13 @@ class AddDCReferencesCommand(SpineToolboxCommand):
 
 
 class RemoveDCReferencesCommand(SpineToolboxCommand):
-    def __init__(self, dc, paths):
-        """Command to remove DC references.
+    """Command to remove DC references."""
 
+    def __init__(self, dc, paths):
+        """
         Args:
             dc (DataConnection): the DC
-            paths (list(str)): list of paths to remove
+            paths (list of str): list of paths to remove
         """
         super().__init__()
         self.dc = dc
@@ -56,3 +59,26 @@ class RemoveDCReferencesCommand(SpineToolboxCommand):
 
     def undo(self):
         self.dc.do_add_references(self.paths)
+
+
+class MoveReferenceToData(SpineToolboxCommand):
+    """Command to move DC references to data."""
+
+    def __init__(self, dc, paths):
+        """
+        Args:
+            dc (DataConnection): the DC
+            paths (list of str): list of paths to move
+        """
+        super().__init__()
+        self._dc = dc
+        self._paths = paths
+        self.setText("copy references to data")
+
+    def redo(self):
+        self._dc.do_copy_to_project(self._paths)
+        self._dc.do_remove_references(self._paths)
+
+    def undo(self):
+        self._dc.delete_files_from_project([Path(p).name for p in self._paths])
+        self._dc.do_add_references(self._paths)

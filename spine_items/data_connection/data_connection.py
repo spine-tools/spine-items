@@ -29,7 +29,7 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.custom_file_system_watcher import CustomFileSystemWatcher
 from spinetoolbox.helpers import open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
-from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand
+from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand, MoveReferenceToData
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
@@ -258,15 +258,22 @@ class DataConnection(ProjectItem):
         if not selected_indexes:
             self._logger.msg_warning.emit("No files to copy")
             return
-        for index in selected_indexes:
-            file_path = self.reference_model.itemFromIndex(index).data(Qt.DisplayRole)
-            if not os.path.exists(file_path):
-                self._logger.msg_error.emit(f"File <b>{file_path}</b> does not exist")
+        self._toolbox.undo_stack.push(MoveReferenceToData(self, [index.data() for index in selected_indexes]))
+
+    def do_copy_to_project(self, paths):
+        """Copies given files to item's data directory.
+
+        Args:
+            paths (Iterable of str): paths to copy
+        """
+        for path in paths:
+            if not os.path.exists(path):
+                self._logger.msg_error.emit(f"File <b>{path}</b> does not exist")
                 continue
-            filename = os.path.split(file_path)[1]
+            filename = os.path.basename(path)
             self._logger.msg.emit(f"Copying file <b>{filename}</b> to Data Connection <b>{self.name}</b>")
             try:
-                shutil.copy(file_path, self.data_dir)
+                shutil.copy(path, self.data_dir)
             except OSError:
                 self._logger.msg_error.emit("[OSError] Copying failed")
 
@@ -334,7 +341,7 @@ class DataConnection(ProjectItem):
         if not indexes:  # Nothing selected
             self._logger.msg.emit("Please select files to remove")
             return
-        file_list = [self.data_model.itemFromIndex(index).data(Qt.DisplayRole) for index in indexes]
+        file_list = [index.data() for index in indexes]
         files = "\n".join(file_list)
         msg = "The following files will be removed permanently from the project\n\n" f"{files}\n\n" "Are you sure?"
         title = f"Remove {len(file_list)} File(s)"
@@ -345,7 +352,15 @@ class DataConnection(ProjectItem):
         answer = message_box.exec_()
         if answer == QMessageBox.Cancel:
             return
-        for filename in file_list:
+        self.delete_files_from_project(file_list)
+
+    def delete_files_from_project(self, file_names):
+        """Deletes given files from item's data directory.
+
+        Args:
+            file_names (Iterable of str): files to delete
+        """
+        for filename in file_names:
             path_to_remove = os.path.join(self.data_dir, filename)
             try:
                 os.remove(path_to_remove)
