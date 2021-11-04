@@ -234,6 +234,10 @@ class Importer(ProjectItem):
         self._file_model.update(r for r in resources if r.type_ != "database")
         self._check_notifications()
 
+    def replace_resource_from_upstream(self, old, new):
+        """See base class."""
+        self._file_model.replace(old, new)
+
     def _check_notifications(self):
         self.clear_notifications()
         if not self.specification():

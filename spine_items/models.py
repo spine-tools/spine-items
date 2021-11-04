@@ -285,6 +285,44 @@ class CheckableFileListModel(FileListModel):
         self._pack_resources = new_packs
         self.endResetModel()
 
+    def replace(self, old_resource, new_resource):
+        """Replaces existing data in the model.
+
+        Note: we don't currently update file pack labels here.
+
+        Args:
+            old_resource (ProjectItemResource): resource to replace
+            new_resource (ProjectItemResource): new resource
+        """
+        if old_resource.type_ == "database":
+            return
+        for row, item in enumerate(self._single_resources):
+            if item.resource.provider_name == old_resource.provider_name and item.resource.label == old_resource.label:
+                self._single_resources[row] = item._replace(resource=new_resource)
+                index = self.index(row, 0)
+                self.dataChanged.emit(index, index, [Qt.DisplayRole, Qt.ToolTipRole])
+                return
+        for pack_row, pack in enumerate(self._pack_resources):
+            for row, resource in enumerate(pack.resources):
+                if resource.provider_name == old_resource.provider_name and resource.label == old_resource.label:
+                    if new_resource.label == resource.label:
+                        pack.resources[row] = new_resource
+                        pack_index = self.index(pack_row, 0)
+                        index = self.index(row, 0, pack_index)
+                        self.dataChanged.emit(index, index, [Qt.DisplayRole, Qt.ToolTipRole])
+                        return
+                    else:
+                        single_resources = [item.resource for item in self._single_resources]
+                        new_pack_resources = [
+                            r
+                            for existing_pack in self._pack_resources
+                            for r in existing_pack.resources
+                            if r is not resource
+                        ]
+                        new_pack_resources.append(new_resource)
+                        self.update(single_resources + new_pack_resources)
+                        return
+
     def setData(self, index, value, role=Qt.EditRole):
         """Sets data in the model."""
         if role != Qt.CheckStateRole or not index.isValid():

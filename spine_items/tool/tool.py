@@ -468,7 +468,6 @@ class Tool(ProjectItem):
         if not super().rename(new_name, rename_data_dir_message):
             return False
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
-        self._resources_to_successors_changed()
         return True
 
     def notify_destination(self, source_item):
