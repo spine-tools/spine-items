@@ -57,16 +57,21 @@ class CustomFileSystemWatcher(QFileSystemWatcher):
             # Maybe it doesn't even matter? In any case, usually there is just a single rename and nothing else.
             removed_paths.remove(old_path)
             added_paths.remove(new_path)
-            if not is_watched_dir:
+            if is_watched_dir:
+                self.file_renamed.emit(old_path, new_path)
+            elif old_path in watched_files:
                 watched_files.remove(old_path)
                 watched_files.add(new_path)
-            self.file_renamed.emit(old_path, new_path)
+                self.file_renamed.emit(old_path, new_path)
         for path in removed_paths:
-            if not is_watched_dir:
+            if is_watched_dir:
+                self.file_removed.emit(path)
+            elif path in watched_files:
                 watched_files.remove(path)
-            self.file_removed.emit(path)
-        for path in added_paths:
-            self.file_added.emit(path)
+                self.file_removed.emit(path)
+        if is_watched_dir:
+            for path in added_paths:
+                self.file_added.emit(path)
         if not watched_files:
             del self._watched_files[dirname]
 
