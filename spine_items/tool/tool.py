@@ -432,8 +432,16 @@ class Tool(ProjectItem):
         update_args = list()
         resource_labels = {resource.label for resource in resources}
         for arg in self.cmd_line_args:
-            if isinstance(arg, LabelArg):
-                arg.missing = arg.arg not in resource_labels
+            if isinstance(arg, LabelArg) and arg.arg not in resource_labels:
+                # Arg may refer to legacy Data connection resource labels that weren't prefixed by <project> or <data>
+                legacy_arg_converted = False
+                for label in resource_labels:
+                    if label.startswith("<") and label.endswith(arg.arg):
+                        legacy_arg_converted = True
+                        arg.arg = label
+                        break
+                if not legacy_arg_converted:
+                    arg.missing = True
             update_args.append(arg)
         self.update_cmd_line_args(update_args)
 
