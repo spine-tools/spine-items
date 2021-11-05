@@ -18,6 +18,8 @@ from copy import deepcopy
 from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
 from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QAction, QHeaderView
+
+from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
     alternative_export,
     feature_export,
@@ -901,6 +903,8 @@ def _add_fixed_table_name(mapping_root):
             mapping.position = Position.hidden
     new_root = FixedValueMapping(Position.table_name, "table")
     new_root.child = mapping_root
+    new_root.group_fn = mapping_root.group_fn
+    mapping_root.group_fn = None
     return new_root
 
 
@@ -914,4 +918,6 @@ def _remove_fixed_table_name(mapping_root):
     Returns:
         Mapping: new mapping hierarchy
     """
-    return mapping_root.child
+    new_root = unflatten(mapping_root.flatten()[1:])
+    new_root.group_fn = mapping_root.group_fn
+    return new_root
