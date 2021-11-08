@@ -19,13 +19,18 @@ import os.path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock
+
 from spinedb_api import DiffDatabaseMapping, import_object_classes, import_objects
+from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.export_mapping import object_export
 from spine_items.exporter.do_work import do_work
 from spine_items.exporter.specification import Specification, MappingSpecification, MappingType
 
 
 class TestWithCsvWriter(unittest.TestCase):
+    _temp_dir = None
+    _url = None
+
     @classmethod
     def setUpClass(cls):
         cls._temp_dir = TemporaryDirectory()
@@ -41,7 +46,7 @@ class TestWithCsvWriter(unittest.TestCase):
 
     def test_export_database(self):
         root_mapping = object_export(class_position=0, object_position=1)
-        mapping_specification = MappingSpecification(MappingType.objects, True, True, False, root_mapping)
+        mapping_specification = MappingSpecification(MappingType.objects, True, True, NoGroup.NAME, False, root_mapping)
         specification = Specification("name", "description", {"mapping": mapping_specification})
         databases = {self._url: "test_export_database.csv"}
         logger = MagicMock()
