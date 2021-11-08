@@ -18,6 +18,8 @@ from copy import deepcopy
 from time import monotonic
 from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide2.QtWidgets import QFileDialog
+
+from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping
 from spinetoolbox.helpers import busy_effect
@@ -315,7 +317,11 @@ class PreviewUpdater:
             bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
-        if not {MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE, MappingsTableModel.FIXED_TABLE_NAME_ROLE} & set(roles):
+        if not {
+            MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE,
+            MappingsTableModel.FIXED_TABLE_NAME_ROLE,
+            MappingsTableModel.GROUP_FN_ROLE,
+        } & set(roles):
             return
         row = self._mappings_proxy_model.mapToSource(self._ui.mappings_table.currentIndex()).row()
         index = self._mappings_table_model.index(row, 0)
@@ -399,6 +405,7 @@ class PreviewUpdater:
             stamp,
             max_tables,
             max_rows,
+            mapping_spec.group_fn,
         )
         worker.signals.table_written.connect(self._add_or_update_data)
         self._thread_pool.start(worker)
@@ -454,7 +461,9 @@ class _Worker(QRunnable):
     class Signals(QObject):
         table_written = Signal(tuple, str, dict, float)
 
-    def __init__(self, url, mapping_name, mapping, always_export_header, stamp, max_tables=20, max_rows=20):
+    def __init__(
+        self, url, mapping_name, mapping, always_export_header, stamp, max_tables=20, max_rows=20, group_fn=NoGroup.NAME
+    ):
         super().__init__()
         self._url = url
         self._mapping_name = mapping_name
@@ -462,6 +471,7 @@ class _Worker(QRunnable):
         self._always_export_header = always_export_header
         self._max_tables = max_tables
         self._max_rows = max_rows
+        self._group_fn = group_fn
         self._stamp = stamp
         self.signals = self.Signals()
 
@@ -477,6 +487,7 @@ class _Worker(QRunnable):
                 empty_data_header=self._always_export_header,
                 max_tables=self._max_tables,
                 max_rows=self._max_rows,
+                group_fns=self._group_fn,
             )
             self.signals.table_written.emit(
                 (self._url, self._mapping_name), self._mapping_name, writer.tables, self._stamp

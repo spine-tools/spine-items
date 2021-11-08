@@ -48,6 +48,7 @@ from spinedb_api.export_mapping.group_functions import (
     GROUP_FUNCTION_DISPLAY_NAMES,
     group_function_name_from_display,
     group_function_display_from_name,
+    NoGroup,
 )
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from .preview_updater import PreviewUpdater
@@ -66,6 +67,7 @@ from ..commands import (
     SetMapping,
     SetUseFixedTableNameFlag,
     SetFixedTableName,
+    SetGroupFunction,
 )
 from ..mvcmodels.mappings_table_model import MappingsTableModel
 from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel
@@ -341,8 +343,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_parameter_dimensions_silently(0)
         self._set_use_fixed_table_name_flag_silently(current.data(MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE))
         self._set_fixed_table_name_silently(current.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE))
+        self._set_group_fn_silently(group_function_display_from_name(current.data(MappingsTableModel.GROUP_FN_ROLE)))
         root_mapping = current.data(MappingsTableModel.MAPPING_ROOT_ROLE)
-        self._set_root_mapping_group_fn_silently(group_function_display_from_name(root_mapping.group_fn))
         mapping_name = self._mappings_table_model.index(current.row(), 0).data()
         self._mapping_editor_model.set_mapping(mapping_name, root_mapping)
         self._enable_relationship_controls()
@@ -385,7 +387,6 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._mapping_editor_model.set_mapping(top_left.data(Qt.DisplayRole), root_mapping)
             self._set_relationship_dimensions_silently(top_left.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE))
             self._set_parameter_dimensions_silently(top_left.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
-            self._set_root_mapping_group_fn_silently(group_function_display_from_name(root_mapping.group_fn))
         if MappingsTableModel.MAPPING_TYPE_ROLE in roles:
             mapping_type = top_left.data(MappingsTableModel.MAPPING_TYPE_ROLE)
             self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
@@ -398,6 +399,10 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             )
         if {MappingsTableModel.MAPPING_ROOT_ROLE, MappingsTableModel.FIXED_TABLE_NAME_ROLE} & set(roles):
             self._set_fixed_table_name_silently(top_left.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE))
+        if MappingsTableModel.GROUP_FN_ROLE in roles:
+            self._set_group_fn_silently(
+                group_function_display_from_name(top_left.data(MappingsTableModel.GROUP_FN_ROLE))
+            )
         self._enable_relationship_controls()
         self._enable_parameter_controls()
 
@@ -724,23 +729,19 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         index = self._sort_mappings_table_model.mapToSource(self._ui.mappings_table.currentIndex())
         if not index.isValid():
             return
-        self._undo_stack.beginMacro("change mapping's group function")
-        mapping = index.data(MappingsTableModel.MAPPING_ROOT_ROLE)
-        mapping = deepcopy(mapping)
-        mapping.group_fn = group_function_name_from_display(text)
-        self._undo_stack.push(SetMapping(index, mapping))
-        self._undo_stack.endMacro()
+        old = index.data(MappingsTableModel.GROUP_FN_ROLE)
+        self._undo_stack.push(SetGroupFunction(index, old, group_function_name_from_display(text)))
 
-    def _set_root_mapping_group_fn_silently(self, group_fn):
+    def _set_group_fn_silently(self, group_fn_display_name):
         """
         Sets group function in combo box without emitting signals.
 
         Args:
-            group_fn (str): group function name
+            group_fn_display_name (str): group function's display name
         """
-        if group_fn != self._ui.group_fn_combo_box.currentText():
+        if group_fn_display_name != self._ui.group_fn_combo_box.currentText():
             self._ui.group_fn_combo_box.currentTextChanged.disconnect(self._change_root_mapping_group_fn)
-            self._ui.group_fn_combo_box.setCurrentText(group_fn)
+            self._ui.group_fn_combo_box.setCurrentText(group_fn_display_name)
             self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
 
     @Slot(int)
@@ -826,38 +827,48 @@ def _new_mapping_specification(mapping_type):
         MappingSpecification: an export mapping specification
     """
     if mapping_type == MappingType.objects:
-        return MappingSpecification(mapping_type, True, True, False, object_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, object_export(0, 1))
     if mapping_type == MappingType.object_groups:
-        return MappingSpecification(mapping_type, True, True, False, object_group_export(0, 1, 2))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, object_group_export(0, 1, 2))
     if mapping_type == MappingType.object_group_parameter_values:
         return MappingSpecification(
             mapping_type,
             True,
             True,
+            NoGroup.NAME,
             False,
             object_group_parameter_export(0, 1, Position.hidden, 2, 3, 4, Position.hidden, 5, None, None),
         )
     if mapping_type == MappingType.object_parameter_default_values:
         return MappingSpecification(
-            mapping_type, True, True, False, object_parameter_default_value_export(0, 1, Position.hidden, 2, None, None)
+            mapping_type,
+            True,
+            True,
+            NoGroup.NAME,
+            False,
+            object_parameter_default_value_export(0, 1, Position.hidden, 2, None, None),
         )
     if mapping_type == MappingType.object_parameter_values:
         return MappingSpecification(
             mapping_type,
             True,
             True,
+            NoGroup.NAME,
             False,
             object_parameter_export(0, 2, Position.hidden, 1, 3, Position.hidden, 4, None, None),
         )
     if mapping_type == MappingType.parameter_value_lists:
-        return MappingSpecification(mapping_type, True, True, False, parameter_value_list_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, parameter_value_list_export(0, 1))
     if mapping_type == MappingType.relationships:
-        return MappingSpecification(mapping_type, True, True, False, relationship_export(0, Position.hidden, [1], [2]))
+        return MappingSpecification(
+            mapping_type, True, True, NoGroup.NAME, False, relationship_export(0, Position.hidden, [1], [2])
+        )
     if mapping_type == MappingType.relationship_parameter_default_values:
         return MappingSpecification(
             mapping_type,
             True,
             True,
+            NoGroup.NAME,
             False,
             relationship_parameter_default_value_export(0, 1, Position.hidden, 2, None, None),
         )
@@ -866,25 +877,28 @@ def _new_mapping_specification(mapping_type):
             mapping_type,
             True,
             True,
+            NoGroup.NAME,
             False,
             relationship_parameter_export(
                 0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None, None
             ),
         )
     if mapping_type == MappingType.alternatives:
-        return MappingSpecification(mapping_type, True, True, False, alternative_export(0))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, alternative_export(0))
     if mapping_type == MappingType.scenario_alternatives:
-        return MappingSpecification(mapping_type, True, True, False, scenario_alternative_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_alternative_export(0, 1))
     if mapping_type == MappingType.scenarios:
-        return MappingSpecification(mapping_type, True, True, False, scenario_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_export(0, 1))
     if mapping_type == MappingType.features:
-        return MappingSpecification(mapping_type, True, True, False, feature_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, feature_export(0, 1))
     if mapping_type == MappingType.tools:
-        return MappingSpecification(mapping_type, True, True, False, tool_export(0))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, tool_export(0))
     if mapping_type == MappingType.tool_features:
-        return MappingSpecification(mapping_type, True, True, False, tool_feature_export(0, 1, 2, 3))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, tool_feature_export(0, 1, 2, 3))
     if mapping_type == MappingType.tool_feature_methods:
-        return MappingSpecification(mapping_type, True, True, False, tool_feature_method_export(0, 1, 2, 3))
+        return MappingSpecification(
+            mapping_type, True, True, NoGroup.NAME, False, tool_feature_method_export(0, 1, 2, 3)
+        )
     raise NotImplementedError()
 
 
@@ -903,8 +917,6 @@ def _add_fixed_table_name(mapping_root):
             mapping.position = Position.hidden
     new_root = FixedValueMapping(Position.table_name, "table")
     new_root.child = mapping_root
-    new_root.group_fn = mapping_root.group_fn
-    mapping_root.group_fn = None
     return new_root
 
 
@@ -918,6 +930,4 @@ def _remove_fixed_table_name(mapping_root):
     Returns:
         Mapping: new mapping hierarchy
     """
-    new_root = unflatten(mapping_root.flatten()[1:])
-    new_root.group_fn = mapping_root.group_fn
-    return new_root
+    return unflatten(mapping_root.flatten()[1:])

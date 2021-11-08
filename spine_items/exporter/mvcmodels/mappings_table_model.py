@@ -45,6 +45,7 @@ class MappingsTableModel(QAbstractTableModel):
     USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.UserRole + 6
     FIXED_TABLE_NAME_ROLE = Qt.UserRole + 7
     PARAMETER_DIMENSIONS_ROLE = Qt.UserRole + 8
+    GROUP_FN_ROLE = Qt.UserRole + 9
 
     def __init__(self, mappings=None, parent=None):
         """
@@ -122,6 +123,8 @@ class MappingsTableModel(QAbstractTableModel):
                 if dimensions == 0:
                     return _instance_occurrences(spec.root, ParameterDefaultValueIndexMapping)
                 return dimensions
+            if role == self.GROUP_FN_ROLE:
+                return spec.group_fn
         return None
 
     def flags(self, index):
@@ -218,6 +221,9 @@ class MappingsTableModel(QAbstractTableModel):
             elif role == self.FIXED_TABLE_NAME_ROLE:
                 spec.root.value = value
                 self.dataChanged.emit(index, index, [self.FIXED_TABLE_NAME_ROLE])
+            elif role == self.GROUP_FN_ROLE:
+                spec.group_fn = value
+                self.dataChanged.emit(index, index, [self.GROUP_FN_ROLE])
             return True
         return False
 

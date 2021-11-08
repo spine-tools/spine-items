@@ -254,6 +254,26 @@ class SetFixedTableName(QUndoCommand):
         self._index.model().setData(self._index, self._old_name, MappingsTableModel.FIXED_TABLE_NAME_ROLE)
 
 
+class SetGroupFunction(QUndoCommand):
+    def __init__(self, index, old_function, new_function):
+        """
+        Args
+            index (QModelIndex): mapping's row index
+            old_function (str): old group function's name
+            new_function (str): new group function's name
+        """
+        super().__init__("change group function")
+        self._index = index
+        self._old_function = old_function
+        self._new_function = new_function
+
+    def redo(self):
+        self._index.model().setData(self._index, self._new_function, MappingsTableModel.GROUP_FN_ROLE)
+
+    def undo(self):
+        self._index.model().setData(self._index, self._old_function, MappingsTableModel.GROUP_FN_ROLE)
+
+
 class SetMappingPositions(QUndoCommand):
     def __init__(self, model, mapping_name, positions, previous_positions):
         """

@@ -18,6 +18,7 @@ Contains Exporter's specifications.
 from dataclasses import dataclass
 from enum import Enum, unique
 import json
+
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spinedb_api.mapping import to_dict as mapping_to_dict, Position, unflatten
 from spinedb_api.export_mapping.export_mapping import (
@@ -27,6 +28,7 @@ from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     IndexNameMapping,
     DefaultValueIndexNameMapping,
+    legacy_group_fn_from_dict,
 )
 from .item_info import ItemInfo
 
@@ -64,6 +66,7 @@ class MappingSpecification:
     type: MappingType
     enabled: bool
     always_export_header: bool
+    group_fn: str
     use_fixed_table_name_flag: bool
     root: ExportMapping
 
@@ -162,6 +165,7 @@ class Specification(ProjectItemSpecification):
                 "mapping": mapping_to_dict(mapping_spec.root),
                 "enabled": mapping_spec.enabled,
                 "always_export_header": mapping_spec.always_export_header,
+                "group_fn": mapping_spec.group_fn,
                 "use_fixed_table_name": mapping_spec.use_fixed_table_name_flag,
             }
             mappings[name] = spec_dict
@@ -189,6 +193,7 @@ class Specification(ProjectItemSpecification):
                 MappingType(spec_dict["type"]),
                 spec_dict.get("enabled", True),
                 spec_dict.get("always_export_header", True),
+                spec_dict.get("group_fn", legacy_group_fn_from_dict(spec_dict["mapping"])),
                 spec_dict.get("use_fixed_table_name", False),
                 _add_index_names(mapping_from_dict(spec_dict["mapping"])),
             )
