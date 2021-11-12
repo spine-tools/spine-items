@@ -159,7 +159,11 @@ class MappingsTableModel(QAbstractTableModel):
         Returns:
             QModelIndex: index
         """
-        return self.index(self._names.index(name), 0)
+        try:
+            row = self._names.index(name)
+        except ValueError:
+            return QModelIndex()
+        return self.index(row, 0)
 
     def reorder_writing(self, row, earlier):
         """Reorders writings.

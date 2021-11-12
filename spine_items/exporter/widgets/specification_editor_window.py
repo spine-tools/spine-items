@@ -498,7 +498,6 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             row (int): row index in mapping list model
             new_name (str): mapping's new name
         """
-        previous_name = self._mappings_table_model.index(row, 0).data()
         self._undo_stack.push(RenameMapping(row, self._mappings_table_model, new_name))
         self._sort_mappings_table_model.invalidate()
 
