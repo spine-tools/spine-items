@@ -15,13 +15,19 @@ Contains unit tests for the tool_instance module.
 :authors: A. Soininen (VTT)
 :date:   18.3.2020
 """
-
+import sys
 import unittest
 from unittest import mock
+
+from spine_engine.execution_managers.persistent_execution_manager import kill_persistent_processes
 from spine_items.tool.tool_specifications import PythonTool
 
 
 class TestPythonToolInstance(unittest.TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        kill_persistent_processes()
+
     def test_prepare_with_cmd_line_arguments_in_jupyter_kernel(self):
         instance = self._make_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager"):
@@ -38,15 +44,17 @@ class TestPythonToolInstance(unittest.TestCase):
         instance = self._make_tool_instance(False)
         with mock.patch("spine_engine.execution_managers.persistent_execution_manager.PersistentManagerBase"):
             instance.prepare(["arg1", "arg2"])
-        self.assertEqual(instance.program, ['python_path/python.exe'])
+        self.assertEqual(instance.program, [sys.executable])
         self.assertEqual(instance.exec_mngr.alias, "# Running 'python main.py arg1 arg2'")
+        instance.terminate_instance()
 
     def test_prepare_without_cmd_line_arguments_in_persistent_process(self):
         instance = self._make_tool_instance(False)
         with mock.patch("spine_engine.execution_managers.persistent_execution_manager.PersistentManagerBase"):
             instance.prepare([])
-        self.assertEqual(instance.program, ['python_path/python.exe'])
+        self.assertEqual(instance.program, [sys.executable])
         self.assertEqual(instance.exec_mngr.alias, "# Running 'python main.py'")
+        instance.terminate_instance()
 
     @staticmethod
     def _make_tool_instance(execute_in_embedded_console):
@@ -56,7 +64,7 @@ class TestPythonToolInstance(unittest.TestCase):
         else:
 
             def get_setting(name, defaultValue):
-                return {"appSettings/pythonPath": "python_path/python.exe", "appSettings/useEmbeddedPython": "0"}.get(
+                return {"appSettings/pythonPath": sys.executable, "appSettings/useEmbeddedPython": "0"}.get(
                     name, defaultValue
                 )
 
