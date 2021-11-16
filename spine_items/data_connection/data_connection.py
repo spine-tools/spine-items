@@ -232,21 +232,26 @@ class DataConnection(ProjectItem):
 
     @Slot(str, str)
     def _handle_file_renamed(self, old_path, new_path):
+        def replace_new_path(paths):
+            for i, path in enumerate(paths):
+                if path == new_path:
+                    paths[i] = old_path
+                    return True
+            return False
+
         renamed = self._rename_reference(old_path, new_path)
         if not renamed:
             renamed = self._rename_data_file(old_path, new_path)
         if not renamed:
             return
         self._check_notifications()
-        if path_in_dir(new_path, self._project.project_dir):
-            old_label = os.path.basename(old_path)
-            new_label = os.path.basename(new_path)
-        else:
-            old_label = old_path
-            new_label = new_path
-        old = file_resource(self.name, old_path, label=old_label)
-        new = file_resource(self.name, new_path, label=new_label)
-        self._resource_to_successors_replaced(old, new)
+        refs = list(self.references)
+        data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
+        new_resources = scan_for_resources(self, refs + data_files, self._project.project_dir)
+        if not replace_new_path(refs):
+            replace_new_path(data_files)
+        old_resources = scan_for_resources(self, refs + data_files, self._project.project_dir)
+        self._resources_to_successors_replaced(old_resources, new_resources)
 
     @Slot(str)
     def _handle_file_added(self, path):

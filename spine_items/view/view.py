@@ -118,20 +118,21 @@ class View(ProjectItem):
                     self._references[url.database] = (url, resource.provider_name)
         self.populate_reference_list()
 
-    def replace_resource_from_upstream(self, old, new):
+    def replace_resources_from_upstream(self, old, new):
         """See base class."""
-        if old.type_ == "database" and new.type_ == "database":
-            old_url = make_url(old.url)
-            new_url = make_url(new.url)
-        elif old.type_ == "file":
-            if os.path.splitext(old.path)[1] == ".sqlite" and os.path.splitext(new.path)[1] == ".sqlite":
-                old_url = URL("sqlite", database=old.path)
-                new_url = URL("sqlite", database=new.path)
+        for old_resource, new_resource in zip(old, new):
+            if old_resource.type_ == "database" and new_resource.type_ == "database":
+                old_url = make_url(old_resource.url)
+                new_url = make_url(new_resource.url)
+            elif old_resource.type_ == "file":
+                if os.path.splitext(old_resource.path)[1] == ".sqlite" and os.path.splitext(new_resource.path)[1] == ".sqlite":
+                    old_url = URL("sqlite", database=old_resource.path)
+                    new_url = URL("sqlite", database=new_resource.path)
+                else:
+                    continue
             else:
-                return
-        else:
-            return
-        self._references[new_url.database] = self._references.pop(old_url.database)
+                continue
+            self._references[new_url.database] = self._references.pop(old_url.database)
         self.populate_reference_list()
 
     def _selected_indexes(self):

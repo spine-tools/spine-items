@@ -25,7 +25,7 @@ def scan_for_resources(provider, files, project_dir):
 
     Args:
         provider (ProjectItem or ExecutableItem): resource provider item
-        files (list of str): path to fata files
+        files (list of str): path to data files
         project_dir (str): absolute path to project directory
 
     Returns:

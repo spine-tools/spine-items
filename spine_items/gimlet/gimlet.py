@@ -262,7 +262,7 @@ class Gimlet(ProjectItem):
         self._resources_from_upstream = list(resources)
         self._update_files_and_cmd_line_args()
 
-    def replace_resource_from_upstream(self, old, new):
+    def replace_resources_from_upstream(self, old, new):
         """See base class."""
         self._replace_resources(old, new, self._resources_from_upstream)
 
@@ -270,37 +270,32 @@ class Gimlet(ProjectItem):
         self._resources_from_downstream = list(resources)
         self._update_files_and_cmd_line_args()
 
-    def replace_resource_from_downstream(self, old, new):
+    def replace_resources_from_downstream(self, old, new):
         """See base class."""
         self._replace_resources(old, new, self._resources_from_downstream)
 
-    def _replace_resources(self, old, new, resource_list):
+    def _replace_resources(self, old_resources, new_resources, resource_list):
         """Replaces resources.
 
         Modifies ``resource_list`` in-place!
 
         Args:
-            old (ProjectItemResource): old resource
-            new (ProjectItemResource): new resource
+            old_resources (list of ProjectItemResource): old resource
+            new_resources (list of ProjectItemResource): new resource
             resource_list (list of ProjectItemResource): current downstream or upstream resources
         """
-        updated_resources = list()
-        for resource in resource_list:
-            if resource == old:
-                updated_resources.append(new)
-            else:
-                updated_resources.append(resource)
-        resource_list.clear()
-        resource_list += updated_resources
+        for old, new in zip(old_resources, new_resources):
+            for i, resource in enumerate(resource_list):
+                if resource == old:
+                    resource_list[i] = new
+                    break
+            for i, arg in enumerate(self.cmd_line_args):
+                if arg.arg == old.label:
+                    self.cmd_line_args[i] = LabelArg(new.label)
+                    break
+        self.update_cmd_line_args(self.cmd_line_args)
         self._file_model.update(self._resources_from_upstream + self._resources_from_downstream)
         self._check_notifications()
-        cmd_line_args = list()
-        for arg in self.cmd_line_args:
-            if arg.arg == old.label:
-                cmd_line_args.append(LabelArg(new.label))
-            else:
-                cmd_line_args.append(arg)
-        self.update_cmd_line_args(cmd_line_args)
 
     def _update_files_and_cmd_line_args(self):
         """Updates the file model and command line arguments with regards to available resources."""

@@ -181,12 +181,15 @@ class ExporterBase(ProjectItem):
             self._update_properties_tab()
         self._check_notifications()
 
-    def replace_resource_from_upstream(self, old, new):
+    def replace_resources_from_upstream(self, old, new):
         """See base class."""
-        if not old.type_ == "database":
-            return
-        self._database_model.update_url(clear_filter_configs(old.url), clear_filter_configs(new.url))
-        self._full_url_model.update_url(old.url, new.url)
+        for old_resource, new_resource in zip(old, new):
+            if not old_resource.type_ == "database":
+                return
+            self._database_model.update_url(
+                clear_filter_configs(old_resource.url), clear_filter_configs(new_resource.url)
+            )
+            self._full_url_model.update_url(old_resource.url, new_resource.url)
 
     def _check_notifications(self):
         """
@@ -294,10 +297,9 @@ class ExporterBase(ProjectItem):
             self._resources_to_successors_changed()
         else:
             new_resources = self.resources_for_direct_successors()
-            olds = (resource for resource in old_resources if resource.label == old_file_name)
-            news = (resource for resource in new_resources if resource.label == file_name)
-            for old, new in zip(olds, news):
-                self._resource_to_successors_replaced(old, new)
+            olds = [resource for resource in old_resources if resource.label == old_file_name]
+            news = [resource for resource in new_resources if resource.label == file_name]
+            self._resources_to_successors_replaced(olds, news)
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item's configuration."""

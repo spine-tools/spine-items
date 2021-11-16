@@ -100,8 +100,7 @@ class DataTransformer(ProjectItem):
         new_resources = scan_for_resources(
             self, self.specification(), self._db_resources, filter_config_path(self.data_dir)
         )
-        for old, new in zip(old_resources, new_resources):
-            self._resource_to_successors_replaced(old, new)
+        self._resources_to_successors_replaced(old_resources, new_resources)
         self._check_notifications()
         return True
 
@@ -154,23 +153,20 @@ class DataTransformer(ProjectItem):
         self._db_resources = [r for r in resources if r.type_ == "database"]
         self._resources_to_successors_changed()
 
-    def replace_resource_from_upstream(self, old, new):
+    def replace_resources_from_upstream(self, old, new):
         """See base class."""
         old_resources = scan_for_resources(
             self, self.specification(), self._db_resources, filter_config_path(self.data_dir)
         )
-        db_resources = list()
-        for resource in self._db_resources:
-            if resource == old:
-                db_resources.append(new)
-            else:
-                db_resources.append(resource)
-        self._db_resources = db_resources
+        for old_resource, new_resource in zip(old, new):
+            for i, resource in enumerate(self._db_resources):
+                if resource == old_resource:
+                    self._db_resources[i] = new_resource
+                    break
         new_resources = scan_for_resources(
             self, self.specification(), self._db_resources, filter_config_path(self.data_dir)
         )
-        for old, new in zip(old_resources, new_resources):
-            self._resource_to_successors_replaced(old, new)
+        self._resources_to_successors_replaced(old_resources, new_resources)
 
     def resources_for_direct_successors(self):
         """See base class."""

@@ -15,11 +15,19 @@ Contains the :class:`Exporter` project item.
 :authors: A. Soininen (VTT)
 :date:    10.12.2020
 """
+from itertools import zip_longest
+from pathlib import Path
+
 from PySide2.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
-from spine_items.utils import Database
+from ..utils import (
+    Database,
+    EXPORTED_PATHS_FILE_NAME,
+    EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX,
+    _write_exported_files_file,
+)
 from ..item_base import ExporterBase
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
@@ -107,6 +115,34 @@ class Exporter(ExporterBase):
             output_time_stamps,
             cancel_on_error,
         )
+
+    def rename(self, new_name, rename_data_dir_message):
+        """See base class."""
+        if not super().rename(new_name, rename_data_dir_message):
+            return False
+        try:
+            Path(self.data_dir, EXPORTED_PATHS_FILE_NAME).unlink()
+        except FileNotFoundError:
+            pass
+        for path in Path(self.data_dir).iterdir():
+            if path.name.startswith(EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX) and path.suffix == ".json":
+                path.unlink()
+        if self._exported_files is not None:
+            data_dir_parts = Path(self.data_dir).parts
+            for label, file_list in self._exported_files.items():
+                new_file_list = list()
+                for file_path in file_list:
+                    new_file_path = Path()
+                    for old_part, new_part in zip_longest(Path(file_path).parts, data_dir_parts):
+                        if new_part is None:
+                            new_file_path = new_file_path / old_part
+                        else:
+                            new_file_path = new_file_path / new_part
+                    new_file_list.append(str(new_file_path))
+                self._exported_files[label] = new_file_list
+            exported_file_path = Path(self.data_dir, EXPORTED_PATHS_FILE_NAME)
+            _write_exported_files_file(exported_file_path, self._exported_files, self.data_dir)
+        return True
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.

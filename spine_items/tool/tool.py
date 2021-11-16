@@ -383,7 +383,7 @@ class Tool(ProjectItem):
         self._resources_from_upstream = resources
         self._update_files_and_cmd_line_args()
 
-    def replace_resource_from_upstream(self, old, new):
+    def replace_resources_from_upstream(self, old, new):
         """See base class."""
         self._replace_resources(old, new, self._resources_from_upstream)
 
@@ -392,37 +392,31 @@ class Tool(ProjectItem):
         self._resources_from_downstream = resources
         self._update_files_and_cmd_line_args()
 
-    def replace_resource_from_downstream(self, old, new):
+    def replace_resources_from_downstream(self, old, new):
         """See base class."""
         self._replace_resources(old, new, self._resources_from_downstream)
 
-    def _replace_resources(self, old, new, resource_list):
+    def _replace_resources(self, old_resources, new_resources, resource_list):
         """Replaces resources.
 
         Modifies ``resource_list`` in-place!
 
         Args:
-            old (ProjectItemResource): old resource
-            new (ProjectItemResource): new resource
+            old_resources (list of ProjectItemResource): old resources
+            new_resources (list of ProjectItemResource): new resources
             resource_list (list of ProjectItemResource): current downstream or upstream resources
         """
-        updated_resources = list()
-        for resource in resource_list:
-            if resource == old:
-                updated_resources.append(new)
-            else:
-                updated_resources.append(resource)
-        resource_list.clear()
-        resource_list += updated_resources
+        for old, new in zip(old_resources, new_resources):
+            for i, resource in enumerate(resource_list):
+                if resource == old:
+                    resource_list[i] = new
+                    break
+            for i, arg in enumerate(self.cmd_line_args):
+                if arg.arg == old.label:
+                    self.cmd_line_args[i] = LabelArg(new.label)
         self._input_file_model.update(self._resources_from_upstream + self._resources_from_downstream)
         self._check_notifications()
-        cmd_line_args = list()
-        for arg in self.cmd_line_args:
-            if arg.arg == old.label:
-                cmd_line_args.append(LabelArg(new.label))
-            else:
-                cmd_line_args.append(arg)
-        self.update_cmd_line_args(cmd_line_args)
+        self.update_cmd_line_args(self.cmd_line_args)
 
     def _update_files_and_cmd_line_args(self):
         """Updates the file model and command line arguments."""
@@ -432,7 +426,9 @@ class Tool(ProjectItem):
         update_args = list()
         resource_labels = {resource.label for resource in resources}
         for arg in self.cmd_line_args:
-            if isinstance(arg, LabelArg) and arg.arg not in resource_labels:
+            if arg.arg in resource_labels:
+                arg.missing = False
+            elif isinstance(arg, LabelArg):
                 # Arg may refer to legacy Data connection resource labels that weren't prefixed by <project> or <data>
                 legacy_arg_converted = False
                 for label in resource_labels:
