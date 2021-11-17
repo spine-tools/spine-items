@@ -15,8 +15,10 @@ Utility functions for the Tool project item.
 :author: A. Soininen (VTT)
 :date:   1.4.2020
 """
+from datetime import datetime
 import glob
 import os.path
+from pathlib import Path
 import re
 
 
@@ -88,32 +90,53 @@ def find_last_output_files(output_files, output_dir):
         return dict()
     recent_output_files = dict()
     file_patterns = list(output_files)
-    archive_dirs = [
-        entry
-        for entry in os.listdir(output_dir)
-        if os.path.isdir(os.path.join(output_dir, entry)) and entry != "failed"
-    ]
-    archive_dirs.sort(reverse=True)
-    result_directory_pattern = re.compile(r"^\d\d\d\d-\d\d-\d\dT\d\d.\d\d.\d\d")
-    for archive in archive_dirs:
-        full_archive_path = os.path.join(output_dir, archive)
-        archive_contents = os.listdir(full_archive_path)
-        if any(result_directory_pattern.match(d) is not None for d in archive_contents):
-            recent_output_files.update(find_last_output_files(output_files, full_archive_path))
-            break
-        for pattern in list(file_patterns):
-            full_path_pattern = os.path.join(full_archive_path, pattern)
-            files_found = False
-            for path in glob.glob(full_path_pattern):
-                if os.path.exists(path):
-                    files_found = True
-                    file_list = recent_output_files.setdefault(pattern, list())
-                    file_list.append(_LatestOutputFile.from_paths(path, full_archive_path))
-            if files_found:
-                file_patterns.remove(pattern)
-            if not file_patterns:
-                return recent_output_files
+    result = _find_last_output_dir(output_dir)
+    if result is None:
+        return dict()
+    full_archive_path = result[1]
+    for pattern in list(file_patterns):
+        full_path_pattern = os.path.join(full_archive_path, pattern)
+        files_found = False
+        for path in glob.glob(full_path_pattern):
+            if os.path.exists(path):
+                files_found = True
+                file_list = recent_output_files.setdefault(pattern, list())
+                file_list.append(os.path.normpath(path))
+        if files_found:
+            file_patterns.remove(pattern)
+        if not file_patterns:
+            return recent_output_files
     return recent_output_files
+
+
+def _find_last_output_dir(output_dir, depth=0):
+    """Searches for the latest output archive directory recursively.
+
+    Args:
+        output_dir (str):  path to the execution output directory
+        depth (int): current recursion depth
+
+    Returns:
+        tuple: creation datetime and directory path
+    """
+    latest = None
+    result_directory_pattern = re.compile(r"^\d\d\d\d-\d\d-\d\dT\d\d.\d\d.\d\d")
+    for path in Path(output_dir).iterdir():
+        if not path.is_dir() or path.name == "failed":
+            continue
+        if result_directory_pattern.match(path.name) is not None:
+            time_stamp = datetime.fromisoformat(path.name.replace(".", ":"))
+            if latest is None:
+                latest = (time_stamp, path)
+            elif latest[0] < time_stamp:
+                latest = (time_stamp, path)
+        elif depth < 1:
+            subdir_latest = _find_last_output_dir(str(path), depth + 1)
+            if latest is None:
+                latest = subdir_latest
+            elif subdir_latest is not None and latest[0] < subdir_latest[0]:
+                latest = subdir_latest
+    return latest
 
 
 def is_pattern(file_name):
@@ -138,23 +161,3 @@ def make_dir_if_necessary(d, directory):
         except OSError:
             return False
     return True
-
-
-class _LatestOutputFile:
-    """
-    A class to hold information on a latest output file.
-
-    Attributes:
-        label (str): file label, e.g. file pattern or relative path
-        path (str): absolute path to the file
-    """
-
-    def __init__(self, label, path):
-        self.label = label
-        self.path = path
-
-    @staticmethod
-    def from_paths(path, archive_dir):
-        """Constructs a _LatestOutputFile object from an absolute path and archive directory."""
-        label = os.path.relpath(path, archive_dir)
-        return _LatestOutputFile(label, path)

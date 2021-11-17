@@ -25,7 +25,6 @@ from spine_engine.project_item.project_item_resource import file_resource
 from spine_engine.execution_managers.persistent_execution_manager import kill_persistent_processes
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
-from spine_items.tool.utils import _LatestOutputFile
 from spine_items.utils import CmdLineArg
 
 
@@ -278,8 +277,8 @@ class TestToolExecutable(unittest.TestCase):
         out_file_2.touch()
         with mock.patch("spine_items.tool.output_resources.find_last_output_files") as mock_find_last_output_files:
             mock_find_last_output_files.return_value = {
-                "results.gdx": [_LatestOutputFile("label", str(out_file_1))],
-                "report.txt": [_LatestOutputFile("label2", str(out_file_2))],
+                "results.gdx": [str(out_file_1)],
+                "report.txt": [str(out_file_2)],
             }
             resources = executable._output_resources_forward()
             mock_find_last_output_files.assert_called_once()

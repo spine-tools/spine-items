@@ -49,7 +49,7 @@ def scan_for_resources(provider, tool_specification, output_dir):
         latest_files = last_output_files.get(out_file_label, list())
         make_resource = file_resource if not is_pattern(out_file_label) else file_resource_in_pack
         for out_file in latest_files:
-            resources.append(make_resource(provider.name, file_path=out_file.path, label=out_file_label))
+            resources.append(make_resource(provider.name, file_path=out_file, label=out_file_label))
         if not latest_files:
             make_resource = transient_file_resource if not is_pattern(out_file_label) else file_resource_in_pack
             resources.append(make_resource(provider.name, label=out_file_label))
