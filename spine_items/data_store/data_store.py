@@ -209,7 +209,7 @@ class DataStore(ProjectItem):
         if old_url and new_url:
             old = database_resource(self.name, str(old_url), label=database_label(self.name))
             new = database_resource(self.name, str(new_url), label=database_label(self.name))
-            self._resource_to_predecessors_replaced([old], [new])
+            self._resources_to_predecessors_replaced([old], [new])
             self._resources_to_successors_replaced([old], [new])
         else:
             self._resources_to_predecessors_changed()
