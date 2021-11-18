@@ -20,6 +20,7 @@ import os
 import sys
 import shutil
 import uuid
+from contextlib import ExitStack
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.config import GIMLET_WORK_DIR_NAME
 from spine_engine.utils.helpers import shorten
@@ -115,7 +116,8 @@ class ExecutableItem(ExecutableItemBase):
         if sys.platform != "win32" and (self.shell_name == "cmd.exe" or self.shell_name == "powershell.exe"):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return ItemExecutionFinishState.FAILURE
-        with labelled_resource_args(forward_resources + backward_resources) as labelled_args:
+        with ExitStack() as stack:
+            labelled_args = labelled_resource_args(forward_resources + backward_resources, stack, self._logger)
             cmd_list = expand_cmd_line_args(self.cmd_list, labelled_args, self._logger)
         if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)
