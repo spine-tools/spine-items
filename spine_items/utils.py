@@ -22,8 +22,6 @@ import json
 import os.path
 from pathlib import Path
 from time import time
-from contextlib import contextmanager
-from spinedb_api.spine_db_server import start_spine_db_server, shutdown_spine_db_server
 from spine_engine.project_item.project_item_resource import (
     extract_packs,
     file_resource_in_pack,
@@ -93,32 +91,22 @@ def cmd_line_arg_from_dict(arg_dict):
     return construct(arg_dict["arg"])
 
 
-@contextmanager
-def labelled_resource_args(resources):
+def labelled_resource_args(resources, stack):
     """
     Args:
         resources (Iterable of ProjectItemResource): resources to process
-        use_db_server (bool): if True, use database server
+        stack (ExitStack)
 
     Yields:
         dict: mapping from resource label to resource args.
     """
     result = {}
-    server_urls = []
     single_resources, pack_resources = extract_packs(resources)
     for resource in single_resources:
-        if resource.type_ != "database":
-            result[resource.label] = resource.path if resource.hasfilepath else ""
-            continue
-        server_url = result[resource.label] = start_spine_db_server(resource.url)
-        server_urls.append(server_url)
+        result[resource.label] = stack.enter_context(resource.open())
     for label, resources_ in pack_resources.items():
-        result[label] = " ".join(r.path for r in resources_ if r.hasfilepath)
-    try:
-        yield result
-    finally:
-        for server_url in server_urls:
-            shutdown_spine_db_server(server_url)
+        result[label] = " ".join(stack.enter_context(r.open()) for r in resources_)
+    return result
 
 
 def expand_cmd_line_args(args, label_to_arg, logger):

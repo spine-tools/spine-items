@@ -26,6 +26,7 @@ import pathlib
 import shutil
 import time
 import uuid
+from contextlib import ExitStack
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
@@ -459,12 +460,13 @@ class ExecutableItem(ExecutableItemBase):
             return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         resources = forward_resources + backward_resources
-        with labelled_resource_args(resources) as labelled_args:
+        with ExitStack() as stack:
+            labelled_args = labelled_resource_args(resources, stack)
             expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
             try:
                 self._tool_instance.prepare(expanded_args)
             except RuntimeError as error:
-                if str(error) != "":
+                if str(error):
                     self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
                 return ItemExecutionFinishState.FAILURE
             return_code = self._tool_instance.execute()
@@ -662,7 +664,7 @@ def _count_files_and_dirs(paths):
 
 
 def _create_output_dir_timestamp():
-    """ Creates a new timestamp string that is used as Tool output
+    """Creates a new timestamp string that is used as Tool output
     directory.
 
     Returns:
