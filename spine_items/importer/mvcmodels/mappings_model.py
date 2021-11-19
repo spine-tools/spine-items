@@ -22,7 +22,7 @@ import re
 from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 
 from spinetoolbox.helpers import unique_name
-from spinedb_api.parameter_value import split_value_and_type
+from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
 from spinedb_api.import_mapping.import_mapping import ImportMapping
 from spinedb_api.import_mapping.import_mapping_compat import (
@@ -768,6 +768,27 @@ class MappingsModel(QAbstractItemModel):
             self._undo_stack.push(SetFilterRe(table_row, mapping_list_row, row, self, value, current_re))
             return True
         return False
+
+    def get_set_data_delayed(self, index):
+        """Returns a function that ParameterValueEditor can call to set data for the given index at any later time,
+        even if the model changes.
+
+        Args:
+            index (QModelIndex): model index
+
+        Returns:
+            Callable: callback for parameter value editor
+        """
+        return lambda value_type_tup, index=index: self.setData(index, join_value_and_type(*value_type_tup))
+
+    @staticmethod
+    def index_name(index):
+        """Returns identifier for parameter value editor's title.
+
+        Returns:
+            str: 'index' name
+        """
+        return index.siblingAtColumn(0).data()
 
     def set_relationship_dimension_count(self, table_row, list_row, dimension_count):
         """Sets relationship dimension count.
