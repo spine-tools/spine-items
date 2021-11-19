@@ -117,7 +117,7 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_warning.emit(f"Sorry, selected shell is not supported on your platform [{sys.platform}]")
             return ItemExecutionFinishState.FAILURE
         with ExitStack() as stack:
-            labelled_args = labelled_resource_args(forward_resources + backward_resources, stack, self._logger)
+            labelled_args = labelled_resource_args(forward_resources + backward_resources, stack)
             cmd_list = expand_cmd_line_args(self.cmd_list, labelled_args, self._logger)
         if not self.shell_name or self.shell_name == "bash":
             prgm = cmd_list.pop(0)

@@ -91,7 +91,7 @@ def cmd_line_arg_from_dict(arg_dict):
     return construct(arg_dict["arg"])
 
 
-def labelled_resource_args(resources, stack, logger):
+def labelled_resource_args(resources, stack):
     """
     Args:
         resources (Iterable of ProjectItemResource): resources to process
@@ -103,9 +103,9 @@ def labelled_resource_args(resources, stack, logger):
     result = {}
     single_resources, pack_resources = extract_packs(resources)
     for resource in single_resources:
-        result[resource.label] = stack.enter_context(resource.open(logger=logger))
+        result[resource.label] = stack.enter_context(resource.open())
     for label, resources_ in pack_resources.items():
-        result[label] = " ".join(stack.enter_context(r.open(logger=logger)) for r in resources_)
+        result[label] = " ".join(stack.enter_context(r.open()) for r in resources_)
     return result
 
 

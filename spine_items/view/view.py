@@ -125,7 +125,10 @@ class View(ProjectItem):
                 old_url = make_url(old_resource.url)
                 new_url = make_url(new_resource.url)
             elif old_resource.type_ == "file":
-                if os.path.splitext(old_resource.path)[1] == ".sqlite" and os.path.splitext(new_resource.path)[1] == ".sqlite":
+                if (
+                    os.path.splitext(old_resource.path)[1] == ".sqlite"
+                    and os.path.splitext(new_resource.path)[1] == ".sqlite"
+                ):
                     old_url = URL("sqlite", database=old_resource.path)
                     new_url = URL("sqlite", database=new_resource.path)
                 else:
