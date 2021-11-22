@@ -534,7 +534,7 @@ class MappingsModel(QAbstractItemModel):
             self.beginInsertRows(index, 0, 0)
             table_item.append_to_mapping_list(mapping_list_item)
             self.endInsertRows()
-            self._append_empty_source_table()
+            self.add_empty_row()
         if remove_empty_row:
             table_item.real = False
             table_item.checkable = False
@@ -623,13 +623,6 @@ class MappingsModel(QAbstractItemModel):
         table_item.append_to_mapping_list(list_item)
         self.beginInsertRows(QModelIndex(), len(self._mappings), len(self._mappings))
         self._mappings.append(table_item)
-        self.endInsertRows()
-
-    def _append_empty_source_table(self):
-        """Adds a new row to the end of source table list."""
-        self.beginInsertRows(QModelIndex(), self.rowCount() - 1, self.rowCount() - 1)
-        empty_item = SourceTableItem("<unnamed table>", False, checkable=False, editable=True, real=False)
-        self._mappings.append(empty_item)
         self.endInsertRows()
 
     def _remove_last_source_table(self):
@@ -1146,6 +1139,7 @@ class MappingsModel(QAbstractItemModel):
             self.row_or_column_type_recommended.emit(-(component.position + 1), convert_spec, Qt.Vertical)
 
     def add_empty_row(self):
+        """Adds the special 'unnamed table' row at the end of table list."""
         last_row = len(self._mappings) - 1
         empty_item = SourceTableItem("<unnamed table>", checked=False, checkable=False, editable=True, real=False)
         self.beginInsertRows(QModelIndex(), last_row, last_row)
