@@ -49,6 +49,9 @@ from ..mapping_colors import ERROR_COLOR
 from .mappings_model_roles import Role
 
 
+UNNAMED_TABLE_NAME = "<unnamed table>"
+
+
 @unique
 class FlattenedColumn(IntEnum):
     NAME = 0
@@ -1138,10 +1141,21 @@ class MappingsModel(QAbstractItemModel):
         else:
             self.row_or_column_type_recommended.emit(-(component.position + 1), convert_spec, Qt.Vertical)
 
+    def set_tables_editable(self, editable):
+        """Enables or disables table name editing.
+
+        Args:
+            editable (bool): True to enable table name editing, False to disable
+        """
+        for item in self._mappings[1:]:
+            if item.name == UNNAMED_TABLE_NAME:
+                continue
+            item.editable = editable
+
     def add_empty_row(self):
         """Adds the special 'unnamed table' row at the end of table list."""
         last_row = len(self._mappings) - 1
-        empty_item = SourceTableItem("<unnamed table>", checked=False, checkable=False, editable=True, real=False)
+        empty_item = SourceTableItem(UNNAMED_TABLE_NAME, checked=False, checkable=False, editable=True, real=False)
         self.beginInsertRows(QModelIndex(), last_row, last_row)
         self._mappings.append(empty_item)
         self.endInsertRows()

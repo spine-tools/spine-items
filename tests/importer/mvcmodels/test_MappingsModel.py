@@ -42,6 +42,33 @@ class TestMappingsModel(unittest.TestCase):
         self.assertEqual(index.data(), "Select All")
 
 
+class TestTableList(unittest.TestCase):
+    def setUp(self):
+        self._undo_stack = QUndoStack()
+        self._model_parent = QObject()
+        self._model = MappingsModel(self._undo_stack, self._model_parent)
+
+    def tearDown(self):
+        self._undo_stack.deleteLater()
+        self._model_parent.deleteLater()
+        QApplication.processEvents()
+
+    def test_set_tables_editable(self):
+        self._model.add_empty_row()
+        table_index = self._model.index(1, 0)
+        with signal_waiter(self._model.dataChanged) as waiter:
+            self.assertTrue(self._model.setData(table_index, "table"))
+            waiter.wait()
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(int(self._model.flags(self._model.index(0, 0)) & Qt.ItemIsEditable), 0)
+        self.assertNotEqual(int(self._model.flags(self._model.index(1, 0)) & Qt.ItemIsEditable), 0)
+        self.assertNotEqual(int(self._model.flags(self._model.index(2, 0)) & Qt.ItemIsEditable), 0)
+        self._model.set_tables_editable(False)
+        self.assertEqual(int(self._model.flags(self._model.index(0, 0)) & Qt.ItemIsEditable), 0)
+        self.assertEqual(int(self._model.flags(self._model.index(1, 0)) & Qt.ItemIsEditable), 0)
+        self.assertNotEqual(int(self._model.flags(self._model.index(2, 0)) & Qt.ItemIsEditable), 0)
+
+
 class TestMappingComponentsTable(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

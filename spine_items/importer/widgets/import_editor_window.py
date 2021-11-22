@@ -224,6 +224,9 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             self._FileLessConnector.__name__ = connector.__name__
             self._FileLessConnector.OPTIONS = connector.OPTIONS
             connector = self._FileLessConnector
+            self._mappings_model.set_tables_editable(True)
+        else:
+            self._mappings_model.set_tables_editable(False)
         self._ui.actionSwitch_connector.setEnabled(True)
         connector_settings = {"gams_directory": _gams_system_directory(self._toolbox)}
         if self._connection_manager:
