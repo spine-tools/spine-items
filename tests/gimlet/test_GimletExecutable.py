@@ -23,8 +23,8 @@ from unittest import mock
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine import ExecutionDirection
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
+from spine_engine.project_item.project_item_resource import CmdLineArg
 from spine_items.gimlet.executable_item import ExecutableItem
-from spine_items.utils import CmdLineArg
 
 
 class TestGimletExecutable(unittest.TestCase):

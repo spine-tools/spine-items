@@ -25,11 +25,11 @@ from spinedb_api.spine_io.importers.json_reader import JSONConnector
 from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
 from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.project_item.project_item_resource import labelled_resource_filepaths
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
 from .item_info import ItemInfo
 from .do_work import do_work
-from ..utils import labelled_resource_filepaths
 
 
 class ExecutableItem(ExecutableItemBase):

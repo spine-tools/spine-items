@@ -27,15 +27,15 @@ from spine_engine.utils.helpers import shorten
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
 from spine_engine.spine_engine import ItemExecutionFinishState
-from .item_info import ItemInfo
-from .utils import SHELLS
-from ..utils import (
+from spine_engine.project_item.project_item_resource import (
     CmdLineArg,
     cmd_line_arg_from_dict,
     expand_cmd_line_args,
-    labelled_resource_filepaths,
     labelled_resource_args,
+    labelled_resource_filepaths,
 )
+from .item_info import ItemInfo
+from .utils import SHELLS
 
 
 class ExecutableItem(ExecutableItemBase):

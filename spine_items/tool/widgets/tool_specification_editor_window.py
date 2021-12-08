@@ -153,10 +153,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # For Python Tool specs, return the jupyter kernel spec selector
         if toolspectype.lower() == "python":
             return PythonToolSpecOptionalWidget(self)
-        elif toolspectype.lower() == "executable":
+        if toolspectype.lower() == "executable":
             return ExecutableToolSpecOptionalWidget(self)
-        else:
-            return None
+        return None
 
     def _get_optional_widget(self, toolspectype):
         """Returns the current optional widget for given tool
@@ -447,22 +446,19 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.treeView_io_files.expand(index)
 
     def populate_inputfiles_list(self, names):
-        """List input files in QTreeView.
-        """
+        """List input files in QTreeView."""
         self.spec_dict["inputfiles"] = names
         index = self.io_files_model.index(0, 0)
         self._populate_io_files_list(index, names)
 
     def populate_inputfiles_opt_list(self, names):
-        """List optional input files in QTreeView.
-        """
+        """List optional input files in QTreeView."""
         self.spec_dict["inputfiles_opt"] = names
         index = self.io_files_model.index(1, 0)
         self._populate_io_files_list(index, names)
 
     def populate_outputfiles_list(self, names):
-        """List output files in QTreeView.
-        """
+        """List output files in QTreeView."""
         self.spec_dict["outputfiles"] = names
         index = self.io_files_model.index(2, 0)
         self._populate_io_files_list(index, names)

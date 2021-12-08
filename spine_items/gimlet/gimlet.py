@@ -19,12 +19,12 @@ import os
 from PySide2.QtCore import QModelIndex, Slot, Qt
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.config import GIMLET_WORK_DIR_NAME
+from spine_engine.project_item.project_item_resource import cmd_line_arg_from_dict, LabelArg
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .commands import UpdateShellCheckBoxCommand, UpdateShellComboboxCommand, UpdatecmdCommand, UpdateWorkDirModeCommand
 from ..commands import ChangeItemSelectionCommand, UpdateCmdLineArgsCommand
 from ..models import GimletCommandLineArgsModel, CheckableFileListModel
-from ..utils import cmd_line_arg_from_dict, LabelArg
 
 
 class Gimlet(ProjectItem):

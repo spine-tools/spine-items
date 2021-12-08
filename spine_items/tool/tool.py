@@ -20,7 +20,9 @@ from PySide2.QtCore import Slot, Signal
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
+from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
+from spine_engine.project_item.project_item_resource import CmdLineArg, cmd_line_arg_from_dict, LabelArg
 from spine_engine.utils.helpers import resolve_python_interpreter
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
 from ..commands import UpdateCmdLineArgsCommand
@@ -29,8 +31,7 @@ from .widgets.custom_menus import ToolSpecificationMenu
 from .widgets.options_widgets import JuliaOptionsWidget
 from .executable_item import ExecutableItem
 from .utils import flatten_file_path_duplicates, find_file
-from ..utils import CmdLineArg, cmd_line_arg_from_dict, LabelArg
-from ..models import ToolCommandLineArgsModel, FileListModel
+from ..models import ToolCommandLineArgsModel
 from .output_resources import scan_for_resources
 
 

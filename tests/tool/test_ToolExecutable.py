@@ -23,9 +23,9 @@ from unittest import mock
 from PySide2.QtCore import QCoreApplication
 from spine_engine.project_item.project_item_resource import file_resource
 from spine_engine.execution_managers.persistent_execution_manager import kill_persistent_processes
+from spine_engine.project_item.project_item_resource import CmdLineArg
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
-from spine_items.utils import CmdLineArg
 
 
 class TestToolExecutable(unittest.TestCase):
