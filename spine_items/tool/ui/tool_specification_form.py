@@ -25,9 +25,9 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
+from spinetoolbox.widgets.code_text_edit import CodeTextEdit
 from spinetoolbox.widgets.custom_qtreeview import CustomTreeView
 from spinetoolbox.widgets.custom_qtreeview import SourcesTreeView
-from spine_items.tool.widgets.main_program_text_edit import MainProgramTextEdit
 
 from spine_items import resources_icons_rc
 
@@ -238,13 +238,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_8.setSpacing(2)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
         self.verticalLayout_8.setContentsMargins(3, 3, 3, 3)
-        self.textEdit_program = MainProgramTextEdit(self.dockWidgetContents)
+        self.textEdit_program = CodeTextEdit(self.dockWidgetContents)
         self.textEdit_program.setObjectName(u"textEdit_program")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.textEdit_program.sizePolicy().hasHeightForWidth())
-        self.textEdit_program.setSizePolicy(sizePolicy3)
 
         self.verticalLayout_8.addWidget(self.textEdit_program)
 

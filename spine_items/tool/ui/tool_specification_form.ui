@@ -314,14 +314,7 @@
       <number>3</number>
      </property>
      <item>
-      <widget class="MainProgramTextEdit" name="textEdit_program">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-      </widget>
+      <widget class="CodeTextEdit" name="textEdit_program"/>
      </item>
     </layout>
    </widget>
@@ -511,6 +504,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>CodeTextEdit</class>
+   <extends>QPlainTextEdit</extends>
+   <header>spinetoolbox/widgets/code_text_edit.h</header>
+  </customwidget>
+  <customwidget>
    <class>CustomTreeView</class>
    <extends>QTreeView</extends>
    <header>spinetoolbox/widgets/custom_qtreeview.h</header>
@@ -519,11 +517,6 @@
    <class>SourcesTreeView</class>
    <extends>QTreeView</extends>
    <header>spinetoolbox/widgets/custom_qtreeview.h</header>
-  </customwidget>
-  <customwidget>
-   <class>MainProgramTextEdit</class>
-   <extends>QLineEdit</extends>
-   <header>spine_items/tool/widgets/main_program_text_edit.h</header>
   </customwidget>
  </customwidgets>
  <resources>
