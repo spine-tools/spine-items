@@ -236,7 +236,10 @@ class TestDataStore(unittest.TestCase):
         source_item.name = "source name"
         source_item.item_type = mock.MagicMock(return_value="Data Connection")
         self.ds.notify_destination(source_item)
-        self.ds.logger.msg.emit.assert_called_with("Link established")
+        self.ds.logger.msg_warning.emit.assert_called_with(
+            "Link established. Interaction between a "
+            "<b>Data Connection</b> and a <b>Data Store</b> has not been implemented yet."
+        )
         source_item.item_type = mock.MagicMock(return_value="Importer")
         self.ds.notify_destination(source_item)
         self.ds.logger.msg.emit.assert_called_with(

@@ -489,7 +489,6 @@ class DataStore(ProjectItem):
                 f"imported in <b>{self.name}</b> when executing."
             )
         elif source_item.item_type() in ["Tool", "Gimlet"]:
-            # Does this type of link do anything?
             self._logger.msg.emit("Link established")
         elif source_item.item_type() == "Data Transformer":
             self._logger.msg.emit(
