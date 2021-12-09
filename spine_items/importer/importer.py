@@ -52,7 +52,7 @@ class Importer(ProjectItem):
             specification_name (str, optional): a spec name
             cancel_on_error (bool): if True the item's execution will stop on import error
             file_selection (dict): a map from label to a bool indicating if the file item is checked
-       """
+        """
         super().__init__(name, description, x, y, project)
         # Make logs subdirectory for this item
         self._toolbox = toolbox
@@ -91,7 +91,7 @@ class Importer(ProjectItem):
         """Notifies Toolbox of successful database import."""
         if execution_direction != "FORWARD":
             return
-        successors = [self._project.get_item(name) for name in self._project.successor_names(self)]
+        successors = [self._project.get_item(name) for name in self._project.successor_names(self.name)]
         committed_db_maps = set()
         for successor in successors:
             if successor.item_type() == "Data Store":

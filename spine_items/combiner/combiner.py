@@ -97,22 +97,51 @@ class Combiner(ProjectItem):
         """Update Data Store tab name label. Used only when renaming project items."""
         self._properties_ui.label_combiner_name.setText(self.name)
 
+    def predecesor_data_stores(self):
+        for name in self._project.predecessor_names(self.name):
+            item = self._project.get_item(name)
+            if item.item_type() == "Data Store":
+                yield item
+
+    def successor_data_stores(self):
+        for name in self._project.successor_names(self.name):
+            item = self._project.get_item(name)
+            if item.item_type() == "Data Store":
+                yield item
+
     @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
         if execution_direction != "FORWARD":
             return
-        return
-        # FIXME
-        url = self.sql_alchemy_url()
-        db_map = self._toolbox.db_mngr.db_map(url)
-        if db_map is not None:
+        committed_db_maps = set()
+        for successor in self.successor_data_stores():
+            url = successor.sql_alchemy_url()
+            db_map = self._toolbox.db_mngr.db_map(url)
+            if db_map:
+                committed_db_maps.add(db_map)
+        if committed_db_maps:
             cookie = self
-            self._toolbox.db_mngr.session_committed.emit({db_map}, cookie)
+            self._toolbox.db_mngr.session_committed.emit(committed_db_maps, cookie)
+
+    def upstream_resources_updated(self, resources):
+        self._check_notifications()
+
+    def downstream_resources_updated(self, resources):
+        self._check_notifications()
 
     def _check_notifications(self):
-        """Updates the SqlAlchemy format URL and checks for notifications"""
         self.clear_notifications()
+        if not list(self.predecesor_data_stores()):
+            self.add_notification(
+                "This Combiner does not have any input Data Stores. "
+                "Connect Data Stores to this to merge their data into output Data Stores."
+            )
+        if not list(self.successor_data_stores()):
+            self.add_notification(
+                "This Combiner does not have any output Data Stores. "
+                "Connect this to Data Stores to merge input Data Stores data into them."
+            )
         # FIXME
 
     def item_dict(self):
@@ -131,9 +160,10 @@ class Combiner(ProjectItem):
     def notify_destination(self, source_item):
         """See base class."""
         if source_item.item_type() == "Data Store":
+            dst_ds_names = ", ".join(x.name for x in self.successor_data_stores())
             self._logger.msg.emit(
                 "Link established. "
-                f"Data from <b>{source_item.name}</b> will be merged into all target Data Stores upon execution."
-            )  # FIXME
+                f"Data from <b>{source_item.name}</b> will be merged into <b>{dst_ds_names}</b> upon execution."
+            )
         else:
             super().notify_destination(source_item)
