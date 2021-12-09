@@ -16,7 +16,7 @@ Tool class.
 :date:   19.12.2017
 """
 import os
-from PySide2.QtCore import Slot, Signal
+from PySide2.QtCore import Slot, Signal, QItemSelection
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
@@ -140,7 +140,29 @@ class Tool(ProjectItem):
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
         s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
         s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
+        s[
+            self._properties_ui.treeView_input_files.selectionModel().selectionChanged
+        ] = self._update_add_args_button_enabled
+        s[
+            self._properties_ui.treeView_cmdline_args.selectionModel().selectionChanged
+        ] = self._update_remove_args_button_enabled
         return s
+
+    @Slot(QItemSelection, QItemSelection)
+    def _update_add_args_button_enabled(self, _selected, _deselected):
+        self._do_update_add_args_button_enabled()
+
+    def _do_update_add_args_button_enabled(self):
+        enabled = self._properties_ui.treeView_input_files.selectionModel().hasSelection()
+        self._properties_ui.toolButton_add_file_path_arg.setEnabled(enabled)
+
+    @Slot(QItemSelection, QItemSelection)
+    def _update_remove_args_button_enabled(self, _selected, _deselected):
+        self._do_update_remove_args_button_enabled()
+
+    def _do_update_remove_args_button_enabled(self):
+        enabled = self._properties_ui.treeView_cmdline_args.selectionModel().hasSelection()
+        self._properties_ui.toolButton_remove_arg.setEnabled(enabled)
 
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
@@ -151,6 +173,8 @@ class Tool(ProjectItem):
         self.update_execute_in_work_button()
         self._properties_ui.label_jupyter.setText("")
         self._update_tool_ui()
+        self._do_update_add_args_button_enabled()
+        self._do_update_remove_args_button_enabled()
 
     @Slot(bool)
     def show_specification_window(self, _=True):

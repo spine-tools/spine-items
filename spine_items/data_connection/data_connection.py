@@ -19,10 +19,9 @@ Module for data connection class.
 import os
 import shutil
 import logging
-from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex
+from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection
 from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QStyle, QFileIconProvider, QInputDialog, QMessageBox
-
 from spine_engine.project_item.project_item_resource import file_resource
 from spine_engine.utils.serialization import deserialize_path, serialize_path, path_in_dir
 from spinetoolbox.project_item.project_item import ProjectItem
@@ -55,9 +54,8 @@ class DataConnection(ProjectItem):
         self.reference_model = QStandardItemModel()  # References to files
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
         self.file_system_watcher = None
-        self.references = [ref for ref in references]
+        self.references = list(references)
         self.populate_reference_list()
-        # Populate data (files) model
         self.populate_data_list()
 
     def set_up(self):
@@ -83,6 +81,15 @@ class DataConnection(ProjectItem):
     def executable_class(self):
         return ExecutableItem
 
+    @Slot(QItemSelection, QItemSelection)
+    def _update_ref_buttons_enabled(self, _selected, _deselected):
+        self._do_update_buttons_enabled()
+
+    def _do_update_buttons_enabled(self):
+        enabled = self._properties_ui.treeView_dc_references.selectionModel().hasSelection()
+        self._properties_ui.toolButton_minus.setEnabled(enabled)
+        self._properties_ui.toolButton_add.setEnabled(enabled)
+
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
@@ -99,6 +106,9 @@ class DataConnection(ProjectItem):
         s[self.get_icon().files_dropped_on_icon] = self.receive_files_dropped_on_icon
         s[self._properties_ui.treeView_dc_references.del_key_pressed] = lambda: self.remove_references
         s[self._properties_ui.treeView_dc_data.del_key_pressed] = self.remove_files
+        s[
+            self._properties_ui.treeView_dc_references.selectionModel().selectionChanged
+        ] = self._update_ref_buttons_enabled
         return s
 
     def restore_selections(self):
@@ -106,6 +116,7 @@ class DataConnection(ProjectItem):
         self._properties_ui.label_dc_name.setText(self.name)
         self._properties_ui.treeView_dc_references.setModel(self.reference_model)
         self._properties_ui.treeView_dc_data.setModel(self.data_model)
+        self._do_update_buttons_enabled()
 
     @Slot(QGraphicsItem, list)
     def receive_files_dropped_on_icon(self, icon, file_paths):
@@ -389,8 +400,7 @@ class DataConnection(ProjectItem):
             return [entry.path for entry in scan_iterator if entry.is_file()]
 
     def populate_reference_list(self):
-        """List file references in QTreeView.
-        """
+        """List file references in QTreeView."""
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
         self._append_references_to_model(*self.references)
@@ -411,8 +421,7 @@ class DataConnection(ProjectItem):
             self.reference_model.appendRow(item)
 
     def populate_data_list(self):
-        """List project internal data (files) in QTreeView.
-        """
+        """List project internal data (files) in QTreeView."""
         self.data_model.clear()
         self.data_model.setHorizontalHeaderItem(0, QStandardItem("Data"))  # Add header
         self._append_data_files_to_model(*self.data_files())
