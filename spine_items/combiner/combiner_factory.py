@@ -35,7 +35,7 @@ class CombinerFactory(ProjectItemFactory):
 
     @staticmethod
     def icon_color():
-        return QColor("coral")
+        return QColor("slategray")
 
     @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
