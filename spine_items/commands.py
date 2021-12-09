@@ -15,7 +15,6 @@ Undo/redo commands that can be used by multiple project items.
 :authors: M. Marin (KTH), P. Savolainen (VTT)
 :date:   5.5.2020
 """
-from PySide2.QtWidgets import QUndoCommand
 from spinetoolbox.project_commands import SpineToolboxCommand
 
 

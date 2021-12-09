@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-DataStore's execute kernel (do_work), as target for a multiprocess.Process
+Combiner's execute kernel (do_work), as target for a multiprocess.Process
 
 :authors: M. Marin (KTH)
 :date:   6.11.2020
@@ -36,31 +36,34 @@ def _get_db_map(url, logger):
     return db_map
 
 
-def do_work(cancel_on_error, logs_dir, from_urls, to_url, logger):
-    from_db_maps = [_get_db_map(url, logger) for url in from_urls]
-    to_db_map = _get_db_map(to_url, logger)
-    if to_db_map is None:
-        return (False,)
-    from_db_map_data = {db_map: export_data(db_map) for db_map in from_db_maps if db_map is not None}
+def do_work(cancel_on_error, logs_dir, from_urls, to_urls, logger):
+    from_db_maps_iter = (_get_db_map(url, logger) for url in from_urls)
+    to_db_maps_iter = (_get_db_map(url, logger) for url in to_urls)
+    to_db_maps = [db_map for db_map in to_db_maps_iter if db_map is not None]
+    from_db_map_data = {db_map: export_data(db_map) for db_map in from_db_maps_iter if db_map is not None}
     all_errors = []
     for from_db_map, data in from_db_map_data.items():
-        import_count, import_errors = import_data(to_db_map, **data)
-        all_errors += import_errors
-        if import_errors and cancel_on_error and to_db_map.has_pending_changes():
-            to_db_map.rollback_session()
-            continue
-        if import_count:
-            to_db_map.commit_session(f"Import {import_count} items from {from_db_map.db_url}")
-            logger.msg_success.emit(
-                "Merged {0} items with {1} errors from {2} into {3}".format(
-                    import_count, len(import_errors), from_db_map.db_url, to_db_map.db_url
+        for to_db_map in to_db_maps:
+            import_count, import_errors = import_data(to_db_map, **data)
+            all_errors += import_errors
+            if import_errors and cancel_on_error and to_db_map.has_pending_changes():
+                to_db_map.rollback_session()
+                continue
+            if import_count:
+                to_db_map.commit_session(f"Import {import_count} items from {from_db_map.db_url}")
+                logger.msg_success.emit(
+                    "Merged {0} items with {1} errors from {2} into {3}".format(
+                        import_count, len(import_errors), from_db_map.db_url, to_db_map.db_url
+                    )
                 )
-            )
-        else:
-            logger.msg_warning.emit("No new data merged from {0} into {1}".format(from_db_map.db_url, to_db_map.db_url))
+            else:
+                logger.msg_warning.emit(
+                    "No new data merged from {0} into {1}".format(from_db_map.db_url, to_db_map.db_url)
+                )
     for db_map in from_db_map_data:
         db_map.connection.close()
-    to_db_map.connection.close()
+    for db_map in to_db_maps:
+        db_map.connection.close()
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()

@@ -18,7 +18,7 @@ Module for data store class.
 
 import os
 from shutil import copyfile
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QAction, QFileDialog, QApplication, QMenu
 
 from spine_engine.project_item.project_item_resource import database_resource
@@ -27,7 +27,6 @@ from spinetoolbox.helpers import create_dir
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
 from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
-from ..commands import UpdateCancelOnErrorCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .utils import convert_to_sqlalchemy_url
@@ -36,7 +35,7 @@ from ..utils import database_label
 
 
 class DataStore(ProjectItem):
-    def __init__(self, name, description, x, y, toolbox, project, url, cancel_on_error=False):
+    def __init__(self, name, description, x, y, toolbox, project, url):
         """Data Store class.
 
         Args:
@@ -47,7 +46,6 @@ class DataStore(ProjectItem):
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
             url (str or dict, optional): SQLAlchemy url
-            cancel_on_error (bool): if True, changes will be reverted on errors
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -56,7 +54,6 @@ class DataStore(ProjectItem):
             create_dir(self.logs_dir)
         except OSError:
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
-        self.cancel_on_error = cancel_on_error
         if url is None:
             url = dict()
         self._url = self.parse_url(url)
@@ -113,13 +110,11 @@ class DataStore(ProjectItem):
         s[self._properties_ui.lineEdit_host.editingFinished] = self.refresh_host
         s[self._properties_ui.lineEdit_port.editingFinished] = self.refresh_port
         s[self._properties_ui.lineEdit_database.editingFinished] = self.refresh_database
-        s[self._properties_ui.cancel_on_error_checkBox.stateChanged] = self._handle_cancel_on_error_changed
         return s
 
     def restore_selections(self):
         """Load url into selections."""
         self._properties_ui.label_ds_name.setText(self.name)
-        self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
         self.load_url_into_selections(self._url)
 
     def url(self):
@@ -162,8 +157,7 @@ class DataStore(ProjectItem):
         return True
 
     def load_url_into_selections(self, url):
-        """Load given url attribute into shared widget selections.
-        """
+        """Load given url attribute into shared widget selections."""
         if not self._active:
             return
         if not url:
@@ -249,22 +243,6 @@ class DataStore(ProjectItem):
     @Slot(str)
     def refresh_dialect(self, dialect):
         self.update_url(dialect=dialect)
-
-    @Slot(int)
-    def _handle_cancel_on_error_changed(self, _state):
-        cancel_on_error = self._properties_ui.cancel_on_error_checkBox.isChecked()
-        if self.cancel_on_error == cancel_on_error:
-            return
-        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel_on_error))
-
-    def set_cancel_on_error(self, cancel_on_error):
-        self.cancel_on_error = cancel_on_error
-        if not self._active:
-            return
-        check_state = Qt.Checked if self.cancel_on_error else Qt.Unchecked
-        self._properties_ui.cancel_on_error_checkBox.blockSignals(True)
-        self._properties_ui.cancel_on_error_checkBox.setCheckState(check_state)
-        self._properties_ui.cancel_on_error_checkBox.blockSignals(False)
 
     def enable_dialect(self, dialect):
         """Enable the given dialect in the item controls."""
@@ -450,7 +428,6 @@ class DataStore(ProjectItem):
         # If database key is a file, change the path to relative
         if d["url"]["dialect"] == "sqlite" and d["url"]["database"]:
             d["url"]["database"] = serialize_path(d["url"]["database"], self._project.project_dir)
-        d["cancel_on_error"] = self.cancel_on_error
         return d
 
     def copy_local_data(self, item_dict):
@@ -487,8 +464,7 @@ class DataStore(ProjectItem):
         url = item_dict["url"]
         if url and not isinstance(url["database"], str):
             url["database"] = deserialize_path(url["database"], project.project_dir)
-        cancel_on_error = item_dict.get("cancel_on_error", False)
-        return DataStore(name, description, x, y, toolbox, project, url, cancel_on_error)
+        return DataStore(name, description, x, y, toolbox, project, url)
 
     def rename(self, new_name, rename_data_dir_message):
         """See base class."""
@@ -497,7 +473,6 @@ class DataStore(ProjectItem):
             return False
         # If dialect is sqlite and db line edit refers to a file in the old data_dir, db line edit needs updating
         if self._url["dialect"] == "sqlite":
-            old_url = self._url["database"]
             db_dir, db_filename = os.path.split(os.path.abspath(self._url["database"].strip()))
             if db_dir == old_data_dir:
                 database = os.path.join(self.data_dir, db_filename)  # NOTE: data_dir has been updated at this point
@@ -513,11 +488,6 @@ class DataStore(ProjectItem):
             self._logger.msg.emit(
                 f"Link established. Mapped data generated by <b>{source_item.name}</b> will be "
                 f"imported in <b>{self.name}</b> when executing."
-            )
-        elif source_item.item_type() == "Data Store":
-            self._logger.msg.emit(
-                "Link established. "
-                f"Data from <b>{source_item.name}</b> will be merged into <b>{self.name}'s upon execution</b>."
             )
         elif source_item.item_type() in ["Data Connection", "Tool", "Gimlet"]:
             # Does this type of link do anything?

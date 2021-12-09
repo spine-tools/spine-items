@@ -627,19 +627,6 @@
         </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="cancel_on_error_checkBox">
-         <property name="toolTip">
-          <string>If there are any errors when trying to import data cancel the whole import.</string>
-         </property>
-         <property name="text">
-          <string>Cancel merges to this db on error</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="Line" name="line_8">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
