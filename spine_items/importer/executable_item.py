@@ -33,7 +33,7 @@ from .do_work import do_work
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, mapping, selected_files, gams_path, cancel_on_error, project_dir, logger):
+    def __init__(self, name, mapping, selected_files, gams_path, cancel_on_error, on_conflict, project_dir, logger):
         """
         Args:
             name (str): Importer's name
@@ -41,6 +41,7 @@ class ExecutableItem(ExecutableItemBase):
             selected_files (list): selected_files
             gams_path (str): path to system's GAMS executable or empty string for the default path
             cancel_on_error (bool): if True, revert changes on error and quit
+            on_conflict (str): conflict resolution strategy for spinedb_api.import_data
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
@@ -49,6 +50,7 @@ class ExecutableItem(ExecutableItemBase):
         self._selected_files = selected_files
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
+        self._on_conflict = on_conflict
         self._process = None
 
     @staticmethod
@@ -95,6 +97,7 @@ class ExecutableItem(ExecutableItemBase):
             args=(
                 self._mapping,
                 self._cancel_on_error,
+                self._on_conflict,
                 self._logs_dir,
                 source_filepaths,
                 connector,
@@ -127,4 +130,5 @@ class ExecutableItem(ExecutableItemBase):
         selected_files = [filepath for filepath, selected in file_selection.items() if selected]
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
-        return cls(name, mapping, selected_files, gams_path, cancel_on_error, project_dir, logger)
+        on_conflict = item_dict["on_conflict"]
+        return cls(name, mapping, selected_files, gams_path, cancel_on_error, on_conflict, project_dir, logger)

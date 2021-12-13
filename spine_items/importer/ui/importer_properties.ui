@@ -18,7 +18,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>294</width>
+    <width>426</width>
     <height>370</height>
    </rect>
   </property>
@@ -98,8 +98,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>292</width>
-        <height>348</height>
+        <width>509</width>
+        <height>334</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -196,6 +196,38 @@
           <bool>true</bool>
          </property>
         </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>If values already exist:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioButton_on_conflict_keep">
+           <property name="text">
+            <string>Keep existing</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioButton_on_conflict_replace">
+           <property name="text">
+            <string>Replace</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioButton_on_conflict_merge">
+           <property name="text">
+            <string>Merge indexes</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QCheckBox" name="cancel_on_error_checkBox">

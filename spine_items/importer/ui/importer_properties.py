@@ -31,7 +31,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(294, 370)
+        Form.resize(426, 370)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -63,7 +63,7 @@ class Ui_Form(object):
         self.scrollArea_6.setWidgetResizable(True)
         self.scrollAreaWidgetContents_5 = QWidget()
         self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 292, 348))
+        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 509, 334))
         self.verticalLayout_21 = QVBoxLayout(self.scrollAreaWidgetContents_5)
         self.verticalLayout_21.setObjectName(u"verticalLayout_21")
         self.horizontalLayout_9 = QHBoxLayout()
@@ -119,6 +119,31 @@ class Ui_Form(object):
 
         self.verticalLayout_21.addWidget(self.treeView_files)
 
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.label = QLabel(self.scrollAreaWidgetContents_5)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout.addWidget(self.label)
+
+        self.radioButton_on_conflict_keep = QRadioButton(self.scrollAreaWidgetContents_5)
+        self.radioButton_on_conflict_keep.setObjectName(u"radioButton_on_conflict_keep")
+
+        self.horizontalLayout.addWidget(self.radioButton_on_conflict_keep)
+
+        self.radioButton_on_conflict_replace = QRadioButton(self.scrollAreaWidgetContents_5)
+        self.radioButton_on_conflict_replace.setObjectName(u"radioButton_on_conflict_replace")
+
+        self.horizontalLayout.addWidget(self.radioButton_on_conflict_replace)
+
+        self.radioButton_on_conflict_merge = QRadioButton(self.scrollAreaWidgetContents_5)
+        self.radioButton_on_conflict_merge.setObjectName(u"radioButton_on_conflict_merge")
+
+        self.horizontalLayout.addWidget(self.radioButton_on_conflict_merge)
+
+
+        self.verticalLayout_21.addLayout(self.horizontalLayout)
+
         self.cancel_on_error_checkBox = QCheckBox(self.scrollAreaWidgetContents_5)
         self.cancel_on_error_checkBox.setObjectName(u"cancel_on_error_checkBox")
         self.cancel_on_error_checkBox.setChecked(True)
@@ -173,6 +198,10 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_edit_specification.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Edit specification.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
+        self.label.setText(QCoreApplication.translate("Form", u"If values already exist:", None))
+        self.radioButton_on_conflict_keep.setText(QCoreApplication.translate("Form", u"Keep existing", None))
+        self.radioButton_on_conflict_replace.setText(QCoreApplication.translate("Form", u"Replace", None))
+        self.radioButton_on_conflict_merge.setText(QCoreApplication.translate("Form", u"Merge indexes", None))
 #if QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setToolTip(QCoreApplication.translate("Form", u"If there are any errors when trying to import data cancel the whole import.", None))
 #endif // QT_CONFIG(tooltip)
