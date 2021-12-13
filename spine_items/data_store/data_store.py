@@ -495,7 +495,7 @@ class DataStore(ProjectItem):
                 "Link established. "
                 f"Data transformed by <b>{source_item.name}</b> will be merged into <b>{self.name}</b> upon execution."
             )
-        elif source_item.item_type() == "Combiner":
+        elif source_item.item_type() == "Merger":
             src_ds_names = ", ".join(x.name for x in source_item.predecesor_data_stores())
             self._logger.msg.emit(
                 "Link established. "

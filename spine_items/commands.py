@@ -20,7 +20,7 @@ from spinetoolbox.project_commands import SpineToolboxCommand
 
 class UpdateCancelOnErrorCommand(SpineToolboxCommand):
     def __init__(self, project_item, cancel_on_error):
-        """Command to update Importer, Exporter, and Combiner cancel on error setting.
+        """Command to update Importer, Exporter, and Merger cancel on error setting.
 
         Args:
             project_item (ProjectItem): Item
@@ -41,7 +41,7 @@ class UpdateCancelOnErrorCommand(SpineToolboxCommand):
 
 class UpdateOnConflictCommand(SpineToolboxCommand):
     def __init__(self, project_item, on_conflict):
-        """Command to update Importer and Combiner 'on conflict' setting.
+        """Command to update Importer and Merger 'on conflict' setting.
 
         Args:
             project_item (ProjectItem): Item

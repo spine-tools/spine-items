@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-CombinerPropertiesWidget widget.
+MergerPropertiesWidget widget.
 
 :author: M. Marin (KTH)
 :date:   12.9.2019
@@ -19,7 +19,7 @@ CombinerPropertiesWidget widget.
 from PySide2.QtWidgets import QWidget
 
 
-class CombinerPropertiesWidget(QWidget):
+class MergerPropertiesWidget(QWidget):
     """Widget for the Data Store Item Properties."""
 
     def __init__(self, toolbox):
@@ -28,9 +28,9 @@ class CombinerPropertiesWidget(QWidget):
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
         super().__init__()
-        from ..ui.combiner_properties import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.merger_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
         self._toolbox = toolbox
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "Combiner")
+        toolbox.ui.tabWidget_item_properties.addTab(self, "Merger")

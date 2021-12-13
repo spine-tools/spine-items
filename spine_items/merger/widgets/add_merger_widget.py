@@ -10,18 +10,18 @@
 ######################################################################################################################
 
 """
-Widget shown to user when a new Combiner is created.
+Widget shown to user when a new Merger is created.
 
 :author: P. Savolainen (VTT)
 :date:   19.1.2017
 """
 
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
-from ..combiner import Combiner
+from ..merger import Merger
 from ..item_info import ItemInfo
 
 
-class AddCombinerWidget(AddProjectItemWidget):
+class AddMergerWidget(AddProjectItemWidget):
     """A widget to query user's preferences for a new item."""
 
     def __init__(self, toolbox, x, y, spec=""):
@@ -32,7 +32,7 @@ class AddCombinerWidget(AddProjectItemWidget):
             y (int): Y coordinate of new item
             spec (str): item specification's name
         """
-        super().__init__(toolbox, x, y, Combiner, spec=spec)
+        super().__init__(toolbox, x, y, Merger, spec=spec)
 
     def call_add_item(self):
         """Creates new Item according to user's selections."""

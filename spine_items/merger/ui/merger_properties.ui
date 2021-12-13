@@ -42,7 +42,7 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QLabel" name="label_combiner_name">
+    <widget class="QLabel" name="label_merger_name">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -146,32 +146,6 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_27">
          <item>
-          <widget class="QToolButton" name="toolButton_copy_url">
-           <property name="minimumSize">
-            <size>
-             <width>22</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>22</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Copy current database url to clipboard.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>...</string>
-           </property>
-           <property name="icon">
-            <iconset resource="../../ui/resources/resources_icons.qrc">
-             <normaloff>:/icons/copy.svg</normaloff>:/icons/copy.svg</iconset>
-           </property>
-          </widget>
-         </item>
-         <item>
           <spacer name="horizontalSpacer_16">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -185,7 +159,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QToolButton" name="toolButton_ds_open_dir">
+          <widget class="QToolButton" name="toolButton_merger_open_dir">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -226,8 +200,7 @@
  </widget>
  <tabstops>
   <tabstop>scrollArea_5</tabstop>
-  <tabstop>toolButton_copy_url</tabstop>
-  <tabstop>toolButton_ds_open_dir</tabstop>
+  <tabstop>toolButton_merger_open_dir</tabstop>
  </tabstops>
  <resources>
   <include location="../../ui/resources/resources_icons.qrc"/>

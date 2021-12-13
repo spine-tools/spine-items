@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Module for CombinerIcon class.
+Module for MergerIcon class.
 
 :authors: M. Marin (KTH), P. Savolainen (VTT)
 :date:   4.4.2018
@@ -22,7 +22,7 @@ from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import AnimationSignaller
 
 
-class CombinerIcon(ProjectItemIcon):
+class MergerIcon(ProjectItemIcon):
     _SHAKE_FACTOR = 0.05
 
     def __init__(self, toolbox, icon, icon_color):
@@ -71,7 +71,7 @@ class CombinerIcon(ProjectItemIcon):
 
     @Slot()
     def start_animation(self):
-        """Start the animation that plays when the Combiner associated to this GraphicsItem is running."""
+        """Start the animation that plays when the Merger associated to this GraphicsItem is running."""
         if self._time_line.state() == QTimeLine.Running:
             return
         self._time_line.start()

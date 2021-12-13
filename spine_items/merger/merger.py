@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Module for Combiner class.
+Module for Merger class.
 
 :authors: P. Savolainen (VTT), M. Marin (KTH)
 :date:   18.12.2017
@@ -25,7 +25,7 @@ from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 
 
-class Combiner(ProjectItem):
+class Merger(ProjectItem):
     def __init__(self, name, description, x, y, toolbox, project, cancel_on_error=False):
         """Data Store class.
 
@@ -70,7 +70,7 @@ class Combiner(ProjectItem):
 
     def restore_selections(self):
         """Load url into selections."""
-        self._properties_ui.label_combiner_name.setText(self.name)
+        self._properties_ui.label_merger_name.setText(self.name)
         self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
 
     def project(self):
@@ -95,7 +95,7 @@ class Combiner(ProjectItem):
 
     def update_name_label(self):
         """Update Data Store tab name label. Used only when renaming project items."""
-        self._properties_ui.label_combiner_name.setText(self.name)
+        self._properties_ui.label_merger_name.setText(self.name)
 
     def predecesor_data_stores(self):
         for name in self._project.predecessor_names(self.name):
@@ -134,12 +134,12 @@ class Combiner(ProjectItem):
         self.clear_notifications()
         if not list(self.predecesor_data_stores()):
             self.add_notification(
-                "This Combiner does not have any input Data Stores. "
+                "This Merger does not have any input Data Stores. "
                 "Connect Data Stores to this to merge their data into output Data Stores."
             )
         if not list(self.successor_data_stores()):
             self.add_notification(
-                "This Combiner does not have any output Data Stores. "
+                "This Merger does not have any output Data Stores. "
                 "Connect this to Data Stores to merge input Data Stores data into them."
             )
         # FIXME
@@ -155,7 +155,7 @@ class Combiner(ProjectItem):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         cancel_on_error = item_dict.get("cancel_on_error", False)
-        return Combiner(name, description, x, y, toolbox, project, cancel_on_error)
+        return Merger(name, description, x, y, toolbox, project, cancel_on_error)
 
     def notify_destination(self, source_item):
         """See base class."""

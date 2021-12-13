@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-The CombinerFactory class.
+The MergerFactory class.
 
 :author: M. Marin (KTH)
 :date:   15.4.2020
@@ -18,16 +18,16 @@ The CombinerFactory class.
 
 from PySide2.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
-from .combiner import Combiner
-from .combiner_icon import CombinerIcon
-from .widgets.combiner_properties_widget import CombinerPropertiesWidget
-from .widgets.add_combiner_widget import AddCombinerWidget
+from .merger import Merger
+from .merger_icon import MergerIcon
+from .widgets.merger_properties_widget import MergerPropertiesWidget
+from .widgets.add_merger_widget import AddMergerWidget
 
 
-class CombinerFactory(ProjectItemFactory):
+class MergerFactory(ProjectItemFactory):
     @staticmethod
     def item_class():
-        return Combiner
+        return Merger
 
     @staticmethod
     def icon():
@@ -39,20 +39,20 @@ class CombinerFactory(ProjectItemFactory):
 
     @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
-        return AddCombinerWidget(toolbox, x, y, specification)
+        return AddMergerWidget(toolbox, x, y, specification)
 
     @staticmethod
     def make_icon(toolbox):
-        return CombinerIcon(toolbox, CombinerFactory.icon(), CombinerFactory.icon_color())
+        return MergerIcon(toolbox, MergerFactory.icon(), MergerFactory.icon_color())
 
     @staticmethod
     def make_item(name, item_dict, toolbox, project):
-        return Combiner.from_dict(name, item_dict, toolbox, project)
+        return Merger.from_dict(name, item_dict, toolbox, project)
 
     @staticmethod
     def make_properties_widget(toolbox):
         """See base class"""
-        return CombinerPropertiesWidget(toolbox)
+        return MergerPropertiesWidget(toolbox)
 
     @staticmethod
     def make_specification_menu(parent, index):
