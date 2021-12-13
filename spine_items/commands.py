@@ -15,13 +15,12 @@ Undo/redo commands that can be used by multiple project items.
 :authors: M. Marin (KTH), P. Savolainen (VTT)
 :date:   5.5.2020
 """
-from PySide2.QtWidgets import QUndoCommand
 from spinetoolbox.project_commands import SpineToolboxCommand
 
 
 class UpdateCancelOnErrorCommand(SpineToolboxCommand):
     def __init__(self, project_item, cancel_on_error):
-        """Command to update Importer, GdxExporter, and Data Store cancel on error setting.
+        """Command to update Importer, Exporter, and Combiner cancel on error setting.
 
         Args:
             project_item (ProjectItem): Item
@@ -38,6 +37,27 @@ class UpdateCancelOnErrorCommand(SpineToolboxCommand):
 
     def undo(self):
         self._project_item.set_cancel_on_error(self._undo_cancel_on_error)
+
+
+class UpdateOnConflictCommand(SpineToolboxCommand):
+    def __init__(self, project_item, on_conflict):
+        """Command to update Importer and Combiner 'on conflict' setting.
+
+        Args:
+            project_item (ProjectItem): Item
+            on_conflict (str): New setting
+        """
+        super().__init__()
+        self._project_item = project_item
+        self._redo_on_conflict = on_conflict
+        self._undo_on_conflict = self._project_item.on_conflict
+        self.setText(f"change {project_item.name} on conflict setting")
+
+    def redo(self):
+        self._project_item.set_on_conflict(self._redo_on_conflict)
+
+    def undo(self):
+        self._project_item.set_on_conflict(self._undo_on_conflict)
 
 
 class ChangeItemSelectionCommand(SpineToolboxCommand):

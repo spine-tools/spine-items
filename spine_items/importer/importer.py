@@ -21,7 +21,7 @@ from PySide2.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
-from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand
+from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand, UpdateOnConflictCommand
 from ..models import CheckableFileListModel
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
@@ -38,6 +38,7 @@ class Importer(ProjectItem):
         project,
         specification_name="",
         cancel_on_error=True,
+        on_conflict="merge",
         file_selection=None,
     ):
         """Importer class.
@@ -68,6 +69,7 @@ class Importer(ProjectItem):
                 f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
             )
         self.cancel_on_error = cancel_on_error
+        self.on_conflict = on_conflict
         self._file_model = CheckableFileListModel(header_label="Available resources")
         self._file_model.set_initial_state(file_selection if file_selection is not None else dict())
         self._file_model.checked_state_changed.connect(self._push_file_selection_change_to_undo_stack)
@@ -112,6 +114,9 @@ class Importer(ProjectItem):
         s[self._properties_ui.treeView_files.doubleClicked] = self._handle_files_double_clicked
         s[self._properties_ui.comboBox_specification.textActivated] = self._change_specification
         s[self._properties_ui.cancel_on_error_checkBox.stateChanged] = self._handle_cancel_on_error_changed
+        s[self._properties_ui.radioButton_on_conflict_merge.clicked] = self._update_on_conflict
+        s[self._properties_ui.radioButton_on_conflict_keep.clicked] = self._update_on_conflict
+        s[self._properties_ui.radioButton_on_conflict_replace.clicked] = self._update_on_conflict
         return s
 
     @Slot(str)
@@ -146,9 +151,45 @@ class Importer(ProjectItem):
         self._properties_ui.cancel_on_error_checkBox.setCheckState(check_state)
         self._properties_ui.cancel_on_error_checkBox.blockSignals(False)
 
+    def _on_conflict(self):
+        """Reads the on_conflict strategy from UI."""
+        strategies = {
+            self._properties_ui.radioButton_on_conflict_merge: "merge",
+            self._properties_ui.radioButton_on_conflict_replace: "replace",
+            self._properties_ui.radioButton_on_conflict_keep: "keep",
+        }
+        return strategies[next(button for button in strategies if button.isChecked())]
+
+    def _set_on_conflict(self):
+        """Sets the on_conflict strategy in the UI."""
+        {
+            "merge": self._properties_ui.radioButton_on_conflict_merge,
+            "replace": self._properties_ui.radioButton_on_conflict_replace,
+            "keep": self._properties_ui.radioButton_on_conflict_keep,
+        }[self.on_conflict].setChecked(True)
+
+    @Slot(bool)
+    def _update_on_conflict(self, _checked):
+        on_conflict = self._on_conflict()
+        if self.on_conflict == on_conflict:
+            return
+        self._toolbox.undo_stack.push(UpdateOnConflictCommand(self, on_conflict))
+
+    def set_on_conflict(self, on_conflict):
+        """Sets on_conflict setting.
+
+        Args:
+            on_conflict (str): on_conflict
+        """
+        self.on_conflict = on_conflict
+        if not self._active:
+            return
+        self._set_on_conflict()
+
     def restore_selections(self):
         """Restores selections into shared widgets when this project item is selected."""
         self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
+        self._set_on_conflict()
         self._properties_ui.label_name.setText(self.name)
         self._properties_ui.treeView_files.setModel(self._file_model)
         self._update_ui()
@@ -262,6 +303,7 @@ class Importer(ProjectItem):
         else:
             d["specification"] = self.specification().name
         d["cancel_on_error"] = self.cancel_on_error
+        d["on_conflict"] = self.on_conflict
         selections = list()
         for row in range(self._file_model.rowCount()):
             label, selected = self._file_model.checked_data(self._file_model.index(row, 0))
@@ -275,8 +317,11 @@ class Importer(ProjectItem):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict.get("specification", "")
         cancel_on_error = item_dict.get("cancel_on_error", False)
+        on_conflict = item_dict.get("on_conflict", "merge")
         file_selection = {label: selected for label, selected in item_dict.get("file_selection", list())}
-        return Importer(name, description, x, y, toolbox, project, specification_name, cancel_on_error, file_selection)
+        return Importer(
+            name, description, x, y, toolbox, project, specification_name, cancel_on_error, on_conflict, file_selection
+        )
 
     def notify_destination(self, source_item):
         """See base class."""
