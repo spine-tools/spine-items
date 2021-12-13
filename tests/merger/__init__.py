@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Init file for tests.project_items.combiner package. Intentionally empty.
+Init file for tests.project_items.merger package. Intentionally empty.
 
 :author: A. Soininen (VTT)
 :date:   28.10.2019

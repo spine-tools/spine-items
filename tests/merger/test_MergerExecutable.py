@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-Unit tests for CombinerExecutable.
+Unit tests for MergerExecutable.
 
 :author: A. Soininen
 :date:   6.4.2020
@@ -20,11 +20,11 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spinedb_api import create_new_spine_database, DatabaseMapping, DiffDatabaseMapping, import_functions
-from spine_items.combiner.executable_item import ExecutableItem
+from spine_items.merger.executable_item import ExecutableItem
 from spine_engine.project_item.project_item_resource import database_resource
 
 
-class TestCombinerExecutable(unittest.TestCase):
+class TestMergerExecutable(unittest.TestCase):
     def setUp(self):
         self._temp_dir = TemporaryDirectory()
 
@@ -32,7 +32,7 @@ class TestCombinerExecutable(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_item_type(self):
-        self.assertEqual(ExecutableItem.item_type(), "Combiner")
+        self.assertEqual(ExecutableItem.item_type(), "Merger")
 
     def test_from_dict(self):
         name = "Output Data Store"
@@ -46,7 +46,7 @@ class TestCombinerExecutable(unittest.TestCase):
         logger = mock.MagicMock()
         item = ExecutableItem.from_dict(item_dict, name, self._temp_dir.name, None, dict(), logger)
         self.assertIsInstance(item, ExecutableItem)
-        self.assertEqual("Combiner", item.item_type())
+        self.assertEqual("Merger", item.item_type())
 
     def test_stop_execution(self):
         executable = ExecutableItem("name", "", self._temp_dir.name, mock.MagicMock())
