@@ -238,7 +238,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         for header in (self._ui.source_data_table.horizontalHeader(), self._ui.source_data_table.verticalHeader()):
             self._ui.source_list.selectionModel().currentChanged.connect(header.set_source_table, Qt.UniqueConnection)
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
-        self._import_sources.set_connector(self._connection_manager)
+        mapping = self.specification.mapping if self.specification else {}
+        self._import_sources.set_connector(self._connection_manager, mapping)
         self._connection_manager.init_connection()
 
     @Slot()

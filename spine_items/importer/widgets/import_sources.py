@@ -95,11 +95,12 @@ class ImportSources(QObject):
     def checked_tables(self):
         return self._source_table_model.checked_table_names()
 
-    def set_connector(self, connector):
+    def set_connector(self, connector, mapping):
         """Sets connector.
 
         Args:
             connector (ConnectionManager): connector
+            mapping (dict)
         """
         self._connector = connector
         self._connector.connection_ready.connect(self.request_new_tables_from_connector)
@@ -109,6 +110,7 @@ class ImportSources(QObject):
         self._connector.default_mapping_ready.connect(self._set_default_mapping)
         self._ui_options_widget.set_connector(self._connector)
         self._source_data_model.more_data_needed.connect(self.fetch_more_data, Qt.UniqueConnection)
+        self.restore_connectors(mapping)
 
     @Slot()
     def _polish_mappings_in_list(self):
