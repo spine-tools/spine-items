@@ -213,17 +213,12 @@ class ImportMappings:
         if not selection_model.hasSelection():
             return
         indexes = selection_model.selectedIndexes()
-        if len(indexes) == 1:
-            index = indexes[0]
-            command = DuplicateMapping(index.parent().row(), self._mappings_model, index.row())
-            self._undo_stack.push(command)
-        else:
-            table_row = indexes[0].parent().row()
-            list_rows = sorted(i.row() for i in indexes)
-            self._undo_stack.beginMacro("duplicate mappings")
-            for list_row in reversed(list_rows):
-                self._undo_stack.push(DuplicateMapping(table_row, self._mappings_model, list_row))
-            self._undo_stack.endMacro()
+        table_row = indexes[0].parent().row()
+        list_rows = sorted(i.row() for i in indexes)
+        self._undo_stack.beginMacro("duplicate mapping(s)")
+        for list_row in reversed(list_rows):
+            self._undo_stack.push(DuplicateMapping(table_row, self._mappings_model, list_row))
+        self._undo_stack.endMacro()
 
     @Slot()
     def _delete_selected_mapping(self):

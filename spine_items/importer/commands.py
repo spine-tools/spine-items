@@ -372,7 +372,7 @@ class DuplicateMapping(QUndoCommand):
         root_mapping = list_index.data(Role.FLATTENED_MAPPINGS).root_mapping
         mapping_dict = [m.to_dict() for m in root_mapping.flatten()]
         self._model.insertRow(self._list_row + 1, table_index)
-        self._model.set_root_mapping(self._table_row, self._list_row, import_mapping_from_dict(mapping_dict))
+        self._model.set_root_mapping(self._table_row, self._list_row + 1, import_mapping_from_dict(mapping_dict))
 
     def undo(self):
         """Deletes the duplicated mapping."""
