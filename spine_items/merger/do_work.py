@@ -24,10 +24,13 @@ from spinedb_api import (
     SpineDBAPIError,
     SpineDBVersionError,
     DatabaseMapping,
+    create_new_spine_database,
 )
 
 
-def _get_db_map(url, logger):
+def _get_db_map(url, logger, purge_before_writing=False):
+    if purge_before_writing:
+        create_new_spine_database(url)
     try:
         db_map = DatabaseMapping(url)
     except (SpineDBAPIError, SpineDBVersionError) as err:
@@ -36,9 +39,9 @@ def _get_db_map(url, logger):
     return db_map
 
 
-def do_work(cancel_on_error, logs_dir, from_urls, to_urls, logger):
+def do_work(cancel_on_error, purge_before_writing, logs_dir, from_urls, to_urls, logger):
     from_db_maps_iter = (_get_db_map(url, logger) for url in from_urls)
-    to_db_maps_iter = (_get_db_map(url, logger) for url in to_urls)
+    to_db_maps_iter = (_get_db_map(url, logger, purge_before_writing) for url in to_urls)
     to_db_maps = [db_map for db_map in to_db_maps_iter if db_map is not None]
     from_db_map_data = {db_map: export_data(db_map) for db_map in from_db_maps_iter if db_map is not None}
     all_errors = []

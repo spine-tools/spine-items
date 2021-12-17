@@ -60,11 +60,9 @@ class ExecutableItem(ExecutableItemBase):
         to_urls = [r.url for r in backward_resources if r.type_ == "database"]
         if not from_urls or not to_urls:
             return ItemExecutionFinishState.SUCCESS
-        if self._purge_before_writing:
-            for url in to_urls:
-                create_new_spine_database(url)
         self._process = ReturningProcess(
-            target=do_work, args=(self._cancel_on_error, self._logs_dir, from_urls, to_urls, self._logger)
+            target=do_work,
+            args=(self._cancel_on_error, self._purge_before_writing, self._logs_dir, from_urls, to_urls, self._logger),
         )
         return_value = self._process.run_until_complete()
         self._process = None

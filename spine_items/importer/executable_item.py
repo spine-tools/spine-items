@@ -93,9 +93,6 @@ class ExecutableItem(ExecutableItemBase):
             if filepath is not None:
                 source_filepaths.append(filepath)
         urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
-        if self._purge_before_writing:
-            for url in urls_downstream:
-                create_new_spine_database(url)
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
             source_settings = {"gams_directory": self._gams_system_directory()}
@@ -114,6 +111,7 @@ class ExecutableItem(ExecutableItemBase):
             args=(
                 self._mapping,
                 self._cancel_on_error,
+                self._purge_before_writing,
                 self._on_conflict,
                 self._logs_dir,
                 source_filepaths,

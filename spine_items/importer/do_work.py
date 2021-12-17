@@ -22,7 +22,17 @@ from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 
-def do_work(mapping, cancel_on_error, on_conflict, logs_dir, source_filepaths, connector, urls_downstream, logger):
+def do_work(
+    mapping,
+    cancel_on_error,
+    purge_before_writing,
+    on_conflict,
+    logs_dir,
+    source_filepaths,
+    connector,
+    urls_downstream,
+    logger,
+):
     all_data = []
     all_errors = []
     table_mappings = {
@@ -86,13 +96,17 @@ def do_work(mapping, cancel_on_error, on_conflict, logs_dir, source_filepaths, c
         logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
     if all_data:
         for url in urls_downstream:
-            success = _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, url, logger)
+            success = _import_data_to_url(
+                cancel_on_error, purge_before_writing, on_conflict, logs_dir, all_data, url, logger
+            )
             if not success and cancel_on_error:
                 return (False,)
     return (True,)
 
 
-def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, url, logger):
+def _import_data_to_url(cancel_on_error, purge_before_writing, on_conflict, logs_dir, all_data, url, logger):
+    if purge_before_writing:
+        spinedb_api.create_new_spine_database(url)
     try:
         db_map = spinedb_api.DatabaseMapping(url, upgrade=False, username="Importer")
     except (spinedb_api.SpineDBAPIError, spinedb_api.SpineDBVersionError) as err:
