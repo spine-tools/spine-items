@@ -42,6 +42,7 @@ class TestMergerExecutable(unittest.TestCase):
             "x": 0,
             "y": 0,
             "cancel_on_error": True,
+            "purge_before_writing": True,
         }
         logger = mock.MagicMock()
         item = ExecutableItem.from_dict(item_dict, name, self._temp_dir.name, None, dict(), logger)
@@ -49,7 +50,7 @@ class TestMergerExecutable(unittest.TestCase):
         self.assertEqual("Merger", item.item_type())
 
     def test_stop_execution(self):
-        executable = ExecutableItem("name", "", self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", True, True, self._temp_dir.name, mock.MagicMock())
         with mock.patch(
             "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
         ) as mock_stop_execution:
@@ -57,7 +58,7 @@ class TestMergerExecutable(unittest.TestCase):
             mock_stop_execution.assert_called_once()
 
     def test_execute(self):
-        executable = ExecutableItem("name", "", self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", True, True, self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
 
     def test_execute_merge_two_dbs(self):
@@ -89,7 +90,7 @@ class TestMergerExecutable(unittest.TestCase):
         create_new_spine_database(db3_url)
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
-        executable = ExecutableItem("name", False, self._temp_dir.name, logger)
+        executable = ExecutableItem("name", True, True, self._temp_dir.name, logger)
         input_db_resources = [database_resource("provider", db1_url), database_resource("provider", db2_url)]
         output_db_resources = [database_resource("receiver", db3_url)]
         self.assertTrue(executable.execute(input_db_resources, output_db_resources))
