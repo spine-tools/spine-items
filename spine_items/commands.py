@@ -39,6 +39,27 @@ class UpdateCancelOnErrorCommand(SpineToolboxCommand):
         self._project_item.set_cancel_on_error(self._undo_cancel_on_error)
 
 
+class UpdatePurgeBeforeWritingCommand(SpineToolboxCommand):
+    def __init__(self, project_item, purge_before_writing):
+        """Command to update purge before running setting.
+
+        Args:
+            project_item (ProjectItem): Item
+            purge_before_writing (bool): New setting
+        """
+        super().__init__()
+        self._project_item = project_item
+        self._redo_purge_before_writing = purge_before_writing
+        self._undo_purge_before_writing = not purge_before_writing
+        self.setText(f"change {project_item.name} purge before running setting")
+
+    def redo(self):
+        self._project_item.set_purge_before_writing(self._redo_purge_before_writing)
+
+    def undo(self):
+        self._project_item.set_purge_before_writing(self._undo_purge_before_writing)
+
+
 class UpdateOnConflictCommand(SpineToolboxCommand):
     def __init__(self, project_item, on_conflict):
         """Command to update Importer and Merger 'on conflict' setting.

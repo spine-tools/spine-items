@@ -144,11 +144,21 @@ class Ui_Form(object):
 
         self.verticalLayout_21.addLayout(self.horizontalLayout)
 
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.cancel_on_error_checkBox = QCheckBox(self.scrollAreaWidgetContents_5)
         self.cancel_on_error_checkBox.setObjectName(u"cancel_on_error_checkBox")
         self.cancel_on_error_checkBox.setChecked(True)
 
-        self.verticalLayout_21.addWidget(self.cancel_on_error_checkBox)
+        self.horizontalLayout_2.addWidget(self.cancel_on_error_checkBox)
+
+        self.checkBox_purge_before_writing = QCheckBox(self.scrollAreaWidgetContents_5)
+        self.checkBox_purge_before_writing.setObjectName(u"checkBox_purge_before_writing")
+
+        self.horizontalLayout_2.addWidget(self.checkBox_purge_before_writing)
+
+
+        self.verticalLayout_21.addLayout(self.horizontalLayout_2)
 
         self.line_6 = QFrame(self.scrollAreaWidgetContents_5)
         self.line_6.setObjectName(u"line_6")
@@ -206,6 +216,7 @@ class Ui_Form(object):
         self.cancel_on_error_checkBox.setToolTip(QCoreApplication.translate("Form", u"If there are any errors when trying to import data cancel the whole import.", None))
 #endif // QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setText(QCoreApplication.translate("Form", u"Cancel import on error", None))
+        self.checkBox_purge_before_writing.setText(QCoreApplication.translate("Form", u"Purge before writing", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Importer's project directory in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

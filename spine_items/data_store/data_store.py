@@ -20,7 +20,6 @@ import os
 from shutil import copyfile
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QAction, QFileDialog, QApplication, QMenu
-
 from spine_engine.project_item.project_item_resource import database_resource
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
@@ -392,17 +391,6 @@ class DataStore(ProjectItem):
     def update_name_label(self):
         """Update Data Store tab name label. Used only when renaming project items."""
         self._properties_ui.label_ds_name.setText(self.name)
-
-    @Slot(object, object)
-    def handle_execution_successful(self, execution_direction, engine_state):
-        """Notifies Toolbox of successful database import."""
-        if execution_direction != "FORWARD":
-            return
-        url = self.sql_alchemy_url()
-        db_map = self._toolbox.db_mngr.db_map(url)
-        if db_map is not None:
-            cookie = self
-            self._toolbox.db_mngr.session_committed.emit({db_map}, cookie)
 
     def _check_notifications(self):
         """Updates the SqlAlchemy format URL and checks for notifications"""

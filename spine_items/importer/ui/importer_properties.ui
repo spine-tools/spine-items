@@ -230,17 +230,28 @@
         </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="cancel_on_error_checkBox">
-         <property name="toolTip">
-          <string>If there are any errors when trying to import data cancel the whole import.</string>
-         </property>
-         <property name="text">
-          <string>Cancel import on error</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QCheckBox" name="cancel_on_error_checkBox">
+           <property name="toolTip">
+            <string>If there are any errors when trying to import data cancel the whole import.</string>
+           </property>
+           <property name="text">
+            <string>Cancel import on error</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_purge_before_writing">
+           <property name="text">
+            <string>Purge before writing</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="Line" name="line_6">

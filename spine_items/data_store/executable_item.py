@@ -16,6 +16,7 @@ Contains Data Store's executable item as well as support utilities.
 :date:   1.4.2020
 """
 
+from spinedb_api.helpers import create_new_spine_database
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo

@@ -17,6 +17,7 @@ Contains Importer's executable item as well as support utilities.
 """
 
 import os
+from spinedb_api.helpers import create_new_spine_database
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
@@ -33,7 +34,18 @@ from .do_work import do_work
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, mapping, selected_files, gams_path, cancel_on_error, on_conflict, project_dir, logger):
+    def __init__(
+        self,
+        name,
+        mapping,
+        selected_files,
+        gams_path,
+        cancel_on_error,
+        purge_before_writing,
+        on_conflict,
+        project_dir,
+        logger,
+    ):
         """
         Args:
             name (str): Importer's name
@@ -41,6 +53,7 @@ class ExecutableItem(ExecutableItemBase):
             selected_files (list): selected_files
             gams_path (str): path to system's GAMS executable or empty string for the default path
             cancel_on_error (bool): if True, revert changes on error and quit
+            purge_before_writing (bool): if True, purge target dbs before writing
             on_conflict (str): conflict resolution strategy for spinedb_api.import_data
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
@@ -50,6 +63,7 @@ class ExecutableItem(ExecutableItemBase):
         self._selected_files = selected_files
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
+        self._purge_before_writing = purge_before_writing
         self._on_conflict = on_conflict
         self._process = None
 
@@ -79,6 +93,9 @@ class ExecutableItem(ExecutableItemBase):
             if filepath is not None:
                 source_filepaths.append(filepath)
         urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
+        if self._purge_before_writing:
+            for url in urls_downstream:
+                create_new_spine_database(url)
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
             source_settings = {"gams_directory": self._gams_system_directory()}
@@ -130,5 +147,16 @@ class ExecutableItem(ExecutableItemBase):
         selected_files = [filepath for filepath, selected in file_selection.items() if selected]
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
+        purge_before_writing = item_dict["purge_before_writing"]
         on_conflict = item_dict["on_conflict"]
-        return cls(name, mapping, selected_files, gams_path, cancel_on_error, on_conflict, project_dir, logger)
+        return cls(
+            name,
+            mapping,
+            selected_files,
+            gams_path,
+            cancel_on_error,
+            purge_before_writing,
+            on_conflict,
+            project_dir,
+            logger,
+        )
