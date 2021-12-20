@@ -58,7 +58,9 @@ class DataStore(ProjectItem):
         self._url = self.parse_url(url)
         self._multi_db_editors_open = {}
         self._open_url_menu = QMenu("Open URL in Spine DB editor", self._toolbox)
+        self._open_url_action = QAction("Open URL in Spine DB editor")
         self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
+        self._open_url_action.triggered.connect(self.open_url_in_spine_db_editor)
 
     @staticmethod
     def item_type():
@@ -78,8 +80,7 @@ class DataStore(ProjectItem):
         """See base class."""
         super().set_up()
         self._actions.clear()
-        self._actions.append(QAction("Open URL in Spine DB editor"))
-        self._actions[-1].triggered.connect(self.open_url_in_spine_db_editor)
+        self._actions.append(self._open_url_action)
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
@@ -185,6 +186,7 @@ class DataStore(ProjectItem):
             self._properties_ui.lineEdit_username.setText(username)
         if password is not None:
             self._properties_ui.lineEdit_password.setText(password)
+        self._update_actions_enabled()
 
     def update_url(self, **kwargs):
         """Set url key to value."""
@@ -208,6 +210,16 @@ class DataStore(ProjectItem):
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
         self._check_notifications()
+
+    def _update_actions_enabled(self):
+        open_editor_enabled = convert_to_sqlalchemy_url(self._url, self.name, logger=None) is not None
+        self._open_url_action.setEnabled(open_editor_enabled)
+        self._open_url_menu.setEnabled(open_editor_enabled)
+        if not self._active:
+            return
+        create_new_enabled = self._url["dialect"].lower() == "sqlite" or open_editor_enabled
+        self._properties_ui.pushButton_ds_open_editor.setEnabled(open_editor_enabled)
+        self._properties_ui.pushButton_create_new_spine_db.setEnabled(create_new_enabled)
 
     @Slot()
     def refresh_host(self):
