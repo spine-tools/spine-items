@@ -22,10 +22,7 @@ import json
 import os.path
 from pathlib import Path
 from time import time
-from spine_engine.project_item.project_item_resource import (
-    file_resource_in_pack,
-    transient_file_resource,
-)
+from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
 
 EXPORTED_PATHS_FILE_NAME = ".exported.json"
 """Name of the file that stores exporter's internal state."""

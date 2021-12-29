@@ -430,6 +430,11 @@ class DataStore(ProjectItem):
             d["url"]["database"] = serialize_path(d["url"]["database"], self._project.project_dir)
         return d
 
+    @staticmethod
+    def item_dict_local_entries():
+        """See base class."""
+        return [("url", "username"), ("url", "password")]
+
     def copy_local_data(self, item_dict):
         """See base class."""
         original_data_dir = item_dict.get("original_data_dir")  # (str) original dir of duplicated ProjectItem
