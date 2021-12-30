@@ -47,9 +47,14 @@ def file_paths_from_resources(resources):
         a list of file paths, possibly including patterns
     """
     file_paths = []
+    glob_chars = ("*", "?", "[")
     for resource in resources:
         if resource.hasfilepath:
-            file_paths += glob.glob(resource.path)
+            path = resource.path
+            if any(char in path for char in glob_chars):
+                file_paths += glob.glob(path)
+            else:
+                file_paths.append(path)
         elif resource.type_ == "file":
             file_paths.append(resource.label)
     return file_paths
