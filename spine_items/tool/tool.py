@@ -440,14 +440,12 @@ class Tool(ProjectItem):
                 if arg.arg == old.label:
                     self.cmd_line_args[i] = LabelArg(new.label)
         self._input_file_model.update(self._resources_from_upstream + self._resources_from_downstream)
-        self._check_notifications()
         self.update_cmd_line_args(self.cmd_line_args)
 
     def _update_files_and_cmd_line_args(self):
         """Updates the file model and command line arguments."""
         resources = self._resources_from_upstream + self._resources_from_downstream
         self._input_file_model.update(resources)
-        self._check_notifications()
         update_args = list()
         resource_labels = {resource.label for resource in resources}
         for arg in self.cmd_line_args:
