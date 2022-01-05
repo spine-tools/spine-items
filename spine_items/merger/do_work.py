@@ -16,7 +16,7 @@ Merger's execute kernel (do_work), as target for a multiprocess.Process
 :date:   6.11.2020
 """
 import os
-from spine_engine.utils.helpers import create_log_file_timestamp
+from spine_engine.utils.helpers import create_log_file_timestamp, remove_credentials_from_url
 from spinedb_api import (
     clear_filter_configs,
     export_data,
@@ -34,7 +34,8 @@ def _get_db_map(url, logger, purge_before_writing=False):
     try:
         db_map = DatabaseMapping(url)
     except (SpineDBAPIError, SpineDBVersionError) as err:
-        logger.msg_warning.emit(f"Skipping url <b>{clear_filter_configs(url)}</b>: {err}")
+        sanitized_url = remove_credentials_from_url(url)
+        logger.msg_warning.emit(f"Skipping url <b>{clear_filter_configs(sanitized_url)}</b>: {err}")
         return None
     return db_map
 
@@ -52,16 +53,18 @@ def do_work(cancel_on_error, purge_before_writing, logs_dir, from_urls, to_urls,
             if import_errors and cancel_on_error and to_db_map.has_pending_changes():
                 to_db_map.rollback_session()
                 continue
+            sanitized_from_url = remove_credentials_from_url(from_db_map.db_url)
+            sanitized_to_url = remove_credentials_from_url(to_db_map.db_url)
             if import_count:
-                to_db_map.commit_session(f"Import {import_count} items from {from_db_map.db_url}")
+                to_db_map.commit_session(f"Import {import_count} items from {sanitized_from_url}")
                 logger.msg_success.emit(
                     "Merged {0} items with {1} errors from {2} into {3}".format(
-                        import_count, len(import_errors), from_db_map.db_url, to_db_map.db_url
+                        import_count, len(import_errors), sanitized_from_url, sanitized_to_url
                     )
                 )
             else:
                 logger.msg_warning.emit(
-                    "No new data merged from {0} into {1}".format(from_db_map.db_url, to_db_map.db_url)
+                    "No new data merged from {0} into {1}".format(sanitized_from_url, sanitized_to_url)
                 )
     for db_map in from_db_map_data:
         db_map.connection.close()
