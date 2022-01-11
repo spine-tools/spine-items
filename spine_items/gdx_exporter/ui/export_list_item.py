@@ -41,28 +41,28 @@ class Ui_Form(object):
         self.frame.setFrameShadow(QFrame.Plain)
         self.verticalLayout = QVBoxLayout(self.frame)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.input_label_field = QLineEdit(self.frame)
-        self.input_label_field.setObjectName(u"input_label_field")
+        self.url_field = QLineEdit(self.frame)
+        self.url_field.setObjectName(u"url_field")
         font = QFont()
         font.setBold(True)
         font.setWeight(75)
-        self.input_label_field.setFont(font)
-        self.input_label_field.setFrame(False)
-        self.input_label_field.setReadOnly(True)
+        self.url_field.setFont(font)
+        self.url_field.setFrame(False)
+        self.url_field.setReadOnly(True)
 
-        self.verticalLayout.addWidget(self.input_label_field)
+        self.verticalLayout.addWidget(self.url_field)
 
         self.formLayout = QFormLayout()
         self.formLayout.setObjectName(u"formLayout")
-        self.out_label_label = QLabel(self.frame)
-        self.out_label_label.setObjectName(u"out_label_label")
+        self.file_name_label = QLabel(self.frame)
+        self.file_name_label.setObjectName(u"file_name_label")
 
-        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.out_label_label)
+        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.file_name_label)
 
-        self.out_label_edit = PropertyQLineEdit(self.frame)
-        self.out_label_edit.setObjectName(u"out_label_edit")
+        self.out_file_name_edit = PropertyQLineEdit(self.frame)
+        self.out_file_name_edit.setObjectName(u"out_file_name_edit")
 
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.out_label_edit)
+        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.out_file_name_edit)
 
 
         self.verticalLayout.addLayout(self.formLayout)
@@ -78,10 +78,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.out_label_label.setText(QCoreApplication.translate("Form", u"Output file/label:", None))
-#if QT_CONFIG(tooltip)
-        self.out_label_edit.setToolTip(QCoreApplication.translate("Form", u"Identifier for the output file(s). This is the  filename if a single file is exported.", None))
-#endif // QT_CONFIG(tooltip)
-        self.out_label_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type output resource label here...", None))
+        self.file_name_label.setText(QCoreApplication.translate("Form", u"Filename:", None))
+        self.out_file_name_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type output file name here...", None))
     # retranslateUi
 

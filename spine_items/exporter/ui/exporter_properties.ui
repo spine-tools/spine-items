@@ -187,7 +187,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="databases_list_layout"/>
+        <layout class="QVBoxLayout" name="outputs_list_layout"/>
        </item>
        <item>
         <spacer name="verticalSpacer">

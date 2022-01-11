@@ -36,7 +36,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QLineEdit" name="input_label_field">
+       <widget class="QLineEdit" name="url_field">
         <property name="font">
          <font>
           <weight>75</weight>
@@ -54,19 +54,16 @@
       <item>
        <layout class="QFormLayout" name="formLayout">
         <item row="0" column="0">
-         <widget class="QLabel" name="out_label_label">
+         <widget class="QLabel" name="file_name_label">
           <property name="text">
-           <string>Output file/label:</string>
+           <string>Filename:</string>
           </property>
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="PropertyQLineEdit" name="out_label_edit">
-          <property name="toolTip">
-           <string>Identifier for the output file(s). This is the  filename if a single file is exported.</string>
-          </property>
+         <widget class="PropertyQLineEdit" name="out_file_name_edit">
           <property name="placeholderText">
-           <string>Type output resource label here...</string>
+           <string>Type output file name here...</string>
           </property>
          </widget>
         </item>

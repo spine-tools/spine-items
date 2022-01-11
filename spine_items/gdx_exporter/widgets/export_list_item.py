@@ -10,7 +10,7 @@
 ######################################################################################################################
 
 """
-A small widget to set up an output in Exporter properties tab.
+A small widget to set up a database in Exporter properties tab.
 
 :author: A. Soininen (VTT)
 :date:   10.9.2019
@@ -21,44 +21,44 @@ from PySide2.QtWidgets import QWidget
 
 
 class ExportListItem(QWidget):
-    """A widget with few controls to select the export output label."""
+    """A widget with few controls to select the output file name and open a settings window."""
 
-    out_label_changed = Signal(str, str)
-    """Emitted when the output label field is changed."""
+    file_name_changed = Signal(str, str)
+    """Emitted when the file name field is changed."""
 
-    def __init__(self, in_label, out_label, parent=None):
+    def __init__(self, url, file_name, parent=None):
         """
         Args:
-            in_label (str): input resource label
-            out_label (str): output resource label
+            url (str): database URL
+            file_name (str): relative path to the exported file name
             parent (QWidget): a parent widget
         """
         from ..ui.export_list_item import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
         self._ui = Ui_Form()
-        self._in_label = in_label
-        self._out_label = out_label
+        self._url = url
+        self._file_name = file_name
         self._ui.setupUi(self)
-        self._ui.input_label_field.setText(in_label)
-        self._ui.out_label_edit.setText(out_label)
-        self._ui.out_label_edit.editingFinished.connect(self._emit_out_label_changed)
+        self._ui.url_field.setText(url)
+        self._ui.out_file_name_edit.setText(file_name)
+        self._ui.out_file_name_edit.editingFinished.connect(self._emit_file_name_changed)
 
     @property
-    def out_label_edit(self):
-        """Output label QLineEdit"""
-        return self._ui.out_label_edit
+    def out_file_name_edit(self):
+        """export file name QLineEdit"""
+        return self._ui.out_file_name_edit
 
     @property
-    def in_label_field(self):
-        """Input label QLineEdit"""
-        return self._ui.input_label_field
+    def url_field(self):
+        """Text in the database URL field."""
+        return self._ui.url_field
 
     @Slot()
-    def _emit_out_label_changed(self):
-        """Emits out_label_changed signal."""
-        out_label = self._ui.out_label_edit.text()
-        if self._out_label == out_label:
+    def _emit_file_name_changed(self):
+        """Emits file_name_changed signal."""
+        file_name = self._ui.out_file_name_edit.text()
+        if self._file_name == file_name:
             return
-        self._out_label = out_label
-        self.out_label_changed.emit(out_label, self._in_label)
+        self._file_name = file_name
+        self.file_name_changed.emit(file_name, self._url)

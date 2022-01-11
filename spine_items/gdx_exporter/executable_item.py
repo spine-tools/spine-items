@@ -17,6 +17,7 @@ Contains GdxExporter's executable item as well as support utilities.
 """
 from json import dump
 from pathlib import Path
+from spinedb_api import clear_filter_configs
 from spinedb_api.spine_io.exporters import gdx
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.returning_process import ReturningProcess
@@ -43,13 +44,39 @@ class ExecutableItem(ExporterExecutableItemBase):
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger)
+        super().__init__(name, output_time_stamps, cancel_on_error, gams_path, project_dir, logger)
+        self._databases = databases
         self._settings_pack = settings_pack
 
     @staticmethod
     def item_type():
         """Returns GdxExporter's type identifier string."""
         return ItemInfo.item_type()
+
+    def _database_output_file_names(self, database_urls):
+        """
+        Connects full database urls to output file names.
+
+        Args:
+            database_urls (Iterable of str): full database URLs including filters
+
+        Returns:
+            dict: a mapping from full database URL to output file name
+        """
+        databases = {}
+        for full_url in database_urls:
+            url = clear_filter_configs(full_url)
+            database = next((db for db in self._databases if db.url == url), None)
+            if database is None:
+                self._logger.msg_warning.emit(f"<b>{self.name}</b>: No settings for database {url}. Skipping.")
+                continue
+            if not database.output_file_name:
+                self._logger.msg_warning.emit(
+                    f"<b>{self.name}</b>: No file name given to export database {url}. Skipping."
+                )
+                continue
+            databases[full_url] = database.output_file_name
+        return databases
 
     def execute(self, forward_resources, backward_resources):
         """See base class."""

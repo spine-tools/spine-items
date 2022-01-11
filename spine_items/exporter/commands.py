@@ -17,7 +17,33 @@ Contains Exporter's undo commands.
 from copy import deepcopy
 from PySide2.QtCore import QModelIndex, Qt
 from PySide2.QtWidgets import QUndoCommand
+from spinetoolbox.project_commands import SpineToolboxCommand
 from .mvcmodels.mappings_table_model import MappingsTableModel
+
+
+class UpdateOutLabel(SpineToolboxCommand):
+    """Command to update exporter's output label."""
+
+    def __init__(self, exporter, out_label, in_label, previous_label):
+        """
+        Args:
+            exporter (ExporterBase): exporter
+            out_label (str): new output resource label
+            in_label (str): associated input resource label
+            previous_label (str): previous output resource label
+        """
+        super().__init__()
+        self._exporter = exporter
+        self._out_label = out_label
+        self._previous_out_label = previous_label
+        self._in_label = in_label
+        self.setText(f"change output label in {exporter.name}")
+
+    def redo(self):
+        self._exporter.set_out_label(self._out_label, self._in_label)
+
+    def undo(self):
+        self._exporter.set_out_label(self._previous_out_label, self._in_label)
 
 
 class NewMapping(QUndoCommand):

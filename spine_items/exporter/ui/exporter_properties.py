@@ -113,10 +113,10 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addWidget(self.issues_label)
 
-        self.databases_list_layout = QVBoxLayout()
-        self.databases_list_layout.setObjectName(u"databases_list_layout")
+        self.outputs_list_layout = QVBoxLayout()
+        self.outputs_list_layout.setObjectName(u"outputs_list_layout")
 
-        self.verticalLayout_2.addLayout(self.databases_list_layout)
+        self.verticalLayout_2.addLayout(self.outputs_list_layout)
 
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 

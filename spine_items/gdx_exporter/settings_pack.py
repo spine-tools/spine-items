@@ -16,7 +16,7 @@ Contains the SettingsPack class.
 :date:   6.5.2020
 """
 from spinedb_api.spine_io.exporters import gdx
-from spine_items.utils import ExporterNotifications
+from .exporter_notifications import ExporterNotifications
 
 
 class SettingsPack:

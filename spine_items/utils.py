@@ -78,22 +78,6 @@ class Database:
         return db
 
 
-class ExporterNotifications:
-    """
-    Holds flags for different exporter error conditions.
-
-    Attributes:
-        duplicate_output_file_name (bool): True if there are duplicate output file names
-        missing_output_file_name (bool): True if the output file name is missing
-        missing_specification (bool): True if export specification is missing
-    """
-
-    def __init__(self):
-        self.duplicate_output_file_name = False
-        self.missing_output_file_name = False
-        self.missing_specification = False
-
-
 def subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, filter_id_hash):
     """
     Creates scenario/tool based output directory for forked workflow.
@@ -134,13 +118,13 @@ def exported_files_as_resources(item_name, exported_files, data_dir, databases):
     Returns:
         tuple: output resources and updated exported files cache
     """
-    manifests = _collect_execution_manifests(data_dir)
+    manifests = collect_execution_manifests(data_dir)
     exported_file_path = Path(data_dir, EXPORTED_PATHS_FILE_NAME)
     if manifests is not None:
-        _write_exported_files_file(exported_file_path, manifests, data_dir)
+        write_exported_files_file(exported_file_path, manifests, data_dir)
         exported_files = manifests
     elif exported_files is None and exported_file_path.exists():
-        exported_files = _read_exported_files_file(exported_file_path, data_dir)
+        exported_files = read_exported_files_file(exported_file_path, data_dir)
     resources = list()
     if exported_files is not None:
         for db in databases:
@@ -157,7 +141,7 @@ def exported_files_as_resources(item_name, exported_files, data_dir, databases):
     return resources, exported_files
 
 
-def _collect_execution_manifests(data_dir):
+def collect_execution_manifests(data_dir):
     """Collects output file names from export manifest files written by exporter's executable item.
 
     Deletes the manifest files after reading their contents.
@@ -181,7 +165,7 @@ def _collect_execution_manifests(data_dir):
     return manifests
 
 
-def _write_exported_files_file(file_path, manifests, data_dir):
+def write_exported_files_file(file_path, manifests, data_dir):
     """Writes manifests to the exported files file.
 
     Args:
@@ -195,7 +179,7 @@ def _write_exported_files_file(file_path, manifests, data_dir):
         json.dump(relative_path_manifests, manifests_file)
 
 
-def _read_exported_files_file(file_path, data_dir):
+def read_exported_files_file(file_path, data_dir):
     """Reads manifests from the exported files file.
 
     Args:

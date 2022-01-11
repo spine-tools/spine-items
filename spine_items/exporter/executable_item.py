@@ -17,12 +17,14 @@ Contains Exporter's executable item as well as support utilities.
 """
 from json import dump
 from pathlib import Path
+
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spinedb_api import clear_filter_configs
 from spine_items.utils import Database, EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 from .do_work import do_work
+from .output_channel import OutputChannel
 from ..exporter_executable_item_base import ExporterExecutableItemBase
 from .item_info import ItemInfo
 from .specification import OutputFormat
@@ -30,36 +32,81 @@ from .specification import OutputFormat
 
 class ExecutableItem(ExporterExecutableItemBase):
     def __init__(
-        self, name, specification, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
+        self, name, specification, output_channels, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
     ):
         """
         Args:
             name (str): item's name
             specification (ExporterSpecification): export settings
-            databases (list of Database): database export settings
+            output_channels (list of OutputChannel): output labels
             output_time_stamps (bool): if True append output directories with time stamps
             cancel_on_error (bool): if True execution fails on all errors else some errors can be ignored
             gams_path (str): GAMS path from Toolbox settings
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger)
+        super().__init__(name, output_time_stamps, cancel_on_error, gams_path, project_dir, logger)
         self._specification = specification
+        self._output_channels = output_channels
 
     @staticmethod
     def item_type():
         """See base class."""
         return ItemInfo.item_type()
 
+    def _database_out_labels(self, resources):
+        """
+        Connects full database urls to output file names.
+
+        Args:
+            resources (Iterable of ProjectItemResource): forward database resources
+
+        Returns:
+            dict: a mapping from full database URL to output file name
+        """
+        databases = {}
+        for resource in resources:
+            channel = next((channel for channel in self._output_channels if channel.in_label == resource.label), None)
+            if channel is None:
+                channel = self._find_legacy_output_channel(resource)
+                if channel is None:
+                    self._logger.msg_warning.emit(
+                        f"<b>{self.name}</b>: No settings for database {resource.label}. Skipping."
+                    )
+                    continue
+            if not channel.out_label:
+                self._logger.msg_warning.emit(
+                    f"<b>{self.name}</b>: No output file name/label given to database {resource.label}. Skipping."
+                )
+                continue
+            databases[resource.url] = channel.out_label
+        return databases
+
+    def _find_legacy_output_channel(self, resource):
+        """
+        Find legacy output channel that corresponds to given resource
+
+        Args:
+            resource (ProjectItemResource): database resource
+
+        Returns:
+            OutputChannel: output channel or None if not found
+        """
+        in_label = clear_filter_configs(resource.url)
+        channel = next((c for c in self._output_channels if c.in_label == in_label), None)
+        if channel is not None:
+            channel.in_label = resource.label
+        return channel
+
     def execute(self, forward_resources, backward_resources):
         """See base class."""
-        if not super().execute(forward_resources, backward_resources):
-            return ItemExecutionFinishState.FAILURE
+        status = super().execute(forward_resources, backward_resources)
+        if status != ItemExecutionFinishState.SUCCESS:
+            return status
         if self._specification is None:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")
             return ItemExecutionFinishState.SKIPPED
-        database_urls = [r.url for r in forward_resources if r.type_ == "database"]
-        databases = self._database_output_file_names(database_urls)
+        databases = self._database_out_labels(r for r in forward_resources if r.type_ == "database")
         if not databases:
             return ItemExecutionFinishState.SKIPPED
         gams_system_directory = ""
@@ -102,14 +149,15 @@ class ExecutableItem(ExporterExecutableItemBase):
         specification = ExporterExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
-        databases = list()
+        output_channels = [OutputChannel.from_dict(d) for d in item_dict.get("output_labels", [])]
         for db_dict in item_dict.get("databases", []):
+            # legacy
             db = Database.from_dict(db_dict)
             db.url = clear_filter_configs(deserialize_path(db_dict["database_url"], project_dir))
-            databases.append(db)
+            output_channels.append(OutputChannel(db.url, db.output_file_name))
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         return ExecutableItem(
-            name, specification, databases, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
+            name, specification, output_channels, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
         )

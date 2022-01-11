@@ -132,14 +132,14 @@ class TestExporter(unittest.TestCase):
 
     def test_upstream_resources_updated(self):
         self._exporter.activate()
-        expected_urls = ["sqlite:///database1.sqlite", "sqlite:///database2.sqlite"]
-        resources = [database_resource("provider", url) for url in expected_urls]
+        expected_out_labels = ["db_url@Data Store 1", "db_url@Data Store 2"]
+        resources = [database_resource("provider", url) for url in expected_out_labels]
         self._exporter.upstream_resources_updated(resources)
         model = self._exporter.full_url_model()
-        self.assertEqual(model.rowCount(), len(expected_urls))
-        self.assertIn(model.index(0, 0).data(), expected_urls)
-        self.assertIn(model.index(1, 0).data(), expected_urls)
-        self.assertEqual(self._exporter._properties_ui.databases_list_layout.count(), len(expected_urls))
+        self.assertEqual(model.rowCount(), len(expected_out_labels))
+        self.assertIn(model.index(0, 0).data(), expected_out_labels)
+        self.assertIn(model.index(1, 0).data(), expected_out_labels)
+        self.assertEqual(self._exporter._properties_ui.outputs_list_layout.count(), len(expected_out_labels))
 
 
 if __name__ == "__main__":
