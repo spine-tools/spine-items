@@ -515,6 +515,6 @@ def _sanitize_data(data, header):
         if length_diff > 0:
             row = row + length_diff * [None]
         elif length_diff < 0:
-            raise RuntimeError("A row contains too many columns of data.")
+            raise RuntimeError("Data row has more items than the header row.")
         sanitized_data.append(row)
     return sanitized_data
