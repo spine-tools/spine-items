@@ -197,13 +197,13 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """See base class."""
         # Check that tool type is selected
         if self._ui.comboBox_tooltype.currentIndex() == -1:
-            self._show_error("Tool spec type not selected")
+            self.show_error("Tool spec type not selected")
             return None
         toolspectype = self._ui.comboBox_tooltype.currentText().lower()
         # Check that Tool Spec has a main program file except for Executable Tool Specs
         main_program_file = self._current_main_program_file()
         if main_program_file is None and toolspectype != "executable":
-            self._show_error("Please add a main program file")
+            self.show_error("Please add a main program file")
             return None
         new_spec_dict = dict()
         new_spec_dict["name"] = spec_name
@@ -229,11 +229,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         try:
             new_spec_dict = self.insert_execution_settings(new_spec_dict)
         except NameError:
-            self._show_error(f"Creating a {self._ui.comboBox_tooltype.currentText().lower()} Tool spec failed")
+            self.show_error(f"Creating a {self._ui.comboBox_tooltype.currentText().lower()} Tool spec failed")
             return None
         tool_spec = make_specification(new_spec_dict, self._toolbox.qsettings(), self._toolbox)
         if not tool_spec:
-            self._show_error("Creating Tool specification failed")
+            self.show_error("Creating Tool specification failed")
             return None
         return tool_spec
 
@@ -266,7 +266,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 doc.setModified(False)
                 saved.append(basename)
                 continue
-            self._show_error(f"Error while saving {basename}: {err}")
+            self.show_error(f"Error while saving {basename}: {err}")
             return True
         if saved:
             saved = ", ".join(saved)

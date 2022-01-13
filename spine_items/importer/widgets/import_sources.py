@@ -242,7 +242,7 @@ class ImportSources(QObject):
         try:
             data = _sanitize_data(data, header)
         except RuntimeError as error:
-            self._ui_error.showMessage(str(error))
+            self.parent().show_error(str(error))
             return
         if not header:
             header = list(range(1, len(data[0]) + 1))

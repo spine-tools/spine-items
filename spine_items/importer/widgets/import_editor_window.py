@@ -106,7 +106,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
         self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
-        self.connection_failed.connect(self._show_error)
+        self.connection_failed.connect(self.show_error)
         self._import_sources.preview_data_updated.connect(self._import_mapping_options.set_num_available_columns)
         self._mappings_model.restore(self.specification.mapping if self.specification is not None else {})
 
@@ -234,7 +234,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._connection_manager = ConnectionManager(connector, connector_settings, self)
         self._connection_manager.source = filepath
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
-        self._connection_manager.error.connect(self._show_error)
+        self._connection_manager.error.connect(self.show_error)
         for header in (self._ui.source_data_table.horizontalHeader(), self._ui.source_data_table.verticalHeader()):
             self._ui.source_list.selectionModel().currentChanged.connect(header.set_source_table, Qt.UniqueConnection)
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
