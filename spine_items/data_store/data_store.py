@@ -197,9 +197,9 @@ class DataStore(ProjectItem):
         return True
 
     def do_update_url(self, **kwargs):
-        old_url = convert_to_sqlalchemy_url(self._url, self.name, None)
+        old_url = convert_to_sqlalchemy_url(self._url, self.name)
         self._url.update(kwargs)
-        new_url = convert_to_sqlalchemy_url(self._url, self.name, None)
+        new_url = convert_to_sqlalchemy_url(self._url, self.name)
         self.load_url_into_selections(kwargs)
         if old_url and new_url:
             old = database_resource(self.name, str(old_url), label=database_label(self.name))
@@ -212,7 +212,7 @@ class DataStore(ProjectItem):
         self._check_notifications()
 
     def _update_actions_enabled(self):
-        open_editor_enabled = convert_to_sqlalchemy_url(self._url, self.name, logger=None) is not None
+        open_editor_enabled = convert_to_sqlalchemy_url(self._url, self.name) is not None
         self._open_url_action.setEnabled(open_editor_enabled)
         self._open_url_menu.setEnabled(open_editor_enabled)
         if not self._active:
@@ -396,7 +396,7 @@ class DataStore(ProjectItem):
         if not sa_url:
             if self._url["dialect"] != "sqlite" or not self._new_sqlite_file():
                 return
-            sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
+            sa_url = convert_to_sqlalchemy_url(self._url, self.name)
         self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
         self._check_notifications()
 
@@ -407,7 +407,7 @@ class DataStore(ProjectItem):
     def _check_notifications(self):
         """Updates the SqlAlchemy format URL and checks for notifications"""
         self.clear_notifications()
-        if convert_to_sqlalchemy_url(self._url, self.name, logger=None) is None:
+        if convert_to_sqlalchemy_url(self._url, self.name) is None:
             self.add_notification(
                 "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
             )
@@ -511,7 +511,7 @@ class DataStore(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
-        sa_url = convert_to_sqlalchemy_url(self._url, self.name, None)
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name)
         resources = scan_for_resources(self, sa_url)
         return resources
 

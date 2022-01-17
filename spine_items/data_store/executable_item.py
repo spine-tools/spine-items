@@ -16,7 +16,8 @@ Contains Data Store's executable item as well as support utilities.
 :date:   1.4.2020
 """
 
-from spinedb_api.helpers import create_new_spine_database
+from spinedb_api import DatabaseMapping
+from spinedb_api.exception import SpineDBAPIError, SpineDBVersionError
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
@@ -42,13 +43,26 @@ class ExecutableItem(ExecutableItemBase):
         """Returns the data store executable's type identifier string."""
         return ItemInfo.item_type()
 
+    def _get_url(self):
+        try:
+            DatabaseMapping.create_engine(self._url)
+        except SpineDBVersionError as v_err:
+            prompt = {"type": "upgrade_db", "url": self._url, "current": v_err.current, "expected": v_err.expected}
+            if not self._logger.prompt.emit(prompt):
+                return None
+            DatabaseMapping.create_engine(self._url, upgrade=True)
+            return self._url
+        except SpineDBAPIError as err:
+            self._logger.msg_error.emit(str(err))
+            return None
+
     def _output_resources_backward(self):
         """See base class."""
         return self._output_resources_forward()
 
     def _output_resources_forward(self):
         """See base class."""
-        return scan_for_resources(self, self._url)
+        return scan_for_resources(self, self._get_url())
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):

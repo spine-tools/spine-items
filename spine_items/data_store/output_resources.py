@@ -20,7 +20,7 @@ from spine_items.utils import database_label
 
 def scan_for_resources(provider, url):
     """
-    Creates file resources based on DC files.
+    Creates db resources based on DS url.
 
     Args:
         provider (ProjectItem or ExecutableItem): resource provider item

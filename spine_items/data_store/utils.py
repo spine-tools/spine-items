@@ -18,23 +18,24 @@ Contains utility Data Store's utility functions.
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 import spinedb_api
+from spine_engine.utils.queue_logger import SuppressedMessage
 
 
-def convert_to_sqlalchemy_url(urllib_url, item_name, logger):
+def convert_to_sqlalchemy_url(urllib_url, item_name, logger=None):
     """Returns a sqlalchemy url from the url or None if not valid."""
+    if logger is None:
+        logger = _NoLogger()
     if not urllib_url:
-        if logger is not None:
-            logger.msg_error.emit(f"No URL specified for <b>{item_name}</b>. Please specify one and try again")
+        logger.msg_error.emit(f"No URL specified for <b>{item_name}</b>. Please specify one and try again")
         return None
     try:
         url = {key: value for key, value in urllib_url.items() if value}
         dialect = url.pop("dialect")
         if not dialect:
-            if logger is not None:
-                logger.msg_error.emit(
-                    f"Unable to generate URL from <b>{item_name}</b> selections: invalid dialect {dialect}. "
-                    "<br>Please select a new dialect and try again."
-                )
+            logger.msg_error.emit(
+                f"Unable to generate URL from <b>{item_name}</b> selections: invalid dialect {dialect}. "
+                "<br>Please select a new dialect and try again."
+            )
             return None
         if dialect == "sqlite":
             sa_url = URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
@@ -44,18 +45,16 @@ def convert_to_sqlalchemy_url(urllib_url, item_name, logger):
             sa_url = URL(drivername, **url)  # pylint: disable=unexpected-keyword-arg
     except Exception as e:  # pylint: disable=broad-except
         # This is in case one of the keys has invalid format
-        if logger is not None:
-            logger.msg_error.emit(
-                f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
-                "<br>Please make new selections and try again."
-            )
+        logger.msg_error.emit(
+            f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
+            "<br>Please make new selections and try again."
+        )
         return None
     if not sa_url.database:
-        if logger is not None:
-            logger.msg_error.emit(
-                f"Unable to generate URL from <b>{item_name}</b> selections: database missing. "
-                "<br>Please select a database and try again."
-            )
+        logger.msg_error.emit(
+            f"Unable to generate URL from <b>{item_name}</b> selections: database missing. "
+            "<br>Please select a database and try again."
+        )
         return None
     # Final check
     try:
@@ -63,10 +62,14 @@ def convert_to_sqlalchemy_url(urllib_url, item_name, logger):
         with engine.connect():
             pass
     except Exception as e:  # pylint: disable=broad-except
-        if logger is not None:
-            logger.msg_error.emit(
-                f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
-                "<br>Please make new selections and try again."
-            )
+        logger.msg_error.emit(
+            f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
+            "<br>Please make new selections and try again."
+        )
         return None
     return sa_url
+
+
+class _NoLogger:
+    def __getattr__(self, _name):
+        return SuppressedMessage()
