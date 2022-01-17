@@ -15,14 +15,11 @@ Unit tests for DataStoreExecutable.
 :author: A. Soininen
 :date:   6.4.2020
 """
-from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from spinedb_api import create_new_spine_database, DatabaseMapping, DiffDatabaseMapping, import_functions
 from spine_engine import ExecutionDirection
 from spine_items.data_store.executable_item import ExecutableItem
-from spine_engine.project_item.project_item_resource import database_resource
 
 
 class TestDataStoreExecutable(unittest.TestCase):
@@ -78,7 +75,8 @@ class TestDataStoreExecutable(unittest.TestCase):
 
     def test_output_resources_backward(self):
         executable = ExecutableItem("name", "sqlite:///database.sqlite", self._temp_dir.name, mock.MagicMock())
-        resources = executable.output_resources(ExecutionDirection.BACKWARD)
+        with mock.patch("spine_items.data_store.executable_item.DatabaseMapping.create_engine"):
+            resources = executable.output_resources(ExecutionDirection.BACKWARD)
         self.assertEqual(len(resources), 1)
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
@@ -87,7 +85,8 @@ class TestDataStoreExecutable(unittest.TestCase):
 
     def test_output_resources_forward(self):
         executable = ExecutableItem("name", "sqlite:///database.sqlite", self._temp_dir.name, mock.MagicMock())
-        resources = executable.output_resources(ExecutionDirection.FORWARD)
+        with mock.patch("spine_items.data_store.executable_item.DatabaseMapping.create_engine"):
+            resources = executable.output_resources(ExecutionDirection.FORWARD)
         self.assertEqual(len(resources), 1)
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
