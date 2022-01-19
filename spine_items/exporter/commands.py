@@ -300,6 +300,26 @@ class SetGroupFunction(QUndoCommand):
         self._index.model().setData(self._index, self._old_function, MappingsTableModel.GROUP_FN_ROLE)
 
 
+class SetHighlightDimension(QUndoCommand):
+    def __init__(self, index, old_dimension, new_dimension):
+        """
+        Args
+            index (QModelIndex): mapping's row index
+            old_dimension (int): old highlight dimension
+            new_dimension (int): new highlight dimension
+        """
+        super().__init__("change selected relationship dimension")
+        self._index = index
+        self._old_dimension = old_dimension
+        self._new_dimension = new_dimension
+
+    def redo(self):
+        self._index.model().setData(self._index, self._new_dimension, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+
+    def undo(self):
+        self._index.model().setData(self._index, self._old_dimension, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+
+
 class SetMappingPositions(QUndoCommand):
     def __init__(self, model, mapping_name, positions, previous_positions):
         """

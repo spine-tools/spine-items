@@ -30,6 +30,8 @@ from spinedb_api.export_mapping import (
     object_parameter_export,
     parameter_value_list_export,
     relationship_export,
+    relationship_object_parameter_default_value_export,
+    relationship_object_parameter_export,
     relationship_parameter_default_value_export,
     relationship_parameter_export,
     scenario_alternative_export,
@@ -68,6 +70,7 @@ from ..commands import (
     SetUseFixedTableNameFlag,
     SetFixedTableName,
     SetGroupFunction,
+    SetHighlightDimension,
 )
 from ..mvcmodels.mappings_table_model import MappingsTableModel
 from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel
@@ -87,6 +90,8 @@ mapping_type_to_combo_box_label = {
     MappingType.object_parameter_values: "Object class",
     MappingType.parameter_value_lists: "Parameter value list",
     MappingType.relationships: "Relationship class",
+    MappingType.relationship_object_parameter_default_values: "Relationship class with object parameter",
+    MappingType.relationship_object_parameter_values: "Relationship class with object parameter",
     MappingType.relationship_parameter_default_values: "Relationship class",
     MappingType.relationship_parameter_values: "Relationship class",
     MappingType.scenario_alternatives: "Scenario alternative",
@@ -106,6 +111,8 @@ mapping_type_to_parameter_type_label = {
     MappingType.object_parameter_values: "Value",
     MappingType.parameter_value_lists: "None",
     MappingType.relationships: "None",
+    MappingType.relationship_object_parameter_default_values: "Default value",
+    MappingType.relationship_object_parameter_values: "Value",
     MappingType.relationship_parameter_default_values: "Default value",
     MappingType.relationship_parameter_values: "Value",
     MappingType.scenario_alternatives: "None",
@@ -181,6 +188,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.parameter_dimensions_spin_box.valueChanged.connect(self._change_parameter_dimensions)
         self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
         self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
+        self._ui.highlight_dimension_spin_box.valueChanged.connect(self._change_highlight_dimension)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
         self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
         self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
@@ -324,20 +332,34 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
         self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
         self._set_always_export_header_silently(current.data(MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE))
-        if mapping_type in (
+        if mapping_type in {
             MappingType.relationships,
             MappingType.relationship_parameter_values,
             MappingType.relationship_parameter_default_values,
-        ):
+            MappingType.relationship_object_parameter_values,
+            MappingType.relationship_object_parameter_default_values,
+        }:
             self._set_relationship_dimensions_silently(current.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE))
         else:
             self._set_relationship_dimensions_silently(1)
-        if mapping_type in (
+        if mapping_type in {
+            MappingType.relationship_object_parameter_values,
+            MappingType.relationship_object_parameter_default_values,
+        }:
+            self._set_highlight_dimension_silently(current.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE))
+            self._ui.highlight_dimension_spin_box.setMaximum(
+                current.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE)
+            )
+        else:
+            self._set_highlight_dimension_silently(0)
+        if mapping_type in {
             MappingType.object_parameter_values,
             MappingType.object_parameter_default_values,
             MappingType.relationship_parameter_values,
             MappingType.relationship_parameter_default_values,
-        ):
+            MappingType.relationship_object_parameter_values,
+            MappingType.relationship_object_parameter_default_values,
+        }:
             self._set_parameter_dimensions_silently(current.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
         else:
             self._set_parameter_dimensions_silently(0)
@@ -382,15 +404,18 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if sorted_index != self._ui.mappings_table.currentIndex():
             self._ui.mappings_table.selectionModel().setCurrentIndex(sorted_index, QItemSelectionModel.ClearAndSelect)
             return
+        enable_controls = False
         if MappingsTableModel.MAPPING_ROOT_ROLE in roles:
             root_mapping = top_left.data(MappingsTableModel.MAPPING_ROOT_ROLE)
             self._mapping_editor_model.set_mapping(top_left.data(Qt.DisplayRole), root_mapping)
             self._set_relationship_dimensions_silently(top_left.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE))
             self._set_parameter_dimensions_silently(top_left.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
+            enable_controls = True
         if MappingsTableModel.MAPPING_TYPE_ROLE in roles:
             mapping_type = top_left.data(MappingsTableModel.MAPPING_TYPE_ROLE)
             self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
             self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
+            enable_controls = True
         if MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE in roles:
             self._set_always_export_header_silently(top_left.data(MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE))
         if MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE in roles:
@@ -403,8 +428,11 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_group_fn_silently(
                 group_function_display_from_name(top_left.data(MappingsTableModel.GROUP_FN_ROLE))
             )
-        self._enable_relationship_controls()
-        self._enable_parameter_controls()
+        if MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE in roles:
+            self._set_highlight_dimension_silently(top_left.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE))
+        if enable_controls:
+            self._enable_relationship_controls()
+            self._enable_parameter_controls()
 
     @Slot(bool)
     def _new_mapping(self, _=True):
@@ -549,6 +577,11 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 mapping_type = MappingType.relationship_parameter_values
             else:
                 mapping_type = MappingType.relationship_parameter_default_values
+        elif type_label == "Relationship class with object parameter":
+            if parameter_type_label == "Default value":
+                mapping_type = MappingType.relationship_object_parameter_default_values
+            else:
+                mapping_type = MappingType.relationship_object_parameter_values
         elif type_label == "Object group":
             if parameter_type_label == "None":
                 mapping_type = MappingType.object_groups
@@ -744,6 +777,29 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
 
     @Slot(int)
+    def _change_highlight_dimension(self, dimension):
+        """Pushes a command to change highlight dimension to undo stack.
+
+        Args:
+            dimension (int): highlight dimension
+        """
+        index = self._sort_mappings_table_model.mapToSource(self._ui.mappings_table.currentIndex())
+        if not index.isValid():
+            return
+        old = index.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+        self._undo_stack.push(SetHighlightDimension(index, old, dimension - 1))
+
+    def _set_highlight_dimension_silently(self, highlight_dimension):
+        """Sets highlight dimension without emitting signals.
+
+        Args:
+            highlight_dimension (int): highlight dimension
+        """
+        self._ui.highlight_dimension_spin_box.valueChanged.disconnect(self._change_highlight_dimension)
+        self._ui.highlight_dimension_spin_box.setValue(highlight_dimension + 1)
+        self._ui.highlight_dimension_spin_box.valueChanged.connect(self._change_highlight_dimension)
+
+    @Slot(int)
     def _change_relationship_dimensions(self, dimensions):
         """
         Pushes a command to undo stack.
@@ -755,7 +811,12 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         mapping = self._mappings_table_model.data(index, MappingsTableModel.MAPPING_ROOT_ROLE)
         modified = deepcopy(mapping)
         set_relationship_dimensions(modified, dimensions)
+        current_mapping_type = self._ui.item_type_combo_box.currentText()
         self._undo_stack.beginMacro("change relationship dimensions")
+        if current_mapping_type == "Relationship class with object parameter":
+            highlight_dimension = self._mappings_table_model.data(index, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+            if highlight_dimension >= dimensions:
+                self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, dimensions))
         self._undo_stack.push(SetMapping(self._ui.mappings_table.currentIndex(), modified))
         self._undo_stack.endMacro()
 
@@ -769,6 +830,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.relationship_dimensions_spin_box.valueChanged.disconnect(self._change_relationship_dimensions)
         self._ui.relationship_dimensions_spin_box.setValue(dimensions)
         self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
+        self._ui.highlight_dimension_spin_box.setMaximum(dimensions if dimensions > 0 else 1)
 
     def _enable_mapping_specification_editing(self):
         """Enables and disables mapping specification editing controls."""
@@ -779,14 +841,22 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _enable_relationship_controls(self):
         """Enables and disables controls related to relationship export."""
-        self._ui.relationship_dimensions_spin_box.setEnabled(
-            self._ui.item_type_combo_box.currentText() == "Relationship class"
+        current_mapping_type = self._ui.item_type_combo_box.currentText()
+        self._ui.relationship_dimensions_spin_box.setEnabled(current_mapping_type.startswith("Relationship class"))
+        self._ui.highlight_dimension_spin_box.setEnabled(
+            current_mapping_type == "Relationship class with object parameter"
         )
 
     def _enable_parameter_controls(self):
         """Enables and disables controls related to relationship export."""
         mapping_type = self._ui.item_type_combo_box.currentText()
-        if mapping_type in ("Object class", "Object group", "Relationship class"):
+        types_with_parameters = {
+            "Object class",
+            "Object group",
+            "Relationship class",
+            "Relationship class with object parameter",
+        }
+        if mapping_type in types_with_parameters:
             self._ui.parameter_type_combo_box.setEnabled(True)
             model = self._ui.parameter_type_combo_box.model()
             default_value_item = model.item(1)
@@ -794,6 +864,11 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 default_value_item.setFlags(default_value_item.flags() & ~Qt.ItemIsEnabled)
             else:
                 default_value_item.setFlags(default_value_item.flags() | Qt.ItemIsEnabled)
+            no_value_item = model.item(2)
+            if mapping_type == "Relationship class with object parameter":
+                no_value_item.setFlags(default_value_item.flags() & ~Qt.ItemIsEnabled)
+            else:
+                no_value_item.setFlags(default_value_item.flags() | Qt.ItemIsEnabled)
             self._ui.parameter_dimensions_spin_box.setEnabled(self._ui.parameter_type_combo_box.currentText() != "None")
         else:
             self._ui.parameter_type_combo_box.setEnabled(False)
@@ -880,6 +955,26 @@ def _new_mapping_specification(mapping_type):
             False,
             relationship_parameter_export(
                 0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None, None
+            ),
+        )
+    if mapping_type == MappingType.relationship_object_parameter_default_values:
+        return MappingSpecification(
+            mapping_type,
+            True,
+            True,
+            NoGroup.NAME,
+            False,
+            relationship_object_parameter_default_value_export(0, 2, [1], Position.hidden, 3, None, None, 0),
+        )
+    if mapping_type == MappingType.relationship_object_parameter_values:
+        return MappingSpecification(
+            mapping_type,
+            True,
+            True,
+            NoGroup.NAME,
+            False,
+            relationship_object_parameter_export(
+                0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None, None, 0
             ),
         )
     if mapping_type == MappingType.alternatives:

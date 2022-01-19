@@ -129,6 +129,7 @@ class Ui_MainWindow(object):
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
+        self.item_type_combo_box.addItem("")
         self.item_type_combo_box.setObjectName(u"item_type_combo_box")
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.item_type_combo_box)
@@ -147,7 +148,7 @@ class Ui_MainWindow(object):
         self.label_5 = QLabel(self.mapping_options_contents)
         self.label_5.setObjectName(u"label_5")
 
-        self.formLayout.setWidget(3, QFormLayout.LabelRole, self.label_5)
+        self.formLayout.setWidget(4, QFormLayout.LabelRole, self.label_5)
 
         self.parameter_type_combo_box = QComboBox(self.mapping_options_contents)
         self.parameter_type_combo_box.addItem("")
@@ -155,27 +156,27 @@ class Ui_MainWindow(object):
         self.parameter_type_combo_box.addItem("")
         self.parameter_type_combo_box.setObjectName(u"parameter_type_combo_box")
 
-        self.formLayout.setWidget(3, QFormLayout.FieldRole, self.parameter_type_combo_box)
+        self.formLayout.setWidget(4, QFormLayout.FieldRole, self.parameter_type_combo_box)
 
         self.label_10 = QLabel(self.mapping_options_contents)
         self.label_10.setObjectName(u"label_10")
 
-        self.formLayout.setWidget(4, QFormLayout.LabelRole, self.label_10)
+        self.formLayout.setWidget(5, QFormLayout.LabelRole, self.label_10)
 
         self.parameter_dimensions_spin_box = QSpinBox(self.mapping_options_contents)
         self.parameter_dimensions_spin_box.setObjectName(u"parameter_dimensions_spin_box")
 
-        self.formLayout.setWidget(4, QFormLayout.FieldRole, self.parameter_dimensions_spin_box)
+        self.formLayout.setWidget(5, QFormLayout.FieldRole, self.parameter_dimensions_spin_box)
 
         self.label_6 = QLabel(self.mapping_options_contents)
         self.label_6.setObjectName(u"label_6")
 
-        self.formLayout.setWidget(6, QFormLayout.LabelRole, self.label_6)
+        self.formLayout.setWidget(7, QFormLayout.LabelRole, self.label_6)
 
         self.group_fn_combo_box = QComboBox(self.mapping_options_contents)
         self.group_fn_combo_box.setObjectName(u"group_fn_combo_box")
 
-        self.formLayout.setWidget(6, QFormLayout.FieldRole, self.group_fn_combo_box)
+        self.formLayout.setWidget(7, QFormLayout.FieldRole, self.group_fn_combo_box)
 
         self.always_export_header_check_box = QCheckBox(self.mapping_options_contents)
         self.always_export_header_check_box.setObjectName(u"always_export_header_check_box")
@@ -185,12 +186,23 @@ class Ui_MainWindow(object):
         self.fix_table_name_check_box = QCheckBox(self.mapping_options_contents)
         self.fix_table_name_check_box.setObjectName(u"fix_table_name_check_box")
 
-        self.formLayout.setWidget(5, QFormLayout.LabelRole, self.fix_table_name_check_box)
+        self.formLayout.setWidget(6, QFormLayout.LabelRole, self.fix_table_name_check_box)
 
         self.fix_table_name_line_edit = QLineEdit(self.mapping_options_contents)
         self.fix_table_name_line_edit.setObjectName(u"fix_table_name_line_edit")
 
-        self.formLayout.setWidget(5, QFormLayout.FieldRole, self.fix_table_name_line_edit)
+        self.formLayout.setWidget(6, QFormLayout.FieldRole, self.fix_table_name_line_edit)
+
+        self.label_7 = QLabel(self.mapping_options_contents)
+        self.label_7.setObjectName(u"label_7")
+
+        self.formLayout.setWidget(3, QFormLayout.LabelRole, self.label_7)
+
+        self.highlight_dimension_spin_box = QSpinBox(self.mapping_options_contents)
+        self.highlight_dimension_spin_box.setObjectName(u"highlight_dimension_spin_box")
+        self.highlight_dimension_spin_box.setMinimum(1)
+
+        self.formLayout.setWidget(3, QFormLayout.FieldRole, self.highlight_dimension_spin_box)
 
 
         self.verticalLayout_7.addLayout(self.formLayout)
@@ -411,15 +423,16 @@ class Ui_MainWindow(object):
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Item type:", None))
         self.item_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Object class", None))
         self.item_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Relationship class", None))
-        self.item_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Object group", None))
-        self.item_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Alternative", None))
-        self.item_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario", None))
-        self.item_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
-        self.item_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
-        self.item_type_combo_box.setItemText(7, QCoreApplication.translate("MainWindow", u"Feature", None))
-        self.item_type_combo_box.setItemText(8, QCoreApplication.translate("MainWindow", u"Tool", None))
-        self.item_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool feature", None))
-        self.item_type_combo_box.setItemText(10, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
+        self.item_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Relationship class with object parameter", None))
+        self.item_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Object group", None))
+        self.item_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Alternative", None))
+        self.item_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Scenario", None))
+        self.item_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
+        self.item_type_combo_box.setItemText(7, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
+        self.item_type_combo_box.setItemText(8, QCoreApplication.translate("MainWindow", u"Feature", None))
+        self.item_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool", None))
+        self.item_type_combo_box.setItemText(10, QCoreApplication.translate("MainWindow", u"Tool feature", None))
+        self.item_type_combo_box.setItemText(11, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
 
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Relationship dimensions:", None))
 #if QT_CONFIG(tooltip)
@@ -443,6 +456,10 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.always_export_header_check_box.setText(QCoreApplication.translate("MainWindow", u"Always export header", None))
         self.fix_table_name_check_box.setText(QCoreApplication.translate("MainWindow", u"Fixed table name:", None))
+        self.label_7.setText(QCoreApplication.translate("MainWindow", u"Selected dimension:", None))
+#if QT_CONFIG(tooltip)
+        self.highlight_dimension_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Relationship dimension used to select object parameters for export.", None))
+#endif // QT_CONFIG(tooltip)
         self.mapping_spec_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping specification", None))
 #if QT_CONFIG(tooltip)
         self.compact_button.setToolTip(QCoreApplication.translate("MainWindow", u"Compact mapping by removing empty columns and rows.", None))

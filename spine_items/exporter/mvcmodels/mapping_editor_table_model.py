@@ -57,6 +57,8 @@ from spinedb_api.export_mapping.export_mapping import (
     IndexNameMapping,
     DefaultValueIndexNameMapping,
     ParameterDefaultValueTypeMapping,
+    RelationshipClassObjectHighlightingMapping,
+    RelationshipObjectHighlightingMapping,
 )
 from spinetoolbox.helpers import color_from_index
 from ..commands import SetMappingNullable, SetMappingPositions, SetMappingProperty
@@ -455,7 +457,9 @@ _names = {
     ParameterValueTypeMapping: "Value types",
     RelationshipClassMapping: "Relationship classes",
     RelationshipClassObjectClassMapping: "Object classes",
+    RelationshipClassObjectHighlightingMapping: "Relationship classes",
     RelationshipMapping: "Relationships",
+    RelationshipObjectHighlightingMapping: "Relationships",
     RelationshipObjectMapping: "Objects",
     ScenarioActiveFlagMapping: "Active flags",
     ScenarioAlternativeMapping: "Alternatives",

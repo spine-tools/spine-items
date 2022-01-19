@@ -481,9 +481,7 @@ class _Worker(QRunnable):
             db_map = DatabaseMapping(self._url)
         except SpineDBVersionError as error:
             tables = {"error": [["unsupported database version"]]}
-            self.signals.table_written.emit(
-                (self._url, self._mapping_name), self._mapping_name, tables, self._stamp
-            )
+            self.signals.table_written.emit((self._url, self._mapping_name), self._mapping_name, tables, self._stamp)
             return
         try:
             writer = TableWriter()

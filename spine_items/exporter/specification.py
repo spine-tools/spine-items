@@ -46,6 +46,8 @@ class MappingType(Enum):
     relationships = "relationships"
     relationship_parameter_default_values = "relationship_default_parameter_values"
     relationship_parameter_values = "relationship_parameter_values"
+    relationship_object_parameter_default_values = "relationship_object_parameter_default_values"
+    relationship_object_parameter_values = "relationship_object_parameter_values"
     scenario_alternatives = "scenario_alternatives"
     scenarios = "scenarios"
     tool_features = "tool_features"
