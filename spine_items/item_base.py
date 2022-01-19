@@ -87,7 +87,6 @@ class ExporterBase(ProjectItem):
 
     def restore_selections(self):
         """Restores selections and connects signals."""
-        self._properties_ui.item_name_label.setText(self.name)
         self._update_properties_tab()
 
     @Slot(int)
@@ -139,10 +138,6 @@ class ExporterBase(ProjectItem):
     def from_dict(name, item_dict, toolbox, project):
         """See base class"""
         raise NotImplementedError()
-
-    def update_name_label(self):
-        """See base class."""
-        self._properties_ui.item_name_label.setText(self.name)
 
     def tear_down(self):
         super().tear_down()

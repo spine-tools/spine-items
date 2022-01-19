@@ -42,7 +42,7 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QLabel" name="label_dc_name">
+    <widget class="QLabel" name="label_item_name">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>

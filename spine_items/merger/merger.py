@@ -73,7 +73,6 @@ class Merger(ProjectItem):
 
     def restore_selections(self):
         """Load url into selections."""
-        self._properties_ui.label_merger_name.setText(self.name)
         self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
         self._properties_ui.checkBox_purge_before_writing.setCheckState(
             Qt.Checked if self._purge_before_writing else Qt.Unchecked
@@ -119,10 +118,6 @@ class Merger(ProjectItem):
         self._properties_ui.checkBox_purge_before_writing.blockSignals(True)
         self._properties_ui.checkBox_purge_before_writing.setCheckState(check_state)
         self._properties_ui.checkBox_purge_before_writing.blockSignals(False)
-
-    def update_name_label(self):
-        """Update Data Store tab name label. Used only when renaming project items."""
-        self._properties_ui.label_merger_name.setText(self.name)
 
     def predecesor_data_stores(self):
         for name in self._project.predecessor_names(self.name):

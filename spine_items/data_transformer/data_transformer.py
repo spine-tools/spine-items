@@ -111,10 +111,6 @@ class DataTransformer(ProjectItem):
             with open(path, "w") as filter_config_file:
                 dump(self._specification.settings.filter_config(), filter_config_file)
 
-    def update_name_label(self):
-        """Update properties tab name label. Used only when renaming project items."""
-        self._properties_ui.item_name_label.setText(self.name)
-
     @Slot(bool)
     def show_specification_window(self, _=True):
         """Opens the settings window."""
@@ -174,7 +170,6 @@ class DataTransformer(ProjectItem):
 
     def restore_selections(self):
         """See base class."""
-        self._properties_ui.item_name_label.setText(self.name)
         self._update_ui()
 
     def _update_ui(self):

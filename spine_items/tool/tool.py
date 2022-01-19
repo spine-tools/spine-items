@@ -166,7 +166,6 @@ class Tool(ProjectItem):
 
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
-        self._properties_ui.label_tool_name.setText(self.name)
         self._properties_ui.treeView_input_files.setModel(self._input_file_model)
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_cmdline_args.expandAll()
@@ -336,10 +335,6 @@ class Tool(ProjectItem):
     def specification(self):
         """Returns Tool specification."""
         return self._specification
-
-    def update_name_label(self):
-        """Update Tool tab name label. Used only when renaming project items."""
-        self._properties_ui.label_tool_name.setText(self.name)
 
     def resources_for_direct_successors(self):
         """See base class"""

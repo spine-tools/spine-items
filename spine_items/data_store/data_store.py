@@ -114,7 +114,6 @@ class DataStore(ProjectItem):
 
     def restore_selections(self):
         """Load url into selections."""
-        self._properties_ui.label_ds_name.setText(self.name)
         self.load_url_into_selections(self._url)
 
     def url(self):
@@ -399,10 +398,6 @@ class DataStore(ProjectItem):
             sa_url = convert_to_sqlalchemy_url(self._url, self.name)
         self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
         self._check_notifications()
-
-    def update_name_label(self):
-        """Update Data Store tab name label. Used only when renaming project items."""
-        self._properties_ui.label_ds_name.setText(self.name)
 
     def _check_notifications(self):
         """Updates the SqlAlchemy format URL and checks for notifications"""

@@ -223,7 +223,6 @@ class Importer(ProjectItem):
             Qt.Checked if self._purge_before_writing else Qt.Unchecked
         )
         self._set_on_conflict()
-        self._properties_ui.label_name.setText(self.name)
         self._properties_ui.treeView_files.setModel(self._file_model)
         self._update_ui()
 
@@ -240,10 +239,6 @@ class Importer(ProjectItem):
     def save_selections(self):
         """Saves selections in shared widgets for this project item into instance variables."""
         self._properties_ui.treeView_files.setModel(None)
-
-    def update_name_label(self):
-        """Update Importer properties tab name label. Used only when renaming project items."""
-        self._properties_ui.label_name.setText(self.name)
 
     def do_set_specification(self, specification):
         """see base class"""

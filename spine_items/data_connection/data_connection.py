@@ -113,7 +113,6 @@ class DataConnection(ProjectItem):
 
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
-        self._properties_ui.label_dc_name.setText(self.name)
         self._properties_ui.treeView_dc_references.setModel(self.reference_model)
         self._properties_ui.treeView_dc_data.setModel(self.data_model)
         self._do_update_buttons_enabled()
@@ -434,10 +433,6 @@ class DataConnection(ProjectItem):
             item.setData(icon, Qt.DecorationRole)
             item.setData(path, Qt.UserRole)
             self.data_model.appendRow(item)
-
-    def update_name_label(self):
-        """Update Data Connection tab name label. Used only when renaming project items."""
-        self._properties_ui.label_dc_name.setText(self.name)
 
     def resources_for_direct_successors(self):
         """see base class"""

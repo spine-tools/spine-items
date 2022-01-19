@@ -74,7 +74,6 @@ class View(ProjectItem):
 
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
-        self._properties_ui.label_view_name.setText(self.name)
         self._properties_ui.treeView_view.setModel(self.reference_model)
 
     def save_selections(self):
@@ -99,10 +98,6 @@ class View(ProjectItem):
             qitem.setFlags(~Qt.ItemIsEditable)
             qitem.setData(self._spine_ref_icon, Qt.DecorationRole)
             self.reference_model.appendRow(qitem)
-
-    def update_name_label(self):
-        """Update View tab name label. Used only when renaming project items."""
-        self._properties_ui.label_view_name.setText(self.name)
 
     def upstream_resources_updated(self, resources):
         """See base class."""

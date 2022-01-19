@@ -25,8 +25,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
-from ...widgets import ArgsTreeView
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
+from ...widgets import ArgsTreeView
 
 from spine_items import resources_icons_rc
 
@@ -39,27 +39,27 @@ class Ui_Form(object):
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.label_gimlet_name = QLabel(Form)
-        self.label_gimlet_name.setObjectName(u"label_gimlet_name")
+        self.label_item_name = QLabel(Form)
+        self.label_item_name.setObjectName(u"label_item_name")
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_gimlet_name.sizePolicy().hasHeightForWidth())
-        self.label_gimlet_name.setSizePolicy(sizePolicy)
-        self.label_gimlet_name.setMinimumSize(QSize(0, 20))
-        self.label_gimlet_name.setMaximumSize(QSize(16777215, 20))
+        sizePolicy.setHeightForWidth(self.label_item_name.sizePolicy().hasHeightForWidth())
+        self.label_item_name.setSizePolicy(sizePolicy)
+        self.label_item_name.setMinimumSize(QSize(0, 20))
+        self.label_item_name.setMaximumSize(QSize(16777215, 20))
         font = QFont()
         font.setPointSize(10)
         font.setBold(False)
         font.setWeight(50)
-        self.label_gimlet_name.setFont(font)
-        self.label_gimlet_name.setStyleSheet(u"background-color: #ecd8c6;")
-        self.label_gimlet_name.setFrameShape(QFrame.Box)
-        self.label_gimlet_name.setFrameShadow(QFrame.Sunken)
-        self.label_gimlet_name.setAlignment(Qt.AlignCenter)
-        self.label_gimlet_name.setWordWrap(True)
+        self.label_item_name.setFont(font)
+        self.label_item_name.setStyleSheet(u"background-color: #ecd8c6;")
+        self.label_item_name.setFrameShape(QFrame.Box)
+        self.label_item_name.setFrameShadow(QFrame.Sunken)
+        self.label_item_name.setAlignment(Qt.AlignCenter)
+        self.label_item_name.setWordWrap(True)
 
-        self.verticalLayout.addWidget(self.label_gimlet_name)
+        self.verticalLayout.addWidget(self.label_item_name)
 
         self.scrollArea_4 = QScrollArea(Form)
         self.scrollArea_4.setObjectName(u"scrollArea_4")
@@ -225,7 +225,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.label_gimlet_name.setText(QCoreApplication.translate("Form", u"Name", None))
+        self.label_item_name.setText(QCoreApplication.translate("Form", u"Name", None))
 #if QT_CONFIG(tooltip)
         self.checkBox_shell.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>If checked, command is executed with the specified shell.</p><p>If unchecked, command is executed without a shell.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

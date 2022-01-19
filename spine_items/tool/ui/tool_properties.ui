@@ -42,7 +42,7 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QLabel" name="label_tool_name">
+    <widget class="QLabel" name="label_item_name">
      <property name="enabled">
       <bool>true</bool>
      </property>

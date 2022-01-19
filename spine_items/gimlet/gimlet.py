@@ -109,7 +109,6 @@ class Gimlet(ProjectItem):
 
     def restore_selections(self):
         """Restores selections into shared widgets when this project item is selected."""
-        self._properties_ui.label_gimlet_name.setText(self.name)
         if not self._active:
             return
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
@@ -376,11 +375,6 @@ class Gimlet(ProjectItem):
             "Gimlet is deprecated and will be removed in the future. Please replace this "
             "item with a <b>Tool</b> configured to run system commands."
         )
-
-    def update_name_label(self):
-        """Updates the name label in Gimlet properties tab.
-        Used only when a project item is renamed."""
-        self._properties_ui.label_gimlet_name.setText(self.name)
 
     def resources_for_direct_successors(self):
         """Returns resources for direct successors.
