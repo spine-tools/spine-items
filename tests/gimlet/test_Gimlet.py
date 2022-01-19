@@ -105,7 +105,7 @@ class TestGimlet(unittest.TestCase):
         expected_short_name = "abc"
         self.gimlet.rename(expected_name, "")
         self.assertEqual(expected_name, self.gimlet.name)  # Item name
-        self.assertEqual(expected_name, self.gimlet._properties_ui.label_gimlet_name.text())  # Name label in props
+        self.assertEqual(expected_name, self.gimlet._properties_ui.label_item_name.text())  # Name label in props
         self.assertEqual(expected_name, self.gimlet.get_icon().name_item.text())  # Name item on Design View
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.gimlet.data_dir)  # Check data dir

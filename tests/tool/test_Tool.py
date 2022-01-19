@@ -144,7 +144,7 @@ class TestTool(unittest.TestCase):
         tool.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, tool.name)  # item name
-        self.assertEqual(expected_name, tool._properties_ui.label_tool_name.text())  # name label in props
+        self.assertEqual(expected_name, tool._properties_ui.label_item_name.text())  # name label in props
         self.assertEqual(expected_name, tool.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
@@ -172,8 +172,7 @@ class TestTool(unittest.TestCase):
             self._assert_is_simple_exec_tool(tool)
 
     def test_save_and_restore_selections(self):
-        """Test that selections are saved and restored when deactivating a Tool and activating it again.
-        """
+        """Test that selections are saved and restored when deactivating a Tool and activating it again."""
         item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": ""}
         tool = self._add_tool(item_dict)
         with mock.patch("spine_items.tool.tool.ToolSpecificationMenu") as mock_tool_spec_menu:

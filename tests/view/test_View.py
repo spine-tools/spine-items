@@ -102,7 +102,7 @@ class TestView(unittest.TestCase):
         self.view.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.view.name)  # item name
-        self.assertEqual(expected_name, self.view._properties_ui.label_view_name.text())  # name label in props
+        self.assertEqual(expected_name, self.view._properties_ui.label_item_name.text())  # name label in props
         self.assertEqual(expected_name, self.view.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
