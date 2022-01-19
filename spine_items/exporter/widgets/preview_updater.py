@@ -21,7 +21,7 @@ from PySide2.QtWidgets import QFileDialog
 
 from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.spine_io.exporters.writer import write
-from spinedb_api import DatabaseMapping
+from spinedb_api import DatabaseMapping, SpineDBVersionError
 from spinetoolbox.helpers import busy_effect
 from ...models import FullUrlListModel
 from ..mvcmodels.mappings_table_model import MappingsTableModel
@@ -477,7 +477,14 @@ class _Worker(QRunnable):
 
     @busy_effect
     def run(self):
-        db_map = DatabaseMapping(self._url)
+        try:
+            db_map = DatabaseMapping(self._url)
+        except SpineDBVersionError as error:
+            tables = {"error": [["unsupported database version"]]}
+            self.signals.table_written.emit(
+                (self._url, self._mapping_name), self._mapping_name, tables, self._stamp
+            )
+            return
         try:
             writer = TableWriter()
             write(
