@@ -35,7 +35,6 @@ class GdxExporterProperties(QWidget):
         super().__init__()
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        toolbox.ui.tabWidget_item_properties.addTab(self, ItemInfo.item_type())
 
     @property
     def ui(self):

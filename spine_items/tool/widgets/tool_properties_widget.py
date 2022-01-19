@@ -37,7 +37,6 @@ class ToolPropertiesWidget(QWidget):
         self.ui.setupUi(self)
         self.ui.treeView_cmdline_args.setStyleSheet(TREEVIEW_HEADER_SS)
         self.ui.treeView_input_files.setStyleSheet(TREEVIEW_HEADER_SS)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "Tool")
         model = self._toolbox.filtered_spec_factory_models["Tool"]
         self.ui.comboBox_tool.setModel(model)
         self.ui.options_widgets = {}

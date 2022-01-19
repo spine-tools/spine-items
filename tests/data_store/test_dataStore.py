@@ -60,7 +60,7 @@ class TestDataStore(unittest.TestCase):
         self.toolbox.project.return_value = self.project
         with mock.patch("spine_items.data_store.data_store.QMenu"):
             self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, self.ds, self.toolbox)
+        self._properties_widget = mock_finish_project_item_construction(factory, self.ds, self.toolbox)
         self.ds_properties_ui = self.ds._properties_ui
 
     def tearDown(self):
@@ -281,7 +281,6 @@ class TestDataStore(unittest.TestCase):
         self.ds.rename(expected_name, "")  # Do rename
         # Check name
         self.assertEqual(expected_name, self.ds.name)  # item name
-        self.assertEqual(expected_name, self.ds_properties_ui.label_item_name.text())  # name label in props
         self.assertEqual(expected_name, self.ds.get_icon().name_item.text())  # name item on Design View
         # Check data_dir and logs_dir
         self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir

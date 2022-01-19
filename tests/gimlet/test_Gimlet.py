@@ -53,7 +53,7 @@ class TestGimlet(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.gimlet = factory.make_item("G", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, self.gimlet, self.toolbox)
+        self._properties_widget = mock_finish_project_item_construction(factory, self.gimlet, self.toolbox)
 
     def tearDown(self):
         self._temp_dir.cleanup()
@@ -105,7 +105,6 @@ class TestGimlet(unittest.TestCase):
         expected_short_name = "abc"
         self.gimlet.rename(expected_name, "")
         self.assertEqual(expected_name, self.gimlet.name)  # Item name
-        self.assertEqual(expected_name, self.gimlet._properties_ui.label_item_name.text())  # Name label in props
         self.assertEqual(expected_name, self.gimlet.get_icon().name_item.text())  # Name item on Design View
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.gimlet.data_dir)  # Check data dir

@@ -38,7 +38,6 @@ class ImporterPropertiesWidget(QWidget):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.ui.treeView_files.setStyleSheet(TREEVIEW_HEADER_SS)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "Importer")
         # Class attributes
         self.files_context_menu = None
         model = self._toolbox.filtered_spec_factory_models[ItemInfo.item_type()]

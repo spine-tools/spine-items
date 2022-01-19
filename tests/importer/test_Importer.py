@@ -52,7 +52,7 @@ class TestImporter(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.importer = factory.make_item("I", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, self.importer, self.toolbox)
+        self._properties_widget = mock_finish_project_item_construction(factory, self.importer, self.toolbox)
 
     def tearDown(self):
         self._temp_dir.cleanup()
@@ -130,7 +130,6 @@ class TestImporter(unittest.TestCase):
         self.importer.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.importer.name)  # item name
-        self.assertEqual(expected_name, self.importer._properties_ui.label_item_name.text())  # name label in props
         self.assertEqual(expected_name, self.importer.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)

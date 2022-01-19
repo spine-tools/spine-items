@@ -53,7 +53,7 @@ class TestExporter(unittest.TestCase):
         self._project = create_mock_project(self._temp_dir.name)
         self._toolbox.project.return_value = self._project
         self._exporter = factory.make_item("exporter", item_dict, self._toolbox, self._project)
-        mock_finish_project_item_construction(factory, self._exporter, self._toolbox)
+        self._properties_widget = mock_finish_project_item_construction(factory, self._exporter, self._toolbox)
 
     def tearDown(self):
         self._temp_dir.cleanup()
@@ -125,7 +125,6 @@ class TestExporter(unittest.TestCase):
         expected_short_name = shorten(expected_name)
         self.assertTrue(self._exporter.rename(expected_name, ""))
         self.assertEqual(expected_name, self._exporter.name)
-        self.assertEqual(expected_name, self._exporter._properties_ui.label_item_name.text())
         self.assertEqual(expected_name, self._exporter.get_icon().name_item.text())
         expected_data_dir = os.path.join(self._project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self._exporter.data_dir)

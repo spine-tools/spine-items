@@ -38,4 +38,3 @@ class DataStorePropertiesWidget(QWidget):
         self.ui.comboBox_dialect.addItems(list(SUPPORTED_DIALECTS.keys()))
         self.ui.comboBox_dialect.setCurrentIndex(-1)
         self.ui.lineEdit_port.setValidator(QIntValidator())
-        toolbox.ui.tabWidget_item_properties.addTab(self, "Data Store")

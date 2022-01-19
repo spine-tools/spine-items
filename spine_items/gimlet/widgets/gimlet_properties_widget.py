@@ -39,4 +39,3 @@ class GimletPropertiesWidget(QWidget):
         self.ui.comboBox_shell.addItems(SHELLS)
         self.ui.treeView_cmdline_args.setStyleSheet(TREEVIEW_HEADER_SS)
         self.ui.treeView_files.setStyleSheet(TREEVIEW_HEADER_SS)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "Gimlet")

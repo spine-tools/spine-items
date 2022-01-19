@@ -279,9 +279,6 @@ class TestDataConnection(unittest.TestCase):
         self.data_connection.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.data_connection.name)  # item name
-        self.assertEqual(
-            expected_name, self.data_connection._properties_ui.label_item_name.text()
-        )  # name label in props
         self.assertEqual(expected_name, self.data_connection.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
         self.assertEqual(expected_data_dir, self.data_connection.data_dir)  # Check data dir

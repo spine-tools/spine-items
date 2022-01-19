@@ -33,6 +33,5 @@ class DataTransformerPropertiesWidget(QWidget):
         self.toolbox = toolbox
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.toolbox.ui.tabWidget_item_properties.addTab(self, ItemInfo.item_type())
         model = self.toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
         self.ui.specification_combo_box.setModel(model)

@@ -45,7 +45,7 @@ class TestGdxExporter(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.exporter = factory.make_item("E", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, self.exporter, self.toolbox)
+        self._properties_widget = mock_finish_project_item_construction(factory, self.exporter, self.toolbox)
 
     def tearDown(self):
         self._temp_dir.cleanup()
@@ -127,7 +127,6 @@ class TestGdxExporter(unittest.TestCase):
         self.exporter.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.exporter.name)  # item name
-        self.assertEqual(expected_name, self.exporter._properties_ui.label_item_name.text())  # name label in props
         self.assertEqual(expected_name, self.exporter.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
@@ -154,7 +153,7 @@ class TestGdxExporter(unittest.TestCase):
         item_dict = {"type": "GdxExporter", "description": "", "settings_packs": None, "x": 0, "y": 0}
         factory = GdxExporterFactory()
         exporter2 = factory.make_item("2nd exporter", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, exporter2, self.toolbox)
+        self._properties_widget2 = mock_finish_project_item_construction(factory, exporter2, self.toolbox)
         exporter2._start_worker = MagicMock()
         resources = [
             database_resource("provider", "first url to database"),

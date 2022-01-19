@@ -38,7 +38,6 @@ class ViewPropertiesWidget(QWidget):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.ui.treeView_view.setStyleSheet(TREEVIEW_HEADER_SS)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "View")
         # Class attributes
         self.view_prop_context_menu = None
         self.connect_signals()

@@ -40,7 +40,6 @@ class DataConnectionPropertiesWidget(QWidget):
         self.ui.setupUi(self)
         self.ui.treeView_dc_references.setStyleSheet(TREEVIEW_HEADER_SS)
         self.ui.treeView_dc_data.setStyleSheet(TREEVIEW_HEADER_SS)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "Data Connection")
         # Class attributes
         self.dc_ref_context_menu = None
         self.dc_data_context_menu = None

@@ -33,7 +33,6 @@ class ExporterProperties(QWidget):
         super().__init__()
         self._ui = Ui_Form()
         self._ui.setupUi(self)
-        toolbox.ui.tabWidget_item_properties.addTab(self, ItemInfo.item_type())
         model = toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
         self.ui.specification_combo_box.setModel(model)
 

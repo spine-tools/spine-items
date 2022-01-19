@@ -26,7 +26,6 @@ from spine_items.tool.item_info import ItemInfo
 from spine_items.tool.tool_specifications import ExecutableTool
 from spine_items.tool.tool import Tool
 from spine_items.tool.tool_factory import ToolFactory
-from spine_items.tool.executable_item import ExecutableItem
 from spine_engine.config import TOOL_OUTPUT_DIR
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
@@ -144,7 +143,6 @@ class TestTool(unittest.TestCase):
         tool.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, tool.name)  # item name
-        self.assertEqual(expected_name, tool._properties_ui.label_item_name.text())  # name label in props
         self.assertEqual(expected_name, tool.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
@@ -191,7 +189,7 @@ class TestTool(unittest.TestCase):
             item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0}
         factory = ToolFactory()
         tool = factory.make_item("T", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, tool, self.toolbox)
+        self._properties_widget = mock_finish_project_item_construction(factory, tool, self.toolbox)
         # Set model for tool combo box
         tool._properties_ui.comboBox_tool.setModel(self.model)
         return tool

@@ -33,4 +33,3 @@ class MergerPropertiesWidget(QWidget):
         self._toolbox = toolbox
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        toolbox.ui.tabWidget_item_properties.addTab(self, "Merger")

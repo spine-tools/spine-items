@@ -42,7 +42,7 @@ class TestDataTransformer(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.transformer = factory.make_item("T", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, self.transformer, self.toolbox)
+        self._properties_widget = mock_finish_project_item_construction(factory, self.transformer, self.toolbox)
 
     def tearDown(self):
         self._temp_dir.cleanup()
@@ -111,7 +111,6 @@ class TestDataTransformer(unittest.TestCase):
         expected_short_name = "abc"
         self.transformer.rename(expected_name, "")
         self.assertEqual(expected_name, self.transformer.name)
-        self.assertEqual(expected_name, self.transformer._properties_ui.label_item_name.text())
         self.assertEqual(expected_name, self.transformer.get_icon().name_item.text())
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.transformer.data_dir)

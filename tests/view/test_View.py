@@ -25,7 +25,6 @@ import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.view.item_info import ItemInfo
 from spine_items.view.view import View
 from spine_items.view.view_factory import ViewFactory
-from spine_items.view.executable_item import ExecutableItem
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
@@ -39,7 +38,7 @@ class TestView(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.view = factory.make_item("V", item_dict, self.toolbox, self.project)
-        mock_finish_project_item_construction(factory, self.view, self.toolbox)
+        self._properties_widget = mock_finish_project_item_construction(factory, self.view, self.toolbox)
 
     def tearDown(self):
         self._temp_dir.cleanup()
@@ -102,7 +101,6 @@ class TestView(unittest.TestCase):
         self.view.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.view.name)  # item name
-        self.assertEqual(expected_name, self.view._properties_ui.label_item_name.text())  # name label in props
         self.assertEqual(expected_name, self.view.get_icon().name_item.text())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
