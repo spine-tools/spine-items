@@ -16,12 +16,12 @@ Gimlet properties widget.
 :date:   15.4.2020
 """
 
-from PySide2.QtWidgets import QWidget
+from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from spinetoolbox.config import TREEVIEW_HEADER_SS
 from ..utils import SHELLS
 
 
-class GimletPropertiesWidget(QWidget):
+class GimletPropertiesWidget(PropertiesWidgetBase):
     """Widget for the Gimlet Item Properties."""
 
     def __init__(self, toolbox):
@@ -32,8 +32,7 @@ class GimletPropertiesWidget(QWidget):
         """
         from ..ui.gimlet_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__()
-        self._toolbox = toolbox
+        super().__init__(toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.ui.comboBox_shell.addItems(SHELLS)

@@ -16,12 +16,12 @@ Data store properties widget.
 :date:   12.9.2019
 """
 
-from PySide2.QtWidgets import QWidget
+from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from PySide2.QtGui import QIntValidator
 from spinedb_api import SUPPORTED_DIALECTS
 
 
-class DataStorePropertiesWidget(QWidget):
+class DataStorePropertiesWidget(PropertiesWidgetBase):
     """Widget for the Data Store Item Properties."""
 
     def __init__(self, toolbox):
@@ -29,10 +29,9 @@ class DataStorePropertiesWidget(QWidget):
         Args:
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
-        super().__init__()
         from ..ui.data_store_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        self._toolbox = toolbox
+        super().__init__(toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.ui.comboBox_dialect.addItems(list(SUPPORTED_DIALECTS.keys()))

@@ -17,13 +17,13 @@ Importer properties widget.
 """
 
 from PySide2.QtCore import QPoint, Slot
-from PySide2.QtWidgets import QWidget
+from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from spinetoolbox.config import TREEVIEW_HEADER_SS
 from .custom_menus import FilesContextMenu
 from ..item_info import ItemInfo
 
 
-class ImporterPropertiesWidget(QWidget):
+class ImporterPropertiesWidget(PropertiesWidgetBase):
     """Widget for the Importer Item Properties."""
 
     def __init__(self, toolbox):
@@ -31,10 +31,9 @@ class ImporterPropertiesWidget(QWidget):
         Args:
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
-        super().__init__()
+        super().__init__(toolbox)
         from ..ui.importer_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        self._toolbox = toolbox
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.ui.treeView_files.setStyleSheet(TREEVIEW_HEADER_SS)

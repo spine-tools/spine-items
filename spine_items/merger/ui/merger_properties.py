@@ -31,45 +31,35 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(415, 382)
+        Form.resize(323, 128)
         self.verticalLayout = QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_5 = QScrollArea(Form)
-        self.scrollArea_5.setObjectName(u"scrollArea_5")
-        self.scrollArea_5.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_7 = QWidget()
-        self.scrollAreaWidgetContents_7.setObjectName(u"scrollAreaWidgetContents_7")
-        self.scrollAreaWidgetContents_7.setGeometry(QRect(0, 0, 413, 380))
-        self.verticalLayout_25 = QVBoxLayout(self.scrollAreaWidgetContents_7)
-        self.verticalLayout_25.setObjectName(u"verticalLayout_25")
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.verticalLayout_25.addItem(self.verticalSpacer_2)
+        self.verticalLayout.addItem(self.verticalSpacer_2)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.cancel_on_error_checkBox = QCheckBox(self.scrollAreaWidgetContents_7)
+        self.cancel_on_error_checkBox = QCheckBox(Form)
         self.cancel_on_error_checkBox.setObjectName(u"cancel_on_error_checkBox")
         self.cancel_on_error_checkBox.setChecked(True)
 
         self.horizontalLayout.addWidget(self.cancel_on_error_checkBox)
 
-        self.checkBox_purge_before_writing = QCheckBox(self.scrollAreaWidgetContents_7)
+        self.checkBox_purge_before_writing = QCheckBox(Form)
         self.checkBox_purge_before_writing.setObjectName(u"checkBox_purge_before_writing")
 
         self.horizontalLayout.addWidget(self.checkBox_purge_before_writing)
 
 
-        self.verticalLayout_25.addLayout(self.horizontalLayout)
+        self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.line_8 = QFrame(self.scrollAreaWidgetContents_7)
+        self.line_8 = QFrame(Form)
         self.line_8.setObjectName(u"line_8")
         self.line_8.setFrameShape(QFrame.HLine)
         self.line_8.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_25.addWidget(self.line_8)
+        self.verticalLayout.addWidget(self.line_8)
 
         self.horizontalLayout_27 = QHBoxLayout()
         self.horizontalLayout_27.setObjectName(u"horizontalLayout_27")
@@ -77,7 +67,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_27.addItem(self.horizontalSpacer_16)
 
-        self.toolButton_merger_open_dir = QToolButton(self.scrollAreaWidgetContents_7)
+        self.toolButton_merger_open_dir = QToolButton(Form)
         self.toolButton_merger_open_dir.setObjectName(u"toolButton_merger_open_dir")
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -93,13 +83,8 @@ class Ui_Form(object):
         self.horizontalLayout_27.addWidget(self.toolButton_merger_open_dir)
 
 
-        self.verticalLayout_25.addLayout(self.horizontalLayout_27)
+        self.verticalLayout.addLayout(self.horizontalLayout_27)
 
-        self.scrollArea_5.setWidget(self.scrollAreaWidgetContents_7)
-
-        self.verticalLayout.addWidget(self.scrollArea_5)
-
-        QWidget.setTabOrder(self.scrollArea_5, self.toolButton_merger_open_dir)
 
         self.retranslateUi(Form)
 

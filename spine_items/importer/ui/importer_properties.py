@@ -31,23 +31,13 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(426, 370)
+        Form.resize(509, 344)
         self.verticalLayout = QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_6 = QScrollArea(Form)
-        self.scrollArea_6.setObjectName(u"scrollArea_6")
-        self.scrollArea_6.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_5 = QWidget()
-        self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 509, 354))
-        self.verticalLayout_21 = QVBoxLayout(self.scrollAreaWidgetContents_5)
-        self.verticalLayout_21.setObjectName(u"verticalLayout_21")
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setSpacing(4)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.label_specification = QLabel(self.scrollAreaWidgetContents_5)
+        self.label_specification = QLabel(Form)
         self.label_specification.setObjectName(u"label_specification")
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -56,12 +46,12 @@ class Ui_Form(object):
         self.label_specification.setSizePolicy(sizePolicy)
         self.label_specification.setMaximumSize(QSize(16777215, 16777215))
         font = QFont()
-        font.setPointSize(8)
+        font.setPointSize(10)
         self.label_specification.setFont(font)
 
         self.horizontalLayout_9.addWidget(self.label_specification)
 
-        self.comboBox_specification = QComboBox(self.scrollAreaWidgetContents_5)
+        self.comboBox_specification = QComboBox(Form)
         self.comboBox_specification.setObjectName(u"comboBox_specification")
         sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
@@ -71,7 +61,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.comboBox_specification)
 
-        self.toolButton_edit_specification = QToolButton(self.scrollAreaWidgetContents_5)
+        self.toolButton_edit_specification = QToolButton(Form)
         self.toolButton_edit_specification.setObjectName(u"toolButton_edit_specification")
         self.toolButton_edit_specification.setMinimumSize(QSize(22, 22))
         self.toolButton_edit_specification.setMaximumSize(QSize(22, 22))
@@ -84,66 +74,64 @@ class Ui_Form(object):
         self.horizontalLayout_9.addWidget(self.toolButton_edit_specification)
 
 
-        self.verticalLayout_21.addLayout(self.horizontalLayout_9)
+        self.verticalLayout.addLayout(self.horizontalLayout_9)
 
-        self.treeView_files = QTreeView(self.scrollAreaWidgetContents_5)
+        self.treeView_files = QTreeView(Form)
         self.treeView_files.setObjectName(u"treeView_files")
-        font1 = QFont()
-        font1.setPointSize(10)
-        self.treeView_files.setFont(font1)
+        self.treeView_files.setFont(font)
         self.treeView_files.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView_files.setTextElideMode(Qt.ElideLeft)
         self.treeView_files.setUniformRowHeights(True)
 
-        self.verticalLayout_21.addWidget(self.treeView_files)
+        self.verticalLayout.addWidget(self.treeView_files)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.label = QLabel(self.scrollAreaWidgetContents_5)
+        self.label = QLabel(Form)
         self.label.setObjectName(u"label")
 
         self.horizontalLayout.addWidget(self.label)
 
-        self.radioButton_on_conflict_keep = QRadioButton(self.scrollAreaWidgetContents_5)
+        self.radioButton_on_conflict_keep = QRadioButton(Form)
         self.radioButton_on_conflict_keep.setObjectName(u"radioButton_on_conflict_keep")
 
         self.horizontalLayout.addWidget(self.radioButton_on_conflict_keep)
 
-        self.radioButton_on_conflict_replace = QRadioButton(self.scrollAreaWidgetContents_5)
+        self.radioButton_on_conflict_replace = QRadioButton(Form)
         self.radioButton_on_conflict_replace.setObjectName(u"radioButton_on_conflict_replace")
 
         self.horizontalLayout.addWidget(self.radioButton_on_conflict_replace)
 
-        self.radioButton_on_conflict_merge = QRadioButton(self.scrollAreaWidgetContents_5)
+        self.radioButton_on_conflict_merge = QRadioButton(Form)
         self.radioButton_on_conflict_merge.setObjectName(u"radioButton_on_conflict_merge")
 
         self.horizontalLayout.addWidget(self.radioButton_on_conflict_merge)
 
 
-        self.verticalLayout_21.addLayout(self.horizontalLayout)
+        self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.cancel_on_error_checkBox = QCheckBox(self.scrollAreaWidgetContents_5)
+        self.cancel_on_error_checkBox = QCheckBox(Form)
         self.cancel_on_error_checkBox.setObjectName(u"cancel_on_error_checkBox")
         self.cancel_on_error_checkBox.setChecked(True)
 
         self.horizontalLayout_2.addWidget(self.cancel_on_error_checkBox)
 
-        self.checkBox_purge_before_writing = QCheckBox(self.scrollAreaWidgetContents_5)
+        self.checkBox_purge_before_writing = QCheckBox(Form)
         self.checkBox_purge_before_writing.setObjectName(u"checkBox_purge_before_writing")
 
         self.horizontalLayout_2.addWidget(self.checkBox_purge_before_writing)
 
 
-        self.verticalLayout_21.addLayout(self.horizontalLayout_2)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
 
-        self.line_6 = QFrame(self.scrollAreaWidgetContents_5)
+        self.line_6 = QFrame(Form)
         self.line_6.setObjectName(u"line_6")
         self.line_6.setFrameShape(QFrame.HLine)
         self.line_6.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_21.addWidget(self.line_6)
+        self.verticalLayout.addWidget(self.line_6)
 
         self.horizontalLayout_13 = QHBoxLayout()
         self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
@@ -151,7 +139,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_13.addItem(self.horizontalSpacer_17)
 
-        self.toolButton_open_dir = QToolButton(self.scrollAreaWidgetContents_5)
+        self.toolButton_open_dir = QToolButton(Form)
         self.toolButton_open_dir.setObjectName(u"toolButton_open_dir")
         sizePolicy.setHeightForWidth(self.toolButton_open_dir.sizePolicy().hasHeightForWidth())
         self.toolButton_open_dir.setSizePolicy(sizePolicy)
@@ -164,11 +152,7 @@ class Ui_Form(object):
         self.horizontalLayout_13.addWidget(self.toolButton_open_dir)
 
 
-        self.verticalLayout_21.addLayout(self.horizontalLayout_13)
-
-        self.scrollArea_6.setWidget(self.scrollAreaWidgetContents_5)
-
-        self.verticalLayout.addWidget(self.scrollArea_6)
+        self.verticalLayout.addLayout(self.horizontalLayout_13)
 
 
         self.retranslateUi(Form)

@@ -16,11 +16,11 @@ GdxExporter properties widget.
 :date:   25.9.2019
 """
 
-from PySide2.QtWidgets import QWidget
+from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from ..item_info import ItemInfo
 
 
-class GdxExporterProperties(QWidget):
+class GdxExporterProperties(PropertiesWidgetBase):
     """A main window widget to show GdxExport item's properties."""
 
     def __init__(self, toolbox):
@@ -32,7 +32,7 @@ class GdxExporterProperties(QWidget):
             Ui_Form,
         )  # pylint: disable=import-outside-toplevel
 
-        super().__init__()
+        super().__init__(toolbox)
         self._ui = Ui_Form()
         self._ui.setupUi(self)
 

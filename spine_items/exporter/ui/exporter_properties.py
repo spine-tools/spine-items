@@ -31,23 +31,13 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(294, 370)
+        Form.resize(250, 219)
         self.verticalLayout = QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_6 = QScrollArea(Form)
-        self.scrollArea_6.setObjectName(u"scrollArea_6")
-        self.scrollArea_6.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_5 = QWidget()
-        self.scrollAreaWidgetContents_5.setObjectName(u"scrollAreaWidgetContents_5")
-        self.scrollAreaWidgetContents_5.setGeometry(QRect(0, 0, 292, 368))
-        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents_5)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setSpacing(4)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.specification_label = QLabel(self.scrollAreaWidgetContents_5)
+        self.specification_label = QLabel(Form)
         self.specification_label.setObjectName(u"specification_label")
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -56,12 +46,12 @@ class Ui_Form(object):
         self.specification_label.setSizePolicy(sizePolicy)
         self.specification_label.setMaximumSize(QSize(16777215, 16777215))
         font = QFont()
-        font.setPointSize(8)
+        font.setPointSize(10)
         self.specification_label.setFont(font)
 
         self.horizontalLayout_9.addWidget(self.specification_label)
 
-        self.specification_combo_box = QComboBox(self.scrollAreaWidgetContents_5)
+        self.specification_combo_box = QComboBox(Form)
         self.specification_combo_box.setObjectName(u"specification_combo_box")
         sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
@@ -71,7 +61,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.specification_combo_box)
 
-        self.specification_button = QToolButton(self.scrollAreaWidgetContents_5)
+        self.specification_button = QToolButton(Form)
         self.specification_button.setObjectName(u"specification_button")
         self.specification_button.setMinimumSize(QSize(22, 22))
         self.specification_button.setMaximumSize(QSize(22, 22))
@@ -84,39 +74,39 @@ class Ui_Form(object):
         self.horizontalLayout_9.addWidget(self.specification_button)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_9)
+        self.verticalLayout.addLayout(self.horizontalLayout_9)
 
-        self.issues_label = QLabel(self.scrollAreaWidgetContents_5)
+        self.issues_label = QLabel(Form)
         self.issues_label.setObjectName(u"issues_label")
 
-        self.verticalLayout_2.addWidget(self.issues_label)
+        self.verticalLayout.addWidget(self.issues_label)
 
         self.outputs_list_layout = QVBoxLayout()
         self.outputs_list_layout.setObjectName(u"outputs_list_layout")
 
-        self.verticalLayout_2.addLayout(self.outputs_list_layout)
+        self.verticalLayout.addLayout(self.outputs_list_layout)
 
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.verticalLayout_2.addItem(self.verticalSpacer)
+        self.verticalLayout.addItem(self.verticalSpacer)
 
-        self.output_time_stamps_check_box = QCheckBox(self.scrollAreaWidgetContents_5)
+        self.output_time_stamps_check_box = QCheckBox(Form)
         self.output_time_stamps_check_box.setObjectName(u"output_time_stamps_check_box")
 
-        self.verticalLayout_2.addWidget(self.output_time_stamps_check_box)
+        self.verticalLayout.addWidget(self.output_time_stamps_check_box)
 
-        self.cancel_on_error_check_box = QCheckBox(self.scrollAreaWidgetContents_5)
+        self.cancel_on_error_check_box = QCheckBox(Form)
         self.cancel_on_error_check_box.setObjectName(u"cancel_on_error_check_box")
         self.cancel_on_error_check_box.setChecked(True)
 
-        self.verticalLayout_2.addWidget(self.cancel_on_error_check_box)
+        self.verticalLayout.addWidget(self.cancel_on_error_check_box)
 
-        self.line_6 = QFrame(self.scrollAreaWidgetContents_5)
+        self.line_6 = QFrame(Form)
         self.line_6.setObjectName(u"line_6")
         self.line_6.setFrameShape(QFrame.HLine)
         self.line_6.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_2.addWidget(self.line_6)
+        self.verticalLayout.addWidget(self.line_6)
 
         self.horizontalLayout_13 = QHBoxLayout()
         self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
@@ -124,7 +114,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_13.addItem(self.horizontalSpacer_17)
 
-        self.open_directory_button = QToolButton(self.scrollAreaWidgetContents_5)
+        self.open_directory_button = QToolButton(Form)
         self.open_directory_button.setObjectName(u"open_directory_button")
         sizePolicy.setHeightForWidth(self.open_directory_button.sizePolicy().hasHeightForWidth())
         self.open_directory_button.setSizePolicy(sizePolicy)
@@ -137,11 +127,7 @@ class Ui_Form(object):
         self.horizontalLayout_13.addWidget(self.open_directory_button)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_13)
-
-        self.scrollArea_6.setWidget(self.scrollAreaWidgetContents_5)
-
-        self.verticalLayout.addWidget(self.scrollArea_6)
+        self.verticalLayout.addLayout(self.horizontalLayout_13)
 
 
         self.retranslateUi(Form)

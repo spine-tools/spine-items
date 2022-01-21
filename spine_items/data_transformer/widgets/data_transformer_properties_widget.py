@@ -15,11 +15,11 @@ Data transformer properties widget.
 :author: A. Soininen
 :date:   2.10.2020
 """
-from PySide2.QtWidgets import QWidget
+from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from ..item_info import ItemInfo
 
 
-class DataTransformerPropertiesWidget(QWidget):
+class DataTransformerPropertiesWidget(PropertiesWidgetBase):
     """Widget for the Data transformer item properties."""
 
     def __init__(self, toolbox):
@@ -29,9 +29,8 @@ class DataTransformerPropertiesWidget(QWidget):
         """
         from ..ui.data_transformer_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__()
-        self.toolbox = toolbox
+        super().__init__(toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        model = self.toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
+        model = self._toolbox.filtered_spec_factory_models[ItemInfo.item_type()]
         self.ui.specification_combo_box.setModel(model)

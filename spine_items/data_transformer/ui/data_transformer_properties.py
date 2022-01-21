@@ -31,23 +31,13 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(395, 396)
+        Form.resize(212, 130)
         self.verticalLayout = QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_4 = QScrollArea(Form)
-        self.scrollArea_4.setObjectName(u"scrollArea_4")
-        self.scrollArea_4.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_4 = QWidget()
-        self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 393, 394))
-        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents_4)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setSpacing(4)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.specification_label = QLabel(self.scrollAreaWidgetContents_4)
+        self.specification_label = QLabel(Form)
         self.specification_label.setObjectName(u"specification_label")
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -56,12 +46,12 @@ class Ui_Form(object):
         self.specification_label.setSizePolicy(sizePolicy)
         self.specification_label.setMaximumSize(QSize(16777215, 16777215))
         font = QFont()
-        font.setPointSize(8)
+        font.setPointSize(10)
         self.specification_label.setFont(font)
 
         self.horizontalLayout_9.addWidget(self.specification_label)
 
-        self.specification_combo_box = QComboBox(self.scrollAreaWidgetContents_4)
+        self.specification_combo_box = QComboBox(Form)
         self.specification_combo_box.setObjectName(u"specification_combo_box")
         sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
@@ -71,7 +61,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.specification_combo_box)
 
-        self.specification_button = QToolButton(self.scrollAreaWidgetContents_4)
+        self.specification_button = QToolButton(Form)
         self.specification_button.setObjectName(u"specification_button")
         self.specification_button.setMinimumSize(QSize(22, 22))
         self.specification_button.setMaximumSize(QSize(22, 22))
@@ -84,18 +74,18 @@ class Ui_Form(object):
         self.horizontalLayout_9.addWidget(self.specification_button)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_9)
+        self.verticalLayout.addLayout(self.horizontalLayout_9)
 
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.verticalLayout_2.addItem(self.verticalSpacer)
+        self.verticalLayout.addItem(self.verticalSpacer)
 
-        self.line_5 = QFrame(self.scrollAreaWidgetContents_4)
+        self.line_5 = QFrame(Form)
         self.line_5.setObjectName(u"line_5")
         self.line_5.setFrameShape(QFrame.HLine)
         self.line_5.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_2.addWidget(self.line_5)
+        self.verticalLayout.addWidget(self.line_5)
 
         self.horizontalLayout_16 = QHBoxLayout()
         self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
@@ -103,7 +93,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_16.addItem(self.horizontalSpacer_12)
 
-        self.open_dir_button = QToolButton(self.scrollAreaWidgetContents_4)
+        self.open_dir_button = QToolButton(Form)
         self.open_dir_button.setObjectName(u"open_dir_button")
         self.open_dir_button.setMinimumSize(QSize(22, 22))
         self.open_dir_button.setMaximumSize(QSize(22, 22))
@@ -114,11 +104,7 @@ class Ui_Form(object):
         self.horizontalLayout_16.addWidget(self.open_dir_button)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_16)
-
-        self.scrollArea_4.setWidget(self.scrollAreaWidgetContents_4)
-
-        self.verticalLayout.addWidget(self.scrollArea_4)
+        self.verticalLayout.addLayout(self.horizontalLayout_16)
 
 
         self.retranslateUi(Form)

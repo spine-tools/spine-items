@@ -34,20 +34,10 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(276, 476)
+        Form.resize(274, 477)
         self.verticalLayout = QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_2 = QScrollArea(Form)
-        self.scrollArea_2.setObjectName(u"scrollArea_2")
-        self.scrollArea_2.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_2 = QWidget()
-        self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 274, 474))
-        self.verticalLayout_16 = QVBoxLayout(self.scrollAreaWidgetContents_2)
-        self.verticalLayout_16.setObjectName(u"verticalLayout_16")
-        self.treeView_dc_references = ReferencesTreeView(self.scrollAreaWidgetContents_2)
+        self.treeView_dc_references = ReferencesTreeView(Form)
         self.treeView_dc_references.setObjectName(u"treeView_dc_references")
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -66,11 +56,11 @@ class Ui_Form(object):
         self.treeView_dc_references.setUniformRowHeights(True)
         self.treeView_dc_references.header().setStretchLastSection(True)
 
-        self.verticalLayout_16.addWidget(self.treeView_dc_references)
+        self.verticalLayout.addWidget(self.treeView_dc_references)
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.toolButton_plus = QToolButton(self.scrollAreaWidgetContents_2)
+        self.toolButton_plus = QToolButton(Form)
         self.toolButton_plus.setObjectName(u"toolButton_plus")
         sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
@@ -91,7 +81,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.toolButton_plus)
 
-        self.toolButton_minus = QToolButton(self.scrollAreaWidgetContents_2)
+        self.toolButton_minus = QToolButton(Form)
         self.toolButton_minus.setObjectName(u"toolButton_minus")
         sizePolicy1.setHeightForWidth(self.toolButton_minus.sizePolicy().hasHeightForWidth())
         self.toolButton_minus.setSizePolicy(sizePolicy1)
@@ -105,7 +95,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.toolButton_minus)
 
-        self.toolButton_add = QToolButton(self.scrollAreaWidgetContents_2)
+        self.toolButton_add = QToolButton(Form)
         self.toolButton_add.setObjectName(u"toolButton_add")
         self.toolButton_add.setMinimumSize(QSize(22, 22))
         self.toolButton_add.setMaximumSize(QSize(22, 22))
@@ -122,9 +112,9 @@ class Ui_Form(object):
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
 
-        self.verticalLayout_16.addLayout(self.horizontalLayout_2)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
 
-        self.treeView_dc_data = DataTreeView(self.scrollAreaWidgetContents_2)
+        self.treeView_dc_data = DataTreeView(Form)
         self.treeView_dc_data.setObjectName(u"treeView_dc_data")
         sizePolicy.setHeightForWidth(self.treeView_dc_data.sizePolicy().hasHeightForWidth())
         self.treeView_dc_data.setSizePolicy(sizePolicy)
@@ -138,14 +128,14 @@ class Ui_Form(object):
         self.treeView_dc_data.setUniformRowHeights(True)
         self.treeView_dc_data.header().setStretchLastSection(True)
 
-        self.verticalLayout_16.addWidget(self.treeView_dc_data)
+        self.verticalLayout.addWidget(self.treeView_dc_data)
 
-        self.line_3 = QFrame(self.scrollAreaWidgetContents_2)
+        self.line_3 = QFrame(Form)
         self.line_3.setObjectName(u"line_3")
         self.line_3.setFrameShape(QFrame.HLine)
         self.line_3.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_16.addWidget(self.line_3)
+        self.verticalLayout.addWidget(self.line_3)
 
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
@@ -153,7 +143,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_7.addItem(self.horizontalSpacer_10)
 
-        self.toolButton_dc_open_dir = QToolButton(self.scrollAreaWidgetContents_2)
+        self.toolButton_dc_open_dir = QToolButton(Form)
         self.toolButton_dc_open_dir.setObjectName(u"toolButton_dc_open_dir")
         sizePolicy1.setHeightForWidth(self.toolButton_dc_open_dir.sizePolicy().hasHeightForWidth())
         self.toolButton_dc_open_dir.setSizePolicy(sizePolicy1)
@@ -166,11 +156,7 @@ class Ui_Form(object):
         self.horizontalLayout_7.addWidget(self.toolButton_dc_open_dir)
 
 
-        self.verticalLayout_16.addLayout(self.horizontalLayout_7)
-
-        self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
-
-        self.verticalLayout.addWidget(self.scrollArea_2)
+        self.verticalLayout.addLayout(self.horizontalLayout_7)
 
 
         self.retranslateUi(Form)

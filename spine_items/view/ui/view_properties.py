@@ -33,20 +33,10 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(395, 396)
+        Form.resize(274, 280)
         self.verticalLayout = QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_4 = QScrollArea(Form)
-        self.scrollArea_4.setObjectName(u"scrollArea_4")
-        self.scrollArea_4.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_4 = QWidget()
-        self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 393, 394))
-        self.verticalLayout_18 = QVBoxLayout(self.scrollAreaWidgetContents_4)
-        self.verticalLayout_18.setObjectName(u"verticalLayout_18")
-        self.treeView_view = ReferencesTreeView(self.scrollAreaWidgetContents_4)
+        self.treeView_view = ReferencesTreeView(Form)
         self.treeView_view.setObjectName(u"treeView_view")
         font = QFont()
         font.setPointSize(9)
@@ -57,7 +47,7 @@ class Ui_Form(object):
         self.treeView_view.setTextElideMode(Qt.ElideLeft)
         self.treeView_view.setRootIsDecorated(False)
 
-        self.verticalLayout_18.addWidget(self.treeView_view)
+        self.verticalLayout.addWidget(self.treeView_view)
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setSpacing(6)
@@ -66,7 +56,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer_9)
 
-        self.pushButton_view_open_editor = QPushButton(self.scrollAreaWidgetContents_4)
+        self.pushButton_view_open_editor = QPushButton(Form)
         self.pushButton_view_open_editor.setObjectName(u"pushButton_view_open_editor")
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -79,14 +69,14 @@ class Ui_Form(object):
         self.horizontalLayout_8.addWidget(self.pushButton_view_open_editor)
 
 
-        self.verticalLayout_18.addLayout(self.horizontalLayout_8)
+        self.verticalLayout.addLayout(self.horizontalLayout_8)
 
-        self.line_5 = QFrame(self.scrollAreaWidgetContents_4)
+        self.line_5 = QFrame(Form)
         self.line_5.setObjectName(u"line_5")
         self.line_5.setFrameShape(QFrame.HLine)
         self.line_5.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_18.addWidget(self.line_5)
+        self.verticalLayout.addWidget(self.line_5)
 
         self.horizontalLayout_16 = QHBoxLayout()
         self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
@@ -94,7 +84,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_16.addItem(self.horizontalSpacer_12)
 
-        self.toolButton_view_open_dir = QToolButton(self.scrollAreaWidgetContents_4)
+        self.toolButton_view_open_dir = QToolButton(Form)
         self.toolButton_view_open_dir.setObjectName(u"toolButton_view_open_dir")
         self.toolButton_view_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_view_open_dir.setMaximumSize(QSize(22, 22))
@@ -105,11 +95,7 @@ class Ui_Form(object):
         self.horizontalLayout_16.addWidget(self.toolButton_view_open_dir)
 
 
-        self.verticalLayout_18.addLayout(self.horizontalLayout_16)
-
-        self.scrollArea_4.setWidget(self.scrollAreaWidgetContents_4)
-
-        self.verticalLayout.addWidget(self.scrollArea_4)
+        self.verticalLayout.addLayout(self.horizontalLayout_16)
 
 
         self.retranslateUi(Form)

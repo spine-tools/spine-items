@@ -33,23 +33,13 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(408, 451)
+        Form.resize(443, 567)
         self.verticalLayout = QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_3 = QScrollArea(Form)
-        self.scrollArea_3.setObjectName(u"scrollArea_3")
-        self.scrollArea_3.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_3 = QWidget()
-        self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 406, 449))
-        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents_3)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setSpacing(4)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.label_tool_specification = QLabel(self.scrollAreaWidgetContents_3)
+        self.label_tool_specification = QLabel(Form)
         self.label_tool_specification.setObjectName(u"label_tool_specification")
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -63,7 +53,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.label_tool_specification)
 
-        self.comboBox_tool = QComboBox(self.scrollAreaWidgetContents_3)
+        self.comboBox_tool = QComboBox(Form)
         self.comboBox_tool.setObjectName(u"comboBox_tool")
         sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
@@ -74,7 +64,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.comboBox_tool)
 
-        self.toolButton_tool_specification = QToolButton(self.scrollAreaWidgetContents_3)
+        self.toolButton_tool_specification = QToolButton(Form)
         self.toolButton_tool_specification.setObjectName(u"toolButton_tool_specification")
         self.toolButton_tool_specification.setMinimumSize(QSize(22, 22))
         self.toolButton_tool_specification.setMaximumSize(QSize(22, 22))
@@ -87,14 +77,14 @@ class Ui_Form(object):
         self.horizontalLayout_9.addWidget(self.toolButton_tool_specification)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_9)
+        self.verticalLayout.addLayout(self.horizontalLayout_9)
 
         self.horizontalLayout_options = QHBoxLayout()
         self.horizontalLayout_options.setObjectName(u"horizontalLayout_options")
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_options)
+        self.verticalLayout.addLayout(self.horizontalLayout_options)
 
-        self.splitter = QSplitter(self.scrollAreaWidgetContents_3)
+        self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Vertical)
         self.treeView_cmdline_args = ArgsTreeView(self.splitter)
@@ -158,7 +148,7 @@ class Ui_Form(object):
 
         self.splitter.addWidget(self.gridLayoutWidget)
 
-        self.verticalLayout_2.addWidget(self.splitter)
+        self.verticalLayout.addWidget(self.splitter)
 
         self.horizontalLayout_11 = QHBoxLayout()
         self.horizontalLayout_11.setSpacing(6)
@@ -167,7 +157,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_11.addItem(self.horizontalSpacer_6)
 
-        self.pushButton_tool_results = QPushButton(self.scrollAreaWidgetContents_3)
+        self.pushButton_tool_results = QPushButton(Form)
         self.pushButton_tool_results.setObjectName(u"pushButton_tool_results")
         sizePolicy3 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
@@ -180,34 +170,34 @@ class Ui_Form(object):
         self.horizontalLayout_11.addWidget(self.pushButton_tool_results)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_11)
+        self.verticalLayout.addLayout(self.horizontalLayout_11)
 
-        self.line_4 = QFrame(self.scrollAreaWidgetContents_3)
+        self.line_4 = QFrame(Form)
         self.line_4.setObjectName(u"line_4")
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_2.addWidget(self.line_4)
+        self.verticalLayout.addWidget(self.line_4)
 
-        self.label_jupyter = QLabel(self.scrollAreaWidgetContents_3)
+        self.label_jupyter = QLabel(Form)
         self.label_jupyter.setObjectName(u"label_jupyter")
 
-        self.verticalLayout_2.addWidget(self.label_jupyter)
+        self.verticalLayout.addWidget(self.label_jupyter)
 
         self.horizontalLayout_15 = QHBoxLayout()
         self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
-        self.label_2 = QLabel(self.scrollAreaWidgetContents_3)
+        self.label_2 = QLabel(Form)
         self.label_2.setObjectName(u"label_2")
 
         self.horizontalLayout_15.addWidget(self.label_2)
 
-        self.radioButton_execute_in_work = QRadioButton(self.scrollAreaWidgetContents_3)
+        self.radioButton_execute_in_work = QRadioButton(Form)
         self.radioButton_execute_in_work.setObjectName(u"radioButton_execute_in_work")
         self.radioButton_execute_in_work.setChecked(True)
 
         self.horizontalLayout_15.addWidget(self.radioButton_execute_in_work)
 
-        self.radioButton_execute_in_source = QRadioButton(self.scrollAreaWidgetContents_3)
+        self.radioButton_execute_in_source = QRadioButton(Form)
         self.radioButton_execute_in_source.setObjectName(u"radioButton_execute_in_source")
 
         self.horizontalLayout_15.addWidget(self.radioButton_execute_in_source)
@@ -216,7 +206,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_15.addItem(self.horizontalSpacer_8)
 
-        self.toolButton_tool_open_dir = QToolButton(self.scrollAreaWidgetContents_3)
+        self.toolButton_tool_open_dir = QToolButton(Form)
         self.toolButton_tool_open_dir.setObjectName(u"toolButton_tool_open_dir")
         self.toolButton_tool_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_tool_open_dir.setMaximumSize(QSize(22, 22))
@@ -227,13 +217,8 @@ class Ui_Form(object):
         self.horizontalLayout_15.addWidget(self.toolButton_tool_open_dir)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_15)
+        self.verticalLayout.addLayout(self.horizontalLayout_15)
 
-        self.scrollArea_3.setWidget(self.scrollAreaWidgetContents_3)
-
-        self.verticalLayout.addWidget(self.scrollArea_3)
-
-        QWidget.setTabOrder(self.scrollArea_3, self.comboBox_tool)
         QWidget.setTabOrder(self.comboBox_tool, self.toolButton_tool_specification)
         QWidget.setTabOrder(self.toolButton_tool_specification, self.pushButton_tool_results)
         QWidget.setTabOrder(self.pushButton_tool_results, self.toolButton_tool_open_dir)

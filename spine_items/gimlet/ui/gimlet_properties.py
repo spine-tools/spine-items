@@ -34,22 +34,12 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(395, 396)
+        Form.resize(276, 560)
         self.verticalLayout = QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea_4 = QScrollArea(Form)
-        self.scrollArea_4.setObjectName(u"scrollArea_4")
-        self.scrollArea_4.setWidgetResizable(True)
-        self.scrollAreaWidgetContents_4 = QWidget()
-        self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 393, 394))
-        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents_4)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.formLayout = QFormLayout()
         self.formLayout.setObjectName(u"formLayout")
-        self.checkBox_shell = QCheckBox(self.scrollAreaWidgetContents_4)
+        self.checkBox_shell = QCheckBox(Form)
         self.checkBox_shell.setObjectName(u"checkBox_shell")
         font = QFont()
         font.setPointSize(10)
@@ -58,7 +48,7 @@ class Ui_Form(object):
 
         self.formLayout.setWidget(0, QFormLayout.LabelRole, self.checkBox_shell)
 
-        self.comboBox_shell = QComboBox(self.scrollAreaWidgetContents_4)
+        self.comboBox_shell = QComboBox(Form)
         self.comboBox_shell.setObjectName(u"comboBox_shell")
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -68,22 +58,22 @@ class Ui_Form(object):
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.comboBox_shell)
 
-        self.label_2 = QLabel(self.scrollAreaWidgetContents_4)
+        self.label_2 = QLabel(Form)
         self.label_2.setObjectName(u"label_2")
         self.label_2.setFont(font)
 
         self.formLayout.setWidget(1, QFormLayout.LabelRole, self.label_2)
 
-        self.lineEdit_cmd = PropertyQLineEdit(self.scrollAreaWidgetContents_4)
+        self.lineEdit_cmd = PropertyQLineEdit(Form)
         self.lineEdit_cmd.setObjectName(u"lineEdit_cmd")
         self.lineEdit_cmd.setClearButtonEnabled(True)
 
         self.formLayout.setWidget(1, QFormLayout.FieldRole, self.lineEdit_cmd)
 
 
-        self.verticalLayout_2.addLayout(self.formLayout)
+        self.verticalLayout.addLayout(self.formLayout)
 
-        self.splitter = QSplitter(self.scrollAreaWidgetContents_4)
+        self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Vertical)
         self.treeView_cmdline_args = ArgsTreeView(self.splitter)
@@ -144,29 +134,29 @@ class Ui_Form(object):
 
         self.splitter.addWidget(self.gridLayoutWidget)
 
-        self.verticalLayout_2.addWidget(self.splitter)
+        self.verticalLayout.addWidget(self.splitter)
 
-        self.line_5 = QFrame(self.scrollAreaWidgetContents_4)
+        self.line_5 = QFrame(Form)
         self.line_5.setObjectName(u"line_5")
         self.line_5.setFrameShape(QFrame.HLine)
         self.line_5.setFrameShadow(QFrame.Sunken)
 
-        self.verticalLayout_2.addWidget(self.line_5)
+        self.verticalLayout.addWidget(self.line_5)
 
-        self.label = QLabel(self.scrollAreaWidgetContents_4)
+        self.label = QLabel(Form)
         self.label.setObjectName(u"label")
 
-        self.verticalLayout_2.addWidget(self.label)
+        self.verticalLayout.addWidget(self.label)
 
         self.horizontalLayout_16 = QHBoxLayout()
         self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
-        self.radioButton_default = QRadioButton(self.scrollAreaWidgetContents_4)
+        self.radioButton_default = QRadioButton(Form)
         self.radioButton_default.setObjectName(u"radioButton_default")
         self.radioButton_default.setChecked(True)
 
         self.horizontalLayout_16.addWidget(self.radioButton_default)
 
-        self.radioButton_unique = QRadioButton(self.scrollAreaWidgetContents_4)
+        self.radioButton_unique = QRadioButton(Form)
         self.radioButton_unique.setObjectName(u"radioButton_unique")
 
         self.horizontalLayout_16.addWidget(self.radioButton_unique)
@@ -175,7 +165,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_16.addItem(self.horizontalSpacer_12)
 
-        self.toolButton_gimlet_open_dir = QToolButton(self.scrollAreaWidgetContents_4)
+        self.toolButton_gimlet_open_dir = QToolButton(Form)
         self.toolButton_gimlet_open_dir.setObjectName(u"toolButton_gimlet_open_dir")
         self.toolButton_gimlet_open_dir.setMinimumSize(QSize(22, 22))
         self.toolButton_gimlet_open_dir.setMaximumSize(QSize(22, 22))
@@ -186,13 +176,8 @@ class Ui_Form(object):
         self.horizontalLayout_16.addWidget(self.toolButton_gimlet_open_dir)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_16)
+        self.verticalLayout.addLayout(self.horizontalLayout_16)
 
-        self.scrollArea_4.setWidget(self.scrollAreaWidgetContents_4)
-
-        self.verticalLayout.addWidget(self.scrollArea_4)
-
-        QWidget.setTabOrder(self.scrollArea_4, self.radioButton_default)
         QWidget.setTabOrder(self.radioButton_default, self.radioButton_unique)
         QWidget.setTabOrder(self.radioButton_unique, self.toolButton_gimlet_open_dir)
 

@@ -17,12 +17,12 @@ View properties widget.
 """
 
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QWidget
+from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from spinetoolbox.config import TREEVIEW_HEADER_SS
 from .custom_menus import ViewPropertiesContextMenu
 
 
-class ViewPropertiesWidget(QWidget):
+class ViewPropertiesWidget(PropertiesWidgetBase):
     """Widget for the View Item Properties.
 
     Args:
@@ -33,8 +33,7 @@ class ViewPropertiesWidget(QWidget):
         """Init class."""
         from ..ui.view_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
-        super().__init__()
-        self._toolbox = toolbox
+        super().__init__(toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.ui.treeView_view.setStyleSheet(TREEVIEW_HEADER_SS)
