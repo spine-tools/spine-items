@@ -72,6 +72,7 @@ class Ui_Form(object):
         self.verticalLayout_26.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3 = QGridLayout()
         self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.gridLayout_3.setContentsMargins(3, 3, 3, 3)
         self.comboBox_dsn = QComboBox(self.frame_3)
         self.comboBox_dsn.setObjectName(u"comboBox_dsn")
         self.comboBox_dsn.setEnabled(False)
