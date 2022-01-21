@@ -82,6 +82,7 @@ class Ui_Form(object):
         self.verticalLayout.addWidget(self.issues_label)
 
         self.outputs_list_layout = QVBoxLayout()
+        self.outputs_list_layout.setSpacing(0)
         self.outputs_list_layout.setObjectName(u"outputs_list_layout")
 
         self.verticalLayout.addLayout(self.outputs_list_layout)

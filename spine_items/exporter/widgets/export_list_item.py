@@ -40,7 +40,7 @@ class ExportListItem(QWidget):
         self._in_label = in_label
         self._out_label = out_label
         self._ui.setupUi(self)
-        self._ui.input_label_field.setText(in_label)
+        self._ui.input_label_field.setText(f"<b>{in_label}</b>")
         self._ui.out_label_edit.setText(out_label)
         self._ui.out_label_edit.editingFinished.connect(self._emit_out_label_changed)
 
