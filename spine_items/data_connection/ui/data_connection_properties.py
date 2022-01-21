@@ -34,7 +34,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(274, 477)
+        Form.resize(274, 438)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.treeView_dc_references = ReferencesTreeView(Form)
@@ -130,34 +130,6 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.treeView_dc_data)
 
-        self.line_3 = QFrame(Form)
-        self.line_3.setObjectName(u"line_3")
-        self.line_3.setFrameShape(QFrame.HLine)
-        self.line_3.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout.addWidget(self.line_3)
-
-        self.horizontalLayout_7 = QHBoxLayout()
-        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_7.addItem(self.horizontalSpacer_10)
-
-        self.toolButton_dc_open_dir = QToolButton(Form)
-        self.toolButton_dc_open_dir.setObjectName(u"toolButton_dc_open_dir")
-        sizePolicy1.setHeightForWidth(self.toolButton_dc_open_dir.sizePolicy().hasHeightForWidth())
-        self.toolButton_dc_open_dir.setSizePolicy(sizePolicy1)
-        self.toolButton_dc_open_dir.setMinimumSize(QSize(22, 22))
-        self.toolButton_dc_open_dir.setMaximumSize(QSize(22, 22))
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_dc_open_dir.setIcon(icon3)
-
-        self.horizontalLayout_7.addWidget(self.toolButton_dc_open_dir)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_7)
-
 
         self.retranslateUi(Form)
 
@@ -183,9 +155,6 @@ class Ui_Form(object):
         self.toolButton_add.setText("")
 #if QT_CONFIG(tooltip)
         self.treeView_dc_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Drag-and-drop files here, they will be copied to the data directory.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_dc_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Data Connection's project directory in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
     # retranslateUi
 

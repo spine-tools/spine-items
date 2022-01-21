@@ -80,7 +80,6 @@ class DataTransformer(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.open_dir_button.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.specification_button.clicked] = self.show_specification_window
         s[self._properties_ui.specification_combo_box.textActivated] = self._change_specification
         return s

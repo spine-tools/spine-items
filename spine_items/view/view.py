@@ -68,7 +68,6 @@ class View(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.toolButton_view_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.pushButton_view_open_editor.clicked] = self.open_db_editor
         return s
 

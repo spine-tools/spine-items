@@ -117,7 +117,6 @@ class Importer(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.toolButton_open_dir.clicked] = lambda _: self.open_directory()
         s[self._properties_ui.toolButton_edit_specification.clicked] = self.edit_specification
         s[self._properties_ui.treeView_files.doubleClicked] = self._handle_files_double_clicked
         s[self._properties_ui.comboBox_specification.textActivated] = self._change_specification

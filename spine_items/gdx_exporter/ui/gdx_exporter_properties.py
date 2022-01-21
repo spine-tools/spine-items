@@ -31,7 +31,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(250, 219)
+        Form.resize(250, 180)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout_2 = QHBoxLayout()
@@ -73,37 +73,6 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.cancel_on_error_check_box)
 
-        self.line_6 = QFrame(Form)
-        self.line_6.setObjectName(u"line_6")
-        self.line_6.setFrameShape(QFrame.HLine)
-        self.line_6.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout.addWidget(self.line_6)
-
-        self.horizontalLayout_13 = QHBoxLayout()
-        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
-        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_13.addItem(self.horizontalSpacer_17)
-
-        self.open_directory_button = QToolButton(Form)
-        self.open_directory_button.setObjectName(u"open_directory_button")
-        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.open_directory_button.sizePolicy().hasHeightForWidth())
-        self.open_directory_button.setSizePolicy(sizePolicy)
-        self.open_directory_button.setMinimumSize(QSize(22, 22))
-        self.open_directory_button.setMaximumSize(QSize(22, 22))
-        icon = QIcon()
-        icon.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.open_directory_button.setIcon(icon)
-
-        self.horizontalLayout_13.addWidget(self.open_directory_button)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_13)
-
 
         self.retranslateUi(Form)
 
@@ -119,8 +88,5 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.output_time_stamps_check_box.setText(QCoreApplication.translate("Form", u"Time stamp output directories", None))
         self.cancel_on_error_check_box.setText(QCoreApplication.translate("Form", u"Cancel export on error", None))
-#if QT_CONFIG(tooltip)
-        self.open_directory_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this GdxExporter's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
     # retranslateUi
 

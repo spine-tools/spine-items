@@ -31,7 +31,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(212, 130)
+        Form.resize(212, 91)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout_9 = QHBoxLayout()
@@ -80,32 +80,6 @@ class Ui_Form(object):
 
         self.verticalLayout.addItem(self.verticalSpacer)
 
-        self.line_5 = QFrame(Form)
-        self.line_5.setObjectName(u"line_5")
-        self.line_5.setFrameShape(QFrame.HLine)
-        self.line_5.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout.addWidget(self.line_5)
-
-        self.horizontalLayout_16 = QHBoxLayout()
-        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
-        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_16.addItem(self.horizontalSpacer_12)
-
-        self.open_dir_button = QToolButton(Form)
-        self.open_dir_button.setObjectName(u"open_dir_button")
-        self.open_dir_button.setMinimumSize(QSize(22, 22))
-        self.open_dir_button.setMaximumSize(QSize(22, 22))
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.open_dir_button.setIcon(icon1)
-
-        self.horizontalLayout_16.addWidget(self.open_dir_button)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_16)
-
 
         self.retranslateUi(Form)
 
@@ -120,9 +94,6 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.specification_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Edit specification.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.open_dir_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this View's project directory in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
     # retranslateUi
 

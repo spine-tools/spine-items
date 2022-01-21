@@ -31,7 +31,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(509, 344)
+        Form.resize(375, 368)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout_9 = QHBoxLayout()
@@ -45,9 +45,6 @@ class Ui_Form(object):
         sizePolicy.setHeightForWidth(self.label_specification.sizePolicy().hasHeightForWidth())
         self.label_specification.setSizePolicy(sizePolicy)
         self.label_specification.setMaximumSize(QSize(16777215, 16777215))
-        font = QFont()
-        font.setPointSize(10)
-        self.label_specification.setFont(font)
 
         self.horizontalLayout_9.addWidget(self.label_specification)
 
@@ -78,81 +75,57 @@ class Ui_Form(object):
 
         self.treeView_files = QTreeView(Form)
         self.treeView_files.setObjectName(u"treeView_files")
-        self.treeView_files.setFont(font)
         self.treeView_files.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView_files.setTextElideMode(Qt.ElideLeft)
         self.treeView_files.setUniformRowHeights(True)
 
         self.verticalLayout.addWidget(self.treeView_files)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.label = QLabel(Form)
+        self.frame = QFrame(Form)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_2 = QVBoxLayout(self.frame)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(-1, 0, -1, -1)
+        self.cancel_on_error_checkBox = QCheckBox(self.frame)
+        self.cancel_on_error_checkBox.setObjectName(u"cancel_on_error_checkBox")
+        self.cancel_on_error_checkBox.setChecked(True)
+
+        self.verticalLayout_2.addWidget(self.cancel_on_error_checkBox)
+
+        self.checkBox_purge_before_writing = QCheckBox(self.frame)
+        self.checkBox_purge_before_writing.setObjectName(u"checkBox_purge_before_writing")
+
+        self.verticalLayout_2.addWidget(self.checkBox_purge_before_writing)
+
+        self.label = QLabel(self.frame)
         self.label.setObjectName(u"label")
 
-        self.horizontalLayout.addWidget(self.label)
+        self.verticalLayout_2.addWidget(self.label)
 
-        self.radioButton_on_conflict_keep = QRadioButton(Form)
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.radioButton_on_conflict_keep = QRadioButton(self.frame)
         self.radioButton_on_conflict_keep.setObjectName(u"radioButton_on_conflict_keep")
 
         self.horizontalLayout.addWidget(self.radioButton_on_conflict_keep)
 
-        self.radioButton_on_conflict_replace = QRadioButton(Form)
+        self.radioButton_on_conflict_replace = QRadioButton(self.frame)
         self.radioButton_on_conflict_replace.setObjectName(u"radioButton_on_conflict_replace")
 
         self.horizontalLayout.addWidget(self.radioButton_on_conflict_replace)
 
-        self.radioButton_on_conflict_merge = QRadioButton(Form)
+        self.radioButton_on_conflict_merge = QRadioButton(self.frame)
         self.radioButton_on_conflict_merge.setObjectName(u"radioButton_on_conflict_merge")
 
         self.horizontalLayout.addWidget(self.radioButton_on_conflict_merge)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout)
-
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.cancel_on_error_checkBox = QCheckBox(Form)
-        self.cancel_on_error_checkBox.setObjectName(u"cancel_on_error_checkBox")
-        self.cancel_on_error_checkBox.setChecked(True)
-
-        self.horizontalLayout_2.addWidget(self.cancel_on_error_checkBox)
-
-        self.checkBox_purge_before_writing = QCheckBox(Form)
-        self.checkBox_purge_before_writing.setObjectName(u"checkBox_purge_before_writing")
-
-        self.horizontalLayout_2.addWidget(self.checkBox_purge_before_writing)
+        self.verticalLayout_2.addLayout(self.horizontalLayout)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
-
-        self.line_6 = QFrame(Form)
-        self.line_6.setObjectName(u"line_6")
-        self.line_6.setFrameShape(QFrame.HLine)
-        self.line_6.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout.addWidget(self.line_6)
-
-        self.horizontalLayout_13 = QHBoxLayout()
-        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
-        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_13.addItem(self.horizontalSpacer_17)
-
-        self.toolButton_open_dir = QToolButton(Form)
-        self.toolButton_open_dir.setObjectName(u"toolButton_open_dir")
-        sizePolicy.setHeightForWidth(self.toolButton_open_dir.sizePolicy().hasHeightForWidth())
-        self.toolButton_open_dir.setSizePolicy(sizePolicy)
-        self.toolButton_open_dir.setMinimumSize(QSize(22, 22))
-        self.toolButton_open_dir.setMaximumSize(QSize(22, 22))
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_open_dir.setIcon(icon1)
-
-        self.horizontalLayout_13.addWidget(self.toolButton_open_dir)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_13)
+        self.verticalLayout.addWidget(self.frame)
 
 
         self.retranslateUi(Form)
@@ -169,17 +142,14 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_edit_specification.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Edit specification.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label.setText(QCoreApplication.translate("Form", u"If values already exist:", None))
-        self.radioButton_on_conflict_keep.setText(QCoreApplication.translate("Form", u"Keep existing", None))
-        self.radioButton_on_conflict_replace.setText(QCoreApplication.translate("Form", u"Replace", None))
-        self.radioButton_on_conflict_merge.setText(QCoreApplication.translate("Form", u"Merge indexes", None))
 #if QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setToolTip(QCoreApplication.translate("Form", u"If there are any errors when trying to import data cancel the whole import.", None))
 #endif // QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setText(QCoreApplication.translate("Form", u"Cancel import on error", None))
         self.checkBox_purge_before_writing.setText(QCoreApplication.translate("Form", u"Purge before writing", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Importer's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        self.label.setText(QCoreApplication.translate("Form", u"If values already exist", None))
+        self.radioButton_on_conflict_keep.setText(QCoreApplication.translate("Form", u"Keep existing", None))
+        self.radioButton_on_conflict_replace.setText(QCoreApplication.translate("Form", u"Replace", None))
+        self.radioButton_on_conflict_merge.setText(QCoreApplication.translate("Form", u"Merge indexes", None))
     # retranslateUi
 

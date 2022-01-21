@@ -33,7 +33,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(443, 567)
+        Form.resize(312, 601)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout_9 = QHBoxLayout()
@@ -150,6 +150,41 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.splitter)
 
+        self.frame = QFrame(Form)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_2 = QVBoxLayout(self.frame)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.label_2 = QLabel(self.frame)
+        self.label_2.setObjectName(u"label_2")
+
+        self.verticalLayout_2.addWidget(self.label_2)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.radioButton_execute_in_source = QRadioButton(self.frame)
+        self.radioButton_execute_in_source.setObjectName(u"radioButton_execute_in_source")
+
+        self.horizontalLayout.addWidget(self.radioButton_execute_in_source)
+
+        self.radioButton_execute_in_work = QRadioButton(self.frame)
+        self.radioButton_execute_in_work.setObjectName(u"radioButton_execute_in_work")
+        self.radioButton_execute_in_work.setChecked(True)
+
+        self.horizontalLayout.addWidget(self.radioButton_execute_in_work)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout)
+
+        self.label_jupyter = QLabel(self.frame)
+        self.label_jupyter.setObjectName(u"label_jupyter")
+
+        self.verticalLayout_2.addWidget(self.label_jupyter)
+
+
+        self.verticalLayout.addWidget(self.frame)
+
         self.horizontalLayout_11 = QHBoxLayout()
         self.horizontalLayout_11.setSpacing(6)
         self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
@@ -172,56 +207,8 @@ class Ui_Form(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_11)
 
-        self.line_4 = QFrame(Form)
-        self.line_4.setObjectName(u"line_4")
-        self.line_4.setFrameShape(QFrame.HLine)
-        self.line_4.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout.addWidget(self.line_4)
-
-        self.label_jupyter = QLabel(Form)
-        self.label_jupyter.setObjectName(u"label_jupyter")
-
-        self.verticalLayout.addWidget(self.label_jupyter)
-
-        self.horizontalLayout_15 = QHBoxLayout()
-        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
-        self.label_2 = QLabel(Form)
-        self.label_2.setObjectName(u"label_2")
-
-        self.horizontalLayout_15.addWidget(self.label_2)
-
-        self.radioButton_execute_in_work = QRadioButton(Form)
-        self.radioButton_execute_in_work.setObjectName(u"radioButton_execute_in_work")
-        self.radioButton_execute_in_work.setChecked(True)
-
-        self.horizontalLayout_15.addWidget(self.radioButton_execute_in_work)
-
-        self.radioButton_execute_in_source = QRadioButton(Form)
-        self.radioButton_execute_in_source.setObjectName(u"radioButton_execute_in_source")
-
-        self.horizontalLayout_15.addWidget(self.radioButton_execute_in_source)
-
-        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_15.addItem(self.horizontalSpacer_8)
-
-        self.toolButton_tool_open_dir = QToolButton(Form)
-        self.toolButton_tool_open_dir.setObjectName(u"toolButton_tool_open_dir")
-        self.toolButton_tool_open_dir.setMinimumSize(QSize(22, 22))
-        self.toolButton_tool_open_dir.setMaximumSize(QSize(22, 22))
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_tool_open_dir.setIcon(icon3)
-
-        self.horizontalLayout_15.addWidget(self.toolButton_tool_open_dir)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_15)
-
         QWidget.setTabOrder(self.comboBox_tool, self.toolButton_tool_specification)
         QWidget.setTabOrder(self.toolButton_tool_specification, self.pushButton_tool_results)
-        QWidget.setTabOrder(self.pushButton_tool_results, self.toolButton_tool_open_dir)
 
         self.retranslateUi(Form)
 
@@ -245,16 +232,13 @@ class Ui_Form(object):
         self.toolButton_add_file_path_arg.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Append selected Available resources to Tool arguments</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_add_file_path_arg.setText("")
+        self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
+        self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))
+        self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
+        self.label_jupyter.setText(QCoreApplication.translate("Form", u"TextLabel", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_tool_results.setText(QCoreApplication.translate("Form", u"Results...", None))
-        self.label_jupyter.setText(QCoreApplication.translate("Form", u"TextLabel", None))
-        self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
-        self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
-        self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_tool_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Tool's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
     # retranslateUi
 

@@ -25,8 +25,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
-from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
 from ...widgets import ArgsTreeView
+from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
 
 from spine_items import resources_icons_rc
 
@@ -34,7 +34,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(276, 560)
+        Form.resize(276, 561)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.formLayout = QFormLayout()
@@ -165,21 +165,10 @@ class Ui_Form(object):
 
         self.horizontalLayout_16.addItem(self.horizontalSpacer_12)
 
-        self.toolButton_gimlet_open_dir = QToolButton(Form)
-        self.toolButton_gimlet_open_dir.setObjectName(u"toolButton_gimlet_open_dir")
-        self.toolButton_gimlet_open_dir.setMinimumSize(QSize(22, 22))
-        self.toolButton_gimlet_open_dir.setMaximumSize(QSize(22, 22))
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_gimlet_open_dir.setIcon(icon2)
-
-        self.horizontalLayout_16.addWidget(self.toolButton_gimlet_open_dir)
-
 
         self.verticalLayout.addLayout(self.horizontalLayout_16)
 
         QWidget.setTabOrder(self.radioButton_default, self.radioButton_unique)
-        QWidget.setTabOrder(self.radioButton_unique, self.toolButton_gimlet_open_dir)
 
         self.retranslateUi(Form)
 
@@ -204,8 +193,5 @@ class Ui_Form(object):
         self.label.setText(QCoreApplication.translate("Form", u"Work directory", None))
         self.radioButton_default.setText(QCoreApplication.translate("Form", u"Default", None))
         self.radioButton_unique.setText(QCoreApplication.translate("Form", u"Unique", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_gimlet_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this View's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
     # retranslateUi
 

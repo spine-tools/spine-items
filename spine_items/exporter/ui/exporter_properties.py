@@ -31,7 +31,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(250, 219)
+        Form.resize(272, 202)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout_9 = QHBoxLayout()
@@ -90,44 +90,25 @@ class Ui_Form(object):
 
         self.verticalLayout.addItem(self.verticalSpacer)
 
-        self.output_time_stamps_check_box = QCheckBox(Form)
+        self.frame = QFrame(Form)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_2 = QVBoxLayout(self.frame)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.output_time_stamps_check_box = QCheckBox(self.frame)
         self.output_time_stamps_check_box.setObjectName(u"output_time_stamps_check_box")
 
-        self.verticalLayout.addWidget(self.output_time_stamps_check_box)
+        self.verticalLayout_2.addWidget(self.output_time_stamps_check_box)
 
-        self.cancel_on_error_check_box = QCheckBox(Form)
+        self.cancel_on_error_check_box = QCheckBox(self.frame)
         self.cancel_on_error_check_box.setObjectName(u"cancel_on_error_check_box")
         self.cancel_on_error_check_box.setChecked(True)
 
-        self.verticalLayout.addWidget(self.cancel_on_error_check_box)
-
-        self.line_6 = QFrame(Form)
-        self.line_6.setObjectName(u"line_6")
-        self.line_6.setFrameShape(QFrame.HLine)
-        self.line_6.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout.addWidget(self.line_6)
-
-        self.horizontalLayout_13 = QHBoxLayout()
-        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
-        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_13.addItem(self.horizontalSpacer_17)
-
-        self.open_directory_button = QToolButton(Form)
-        self.open_directory_button.setObjectName(u"open_directory_button")
-        sizePolicy.setHeightForWidth(self.open_directory_button.sizePolicy().hasHeightForWidth())
-        self.open_directory_button.setSizePolicy(sizePolicy)
-        self.open_directory_button.setMinimumSize(QSize(22, 22))
-        self.open_directory_button.setMaximumSize(QSize(22, 22))
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.open_directory_button.setIcon(icon1)
-
-        self.horizontalLayout_13.addWidget(self.open_directory_button)
+        self.verticalLayout_2.addWidget(self.cancel_on_error_check_box)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout_13)
+        self.verticalLayout.addWidget(self.frame)
 
 
         self.retranslateUi(Form)
@@ -150,8 +131,5 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.output_time_stamps_check_box.setText(QCoreApplication.translate("Form", u"Time stamp output directories", None))
         self.cancel_on_error_check_box.setText(QCoreApplication.translate("Form", u"Cancel export on error", None))
-#if QT_CONFIG(tooltip)
-        self.open_directory_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this GdxExporter's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
     # retranslateUi
 

@@ -31,59 +31,32 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(323, 128)
+        Form.resize(205, 136)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer_2)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.cancel_on_error_checkBox = QCheckBox(Form)
+        self.frame = QFrame(Form)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_2 = QVBoxLayout(self.frame)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.cancel_on_error_checkBox = QCheckBox(self.frame)
         self.cancel_on_error_checkBox.setObjectName(u"cancel_on_error_checkBox")
         self.cancel_on_error_checkBox.setChecked(True)
 
-        self.horizontalLayout.addWidget(self.cancel_on_error_checkBox)
+        self.verticalLayout_2.addWidget(self.cancel_on_error_checkBox)
 
-        self.checkBox_purge_before_writing = QCheckBox(Form)
+        self.checkBox_purge_before_writing = QCheckBox(self.frame)
         self.checkBox_purge_before_writing.setObjectName(u"checkBox_purge_before_writing")
 
-        self.horizontalLayout.addWidget(self.checkBox_purge_before_writing)
+        self.verticalLayout_2.addWidget(self.checkBox_purge_before_writing)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout)
-
-        self.line_8 = QFrame(Form)
-        self.line_8.setObjectName(u"line_8")
-        self.line_8.setFrameShape(QFrame.HLine)
-        self.line_8.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout.addWidget(self.line_8)
-
-        self.horizontalLayout_27 = QHBoxLayout()
-        self.horizontalLayout_27.setObjectName(u"horizontalLayout_27")
-        self.horizontalSpacer_16 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_27.addItem(self.horizontalSpacer_16)
-
-        self.toolButton_merger_open_dir = QToolButton(Form)
-        self.toolButton_merger_open_dir.setObjectName(u"toolButton_merger_open_dir")
-        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.toolButton_merger_open_dir.sizePolicy().hasHeightForWidth())
-        self.toolButton_merger_open_dir.setSizePolicy(sizePolicy)
-        self.toolButton_merger_open_dir.setMinimumSize(QSize(22, 22))
-        self.toolButton_merger_open_dir.setMaximumSize(QSize(22, 22))
-        icon = QIcon()
-        icon.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_merger_open_dir.setIcon(icon)
-
-        self.horizontalLayout_27.addWidget(self.toolButton_merger_open_dir)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_27)
+        self.verticalLayout.addWidget(self.frame)
 
 
         self.retranslateUi(Form)
@@ -98,9 +71,5 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setText(QCoreApplication.translate("Form", u"Cancel on error", None))
         self.checkBox_purge_before_writing.setText(QCoreApplication.translate("Form", u"Purge before writing", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_merger_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this Data Store's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolButton_merger_open_dir.setText("")
     # retranslateUi
 

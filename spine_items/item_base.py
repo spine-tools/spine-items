@@ -80,7 +80,6 @@ class ExporterBase(ProjectItem):
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.open_directory_button.clicked] = lambda _: self.open_directory()
         s[self._properties_ui.output_time_stamps_check_box.stateChanged] = self._change_output_time_stamps_flag
         s[self._properties_ui.cancel_on_error_check_box.stateChanged] = self._cancel_on_error_option_changed
         return s

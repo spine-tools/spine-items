@@ -134,7 +134,6 @@ class Tool(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.toolButton_tool_specification.clicked] = self.show_specification_window
-        s[self._properties_ui.toolButton_tool_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.pushButton_tool_results.clicked] = self._open_results_directory
         s[self._properties_ui.comboBox_tool.textActivated] = self.update_specification
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
@@ -170,7 +169,7 @@ class Tool(ProjectItem):
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
-        self._properties_ui.label_jupyter.setText("")
+        self._properties_ui.label_jupyter.hide()
         self._update_tool_ui()
         self._do_update_add_args_button_enabled()
         self._do_update_remove_args_button_enabled()
@@ -307,6 +306,7 @@ class Tool(ProjectItem):
                 k_spec_name = self.specification().execution_settings["kernel_spec_name"]
                 env = self.specification().execution_settings["env"]
                 use_console = self.specification().execution_settings["use_jupyter_console"]
+                self._properties_ui.label_jupyter.show()
                 if not use_console:
                     exe = self.specification().execution_settings["executable"]
                     p = resolve_python_interpreter(exe)

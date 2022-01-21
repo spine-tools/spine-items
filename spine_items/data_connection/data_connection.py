@@ -95,7 +95,6 @@ class DataConnection(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         # pylint: disable=unnecessary-lambda
-        s[self._properties_ui.toolButton_dc_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.toolButton_plus.clicked] = self.show_add_references_dialog
         s[self._properties_ui.toolButton_minus.clicked] = self.remove_references
         s[self._properties_ui.toolButton_add.clicked] = self.copy_to_project

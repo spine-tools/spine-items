@@ -33,7 +33,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(274, 280)
+        Form.resize(274, 241)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.treeView_view = ReferencesTreeView(Form)
@@ -71,32 +71,6 @@ class Ui_Form(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_8)
 
-        self.line_5 = QFrame(Form)
-        self.line_5.setObjectName(u"line_5")
-        self.line_5.setFrameShape(QFrame.HLine)
-        self.line_5.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout.addWidget(self.line_5)
-
-        self.horizontalLayout_16 = QHBoxLayout()
-        self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
-        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_16.addItem(self.horizontalSpacer_12)
-
-        self.toolButton_view_open_dir = QToolButton(Form)
-        self.toolButton_view_open_dir.setObjectName(u"toolButton_view_open_dir")
-        self.toolButton_view_open_dir.setMinimumSize(QSize(22, 22))
-        self.toolButton_view_open_dir.setMaximumSize(QSize(22, 22))
-        icon = QIcon()
-        icon.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_view_open_dir.setIcon(icon)
-
-        self.horizontalLayout_16.addWidget(self.toolButton_view_open_dir)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_16)
-
 
         self.retranslateUi(Form)
 
@@ -108,9 +82,6 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.pushButton_view_open_editor.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open selected database in Spine database editor</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_view_open_editor.setText(QCoreApplication.translate("Form", u"Open editor", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_view_open_dir.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open this View's project directory in file browser</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        self.pushButton_view_open_editor.setText(QCoreApplication.translate("Form", u"Open editor...", None))
     # retranslateUi
 

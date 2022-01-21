@@ -98,7 +98,6 @@ class DataStore(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.toolButton_ds_open_dir.clicked] = lambda checked=False: self.open_directory()
         s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_spine_db_editor
         s[self._properties_ui.toolButton_select_sqlite_file.clicked] = self.select_sqlite_file
         s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
