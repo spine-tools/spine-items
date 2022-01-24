@@ -268,9 +268,9 @@
        </layout>
       </item>
       <item>
-       <widget class="QLabel" name="label_jupyter">
+       <widget class="ElidedLabel" name="label_jupyter">
         <property name="text">
-         <string>TextLabel</string>
+         <string>Console info</string>
         </property>
        </widget>
       </item>
@@ -332,6 +332,11 @@
    <class>ArgsTreeView</class>
    <extends>QTreeView</extends>
    <header>../widgets.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ElidedLabel</class>
+   <extends>QLabel</extends>
+   <header>spinetoolbox/widgets/custom_qwidgets.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

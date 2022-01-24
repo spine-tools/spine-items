@@ -26,6 +26,7 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
 from PySide2.QtWidgets import *
 
 from ...widgets import ArgsTreeView
+from spinetoolbox.widgets.custom_qwidgets import ElidedLabel
 
 from spine_items import resources_icons_rc
 
@@ -171,7 +172,7 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
-        self.label_jupyter = QLabel(self.frame)
+        self.label_jupyter = ElidedLabel(self.frame)
         self.label_jupyter.setObjectName(u"label_jupyter")
 
         self.verticalLayout_2.addWidget(self.label_jupyter)
@@ -229,7 +230,7 @@ class Ui_Form(object):
         self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
         self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))
         self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
-        self.label_jupyter.setText(QCoreApplication.translate("Form", u"TextLabel", None))
+        self.label_jupyter.setText(QCoreApplication.translate("Form", u"Console info", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

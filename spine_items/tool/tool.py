@@ -16,7 +16,7 @@ Tool class.
 :date:   19.12.2017
 """
 import os
-from PySide2.QtCore import Slot, Signal, QItemSelection
+from PySide2.QtCore import Slot, Signal, QItemSelection, Qt
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
@@ -169,6 +169,7 @@ class Tool(ProjectItem):
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
+        self._properties_ui.label_jupyter.elided_mode = Qt.ElideMiddle
         self._properties_ui.label_jupyter.hide()
         self._update_tool_ui()
         self._do_update_add_args_button_enabled()
