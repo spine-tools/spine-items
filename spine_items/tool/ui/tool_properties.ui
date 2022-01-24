@@ -19,7 +19,7 @@
     <x>0</x>
     <y>0</y>
     <width>312</width>
-    <height>601</height>
+    <height>603</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,11 +45,6 @@
          <height>16777215</height>
         </size>
        </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
        <property name="text">
         <string>Specification</string>
        </property>
@@ -62,11 +57,6 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
        </property>
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tool specification for this Tool&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -121,11 +111,6 @@
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
       </property>
       <property name="acceptDrops">
        <bool>true</bool>
@@ -217,11 +202,6 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
          </property>
          <property name="dragEnabled">
           <bool>false</bool>

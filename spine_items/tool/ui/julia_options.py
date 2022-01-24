@@ -40,16 +40,12 @@ class Ui_Form(object):
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.label_sysimage = QLabel(Form)
         self.label_sysimage.setObjectName(u"label_sysimage")
-        font = QFont()
-        font.setPointSize(10)
-        self.label_sysimage.setFont(font)
 
         self.horizontalLayout.addWidget(self.label_sysimage)
 
         self.lineEdit_sysimage = PropertyQLineEdit(Form)
         self.lineEdit_sysimage.setObjectName(u"lineEdit_sysimage")
         self.lineEdit_sysimage.setMaximumSize(QSize(16777215, 24))
-        self.lineEdit_sysimage.setFont(font)
         self.lineEdit_sysimage.setReadOnly(False)
         self.lineEdit_sysimage.setClearButtonEnabled(True)
 

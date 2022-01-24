@@ -18,7 +18,6 @@ View properties widget.
 
 from PySide2.QtCore import Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from spinetoolbox.config import TREEVIEW_HEADER_SS
 from .custom_menus import ViewPropertiesContextMenu
 
 
@@ -36,7 +35,6 @@ class ViewPropertiesWidget(PropertiesWidgetBase):
         super().__init__(toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.treeView_view.setStyleSheet(TREEVIEW_HEADER_SS)
         # Class attributes
         self.view_prop_context_menu = None
         self.connect_signals()

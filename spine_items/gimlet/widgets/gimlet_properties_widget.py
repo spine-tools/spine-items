@@ -17,7 +17,6 @@ Gimlet properties widget.
 """
 
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from spinetoolbox.config import TREEVIEW_HEADER_SS
 from ..utils import SHELLS
 
 
@@ -36,5 +35,3 @@ class GimletPropertiesWidget(PropertiesWidgetBase):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.ui.comboBox_shell.addItems(SHELLS)
-        self.ui.treeView_cmdline_args.setStyleSheet(TREEVIEW_HEADER_SS)
-        self.ui.treeView_files.setStyleSheet(TREEVIEW_HEADER_SS)

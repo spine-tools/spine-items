@@ -17,7 +17,6 @@ Tool properties widget.
 """
 
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from spinetoolbox.config import TREEVIEW_HEADER_SS
 
 
 class ToolPropertiesWidget(PropertiesWidgetBase):
@@ -34,8 +33,6 @@ class ToolPropertiesWidget(PropertiesWidgetBase):
         super().__init__(toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.treeView_cmdline_args.setStyleSheet(TREEVIEW_HEADER_SS)
-        self.ui.treeView_input_files.setStyleSheet(TREEVIEW_HEADER_SS)
         model = self._toolbox.filtered_spec_factory_models["Tool"]
         self.ui.comboBox_tool.setModel(model)
         self.ui.options_widgets = {}

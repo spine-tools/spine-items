@@ -18,7 +18,6 @@ Importer properties widget.
 
 from PySide2.QtCore import QPoint, Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from spinetoolbox.config import TREEVIEW_HEADER_SS
 from .custom_menus import FilesContextMenu
 from ..item_info import ItemInfo
 
@@ -36,7 +35,6 @@ class ImporterPropertiesWidget(PropertiesWidgetBase):
 
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.treeView_files.setStyleSheet(TREEVIEW_HEADER_SS)
         # Class attributes
         self.files_context_menu = None
         model = self._toolbox.filtered_spec_factory_models[ItemInfo.item_type()]

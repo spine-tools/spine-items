@@ -83,9 +83,6 @@ class Ui_Form(object):
         self.comboBox_dsn.setSizePolicy(sizePolicy)
         self.comboBox_dsn.setMinimumSize(QSize(0, 24))
         self.comboBox_dsn.setMaximumSize(QSize(16777215, 24))
-        font = QFont()
-        font.setPointSize(9)
-        self.comboBox_dsn.setFont(font)
 
         self.gridLayout_3.addWidget(self.comboBox_dsn, 1, 2, 1, 2)
 
@@ -96,7 +93,6 @@ class Ui_Form(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.label_dsn.sizePolicy().hasHeightForWidth())
         self.label_dsn.setSizePolicy(sizePolicy1)
-        self.label_dsn.setFont(font)
 
         self.gridLayout_3.addWidget(self.label_dsn, 1, 0, 1, 1)
 
@@ -104,7 +100,6 @@ class Ui_Form(object):
         self.label_username.setObjectName(u"label_username")
         sizePolicy1.setHeightForWidth(self.label_username.sizePolicy().hasHeightForWidth())
         self.label_username.setSizePolicy(sizePolicy1)
-        self.label_username.setFont(font)
 
         self.gridLayout_3.addWidget(self.label_username, 2, 0, 1, 1)
 
@@ -118,7 +113,6 @@ class Ui_Form(object):
         self.lineEdit_database.setSizePolicy(sizePolicy)
         self.lineEdit_database.setMinimumSize(QSize(0, 24))
         self.lineEdit_database.setMaximumSize(QSize(16777215, 24))
-        self.lineEdit_database.setFont(font)
         self.lineEdit_database.setCursor(QCursor(Qt.IBeamCursor))
         self.lineEdit_database.setClearButtonEnabled(True)
 
@@ -147,7 +141,6 @@ class Ui_Form(object):
         self.lineEdit_password.setSizePolicy(sizePolicy)
         self.lineEdit_password.setMinimumSize(QSize(0, 24))
         self.lineEdit_password.setMaximumSize(QSize(5000, 24))
-        self.lineEdit_password.setFont(font)
         self.lineEdit_password.setEchoMode(QLineEdit.Password)
         self.lineEdit_password.setClearButtonEnabled(True)
 
@@ -160,7 +153,6 @@ class Ui_Form(object):
         self.lineEdit_username.setSizePolicy(sizePolicy)
         self.lineEdit_username.setMinimumSize(QSize(0, 24))
         self.lineEdit_username.setMaximumSize(QSize(5000, 24))
-        self.lineEdit_username.setFont(font)
         self.lineEdit_username.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_username, 2, 2, 1, 2)
@@ -169,7 +161,6 @@ class Ui_Form(object):
         self.label_password.setObjectName(u"label_password")
         sizePolicy1.setHeightForWidth(self.label_password.sizePolicy().hasHeightForWidth())
         self.label_password.setSizePolicy(sizePolicy1)
-        self.label_password.setFont(font)
 
         self.gridLayout_3.addWidget(self.label_password, 3, 0, 1, 1)
 
@@ -177,7 +168,6 @@ class Ui_Form(object):
         self.label_host.setObjectName(u"label_host")
         sizePolicy1.setHeightForWidth(self.label_host.sizePolicy().hasHeightForWidth())
         self.label_host.setSizePolicy(sizePolicy1)
-        self.label_host.setFont(font)
 
         self.gridLayout_3.addWidget(self.label_host, 4, 0, 1, 1)
 
@@ -189,7 +179,6 @@ class Ui_Form(object):
         self.comboBox_dialect.setSizePolicy(sizePolicy)
         self.comboBox_dialect.setMinimumSize(QSize(0, 24))
         self.comboBox_dialect.setMaximumSize(QSize(16777215, 24))
-        self.comboBox_dialect.setFont(font)
 
         self.horizontalLayout_12.addWidget(self.comboBox_dialect)
 
@@ -201,7 +190,6 @@ class Ui_Form(object):
         sizePolicy1.setHeightForWidth(self.label_dialect.sizePolicy().hasHeightForWidth())
         self.label_dialect.setSizePolicy(sizePolicy1)
         self.label_dialect.setMaximumSize(QSize(16777215, 16777215))
-        self.label_dialect.setFont(font)
 
         self.gridLayout_3.addWidget(self.label_dialect, 0, 0, 1, 1)
 
@@ -209,7 +197,6 @@ class Ui_Form(object):
         self.label_database.setObjectName(u"label_database")
         sizePolicy1.setHeightForWidth(self.label_database.sizePolicy().hasHeightForWidth())
         self.label_database.setSizePolicy(sizePolicy1)
-        self.label_database.setFont(font)
 
         self.gridLayout_3.addWidget(self.label_database, 5, 0, 1, 1)
 
@@ -225,7 +212,6 @@ class Ui_Form(object):
         self.lineEdit_host.setSizePolicy(sizePolicy2)
         self.lineEdit_host.setMinimumSize(QSize(0, 24))
         self.lineEdit_host.setMaximumSize(QSize(5000, 24))
-        self.lineEdit_host.setFont(font)
         self.lineEdit_host.setClearButtonEnabled(True)
 
         self.horizontalLayout_23.addWidget(self.lineEdit_host)
@@ -237,7 +223,6 @@ class Ui_Form(object):
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.label_port.sizePolicy().hasHeightForWidth())
         self.label_port.setSizePolicy(sizePolicy3)
-        self.label_port.setFont(font)
 
         self.horizontalLayout_23.addWidget(self.label_port)
 
@@ -248,7 +233,6 @@ class Ui_Form(object):
         self.lineEdit_port.setSizePolicy(sizePolicy)
         self.lineEdit_port.setMinimumSize(QSize(0, 24))
         self.lineEdit_port.setMaximumSize(QSize(80, 24))
-        self.lineEdit_port.setFont(font)
         self.lineEdit_port.setInputMethodHints(Qt.ImhNone)
 
         self.horizontalLayout_23.addWidget(self.lineEdit_port)

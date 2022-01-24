@@ -30,11 +30,6 @@
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
       <widget class="QCheckBox" name="checkBox_shell">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, command is executed with the specified shell.&lt;/p&gt;&lt;p&gt;If unchecked, command is executed without a shell.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -58,11 +53,6 @@
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
        <property name="text">
         <string>Command</string>
        </property>
@@ -88,11 +78,6 @@
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
       </property>
       <property name="contextMenuPolicy">
        <enum>Qt::CustomContextMenu</enum>
@@ -182,11 +167,6 @@
        </item>
        <item row="1" column="0" colspan="3">
         <widget class="QTreeView" name="treeView_files">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
          <property name="dragDropMode">
           <enum>QAbstractItemView::DragOnly</enum>
          </property>

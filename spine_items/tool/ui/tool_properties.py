@@ -33,7 +33,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(312, 601)
+        Form.resize(312, 603)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout_9 = QHBoxLayout()
@@ -47,9 +47,6 @@ class Ui_Form(object):
         sizePolicy.setHeightForWidth(self.label_tool_specification.sizePolicy().hasHeightForWidth())
         self.label_tool_specification.setSizePolicy(sizePolicy)
         self.label_tool_specification.setMaximumSize(QSize(16777215, 16777215))
-        font = QFont()
-        font.setPointSize(10)
-        self.label_tool_specification.setFont(font)
 
         self.horizontalLayout_9.addWidget(self.label_tool_specification)
 
@@ -60,7 +57,6 @@ class Ui_Form(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.comboBox_tool.sizePolicy().hasHeightForWidth())
         self.comboBox_tool.setSizePolicy(sizePolicy1)
-        self.comboBox_tool.setFont(font)
 
         self.horizontalLayout_9.addWidget(self.comboBox_tool)
 
@@ -94,7 +90,6 @@ class Ui_Form(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.treeView_cmdline_args.sizePolicy().hasHeightForWidth())
         self.treeView_cmdline_args.setSizePolicy(sizePolicy2)
-        self.treeView_cmdline_args.setFont(font)
         self.treeView_cmdline_args.setAcceptDrops(True)
         self.treeView_cmdline_args.setEditTriggers(QAbstractItemView.AnyKeyPressed|QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed)
         self.treeView_cmdline_args.setDragDropMode(QAbstractItemView.DragDrop)
@@ -135,7 +130,6 @@ class Ui_Form(object):
         self.treeView_input_files.setObjectName(u"treeView_input_files")
         sizePolicy2.setHeightForWidth(self.treeView_input_files.sizePolicy().hasHeightForWidth())
         self.treeView_input_files.setSizePolicy(sizePolicy2)
-        self.treeView_input_files.setFont(font)
         self.treeView_input_files.setDragEnabled(False)
         self.treeView_input_files.setDragDropMode(QAbstractItemView.DragOnly)
         self.treeView_input_files.setSelectionMode(QAbstractItemView.ExtendedSelection)

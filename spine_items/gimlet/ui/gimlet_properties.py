@@ -41,9 +41,6 @@ class Ui_Form(object):
         self.formLayout.setObjectName(u"formLayout")
         self.checkBox_shell = QCheckBox(Form)
         self.checkBox_shell.setObjectName(u"checkBox_shell")
-        font = QFont()
-        font.setPointSize(10)
-        self.checkBox_shell.setFont(font)
         self.checkBox_shell.setChecked(True)
 
         self.formLayout.setWidget(0, QFormLayout.LabelRole, self.checkBox_shell)
@@ -60,7 +57,6 @@ class Ui_Form(object):
 
         self.label_2 = QLabel(Form)
         self.label_2.setObjectName(u"label_2")
-        self.label_2.setFont(font)
 
         self.formLayout.setWidget(1, QFormLayout.LabelRole, self.label_2)
 
@@ -83,7 +79,6 @@ class Ui_Form(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.treeView_cmdline_args.sizePolicy().hasHeightForWidth())
         self.treeView_cmdline_args.setSizePolicy(sizePolicy1)
-        self.treeView_cmdline_args.setFont(font)
         self.treeView_cmdline_args.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView_cmdline_args.setAcceptDrops(True)
         self.treeView_cmdline_args.setEditTriggers(QAbstractItemView.AnyKeyPressed|QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed)
@@ -123,7 +118,6 @@ class Ui_Form(object):
 
         self.treeView_files = QTreeView(self.gridLayoutWidget)
         self.treeView_files.setObjectName(u"treeView_files")
-        self.treeView_files.setFont(font)
         self.treeView_files.setDragDropMode(QAbstractItemView.DragOnly)
         self.treeView_files.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.treeView_files.setTextElideMode(Qt.ElideLeft)

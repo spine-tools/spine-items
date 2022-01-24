@@ -45,9 +45,6 @@ class Ui_Form(object):
         sizePolicy.setHeightForWidth(self.specification_label.sizePolicy().hasHeightForWidth())
         self.specification_label.setSizePolicy(sizePolicy)
         self.specification_label.setMaximumSize(QSize(16777215, 16777215))
-        font = QFont()
-        font.setPointSize(10)
-        self.specification_label.setFont(font)
 
         self.horizontalLayout_9.addWidget(self.specification_label)
 
