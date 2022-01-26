@@ -721,7 +721,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         new_name = self._ui.fix_table_name_line_edit.text()
         old_name = index.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE)
-        self._undo_stack.push(SetFixedTableName(index, old_name, new_name))
+        if new_name != old_name:
+            self._undo_stack.push(SetFixedTableName(index, old_name, new_name))
 
     def _set_use_fixed_table_name_flag_silently(self, flag):
         """
@@ -858,6 +859,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         }
         if mapping_type in types_with_parameters:
             self._ui.parameter_type_combo_box.setEnabled(True)
+            self._ui.parameter_type_combo_box.currentTextChanged.disconnect(self._change_mapping_type)
             model = self._ui.parameter_type_combo_box.model()
             default_value_item = model.item(1)
             if mapping_type == "Object group":
@@ -869,6 +871,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 no_value_item.setFlags(default_value_item.flags() & ~Qt.ItemIsEnabled)
             else:
                 no_value_item.setFlags(default_value_item.flags() | Qt.ItemIsEnabled)
+            self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
             self._ui.parameter_dimensions_spin_box.setEnabled(self._ui.parameter_type_combo_box.currentText() != "None")
         else:
             self._ui.parameter_type_combo_box.setEnabled(False)
