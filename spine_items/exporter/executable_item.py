@@ -138,7 +138,13 @@ class ExecutableItem(ExporterExecutableItemBase):
                 EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self.filter_id else "")
             ) + ".json"
             with open(Path(self._data_dir, file_name), "w") as manifest:
-                dump({label: list(files) for label, files in self._result_files.items()}, manifest)
+                dump(
+                    {
+                        label: list(str(Path(file).relative_to(Path(self._data_dir))) for file in files)
+                        for label, files in self._result_files.items()
+                    },
+                    manifest,
+                )
         self._process = None
         return ItemExecutionFinishState.SUCCESS if result[0] else ItemExecutionFinishState.FAILURE
 

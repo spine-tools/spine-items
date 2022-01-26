@@ -18,6 +18,7 @@ Contains utilities shared between project items.
 
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import dropwhile
 import json
 import os.path
 from pathlib import Path
@@ -119,12 +120,14 @@ def exported_files_as_resources(item_name, exported_files, data_dir, databases):
         tuple: output resources and updated exported files cache
     """
     manifests = collect_execution_manifests(data_dir)
-    exported_file_path = Path(data_dir, EXPORTED_PATHS_FILE_NAME)
     if manifests is not None:
-        write_exported_files_file(exported_file_path, manifests, data_dir)
-        exported_files = manifests
-    elif exported_files is None and exported_file_path.exists():
-        exported_files = read_exported_files_file(exported_file_path, data_dir)
+        names = {db.output_file_name for db in databases}
+        manifests = {
+            out_file_name: files
+            for out_file_name, files in collect_execution_manifests(data_dir).items()
+            if out_file_name in names
+        }
+        exported_files = {name: [str(Path(data_dir, f)) for f in files] for name, files in manifests.items()}
     resources = list()
     if exported_files is not None:
         for db in databases:
@@ -144,8 +147,6 @@ def exported_files_as_resources(item_name, exported_files, data_dir, databases):
 def collect_execution_manifests(data_dir):
     """Collects output file names from export manifest files written by exporter's executable item.
 
-    Deletes the manifest files after reading their contents.
-
     Args:
         data_dir (str): item's data directory
 
@@ -158,37 +159,22 @@ def collect_execution_manifests(data_dir):
             with open(path) as manifest_file:
                 manifest = json.load(manifest_file)
             for out_file_name, paths in manifest.items():
+                relative_paths = list()
+                for file_path in paths:
+                    p = Path(file_path)
+                    if p.is_absolute():
+                        # Legacy manifests had absolute paths
+                        try:
+                            relative_paths.append(p.relative_to(data_dir))
+                        except ValueError:
+                            # Project may have been moved to another directory (or system)
+                            # so data_dir is differs from manifest file content.
+                            # Try resolving the relative path manually.
+                            parts = tuple(dropwhile(lambda part: part != "output", p.parts))
+                            relative_paths.append(str(Path(*parts)))
+                    else:
+                        relative_paths.append(file_path)
                 if manifests is None:
                     manifests = dict()
-                path_list = manifests.setdefault(out_file_name, list())
-                path_list += paths
+                manifests.setdefault(out_file_name, list()).extend(paths)
     return manifests
-
-
-def write_exported_files_file(file_path, manifests, data_dir):
-    """Writes manifests to the exported files file.
-
-    Args:
-        file_path (Path): path to the exported files file
-        manifests (dict): collected execution manifests
-    """
-    relative_path_manifests = dict()
-    for out_file_name, paths in manifests.items():
-        relative_path_manifests[out_file_name] = [str(Path(p).relative_to(data_dir)) for p in paths]
-    with open(file_path, "w") as manifests_file:
-        json.dump(relative_path_manifests, manifests_file)
-
-
-def read_exported_files_file(file_path, data_dir):
-    """Reads manifests from the exported files file.
-
-    Args:
-        file_path (Path): path to the exported files file
-        data_dir (str): absolute path to item's data directory
-
-    Returns:
-        dict: mapping from output file name to a list of actually exported file paths
-    """
-    with open(file_path) as manifests_file:
-        relative_path_manifests = json.load(manifests_file)
-    return {name: [str(Path(data_dir, p)) for p in paths] for name, paths in relative_path_manifests.items()}
