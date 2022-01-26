@@ -78,11 +78,13 @@ class PreviewTreeModel(QAbstractItemModel):
 
     def data(self, index, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
-            if index.internalPointer() is None:
+            mapping_name_row = index.internalId() - 1
+            if mapping_name_row < 0:
                 return self._mapping_names[index.row()]
-            return self._table_names[index.internalPointer()][index.row()]
-        if role == self.TABLE_ROLE and index.internalPointer() is not None:
-            mapping_name = index.internalPointer()
+            mapping_name = self._mapping_names[mapping_name_row]
+            return self._table_names[mapping_name][index.row()]
+        if role == self.TABLE_ROLE and index.internalId() > 0:
+            mapping_name = self._mapping_names[index.internalId() - 1]
             return self._tables[mapping_name][self._table_names[mapping_name][index.row()]]
         return None
 
@@ -97,7 +99,7 @@ class PreviewTreeModel(QAbstractItemModel):
         self.endResetModel()
 
     def flags(self, parent=QModelIndex()):
-        if parent.internalPointer() is not None:
+        if parent.internalId() > 0:
             return super().flags(parent) | Qt.ItemNeverHasChildren
         return super().flags(parent)
 
@@ -114,18 +116,16 @@ class PreviewTreeModel(QAbstractItemModel):
 
     def index(self, row, column, parent=QModelIndex()):
         if not parent.isValid():
-            return self.createIndex(row, column)
-        if parent.internalPointer() is not None:
+            return self.createIndex(row, column, 0)
+        if parent.internalId() > 0:
             return QModelIndex()
-        mapping_name = self._mapping_names[parent.row()]
-        return self.createIndex(row, column, mapping_name)
+        return self.createIndex(row, column, parent.row() + 1)
 
     def parent(self, index):
-        if index.internalPointer() is None:
+        if index.internalId() == 0:
             return QModelIndex()
-        mapping_name = index.internalPointer()
-        row = self._mapping_names.index(mapping_name)
-        return self.createIndex(row, 0)
+        row = index.internalId() - 1
+        return self.createIndex(row, 0, 0)
 
     def rename_mappings(self, new_names):
         """

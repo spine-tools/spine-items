@@ -17,12 +17,7 @@ Contains utilities to manage export manifest files.
 """
 from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
-from spine_items.utils import (
-    EXPORTED_PATHS_FILE_NAME,
-    collect_execution_manifests,
-    write_exported_files_file,
-    read_exported_files_file,
-)
+from spine_items.utils import collect_execution_manifests
 
 
 def exported_files_as_resources(item_name, exported_files, data_dir, output_channels):
@@ -38,12 +33,12 @@ def exported_files_as_resources(item_name, exported_files, data_dir, output_chan
         tuple: output resources and updated exported files cache
     """
     manifests = collect_execution_manifests(data_dir)
-    exported_file_path = Path(data_dir, EXPORTED_PATHS_FILE_NAME)
     if manifests is not None:
-        write_exported_files_file(exported_file_path, manifests, data_dir)
-        exported_files = manifests
-    elif exported_files is None and exported_file_path.exists():
-        exported_files = read_exported_files_file(exported_file_path, data_dir)
+        out_labels = {c.out_label for c in output_channels}
+        manifests = {
+            label: files for label, files in collect_execution_manifests(data_dir).items() if label in out_labels
+        }
+        exported_files = {label: [str(Path(data_dir, f)) for f in files] for label, files in manifests.items()}
     resources = list()
     if exported_files is not None:
         for channel in output_channels:

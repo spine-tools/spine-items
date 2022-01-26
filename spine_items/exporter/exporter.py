@@ -24,7 +24,7 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
 from .export_manifest import exported_files_as_resources
-from ..utils import EXPORTED_PATHS_FILE_NAME, EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX, write_exported_files_file
+from ..utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 from ..item_base import ExporterBase
 from .widgets.export_list_item import ExportListItem
 from .item_info import ItemInfo
@@ -123,14 +123,15 @@ class Exporter(ExporterBase):
         resources_by_labels = {r.label: r for r in database_resources}  # legacy: when in_label was url
         in_labels = set(r.label for r in database_resources)
         inactive_channels = {c.in_label: c for c in self._output_channels}
-        self._output_channels.clear()
+        old_output_channels = self._output_channels
+        self._output_channels = []
         inactive_channels.update({c.in_label: c for c in self._inactive_output_channels})
         for in_label in in_labels:
             inactive = inactive_channels.pop(in_label, None)
             if inactive is not None:
                 self._output_channels.append(inactive)
             else:
-                url = resources_by_labels[in_label].url
+                url = clear_filter_configs(resources_by_labels[in_label].url)
                 if url in inactive_channels:
                     # legacy: when in_label was url
                     # we actually have out_label already
@@ -140,6 +141,8 @@ class Exporter(ExporterBase):
                     self._output_channels.append(OutputChannel(in_label))
         self._inactive_output_channels = list(inactive_channels.values())
         self._full_url_model.set_urls(set(r.url for r in database_resources))
+        if self._output_channels != old_output_channels:
+            self._resources_to_successors_changed()
         if self._active:
             self._update_properties_tab()
         self._check_notifications()
@@ -271,10 +274,6 @@ class Exporter(ExporterBase):
         """See base class."""
         if not super().rename(new_name, rename_data_dir_message):
             return False
-        try:
-            Path(self.data_dir, EXPORTED_PATHS_FILE_NAME).unlink()
-        except FileNotFoundError:
-            pass
         for path in Path(self.data_dir).iterdir():
             if path.name.startswith(EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX) and path.suffix == ".json":
                 path.unlink()
@@ -291,8 +290,6 @@ class Exporter(ExporterBase):
                             new_file_path = new_file_path / new_part
                     new_file_list.append(str(new_file_path))
                 self._exported_files[label] = new_file_list
-            exported_file_path = Path(self.data_dir, EXPORTED_PATHS_FILE_NAME)
-            write_exported_files_file(exported_file_path, self._exported_files, self.data_dir)
         return True
 
     def make_signal_handler_dict(self):
