@@ -601,6 +601,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         mapping_specification = _new_mapping_specification(mapping_type)
         if self._ui.fix_table_name_check_box.isChecked():
             mapping_specification.root = _add_fixed_table_name(mapping_specification.root)
+            mapping_specification.root.value = self._ui.fix_table_name_line_edit.text()
         self._undo_stack.beginMacro("change mapping type")
         self._undo_stack.push(SetMappingType(index, mapping_type))
         self._undo_stack.push(SetMapping(index, mapping_specification.root))
