@@ -16,7 +16,7 @@ Contains the source data table model.
 """
 from PySide2.QtCore import Qt, Signal, Slot, QModelIndex
 from spinedb_api import ParameterValueFormatError
-from spinedb_api.mapping import Position
+from spinedb_api.mapping import Position, is_pivoted
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel
 from spinedb_api.import_mapping.type_conversion import ConvertSpec
 from .mappings_model import Role
@@ -215,6 +215,7 @@ class SourceDataTableModel(MinimalTableModel):
 
     def data(self, index, role=Qt.DisplayRole):
         if role in (Qt.ToolTipRole, Qt.BackgroundRole):
+            flattened_mappings = None
             if self._mapping_list_index.isValid():
                 flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
                 last_pivot_row = flattened_mappings.root_mapping.last_pivot_row()
@@ -229,7 +230,7 @@ class SourceDataTableModel(MinimalTableModel):
                 if error is not None:
                     return self.data_error(error, index, role, orientation=Qt.Horizontal)
 
-            if row <= last_pivot_row and column not in self._non_pivoted_and_skipped_columns():
+            if row <= last_pivot_row and column not in self._non_pivoted_and_skipped_columns(flattened_mappings):
                 error = self._row_type_errors.get((row, column))
                 if error is not None:
                     return self.data_error(error, index, role, orientation=Qt.Vertical)
@@ -244,64 +245,85 @@ class SourceDataTableModel(MinimalTableModel):
             return f"item_{index.row() + 1}_{index.column() + 1}"
         return super().data(index, role)
 
-    def _non_pivoted_and_skipped_columns(self):
+    def _non_pivoted_and_skipped_columns(self, flattened_mappings=None):
         """Returns a list of non-pivoted and skipped columns.
+
+        Args:
+            flattened_mappings (FlattenedMappings, optional): flattened import mappings
 
         Returns:
             set: non-pivoted and skipped columns
         """
-        flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
-        return set(flattened_mappings.root_mapping.non_pivoted_columns() + flattened_mappings.root_mapping.skip_columns)
+        if flattened_mappings is None:
+            flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
+        root_mapping = flattened_mappings.root_mapping
+        return set(root_mapping.non_pivoted_columns()) | set(root_mapping.skip_columns)
 
     def data_color(self, index):
         """
         Returns background color for index depending on mapping.
 
         Arguments:
-            index (PySide2.QtCore.QModelIndex): index
+            index (QModelIndex): index
 
         Returns:
             QColor: color of index
         """
+        row = index.row()
+        column = index.column()
         flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
-        if self.index_below_last_pivot_row(index):
+        last_row = self._last_row(flattened_mappings)
+        non_pivoted_and_skipped_columns = self._non_pivoted_and_skipped_columns(flattened_mappings)
+        if self.index_below_last_pivot_row(row, column, last_row, flattened_mappings, non_pivoted_and_skipped_columns):
             return flattened_mappings.get_value_color()
         for k in range(len(flattened_mappings.display_names)):
             component_mapping = flattened_mappings.component_at(k)
-            if self.index_in_mapping(component_mapping, index):
+            if self.index_in_mapping(component_mapping, row, column, last_row, non_pivoted_and_skipped_columns):
                 return flattened_mappings.display_colors[k]
         return None
 
-    def _last_row(self):
+    @staticmethod
+    def _last_row(flattened_mappings):
         """Calculates last row when mapping is pivoted.
+
+        Args:
+            flattened_mappings (FlattenedMappings, optional): flattened mappings
 
         Returns:
             int: last row
         """
-        root_mapping = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS).root_mapping
+        root_mapping = flattened_mappings.root_mapping
         return max(root_mapping.last_pivot_row(), root_mapping.read_start_row - 1)
 
-    def index_below_last_pivot_row(self, index):
+    @staticmethod
+    def index_below_last_pivot_row(row, column, last_row, flattened_mappings, non_pivoted_and_skipped_columns):
         """Checks if given index is outside pivot.
 
         Args:
-            index (QModelIndex): index
+            row (int): index row
+            column (int): index column
+            last_row (int): last non-pivoted row index
+            flattened_mappings (FlattenedMappings): flattened mappings
+            non_pivoted_and_skipped_columns (set of int): set of column indexes
 
         Returns:
             bool: True if index is below the pivot, False otherwise
         """
-        flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
         if not flattened_mappings.has_value_component() or not flattened_mappings.root_mapping.is_pivoted():
             return False
-        return index.row() > self._last_row() and index.column() not in self._non_pivoted_and_skipped_columns()
+        return row > last_row and column not in non_pivoted_and_skipped_columns
 
-    def index_in_mapping(self, mapping, index):
+    @staticmethod
+    def index_in_mapping(mapping, row, column, last_row, non_pivoted_and_skipped_columns):
         """
         Checks if index is in mapping
 
         Args:
             mapping (ImportMapping): mapping component
-            index (QModelIndex): index
+            row (int): index row
+            column (int): index column
+            last_row (int): last non-pivoted row index
+            non_pivoted_and_skipped_columns (set of int): set of column indexes
 
         Returns:
             bool: True if mapping is in index
@@ -309,12 +331,12 @@ class SourceDataTableModel(MinimalTableModel):
         if not isinstance(mapping.position, int):
             return False
         if mapping.position < 0:
-            if index.column() in self._non_pivoted_and_skipped_columns():
+            if column in non_pivoted_and_skipped_columns:
                 return False
-            return index.row() == -(mapping.position + 1)
-        if index.row() <= self._last_row():
+            return row == -(mapping.position + 1)
+        if row <= last_row:
             return False
-        return index.column() == mapping.position
+        return column == mapping.position
 
     def headerData(self, section, orientation=Qt.Horizontal, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.BackgroundRole and self._mapping_list_index.isValid():
