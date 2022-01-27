@@ -110,7 +110,7 @@ class ExporterExecutableItemBase(ExecutableItemBase):
             return []
         resources = list()
         for label, output_files in self._result_files.items():
-            resources += [file_resource_in_pack(self.name, label, f) for f in output_files]
+            resources += [file_resource_in_pack(self.name, label, str(Path(self._data_dir, f))) for f in output_files]
         return resources
 
     def _resolve_gams_system_directory(self):
