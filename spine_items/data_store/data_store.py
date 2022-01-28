@@ -405,15 +405,6 @@ class DataStore(ProjectItem):
             self.add_notification(
                 "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
             )
-            return
-        db = self._url["database"]
-        if db.lower().endswith(".sqlite") and os.path.isfile(db):
-            if os.path.getsize(db) == 0:
-                self.add_notification(
-                    "This Data Store is pointing to an empty SQLITE file. "
-                    "Please click 'New Spine db' or 'Open editor...' to initialize it."
-                )
-            return
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""

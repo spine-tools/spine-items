@@ -45,7 +45,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _get_url(self):
         try:
-            DatabaseMapping.create_engine(self._url)
+            DatabaseMapping.create_engine(self._url, create=True)
             return self._url
         except SpineDBVersionError as v_err:
             prompt = {"type": "upgrade_db", "url": self._url, "current": v_err.current, "expected": v_err.expected}
