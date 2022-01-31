@@ -73,7 +73,7 @@ class Tool(ProjectItem):
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
-        self.execute_in_work = None
+        self.execute_in_work = execute_in_work
         if cmd_line_args is None:
             cmd_line_args = []
         self.cmd_line_args = cmd_line_args
@@ -90,7 +90,6 @@ class Tool(ProjectItem):
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
         # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
-        self.do_update_execution_mode(execute_in_work)
         self._specification_menu = None
         self._options = options if options is not None else {}
         self._resources_from_upstream = list()
@@ -100,6 +99,11 @@ class Tool(ProjectItem):
         self.persistent_stdin_available.connect(self._add_persistent_stdin)
         self.persistent_stdout_available.connect(self._add_persistent_stdout)
         self.persistent_stderr_available.connect(self._add_persistent_stderr)
+
+    def set_up(self):
+        execute_in_work = self.execute_in_work
+        super().set_up()
+        self.do_update_execution_mode(execute_in_work)
 
     @property
     def group_id(self):
@@ -309,8 +313,7 @@ class Tool(ProjectItem):
             _ = self._get_options_widget()
 
     def _update_tool_ui(self):
-        """Updates Tool properties UI. Used when Tool specification is changed.
-        Overrides execution mode (work or source) with the specification default."""
+        """Updates Tool properties UI. Used when Tool specification is changed.."""
         options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
         if options_widget:
             options_widget.widget().hide()
@@ -318,27 +321,27 @@ class Tool(ProjectItem):
             self._properties_ui.comboBox_tool.setCurrentIndex(-1)
             self.do_update_execution_mode(True)
             self._properties_ui.toolButton_tool_specification.setMenu(None)
-        else:
-            self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
-            self._update_specification_menu()
-            self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
-            options_widget = self._get_options_widget()
-            if options_widget:
-                self._properties_ui.horizontalLayout_options.addWidget(options_widget)
-                options_widget.show()
-            if self._specification.tooltype == "python":
-                self.specification().set_execution_settings()
-                k_spec_name = self.specification().execution_settings["kernel_spec_name"]
-                env = self.specification().execution_settings["env"]
-                use_console = self.specification().execution_settings["use_jupyter_console"]
-                self._properties_ui.label_jupyter.show()
-                if not use_console:
-                    exe = self.specification().execution_settings["executable"]
-                    p = resolve_python_interpreter(exe)
-                    self._properties_ui.label_jupyter.setText(f"[Basic console] {p}")
-                else:
-                    env = "" if not env else f"[{env}]"
-                    self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
+            return
+        self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
+        self._update_specification_menu()
+        self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
+        options_widget = self._get_options_widget()
+        if options_widget:
+            self._properties_ui.horizontalLayout_options.addWidget(options_widget)
+            options_widget.show()
+        if self._specification.tooltype == "python":
+            self.specification().set_execution_settings()
+            k_spec_name = self.specification().execution_settings["kernel_spec_name"]
+            env = self.specification().execution_settings["env"]
+            use_console = self.specification().execution_settings["use_jupyter_console"]
+            self._properties_ui.label_jupyter.show()
+            if not use_console:
+                exe = self.specification().execution_settings["executable"]
+                p = resolve_python_interpreter(exe)
+                self._properties_ui.label_jupyter.setText(f"[Basic console] {p}")
+            else:
+                env = "" if not env else f"[{env}]"
+                self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
