@@ -69,10 +69,6 @@ class ExecutableItem(ExecutableItemBase):
     def options(self):
         return self._options
 
-    @property
-    def group_id(self):
-        return self._group_id
-
     @ExecutableItemBase.filter_id.setter
     def filter_id(self, filter_id):
         self._filter_id = filter_id
