@@ -25,7 +25,7 @@ from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, cmd_line_arg_from_dict, LabelArg
 from spine_engine.utils.helpers import resolve_python_interpreter
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
-from ..commands import UpdateCmdLineArgsCommand
+from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
 from .widgets.options_widgets import JuliaOptionsWidget
@@ -55,6 +55,7 @@ class Tool(ProjectItem):
         execute_in_work=True,
         cmd_line_args=None,
         options=None,
+        group_id=None,
     ):
         """Tool class.
 
@@ -83,6 +84,7 @@ class Tool(ProjectItem):
                 f"Tool <b>{self.name}</b> should have a Tool specification "
                 f"<b>{specification_name}</b> but it was not found"
             )
+        self._group_id = group_id
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
@@ -98,6 +100,10 @@ class Tool(ProjectItem):
         self.persistent_stdin_available.connect(self._add_persistent_stdin)
         self.persistent_stdout_available.connect(self._add_persistent_stdout)
         self.persistent_stderr_available.connect(self._add_persistent_stderr)
+
+    @property
+    def group_id(self):
+        return self._group_id
 
     def _get_options_widget(self):
         """Returns a widget to specify the options for this tool.
@@ -145,7 +151,24 @@ class Tool(ProjectItem):
         s[
             self._properties_ui.treeView_cmdline_args.selectionModel().selectionChanged
         ] = self._update_remove_args_button_enabled
+        s[self._properties_ui.lineEdit_group_id.editingFinished] = self._set_group_id
         return s
+
+    @Slot()
+    def _set_group_id(self):
+        """Pushes a command to update group id whenever the user edits the line edit."""
+        group_id = self._properties_ui.lineEdit_group_id.text()
+        if not group_id:
+            group_id = None
+        self._toolbox.undo_stack.push(UpdateGroupIdCommand(self, group_id))
+
+    def do_set_group_id(self, group_id):
+        """Sets group id."""
+        if self._group_id == group_id:
+            return
+        self._group_id = group_id
+        if self._active:
+            self._properties_ui.lineEdit_group_id.setText(group_id)
 
     @Slot(QItemSelection, QItemSelection)
     def _update_add_args_button_enabled(self, _selected, _deselected):
@@ -174,6 +197,7 @@ class Tool(ProjectItem):
         self._update_tool_ui()
         self._do_update_add_args_button_enabled()
         self._do_update_remove_args_button_enabled()
+        self._properties_ui.lineEdit_group_id.setText(self._group_id)
 
     @Slot(bool)
     def show_specification_window(self, _=True):
@@ -471,6 +495,8 @@ class Tool(ProjectItem):
         d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
         if self._options:
             d["options"] = self._options
+        if self._group_id:
+            d["group_id"] = self._group_id
         return d
 
     @staticmethod
@@ -482,8 +508,19 @@ class Tool(ProjectItem):
         cmd_line_args = item_dict.get("cmd_line_args", [])
         cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in cmd_line_args]
         options = item_dict.get("options", {})
+        group_id = item_dict.get("group_id")
         return Tool(
-            name, description, x, y, toolbox, project, specification_name, execute_in_work, cmd_line_args, options
+            name,
+            description,
+            x,
+            y,
+            toolbox,
+            project,
+            specification_name,
+            execute_in_work,
+            cmd_line_args,
+            options,
+            group_id,
         )
 
     def rename(self, new_name, rename_data_dir_message):

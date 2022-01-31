@@ -172,6 +172,21 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.label_group_id = QLabel(self.frame)
+        self.label_group_id.setObjectName(u"label_group_id")
+
+        self.horizontalLayout_2.addWidget(self.label_group_id)
+
+        self.lineEdit_group_id = QLineEdit(self.frame)
+        self.lineEdit_group_id.setObjectName(u"lineEdit_group_id")
+
+        self.horizontalLayout_2.addWidget(self.lineEdit_group_id)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+
         self.label_jupyter = ElidedLabel(self.frame)
         self.label_jupyter.setObjectName(u"label_jupyter")
 
@@ -230,6 +245,10 @@ class Ui_Form(object):
         self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
         self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))
         self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
+        self.label_group_id.setText(QCoreApplication.translate("Form", u"Group id", None))
+#if QT_CONFIG(tooltip)
+        self.lineEdit_group_id.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Type execution group identifier, or leave empty to run in isolation.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.label_jupyter.setText(QCoreApplication.translate("Form", u"Console info", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))

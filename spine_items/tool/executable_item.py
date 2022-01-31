@@ -44,7 +44,7 @@ from .output_resources import scan_for_resources
 class ExecutableItem(ExecutableItemBase):
     """Tool project item's executable parts."""
 
-    def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, project_dir, logger):
+    def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, group_id, project_dir, logger):
         """
         Args:
             name (str): item's name
@@ -53,10 +53,11 @@ class ExecutableItem(ExecutableItemBase):
             tool_specification (ToolSpecification): a tool specification
             cmd_line_args (list): a list of command line argument to pass to the tool instance
             options (dict): misc tool options. See ``Tool`` for details.
+            group_id (str or None): execution group identifier
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, project_dir, logger)
+        super().__init__(name, project_dir, logger, group_id=group_id)
         self._work_dir = work_dir
         self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR))
         self._tool_specification = tool_specification
@@ -67,6 +68,10 @@ class ExecutableItem(ExecutableItemBase):
     @property
     def options(self):
         return self._options
+
+    @property
+    def group_id(self):
+        return self._group_id
 
     @ExecutableItemBase.filter_id.setter
     def filter_id(self, filter_id):
@@ -643,7 +648,8 @@ class ExecutableItem(ExecutableItemBase):
         )
         cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
-        return cls(name, work_dir, specification, cmd_line_args, options, project_dir, logger)
+        group_id = item_dict.get("group_id")
+        return cls(name, work_dir, specification, cmd_line_args, options, group_id, project_dir, logger)
 
 
 def _count_files_and_dirs(paths):

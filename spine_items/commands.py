@@ -125,6 +125,27 @@ class UpdateCmdLineArgsCommand(SpineToolboxCommand):
         self.item.update_cmd_line_args(self.undo_cmd_line_args)
 
 
+class UpdateGroupIdCommand(SpineToolboxCommand):
+    def __init__(self, item, group_id):
+        """Command to update item group identifier.
+
+        Args:
+            item (ProjectItemBase): the item
+            group_id (str): group identifier
+        """
+        super().__init__()
+        self._item = item
+        self._redo_group_id = group_id
+        self._undo_group_id = self._item.group_id
+        self.setText(f"change group identifier of {item.name}")
+
+    def redo(self):
+        self._item.do_set_group_id(self._redo_group_id)
+
+    def undo(self):
+        self._item.do_set_group_id(self._undo_group_id)
+
+
 class UpdateOutFileName(SpineToolboxCommand):
     """Command to update exporter's output file name."""
 
