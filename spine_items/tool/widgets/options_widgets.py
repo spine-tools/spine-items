@@ -225,9 +225,8 @@ class JuliaOptionsWidget(OptionsWidget):
         dag = self._project.dag_with_node(self._tool.name)
         if not dag:
             return
-        dag_identifier = f"containing {self._tool.name}"
-        node_successors = self._project.get_node_successors(dag, dag_identifier)
-        if node_successors is None:
+        if dag.nodes():
+            # FIXME?
             return
         self.sysimage_path = self._get_sysimage_path()
         if self.sysimage_path is None:
@@ -235,6 +234,7 @@ class JuliaOptionsWidget(OptionsWidget):
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
         settings = make_settings_dict_for_engine(self._settings)
         settings["appSettings/useJuliaKernel"] = "1"  # Use subprocess
+        dag_identifier = f"containing {self._tool.name}"
         self.sysimage_worker = self._project.create_engine_worker(dag, execution_permits, dag_identifier, settings)
         # Use the modified spec
         engine_data = self.sysimage_worker.get_engine_data()
