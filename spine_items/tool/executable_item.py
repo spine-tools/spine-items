@@ -44,6 +44,8 @@ from .output_resources import scan_for_resources
 class ExecutableItem(ExecutableItemBase):
     """Tool project item's executable parts."""
 
+    _MAX_RETRIES = 3
+
     def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, group_id, project_dir, logger):
         """
         Args:
@@ -64,6 +66,7 @@ class ExecutableItem(ExecutableItemBase):
         self._cmd_line_args = cmd_line_args
         self._options = options
         self._tool_instance = None
+        self._retry_count = 0
 
     @property
     def options(self):
@@ -384,7 +387,7 @@ class ExecutableItem(ExecutableItemBase):
                 if sys.platform == "win32" and shell == "bash":
                     self._logger.msg_error.emit("Bash shell is not supported on Windows. Please select another shell.")
                     return False
-                if sys.platform != "win32" and (shell == "cmd.exe" or shell == "powershell.exe"):
+                if sys.platform != "win32" and (shell in ("cmd.exe", "powershell.exe")):
                     self._logger.msg_error.emit(
                         f"Selected shell is not supported on your platform [{sys.platform}]. "
                         f"Please select another shell."
@@ -475,6 +478,15 @@ class ExecutableItem(ExecutableItemBase):
                     self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
                 return ItemExecutionFinishState.FAILURE
             return_code = self._tool_instance.execute()
+            if return_code != 0 and self._tool_instance.killed:
+                # NOTE: return_code will be 0 if the instance was killed by e.g. `exit(0)` in julia
+                # In this case we want to consider the tool successfull and not retry it
+                if self._retry_count < self._MAX_RETRIES:
+                    # Try again
+                    self._retry_count += 1
+                    self._logger.msg_warning.emit("The Tool process was found dead. Retrying...")
+                    return self.execute(forward_resources, backward_resources)
+                self._logger.msg_warning.emit("Maximum amount of retries reached.")
         self._handle_output_files(return_code, self._filter_id, execution_dir)
         self._tool_instance = None
         # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
