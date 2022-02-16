@@ -55,6 +55,12 @@ class ToolInstance:
         self.args = list()  # List of command line arguments for the program
         self.killed = False
 
+    def _update_killed(self):
+        try:
+            self.killed = self.exec_mngr.killed
+        except AttributeError:
+            pass
+
     @property
     def owner(self):
         return self._owner
@@ -126,7 +132,7 @@ class GAMSToolInstance(ToolInstance):
             debug_anchor = self.tool_specification.make_debug_project(self.basedir)
             if debug_anchor is not None:
                 self._logger.msg.emit(f"{debug_anchor}")
-        self.killed = self.exec_mngr.killed
+        self._update_killed()
         self.exec_mngr = None
         return ret
 
@@ -185,7 +191,7 @@ class JuliaToolInstance(ToolInstance):
                 self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
             except KeyError:
                 self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
-        self.killed = self.exec_mngr.killed
+        self._update_killed()
         self.exec_mngr = None
         return ret
 
@@ -277,7 +283,7 @@ class PythonToolInstance(ToolInstance):
                 self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
             except KeyError:
                 self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
-        self.killed = self.exec_mngr.killed
+        self._update_killed()
         self.exec_mngr = None
         return ret
 
@@ -330,6 +336,6 @@ class ExecutableToolInstance(ToolInstance):
                 self._logger.msg_error.emit(f"\t<b>{return_msg}</b> [exit code:{ret}]")
             except KeyError:
                 self._logger.msg_error.emit(f"\tUnknown return code ({ret})")
-        self.killed = self.exec_mngr.killed
+        self._update_killed()
         self.exec_mngr = None
         return ret
