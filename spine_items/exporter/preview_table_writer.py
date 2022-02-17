@@ -22,11 +22,6 @@ class TableWriter(Writer):
     """An export writer that writes to a Python dictionary."""
 
     def __init__(self):
-        """
-        Args:
-            max_tables (int): maximum number of tables to write
-            max_rows (int): maximum number of row to write for each table
-        """
         self._tables = dict()
         self._current_table = None
 
@@ -54,7 +49,7 @@ def _sanitize(x):
         x (Any): parameter value
 
     Returns:
-        float, int, str: sanitized value
+        float or int or str: sanitized value
     """
     if isinstance(x, numpy.float_):
         return float(x)
