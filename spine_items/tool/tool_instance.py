@@ -177,7 +177,7 @@ class JuliaToolInstance(ToolInstance):
         self.program.append(f"--project={julia_project_path}")
         if os.path.isfile(sysimage):
             self.program.append(f"--sysimage={sysimage}")
-        alias = f"# Running 'julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}'"
+        alias = f"julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}"
         self.exec_mngr = JuliaPersistentExecutionManager(
             self._logger, self.program, self.args, alias, fail_run_on_stderror=True, group_id=self.owner.group_id
         )
@@ -243,7 +243,7 @@ class PythonToolInstance(ToolInstance):
             self.args += [f"import os; os.chdir({repr(self.basedir)})"]
             self.args += self._make_exec_code(fp, full_fp)
             self.args += [""]  # Needed to properly finish stuff in the console.
-            alias = f"# Running 'python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}'"
+            alias = f"python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}"
             self.exec_mngr = PythonPersistentExecutionManager(
                 self._logger,
                 self.program,
