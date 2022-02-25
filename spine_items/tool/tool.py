@@ -164,12 +164,12 @@ class Tool(ProjectItem):
         group_id = self._properties_ui.lineEdit_group_id.text()
         if not group_id:
             group_id = None
+        if self._group_id == group_id:
+            return
         self._toolbox.undo_stack.push(UpdateGroupIdCommand(self, group_id))
 
     def do_set_group_id(self, group_id):
         """Sets group id."""
-        if self._group_id == group_id:
-            return
         self._group_id = group_id
         if self._active:
             self._properties_ui.lineEdit_group_id.setText(group_id)
