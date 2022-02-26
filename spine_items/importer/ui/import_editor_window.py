@@ -25,8 +25,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
-from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
 from spinetoolbox.widgets.custom_combobox import ElidedCombobox
+from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
 from spine_items.importer.widgets.multi_checkable_list_view import MultiCheckableListView
 
 from spine_items import resources_icons_rc
@@ -49,10 +49,6 @@ class Ui_MainWindow(object):
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QStatusBar(MainWindow)
-        self.statusbar.setObjectName(u"statusbar")
-        self.statusbar.setSizeGripEnabled(False)
-        MainWindow.setStatusBar(self.statusbar)
         self.dockWidget_source_tables = QDockWidget(MainWindow)
         self.dockWidget_source_tables.setObjectName(u"dockWidget_source_tables")
         self.dockWidgetContents = QWidget()

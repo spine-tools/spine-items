@@ -370,9 +370,6 @@ class Ui_MainWindow(object):
 
         self.class_rename_dock.setWidget(self.dockWidgetContents_8)
         MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.class_rename_dock)
-        self.statusbar = QStatusBar(MainWindow)
-        self.statusbar.setObjectName(u"statusbar")
-        MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
 

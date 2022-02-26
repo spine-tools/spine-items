@@ -529,7 +529,6 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="remove_parameter_rename_action">
    <property name="text">
     <string>Remove parameter</string>

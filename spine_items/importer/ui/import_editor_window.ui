@@ -29,11 +29,6 @@
    <bool>true</bool>
   </property>
   <widget class="QWidget" name="centralwidget"/>
-  <widget class="QStatusBar" name="statusbar">
-   <property name="sizeGripEnabled">
-    <bool>false</bool>
-   </property>
-  </widget>
   <widget class="QDockWidget" name="dockWidget_source_tables">
    <property name="windowTitle">
     <string>Source tables</string>
@@ -572,14 +567,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>TableViewWithButtonHeader</class>
-   <extends>QTableView</extends>
-   <header>spine_items/importer/widgets/table_view_with_button_header.h</header>
-  </customwidget>
-  <customwidget>
    <class>ElidedCombobox</class>
    <extends>QComboBox</extends>
    <header>spinetoolbox/widgets/custom_combobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TableViewWithButtonHeader</class>
+   <extends>QTableView</extends>
+   <header>spine_items/importer/widgets/table_view_with_button_header.h</header>
   </customwidget>
   <customwidget>
    <class>MultiCheckableListView</class>
