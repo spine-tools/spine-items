@@ -179,7 +179,7 @@ class JuliaToolInstance(ToolInstance):
             self.program.append(f"--sysimage={sysimage}")
         alias = f"julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}"
         self.exec_mngr = JuliaPersistentExecutionManager(
-            self._logger, self.program, self.args, alias, fail_run_on_stderror=True, group_id=self.owner.group_id
+            self._logger, self.program, self.args, alias, group_id=self.owner.group_id
         )
 
     def execute(self):
@@ -198,19 +198,6 @@ class JuliaToolInstance(ToolInstance):
 
 class PythonToolInstance(ToolInstance):
     """Class for Python Tool instances."""
-
-    def __init__(self, tool_specification, basedir, settings, logger, owner, fail_on_stderror):
-        """
-        Args:
-            tool_specification (ToolSpecification): the tool specification for this instance
-            basedir (str): the path to the directory where this instance should run
-            settings (QSettings): Toolbox settings
-            logger (LoggerInterface): a logger instance
-            owner (ExecutableItemBase): The item that owns the instance
-            fail_on_stderror (bool): If True, fail run if last console message goes to stderror
-        """
-        super().__init__(tool_specification, basedir, settings, logger, owner)
-        self._fail_on_stderror = fail_on_stderror
 
     def prepare(self, args):
         """See base class."""
@@ -248,7 +235,6 @@ class PythonToolInstance(ToolInstance):
                 self.program,
                 self.args,
                 alias,
-                fail_run_on_stderror=self._fail_on_stderror,
                 group_id=self.owner.group_id,
             )
 

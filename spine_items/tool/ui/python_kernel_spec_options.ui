@@ -18,8 +18,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>506</width>
-    <height>69</height>
+    <width>527</width>
+    <height>73</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -129,19 +129,6 @@
           </widget>
          </item>
         </layout>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="fail_on_stderror_check_box">
-         <property name="toolTip">
-          <string>Fail execution if Tool finishes by writing to stderror, e.g. when there is a Traceback.</string>
-         </property>
-         <property name="text">
-          <string>Fail if last console message is error</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">

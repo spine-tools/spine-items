@@ -582,31 +582,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             opt_widget.ui.radioButton_python_console.setChecked(True)
         opt_widget.set_ui_for_jupyter_console(not value)
 
-    @Slot(int)
-    def _push_set_fail_on_stderror(self, check_box_state):
-        """Pushes a command to change fail_on_stderror flag to undo stack.
-
-        Args:
-            check_box_state (int): check box state
-        """
-        fail_on_stderror = check_box_state == Qt.Checked
-        old_value = self.spec_dict["execution_settings"].get("fail_on_error", not check_box_state)
-        if fail_on_stderror == old_value:
-            return
-        text = ("check" if fail_on_stderror else "uncheck") + " 'Fail if...' check box"
-        self._undo_stack.push(ChangeSpecPropertyCommand(self._set_fail_on_stderror, fail_on_stderror, old_value, text))
-
-    def _set_fail_on_stderror(self, fail_on_stderror):
-        """Sets the fail_on_stderror flag in specification dict.
-
-        Args:
-            fail_on_stderror (bool): flag value
-        """
-        self.spec_dict["execution_settings"]["fail_on_error"] = fail_on_stderror
-        toolspectype = self.spec_dict.get("tooltype", "")
-        opt_widget = self._get_optional_widget(toolspectype)
-        opt_widget.ui.fail_on_stderror_check_box.setChecked(fail_on_stderror)
-
     @Slot()
     def _push_change_executable(self):
         old_value = self.spec_dict["execution_settings"]["executable"]

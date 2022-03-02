@@ -92,7 +92,6 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.toolButton_browse_python.clicked.connect(self.browse_python_button_clicked)
         self.ui.pushButton_open_kernel_spec_viewer.clicked.connect(self.show_python_kernel_spec_editor)
         self.ui.lineEdit_python_path.editingFinished.connect(self._parent._push_change_executable)
-        self.ui.fail_on_stderror_check_box.stateChanged.connect(self._parent._push_set_fail_on_stderror)
 
     def init_widget(self, specification):
         """Initializes UI elements based on specification
@@ -103,20 +102,12 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         use_jupyter_console = specification.execution_settings["use_jupyter_console"]
         self.ui.radioButton_jupyter_console.blockSignals(True)
         self.ui.radioButton_python_console.blockSignals(True)
-        self.ui.fail_on_stderror_check_box.blockSignals(True)
         if use_jupyter_console:
             self.ui.radioButton_jupyter_console.setChecked(True)
-            self.ui.fail_on_stderror_check_box.setEnabled(False)
-            self.ui.fail_on_stderror_check_box.setChecked(False)
         else:
             self.ui.radioButton_python_console.setChecked(True)
-            self.ui.fail_on_stderror_check_box.setEnabled(True)
-            self.ui.fail_on_stderror_check_box.setChecked(
-                specification.execution_settings.get("fail_on_stderror", True)
-            )
         self.ui.radioButton_jupyter_console.blockSignals(False)
         self.ui.radioButton_python_console.blockSignals(False)
-        self.ui.fail_on_stderror_check_box.blockSignals(False)
         self.set_ui_for_jupyter_console(not use_jupyter_console)
         k_spec = specification.execution_settings["kernel_spec_name"]
         if k_spec == "":
@@ -147,7 +138,6 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         d["use_jupyter_console"] = self.ui.radioButton_jupyter_console.isChecked()
         self.validate_executable()  # Raises NameError if Python path is not valid
         d["executable"] = self.get_executable()
-        d["fail_on_stderror"] = self.ui.fail_on_stderror_check_box.isChecked()
         return d
 
     @Slot(bool)
@@ -163,7 +153,6 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.pushButton_open_kernel_spec_viewer.setDisabled(value)
         self.ui.lineEdit_python_path.setDisabled((not value))
         self.ui.toolButton_browse_python.setDisabled(not value)
-        self.ui.fail_on_stderror_check_box.setEnabled(value)
 
     def validate_executable(self):
         """Check that Python path in the line edit is a file it exists and the file name starts with 'python'.

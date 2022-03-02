@@ -41,7 +41,6 @@ OPTIONAL_KEYS = [
     "cmdline_args",
     "execute_in_work",
     "execution_settings",
-    "fail_on_stderror",
 ]
 LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]  # These should be lists
 
@@ -594,9 +593,7 @@ class PythonTool(ToolSpecification):
 
     def create_tool_instance(self, basedir, logger, owner):
         """See base class."""
-        return PythonToolInstance(
-            self, basedir, self._settings, logger, owner, self.execution_settings.get("fail_on_stderror", True)
-        )
+        return PythonToolInstance(self, basedir, self._settings, logger, owner)
 
 
 class ExecutableTool(ToolSpecification):

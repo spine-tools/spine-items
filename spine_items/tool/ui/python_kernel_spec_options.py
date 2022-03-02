@@ -31,7 +31,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(506, 69)
+        Form.resize(527, 73)
         self.verticalLayout_3 = QVBoxLayout(Form)
         self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
@@ -100,12 +100,6 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
-        self.fail_on_stderror_check_box = QCheckBox(Form)
-        self.fail_on_stderror_check_box.setObjectName(u"fail_on_stderror_check_box")
-        self.fail_on_stderror_check_box.setChecked(True)
-
-        self.verticalLayout_2.addWidget(self.fail_on_stderror_check_box)
-
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
@@ -167,10 +161,6 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_python.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Python interpreter using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.fail_on_stderror_check_box.setToolTip(QCoreApplication.translate("Form", u"Fail execution if Tool finishes by writing to stderror, e.g. when there is a Traceback.", None))
-#endif // QT_CONFIG(tooltip)
-        self.fail_on_stderror_check_box.setText(QCoreApplication.translate("Form", u"Fail if last console message is error", None))
         self.label.setText(QCoreApplication.translate("Form", u"Kernel spec", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python Jupyter kernel spec for Jupyter Console.</p><p>Both Conda and Jupyter kernel specs are shown.</p></body></html>", None))
