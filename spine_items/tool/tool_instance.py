@@ -242,7 +242,6 @@ class PythonToolInstance(ToolInstance):
             self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
             self.args += [f"import os; os.chdir({repr(self.basedir)})"]
             self.args += self._make_exec_code(fp, full_fp)
-            self.args += [""]  # Needed to properly finish stuff in the console.
             alias = f"python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}"
             self.exec_mngr = PythonPersistentExecutionManager(
                 self._logger,
@@ -266,13 +265,11 @@ class PythonToolInstance(ToolInstance):
         """
         globals_dict = 'globals_dict = globals()'
         update_globals_dict = f'globals_dict.update({{"__file__": "{full_fp}", "__name__": "__main__"}})'
-        try_start = "try:"
         compile_and_exec = (
-            f"  with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), globals_dict, globals_dict)"
+            f"with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), globals_dict, globals_dict)"
+            + os.linesep
         )
-        except_system_exit = "except SystemExit as e:"
-        ignore_exception = "  print(f'Script finished with exit code {e.code}')"
-        return [globals_dict, update_globals_dict, try_start, compile_and_exec, except_system_exit, ignore_exception]
+        return [globals_dict, update_globals_dict, compile_and_exec]
 
     def execute(self):
         """Executes a prepared instance."""
