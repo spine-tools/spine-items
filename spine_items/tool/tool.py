@@ -16,7 +16,7 @@ Tool class.
 :date:   19.12.2017
 """
 import os
-from PySide2.QtCore import Slot, Signal, QItemSelection, Qt
+from PySide2.QtCore import Slot, QItemSelection, Qt
 from PySide2.QtWidgets import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
@@ -36,13 +36,6 @@ from .output_resources import scan_for_resources
 
 
 class Tool(ProjectItem):
-
-    jupyter_console_requested = Signal(str, str, str)
-    persistent_console_requested = Signal(str, tuple, str)
-    persistent_stdin_available = Signal(str, str)
-    persistent_stdout_available = Signal(str, str)
-    persistent_stderr_available = Signal(str, str)
-
     def __init__(
         self,
         name,
@@ -94,11 +87,6 @@ class Tool(ProjectItem):
         self._options = options if options is not None else {}
         self._resources_from_upstream = list()
         self._resources_from_downstream = list()
-        self.jupyter_console_requested.connect(self._setup_jupyter_console)
-        self.persistent_console_requested.connect(self._setup_persistent_console)
-        self.persistent_stdin_available.connect(self._add_persistent_stdin)
-        self.persistent_stdout_available.connect(self._add_persistent_stdout)
-        self.persistent_stderr_available.connect(self._add_persistent_stderr)
 
     def set_up(self):
         execute_in_work = self.execute_in_work
@@ -559,57 +547,6 @@ class Tool(ProjectItem):
             )
         else:
             super().notify_destination(source_item)
-
-    @Slot(str, str, str)
-    def _setup_jupyter_console(self, filter_id, kernel_name, connection_file):
-        """Sets up jupyter console, eventually for a filter execution.
-
-        Args:
-            filter_id (str): filter identifier
-            kernel_name (str): jupyter kernel name
-            connection_file (str): path to connection file
-        """
-        if not filter_id:
-            # pylint: disable=attribute-defined-outside-init
-            self.console = self._toolbox.make_jupyter_console(self, kernel_name, connection_file)
-            self._toolbox.override_console()
-        else:
-            self._filter_consoles[filter_id] = self._toolbox.make_jupyter_console(self, kernel_name, connection_file)
-            self._toolbox.ui.listView_console_executions.model().layoutChanged.emit()
-
-    @Slot(str, tuple, str)
-    def _setup_persistent_console(self, filter_id, key, language):
-        """Sets up persistent console, eventually for a filter execution.
-
-        Args:
-            filter_id (str): filter identifier
-            key (tuple)
-            language (str)
-        """
-        if not filter_id:
-            # pylint: disable=attribute-defined-outside-init
-            self.console = self._toolbox.make_persistent_console(self, key, language)
-            self._toolbox.override_console()
-        else:
-            self._filter_consoles[filter_id] = self._toolbox.make_persistent_console(self, key, language)
-            self._toolbox.ui.listView_console_executions.model().layoutChanged.emit()
-
-    @Slot(str, str)
-    def _add_persistent_stdin(self, filter_id, data):
-        self._get_console(filter_id).add_stdin(data)
-
-    @Slot(str, str)
-    def _add_persistent_stdout(self, filter_id, data):
-        self._get_console(filter_id).add_stdout(data)
-
-    @Slot(str, str)
-    def _add_persistent_stderr(self, filter_id, data):
-        self._get_console(filter_id).add_stderr(data)
-
-    def _get_console(self, filter_id):
-        if not filter_id:
-            return self.console
-        return self._filter_consoles.get(filter_id)
 
     def actions(self):
         # pylint: disable=attribute-defined-outside-init
