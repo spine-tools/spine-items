@@ -478,7 +478,7 @@ class ExecutableItem(ExecutableItemBase):
                     self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
                 return ItemExecutionFinishState.FAILURE
             return_code = self._tool_instance.execute()
-            if return_code != 0 and self._tool_instance.killed:
+            if return_code != 0 and self._tool_instance is not None and self._tool_instance.killed:
                 # NOTE: return_code will be 0 if the instance was killed by e.g. `exit(0)` in julia
                 # In this case we want to consider the tool successfull and not retry it
                 if self._retry_count < self._MAX_RETRIES:
