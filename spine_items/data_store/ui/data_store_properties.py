@@ -203,15 +203,23 @@ class Ui_Form(object):
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.toolButton_vacuum = QPushButton(Form)
+        self.toolButton_vacuum.setObjectName(u"toolButton_vacuum")
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/broom.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_vacuum.setIcon(icon1)
+
+        self.horizontalLayout_3.addWidget(self.toolButton_vacuum)
+
         self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
 
         self.toolButton_copy_url = QPushButton(Form)
         self.toolButton_copy_url.setObjectName(u"toolButton_copy_url")
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/copy.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_copy_url.setIcon(icon1)
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/copy.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_copy_url.setIcon(icon2)
 
         self.horizontalLayout_3.addWidget(self.toolButton_copy_url)
 
@@ -231,9 +239,9 @@ class Ui_Form(object):
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.pushButton_create_new_spine_db.sizePolicy().hasHeightForWidth())
         self.pushButton_create_new_spine_db.setSizePolicy(sizePolicy4)
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/Spine_symbol.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.pushButton_create_new_spine_db.setIcon(icon2)
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/Spine_symbol.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.pushButton_create_new_spine_db.setIcon(icon3)
 
         self.horizontalLayout.addWidget(self.pushButton_create_new_spine_db)
 
@@ -276,6 +284,7 @@ class Ui_Form(object):
         self.lineEdit_host.setPlaceholderText("")
         self.lineEdit_password.setPlaceholderText("")
         self.lineEdit_username.setPlaceholderText("")
+        self.toolButton_vacuum.setText(QCoreApplication.translate("Form", u"Vacuum", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_copy_url.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Copy current database url to clipboard.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/icons">
+    <file>broom.svg</file>
     <file>sync.svg</file>
     <file>file-regular.svg</file>
     <file>save.svg</file>

@@ -391,6 +391,17 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
+      <widget class="QPushButton" name="toolButton_vacuum">
+       <property name="text">
+        <string>Vacuum</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../../ui/resources/resources_icons.qrc">
+         <normaloff>:/icons/broom.svg</normaloff>:/icons/broom.svg</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_3">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
