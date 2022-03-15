@@ -393,7 +393,8 @@ class DataStore(ProjectItem):
     @Slot(bool)
     def vacuum(self, checked=False):
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
-        vacuum(sa_url)
+        freed, unit = vacuum(sa_url)
+        self._logger.msg.emit(f"Vacuum finished, {freed} {unit} freed from {sa_url.database}")
 
     @Slot(bool)
     def create_new_spine_database(self, checked=False):
