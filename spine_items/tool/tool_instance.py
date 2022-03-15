@@ -231,11 +231,7 @@ class PythonToolInstance(ToolInstance):
             self.args += self._make_exec_code(fp, full_fp)
             alias = f"python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}"
             self.exec_mngr = PythonPersistentExecutionManager(
-                self._logger,
-                self.program,
-                self.args,
-                alias,
-                group_id=self.owner.group_id,
+                self._logger, self.program, self.args, alias, group_id=self.owner.group_id
             )
 
     @staticmethod
