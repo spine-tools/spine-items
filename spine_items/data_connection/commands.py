@@ -22,43 +22,47 @@ from spine_items.commands import SpineToolboxCommand
 class AddDCReferencesCommand(SpineToolboxCommand):
     """Command to add DC references."""
 
-    def __init__(self, dc, paths):
+    def __init__(self, dc, file_refs, db_refs):
         """
         Args:
             dc (DataConnection): the DC
-            paths (set of str): set of paths to add
+            file_refs (list of str): list of file refs to add
+            db_refs (list of str): list of db refs to add
         """
         super().__init__()
         self.dc = dc
-        self.paths = paths
+        self.file_refs = file_refs
+        self.db_refs = db_refs
         self.setText(f"add references to {dc.name}")
 
     def redo(self):
-        self.dc.do_add_references(self.paths)
+        self.dc.do_add_references(self.file_refs, self.db_refs)
 
     def undo(self):
-        self.dc.do_remove_references(self.paths)
+        self.dc.do_remove_references(self.file_refs, self.db_refs)
 
 
 class RemoveDCReferencesCommand(SpineToolboxCommand):
     """Command to remove DC references."""
 
-    def __init__(self, dc, paths):
+    def __init__(self, dc, file_refs, db_refs):
         """
         Args:
             dc (DataConnection): the DC
-            paths (list of str): list of paths to remove
+            file_refs (list of str): list of file refs to remove
+            db_refs (list of str): list of db refs to remove
         """
         super().__init__()
         self.dc = dc
-        self.paths = paths
+        self.file_refs = file_refs
+        self.db_refs = db_refs
         self.setText(f"remove references from {dc.name}")
 
     def redo(self):
-        self.dc.do_remove_references(self.paths)
+        self.dc.do_remove_references(self.file_refs, self.db_refs)
 
     def undo(self):
-        self.dc.do_add_references(self.paths)
+        self.dc.do_add_references(self.file_refs, self.db_refs)
 
 
 class MoveReferenceToData(SpineToolboxCommand):
@@ -77,8 +81,8 @@ class MoveReferenceToData(SpineToolboxCommand):
 
     def redo(self):
         self._dc.do_copy_to_project(self._paths)
-        self._dc.do_remove_references(self._paths)
+        self._dc.do_remove_references(self._paths, [])
 
     def undo(self):
         self._dc.delete_files_from_project([Path(p).name for p in self._paths])
-        self._dc.do_add_references(self._paths)
+        self._dc.do_add_references(self._paths, [])

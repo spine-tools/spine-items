@@ -29,9 +29,8 @@ from spine_engine.utils.serialization import serialize_path, deserialize_path
 from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
-from .utils import convert_to_sqlalchemy_url
 from .output_resources import scan_for_resources
-from ..utils import database_label
+from ..utils import database_label, convert_to_sqlalchemy_url
 
 
 class DataStore(ProjectItem):
@@ -100,11 +99,11 @@ class DataStore(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_spine_db_editor
-        s[self._properties_ui.toolButton_select_sqlite_file.clicked] = self.select_sqlite_file
         s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
         s[self._properties_ui.toolButton_copy_url.clicked] = self.copy_url
         s[self._properties_ui.toolButton_vacuum.clicked] = self.vacuum
         s[self._properties_ui.comboBox_dialect.activated[str]] = self.refresh_dialect
+        s[self._properties_ui.toolButton_select_sqlite_file.clicked] = self.select_sqlite_file
         s[self._properties_ui.lineEdit_database.file_dropped] = self.set_path_to_sqlite_file
         s[self._properties_ui.lineEdit_username.editingFinished] = self.refresh_username
         s[self._properties_ui.lineEdit_password.editingFinished] = self.refresh_password
@@ -169,7 +168,7 @@ class DataStore(ProjectItem):
         username = url.get("username")
         password = url.get("password")
         if dialect is not None:
-            self.enable_dialect(dialect)
+            self._properties_ui.controller.enable_dialect(dialect)
             if dialect == "":
                 self._properties_ui.comboBox_dialect.setCurrentIndex(-1)
             else:
@@ -257,82 +256,6 @@ class DataStore(ProjectItem):
     def refresh_dialect(self, dialect):
         self.update_url(dialect=dialect)
 
-    def enable_dialect(self, dialect):
-        """Enable the given dialect in the item controls."""
-        if dialect == "":
-            self.enable_no_dialect()
-        elif dialect == "sqlite":
-            self.enable_sqlite()
-        elif dialect == "mssql":
-            import pyodbc  # pylint: disable=import-outside-toplevel
-
-            dsns = pyodbc.dataSources()
-            # Collect dsns which use the msodbcsql driver
-            mssql_dsns = list()
-            for key, value in dsns.items():
-                if "msodbcsql" in value.lower():
-                    mssql_dsns.append(key)
-            if mssql_dsns:
-                self._properties_ui.comboBox_dsn.clear()
-                self._properties_ui.comboBox_dsn.addItems(mssql_dsns)
-                self._properties_ui.comboBox_dsn.setCurrentIndex(-1)
-                self.enable_mssql()
-            else:
-                msg = "Please create a SQL Server ODBC Data Source first."
-                self._logger.msg_warning.emit(msg)
-        else:
-            self.enable_common()
-
-    def enable_no_dialect(self):
-        """Adjust widget enabled status to default when no dialect is selected."""
-        self._properties_ui.comboBox_dialect.setEnabled(True)
-        self._properties_ui.comboBox_dsn.setEnabled(False)
-        self._properties_ui.toolButton_select_sqlite_file.setEnabled(False)
-        self._properties_ui.lineEdit_host.setEnabled(False)
-        self._properties_ui.lineEdit_port.setEnabled(False)
-        self._properties_ui.lineEdit_database.setEnabled(False)
-        self._properties_ui.lineEdit_username.setEnabled(False)
-        self._properties_ui.lineEdit_password.setEnabled(False)
-
-    def enable_mssql(self):
-        """Adjust controls to mssql connection specification."""
-        self._properties_ui.comboBox_dsn.setEnabled(True)
-        self._properties_ui.toolButton_select_sqlite_file.setEnabled(False)
-        self._properties_ui.lineEdit_host.setEnabled(False)
-        self._properties_ui.lineEdit_port.setEnabled(False)
-        self._properties_ui.lineEdit_database.setEnabled(False)
-        self._properties_ui.lineEdit_username.setEnabled(True)
-        self._properties_ui.lineEdit_password.setEnabled(True)
-        self._properties_ui.lineEdit_host.clear()
-        self._properties_ui.lineEdit_port.clear()
-        self._properties_ui.lineEdit_database.clear()
-
-    def enable_sqlite(self):
-        """Adjust controls to sqlite connection specification."""
-        self._properties_ui.comboBox_dsn.setEnabled(False)
-        self._properties_ui.comboBox_dsn.setCurrentIndex(-1)
-        self._properties_ui.toolButton_select_sqlite_file.setEnabled(True)
-        self._properties_ui.lineEdit_host.setEnabled(False)
-        self._properties_ui.lineEdit_port.setEnabled(False)
-        self._properties_ui.lineEdit_database.setEnabled(True)
-        self._properties_ui.lineEdit_username.setEnabled(False)
-        self._properties_ui.lineEdit_password.setEnabled(False)
-        self._properties_ui.lineEdit_host.clear()
-        self._properties_ui.lineEdit_port.clear()
-        self._properties_ui.lineEdit_username.clear()
-        self._properties_ui.lineEdit_password.clear()
-
-    def enable_common(self):
-        """Adjust controls to 'common' connection specification."""
-        self._properties_ui.comboBox_dsn.setEnabled(False)
-        self._properties_ui.comboBox_dsn.setCurrentIndex(-1)
-        self._properties_ui.toolButton_select_sqlite_file.setEnabled(False)
-        self._properties_ui.lineEdit_host.setEnabled(True)
-        self._properties_ui.lineEdit_port.setEnabled(True)
-        self._properties_ui.lineEdit_database.setEnabled(True)
-        self._properties_ui.lineEdit_username.setEnabled(True)
-        self._properties_ui.lineEdit_password.setEnabled(True)
-
     def actions(self):
         self._multi_db_editors_open = {x.name(): x for x in self._toolbox.db_mngr.get_all_multi_spine_db_editors()}
         if not self._multi_db_editors_open:
@@ -373,12 +296,6 @@ class DataStore(ProjectItem):
             db_editor.add_new_tab({sa_url: self.name})
             db_editor.raise_()
             db_editor.activateWindow()
-
-    def data_files(self):
-        """Return a list of files that are in this items data directory."""
-        if not os.path.isdir(self.data_dir):
-            return None
-        return os.listdir(self.data_dir)
 
     @Slot(bool)
     def copy_url(self, checked=False):

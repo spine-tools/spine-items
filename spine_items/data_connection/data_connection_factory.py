@@ -31,7 +31,7 @@ class DataConnectionFactory(ProjectItemFactory):
 
     @staticmethod
     def icon():
-        return ":/icons/item_icons/file-alt.svg"
+        return ":/icons/item_icons/satellite.svg"
 
     @staticmethod
     def icon_color():

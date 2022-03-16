@@ -17,11 +17,11 @@ Data store properties widget.
 """
 
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from PySide2.QtGui import QIntValidator
 from spinedb_api import SUPPORTED_DIALECTS
+from ...widgets import UrlSelectorMixin
 
 
-class DataStorePropertiesWidget(PropertiesWidgetBase):
+class DataStorePropertiesWidget(UrlSelectorMixin, PropertiesWidgetBase):
     """Widget for the Data Store Item Properties."""
 
     def __init__(self, toolbox):
@@ -34,6 +34,5 @@ class DataStorePropertiesWidget(PropertiesWidgetBase):
         super().__init__(toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.comboBox_dialect.addItems(list(SUPPORTED_DIALECTS.keys()))
-        self.ui.comboBox_dialect.setCurrentIndex(-1)
-        self.ui.lineEdit_port.setValidator(QIntValidator())
+        self.ui.controller = self
+        self._setup(list(SUPPORTED_DIALECTS.keys()))

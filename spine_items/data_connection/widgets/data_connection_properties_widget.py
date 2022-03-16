@@ -54,29 +54,26 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         Args:
             pos (QPoint): Mouse position
         """
-        ind = self.ui.treeView_dc_references.indexAt(pos)
+        index = self.ui.treeView_dc_references.indexAt(pos)
+        dc_index = self._toolbox.ui.treeView_project.currentIndex()
+        dc = self._toolbox.project_item_model.item(dc_index).project_item
         global_pos = self.ui.treeView_dc_references.viewport().mapToGlobal(pos)
-        self.dc_ref_context_menu = DcRefContextMenu(self, global_pos, ind)
+        self.dc_ref_context_menu = DcRefContextMenu(self, global_pos, index, dc)
         option = self.dc_ref_context_menu.get_action()
-        # Get selected Data Connection from project item model
-        curr_index = self._toolbox.ui.treeView_project.currentIndex()
-        leaf_item = self._toolbox.project_item_model.item(curr_index)
-        if not leaf_item:
-            self._toolbox.msg_error.emit("FIXME: Data Connection {0} not found in project item tree".format(curr_index))
-            return
-        dc = leaf_item.project_item
         if option == "Open containing directory...":
-            ref_path = self.ui.treeView_dc_references.model().itemFromIndex(ind).data(Qt.DisplayRole)
+            ref_path = self.ui.treeView_dc_references.model().itemFromIndex(index).data(Qt.DisplayRole)
             ref_dir = os.path.split(ref_path)[0]
             file_url = "file:///" + ref_dir
             self._toolbox.open_anchor(QUrl(file_url, QUrl.TolerantMode))
-        elif option == "Edit...":
-            dc.open_reference(ind)
-        elif option == "Add reference(s)...":
-            dc.show_add_references_dialog()
+        elif option == "Open...":
+            dc.open_reference(index)
+        elif option == "Add file reference(s)...":
+            dc.show_add_file_references_dialog()
+        elif option == "Add URL reference...":
+            dc.show_add_db_reference_dialog()
         elif option == "Remove reference(s)":
             dc.remove_references()
-        elif option == "Copy reference(s) to project":
+        elif option == "Copy file reference(s) to project":
             dc.copy_to_project()
 
     @Slot(QPoint)
@@ -87,23 +84,17 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         Args:
             pos (QPoint): Mouse position
         """
-        ind = self.ui.treeView_dc_data.indexAt(pos)
+        index = self.ui.treeView_dc_data.indexAt(pos)
+        dc_index = self._toolbox.ui.treeView_project.currentIndex()
+        dc = self._toolbox.project_item_model.item(dc_index).project_item
         global_pos = self.ui.treeView_dc_data.viewport().mapToGlobal(pos)
-        self.dc_data_context_menu = DcDataContextMenu(self, global_pos, ind)
+        self.dc_data_context_menu = DcDataContextMenu(self, global_pos, index, dc)
         option = self.dc_data_context_menu.get_action()
-        # Get selected Data Connection from project item model
-        curr_index = self._toolbox.ui.treeView_project.currentIndex()
-        leaf_item = self._toolbox.project_item_model.item(curr_index)
-        if not leaf_item:
-            self._toolbox.msg_error.emit("FIXME: Data Connection {0} not found in project items".format(curr_index))
-            return
-        dc = leaf_item.project_item
         if option == "New file...":
             dc.make_new_file()
-        elif option == "Edit...":
-            dc.open_data_file(ind)
+        elif option == "Open...":
+            dc.open_data_file(dc.selected_data_file)
         elif option == "Remove file(s)":
             dc.remove_files()
         elif option == "Open directory...":
             dc.open_directory()
-        return

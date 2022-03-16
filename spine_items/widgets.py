@@ -18,8 +18,11 @@ Contains common & shared (Q)widgets.
 
 import os
 from PySide2.QtCore import Qt, Signal, QUrl, QMimeData, Property
-from PySide2.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget
-from PySide2.QtGui import QDrag
+from PySide2.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget, QDialog
+from PySide2.QtGui import QDrag, QIntValidator
+from spinetoolbox.helpers import get_open_file_name_in_last_dir
+from spinetoolbox.config import APPLICATION_PATH
+from .utils import convert_to_sqlalchemy_url
 
 
 class ArgsTreeView(QTreeView):
@@ -208,3 +211,141 @@ class FilterEdit(QWidget):
 
     regexp = Property(str, regexp, set_regexp, user=True)
     """Property used to communicate with the editor delegate."""
+
+
+class UrlSelectorMixin:
+    def _setup(self, dialects):
+        self.ui.comboBox_dialect.addItems(dialects)
+        self.ui.comboBox_dialect.setCurrentIndex(-1)
+        self.ui.lineEdit_port.setValidator(QIntValidator())
+
+    def enable_dialect(self, dialect):
+        """Enable the given dialect in the item controls."""
+        if dialect == "":
+            self.enable_no_dialect()
+        elif dialect == "sqlite":
+            self.enable_sqlite()
+        elif dialect == "mssql":
+            import pyodbc  # pylint: disable=import-outside-toplevel
+
+            dsns = pyodbc.dataSources()
+            # Collect dsns which use the msodbcsql driver
+            mssql_dsns = list()
+            for key, value in dsns.items():
+                if "msodbcsql" in value.lower():
+                    mssql_dsns.append(key)
+            if mssql_dsns:
+                self.ui.comboBox_dsn.clear()
+                self.ui.comboBox_dsn.addItems(mssql_dsns)
+                self.ui.comboBox_dsn.setCurrentIndex(-1)
+                self.enable_mssql()
+            else:
+                msg = "Please create a SQL Server ODBC Data Source first."
+                self._logger.msg_warning.emit(msg)
+        else:
+            self.enable_common()
+
+    def enable_no_dialect(self):
+        """Adjust widget enabled status to default when no dialect is selected."""
+        self.ui.comboBox_dialect.setEnabled(True)
+        self.ui.comboBox_dsn.setEnabled(False)
+        self.ui.toolButton_select_sqlite_file.setEnabled(False)
+        self.ui.lineEdit_host.setEnabled(False)
+        self.ui.lineEdit_port.setEnabled(False)
+        self.ui.lineEdit_database.setEnabled(False)
+        self.ui.lineEdit_username.setEnabled(False)
+        self.ui.lineEdit_password.setEnabled(False)
+
+    def enable_mssql(self):
+        """Adjust controls to mssql connection specification."""
+        self.ui.comboBox_dsn.setEnabled(True)
+        self.ui.toolButton_select_sqlite_file.setEnabled(False)
+        self.ui.lineEdit_host.setEnabled(False)
+        self.ui.lineEdit_port.setEnabled(False)
+        self.ui.lineEdit_database.setEnabled(False)
+        self.ui.lineEdit_username.setEnabled(True)
+        self.ui.lineEdit_password.setEnabled(True)
+        self.ui.lineEdit_host.clear()
+        self.ui.lineEdit_port.clear()
+        self.ui.lineEdit_database.clear()
+
+    def enable_sqlite(self):
+        """Adjust controls to sqlite connection specification."""
+        self.ui.comboBox_dsn.setEnabled(False)
+        self.ui.comboBox_dsn.setCurrentIndex(-1)
+        self.ui.toolButton_select_sqlite_file.setEnabled(True)
+        self.ui.lineEdit_host.setEnabled(False)
+        self.ui.lineEdit_port.setEnabled(False)
+        self.ui.lineEdit_database.setEnabled(True)
+        self.ui.lineEdit_username.setEnabled(False)
+        self.ui.lineEdit_password.setEnabled(False)
+        self.ui.lineEdit_host.clear()
+        self.ui.lineEdit_port.clear()
+        self.ui.lineEdit_username.clear()
+        self.ui.lineEdit_password.clear()
+
+    def enable_common(self):
+        """Adjust controls to 'common' connection specification."""
+        self.ui.comboBox_dsn.setEnabled(False)
+        self.ui.comboBox_dsn.setCurrentIndex(-1)
+        self.ui.toolButton_select_sqlite_file.setEnabled(False)
+        self.ui.lineEdit_host.setEnabled(True)
+        self.ui.lineEdit_port.setEnabled(True)
+        self.ui.lineEdit_database.setEnabled(True)
+        self.ui.lineEdit_username.setEnabled(True)
+        self.ui.lineEdit_password.setEnabled(True)
+
+
+class UrlSelector(UrlSelectorMixin, QDialog):
+    def __init__(self, toolbox, parent=None):
+        from .ui.url_selector_widget import Ui_Dialog  # pylint: disable=import-outside-toplevel
+
+        super().__init__(parent if parent is not None else toolbox)
+        self._toolbox = toolbox
+        self.ui = Ui_Dialog()
+        self.ui.setupUi(self)
+        self._sa_url = None
+        self.ui.buttonBox.button(self.ui.buttonBox.Ok).setEnabled(False)
+        self._setup(("mysql", "sqlite", "mssql", "postgresql", "oracle"))  # Others?
+        self.ui.comboBox_dialect.activated[str].connect(self.enable_dialect)
+        self.ui.comboBox_dialect.activated.connect(self._refresh_url)
+        self.ui.toolButton_select_sqlite_file.clicked.connect(self._browse_sqlite_file)
+        self.ui.lineEdit_username.editingFinished.connect(self._refresh_url)
+        self.ui.lineEdit_password.editingFinished.connect(self._refresh_url)
+        self.ui.lineEdit_host.editingFinished.connect(self._refresh_url)
+        self.ui.lineEdit_port.editingFinished.connect(self._refresh_url)
+        self.ui.lineEdit_database.editingFinished.connect(self._refresh_url)
+
+    @property
+    def url(self):
+        if self._sa_url is None:
+            return ""
+        return str(self._sa_url)
+
+    def _refresh_url(self):
+        url = {
+            "dialect": self.ui.comboBox_dialect.currentText(),
+            "host": self.ui.lineEdit_host.text(),
+            "port": self.ui.lineEdit_port.text(),
+            "database": self.ui.lineEdit_database.text(),
+            "username": self.ui.lineEdit_username.text(),
+            "password": self.ui.lineEdit_password.text(),
+        }
+        self._sa_url = convert_to_sqlalchemy_url(url)
+        self.ui.buttonBox.button(self.ui.buttonBox.Ok).setEnabled(self._sa_url is not None)
+
+    def _browse_sqlite_file(self):
+        filter_ = "*.sqlite;;*.*"
+        key = "selectImportSourceSQLiteFile"
+        filepath, _ = get_open_file_name_in_last_dir(
+            self._toolbox.qsettings(),
+            key,
+            self,
+            "Select a SQLite file",
+            APPLICATION_PATH,
+            filter_=filter_,
+        )
+        if not filepath:
+            return
+        self.ui.lineEdit_database.setText(filepath)
+        self._refresh_url()

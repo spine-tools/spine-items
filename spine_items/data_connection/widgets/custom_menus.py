@@ -28,21 +28,16 @@ class DcRefContextMenu(CustomContextMenu):
         index (QModelIndex): Index of item that requested the context-menu
     """
 
-    def __init__(self, parent, position, index):
+    def __init__(self, parent, position, index, dc):
         """Class constructor."""
         super().__init__(parent, position)
-        if not index.isValid():
-            # If no item at index
-            self.add_action("Add reference(s)...")
-            self.add_action("Remove reference(s)")
-            self.add_action("Copy reference(s) to project")
-        else:
-            self.add_action("Edit...")
-            self.add_action("Open containing directory...")
-            self.addSeparator()
-            self.add_action("Add reference(s)...")
-            self.add_action("Remove reference(s)")
-            self.add_action("Copy reference(s) to project")
+        self.add_action("Open...", enabled=index.isValid())
+        self.add_action("Open containing directory...", enabled=index.isValid())
+        self.addSeparator()
+        self.add_action("Add file reference(s)...")
+        self.add_action("Add URL reference...")
+        self.add_action("Remove reference(s)", enabled=dc.any_refs_selected)
+        self.add_action("Copy file reference(s) to project", enabled=dc.file_refs_selected)
 
 
 class DcDataContextMenu(CustomContextMenu):
@@ -54,17 +49,11 @@ class DcDataContextMenu(CustomContextMenu):
         index (QModelIndex): Index of item that requested the context-menu
     """
 
-    def __init__(self, parent, position, index):
+    def __init__(self, parent, position, index, dc):
         """Class constructor."""
         super().__init__(parent, position)
-        if not index.isValid():
-            # If no item at index
-            self.add_action("New file...")
-            self.addSeparator()
-            self.add_action("Open directory...")
-        else:
-            self.add_action("Edit...")
-            self.add_action("New file...")
-            self.add_action("Remove file(s)")
-            self.addSeparator()
-            self.add_action("Open directory...")
+        self.add_action("Open...", enabled=index.isValid())
+        self.add_action("New file...")
+        self.add_action("Remove file(s)", enabled=dc.any_data_selected)
+        self.addSeparator()
+        self.add_action("Open directory...")

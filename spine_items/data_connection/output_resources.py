@@ -19,35 +19,36 @@ from spine_engine.project_item.project_item_resource import file_resource, trans
 from spine_engine.utils.serialization import path_in_dir
 
 
-def scan_for_resources(provider, files, project_dir):
+def scan_for_resources(provider, files, urls, project_dir):
     """
     Creates file resources based on DC files.
 
     Args:
         provider (ProjectItem or ExecutableItem): resource provider item
-        files (list of str): path to data files
+        files (list of str): file paths
+        urls (list of str): urls
         project_dir (str): absolute path to project directory
 
     Returns:
         list of ProjectItemResource: output resources
     """
     resources = list()
-    for ref in files:
-        if path_in_dir(ref, provider.data_dir):
+    for file in files:
+        if path_in_dir(file, provider.data_dir):
             resource = file_resource(
-                provider.name, ref, label=f"<{provider.name}>/" + Path(ref).relative_to(provider.data_dir).as_posix()
+                provider.name, file, label=f"<{provider.name}>/" + Path(file).relative_to(provider.data_dir).as_posix()
             )
-        elif path_in_dir(ref, project_dir):
-            path = Path(ref)
-            label = "<project>/" + Path(ref).relative_to(project_dir).as_posix()
+        elif path_in_dir(file, project_dir):
+            path = Path(file)
+            label = "<project>/" + Path(file).relative_to(project_dir).as_posix()
             if path.exists():
-                resource = file_resource(provider.name, ref, label=label)
+                resource = file_resource(provider.name, file, label=label)
             else:
                 resource = transient_file_resource(provider.name, label)
         else:
-            if Path(ref).exists():
-                resource = file_resource(provider.name, ref)
+            if Path(file).exists():
+                resource = file_resource(provider.name, file)
             else:
-                resource = transient_file_resource(provider.name, ref)
+                resource = transient_file_resource(provider.name, file)
         resources.append(resource)
     return resources

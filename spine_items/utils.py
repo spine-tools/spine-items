@@ -23,7 +23,12 @@ import json
 import os.path
 from pathlib import Path
 from time import time
+from sqlalchemy import create_engine
+from sqlalchemy.engine.url import URL
+import spinedb_api
+from spine_engine.utils.queue_logger import SuppressedMessage
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
+
 
 EXPORTED_PATHS_FILE_NAME = ".exported.json"
 """Name of the file that stores exporter's internal state."""
@@ -178,3 +183,57 @@ def collect_execution_manifests(data_dir):
                     manifests = dict()
                 manifests.setdefault(out_file_name, list()).extend(paths)
     return manifests
+
+
+def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
+    """Returns a sqlalchemy url from the url or None if not valid."""
+    if logger is None:
+        logger = _NoLogger()
+    if not urllib_url:
+        logger.msg_error.emit(f"No URL specified for <b>{item_name}</b>. Please specify one and try again")
+        return None
+    try:
+        url = {key: value for key, value in urllib_url.items() if value}
+        dialect = url.pop("dialect")
+        if not dialect:
+            logger.msg_error.emit(
+                f"Unable to generate URL from <b>{item_name}</b> selections: invalid dialect {dialect}. "
+                "<br>Please select a new dialect and try again."
+            )
+            return None
+        if dialect == "sqlite":
+            sa_url = URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
+        else:
+            db_api = spinedb_api.SUPPORTED_DIALECTS[dialect]
+            drivername = f"{dialect}+{db_api}"
+            sa_url = URL(drivername, **url)  # pylint: disable=unexpected-keyword-arg
+    except Exception as e:  # pylint: disable=broad-except
+        # This is in case one of the keys has invalid format
+        logger.msg_error.emit(
+            f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
+            "<br>Please make new selections and try again."
+        )
+        return None
+    if not sa_url.database:
+        logger.msg_error.emit(
+            f"Unable to generate URL from <b>{item_name}</b> selections: database missing. "
+            "<br>Please select a database and try again."
+        )
+        return None
+    # Final check
+    try:
+        engine = create_engine(sa_url)
+        with engine.connect():
+            pass
+    except Exception as e:  # pylint: disable=broad-except
+        logger.msg_error.emit(
+            f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
+            "<br>Please make new selections and try again."
+        )
+        return None
+    return sa_url
+
+
+class _NoLogger:
+    def __getattr__(self, _name):
+        return SuppressedMessage()

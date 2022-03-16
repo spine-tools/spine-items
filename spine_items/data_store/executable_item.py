@@ -21,8 +21,8 @@ from spinedb_api.exception import SpineDBAPIError, SpineDBVersionError
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
-from .utils import convert_to_sqlalchemy_url
 from .output_resources import scan_for_resources
+from ..utils import convert_to_sqlalchemy_url
 
 
 class ExecutableItem(ExecutableItemBase):
