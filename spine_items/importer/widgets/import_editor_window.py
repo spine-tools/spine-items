@@ -39,6 +39,7 @@ from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
 from ..importer_specification import ImporterSpecification
 from ..mvcmodels.mappings_model import MappingsModel
+from ...widgets import UrlSelector
 
 _CONNECTOR_NAME_TO_CLASS = {
     "CSVConnector": CSVConnector,
@@ -55,7 +56,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     connection_failed = Signal(str)
 
-    _FILE_LESS = "anonymous file"
+    _FILE_LESS = "anonymous"
     """Name of the 'file-less' entry in the file path combobox."""
 
     class _FileLessConnector(SourceConnection):
@@ -93,7 +94,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.mapping_spec_table.setModel(self._mappings_model)
         self._ui.mapping_spec_table.setRootIndex(self._mappings_model.dummy_parent())
         self._connection_manager = None
-        self._memoized_connectors = {}
+        self._memoized_connector = None
         self._import_mappings = ImportMappings(self._mappings_model, self._ui, self._undo_stack, self)
         self._import_mapping_options = ImportMappingOptions(self._mappings_model, self._ui, self._undo_stack)
         self._import_sources = ImportSources(self._mappings_model, self._ui, self._undo_stack, self)
@@ -173,6 +174,21 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):
+        if self._connection_manager.connection.__name__ == "SqlAlchemyConnector":
+            filepath = self._get_source_url()
+        else:
+            filepath = self._get_source_file_path()
+        if not filepath:
+            return
+        self._ui.comboBox_source_file.addItem(filepath)
+        self._ui.comboBox_source_file.setCurrentText(filepath)
+
+    def _get_source_url(self):
+        selector = UrlSelector(self._toolbox, parent=self)
+        selector.exec_()
+        return selector.url
+
+    def _get_source_file_path(self):
         filter_ = ";;".join([conn.FILE_EXTENSIONS for conn in _CONNECTOR_NAME_TO_CLASS.values()])
         key = f"selectInputDataFileFor{self.specification.name if self.specification else None}"
         filepath, _ = get_open_file_name_in_last_dir(
@@ -183,18 +199,14 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             APPLICATION_PATH,
             filter_=filter_,
         )
-        if not filepath:
-            return
-        self._ui.comboBox_source_file.addItem(filepath)
-        self._ui.comboBox_source_file.setCurrentText(filepath)
+        return filepath
 
     @Slot(bool)
     def _switch_connector(self, _=False):
-        filepath = self._connection_manager.source
         if self.specification:
             self.specification.mapping.pop("source_type", None)
-        self._memoized_connectors.pop(filepath, None)
-        self.start_ui(filepath)
+        self._memoized_connector = None
+        self.start_ui(self._FILE_LESS)
 
     def _get_connector_from_mapping(self, filepath):
         if not self.specification:
@@ -220,6 +232,12 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             connector = self._get_connector(filepath)
             if not connector:
                 return
+        if connector.__name__ == "SqlAlchemyConnector":
+            self._ui.dockWidget_source_files.setWindowTitle("Source URLs")
+            self._ui.file_path_label.setText("URL")
+        else:
+            self._ui.dockWidget_source_files.setWindowTitle("Source files")
+            self._ui.file_path_label.setText("File path")
         if filepath == self._FILE_LESS:
             self._FileLessConnector.__name__ = connector.__name__
             self._FileLessConnector.OPTIONS = connector.OPTIONS
@@ -256,8 +274,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         Returns:
             Asynchronous data reader class for the given importee
         """
-        if filepath in self._memoized_connectors:
-            return self._memoized_connectors[filepath]
+        if self._memoized_connector:
+            return self._memoized_connector
         connector_list = list(_CONNECTOR_NAME_TO_CLASS.values())
         connector_names = [c.DISPLAY_NAME for c in connector_list]
         dialog = QDialog(self)
@@ -286,7 +304,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if not answer:
             return None
         row = connector_list_wg.currentIndex().row()
-        connector = self._memoized_connectors[filepath] = connector_list[row]
+        connector = self._memoized_connector = connector_list[row]
         return connector
 
     @Slot()

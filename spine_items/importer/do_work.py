@@ -28,7 +28,7 @@ def do_work(
     purge_before_writing,
     on_conflict,
     logs_dir,
-    source_filepaths,
+    sources,
     connector,
     urls_downstream,
     logger,
@@ -51,15 +51,12 @@ def do_work(
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_row_types", {}).items()
     }
-    for path in source_filepaths:
-        file_anchor = (
-            "<a style='color:#BB99FF;' title='" + path + "' href='file:///" + path + f"'>{os.path.basename(path)}</a>"
-        )
-        logger.msg.emit("Importing " + file_anchor)
+    for src in sources:
+        logger.msg.emit("Importing " + src)
         try:
-            connector.connect_to_source(path)
+            connector.connect_to_source(src)
         except Exception as error:  # pylint: disable=broad-except
-            logger.msg_error.emit(f"Failed to connect to {path}: {error}")
+            logger.msg_error.emit(f"Failed to connect to {src}: {error}")
             return (False,)
         try:
             data, errors = connector.get_mapped_data(

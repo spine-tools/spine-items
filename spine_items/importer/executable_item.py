@@ -17,7 +17,6 @@ Contains Importer's executable item as well as support utilities.
 """
 
 import os
-from spinedb_api.helpers import create_new_spine_database
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
@@ -26,7 +25,7 @@ from spinedb_api.spine_io.importers.json_reader import JSONConnector
 from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
 from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import labelled_resource_filepaths
+from spine_engine.project_item.project_item_resource import get_labelled_sources
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
 from .item_info import ItemInfo
@@ -86,12 +85,12 @@ class ExecutableItem(ExecutableItemBase):
         if not self._mapping:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No mappings configured. Skipping.")
             return ItemExecutionFinishState.SKIPPED
-        labelled_filepaths = labelled_resource_filepaths(forward_resources)
-        source_filepaths = list()
+        labelled_sources = get_labelled_sources(forward_resources)
+        sources = list()
         for label in self._selected_files:
-            filepath = labelled_filepaths.get(label)
-            if filepath is not None:
-                source_filepaths.append(filepath)
+            source = labelled_sources.get(label)
+            if source is not None:
+                sources.append(source)
         urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
@@ -114,7 +113,7 @@ class ExecutableItem(ExecutableItemBase):
                 self._purge_before_writing,
                 self._on_conflict,
                 self._logs_dir,
-                source_filepaths,
+                sources,
                 connector,
                 urls_downstream,
                 self._logger,

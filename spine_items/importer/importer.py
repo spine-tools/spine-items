@@ -266,15 +266,16 @@ class Importer(ProjectItem):
         filepath = None
         if index.isValid():
             resource = self._file_model.resource(index)
-            if resource is not None:
+            if resource.type_ == "database":
+                filepath = resource.url
+            else:
                 if not resource.hasfilepath:
                     self._logger.msg_error.emit("File does not exist yet.")
-                    filepath = None
                 else:
-                    filepath = resource.path
-                    if not os.path.exists(filepath):
+                    if not os.path.exists(resource.path):
                         self._logger.msg_error.emit(f"Cannot find file '{filepath}'.")
-                        filepath = None
+                    else:
+                        filepath = resource.path
         self._toolbox.show_specification_form(self.item_type(), self.specification(), self, filepath=filepath)
 
     def select_connector_type(self, index):
@@ -299,7 +300,7 @@ class Importer(ProjectItem):
         self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self.name, self._file_model, index, checked))
 
     def upstream_resources_updated(self, resources):
-        self._file_model.update(r for r in resources if r.type_ != "database")
+        self._file_model.update(resources)
         self._check_notifications()
 
     def replace_resources_from_upstream(self, old, new):

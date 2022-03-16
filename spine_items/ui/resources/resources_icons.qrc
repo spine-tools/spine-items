@@ -27,8 +27,8 @@
     <file>item_icons/database-export.svg</file>
     <file>item_icons/database-import.svg</file>
     <file>item_icons/exclamation-circle.svg</file>
-    <file>item_icons/file-alt.svg</file>
     <file>item_icons/hammer.svg</file>
+    <file>file-alt.svg</file>
     <file>item_icons/screwdriver.svg</file>
     <file>item_icons/paint-brush-solid.svg</file>
     <file>item_icons/database-export-gdx.svg</file>

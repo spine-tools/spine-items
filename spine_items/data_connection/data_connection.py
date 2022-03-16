@@ -520,7 +520,7 @@ class DataConnection(ProjectItem):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         # FIXME: Do we want to convert references to file_references via upgrade?
         file_references = item_dict.get("file_references", list()) or item_dict.get("references", list())
-        file_references = [deserialize_path(r, project.project_dir) for r in item_dict.get("file_references", list())]
+        file_references = [deserialize_path(r, project.project_dir) for r in file_references]
         db_references = item_dict.get("db_references", list())
         return DataConnection(name, description, x, y, toolbox, project, file_references, db_references)
 

@@ -25,11 +25,12 @@ from .output_resources import scan_for_resources
 class ExecutableItem(ExecutableItemBase):
     """The executable parts of Data Connection."""
 
-    def __init__(self, name, file_references, project_dir, logger):
+    def __init__(self, name, file_references, db_references, project_dir, logger):
         """
         Args:
             name (str): item's name
             file_references (list): a list of absolute paths to connected files
+            db_references (list): a list of urls to connected dbs
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
@@ -39,7 +40,8 @@ class ExecutableItem(ExecutableItemBase):
             for entry in scan_iterator:
                 if entry.is_file():
                     data_files.append(entry.path)
-        self._files = file_references + data_files
+        self._file_paths = file_references + data_files
+        self._urls = db_references
 
     @staticmethod
     def item_type():
@@ -48,11 +50,12 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return scan_for_resources(self, self._files, self._project_dir)
+        return scan_for_resources(self, self._file_paths, self._urls, self._project_dir)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
-        references = item_dict["references"]
-        file_references = [deserialize_path(r, project_dir) for r in references]
-        return cls(name, file_references, project_dir, logger)
+        file_references = item_dict["file_references"]
+        file_references = [deserialize_path(r, project_dir) for r in file_references]
+        db_references = item_dict["db_references"]
+        return cls(name, file_references, db_references, project_dir, logger)

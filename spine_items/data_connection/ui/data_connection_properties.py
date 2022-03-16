@@ -70,7 +70,7 @@ class Ui_Form(object):
         font.setWeight(75)
         self.toolButton_plus_file.setFont(font)
         icon = QIcon()
-        icon.addFile(u":/icons/file.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/file-alt.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_plus_file.setIcon(icon)
         self.toolButton_plus_file.setPopupMode(QToolButton.InstantPopup)
 

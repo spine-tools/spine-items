@@ -353,8 +353,11 @@ class ConnectionWorker(QObject):
             raise error
 
     @busy_effect
-    @Slot(list, dict, int, int)
+    @Slot(str, dict, int, int)
     def data(self, table, options, max_rows, start):
+        if not table:
+            # FIXME: The 'Select all' option in the Source tables list thinks it's a table too and requests data
+            return
         try:
             data, header = self._connection.get_data(table, options, max_rows, start)
             self.dataReady.emit(data, header)
@@ -362,7 +365,7 @@ class ConnectionWorker(QObject):
             self.error.emit(f"Could not get data from source: {error}")
             raise error
 
-    @Slot(dict, dict, list, list, int)
+    @Slot(dict, dict, list, list, int)  # FIXME: Types do not match mapped_data_requested
     def mapped_data(self, table_mappings, options, types, table_row_types, max_rows):
         try:
             data, errors = self._connection.get_mapped_data(table_mappings, options, types, table_row_types, max_rows)

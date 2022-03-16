@@ -272,13 +272,13 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.label = QLabel(self.dockWidgetContents_7)
-        self.label.setObjectName(u"label")
+        self.file_path_label = QLabel(self.dockWidgetContents_7)
+        self.file_path_label.setObjectName(u"file_path_label")
         font = QFont()
         font.setPointSize(10)
-        self.label.setFont(font)
+        self.file_path_label.setFont(font)
 
-        self.horizontalLayout_2.addWidget(self.label)
+        self.horizontalLayout_2.addWidget(self.file_path_label)
 
         self.comboBox_source_file = ElidedCombobox(self.dockWidgetContents_7)
         self.comboBox_source_file.setObjectName(u"comboBox_source_file")
@@ -377,7 +377,7 @@ class Ui_MainWindow(object):
 
         self.dockWidget_mapping_spec.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping specification", None))
         self.dockWidget_source_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source files", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"File path:", None))
+        self.file_path_label.setText(QCoreApplication.translate("MainWindow", u"File path:", None))
         self.toolButton_browse_source_file.setText(QCoreApplication.translate("MainWindow", u"...", None))
     # retranslateUi
 

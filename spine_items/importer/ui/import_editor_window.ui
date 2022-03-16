@@ -484,7 +484,7 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="file_path_label">
          <property name="font">
           <font>
            <pointsize>10</pointsize>
