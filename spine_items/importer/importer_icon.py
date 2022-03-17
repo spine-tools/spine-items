@@ -30,10 +30,11 @@ class ImporterIcon(ProjectItemIcon):
             icon_color (QColor): Icon's color
         """
         super().__init__(toolbox, icon, icon_color)
-        self.animation = ImporterAnimation(self, x_shift=4)
+        self.animation = ImporterAnimation(self)
         self.animation_signaller = AnimationSignaller()
         self.animation_signaller.animation_started.connect(self.animation.start)
         self.animation_signaller.animation_stopped.connect(self.animation.stop)
+        self.animation_signaller.animation_started.emit()
 
     def mouseDoubleClickEvent(self, e):
         """Opens Import editor when this Importer icon is double-clicked.
