@@ -149,6 +149,9 @@ class PreviewUpdater:
         if mappings_index.data(Qt.CheckStateRole) == Qt.Unchecked:
             return
         current_preview = self._ui.preview_tree_view.selectionModel().currentIndex()
+        if current_preview.parent().row() >= self._preview_tree_model.rowCount():
+            # May happen when mappings at the end of the list are removed.
+            return
         mapping_name = mappings_index.data()
         if current_preview.parent().data() == mapping_name:
             return
@@ -254,7 +257,7 @@ class PreviewUpdater:
         """
         if self._current_url is None:
             return
-        for row in range(first, last + 1):
+        for row in range(last, first - 1, -1):
             index = self._mappings_table_model.index(row, 0)
             if index.data(Qt.CheckStateRole) == Qt.Unchecked:
                 continue

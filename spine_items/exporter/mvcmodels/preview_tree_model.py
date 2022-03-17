@@ -167,7 +167,11 @@ class PreviewTreeModel(QAbstractItemModel):
         Args:
             name (str): mapping's name
         """
-        mapping_name_row = self._mapping_names.index(name)
+        try:
+            mapping_name_row = self._mapping_names.index(name)
+        except ValueError:
+            # Ignoring. Mappings are being removed while the previews are still loading.
+            return
         parent_index = self.index(mapping_name_row, 0)
         self.beginRemoveRows(parent_index, 0, len(self._tables[name]) - 1)
         self._tables[name].clear()
@@ -175,6 +179,7 @@ class PreviewTreeModel(QAbstractItemModel):
         self.endRemoveRows()
         self.beginRemoveRows(QModelIndex(), mapping_name_row, mapping_name_row)
         del self._tables[name]
+        del self._table_names[name]
         del self._mapping_names[mapping_name_row]
         self.endRemoveRows()
 
