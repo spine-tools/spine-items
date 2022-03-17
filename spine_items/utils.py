@@ -24,7 +24,7 @@ import os.path
 from pathlib import Path
 from time import time
 from sqlalchemy import create_engine
-from sqlalchemy.engine.url import URL
+from sqlalchemy.engine.url import URL, make_url
 import spinedb_api
 from spine_engine.utils.queue_logger import SuppressedMessage
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
@@ -187,6 +187,7 @@ def collect_execution_manifests(data_dir):
 
 def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
     """Returns a sqlalchemy url from the url or None if not valid."""
+    selections = f"<b>{item_name}</b> selections" if item_name else "selections"
     if logger is None:
         logger = _NoLogger()
     if not urllib_url:
@@ -196,10 +197,7 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
         url = {key: value for key, value in urllib_url.items() if value}
         dialect = url.pop("dialect")
         if not dialect:
-            logger.msg_error.emit(
-                f"Unable to generate URL from <b>{item_name}</b> selections: invalid dialect {dialect}. "
-                "<br>Please select a new dialect and try again."
-            )
+            logger.msg_error.emit(f"Unable to generate URL from {selections}: invalid dialect {dialect}.")
             return None
         if dialect == "sqlite":
             sa_url = URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
@@ -209,16 +207,10 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
             sa_url = URL(drivername, **url)  # pylint: disable=unexpected-keyword-arg
     except Exception as e:  # pylint: disable=broad-except
         # This is in case one of the keys has invalid format
-        logger.msg_error.emit(
-            f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
-            "<br>Please make new selections and try again."
-        )
+        logger.msg_error.emit(f"Unable to generate URL from {selections}: {e}")
         return None
     if not sa_url.database:
-        logger.msg_error.emit(
-            f"Unable to generate URL from <b>{item_name}</b> selections: database missing. "
-            "<br>Please select a database and try again."
-        )
+        logger.msg_error.emit(f"Unable to generate URL from {selections}: database missing.")
         return None
     # Final check
     try:
@@ -226,10 +218,7 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
         with engine.connect():
             pass
     except Exception as e:  # pylint: disable=broad-except
-        logger.msg_error.emit(
-            f"Unable to generate URL from <b>{item_name}</b> selections: {e} "
-            "<br>Please make new selections and try again."
-        )
+        logger.msg_error.emit(f"Unable to generate URL from {selections}: {e}")
         return None
     return sa_url
 
@@ -237,3 +226,20 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
 class _NoLogger:
     def __getattr__(self, _name):
         return SuppressedMessage()
+
+
+def split_url_credentials(url):
+    sa_url = make_url(url)
+    connect_args = sa_url.translate_connect_args()
+    username = connect_args.pop("username", None)
+    password = connect_args.pop("password", None)
+    new_sa_url = URL(sa_url.drivername, **connect_args)
+    return str(new_sa_url), (username, password)
+
+
+def unsplit_url_credentials(url, credentials):
+    sa_url = make_url(url)
+    connect_args = sa_url.translate_connect_args()
+    connect_args["username"], connect_args["password"] = credentials
+    new_sa_url = URL(sa_url.drivername, **connect_args)
+    return str(new_sa_url)

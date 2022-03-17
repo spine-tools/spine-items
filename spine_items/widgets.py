@@ -18,10 +18,10 @@ Contains common & shared (Q)widgets.
 
 import os
 from PySide2.QtCore import Qt, Signal, QUrl, QMimeData, Property
-from PySide2.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget, QDialog
+from PySide2.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget, QDialog, QStatusBar
 from PySide2.QtGui import QDrag, QIntValidator
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
-from spinetoolbox.config import APPLICATION_PATH
+from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
 from .utils import convert_to_sqlalchemy_url
 
 
@@ -297,6 +297,8 @@ class UrlSelectorMixin:
 
 
 class UrlSelector(UrlSelectorMixin, QDialog):
+    msg_error = Signal(str)
+
     def __init__(self, toolbox, parent=None):
         from .ui.url_selector_widget import Ui_Dialog  # pylint: disable=import-outside-toplevel
 
@@ -304,6 +306,12 @@ class UrlSelector(UrlSelectorMixin, QDialog):
         self._toolbox = toolbox
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        # Add status bar to form
+        self.statusbar = QStatusBar(self)
+        self.statusbar.setFixedHeight(20)
+        self.statusbar.setSizeGripEnabled(False)
+        self.statusbar.setStyleSheet(STATUSBAR_SS)
+        self.ui.horizontalLayout_statusbar_ph.addWidget(self.statusbar)
         self._sa_url = None
         self.ui.buttonBox.button(self.ui.buttonBox.Ok).setEnabled(False)
         self._setup(("mysql", "sqlite", "mssql", "postgresql", "oracle"))  # Others?
@@ -315,6 +323,7 @@ class UrlSelector(UrlSelectorMixin, QDialog):
         self.ui.lineEdit_host.editingFinished.connect(self._refresh_url)
         self.ui.lineEdit_port.editingFinished.connect(self._refresh_url)
         self.ui.lineEdit_database.editingFinished.connect(self._refresh_url)
+        self.msg_error.connect(self.statusbar.showMessage)
 
     @property
     def url(self):
@@ -331,7 +340,7 @@ class UrlSelector(UrlSelectorMixin, QDialog):
             "username": self.ui.lineEdit_username.text(),
             "password": self.ui.lineEdit_password.text(),
         }
-        self._sa_url = convert_to_sqlalchemy_url(url)
+        self._sa_url = convert_to_sqlalchemy_url(url, logger=self)
         self.ui.buttonBox.button(self.ui.buttonBox.Ok).setEnabled(self._sa_url is not None)
 
     def _browse_sqlite_file(self):

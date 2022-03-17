@@ -25,7 +25,7 @@ from .output_resources import scan_for_resources
 class ExecutableItem(ExecutableItemBase):
     """The executable parts of Data Connection."""
 
-    def __init__(self, name, file_references, db_references, project_dir, logger):
+    def __init__(self, name, file_references, db_references, db_credentials, project_dir, logger):
         """
         Args:
             name (str): item's name
@@ -42,6 +42,7 @@ class ExecutableItem(ExecutableItemBase):
                     data_files.append(entry.path)
         self._file_paths = file_references + data_files
         self._urls = db_references
+        self._url_credentials = db_credentials
 
     @staticmethod
     def item_type():
@@ -50,7 +51,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return scan_for_resources(self, self._file_paths, self._urls, self._project_dir)
+        return scan_for_resources(self, self._file_paths, self._urls, self._url_credentials, self._project_dir)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
@@ -58,4 +59,5 @@ class ExecutableItem(ExecutableItemBase):
         file_references = item_dict["file_references"]
         file_references = [deserialize_path(r, project_dir) for r in file_references]
         db_references = item_dict["db_references"]
-        return cls(name, file_references, db_references, project_dir, logger)
+        db_credentials = item_dict["db_credentials"]
+        return cls(name, file_references, db_references, db_credentials, project_dir, logger)

@@ -259,6 +259,16 @@ class Ui_Form(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
+        QWidget.setTabOrder(self.comboBox_dialect, self.comboBox_dsn)
+        QWidget.setTabOrder(self.comboBox_dsn, self.lineEdit_username)
+        QWidget.setTabOrder(self.lineEdit_username, self.lineEdit_password)
+        QWidget.setTabOrder(self.lineEdit_password, self.lineEdit_host)
+        QWidget.setTabOrder(self.lineEdit_host, self.lineEdit_port)
+        QWidget.setTabOrder(self.lineEdit_port, self.lineEdit_database)
+        QWidget.setTabOrder(self.lineEdit_database, self.toolButton_select_sqlite_file)
+        QWidget.setTabOrder(self.toolButton_select_sqlite_file, self.toolButton_vacuum)
+        QWidget.setTabOrder(self.toolButton_vacuum, self.toolButton_copy_url)
+        QWidget.setTabOrder(self.toolButton_copy_url, self.pushButton_create_new_spine_db)
         QWidget.setTabOrder(self.pushButton_create_new_spine_db, self.pushButton_ds_open_editor)
 
         self.retranslateUi(Form)

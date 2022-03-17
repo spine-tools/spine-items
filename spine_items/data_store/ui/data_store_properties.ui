@@ -511,6 +511,16 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>comboBox_dialect</tabstop>
+  <tabstop>comboBox_dsn</tabstop>
+  <tabstop>lineEdit_username</tabstop>
+  <tabstop>lineEdit_password</tabstop>
+  <tabstop>lineEdit_host</tabstop>
+  <tabstop>lineEdit_port</tabstop>
+  <tabstop>lineEdit_database</tabstop>
+  <tabstop>toolButton_select_sqlite_file</tabstop>
+  <tabstop>toolButton_vacuum</tabstop>
+  <tabstop>toolButton_copy_url</tabstop>
   <tabstop>pushButton_create_new_spine_db</tabstop>
   <tabstop>pushButton_ds_open_editor</tabstop>
  </tabstops>

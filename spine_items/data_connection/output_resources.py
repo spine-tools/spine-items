@@ -17,9 +17,10 @@ Contains utilities to scan for Data Connection's output resources.
 from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource, database_resource
 from spine_engine.utils.serialization import path_in_dir
+from ..utils import unsplit_url_credentials
 
 
-def scan_for_resources(provider, file_paths, urls, project_dir):
+def scan_for_resources(provider, file_paths, urls, url_credentials, project_dir):
     """
     Creates file resources based on DC files.
 
@@ -27,6 +28,7 @@ def scan_for_resources(provider, file_paths, urls, project_dir):
         provider (ProjectItem or ExecutableItem): resource provider item
         files (list of str): file paths
         urls (list of str): urls
+        url_credentials (dict): mapping url from urls to tuple (username, password)
         project_dir (str): absolute path to project directory
 
     Returns:
@@ -52,6 +54,8 @@ def scan_for_resources(provider, file_paths, urls, project_dir):
                 resource = transient_file_resource(provider.name, fp)
         resources.append(resource)
     for url in urls:
-        resource = database_resource(provider.name, url, label=f"<{provider.name}>/" + url)
+        credentials = url_credentials.get(url)
+        full_url = unsplit_url_credentials(url, credentials) if credentials is not None else url
+        resource = database_resource(provider.name, full_url, label=f"<{provider.name}>" + url)
         resources.append(resource)
     return resources

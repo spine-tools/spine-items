@@ -33,10 +33,13 @@ from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from ..widgets import UrlSelector
+from ..utils import split_url_credentials
 
 
 class DataConnection(ProjectItem):
-    def __init__(self, name, description, x, y, toolbox, project, file_references=None, db_references=None):
+    def __init__(
+        self, name, description, x, y, toolbox, project, file_references=None, db_references=None, db_credentials=None
+    ):
         """Data Connection class.
 
         Args:
@@ -47,18 +50,23 @@ class DataConnection(ProjectItem):
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
             file_references (list, optional): a list of file paths
+            db_references (list, optional): a list of db urls
+            db_credentials (dict, optional): mapping urls from db_references to tuple (username, password)
         """
         super().__init__(name, description, x, y, project)
         if file_references is None:
             file_references = list()
         if db_references is None:
             db_references = list()
+        if db_credentials is None:
+            db_credentials = dict()
         self._toolbox = toolbox
         self.reference_model = QStandardItemModel()  # References to files
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
         self.file_system_watcher = None
         self.file_references = list(file_references)
         self.db_references = list(db_references)
+        self.db_credentials = db_credentials
         self._file_ref_root = QStandardItem("File paths")
         self._db_ref_root = QStandardItem("URLs")
         self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
@@ -196,9 +204,11 @@ class DataConnection(ProjectItem):
         except Exception as e:  # pylint: disable=broad-except
             self._logger.msg_error.emit(f"Unable to connect to <b>{url}</b>: {e}")
             return
+        url, credentials = split_url_credentials(url)
         if url in self.db_references:
             self._logger.msg_warning.emit(f"Reference to database <b>{url}</b> already exists")
             return
+        self.db_credentials[url] = credentials
         self._toolbox.undo_stack.push(AddDCReferencesCommand(self, [], [url]))
 
     def do_add_references(self, file_refs, db_refs):
@@ -260,7 +270,8 @@ class DataConnection(ProjectItem):
         result = False
         for k in reversed(range(self._db_ref_root.rowCount())):
             if self._db_ref_root.child(k).text() in refs:
-                self.db_references.pop(k)
+                url = self.db_references.pop(k)
+                self.db_credentials.pop(url, None)
                 self._db_ref_root.removeRow(k)
                 result = True
         return result
@@ -314,10 +325,14 @@ class DataConnection(ProjectItem):
         self._check_notifications()
         file_refs = list(self.file_references)
         data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
-        new_resources = scan_for_resources(self, file_refs + data_files, self.db_references, self._project.project_dir)
+        new_resources = scan_for_resources(
+            self, file_refs + data_files, self.db_references, self.db_credentials, self._project.project_dir
+        )
         if not replace_new_path(file_refs):
             replace_new_path(data_files)
-        old_resources = scan_for_resources(self, file_refs + data_files, self.db_references, self._project.project_dir)
+        old_resources = scan_for_resources(
+            self, file_refs + data_files, self.db_references, self.db_credentials, self._project.project_dir
+        )
         self._resources_to_successors_replaced(old_resources, new_resources)
 
     @Slot(str)
@@ -491,7 +506,7 @@ class DataConnection(ProjectItem):
         """see base class"""
         data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
         resources = scan_for_resources(
-            self, self.file_references + data_files, self.db_references, self._project.project_dir
+            self, self.file_references + data_files, self.db_references, self.db_credentials, self._project.project_dir
         )
         return resources
 
@@ -510,10 +525,15 @@ class DataConnection(ProjectItem):
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
         d = super().item_dict()
-        # Convert paths to relative before saving
-        d["file_references"] = [serialize_path(f, self._project.project_dir) for f in self.file_references]
+        d["file_references"] = [serialize_path(ref, self._project.project_dir) for ref in self.file_references]
         d["db_references"] = self.db_references
+        d["db_credentials"] = self.db_credentials
         return d
+
+    @staticmethod
+    def item_dict_local_entries():
+        """See base class."""
+        return [("db_credentials",)]
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
@@ -522,7 +542,8 @@ class DataConnection(ProjectItem):
         file_references = item_dict.get("file_references", list()) or item_dict.get("references", list())
         file_references = [deserialize_path(r, project.project_dir) for r in file_references]
         db_references = item_dict.get("db_references", list())
-        return DataConnection(name, description, x, y, toolbox, project, file_references, db_references)
+        db_credentials = item_dict.get("db_credentials", dict())
+        return DataConnection(name, description, x, y, toolbox, project, file_references, db_references, db_credentials)
 
     def rename(self, new_name, rename_data_dir_message):
         """See base class."""
