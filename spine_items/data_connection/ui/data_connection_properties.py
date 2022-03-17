@@ -156,7 +156,7 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.toolButton_minus.setText("")
 #if QT_CONFIG(tooltip)
-        self.toolButton_add.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add references to project. Copies files to Data connection's directory.</p></body></html>", None))
+        self.toolButton_add.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Copy file references to Data Connection's directory</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_add.setText("")
 #if QT_CONFIG(tooltip)
