@@ -67,10 +67,8 @@ class DataConnection(ProjectItem):
         self.file_references = list(file_references)
         self.db_references = list(db_references)
         self.db_credentials = db_credentials
-        self._file_ref_root = QStandardItem("File paths")
-        self._db_ref_root = QStandardItem("URLs")
-        self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
-        self._db_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
+        self._file_ref_root = None
+        self._db_ref_root = None
         self.file_refs_selected = False
         self.any_refs_selected = False
         self.any_data_selected = False
@@ -465,6 +463,10 @@ class DataConnection(ProjectItem):
         """List file references in QTreeView."""
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
+        self._file_ref_root = QStandardItem("File paths")
+        self._db_ref_root = QStandardItem("URLs")
+        self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
+        self._db_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
         self.reference_model.appendRow(self._file_ref_root)
         self.reference_model.appendRow(self._db_ref_root)
         self._append_file_references_to_model(*self.file_references)
