@@ -246,7 +246,7 @@ class Ui_Dialog(object):
     # setupUi
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"URL", None))
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Select URL", None))
         self.lineEdit_password.setPlaceholderText("")
         self.label_port.setText(QCoreApplication.translate("Dialog", u"Port", None))
         self.label_dsn.setText(QCoreApplication.translate("Dialog", u"DSN", None))

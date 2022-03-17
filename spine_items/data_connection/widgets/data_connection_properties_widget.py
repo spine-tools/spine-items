@@ -69,7 +69,7 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
             dc.open_reference(index)
         elif option == "Add file reference(s)...":
             dc.show_add_file_references_dialog()
-        elif option == "Add URL reference...":
+        elif option == "Add database reference...":
             dc.show_add_db_reference_dialog()
         elif option == "Remove reference(s)":
             dc.remove_references()

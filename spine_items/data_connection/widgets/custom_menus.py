@@ -35,7 +35,7 @@ class DcRefContextMenu(CustomContextMenu):
         self.add_action("Open containing directory...", enabled=index.isValid())
         self.addSeparator()
         self.add_action("Add file reference(s)...")
-        self.add_action("Add URL reference...")
+        self.add_action("Add database reference...")
         self.add_action("Remove reference(s)", enabled=dc.any_refs_selected)
         self.add_action("Copy file reference(s) to project", enabled=dc.file_refs_selected)
 

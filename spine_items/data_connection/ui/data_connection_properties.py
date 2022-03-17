@@ -148,7 +148,7 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.toolButton_plus_file.setText("")
 #if QT_CONFIG(tooltip)
-        self.toolButton_plus_url.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add database references</p></body></html>", None))
+        self.toolButton_plus_url.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add database reference</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_plus_url.setText(QCoreApplication.translate("Form", u"...", None))
 #if QT_CONFIG(tooltip)
