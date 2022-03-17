@@ -61,7 +61,7 @@ class TestDataConnection(unittest.TestCase):
     def test_item_category(self):
         self.assertEqual(DataConnection.item_category(), ItemInfo.item_category())
 
-    def test_add_references(self):
+    def test_add_file_references(self):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
         with mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames:
@@ -105,6 +105,30 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(2, len(self.data_connection.file_references))
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
 
+    def test_add_db_references(self):
+        with mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelector"
+        ) as mock_url_selector_class, mock.patch("spine_items.data_connection.data_connection.create_engine"):
+            mock_url_selector_class.return_value = mock_url_selector = mock.MagicMock()
+            # Add nothing
+            type(mock_url_selector).url = mock.PropertyMock(return_value="")
+            self.data_connection.show_add_db_reference_dialog()
+            self.assertEqual(1, mock_url_selector.exec_.call_count)
+            self.assertEqual(0, len(self.data_connection.db_references))
+            self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(1, 0)))
+            # Add one url
+            type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://randy:creamfraiche@host:3306/db")
+            self.data_connection.show_add_db_reference_dialog()
+            self.assertEqual(2, mock_url_selector.exec_.call_count)
+            self.assertEqual(1, len(self.data_connection.db_references))
+            self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
+            # Add same url with different username and password (should not be added)
+            type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://scott:tiger@host:3306/db")
+            self.data_connection.show_add_db_reference_dialog()
+            self.assertEqual(3, mock_url_selector.exec_.call_count)
+            self.assertEqual(1, len(self.data_connection.db_references))
+            self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
+
     def test_remove_references(self):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
@@ -112,7 +136,12 @@ class TestDataConnection(unittest.TestCase):
             "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
         ) as mock_filenames, mock.patch.object(
             self.data_connection._properties_ui.treeView_dc_references, "selectedIndexes"
-        ) as mock_selected_indexes:
+        ) as mock_selected_indexes, mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelector"
+        ) as mock_url_selector_class, mock.patch(
+            "spine_items.data_connection.data_connection.create_engine"
+        ):
+            mock_url_selector_class.return_value = mock_url_selector = mock.MagicMock()
             a = Path(temp_dir, "a.txt")
             a.touch()
             b = Path(temp_dir, "b.txt")
@@ -128,29 +157,50 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(1, mock_filenames.call_count)
             self.assertEqual(2, len(self.data_connection.file_references))
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
+            # Second add a couple of dbs as refs
+            type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://scott:tiger@host:3306/db")
+            self.data_connection.show_add_db_reference_dialog()
+            type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://randy:creamfraiche@host:3307/db")
+            self.data_connection.show_add_db_reference_dialog()
+            self.assertEqual(2, mock_url_selector.exec_.call_count)
+            self.assertEqual(2, len(self.data_connection.db_references))
+            self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Test with no indexes selected
             mock_selected_indexes.return_value = []
             self.data_connection.remove_references()
             self.assertEqual(1, mock_selected_indexes.call_count)
             self.assertEqual(2, len(self.data_connection.file_references))
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
-            # Set one selected and remove it
+            # Set one file selected and remove it
             a_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
             mock_selected_indexes.return_value = [a_index]
             self.data_connection.remove_references()
             self.assertEqual(2, mock_selected_indexes.call_count)
             self.assertEqual(1, len(self.data_connection.file_references))
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(0, 0)))
-            # Check that the remaining item is the one that's supposed to be there
+            # Check that the remaining file is the one that's supposed to be there
             self.assertEqual([str(b)], self.data_connection.file_references)
             self.assertEqual(str(b), self.ref_model.item(0).child(0).data(Qt.DisplayRole))
-            # Now remove the remaining one
-            b_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
-            mock_selected_indexes.return_value = [b_index]
+            # Set one db selected and remove it
+            db1_index = self.ref_model.index(0, 0, self.ref_model.index(1, 0))
+            mock_selected_indexes.return_value = [db1_index]
             self.data_connection.remove_references()
             self.assertEqual(3, mock_selected_indexes.call_count)
+            self.assertEqual(1, len(self.data_connection.db_references))
+            self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
+            # Check that the remaining db is the one that's supposed to be there
+            self.assertEqual(["mysql://host:3307/db"], self.data_connection.db_references)
+            self.assertEqual("mysql://host:3307/db", self.ref_model.item(1).child(0).data(Qt.DisplayRole))
+            # Now remove the remaining file and db
+            b_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
+            db2_index = self.ref_model.index(0, 0, self.ref_model.index(1, 0))
+            mock_selected_indexes.return_value = [b_index, db2_index]
+            self.data_connection.remove_references()
+            self.assertEqual(4, mock_selected_indexes.call_count)
             self.assertEqual(0, len(self.data_connection.file_references))
             self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(0, 0)))
+            self.assertEqual(0, len(self.data_connection.db_references))
+            self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Add a and b back and the two non-existing files as well
             # Select non-existing file c and remove it
             mock_filenames.return_value = ([str(a), str(b), str(c), str(d)], "*.*")
@@ -168,7 +218,7 @@ class TestDataConnection(unittest.TestCase):
             b_index = self.ref_model.index(1, 0, self.ref_model.index(0, 0))
             mock_selected_indexes.return_value = [a_index, b_index]
             self.data_connection.remove_references()
-            self.assertEqual(4, mock_selected_indexes.call_count)
+            self.assertEqual(5, mock_selected_indexes.call_count)
             self.assertEqual(0, len(self.data_connection.file_references))
             self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(0, 0)))
             # Add a, b, c, and d back Select all and remove.
@@ -179,7 +229,7 @@ class TestDataConnection(unittest.TestCase):
             b_index = self.ref_model.index(1, 0, self.ref_model.index(0, 0))
             mock_selected_indexes.return_value = [a_index, b_index]
             self.data_connection.remove_references()
-            self.assertEqual(5, mock_selected_indexes.call_count)
+            self.assertEqual(6, mock_selected_indexes.call_count)
             self.assertEqual(0, len(self.data_connection.file_references))
             self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(0, 0)))
 
