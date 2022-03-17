@@ -34,7 +34,6 @@ class ImporterIcon(ProjectItemIcon):
         self.animation_signaller = AnimationSignaller()
         self.animation_signaller.animation_started.connect(self.animation.start)
         self.animation_signaller.animation_stopped.connect(self.animation.stop)
-        self.animation_signaller.animation_started.emit()
 
     def mouseDoubleClickEvent(self, e):
         """Opens Import editor when this Importer icon is double-clicked.

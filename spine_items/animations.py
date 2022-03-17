@@ -54,7 +54,7 @@ class ImporterExporterAnimation:
         font.setPixelSize(cube_size)
         self.path = QPainterPath()
         orbit_rect = item_rect.adjusted(0, 0, -1.5 * cube_size, 0)
-        orbit_rect.setHeight(0.5 * cube_size)
+        orbit_rect.setHeight(cube_size)
         orbit_rect.moveTop(item_rect.center().y() - cube_size)
         self.path.addEllipse(orbit_rect)
         self.x_offsets = [i / count for i in range(count)]
@@ -65,18 +65,16 @@ class ImporterExporterAnimation:
             cube.setDefaultTextColor("#003333")
             cube.setTransformOriginPoint(cube.boundingRect().center())
             cube.hide()
-            cube.setOpacity(1)
-            cube.setZValue(1000)
 
     @staticmethod
     def _opacity(percent):
         if percent < 0.25:
-            return 0.5 + 3 * percent
+            return 0.75 + 3 * percent
         if percent < 0.5:
-            return 1.25 - 3 * (percent - 0.25)
+            return 1.5 - 3 * (percent - 0.25)
         if percent < 0.75:
-            return 0.5 - 3 * (percent - 0.5)
-        return -0.25 + 3 * (percent - 0.75)
+            return 0.75 - 3 * (percent - 0.5)
+        return 3 * (percent - 0.75)
 
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
@@ -110,7 +108,7 @@ class ImporterExporterAnimation:
 
     @staticmethod
     def percent(value):
-        return value
+        raise NotImplementedError()
 
     @Slot()
     def stop(self):
