@@ -30,7 +30,7 @@ class ExporterIcon(ProjectItemIcon):
             icon_color (QColor): Icon's color
         """
         super().__init__(toolbox, icon, icon_color)
-        self.animation = ExporterAnimation(self, x_shift=-10)
+        self.animation = ExporterAnimation(self)
         self.animation_signaller = AnimationSignaller()
         self.animation_signaller.animation_started.connect(self.animation.start)
         self.animation_signaller.animation_stopped.connect(self.animation.stop)

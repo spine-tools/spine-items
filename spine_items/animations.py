@@ -17,8 +17,8 @@ Animation class for importers and exporters.
 """
 
 import random
-from PySide2.QtGui import QFont, QPainterPath
-from PySide2.QtCore import Signal, Slot, QObject, QTimeLine, QPointF
+from PySide2.QtGui import QFont, QPainterPath, QTransform
+from PySide2.QtCore import Signal, Slot, QObject, QTimeLine, QPointF, Qt
 from PySide2.QtWidgets import QGraphicsTextItem
 
 
@@ -29,18 +29,14 @@ class AnimationSignaller(QObject):
 
 
 class ImporterExporterAnimation:
-    def __init__(self, item, duration=2000, count=5, percentage_size=0.24, x_shift=0):
+    def __init__(self, item, duration=2500, count=8, percentage_size=0.2):
         """Initializes animation stuff.
 
         Args:
             item (QGraphicsItem): The item on top of which the animation should play.
         """
         self._item = item
-        self.cubes = [QGraphicsTextItem("\uf1b2", item) for i in range(count)]
-        self.opacity_at_value_path = QPainterPath(QPointF(0.0, 0.0))
-        self.opacity_at_value_path.lineTo(QPointF(0.01, 1.0))
-        self.opacity_at_value_path.lineTo(QPointF(0.5, 1.0))
-        self.opacity_at_value_path.lineTo(QPointF(1.0, 0.0))
+        self.cubes = [QGraphicsTextItem(item) for i in range(count)]
         self.time_line = QTimeLine()
         self.time_line.setLoopCount(0)  # loop forever
         self.time_line.setFrameRange(0, 10)
@@ -50,41 +46,56 @@ class ImporterExporterAnimation:
         self.time_line.stateChanged.connect(self._handle_time_line_state_changed)
         font = QFont("Font Awesome 5 Free Solid")
         item_rect = item.rect()
-        cube_size = percentage_size * 0.875 * item_rect.height()
+        cube_size = percentage_size * item_rect.height()
         font.setPixelSize(cube_size)
-        rect = item_rect.translated(-0.5 * cube_size + x_shift, -cube_size)
-        end = rect.center()
-        ctrl = end - QPointF(0, 0.6 * rect.height())
-        lower, upper = 0.2, 0.8
-        starts = [lower + i * (upper - lower) / count for i in range(count)]
-        starts = [rect.topLeft() + QPointF(start * rect.width(), 0) for start in starts]
-        self.paths = [QPainterPath(start) for start in starts]
-        for path in self.paths:
-            path.quadTo(ctrl, end)
-        self.offsets = [i / count for i in range(count)]
+        self.path = QPainterPath()
+        orbit_rect = item_rect.adjusted(0, 0, -1.5 * cube_size, 0)
+        orbit_rect.setHeight(cube_size)
+        orbit_rect.moveTop(item_rect.center().y() - 1.5 * cube_size)
+        self.path.addEllipse(orbit_rect)
+        transform = QTransform()
+        offset = 0.25 * cube_size
+        transform.translate(orbit_rect.center().x() + offset, orbit_rect.center().y() + offset)
+        transform.rotate(-45)
+        transform.translate(-orbit_rect.center().x() - offset, -orbit_rect.center().y() - offset)
+        self.path = transform.map(self.path)
+        self.x_offsets = [i / count for i in range(count)]
+        self.y_offsets = [0.5 * cube_size * i / count for i in range(-count, count)]
         for cube in self.cubes:
+            cube.setHtml("\uf6d1")  # dice
             cube.setFont(font)
-            cube.setDefaultTextColor("#003333")
+            cube.setAcceptedMouseButtons(Qt.NoButton)
+            cube.setDefaultTextColor("#000000")
             cube.setTransformOriginPoint(cube.boundingRect().center())
             cube.hide()
-            cube.setOpacity(0)
+
+    @staticmethod
+    def _opacity(percent):
+        if percent < 0.25:
+            return 0.75 + 3 * percent
+        if percent < 0.5:
+            return 1.5 - 3 * (percent - 0.25)
+        if percent < 0.75:
+            return 0.75 - 3 * (percent - 0.5)
+        return 3 * (percent - 0.75)
 
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
-        for cube, offset, path in zip(self.cubes, self.offsets, self.paths):
-            value = (offset + value) % 1.0
-            opacity = self.opacity_at_value_path.pointAtPercent(value).y()
-            cube.setOpacity(opacity)
+        for cube, x_offset, y_offset in zip(self.cubes, self.x_offsets, self.y_offsets):
+            value = (x_offset + value) % 1.0
             percent = self.percent(value)
-            point = path.pointAtPercent(percent)
-            angle = percent * 360.0
+            opacity = self._opacity(percent)
+            cube.setOpacity(opacity)
+            point = self.path.pointAtPercent(percent)
+            point += QPointF(0, y_offset)
+            angle = -percent * 360.0
             cube.setPos(point)
             cube.setRotation(angle)
 
-    @Slot("QTimeLine::State")
+    @Slot(QTimeLine.State)
     def _handle_time_line_state_changed(self, new_state):
         if new_state == QTimeLine.Running:
-            random.shuffle(self.offsets)
+            random.shuffle(self.y_offsets)
             for cube in self.cubes:
                 cube.show()
         elif new_state == QTimeLine.NotRunning:
@@ -117,4 +128,4 @@ class ImporterAnimation(ImporterExporterAnimation):
 class ExporterAnimation(ImporterExporterAnimation):
     @staticmethod
     def percent(value):
-        return 1.0 - value
+        return 1 - value
