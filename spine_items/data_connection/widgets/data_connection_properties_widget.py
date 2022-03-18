@@ -93,7 +93,7 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         if option == "New file...":
             dc.make_new_file()
         elif option == "Open...":
-            dc.open_data_file(dc.selected_data_file)
+            dc.open_data_file(index)
         elif option == "Remove file(s)":
             dc.remove_files()
         elif option == "Open directory...":
