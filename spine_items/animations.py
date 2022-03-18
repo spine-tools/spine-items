@@ -17,7 +17,7 @@ Animation class for importers and exporters.
 """
 
 import random
-from PySide2.QtGui import QFont, QPainterPath
+from PySide2.QtGui import QFont, QPainterPath, QTransform
 from PySide2.QtCore import Signal, Slot, QObject, QTimeLine, QPointF, Qt
 from PySide2.QtWidgets import QGraphicsTextItem
 
@@ -29,18 +29,14 @@ class AnimationSignaller(QObject):
 
 
 class ImporterExporterAnimation:
-    def __init__(self, item, duration=2000, count=8, percentage_size=0.2):
+    def __init__(self, item, duration=2500, count=8, percentage_size=0.2):
         """Initializes animation stuff.
 
         Args:
             item (QGraphicsItem): The item on top of which the animation should play.
         """
         self._item = item
-        self.cubes = [QGraphicsTextItem("\uf1b2", item) for i in range(count)]
-        self.opacity_at_value_path = QPainterPath(QPointF(0.0, 0.0))
-        self.opacity_at_value_path.lineTo(QPointF(0.25, 0.0))
-        self.opacity_at_value_path.lineTo(QPointF(0.5, 0.0))
-        self.opacity_at_value_path.lineTo(QPointF(1.0, 0.0))
+        self.cubes = [QGraphicsTextItem(item) for i in range(count)]
         self.time_line = QTimeLine()
         self.time_line.setLoopCount(0)  # loop forever
         self.time_line.setFrameRange(0, 10)
@@ -55,14 +51,21 @@ class ImporterExporterAnimation:
         self.path = QPainterPath()
         orbit_rect = item_rect.adjusted(0, 0, -1.5 * cube_size, 0)
         orbit_rect.setHeight(cube_size)
-        orbit_rect.moveTop(item_rect.center().y() - cube_size)
+        orbit_rect.moveTop(item_rect.center().y() - 1.5 * cube_size)
         self.path.addEllipse(orbit_rect)
+        transform = QTransform()
+        offset = 0.25 * cube_size
+        transform.translate(orbit_rect.center().x() + offset, orbit_rect.center().y() + offset)
+        transform.rotate(-45)
+        transform.translate(-orbit_rect.center().x() - offset, -orbit_rect.center().y() - offset)
+        self.path = transform.map(self.path)
         self.x_offsets = [i / count for i in range(count)]
         self.y_offsets = [0.5 * cube_size * i / count for i in range(-count, count)]
         for cube in self.cubes:
+            cube.setHtml("\uf6d1")  # dice
             cube.setFont(font)
             cube.setAcceptedMouseButtons(Qt.NoButton)
-            cube.setDefaultTextColor("#003333")
+            cube.setDefaultTextColor("#000000")
             cube.setTransformOriginPoint(cube.boundingRect().center())
             cube.hide()
 
