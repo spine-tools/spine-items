@@ -36,7 +36,9 @@ def do_work(
     all_data = []
     all_errors = []
     table_mappings = {
-        name: m for name, m in mapping.get("table_mappings", {}).items() if name in mapping["selected_tables"]
+        name: mappings
+        for name, mappings in mapping.get("table_mappings", {}).items()
+        if name in mapping["selected_tables"]
     }
     table_options = {
         name: options
@@ -58,23 +60,30 @@ def do_work(
         except Exception as error:  # pylint: disable=broad-except
             logger.msg_error.emit(f"Failed to connect to {src}: {error}")
             return (False,)
-        try:
-            data, errors = connector.get_mapped_data(
-                table_mappings, table_options, table_column_convert_specs, table_row_convert_specs
-            )
-        except spinedb_api.InvalidMapping as error:
-            logger.msg_error.emit(f"Failed to import: {error}")
-            if cancel_on_error:
-                logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
-                return (False,)
-            logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-            continue
-        if not errors:
-            logger.msg.emit(f"Successfully read {sum(len(d) for d in data.values())} data.")
-        else:
-            logger.msg_warning.emit(f"Read {sum(len(d) for d in data.values())} data with {len(errors)} errors.")
-        all_data.append(data)
-        all_errors.extend(errors)
+        for name, mappings in table_mappings.items():
+            logger.msg.emit(f"Processing table <b>{name}</b>")
+            for spec in mappings:
+                mapping_name = next(iter(spec.keys()))
+                logger.msg.emit(f"* Applying mapping <b>{mapping_name}</b>...")
+                try:
+                    data, errors = connector.get_mapped_data(
+                        {name: [spec]}, table_options, table_column_convert_specs, table_row_convert_specs
+                    )
+                except spinedb_api.InvalidMapping as error:
+                    logger.msg_error.emit(f"Failed to import: {error}")
+                    if cancel_on_error:
+                        logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
+                        return (False,)
+                    logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
+                    continue
+                if not errors:
+                    logger.msg.emit(f"Successfull ({sum(len(d) for d in data.values())} data to be written).")
+                else:
+                    logger.msg_warning.emit(
+                        f"Read {sum(len(d) for d in data.values())} data with {len(errors)} errors."
+                    )
+                all_data.append(data)
+                all_errors.extend(errors)
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()
@@ -126,7 +135,9 @@ def _import_data_to_url(cancel_on_error, purge_before_writing, on_conflict, logs
         all_import_num += import_num
     if db_map.has_pending_changes():
         db_map.commit_session("Import data by Spine Toolbox Importer")
-        logger.msg_success.emit(f"Inserted {all_import_num} data with {len(all_import_errors)} errors into {url}")
+        logger.msg_success.emit(
+            f"Inserted {all_import_num} data with {len(all_import_errors)} errors into {db_map.codename}"
+        )
     else:
         logger.msg_warning.emit("No new data imported")
     db_map.connection.close()
