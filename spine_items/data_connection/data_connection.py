@@ -107,6 +107,7 @@ class DataConnection(ProjectItem):
         data_indexes = self._properties_ui.treeView_dc_data.selectionModel().selectedIndexes()
         self.file_refs_selected = any(ind.parent().row() == 0 for ind in ref_indexes)
         self.any_refs_selected = any(ind.parent().row() in (0, 1) for ind in ref_indexes)
+        self.current_is_file_ref = self._properties_ui.treeView_dc_references.currentIndex().parent().row() == 0
         self.any_data_selected = bool(data_indexes)
         self._properties_ui.toolButton_minus.setEnabled(self.any_refs_selected)
         self._properties_ui.toolButton_add.setEnabled(self.file_refs_selected)

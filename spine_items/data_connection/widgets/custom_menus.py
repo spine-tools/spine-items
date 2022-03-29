@@ -31,8 +31,8 @@ class DcRefContextMenu(CustomContextMenu):
     def __init__(self, parent, position, index, dc):
         """Class constructor."""
         super().__init__(parent, position)
-        self.add_action("Open...", enabled=index.isValid())
-        self.add_action("Open containing directory...", enabled=index.isValid())
+        self.add_action("Open...", enabled=dc.current_is_file_ref)
+        self.add_action("Open containing directory...", enabled=dc.current_is_file_ref)
         self.addSeparator()
         self.add_action("Add file reference(s)...")
         self.add_action("Add database reference...")
