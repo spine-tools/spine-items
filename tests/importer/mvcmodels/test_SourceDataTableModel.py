@@ -134,9 +134,11 @@ class TestSourceDataTableModel(unittest.TestCase):
         )
         self._model.set_mapping_list_index(list_index)
         entity_color = self._find_color(list_index, "Object names")
+        metadata_color = self._find_color(list_index, "Object metadata")
         self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), entity_color)
         self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.BackgroundRole), entity_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), metadata_color)
+        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.BackgroundRole), metadata_color)
         # column not showing color if the columns is skipped
         list_index = self._add_mapping(
             mappings_model,
@@ -158,13 +160,13 @@ class TestSourceDataTableModel(unittest.TestCase):
             mappings_model, {"map_type": "ObjectClass", "name": 0, "object": {"map_type": "row", "value_reference": 0}}
         )
         self._model.set_mapping_list_index(list_index)
-        # no color showing where row and column mapping intersect
         entity_class_color = self._find_color(list_index, "Object class names")
         entity_color = self._find_color(list_index, "Object names")
+        metadata_color = self._find_color(list_index, "Object metadata")
         self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), None)
         self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.BackgroundRole), entity_color)
         self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
-        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.BackgroundRole), metadata_color)
         mappings_model.deleteLater()
 
     def test_mapping_column_and_pivot_colors_with_value_mapping_position_set_to_random_column(self):

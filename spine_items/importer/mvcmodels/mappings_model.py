@@ -24,7 +24,7 @@ from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from spinetoolbox.helpers import unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.import_mapping.import_mapping import ImportMapping
+from spinedb_api.import_mapping.import_mapping import ImportMapping, ScenarioBeforeAlternativeMapping
 from spinedb_api.import_mapping.import_mapping_compat import (
     parse_named_mapping_spec,
     import_mapping_from_dict,
@@ -324,8 +324,8 @@ class MappingsModel(QAbstractItemModel):
         if column == FlattenedColumn.NAME:
             return non_editable
         if flattened_item.root_mapping.is_pivoted():
-            # special case where we have pivoted data, the values are columns under pivoted indexes
-            if flattened_item.display_names[index.row()].endswith("values"):
+            # special case where we have pivoted data
+            if index.row() == len(flattened_item.display_names) - 1:
                 return non_editable
         if column == FlattenedColumn.POSITION:
             component = flattened_item.component_at(index.row())
@@ -991,6 +991,29 @@ class MappingsModel(QAbstractItemModel):
         flattened_mappings.set_import_objects(import_objects)
         table_index = self.index(table_row, 0)
         list_index = self.index(list_row, 0, table_index)
+        self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
+
+    def set_use_before_alternative(self, table_row, list_row, use_before_alternative):
+        """Sets the use before alternative flag.
+
+        Args:
+            table_row (int): source table row index
+            list_row (int): mapping list row index
+            use_before_alternative (bool): flag value
+        """
+        table_index = self.index(table_row, 0)
+        list_index = self.index(list_row, 0, table_index)
+        mapping_list = self._mappings[table_row].mapping_list[list_row]
+        flattened_mappings = mapping_list.flattened_mappings
+        if use_before_alternative:
+            before_alternative_mapping = ScenarioBeforeAlternativeMapping(Position.hidden)
+            self.beginInsertRows(list_index, 2, 2)
+            flattened_mappings.append_tail_component(before_alternative_mapping)
+            self.endInsertRows()
+        else:
+            self.beginRemoveRows(list_index, 2, 2)
+            flattened_mappings.cut_tail_component()
+            self.endRemoveRows()
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
 
     def set_read_start_row(self, table_row, list_row, start_row):

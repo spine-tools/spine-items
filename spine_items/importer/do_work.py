@@ -23,15 +23,7 @@ from spine_engine.utils.helpers import create_log_file_timestamp
 
 
 def do_work(
-    mapping,
-    cancel_on_error,
-    purge_before_writing,
-    on_conflict,
-    logs_dir,
-    sources,
-    connector,
-    urls_downstream,
-    logger,
+    mapping, cancel_on_error, purge_before_writing, on_conflict, logs_dir, sources, connector, urls_downstream, logger
 ):
     all_data = []
     all_errors = []

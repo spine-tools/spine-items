@@ -275,7 +275,7 @@ class SourceDataTableModel(MinimalTableModel):
         last_row = self._last_row(flattened_mappings)
         non_pivoted_and_skipped_columns = self._non_pivoted_and_skipped_columns(flattened_mappings)
         if self.index_below_last_pivot_row(row, column, last_row, flattened_mappings, non_pivoted_and_skipped_columns):
-            return flattened_mappings.get_value_color()
+            return flattened_mappings.display_colors[-1]
         for k in range(len(flattened_mappings.display_names)):
             component_mapping = flattened_mappings.component_at(k)
             if self.index_in_mapping(component_mapping, row, column, last_row, non_pivoted_and_skipped_columns):
@@ -309,7 +309,7 @@ class SourceDataTableModel(MinimalTableModel):
         Returns:
             bool: True if index is below the pivot, False otherwise
         """
-        if not flattened_mappings.has_value_component() or not flattened_mappings.root_mapping.is_pivoted():
+        if not flattened_mappings.root_mapping.is_pivoted():
             return False
         return row > last_row and column not in non_pivoted_and_skipped_columns
 

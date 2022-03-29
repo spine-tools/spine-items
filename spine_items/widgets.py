@@ -347,12 +347,7 @@ class UrlSelector(UrlSelectorMixin, QDialog):
         filter_ = "*.sqlite;;*.*"
         key = "selectImportSourceSQLiteFile"
         filepath, _ = get_open_file_name_in_last_dir(
-            self._toolbox.qsettings(),
-            key,
-            self,
-            "Select a SQLite file",
-            APPLICATION_PATH,
-            filter_=filter_,
+            self._toolbox.qsettings(), key, self, "Select a SQLite file", APPLICATION_PATH, filter_=filter_
         )
         if not filepath:
             return

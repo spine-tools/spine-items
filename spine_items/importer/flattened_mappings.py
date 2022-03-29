@@ -48,6 +48,7 @@ from spinedb_api.import_mapping.import_mapping import (
     ParameterDefaultValueIndexMapping,
     DefaultValueIndexNameMapping,
     IndexNameMapping,
+    ScenarioBeforeAlternativeMapping,
 )
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.spine_db_manager import SpineDBManager
@@ -195,6 +196,14 @@ class FlattenedMappings:
         index_mapping = ParameterValueIndexMapping if parameter_type == "Value" else ParameterDefaultValueIndexMapping
         return len([m for m in self._components if isinstance(m, index_mapping)])
 
+    def uses_before_alternative(self):
+        """Checks if before alternative component is part of the mappings.
+
+        Returns:
+            bool: True if mapping uses before alternative, False otherwise
+        """
+        return any(isinstance(c, ScenarioBeforeAlternativeMapping) for c in reversed(self._components))
+
     def set_map_dimension_count(self, dimension_count):
         """Sets new dimensions for Map type value.
 
@@ -246,6 +255,20 @@ class FlattenedMappings:
         if m is None or m.parent is None:
             return
         m.parent.child = component
+        self.set_root_mapping(self._components[0])
+
+    def append_tail_component(self, component):
+        """Adds a new component as the last component in mappings.
+
+        Args:
+            component (ImportMapping): component to add
+        """
+        self._components[-1].child = component
+        self.set_root_mapping(self._components[0])
+
+    def cut_tail_component(self):
+        """Removes the tail component."""
+        self._components[-2].child = None
         self.set_root_mapping(self._components[0])
 
     def read_start_row(self):
@@ -300,7 +323,7 @@ class FlattenedMappings:
         Returns:
             str: display position
         """
-        if self._display_names[row].endswith("values") and self._components[0].is_pivoted():
+        if self._components[0].is_pivoted() and row == len(self._display_names) - 1:
             return "Pivoted"
         component = self._components[self._display_to_logical[row]]
         if component.position == Position.hidden:
@@ -358,10 +381,10 @@ class FlattenedMappings:
         """
         component = self._components[self._display_to_logical[row]]
         # A) Handle two special cases for value mappings
+        if self._components[0].is_pivoted() and row == len(self._display_names) - 1:
+            # 1. Pivoted data
+            return "Pivoted values"
         if self._display_names[row].endswith("values"):
-            if self._components[0].is_pivoted():
-                # 1. Pivoted values
-                return "Pivoted values"
             if component.position == Position.hidden and component.value is not None:
                 # 2. Constant value: we want special database value support
                 try:
@@ -653,17 +676,6 @@ class FlattenedMappings:
             ParameterDefaultValueTypeMapping,
         )
         return next((m for m in self._components if isinstance(m, value_mappings)), None)
-
-    def get_value_color(self):
-        """Returns a display color corresponding to the first value component.
-
-        Returns:
-            QColor: value color or None if there's no value component
-        """
-        row = next((k for k, name in enumerate(self._display_names) if name.endswith("values")), None)
-        if row is None:
-            return None
-        return self._display_colors[row]
 
     def _make_colors(self):
         """Creates display colors for mapping components.

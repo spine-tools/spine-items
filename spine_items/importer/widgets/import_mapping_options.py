@@ -29,6 +29,7 @@ from ..commands import (
     SetSkipColumns,
     SetReadStartRow,
     SetTimeSeriesRepeatFlag,
+    SetUseBeforeAlternativeFlag,
 )
 from ..flattened_mappings import MappingType
 from ..mvcmodels.mappings_model import Role
@@ -62,6 +63,7 @@ class ImportMappingOptions:
         self._ui.class_type_combo_box.currentTextChanged.connect(self._change_item_mapping_type)
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_parameter_type)
         self._ui.value_type_combo_box.currentTextChanged.connect(self._change_value_type)
+        self._ui.before_alternative_check_box.stateChanged.connect(self._change_use_before_alternative)
         self._ui.import_objects_check_box.stateChanged.connect(self._change_import_objects)
         self._ui_ignore_columns_filtermenu.filterChanged.connect(self._change_skip_columns)
         self._ui.start_read_row_spin_box.valueChanged.connect(self._change_read_start_row)
@@ -160,26 +162,30 @@ class ImportMappingOptions:
             self._ui.import_objects_check_box.setCheckState(check_state)
         else:
             self._ui.import_objects_check_box.setEnabled(False)
-        if flattened_mappings.has_dimensions():
-            self._ui.dimension_label.setEnabled(True)
-            self._ui.dimension_spin_box.setEnabled(True)
+        has_dimensions = flattened_mappings.has_dimensions()
+        self._ui.dimension_label.setEnabled(has_dimensions)
+        self._ui.dimension_spin_box.setEnabled(has_dimensions)
+        if has_dimensions:
             self._ui.dimension_spin_box.setValue(flattened_mappings.dimension_count())
-        else:
-            self._ui.dimension_label.setEnabled(False)
-            self._ui.dimension_spin_box.setEnabled(False)
 
         # update parameter mapping settings
-        if flattened_mappings.has_parameters():
-            self._ui.parameter_type_combo_box.setEnabled(True)
+        has_parameters = flattened_mappings.has_parameters()
+        self._ui.parameter_type_label.setEnabled(has_parameters)
+        self._ui.parameter_type_combo_box.setEnabled(has_parameters)
+        if has_parameters:
             self._ui.parameter_type_combo_box.setCurrentText(flattened_mappings.display_parameter_type())
-        else:
-            self._ui.parameter_type_combo_box.setEnabled(False)
-        if flattened_mappings.has_value_component():
-            self._ui.value_type_combo_box.setEnabled(True)
+        has_value_component = flattened_mappings.has_value_component()
+        self._ui.value_type_label.setEnabled(has_value_component)
+        self._ui.value_type_combo_box.setEnabled(has_value_component)
+        if has_value_component:
             self._ui.value_type_combo_box.setCurrentText(flattened_mappings.value_type)
             self._ui.value_type_label.setText(flattened_mappings.value_type_label())
-        else:
-            self._ui.value_type_combo_box.setEnabled(False)
+
+        # update before alternative settings
+        is_scenario_alternative_mapping = flattened_mappings.map_type == MappingType.ScenarioAlternative
+        self._ui.before_alternative_check_box.setEnabled(is_scenario_alternative_mapping)
+        if is_scenario_alternative_mapping:
+            self._ui.before_alternative_check_box.setChecked(flattened_mappings.uses_before_alternative())
 
         # update ignore columns filter
         self._ui.ignore_columns_button.setEnabled(flattened_mappings.root_mapping.is_pivoted())
@@ -283,6 +289,27 @@ class ImportMappingOptions:
         self._undo_stack.push(
             SetValueType(
                 self._list_index.parent().row(), self._list_index.row(), self._mappings_model, new_type, old_type
+            )
+        )
+
+    @Slot(bool)
+    def _change_use_before_alternative(self, state):
+        """
+        Pushes SetUseBeforeAlternative command to the undo stack.
+
+        Args:
+            state (bool): new flag value
+        """
+        if self._block_signals or not self._has_current_mappings():
+            return
+        previous_mapping = self._list_index.data(Role.FLATTENED_MAPPINGS).root_mapping
+        self._undo_stack.push(
+            SetUseBeforeAlternativeFlag(
+                self._list_index.parent().row(),
+                self._list_index.row(),
+                self._mappings_model,
+                state == Qt.Checked,
+                previous_mapping,
             )
         )
 
@@ -415,11 +442,13 @@ class ImportMappingOptions:
         flattened_mappings = self._list_index.data(Role.ITEM).flattened_mappings
         value_mapping = flattened_mappings.value_mapping()
         if value_mapping is None:
+            self._ui.map_dimensions_label.setEnabled(False)
             self._ui.map_dimension_spin_box.setEnabled(False)
             self._ui.map_compression_check_box.setEnabled(False)
             return
         is_map = flattened_mappings.is_map_value()
         dimension_count = flattened_mappings.map_dimension_count()
+        self._ui.map_dimensions_label.setEnabled(is_map)
         self._ui.map_dimension_spin_box.setEnabled(is_map)
         self._ui.map_dimension_spin_box.setValue(dimension_count)
         self._ui.map_compression_check_box.setEnabled(is_map)
