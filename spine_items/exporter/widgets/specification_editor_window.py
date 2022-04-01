@@ -673,6 +673,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if self._mappings_table_model.data(index, MappingsTableModel.MAPPING_TYPE_ROLE) in (
             MappingType.object_parameter_values,
             MappingType.relationship_parameter_values,
+            MappingType.relationship_object_parameter_values,
         ):
             set_parameter_dimensions(modified, dimensions)
         else:
