@@ -28,11 +28,6 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="ReferencesTreeView" name="treeView_view">
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
      </property>
@@ -97,6 +92,19 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QTreeView" name="treeView_pinned_values">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+     <property name="rootIsDecorated">
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

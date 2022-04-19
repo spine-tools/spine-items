@@ -19,7 +19,7 @@ Classes for custom context menus and pop-up menus.
 from spinetoolbox.widgets.custom_menus import CustomContextMenu
 
 
-class ViewPropertiesContextMenu(CustomContextMenu):
+class ViewRefsContextMenu(CustomContextMenu):
     """Context menu class for the references tree view of the View project item properties."""
 
     def __init__(self, parent, position, index):
@@ -35,3 +35,22 @@ class ViewPropertiesContextMenu(CustomContextMenu):
             # If no item at index
             return
         self.add_action("Open editor")
+
+
+class ViewSelectionsContextMenu(CustomContextMenu):
+    """Context menu class for the pinned values tree view of the View project item properties."""
+
+    def __init__(self, parent, position, view):
+        """
+
+        Args:
+            parent (QWidget): Parent for menu widget (ToolboxUI)
+            position (QPoint): Position on screen
+            view (View): View item that requests the menu
+        """
+        super().__init__(parent, position)
+        selected_pinned_values = view.selected_pinned_values()
+        self.add_action("Plot", enabled=bool(selected_pinned_values))
+        self.add_action("Unpin", enabled=bool(selected_pinned_values))
+        self.addSeparator()
+        self.add_action("Rename...", enabled=len(selected_pinned_values) == 1)

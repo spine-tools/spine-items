@@ -16,9 +16,9 @@ View properties widget.
 :date:   12.9.2019
 """
 
-from PySide2.QtCore import Slot
+from PySide2.QtCore import Slot, QPoint
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from .custom_menus import ViewPropertiesContextMenu
+from .custom_menus import ViewRefsContextMenu, ViewSelectionsContextMenu
 
 
 class ViewPropertiesWidget(PropertiesWidgetBase):
@@ -41,11 +41,12 @@ class ViewPropertiesWidget(PropertiesWidgetBase):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.treeView_view.customContextMenuRequested.connect(self.show_view_properties_context_menu)
+        self.ui.treeView_view.customContextMenuRequested.connect(self.show_view_refs_context_menu)
+        self.ui.treeView_pinned_values.customContextMenuRequested.connect(self.show_view_selections_context_menu)
 
-    @Slot("QPoint")
-    def show_view_properties_context_menu(self, pos):
-        """Create and show a context-menu in View properties.
+    @Slot(QPoint)
+    def show_view_refs_context_menu(self, pos):
+        """Create and show a context-menu in View refs.
 
         Args:
             pos (QPoint): Mouse position
@@ -54,9 +55,29 @@ class ViewPropertiesWidget(PropertiesWidgetBase):
         curr_index = self._toolbox.ui.treeView_project.currentIndex()  # Get selected View
         view = self._toolbox.project_item_model.item(curr_index).project_item
         global_pos = self.ui.treeView_view.viewport().mapToGlobal(pos)
-        self.view_prop_context_menu = ViewPropertiesContextMenu(self, global_pos, ind)
+        self.view_prop_context_menu = ViewRefsContextMenu(self, global_pos, ind)
         option = self.view_prop_context_menu.get_action()
         if option == "Open editor":
             view.open_db_editor()
+        self.view_prop_context_menu.deleteLater()
+        self.view_prop_context_menu = None
+
+    @Slot(QPoint)
+    def show_view_selections_context_menu(self, pos):
+        """Create and show a context-menu in View selections.
+
+        Args:
+            pos (QPoint): Mouse position
+        """
+        view = self._toolbox.active_project_item
+        global_pos = self.ui.treeView_pinned_values.viewport().mapToGlobal(pos)
+        self.view_prop_context_menu = ViewSelectionsContextMenu(self, global_pos, view)
+        option = self.view_prop_context_menu.get_action()
+        if option == "Plot":
+            view.plot_selected_pinned_values()
+        elif option == "Unpin":
+            view.unpin_selected_pinned_values()
+        elif option == "Rename...":
+            view.renamed_selected_pinned_value()
         self.view_prop_context_menu.deleteLater()
         self.view_prop_context_menu = None

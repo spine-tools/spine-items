@@ -38,9 +38,6 @@ class Ui_Form(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.treeView_view = ReferencesTreeView(Form)
         self.treeView_view.setObjectName(u"treeView_view")
-        font = QFont()
-        font.setPointSize(9)
-        self.treeView_view.setFont(font)
         self.treeView_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView_view.setAcceptDrops(True)
         self.treeView_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -70,6 +67,14 @@ class Ui_Form(object):
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_8)
+
+        self.treeView_pinned_values = QTreeView(Form)
+        self.treeView_pinned_values.setObjectName(u"treeView_pinned_values")
+        self.treeView_pinned_values.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView_pinned_values.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.treeView_pinned_values.setRootIsDecorated(False)
+
+        self.verticalLayout.addWidget(self.treeView_pinned_values)
 
 
         self.retranslateUi(Form)

@@ -19,15 +19,20 @@ Module for view class.
 import os
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
+from PySide2.QtWidgets import QInputDialog
 from sqlalchemy.engine.url import URL, make_url
+from spinedb_api import DatabaseMapping, from_database, Map
 from spinetoolbox.project_item.project_item import ProjectItem
-from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
+from spinetoolbox.plotting import PlotWidget, add_plot_to_widget, expand_maps
+from spinetoolbox.helpers import busy_effect
+from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
+from .commands import PinOrUnpinDBValuesCommand
 
 
 class View(ProjectItem):
-    def __init__(self, name, description, x, y, toolbox, project):
+    def __init__(self, name, description, x, y, toolbox, project, pinned_values=None):
         """
         View class.
 
@@ -37,12 +42,16 @@ class View(ProjectItem):
             x (float): Initial X coordinate of item icon
             y (float): Initial Y coordinate of item icon
             project (SpineToolboxProject): the project this item belongs to
+            pinned_values (dict): pinned values by name
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
         self._references = dict()
+        self._pinned_values = pinned_values if pinned_values is not None else dict()
+        self.pinned_value_model = QStandardItemModel()
         self.reference_model = QStandardItemModel()  # References to databases
         self._spine_ref_icon = QIcon(QPixmap(":/icons/Spine_db_ref_icon.png"))
+        self.populate_pinned_values_list()
 
     @staticmethod
     def item_type():
@@ -58,12 +67,6 @@ class View(ProjectItem):
     def executable_class(self):
         return ExecutableItem
 
-    @staticmethod
-    def from_dict(name, item_dict, toolbox, project):
-        """See base class."""
-        description, x, y = ProjectItem.parse_item_dict(item_dict)
-        return View(name, description, x, y, toolbox, project)
-
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
@@ -74,10 +77,12 @@ class View(ProjectItem):
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
         self._properties_ui.treeView_view.setModel(self.reference_model)
+        self._properties_ui.treeView_pinned_values.setModel(self.pinned_value_model)
 
     def save_selections(self):
         """Save selections in shared widgets for this project item into instance variables."""
         self._properties_ui.treeView_view.setModel(None)
+        self._properties_ui.treeView_pinned_values.setModel(None)
 
     @Slot(bool)
     def open_db_editor(self, checked=False):
@@ -86,12 +91,127 @@ class View(ProjectItem):
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
-        MultiSpineDBEditor(self._toolbox.db_mngr, db_url_codenames).show()
+        db_editor = SpineDBEditor(self._toolbox.db_mngr, db_url_codenames)
+        db_editor.values_pinned.connect(self._pin_db_values)
+        db_editor.show()
+
+    def selected_pinned_values(self):
+        return self._properties_ui.treeView_pinned_values.selectedIndexes()
+
+    def _reference_resource_label_from_url(self, url):
+        for label, (ref_url, _) in self._references.items():
+            if str(ref_url) == str(url):
+                return label
+        self._logger.msg_error.emit(f"<b>{self.name}</b>: Can't find any resource having url {url}.")
+
+    def _pin_db_values(self, name, values):
+        values = [(self._reference_resource_label_from_url(url), pk) for url, pk in values]
+        self._toolbox.undo_stack.push(
+            PinOrUnpinDBValuesCommand(self, {name: values}, {name: self._pinned_values.get(name)})
+        )
+
+    def unpin_selected_pinned_values(self):
+        names = [index.data() for index in self._properties_ui.treeView_pinned_values.selectedIndexes()]
+        self._toolbox.undo_stack.push(
+            PinOrUnpinDBValuesCommand(
+                self, {name: None for name in names}, {name: self._pinned_values.get(name) for name in names}
+            )
+        )
+
+    def renamed_selected_pinned_value(self):
+        index = self._properties_ui.treeView_pinned_values.selectedIndexes()[0]
+        old_name = index.data()
+        new_name, ok = QInputDialog.getText(
+            self._toolbox,
+            "Rename pin",
+            "Enter a new name for the pin:",
+            text=old_name,
+            flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint,
+        )
+        if not ok:
+            return
+        if new_name in self._pinned_values:
+            self._logger.msg_error.emit(
+                f"<b>{self.name}</b>: A pin called '{new_name}' already exists, please select a different one."
+            )
+            return
+        values = self._pinned_values.get(old_name)
+        self._toolbox.undo_stack.push(
+            PinOrUnpinDBValuesCommand(self, {old_name: None, new_name: values}, {old_name: values, new_name: None})
+        )
+
+    def do_pin_db_values(self, values_by_name):
+        for name, values in values_by_name.items():
+            self._pinned_values[name] = values
+            self.populate_pinned_values_list()
+
+    def plot_selected_pinned_values(self):
+        for index in self._properties_ui.treeView_pinned_values.selectedIndexes():
+            self._plot_pinned_value(index)
+
+    @busy_effect
+    def _plot_pinned_value(self, index):
+        pinned_values = self._pinned_values[index.data()]
+        pks_by_resource_label = {}
+        for value in pinned_values:
+            resource_label, pk = value
+            pks_by_resource_label.setdefault(resource_label, list()).append(pk)
+        values = []
+        labels = []
+        for resource_label, pks in pks_by_resource_label.items():
+            url_provider_tuple = self._references.get(resource_label)
+            if url_provider_tuple is None:
+                self._logger.msg_error.emit(f"<b>{self.name}</b>: Can't find any resource with label {resource_label}")
+                continue
+            url = url_provider_tuple[0]
+            db_map = DatabaseMapping(url)
+            row_by_pk = {
+                str(pk): db_map.query(db_map.entity_parameter_value_sq).filter_by(**pk).one_or_none() for pk in pks
+            }
+            value_by_id = {row.id: (row.value, row.type) for row in db_map.query(db_map.parameter_value_sq)}
+            db_map.connection.close()
+            for pk in pks:
+                row = row_by_pk.get(str(pk))
+                if row is None:
+                    self._logger.msg_error.emit(
+                        f"<b>{self.name}</b>: "
+                        f"Couldn't find any values having {_pk_to_ul(pk)} in <b>{db_map.codename}</b>"
+                    )
+                    continue
+                value = from_database(*value_by_id[row.id])
+                values.append(value)
+                label_parts = [db_map.codename] + [x for x in pk.values() if x]
+                labels.append(" | ".join(label_parts))
+        if not values:
+            return
+        plot_widget = PlotWidget()
+        for value, label in zip(values, labels):
+            if isinstance(value, Map):
+                values, labels = expand_maps([value], [label])
+                add_plot_to_widget(values, labels, plot_widget)
+                continue
+            add_plot_to_widget([value], [label], plot_widget)
+        plot_widget.add_legend()
+        plot_widget.use_as_window(self._toolbox, self.name)
+        plot_widget.show()
+
+    def populate_pinned_values_list(self):
+        """Populates pinned values list."""
+        self.pinned_value_model.clear()
+        self.pinned_value_model.setHorizontalHeaderItem(0, QStandardItem("Pinned values"))  # Add header
+        for key, values in self._pinned_values.items():
+            if not values:
+                continue
+            qitem = QStandardItem(key)
+            qitem.setFlags(~Qt.ItemIsEditable)
+            tool_tip = "".join([f"{url}:" + _pk_to_ul(pk) for url, pk in values])
+            qitem.setData(tool_tip, Qt.ToolTipRole)
+            self.pinned_value_model.appendRow(qitem)
 
     def populate_reference_list(self):
         """Populates reference list."""
         self.reference_model.clear()
-        self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
+        self.reference_model.setHorizontalHeaderItem(0, QStandardItem("Available resources"))  # Add header
         for db in sorted(self._references, reverse=True):
             qitem = QStandardItem(db)
             qitem.setFlags(~Qt.ItemIsEditable)
@@ -104,32 +224,32 @@ class View(ProjectItem):
         for resource in resources:
             if resource.type_ == "database":
                 url = make_url(resource.url)
-                self._references[url.database] = (url, resource.provider_name)
+                self._references[resource.label] = (url, resource.provider_name)
             elif resource.type_ == "file":
                 filepath = resource.path
                 if os.path.splitext(filepath)[1] == ".sqlite":
                     url = URL("sqlite", database=filepath)
-                    self._references[url.database] = (url, resource.provider_name)
+                    self._references[resource.label] = (url, resource.provider_name)
         self.populate_reference_list()
 
     def replace_resources_from_upstream(self, old, new):
         """See base class."""
         for old_resource, new_resource in zip(old, new):
             if old_resource.type_ == "database" and new_resource.type_ == "database":
-                old_url = make_url(old_resource.url)
-                new_url = make_url(new_resource.url)
+                old_label = old_resource.label
+                new_label = new_resource.label
             elif old_resource.type_ == "file":
                 if (
                     os.path.splitext(old_resource.path)[1] == ".sqlite"
                     and os.path.splitext(new_resource.path)[1] == ".sqlite"
                 ):
-                    old_url = URL("sqlite", database=old_resource.path)
-                    new_url = URL("sqlite", database=new_resource.path)
+                    old_label = old_resource.label
+                    new_label = new_resource.label
                 else:
                     continue
             else:
                 continue
-            self._references[new_url.database] = self._references.pop(old_url.database)
+            self._references[new_label] = self._references.pop(old_label)
         self.populate_reference_list()
 
     def _selected_indexes(self):
@@ -157,3 +277,18 @@ class View(ProjectItem):
             )
         else:
             super().notify_destination(source_item)
+
+    def item_dict(self):
+        d = super().item_dict()
+        d["pinned_values"] = {name: values for name, values in self._pinned_values.items() if values is not None}
+        return d
+
+    @staticmethod
+    def from_dict(name, item_dict, toolbox, project):
+        description, x, y = ProjectItem.parse_item_dict(item_dict)
+        pinned_values = item_dict.get("pinned_values", dict())
+        return View(name, description, x, y, toolbox, project, pinned_values=pinned_values)
+
+
+def _pk_to_ul(pk):
+    return "".join(["<ul>"] + [f"<li><b>{k}</b>: {v}</li>" for k, v in pk.items() if v] + ["</ul>"])
