@@ -192,7 +192,7 @@ class ImportMappingOptions:
         self._ui.ignore_columns_label.setEnabled(flattened_mappings.root_mapping.is_pivoted())
         self._update_ignore_columns_button(flattened_mappings.root_mapping.skip_columns)
 
-        self._ui.start_read_row_spin_box.setValue(flattened_mappings.root_mapping.read_start_row)
+        self._ui.start_read_row_spin_box.setValue(flattened_mappings.root_mapping.read_start_row + 1)
 
         self._update_time_series_options()
         self._update_map_options()
@@ -339,6 +339,7 @@ class ImportMappingOptions:
         """
         if self._block_signals or not self._has_current_mappings():
             return
+        row -= 1
         previous_row = self._list_index.data(Role.ITEM).flattened_mappings.read_start_row()
         self._undo_stack.push(
             SetReadStartRow(

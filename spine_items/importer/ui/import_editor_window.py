@@ -201,6 +201,7 @@ class Ui_MainWindow(object):
 
         self.start_read_row_spin_box = QSpinBox(self.dockWidgetContents_5)
         self.start_read_row_spin_box.setObjectName(u"start_read_row_spin_box")
+        self.start_read_row_spin_box.setMinimum(1)
 
         self.formLayout_2.setWidget(5, QFormLayout.FieldRole, self.start_read_row_spin_box)
 

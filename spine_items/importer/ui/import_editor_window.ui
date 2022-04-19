@@ -374,7 +374,11 @@
       </widget>
      </item>
      <item row="5" column="1">
-      <widget class="QSpinBox" name="start_read_row_spin_box"/>
+      <widget class="QSpinBox" name="start_read_row_spin_box">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+      </widget>
      </item>
      <item row="6" column="0">
       <widget class="QLabel" name="ignore_columns_label">
