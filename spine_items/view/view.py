@@ -45,11 +45,11 @@ class _PinValuesDialog(QDialog):
         self._ok_button = button_box.button(QDialogButtonBox.Ok)
         self._ok_button.setEnabled(False)
         self._line_edit = QLineEdit()
-        self._line_edit.setPlaceholderText("Type a name for the pin")
+        self._line_edit.setPlaceholderText("Type a name for the pin here...")
         self._text_edit = QTextBrowser()
         self._text_edit.setPlaceholderText(
             "Select parameter values that you want to pin in the Spine DB Editor below; "
-            "they will be pretty printed here."
+            "they will be pretty printed here..."
         )
         outer_layout.addWidget(self._line_edit)
         outer_layout.addWidget(self._text_edit)
@@ -157,6 +157,8 @@ class View(ProjectItem):
         self._logger.msg_error.emit(f"<b>{self.name}</b>: Can't find any resource having url {url}.")
 
     def _pin_db_values(self, name, values):
+        if not self._check_name_in_pinned_values(name):
+            return
         self._toolbox.undo_stack.push(
             PinOrUnpinDBValuesCommand(self, {name: values}, {name: self._pinned_values.get(name)})
         )
@@ -179,17 +181,20 @@ class View(ProjectItem):
             text=old_name,
             flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint,
         )
-        if not ok:
-            return
-        if new_name in self._pinned_values:
-            self._logger.msg_error.emit(
-                f"<b>{self.name}</b>: A pin called '{new_name}' already exists, please select a different one."
-            )
+        if not ok or not self._check_name_in_pinned_values(new_name):
             return
         values = self._pinned_values.get(old_name)
         self._toolbox.undo_stack.push(
             PinOrUnpinDBValuesCommand(self, {old_name: None, new_name: values}, {old_name: values, new_name: None})
         )
+
+    def _check_name_in_pinned_values(self, name):
+        if name in self._pinned_values:
+            self._logger.msg_error.emit(
+                f"<b>{self.name}</b>: A pin called '{name}' already exists, please select a different one."
+            )
+            return False
+        return True
 
     def do_pin_db_values(self, values_by_name):
         for name, values in values_by_name.items():
@@ -348,5 +353,5 @@ def _pk_to_ul(pk):
 def _format_pinned_values(values):
     html_parts = []
     for label, pk in values:
-        html_parts.append(f"<li>From <b>{label}</b>, with:" + _pk_to_ul(pk) + "</li>")
+        html_parts.append(f"<li>From <b>{label}</b>, having:" + _pk_to_ul(pk) + "</li>")
     return "<ol>" + "".join(html_parts) + "</ol>"
