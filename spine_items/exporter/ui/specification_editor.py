@@ -40,7 +40,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1146, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1146, 21))
         MainWindow.setMenuBar(self.menubar)
         self.mappings_dock = QDockWidget(MainWindow)
         self.mappings_dock.setObjectName(u"mappings_dock")
@@ -74,6 +74,7 @@ class Ui_MainWindow(object):
 
         self.mappings_table = QTableView(self.dockWidgetContents)
         self.mappings_table.setObjectName(u"mappings_table")
+        self.mappings_table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.mappings_table.setShowGrid(False)
         self.mappings_table.verticalHeader().setVisible(False)

@@ -47,20 +47,21 @@ class UpdateOutLabel(SpineToolboxCommand):
 
 
 class NewMapping(QUndoCommand):
-    def __init__(self, mappings_table_model, mapping_specification):
+    def __init__(self, mappings_table_model, mapping_specification, name=""):
         """
         Args:
             mappings_table_model (MappingsTableModel): mapping table model
             mapping_specification (MappingSpecification): new mapping specification
+            name (str): specification's name
         """
         super().__init__("add mapping")
         self._mappings_table_model = mappings_table_model
         self._mapping_specification = mapping_specification
-        self._mapping_name = None
+        self._mapping_name = name
 
     def redo(self):
-        self._mappings_table_model.extend(deepcopy(self._mapping_specification))
-        self._mapping_name = self._mappings_table_model.index(self._mappings_table_model.rowCount() - 1, 0).data()
+        row = self._mappings_table_model.extend(deepcopy(self._mapping_specification), self._mapping_name)
+        self._mapping_name = self._mappings_table_model.index(row, 0).data()
 
     def undo(self):
         self._mappings_table_model.remove_mapping(self._mapping_name)

@@ -35,7 +35,7 @@
      <x>0</x>
      <y>0</y>
      <width>1146</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -91,6 +91,9 @@
      </item>
      <item>
       <widget class="QTableView" name="mappings_table">
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
+       </property>
        <property name="selectionBehavior">
         <enum>QAbstractItemView::SelectRows</enum>
        </property>

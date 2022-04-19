@@ -15,9 +15,10 @@ Contains :class:`SpecificationEditorWindow`.
 :date:   11.12.2020
 """
 from copy import deepcopy
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
+import json
+from PySide2.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
 from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QAction, QHeaderView
+from PySide2.QtWidgets import QAction, QApplication, QHeaderView, QMenu
 
 from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
@@ -123,6 +124,9 @@ mapping_type_to_parameter_type_label = {
 }
 
 
+_MAPPINGS_MIME_TYPE = "application/spine_items-exportmappings"
+
+
 class SpecificationEditorWindow(SpecificationEditorWindowBase):
     """Interface to edit exporter specifications."""
 
@@ -165,6 +169,16 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._remove_mapping_action.setShortcut(QKeySequence(QKeySequence.Delete))
         self._remove_mapping_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         self._remove_mapping_action.triggered.connect(self._delete_mapping)
+        self._copy_mappings_action = QAction("Copy", self)
+        self._copy_mappings_action.setShortcut(QKeySequence(QKeySequence.Copy))
+        self._copy_mappings_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self._copy_mappings_action.triggered.connect(self._copy_mappings_to_clipboard)
+        self._paste_mappings_action = QAction("Paste", self)
+        self._paste_mappings_action.setShortcut(QKeySequence(QKeySequence.Paste))
+        self._paste_mappings_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self._paste_mappings_action.triggered.connect(self._paste_mappings_from_clipboard)
+        self._duplicate_mappings_action = QAction("Duplicate", self)
+        self._duplicate_mappings_action.triggered.connect(self._duplicate_mappings)
         self._ui.remove_mapping_button.clicked.connect(self._remove_mapping_action.trigger)
         self._toggle_all_enabled_action = QAction("Toggle all mappings enabled", self)
         self._toggle_all_enabled_action.triggered.connect(self._toggle_all_enabled)
@@ -175,11 +189,15 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._write_later_action = QAction("Write later", self)
         self._write_later_action.triggered.connect(self._write_later)
         self._ui.write_later_button.clicked.connect(self._write_later_action.trigger)
+        self._mappings_table_menu = self._make_mappings_table_menu()
         self._ui.mappings_table.addAction(self._add_mapping_action)
         self._ui.mappings_table.addAction(self._remove_mapping_action)
+        self._ui.mappings_table.addAction(self._copy_mappings_action)
+        self._ui.mappings_table.addAction(self._paste_mappings_action)
         self._ui.mappings_table.setModel(self._sort_mappings_table_model)
         self._ui.mappings_table.setSortingEnabled(True)
         self._ui.mappings_table.sortByColumn(0, Qt.AscendingOrder)
+        self._ui.mappings_table.customContextMenuRequested.connect(self._show_mappings_table_context_menu)
         self._expect_current_mapping_change(False)
         self._ui.mappings_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self._ui.group_fn_combo_box.addItems(GROUP_FUNCTION_DISPLAY_NAMES)
@@ -434,6 +452,29 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._enable_relationship_controls()
             self._enable_parameter_controls()
 
+    @Slot(QPoint)
+    def _show_mappings_table_context_menu(self, position):
+        """Shows Mappings table context menu.
+
+        Args:
+            position (QPoint): requested menu position
+        """
+        self._mappings_table_menu.exec_(self._ui.mappings_table.mapToGlobal(position))
+
+    def _make_mappings_table_menu(self):
+        """Creates context menu for Mappings table.
+
+        Returns:
+            QMenu: context menu
+        """
+        menu = QMenu(self)
+        menu.addAction(self._add_mapping_action)
+        menu.addAction(self._copy_mappings_action)
+        menu.addAction(self._paste_mappings_action)
+        menu.addAction(self._duplicate_mappings_action)
+        menu.addAction(self._remove_mapping_action)
+        return menu
+
     @Slot(bool)
     def _new_mapping(self, _=True):
         """Pushes an add mapping command to the undo stack."""
@@ -477,6 +518,75 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 row = self._mappings_table_model.index_of(name).row()
                 self._undo_stack.push(RemoveMapping(row, self._mappings_table_model))
             self._undo_stack.endMacro()
+
+    @Slot(bool)
+    def _copy_mappings_to_clipboard(self, checked):
+        """Copies selected mappings to system clipboard.
+
+        Args:
+            checked (bool): unused
+        """
+        selection_model = self._ui.mappings_table.selectionModel()
+        indices = [self._sort_mappings_table_model.mapToSource(i) for i in selection_model.selectedIndexes()]
+        if not indices:
+            return
+        specifications = []
+        for index in indices:
+            if index.column() != 0:
+                continue
+            specification = self._mappings_table_model.data(index, MappingsTableModel.MAPPING_SPECIFICATION_ROLE)
+            serialized = specification.to_dict()
+            serialized["name"] = self._mappings_table_model.data(index)
+            specifications.append(serialized)
+        clipboard = QApplication.clipboard()
+        mime_data = QMimeData()
+        mime_data.setData(_MAPPINGS_MIME_TYPE, bytes(json.dumps(specifications), "utf-8"))
+        clipboard.setMimeData(mime_data)
+
+    @Slot(bool)
+    def _paste_mappings_from_clipboard(self, checked):
+        """Pastes mappings from system clipboard.
+
+        Args:
+            checked (bool): unused
+        """
+        clipboard = QApplication.clipboard()
+        mime_data = clipboard.mimeData()
+        if not mime_data.hasFormat(_MAPPINGS_MIME_TYPE):
+            return
+        serialized = json.loads(str(mime_data.data(_MAPPINGS_MIME_TYPE), "utf-8"))
+        names = [d.pop("name") for d in serialized]
+        mappings = [MappingSpecification.from_dict(d) for d in serialized]
+        command_text = "paste mapping" + ("s" if len(mappings) > 1 else "")
+        self._undo_stack.beginMacro(command_text)
+        for mapping, name in zip(mappings, names):
+            self._undo_stack.push(NewMapping(self._mappings_table_model, mapping, name))
+        self._undo_stack.endMacro()
+
+    @Slot(bool)
+    def _duplicate_mappings(self, checked):
+        """Duplicates selected mappings.
+
+        Args:
+            checked (bool): unused
+        """
+        selection_model = self._ui.mappings_table.selectionModel()
+        indices = [self._sort_mappings_table_model.mapToSource(i) for i in selection_model.selectedIndexes()]
+        if not indices:
+            return
+        specifications = []
+        names = []
+        for index in indices:
+            if index.column() != 0:
+                continue
+            specification = self._mappings_table_model.data(index, MappingsTableModel.MAPPING_SPECIFICATION_ROLE)
+            specifications.append(deepcopy(specification))
+            names.append(self._mappings_table_model.data(index))
+        text = "duplicate mapping" + ("s" if len(specifications) > 1 else "")
+        self._undo_stack.beginMacro(text)
+        for name, specification in zip(names, specifications):
+            self._undo_stack.push(NewMapping(self._mappings_table_model, specification, name))
+        self._undo_stack.endMacro()
 
     @Slot()
     def _toggle_all_enabled(self):

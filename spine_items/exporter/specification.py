@@ -72,6 +72,31 @@ class MappingSpecification:
     use_fixed_table_name_flag: bool
     root: ExportMapping
 
+    def to_dict(self):
+        """Serializes specification into dictionary.
+
+        Returns:
+            dict: serialized specification
+        """
+        mapping_dict = dict(vars(self))
+        mapping_dict["type"] = mapping_dict["type"].value
+        mapping_dict["root"] = mapping_to_dict(mapping_dict["root"])
+        return mapping_dict
+
+    @staticmethod
+    def from_dict(mapping_dict):
+        """Deserializes specification from dictionary.
+
+        Args:
+            mapping_dict (dict): serialized specification
+
+        Returns:
+            MappingSpecifiation: deserialized specification
+        """
+        root = mapping_from_dict(mapping_dict.pop("root"))
+        type_ = MappingType(mapping_dict.pop("type"))
+        return MappingSpecification(root=root, type=type_, **mapping_dict)
+
 
 class Specification(ProjectItemSpecification):
     """Exporter's specification."""

@@ -64,19 +64,23 @@ class MappingsTableModel(QAbstractTableModel):
     def columnCount(self, parent):
         return 2
 
-    def extend(self, mapping_specification):
+    def extend(self, mapping_specification, name=""):
         """
-        Appends a new mapping to the table.
+        Appends a mapping to the table.
 
         Args:
             mapping_specification (MappingSpecification): specification to add
+            name (str): mapping specification's name; if empty, the mapping is given a default name
 
         Returns:
             int: row index of the new mapping
         """
         position = len(self._names)
         self.beginInsertRows(QModelIndex(), position, position)
-        name = unique_name("Mapping", self._names)
+        if not name:
+            name = unique_name("Mapping", self._names)
+        elif name in self._names:
+            name = unique_name(name, self._names)
         self._mappings[name] = mapping_specification
         self._names.append(name)
         self.endInsertRows()
