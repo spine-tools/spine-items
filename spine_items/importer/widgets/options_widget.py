@@ -54,10 +54,9 @@ class OptionsWidget(QWidget):
         self._current_source_table = None
 
         # ui
-        layout = QVBoxLayout(self)
-        form_widget = QWidget(self)
-        self.form_layout = QFormLayout(form_widget)
-        layout.addWidget(form_widget)
+        self._layout = QVBoxLayout(self)
+        self.form_layout = QFormLayout()
+        self._layout.addLayout(self.form_layout)
         self._ui_choices = {str: QLineEdit, list: QComboBox, int: QSpinBox, bool: QCheckBox}
         self._ui_elements = {}
         self._build_ui()
@@ -68,8 +67,8 @@ class OptionsWidget(QWidget):
         for _ in range(self.form_layout.rowCount()):
             self.form_layout.removeRow(0)
         layout = self.layout()
-        for _ in range(layout.count()):
-            layout.removeItem(layout.itemAt(0))
+        if layout.count() == 2:
+            layout.removeItem(layout.itemAt(1))
 
     def _build_ui(self):
         """Builds ui from specification in dict"""
@@ -127,7 +126,6 @@ class OptionsWidget(QWidget):
         self._set_options(self._connector.current_table)
         if hasattr(self._connector.connection, "create_default_mapping"):
             button = QPushButton("Load default mapping")
-            self.layout().addStretch()
             self.layout().addWidget(button)
             button.clicked.connect(self.load_default_mapping_requested)
 
