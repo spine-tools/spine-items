@@ -156,6 +156,7 @@ class View(ProjectItem):
                 return label
         self._logger.msg_error.emit(f"<b>{self.name}</b>: Can't find any resource having url {url}.")
 
+    @Slot(str, list)
     def _pin_db_values(self, name, values):
         if not self._check_name_in_pinned_values(name):
             return
@@ -260,7 +261,7 @@ class View(ProjectItem):
                 continue
             qitem = QStandardItem(key)
             qitem.setFlags(~Qt.ItemIsEditable)
-            tool_tip = _format_pinned_values(values)
+            tool_tip = "Pinned values:" + _format_pinned_values(values)
             qitem.setData(tool_tip, Qt.ToolTipRole)
             self.pinned_value_model.appendRow(qitem)
 
