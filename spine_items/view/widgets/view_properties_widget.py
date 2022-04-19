@@ -57,8 +57,8 @@ class ViewPropertiesWidget(PropertiesWidgetBase):
         global_pos = self.ui.treeView_view.viewport().mapToGlobal(pos)
         self.view_prop_context_menu = ViewRefsContextMenu(self, global_pos, ind)
         option = self.view_prop_context_menu.get_action()
-        if option == "Open editor":
-            view.open_db_editor()
+        if option == "Pin values...":
+            view.pin_values()
         self.view_prop_context_menu.deleteLater()
         self.view_prop_context_menu = None
 

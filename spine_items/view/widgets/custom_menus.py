@@ -31,10 +31,7 @@ class ViewRefsContextMenu(CustomContextMenu):
             index (QModelIndex): Index of item that requested the context-menu
         """
         super().__init__(parent, position)
-        if not index.isValid():
-            # If no item at index
-            return
-        self.add_action("Open editor")
+        self.add_action("Pin values...", enabled=index.isValid())
 
 
 class ViewSelectionsContextMenu(CustomContextMenu):

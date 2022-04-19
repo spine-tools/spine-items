@@ -64,7 +64,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_view_open_editor">
+      <widget class="QPushButton" name="pushButton_view_pin_values">
        <property name="sizePolicy">
         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -87,7 +87,7 @@
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open selected database in Spine database editor&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="text">
-        <string>Open editor...</string>
+        <string>Pin values...</string>
        </property>
       </widget>
      </item>

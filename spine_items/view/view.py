@@ -17,9 +17,9 @@ Module for view class.
 """
 
 import os
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtCore import Qt, Slot, Signal
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
-from PySide2.QtWidgets import QInputDialog
+from PySide2.QtWidgets import QInputDialog, QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit
 from sqlalchemy.engine.url import URL, make_url
 from spinedb_api import DatabaseMapping, from_database, Map
 from spinetoolbox.project_item.project_item import ProjectItem
@@ -29,6 +29,55 @@ from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .commands import PinOrUnpinDBValuesCommand
+
+
+class _PinValuesDialog(QDialog):
+    data_committed = Signal(str, list)
+
+    def __init__(self, view, db_editor):
+        super().__init__(parent=db_editor)
+        self.setWindowTitle("Pin values")
+        self._view = view
+        self._pinned_values = []
+        outer_layout = QVBoxLayout(self)
+        button_box = QDialogButtonBox(self)
+        button_box.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self._ok_button = button_box.button(QDialogButtonBox.Ok)
+        self._ok_button.setEnabled(False)
+        self._line_edit = QLineEdit()
+        self._line_edit.setPlaceholderText("Type a name for the pin")
+        self._text_edit = QTextBrowser()
+        self._text_edit.setPlaceholderText(
+            "Select parameter values that you want to pin in the Spine DB Editor below; "
+            "they will be pretty printed here."
+        )
+        outer_layout.addWidget(self._line_edit)
+        outer_layout.addWidget(self._text_edit)
+        outer_layout.addWidget(button_box)
+        button_box.rejected.connect(self.close)
+        button_box.rejected.connect(db_editor.close)
+        button_box.accepted.connect(self.accept)
+        button_box.accepted.connect(db_editor.close)
+        self._line_edit.textEdited.connect(self._update_ok_button_enabled)
+        self.adjustSize()
+
+    @Slot(str)
+    def _update_ok_button_enabled(self, text=None):
+        self._ok_button.setEnabled(bool(self._pinned_values) and bool(self.pin_name))
+
+    @Slot(list)
+    def update_pinned_values(self, values):
+        self._pinned_values = [(self._view.reference_resource_label_from_url(url), pk) for url, pk in values]
+        self._text_edit.setHtml("Values to pin:" + _format_pinned_values(self._pinned_values))
+        self._update_ok_button_enabled()
+
+    @property
+    def pin_name(self):
+        return self._line_edit.text()
+
+    def accept(self):
+        super().accept()
+        self.data_committed.emit(self.pin_name, self._pinned_values)
 
 
 class View(ProjectItem):
@@ -71,7 +120,7 @@ class View(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.pushButton_view_open_editor.clicked] = self.open_db_editor
+        s[self._properties_ui.pushButton_view_pin_values.clicked] = self.pin_values
         return s
 
     def restore_selections(self):
@@ -85,27 +134,29 @@ class View(ProjectItem):
         self._properties_ui.treeView_pinned_values.setModel(None)
 
     @Slot(bool)
-    def open_db_editor(self, checked=False):
-        """Opens selected db in the Spine database editor."""
+    def pin_values(self, checked=False):
+        """Opens selected db in the Spine database editor to pin values."""
         indexes = self._selected_indexes()
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
         db_editor = SpineDBEditor(self._toolbox.db_mngr, db_url_codenames)
-        db_editor.values_pinned.connect(self._pin_db_values)
+        dialog = _PinValuesDialog(self, db_editor)
+        db_editor.pinned_values_updated.connect(dialog.update_pinned_values)
+        dialog.data_committed.connect(self._pin_db_values)
         db_editor.show()
+        dialog.show()
 
     def selected_pinned_values(self):
         return self._properties_ui.treeView_pinned_values.selectedIndexes()
 
-    def _reference_resource_label_from_url(self, url):
+    def reference_resource_label_from_url(self, url):
         for label, (ref_url, _) in self._references.items():
             if str(ref_url) == str(url):
                 return label
         self._logger.msg_error.emit(f"<b>{self.name}</b>: Can't find any resource having url {url}.")
 
     def _pin_db_values(self, name, values):
-        values = [(self._reference_resource_label_from_url(url), pk) for url, pk in values]
         self._toolbox.undo_stack.push(
             PinOrUnpinDBValuesCommand(self, {name: values}, {name: self._pinned_values.get(name)})
         )
@@ -204,7 +255,7 @@ class View(ProjectItem):
                 continue
             qitem = QStandardItem(key)
             qitem.setFlags(~Qt.ItemIsEditable)
-            tool_tip = "".join([f"{url}:" + _pk_to_ul(pk) for url, pk in values])
+            tool_tip = _format_pinned_values(values)
             qitem.setData(tool_tip, Qt.ToolTipRole)
             self.pinned_value_model.appendRow(qitem)
 
@@ -292,3 +343,10 @@ class View(ProjectItem):
 
 def _pk_to_ul(pk):
     return "".join(["<ul>"] + [f"<li><b>{k}</b>: {v}</li>" for k, v in pk.items() if v] + ["</ul>"])
+
+
+def _format_pinned_values(values):
+    html_parts = []
+    for label, pk in values:
+        html_parts.append(f"<li>From <b>{label}</b>, with:" + _pk_to_ul(pk) + "</li>")
+    return "<ol>" + "".join(html_parts) + "</ol>"

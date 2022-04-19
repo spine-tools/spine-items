@@ -53,17 +53,17 @@ class Ui_Form(object):
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer_9)
 
-        self.pushButton_view_open_editor = QPushButton(Form)
-        self.pushButton_view_open_editor.setObjectName(u"pushButton_view_open_editor")
+        self.pushButton_view_pin_values = QPushButton(Form)
+        self.pushButton_view_pin_values.setObjectName(u"pushButton_view_pin_values")
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_view_open_editor.sizePolicy().hasHeightForWidth())
-        self.pushButton_view_open_editor.setSizePolicy(sizePolicy)
-        self.pushButton_view_open_editor.setMinimumSize(QSize(75, 23))
-        self.pushButton_view_open_editor.setMaximumSize(QSize(16777215, 23))
+        sizePolicy.setHeightForWidth(self.pushButton_view_pin_values.sizePolicy().hasHeightForWidth())
+        self.pushButton_view_pin_values.setSizePolicy(sizePolicy)
+        self.pushButton_view_pin_values.setMinimumSize(QSize(75, 23))
+        self.pushButton_view_pin_values.setMaximumSize(QSize(16777215, 23))
 
-        self.horizontalLayout_8.addWidget(self.pushButton_view_open_editor)
+        self.horizontalLayout_8.addWidget(self.pushButton_view_pin_values)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_8)
@@ -85,8 +85,8 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_view_open_editor.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open selected database in Spine database editor</p></body></html>", None))
+        self.pushButton_view_pin_values.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open selected database in Spine database editor</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_view_open_editor.setText(QCoreApplication.translate("Form", u"Open editor...", None))
+        self.pushButton_view_pin_values.setText(QCoreApplication.translate("Form", u"Pin values...", None))
     # retranslateUi
 
