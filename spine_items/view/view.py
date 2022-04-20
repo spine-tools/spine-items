@@ -84,6 +84,7 @@ class View(ProjectItem):
         """Restore selections into shared widgets when this project item is selected."""
         self._properties_ui.treeView_references.setModel(self.reference_model)
         self._properties_ui.treeView_pinned_values.setModel(self.pinned_value_model)
+        self._update_buttons_enabled()
 
     def save_selections(self):
         """Save selections in shared widgets for this project item into instance variables."""
@@ -219,8 +220,13 @@ class View(ProjectItem):
             qitem.setData(tool_tip, Qt.ToolTipRole)
             self.pinned_value_model.appendRow(qitem)
 
+    def _update_buttons_enabled(self):
+        self._properties_ui.pushButton_view_open_editor.setEnabled(bool(self._references))
+        self._properties_ui.pushButton_view_pin_values.setEnabled(bool(self._references))
+
     def populate_reference_list(self):
         """Populates reference list."""
+        self._update_buttons_enabled()
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("Available resources"))  # Add header
         for db in sorted(self._references, reverse=True):
