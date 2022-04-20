@@ -370,7 +370,8 @@ class _PinValuesDialog(_PinDialogMixin, QDialog):
         self._line_edit.setPlaceholderText("Type a name for the pin here...")
         self._text_edit = QTextBrowser()
         self._text_edit.setPlaceholderText(
-            "Select parameter values that you want to pin in the Spine DB Editor underneath..."
+            "Select parameter values that you want to pin in the Spine DB Editor underneath - "
+            "they will be shown here..."
         )
         outer_layout.addWidget(self._line_edit)
         outer_layout.addWidget(self._text_edit)
