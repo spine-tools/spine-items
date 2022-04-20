@@ -19,70 +19,17 @@ Module for view class.
 import os
 from PySide2.QtCore import Qt, Slot, Signal
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
-from PySide2.QtWidgets import QInputDialog, QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
+from PySide2.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
 from sqlalchemy.engine.url import URL, make_url
 from spinedb_api import DatabaseMapping, from_database, Map
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.plotting import PlotWidget, add_plot_to_widget, expand_maps
 from spinetoolbox.helpers import busy_effect
 from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
+from spinetoolbox.widgets.notification import Notification
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .commands import PinOrUnpinDBValuesCommand
-
-
-class _PinValuesDialog(QDialog):
-    data_committed = Signal(str, list)
-
-    def __init__(self, view, db_editor):
-        super().__init__(parent=db_editor)
-        self.setWindowTitle("Pin values")
-        self._view = view
-        self._pinned_values = []
-        outer_layout = QVBoxLayout(self)
-        button_box = QDialogButtonBox(self)
-        button_box.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self._ok_button = button_box.button(QDialogButtonBox.Ok)
-        self._ok_button.setEnabled(False)
-        self._line_edit = QLineEdit()
-        self._line_edit.setPlaceholderText("Type a name for the pin here...")
-        self._text_edit = QTextBrowser()
-        self._text_edit.setPlaceholderText(
-            "Select parameter values that you want to pin in the Spine DB Editor underneath..."
-        )
-        outer_layout.addWidget(self._line_edit)
-        outer_layout.addWidget(self._text_edit)
-        outer_layout.addWidget(button_box)
-        button_box.rejected.connect(self.close)
-        button_box.rejected.connect(db_editor.close)
-        button_box.accepted.connect(self.accept)
-        button_box.accepted.connect(db_editor.close)
-        self._line_edit.textEdited.connect(self._update_ok_button_enabled)
-        self.adjustSize()
-
-    @Slot(str)
-    def _update_ok_button_enabled(self, text=None):
-        self._ok_button.setEnabled(bool(self._pinned_values) and bool(self.pin_name))
-
-    @Slot(list)
-    def update_pinned_values(self, values):
-        self._pinned_values = [(self._view.reference_resource_label_from_url(url), pk) for url, pk in values]
-        html = _format_pinned_values(self._pinned_values)
-        self._text_edit.setHtml(html)
-        label = QLabel(html)
-        width = label.sizeHint().width()
-        doc_margin = self._text_edit.document().documentMargin()
-        width += 2 * doc_margin
-        self._text_edit.setMinimumWidth(width)
-        self._update_ok_button_enabled()
-
-    @property
-    def pin_name(self):
-        return self._line_edit.text()
-
-    def accept(self):
-        super().accept()
-        self.data_committed.emit(self.pin_name, self._pinned_values)
 
 
 class View(ProjectItem):
@@ -103,7 +50,7 @@ class View(ProjectItem):
         self._references = dict()
         self._pinned_values = pinned_values if pinned_values is not None else dict()
         self.pinned_value_model = QStandardItemModel()
-        self.reference_model = QStandardItemModel()  # References to databases
+        self.reference_model = QStandardItemModel()
         self._spine_ref_icon = QIcon(QPixmap(":/icons/Spine_db_ref_icon.png"))
         self.populate_pinned_values_list()
 
@@ -120,6 +67,10 @@ class View(ProjectItem):
     @property
     def executable_class(self):
         return ExecutableItem
+
+    @property
+    def pinned_values(self):
+        return self._pinned_values
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
@@ -176,11 +127,10 @@ class View(ProjectItem):
 
     @Slot(str, list)
     def _pin_db_values(self, name, values):
-        if not self._check_name_in_pinned_values(name):
-            return
         self._toolbox.undo_stack.push(
             PinOrUnpinDBValuesCommand(self, {name: values}, {name: self._pinned_values.get(name)})
         )
+        self._logger.msg.emit(f"<b>{self.name}</b>: Successfully added pin '{name}'")
 
     def unpin_selected_pinned_values(self):
         names = [index.data() for index in self._properties_ui.treeView_pinned_values.selectedIndexes()]
@@ -193,27 +143,13 @@ class View(ProjectItem):
     def renamed_selected_pinned_value(self):
         index = self._properties_ui.treeView_pinned_values.selectedIndexes()[0]
         old_name = index.data()
-        new_name, ok = QInputDialog.getText(
-            self._toolbox,
-            "Rename pin",
-            "Enter a new name for the pin:",
-            text=old_name,
-            flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint,
-        )
-        if not ok or not self._check_name_in_pinned_values(new_name):
+        new_name, ok = _RenamePinDialog.get_new_name(self, old_name, self._toolbox)
+        if not ok:
             return
         values = self._pinned_values.get(old_name)
         self._toolbox.undo_stack.push(
             PinOrUnpinDBValuesCommand(self, {old_name: None, new_name: values}, {old_name: values, new_name: None})
         )
-
-    def _check_name_in_pinned_values(self, name):
-        if name in self._pinned_values:
-            self._logger.msg_error.emit(
-                f"<b>{self.name}</b>: A pin called '{name}' already exists, please select a different one."
-            )
-            return False
-        return True
 
     def do_pin_db_values(self, values_by_name):
         for name, values in values_by_name.items():
@@ -392,3 +328,110 @@ def _format_pinned_values(values):
         tables.append(table)
     table = "".join(tables)
     return f"<html>{head}<body>{table}</body></html>"
+
+
+class _PinDialogMixin:
+    @property
+    def pin_name(self):
+        return self._line_edit.text()
+
+    def _check_name_valid(self):
+        if self.pin_name in self._view.pinned_values:
+            Notification(
+                self,
+                f"A pin called {self.pin_name} already exists, please select a different name.",
+                corner=Qt.BottomRightCorner,
+            ).show()
+            return False
+        return True
+
+
+class _PinValuesDialog(_PinDialogMixin, QDialog):
+    data_committed = Signal(str, list)
+
+    def __init__(self, view, db_editor):
+        super().__init__(parent=db_editor)
+        self.setWindowTitle("Pin values")
+        self._view = view
+        self._db_editor = db_editor
+        self._pinned_values = []
+        outer_layout = QVBoxLayout(self)
+        button_box = QDialogButtonBox(self)
+        button_box.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self._ok_button = button_box.button(QDialogButtonBox.Ok)
+        self._ok_button.setEnabled(False)
+        self._line_edit = QLineEdit()
+        self._line_edit.setPlaceholderText("Type a name for the pin here...")
+        self._text_edit = QTextBrowser()
+        self._text_edit.setPlaceholderText(
+            "Select parameter values that you want to pin in the Spine DB Editor underneath..."
+        )
+        outer_layout.addWidget(self._line_edit)
+        outer_layout.addWidget(self._text_edit)
+        outer_layout.addWidget(button_box)
+        button_box.rejected.connect(self.close)
+        button_box.rejected.connect(db_editor.close)
+        button_box.accepted.connect(self.accept)
+        self._line_edit.textEdited.connect(self._update_ok_button_enabled)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+    @Slot(str)
+    def _update_ok_button_enabled(self, _text=None):
+        self._ok_button.setEnabled(bool(self._pinned_values) and bool(self.pin_name))
+
+    @Slot(list)
+    def update_pinned_values(self, values):
+        self._pinned_values = [(self._view.reference_resource_label_from_url(url), pk) for url, pk in values]
+        html = _format_pinned_values(self._pinned_values)
+        self._text_edit.setHtml(html)
+        label = QLabel(html)
+        width = label.sizeHint().width()
+        doc_margin = self._text_edit.document().documentMargin()
+        width += 2 * doc_margin
+        self._text_edit.setMinimumWidth(width)
+        self._update_ok_button_enabled()
+
+    def accept(self):
+        if not self._check_name_valid():
+            return
+        super().accept()
+        self._db_editor.close()
+        self.data_committed.emit(self.pin_name, self._pinned_values)
+
+
+class _RenamePinDialog(_PinDialogMixin, QDialog):
+    def __init__(self, view, old_name, parent):
+        super().__init__(parent=parent)
+        self._view = view
+        self.new_name = ""
+        self.setWindowTitle("Rename pin")
+        outer_layout = QVBoxLayout(self)
+        button_box = QDialogButtonBox(self)
+        button_box.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self._ok_button = button_box.button(QDialogButtonBox.Ok)
+        self._line_edit = QLineEdit()
+        self._line_edit.setText(old_name)
+        outer_layout.addWidget(QLabel("New name:"))
+        outer_layout.addWidget(self._line_edit)
+        outer_layout.addWidget(button_box)
+        button_box.rejected.connect(self.close)
+        button_box.accepted.connect(self.accept)
+        self._line_edit.textEdited.connect(self._update_ok_button_enabled)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self._line_edit.setFocus()
+
+    @Slot(str)
+    def _update_ok_button_enabled(self, _text=None):
+        self._ok_button.setEnabled(bool(self.pin_name))
+
+    def accept(self):
+        if not self._check_name_valid():
+            return
+        super().accept()
+        self.new_name = self.pin_name
+
+    @classmethod
+    def get_new_name(cls, view, old_name, parent):
+        dialog = cls(view, old_name, parent)
+        result = dialog.exec_()
+        return dialog.new_name, result == QDialog.Accepted
