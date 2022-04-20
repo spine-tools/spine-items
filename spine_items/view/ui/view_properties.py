@@ -36,23 +36,19 @@ class Ui_Form(object):
         Form.resize(274, 241)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.treeView_view = ReferencesTreeView(Form)
-        self.treeView_view.setObjectName(u"treeView_view")
-        self.treeView_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.treeView_view.setAcceptDrops(True)
-        self.treeView_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.treeView_view.setTextElideMode(Qt.ElideLeft)
-        self.treeView_view.setRootIsDecorated(False)
+        self.treeView_references = ReferencesTreeView(Form)
+        self.treeView_references.setObjectName(u"treeView_references")
+        self.treeView_references.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView_references.setAcceptDrops(True)
+        self.treeView_references.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.treeView_references.setTextElideMode(Qt.ElideLeft)
+        self.treeView_references.setRootIsDecorated(False)
 
-        self.verticalLayout.addWidget(self.treeView_view)
+        self.verticalLayout.addWidget(self.treeView_references)
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setSpacing(6)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_8.addItem(self.horizontalSpacer_9)
-
         self.pushButton_view_pin_values = QPushButton(Form)
         self.pushButton_view_pin_values.setObjectName(u"pushButton_view_pin_values")
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
@@ -64,6 +60,15 @@ class Ui_Form(object):
         self.pushButton_view_pin_values.setMaximumSize(QSize(16777215, 23))
 
         self.horizontalLayout_8.addWidget(self.pushButton_view_pin_values)
+
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_8.addItem(self.horizontalSpacer_9)
+
+        self.pushButton_view_open_editor = QPushButton(Form)
+        self.pushButton_view_open_editor.setObjectName(u"pushButton_view_open_editor")
+
+        self.horizontalLayout_8.addWidget(self.pushButton_view_open_editor)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_8)
@@ -88,5 +93,6 @@ class Ui_Form(object):
         self.pushButton_view_pin_values.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open selected database in Spine database editor</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_view_pin_values.setText(QCoreApplication.translate("Form", u"Pin values...", None))
+        self.pushButton_view_open_editor.setText(QCoreApplication.translate("Form", u"Open editor...", None))
     # retranslateUi
 

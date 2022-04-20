@@ -22,16 +22,18 @@ from spinetoolbox.widgets.custom_menus import CustomContextMenu
 class ViewRefsContextMenu(CustomContextMenu):
     """Context menu class for the references tree view of the View project item properties."""
 
-    def __init__(self, parent, position, index):
+    def __init__(self, parent, position, view):
         """
 
         Args:
             parent (QWidget): Parent for menu widget (ToolboxUI)
             position (QPoint): Position on screen
-            index (QModelIndex): Index of item that requested the context-menu
+            view (View): View item that requests the menu
         """
         super().__init__(parent, position)
-        self.add_action("Pin values...", enabled=index.isValid())
+        selected_references = view.selected_references()
+        self.add_action("Pin values...", enabled=bool(selected_references))
+        self.add_action("Open editor...", enabled=bool(selected_references))
 
 
 class ViewSelectionsContextMenu(CustomContextMenu):

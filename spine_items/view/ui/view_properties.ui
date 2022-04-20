@@ -27,7 +27,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="ReferencesTreeView" name="treeView_view">
+    <widget class="ReferencesTreeView" name="treeView_references">
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
      </property>
@@ -46,23 +46,10 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,0">
+    <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,0,0">
      <property name="spacing">
       <number>6</number>
      </property>
-     <item>
-      <spacer name="horizontalSpacer_9">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item>
       <widget class="QPushButton" name="pushButton_view_pin_values">
        <property name="sizePolicy">
@@ -88,6 +75,26 @@
        </property>
        <property name="text">
         <string>Pin values...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_9">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_view_open_editor">
+       <property name="text">
+        <string>Open editor...</string>
        </property>
       </widget>
      </item>

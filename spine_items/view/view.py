@@ -68,7 +68,7 @@ class _PinValuesDialog(QDialog):
     @Slot(list)
     def update_pinned_values(self, values):
         self._pinned_values = [(self._view.reference_resource_label_from_url(url), pk) for url, pk in values]
-        self._text_edit.setHtml("Values to pin:" + _format_pinned_values(self._pinned_values))
+        self._text_edit.setHtml(_format_pinned_values(self._pinned_values))
         self._update_ok_button_enabled()
 
     @property
@@ -121,17 +121,27 @@ class View(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         s[self._properties_ui.pushButton_view_pin_values.clicked] = self.pin_values
+        s[self._properties_ui.pushButton_view_open_editor.clicked] = self.open_editor
         return s
 
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
-        self._properties_ui.treeView_view.setModel(self.reference_model)
+        self._properties_ui.treeView_references.setModel(self.reference_model)
         self._properties_ui.treeView_pinned_values.setModel(self.pinned_value_model)
 
     def save_selections(self):
         """Save selections in shared widgets for this project item into instance variables."""
-        self._properties_ui.treeView_view.setModel(None)
+        self._properties_ui.treeView_references.setModel(None)
         self._properties_ui.treeView_pinned_values.setModel(None)
+
+    @Slot(bool)
+    def open_editor(self, checked=False):
+        """Opens selected db in the Spine database editor."""
+        indexes = self._selected_indexes()
+        db_url_codenames = self._db_url_codenames(indexes)
+        if not db_url_codenames:
+            return
+        self._toolbox.db_mngr.open_db_editor(db_url_codenames)
 
     @Slot(bool)
     def pin_values(self, checked=False):
@@ -146,6 +156,9 @@ class View(ProjectItem):
         dialog.data_committed.connect(self._pin_db_values)
         db_editor.show()
         dialog.show()
+
+    def selected_references(self):
+        return self._properties_ui.treeView_references.selectedIndexes()
 
     def selected_pinned_values(self):
         return self._properties_ui.treeView_pinned_values.selectedIndexes()
@@ -261,7 +274,7 @@ class View(ProjectItem):
                 continue
             qitem = QStandardItem(key)
             qitem.setFlags(~Qt.ItemIsEditable)
-            tool_tip = "Pinned values:" + _format_pinned_values(values)
+            tool_tip = _format_pinned_values(values)
             qitem.setData(tool_tip, Qt.ToolTipRole)
             self.pinned_value_model.appendRow(qitem)
 
@@ -311,10 +324,10 @@ class View(ProjectItem):
 
     def _selected_indexes(self):
         """Returns selected indexes."""
-        selection_model = self._properties_ui.treeView_view.selectionModel()
+        selection_model = self._properties_ui.treeView_references.selectionModel()
         if not selection_model.hasSelection():
-            self._properties_ui.treeView_view.selectAll()
-        return self._properties_ui.treeView_view.selectionModel().selectedRows()
+            self._properties_ui.treeView_references.selectAll()
+        return self._properties_ui.treeView_references.selectionModel().selectedRows()
 
     def _db_url_codenames(self, indexes):
         """Returns a dict mapping url to provider's name for given indexes in the reference model."""
@@ -352,7 +365,25 @@ def _pk_to_ul(pk):
 
 
 def _format_pinned_values(values):
-    html_parts = []
+    head = """
+        <head>
+        <style>
+            table, th, td {
+              border: 1px solid black;
+              border-collapse: collapse;
+              padding: 5px;
+            }
+        </style>
+        </head>
+    """
+    tables = []
     for label, pk in values:
-        html_parts.append(f"<li>From <b>{label}</b>, having:" + _pk_to_ul(pk) + "</li>")
-    return "<ol>" + "".join(html_parts) + "</ol>"
+        header = [*pk, "database"]
+        data = [*pk.values(), label]
+        table = "<p><table>"
+        table += "<tr>" + "".join([f"<th>{h}</th>" for h in header]) + "</tr>"
+        table += "<tr>" + "".join([f"<td>{d}</td>" for d in data]) + "</tr>"
+        table += "</table></p>"
+        tables.append(table)
+    table = "".join(tables)
+    return f"<html>{head}<body>{table}</body></html>"

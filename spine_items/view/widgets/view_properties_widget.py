@@ -41,7 +41,7 @@ class ViewPropertiesWidget(PropertiesWidgetBase):
 
     def connect_signals(self):
         """Connect signals to slots."""
-        self.ui.treeView_view.customContextMenuRequested.connect(self.show_view_refs_context_menu)
+        self.ui.treeView_references.customContextMenuRequested.connect(self.show_view_refs_context_menu)
         self.ui.treeView_pinned_values.customContextMenuRequested.connect(self.show_view_selections_context_menu)
 
     @Slot(QPoint)
@@ -51,14 +51,14 @@ class ViewPropertiesWidget(PropertiesWidgetBase):
         Args:
             pos (QPoint): Mouse position
         """
-        ind = self.ui.treeView_view.indexAt(pos)  # Index of selected item in View references tree view.
-        curr_index = self._toolbox.ui.treeView_project.currentIndex()  # Get selected View
-        view = self._toolbox.project_item_model.item(curr_index).project_item
-        global_pos = self.ui.treeView_view.viewport().mapToGlobal(pos)
-        self.view_prop_context_menu = ViewRefsContextMenu(self, global_pos, ind)
+        view = self._toolbox.active_project_item
+        global_pos = self.ui.treeView_references.viewport().mapToGlobal(pos)
+        self.view_prop_context_menu = ViewRefsContextMenu(self, global_pos, view)
         option = self.view_prop_context_menu.get_action()
         if option == "Pin values...":
             view.pin_values()
+        elif option == "Open editor...":
+            view.open_editor()
         self.view_prop_context_menu.deleteLater()
         self.view_prop_context_menu = None
 
