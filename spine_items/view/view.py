@@ -19,7 +19,7 @@ Module for view class.
 import os
 from PySide2.QtCore import Qt, Slot, Signal
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
-from PySide2.QtWidgets import QInputDialog, QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit
+from PySide2.QtWidgets import QInputDialog, QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
 from sqlalchemy.engine.url import URL, make_url
 from spinedb_api import DatabaseMapping, from_database, Map
 from spinetoolbox.project_item.project_item import ProjectItem
@@ -48,8 +48,7 @@ class _PinValuesDialog(QDialog):
         self._line_edit.setPlaceholderText("Type a name for the pin here...")
         self._text_edit = QTextBrowser()
         self._text_edit.setPlaceholderText(
-            "Select parameter values that you want to pin in the Spine DB Editor below; "
-            "they will be pretty printed here..."
+            "Select parameter values that you want to pin in the Spine DB Editor underneath..."
         )
         outer_layout.addWidget(self._line_edit)
         outer_layout.addWidget(self._text_edit)
@@ -68,7 +67,13 @@ class _PinValuesDialog(QDialog):
     @Slot(list)
     def update_pinned_values(self, values):
         self._pinned_values = [(self._view.reference_resource_label_from_url(url), pk) for url, pk in values]
-        self._text_edit.setHtml(_format_pinned_values(self._pinned_values))
+        html = _format_pinned_values(self._pinned_values)
+        self._text_edit.setHtml(html)
+        label = QLabel(html)
+        width = label.sizeHint().width()
+        doc_margin = self._text_edit.document().documentMargin()
+        width += 2 * doc_margin
+        self._text_edit.setMinimumWidth(width)
         self._update_ok_button_enabled()
 
     @property
@@ -378,7 +383,7 @@ def _format_pinned_values(values):
     """
     tables = []
     for label, pk in values:
-        header = [*pk, "database"]
+        header = [*pk, "source"]
         data = [*pk.values(), label]
         table = "<p><table>"
         table += "<tr>" + "".join([f"<th>{h}</th>" for h in header]) + "</tr>"
