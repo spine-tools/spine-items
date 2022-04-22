@@ -51,25 +51,7 @@
       <number>6</number>
      </property>
      <item>
-      <widget class="QPushButton" name="pushButton_view_pin_values">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>75</width>
-         <height>23</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>23</height>
-        </size>
-       </property>
+      <widget class="QPushButton" name="pushButton_pin_values">
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open selected database in Spine database editor&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -92,7 +74,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_view_open_editor">
+      <widget class="QPushButton" name="pushButton_open_editor">
        <property name="text">
         <string>Open editor...</string>
        </property>
@@ -112,6 +94,30 @@
       <bool>false</bool>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_plot_pinned">
+       <property name="text">
+        <string>Plot</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

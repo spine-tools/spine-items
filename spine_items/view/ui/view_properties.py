@@ -49,26 +49,19 @@ class Ui_Form(object):
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setSpacing(6)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.pushButton_view_pin_values = QPushButton(Form)
-        self.pushButton_view_pin_values.setObjectName(u"pushButton_view_pin_values")
-        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_view_pin_values.sizePolicy().hasHeightForWidth())
-        self.pushButton_view_pin_values.setSizePolicy(sizePolicy)
-        self.pushButton_view_pin_values.setMinimumSize(QSize(75, 23))
-        self.pushButton_view_pin_values.setMaximumSize(QSize(16777215, 23))
+        self.pushButton_pin_values = QPushButton(Form)
+        self.pushButton_pin_values.setObjectName(u"pushButton_pin_values")
 
-        self.horizontalLayout_8.addWidget(self.pushButton_view_pin_values)
+        self.horizontalLayout_8.addWidget(self.pushButton_pin_values)
 
         self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer_9)
 
-        self.pushButton_view_open_editor = QPushButton(Form)
-        self.pushButton_view_open_editor.setObjectName(u"pushButton_view_open_editor")
+        self.pushButton_open_editor = QPushButton(Form)
+        self.pushButton_open_editor.setObjectName(u"pushButton_open_editor")
 
-        self.horizontalLayout_8.addWidget(self.pushButton_view_open_editor)
+        self.horizontalLayout_8.addWidget(self.pushButton_open_editor)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_8)
@@ -81,6 +74,20 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.treeView_pinned_values)
 
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout.addItem(self.horizontalSpacer)
+
+        self.pushButton_plot_pinned = QPushButton(Form)
+        self.pushButton_plot_pinned.setObjectName(u"pushButton_plot_pinned")
+
+        self.horizontalLayout.addWidget(self.pushButton_plot_pinned)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout)
+
 
         self.retranslateUi(Form)
 
@@ -90,9 +97,10 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_view_pin_values.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open selected database in Spine database editor</p></body></html>", None))
+        self.pushButton_pin_values.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open selected database in Spine database editor</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_view_pin_values.setText(QCoreApplication.translate("Form", u"Pin values...", None))
-        self.pushButton_view_open_editor.setText(QCoreApplication.translate("Form", u"Open editor...", None))
+        self.pushButton_pin_values.setText(QCoreApplication.translate("Form", u"Pin values...", None))
+        self.pushButton_open_editor.setText(QCoreApplication.translate("Form", u"Open editor...", None))
+        self.pushButton_plot_pinned.setText(QCoreApplication.translate("Form", u"Plot", None))
     # retranslateUi
 

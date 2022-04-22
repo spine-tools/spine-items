@@ -50,6 +50,7 @@ class ViewSelectionsContextMenu(CustomContextMenu):
         super().__init__(parent, position)
         selected_pinned_values = view.selected_pinned_values()
         self.add_action("Plot", enabled=bool(selected_pinned_values))
-        self.add_action("Unpin", enabled=bool(selected_pinned_values))
+        self.add_action("Copy plot data", enabled=len(selected_pinned_values) == 1)
         self.addSeparator()
+        self.add_action("Unpin", enabled=bool(selected_pinned_values))
         self.add_action("Rename...", enabled=len(selected_pinned_values) == 1)

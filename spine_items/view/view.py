@@ -76,8 +76,9 @@ class View(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        s[self._properties_ui.pushButton_view_pin_values.clicked] = self.pin_values
-        s[self._properties_ui.pushButton_view_open_editor.clicked] = self.open_editor
+        s[self._properties_ui.pushButton_pin_values.clicked] = self.pin_values
+        s[self._properties_ui.pushButton_open_editor.clicked] = self.open_editor
+        s[self._properties_ui.pushButton_plot_pinned.clicked] = self.plot_selected_pinned_values
         return s
 
     def restore_selections(self):
@@ -94,7 +95,7 @@ class View(ProjectItem):
     @Slot(bool)
     def open_editor(self, checked=False):
         """Opens selected db in the Spine database editor."""
-        indexes = self._selected_indexes()
+        indexes = self._selected_reference_indexes()
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
@@ -103,7 +104,7 @@ class View(ProjectItem):
     @Slot(bool)
     def pin_values(self, checked=False):
         """Opens selected db in the Spine database editor to pin values."""
-        indexes = self._selected_indexes()
+        indexes = self._selected_reference_indexes()
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
@@ -157,12 +158,13 @@ class View(ProjectItem):
             self._pinned_values[name] = values
             self.populate_pinned_values_list()
 
-    def plot_selected_pinned_values(self):
-        for index in self._properties_ui.treeView_pinned_values.selectedIndexes():
+    @Slot(bool)
+    def plot_selected_pinned_values(self, _checked=False):
+        for index in self._selected_pinned_value_indexes():
             self._plot_pinned_value(index)
 
     @busy_effect
-    def _plot_pinned_value(self, index):
+    def _make_plot_widget(self, index):
         pinned_values = self._pinned_values[index.data()]
         pks_by_resource_label = {}
         for value in pinned_values:
@@ -203,8 +205,17 @@ class View(ProjectItem):
                 add_plot_to_widget(values, labels, plot_widget)
                 continue
             add_plot_to_widget([value], [label], plot_widget)
+        return plot_widget
+
+    def copy_selected_pinned_value_plot_data(self):
+        index = self._properties_ui.treeView_pinned_values.selectionModel().currentIndex()
+        plot_widget = self._make_plot_widget(index)
+        plot_widget.copy_plot_data()
+
+    def _plot_pinned_value(self, index):
+        plot_widget = self._make_plot_widget(index)
         plot_widget.add_legend()
-        plot_widget.use_as_window(self._toolbox, self.name)
+        plot_widget.use_as_window(self._toolbox, self.name + " / " + index.data())
         plot_widget.show()
 
     def populate_pinned_values_list(self):
@@ -221,8 +232,9 @@ class View(ProjectItem):
             self.pinned_value_model.appendRow(qitem)
 
     def _update_buttons_enabled(self):
-        self._properties_ui.pushButton_view_open_editor.setEnabled(bool(self._references))
-        self._properties_ui.pushButton_view_pin_values.setEnabled(bool(self._references))
+        self._properties_ui.pushButton_open_editor.setEnabled(bool(self._references))
+        self._properties_ui.pushButton_pin_values.setEnabled(bool(self._references))
+        self._properties_ui.pushButton_plot_pinned.setEnabled(bool(self._references))
 
     def populate_reference_list(self):
         """Populates reference list."""
@@ -269,12 +281,19 @@ class View(ProjectItem):
             self._references[new_label] = self._references.pop(old_label)
         self.populate_reference_list()
 
-    def _selected_indexes(self):
-        """Returns selected indexes."""
+    def _selected_reference_indexes(self):
+        """Returns selected references indexes."""
         selection_model = self._properties_ui.treeView_references.selectionModel()
         if not selection_model.hasSelection():
             self._properties_ui.treeView_references.selectAll()
         return self._properties_ui.treeView_references.selectionModel().selectedRows()
+
+    def _selected_pinned_value_indexes(self):
+        """Returns selected references indexes."""
+        selection_model = self._properties_ui.treeView_pinned_values.selectionModel()
+        if not selection_model.hasSelection():
+            self._properties_ui.treeView_pinned_values.selectAll()
+        return self._properties_ui.treeView_pinned_values.selectionModel().selectedRows()
 
     def _db_url_codenames(self, indexes):
         """Returns a dict mapping url to provider's name for given indexes in the reference model."""
@@ -370,8 +389,8 @@ class _PinValuesDialog(_PinDialogMixin, QDialog):
         self._line_edit.setPlaceholderText("Type a name for the pin here...")
         self._text_edit = QTextBrowser()
         self._text_edit.setPlaceholderText(
-            "Select parameter values that you want to pin in the Spine DB Editor underneath - "
-            "they will be shown here..."
+            "Select parameter values that you want to pin in the Spine DB Editor underneath "
+            "(they will be shown here)..."
         )
         outer_layout.addWidget(self._line_edit)
         outer_layout.addWidget(self._text_edit)

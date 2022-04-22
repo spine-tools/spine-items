@@ -75,6 +75,8 @@ class ViewPropertiesWidget(PropertiesWidgetBase):
         option = self.view_prop_context_menu.get_action()
         if option == "Plot":
             view.plot_selected_pinned_values()
+        elif option == "Copy plot data":
+            view.copy_selected_pinned_value_plot_data()
         elif option == "Unpin":
             view.unpin_selected_pinned_values()
         elif option == "Rename...":
