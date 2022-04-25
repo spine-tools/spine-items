@@ -69,7 +69,7 @@ def do_work(
                     logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
                     continue
                 if not errors:
-                    logger.msg.emit(f"Successfull ({sum(len(d) for d in data.values())} data to be written).")
+                    logger.msg.emit(f"Successful ({sum(len(d) for d in data.values())} data to be written).")
                 else:
                     logger.msg_warning.emit(
                         f"Read {sum(len(d) for d in data.values())} data with {len(errors)} errors."
