@@ -16,9 +16,9 @@ Animation class for importers and exporters.
 :date:   12.11.2019
 """
 
-import random
-from PySide2.QtGui import QFont, QPainterPath, QTransform
-from PySide2.QtCore import Signal, Slot, QObject, QTimeLine, QPointF, Qt
+import math
+from PySide2.QtGui import QPainterPath, QFont, QColor
+from PySide2.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF
 from PySide2.QtWidgets import QGraphicsTextItem
 
 
@@ -29,78 +29,71 @@ class AnimationSignaller(QObject):
 
 
 class ImporterExporterAnimation:
-    def __init__(self, item, duration=2500, count=8, percentage_size=0.2):
+    def __init__(self, item, duration=3000, cube_density=5, point_size=8, loop_extent=15):
         """Initializes animation stuff.
 
         Args:
             item (QGraphicsItem): The item on top of which the animation should play.
         """
         self._item = item
-        self.cubes = [QGraphicsTextItem(item) for i in range(count)]
+        self._cubes = []
+        self._step = 100 / duration
+        self._cube_density = cube_density
+        self._loop_extent = loop_extent
+        self._font = QFont("Font Awesome 5 Free Solid")
+        self._font.setPointSize(point_size)
         self.time_line = QTimeLine()
         self.time_line.setLoopCount(0)  # loop forever
-        self.time_line.setFrameRange(0, 10)
-        self.time_line.setDuration(duration)
-        self.time_line.setCurveShape(QTimeLine.LinearCurve)
         self.time_line.valueChanged.connect(self._handle_time_line_value_changed)
         self.time_line.stateChanged.connect(self._handle_time_line_state_changed)
-        font = QFont("Font Awesome 5 Free Solid")
-        item_rect = item.rect()
-        cube_size = percentage_size * item_rect.height()
-        font.setPixelSize(cube_size)
-        self.path = QPainterPath()
-        orbit_rect = item_rect.adjusted(0, 0, -1.5 * cube_size, 0)
-        orbit_rect.setHeight(cube_size)
-        orbit_rect.moveTop(item_rect.center().y() - 1.5 * cube_size)
-        self.path.addEllipse(orbit_rect)
-        transform = QTransform()
-        offset = 0.25 * cube_size
-        transform.translate(orbit_rect.center().x() + offset, orbit_rect.center().y() + offset)
-        transform.rotate(-45)
-        transform.translate(-orbit_rect.center().x() - offset, -orbit_rect.center().y() - offset)
-        self.path = transform.map(self.path)
-        self.x_offsets = [i / count for i in range(count)]
-        self.y_offsets = [0.5 * cube_size * i / count for i in range(-count, count)]
-        for cube in self.cubes:
-            cube.setHtml("\uf6d1")  # dice
-            cube.setFont(font)
-            cube.setAcceptedMouseButtons(Qt.NoButton)
-            cube.setDefaultTextColor("#000000")
-            cube.setTransformOriginPoint(cube.boundingRect().center())
-            cube.hide()
-
-    @staticmethod
-    def _opacity(percent):
-        if percent < 0.25:
-            return 0.75 + 3 * percent
-        if percent < 0.5:
-            return 1.5 - 3 * (percent - 0.25)
-        if percent < 0.75:
-            return 0.75 - 3 * (percent - 0.5)
-        return 3 * (percent - 0.75)
 
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
-        for cube, x_offset, y_offset in zip(self.cubes, self.x_offsets, self.y_offsets):
-            value = (x_offset + value) % 1.0
-            percent = self.percent(value)
-            opacity = self._opacity(percent)
-            cube.setOpacity(opacity)
-            point = self.path.pointAtPercent(percent)
-            point += QPointF(0, y_offset)
-            angle = -percent * 360.0
-            cube.setPos(point)
-            cube.setRotation(angle)
+        for cube in self._cubes:
+            cube.advance()
 
     @Slot(QTimeLine.State)
     def _handle_time_line_state_changed(self, new_state):
-        if new_state == QTimeLine.Running:
-            random.shuffle(self.y_offsets)
-            for cube in self.cubes:
-                cube.show()
-        elif new_state == QTimeLine.NotRunning:
-            for cube in self.cubes:
-                cube.hide()
+        sources = [conn.rect().center() for conn in self._item.connectors.values() if conn.incoming_links()]
+        sinks = [conn.rect().center() for conn in self._item.connectors.values() if conn.outgoing_links()]
+        center = self._item.rect().center()
+        if not sinks:
+            sinks = [center]
+        for source in sources:
+            for sink in sinks:
+                rect = QRectF(
+                    center.x() - self._loop_extent / 2,
+                    center.y() - self._loop_extent / 2,
+                    self._loop_extent,
+                    self._loop_extent,
+                )
+                if source == sink:
+                    sweep = 180
+                elif source.y() == sink.y():
+                    sweep = 360
+                else:
+                    sweep = 270
+                if source.x() > sink.x():
+                    sweep = -sweep
+                if source.y() < rect.bottom():
+                    start = 270
+                else:
+                    if source.x() > sink.x():
+                        start = 180
+                    else:
+                        start = 0
+                path = QPainterPath()
+                path.moveTo(source)
+                path.arcTo(rect, start, sweep)
+                path.lineTo(sink)
+                cube_count = self._cube_density * path.length() // self._item.boundingRect().width()
+                self._cubes += [
+                    _Cube(self._item, self._font, path, -i / cube_count, self._step) for i in range(int(cube_count))
+                ]
+        if new_state == QTimeLine.NotRunning:
+            for cube in self._cubes:
+                cube.scene().removeItem(cube)
+            self._cubes.clear()
 
     @Slot()
     def start(self):
@@ -117,6 +110,42 @@ class ImporterExporterAnimation:
     def stop(self):
         """Stops the animation"""
         self.time_line.stop()
+
+
+class _Cube(QGraphicsTextItem):
+    def __init__(self, parent, font, path, percent, step):
+        super().__init__(parent)
+        self._path = path
+        self._percent = percent
+        self._step = step
+        self._icon_code = "\uf1b2"
+        self.setHtml(self._icon_code)
+        self.setFont(font)
+        self.setAcceptedMouseButtons(Qt.NoButton)
+        self.setDefaultTextColor(Qt.white)
+        self.setTransformOriginPoint(self.boundingRect().center())
+        self._inset = QGraphicsTextItem(self)
+        self._inset.setHtml(self._icon_code)
+        self._inset.setFont(font)
+        self._inset.setDefaultTextColor(Qt.black)
+        self._inset.setTransformOriginPoint(self._inset.boundingRect().center())
+        self._inset.setScale(0.9)
+        self.hide()
+
+    def advance(self):
+        self._percent = self._percent + self._step
+        if self._percent > 1:
+            self._percent = -1
+        if self._percent < 0:
+            self.hide()
+            return
+        self.show()
+        pos = self._path.pointAtPercent(self._percent)
+        self.setPos(pos - self.boundingRect().center())
+        opacity = math.sin(math.pi * self._percent)
+        self.setOpacity(opacity)
+        angle = self._percent * 360.0
+        self.setRotation(angle)
 
 
 class ImporterAnimation(ImporterExporterAnimation):
