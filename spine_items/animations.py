@@ -16,10 +16,10 @@ Animation class for importers and exporters.
 :date:   12.11.2019
 """
 
-import math
-from PySide2.QtGui import QPainterPath, QFont, QColor
-from PySide2.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF
-from PySide2.QtWidgets import QGraphicsTextItem
+from PySide2.QtGui import QPainterPath, QFont
+from PySide2.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF, QPointF, QLineF
+from PySide2.QtWidgets import QGraphicsPathItem
+from spinetoolbox.helpers import color_from_index
 
 
 class AnimationSignaller(QObject):
@@ -29,17 +29,20 @@ class AnimationSignaller(QObject):
 
 
 class ImporterExporterAnimation:
-    def __init__(self, item, duration=3000, cube_density=5, point_size=8, loop_extent=15):
+    def __init__(self, item, duration=4000, plane_count=4, point_size=10, loop_width=30, loop_aspect_ratio=3):
         """Initializes animation stuff.
 
         Args:
             item (QGraphicsItem): The item on top of which the animation should play.
         """
         self._item = item
-        self._cubes = []
-        self._step = 100 / duration
-        self._cube_density = cube_density
-        self._loop_extent = loop_extent
+        self._planes = []
+        self._frame_count = 10
+        self._step = 1000 / duration / self._frame_count
+        self._plane_count = plane_count
+        self._loop_aspect_ratio = loop_aspect_ratio
+        self._loop_width = loop_width
+        self._loop_height = loop_width / loop_aspect_ratio
         self._font = QFont("Font Awesome 5 Free Solid")
         self._font.setPointSize(point_size)
         self.time_line = QTimeLine()
@@ -49,8 +52,8 @@ class ImporterExporterAnimation:
 
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
-        for cube in self._cubes:
-            cube.advance()
+        for plane in self._planes:
+            plane.advance()
 
     @Slot(QTimeLine.State)
     def _handle_time_line_state_changed(self, new_state):
@@ -59,41 +62,58 @@ class ImporterExporterAnimation:
         center = self._item.rect().center()
         if not sinks:
             sinks = [center]
-        for source in sources:
-            for sink in sinks:
-                rect = QRectF(
-                    center.x() - self._loop_extent / 2,
-                    center.y() - self._loop_extent / 2,
-                    self._loop_extent,
-                    self._loop_extent,
-                )
-                if source == sink:
-                    sweep = 180
-                elif source.y() == sink.y():
-                    sweep = 360
+        source_sink_pairs = [(source, sink) for source in sources for sink in sinks]
+        for source, sink in source_sink_pairs:
+            loop_rect = QRectF(
+                center.x() - self._loop_width / 2,
+                center.y() - self._loop_height / 2,
+                self._loop_width,
+                self._loop_height,
+            )
+            # Find sweep:
+            if source == sink:
+                # Same source as destination: sweep half circle
+                sweep = 180
+            elif source.y() == sink.y():
+                # Side to side: sweep full circle
+                sweep = 360
+            else:
+                # Side to bottom: sweep 3/4 of circle
+                sweep = 270
+            # Find start and sense
+            invert_sense = False
+            if source.y() < loop_rect.bottom():
+                # From the side: start at bottom
+                start = 270
+                # Invert sense if from the right
+                invert_sense = source.x() > center.x()
+            else:
+                # From the bottom
+                if sink.x() < center.x():
+                    # To the left: start at left and invert sense
+                    start = 180
+                    invert_sense = True
                 else:
-                    sweep = 270
-                if source.x() > sink.x():
-                    sweep = -sweep
-                if source.y() < rect.bottom():
-                    start = 270
-                else:
-                    if source.x() > sink.x():
-                        start = 180
-                    else:
-                        start = 0
-                path = QPainterPath()
-                path.moveTo(source)
-                path.arcTo(rect, start, sweep)
-                path.lineTo(sink)
-                cube_count = self._cube_density * path.length() // self._item.boundingRect().width()
-                self._cubes += [
-                    _Cube(self._item, self._font, path, -i / cube_count, self._step) for i in range(int(cube_count))
-                ]
+                    # To the right: start at right
+                    start = 0
+            if invert_sense:
+                sweep = -sweep
+            middle_point = _point_at_angle(loop_rect, start)
+            path = QPainterPath()
+            path.moveTo(source)
+            path.quadTo(_nice_ctrl_point(path.currentPosition(), middle_point), middle_point)
+            path.arcTo(loop_rect, start, sweep)
+            path.quadTo(_nice_ctrl_point(path.currentPosition(), sink), sink)
+            self._planes += [
+                self._PaperPlane(self._item, self._font, path, -i / self._plane_count, self._step, loop_rect)
+                for i in range(self._plane_count)
+            ]
+        for k, plane in enumerate(self._planes):
+            plane.color = color_from_index(k, len(self._planes))
         if new_state == QTimeLine.NotRunning:
-            for cube in self._cubes:
-                cube.scene().removeItem(cube)
-            self._cubes.clear()
+            for plane in self._planes:
+                plane.scene().removeItem(plane)
+            self._planes.clear()
 
     @Slot()
     def start(self):
@@ -112,49 +132,97 @@ class ImporterExporterAnimation:
         self.time_line.stop()
 
 
-class _Cube(QGraphicsTextItem):
-    def __init__(self, parent, font, path, percent, step):
+class _PaperPlane(QGraphicsPathItem):
+    def __init__(self, parent, font, trajectory_path, percent, step, loop_rect):
+        self._rect = QRectF(0, 0, 22, 22)
         super().__init__(parent)
-        self._path = path
+        self._trajectory_path = trajectory_path
         self._percent = percent
         self._step = step
-        self._icon_code = "\uf1b2"
-        self.setHtml(self._icon_code)
-        self.setFont(font)
+        self._loop_rect = loop_rect
+        self._icon_code = "\uf1d8"
         self.setAcceptedMouseButtons(Qt.NoButton)
-        self.setDefaultTextColor(Qt.white)
-        self.setTransformOriginPoint(self.boundingRect().center())
-        self._inset = QGraphicsTextItem(self)
-        self._inset.setHtml(self._icon_code)
-        self._inset.setFont(font)
-        self._inset.setDefaultTextColor(Qt.black)
-        self._inset.setTransformOriginPoint(self._inset.boundingRect().center())
-        self._inset.setScale(0.9)
+        path = QPainterPath()
+        path.addText(0, 0, font, self._icon_code)
+        rect = path.boundingRect()
+        self.setPath(path)
+        self._offset = -rect.topLeft() - 0.66 * self.boundingRect().center()
+        self.setTransformOriginPoint(rect.center())
+        border_pen = self.pen()
+        border_pen.setWidthF(0.5)
+        self.setPen(border_pen)
+        self.color = Qt.white
         self.hide()
+
+    def boundingRect(self):
+        return self._rect
 
     def advance(self):
         self._percent = self._percent + self._step
         if self._percent > 1:
-            self._percent = -1
+            self._percent = -0.8
         if self._percent < 0:
             self.hide()
             return
         self.show()
-        pos = self._path.pointAtPercent(self._percent)
-        self.setPos(pos - self.boundingRect().center())
-        opacity = math.sin(math.pi * self._percent)
-        self.setOpacity(opacity)
-        angle = self._percent * 360.0
-        self.setRotation(angle)
+        pos = self._trajectory_path.pointAtPercent(self._percent)
+        self.setPos(self._offset + pos)
+        if pos.y() > self._loop_rect.center().y():
+            self.setZValue(1000)
+            scale = 1
+        else:
+            self.setZValue(-1000)
+            scale = 1 - 0.5 * (self._loop_rect.center().y() - pos.y()) / (self._loop_rect.height() / 2)
+        self.setScale(scale)
+        angle = self._trajectory_path.angleAtPercent(self._percent)
+        self.setRotation(45 - angle)
+        h, s, _, _ = self.color.getHslF()
+        self.color.setHslF(h, s, self._lightness())
+        self.setBrush(self.color)
+
+    def _lightness(self):
+        raise NotImplementedError()
+
+
+def _point_at_angle(rect, angle):
+    if angle == 0:
+        return QPointF(rect.right(), rect.center().y())
+    if angle == 180:
+        return QPointF(rect.left(), rect.center().y())
+    if angle == 270:
+        return QPointF(rect.center().x(), rect.bottom())
+
+
+def _nice_ctrl_point(p1, p2):
+    line = QLineF(p1, p2)
+    p = line.center()
+    normal_angle = line.normalVector().angle()
+    normal_line = QLineF()
+    normal_line.setP1(p)
+    normal_line.setAngle(normal_angle)
+    normal_line.setLength(3)
+    return normal_line.p2()
+
+
+class _ImporterPaperPlane(_PaperPlane):
+    def _lightness(self):
+        threshold = 0.66
+        max_darkness = 0.5
+        darkness = max(0, max_darkness * (self._percent - threshold) / (1 - threshold))
+        return 1 - darkness
+
+
+class _ExporterPaperPlane(_PaperPlane):
+    def _lightness(self):
+        threshold = 0.66
+        max_darkness = 0.5
+        darkness = max(0, max_darkness * (threshold - self._percent) / threshold)
+        return 1 - darkness
 
 
 class ImporterAnimation(ImporterExporterAnimation):
-    @staticmethod
-    def percent(value):
-        return value
+    _PaperPlane = _ImporterPaperPlane
 
 
 class ExporterAnimation(ImporterExporterAnimation):
-    @staticmethod
-    def percent(value):
-        return 1 - value
+    _PaperPlane = _ExporterPaperPlane
