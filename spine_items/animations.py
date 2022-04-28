@@ -16,7 +16,7 @@ Animation class for importers and exporters.
 :date:   12.11.2019
 """
 
-from PySide2.QtGui import QPainterPath, QFont
+from PySide2.QtGui import QPainterPath, QFont, QFontMetrics
 from PySide2.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF, QPointF, QLineF
 from PySide2.QtWidgets import QGraphicsPathItem
 from spinetoolbox.helpers import color_from_index
@@ -29,7 +29,7 @@ class AnimationSignaller(QObject):
 
 
 class ImporterExporterAnimation:
-    def __init__(self, item, duration=4000, plane_count=4, point_size=10, loop_width=30, loop_aspect_ratio=3):
+    def __init__(self, item, duration=1800, plane_count=4, point_size=10, loop_width=30, loop_aspect_ratio=3):
         """Initializes animation stuff.
 
         Args:
@@ -37,8 +37,6 @@ class ImporterExporterAnimation:
         """
         self._item = item
         self._planes = []
-        self._frame_count = 10
-        self._step = 1000 / duration / self._frame_count
         self._plane_count = plane_count
         self._loop_aspect_ratio = loop_aspect_ratio
         self._loop_width = loop_width
@@ -46,9 +44,11 @@ class ImporterExporterAnimation:
         self._font = QFont("Font Awesome 5 Free Solid")
         self._font.setPointSize(point_size)
         self.time_line = QTimeLine()
+        self.time_line.setDuration(duration)
         self.time_line.setLoopCount(0)  # loop forever
         self.time_line.valueChanged.connect(self._handle_time_line_value_changed)
         self.time_line.stateChanged.connect(self._handle_time_line_state_changed)
+        self._step = self.time_line.updateInterval() / duration
 
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
@@ -134,28 +134,24 @@ class ImporterExporterAnimation:
 
 class _PaperPlane(QGraphicsPathItem):
     def __init__(self, parent, font, trajectory_path, percent, step, loop_rect):
-        self._rect = QRectF(0, 0, 22, 22)
         super().__init__(parent)
+        self._parent = parent
         self._trajectory_path = trajectory_path
         self._percent = percent
         self._step = step
         self._loop_rect = loop_rect
         self._icon_code = "\uf1d8"
         self.setAcceptedMouseButtons(Qt.NoButton)
+        self.setZValue(self._parent.svg_item.zValue())
         path = QPainterPath()
-        path.addText(0, 0, font, self._icon_code)
-        rect = path.boundingRect()
+        path.addText(0, (1 - 0.14) * QFontMetrics(font).height(), font, self._icon_code)  # 14% baseline for FA
         self.setPath(path)
-        self._offset = -rect.topLeft() - 0.66 * self.boundingRect().center()
-        self.setTransformOriginPoint(rect.center())
+        self.setTransformOriginPoint(self.boundingRect().center())
         border_pen = self.pen()
         border_pen.setWidthF(0.5)
         self.setPen(border_pen)
         self.color = Qt.white
         self.hide()
-
-    def boundingRect(self):
-        return self._rect
 
     def advance(self):
         self._percent = self._percent + self._step
@@ -165,23 +161,43 @@ class _PaperPlane(QGraphicsPathItem):
             self.hide()
             return
         self.show()
-        pos = self._trajectory_path.pointAtPercent(self._percent)
-        self.setPos(self._offset + pos)
+        pos = self._trajectory_path.pointAtPercent(self._percent)  #
+        self.setPos(pos - self.boundingRect().center())
         if pos.y() > self._loop_rect.center().y():
-            self.setZValue(1000)
+            self._parent.svg_item.stackBefore(self)
             scale = 1
         else:
-            self.setZValue(-1000)
+            self.stackBefore(self._parent.svg_item)
             scale = 1 - 0.5 * (self._loop_rect.center().y() - pos.y()) / (self._loop_rect.height() / 2)
         self.setScale(scale)
         angle = self._trajectory_path.angleAtPercent(self._percent)
-        self.setRotation(45 - angle)
+        self.resetTransform()
+        if 90 < angle < 270:
+            self.flip_vertical()
+            self.setRotation(45 + angle)
+        else:
+            self.setRotation(45 - angle)
         h, s, _, _ = self.color.getHslF()
         self.color.setHslF(h, s, self._lightness())
         self.setBrush(self.color)
 
     def _lightness(self):
         raise NotImplementedError()
+
+    def flip_vertical(self):
+        transform = self.transform()
+        m11 = transform.m11()
+        m12 = transform.m12()
+        m13 = transform.m13()
+        m21 = transform.m21()
+        m22 = transform.m22()
+        m23 = transform.m23()
+        m31 = transform.m31()
+        m32 = super().boundingRect().height() * m22
+        m33 = transform.m33()
+        m22 = -m22
+        transform.setMatrix(m11, m12, m13, m21, m22, m23, m31, m32, m33)
+        self.setTransform(transform)
 
 
 def _point_at_angle(rect, angle):
@@ -194,6 +210,8 @@ def _point_at_angle(rect, angle):
 
 
 def _nice_ctrl_point(p1, p2):
+    if p1.x() > p2.x():
+        p1, p2 = p2, p1
     line = QLineF(p1, p2)
     p = line.center()
     normal_angle = line.normalVector().angle()
