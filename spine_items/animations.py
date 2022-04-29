@@ -112,7 +112,7 @@ class ImporterExporterAnimation:
             plane.color = color_from_index(k, len(self._planes))
         if new_state == QTimeLine.NotRunning:
             for plane in self._planes:
-                plane.scene().removeItem(plane)
+                plane.wipe_out()
             self._planes.clear()
 
     @Slot()
@@ -198,6 +198,12 @@ class _PaperPlane(QGraphicsPathItem):
         m22 = -m22
         transform.setMatrix(m11, m12, m13, m21, m22, m23, m31, m32, m33)
         self.setTransform(transform)
+
+    def wipe_out(self):
+        scene = self.scene()
+        if scene is None:
+            return
+        scene.removeItem(self)
 
 
 def _point_at_angle(rect, angle):
