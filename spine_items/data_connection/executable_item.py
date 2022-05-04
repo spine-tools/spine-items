@@ -58,6 +58,6 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         file_references = item_dict["file_references"]
         file_references = [deserialize_path(r, project_dir) for r in file_references]
-        db_references = item_dict["db_references"]
-        db_credentials = item_dict["db_credentials"]
+        db_references = item_dict.get("db_references", [])
+        db_credentials = item_dict.get("db_credentials", {})
         return cls(name, file_references, db_references, db_credentials, project_dir, logger)
