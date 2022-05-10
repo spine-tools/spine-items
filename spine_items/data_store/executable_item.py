@@ -63,6 +63,8 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
+        if self._url is None:
+            return []
         return scan_for_resources(self, self._get_url())
 
     @classmethod
