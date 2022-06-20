@@ -46,11 +46,12 @@ def do_work(
         for tn, cols in mapping.get("table_row_types", {}).items()
     }
     for src in sources:
-        logger.msg.emit("Importing " + src)
+        file_anchor = f"<a style='color:#BB99FF;' title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
+        logger.msg.emit("Importing " + file_anchor)
         try:
             connector.connect_to_source(src)
         except Exception as error:  # pylint: disable=broad-except
-            logger.msg_error.emit(f"Failed to connect to {src}: {error}")
+            logger.msg_error.emit(f"Failed to connect to {file_anchor}: {error}")
             return (False,)
         for name, mappings in table_mappings.items():
             logger.msg.emit(f"Processing table <b>{name}</b>")

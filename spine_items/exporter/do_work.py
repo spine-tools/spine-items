@@ -87,12 +87,12 @@ def do_work(
                     anchors = list()
                     for path in (Path(f) for f in files):
                         anchors.append(
-                            f"<a style='color:#BB99FF;' title='{path}' href='file:///{path}'>{path.name}</a>"
+                            f"\t<a style='color:#BB99FF;' title='{path}' href='file:///{path}'>{path.name}</a>"
                         )
                     logger.msg_success.emit(f"Wrote multiple files:<br>{'<br>'.join(anchors)}")
                 else:
                     file_anchor = f"<a style='color:#BB99FF;' title='{file}' href='file:///{file}'>{file.name}</a>"
-                    logger.msg_success.emit(f"File {file_anchor} written.")
+                    logger.msg_success.emit(f"Wrote {file_anchor}")
                 if filter_id:
                     write_filter_id_file(filter_id, Path(out_path).parent)
                 successes.append(True)

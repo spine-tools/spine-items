@@ -114,8 +114,12 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_error.emit(f"Creating directory <b>{execution_dir}</b> failed")
             return False
         for dst, src_path in paths.items():
+            file_anchor = (
+                f"<a style='color:#BB99FF;' title='{src_path}' href='file:///{src_path}'>"
+                + f"{os.path.basename(src_path)}</a>"
+            )
             if not os.path.exists(src_path):
-                self._logger.msg_error.emit(f"\tFile <b>{src_path}</b> does not exist")
+                self._logger.msg_error.emit(f"\tFile <b>{file_anchor}</b> does not exist")
                 return False
             # Join work directory path to dst (dst is the filename including possible subfolders, e.g. 'input/f.csv')
             dst_path = os.path.abspath(os.path.join(execution_dir, dst))
@@ -123,7 +127,7 @@ class ExecutableItem(ExecutableItemBase):
             dst_subdir, _ = os.path.split(dst)
             if not dst_subdir:
                 # No subdirectories to create
-                self._logger.msg.emit(f"\tCopying <b>{src_path}</b>")
+                self._logger.msg.emit(f"\tCopying <b>{file_anchor}</b>")
             else:
                 # Create subdirectory structure to work or source directory
                 work_subdir_path = os.path.abspath(os.path.join(execution_dir, dst_subdir))
@@ -133,7 +137,7 @@ class ExecutableItem(ExecutableItemBase):
                     except OSError:
                         self._logger.msg_error.emit(f"[OSError] Creating directory <b>{work_subdir_path}</b> failed.")
                         return False
-                self._logger.msg.emit(f"\tCopying <b>{src_path}</b> into subdirectory <b>{os.path.sep}{dst_subdir}</b>")
+                self._logger.msg.emit(f"\tCopying <b>{file_anchor}</b> into <b>{dst_subdir}{os.path.sep}</b>")
             try:
                 shutil.copyfile(src_path, dst_path)
                 n_copied_files += 1
@@ -142,7 +146,7 @@ class ExecutableItem(ExecutableItemBase):
                 # source dir, which are equal
                 self._logger.msg_warning.emit("\tNo need to copy. File already available.")
             except OSError as e:
-                self._logger.msg_error.emit(f"Copying file <b>{src_path}</b> to <b>{dst_path}</b> failed")
+                self._logger.msg_error.emit(f"Copying file <b>{file_anchor}</b> to <b>{dst_path}</b> failed")
                 self._logger.msg_error.emit(f"{e}")
                 if e.errno == 22:
                     msg = (
