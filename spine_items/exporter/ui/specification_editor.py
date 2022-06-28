@@ -40,7 +40,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1146, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1146, 22))
         MainWindow.setMenuBar(self.menubar)
         self.mappings_dock = QDockWidget(MainWindow)
         self.mappings_dock.setObjectName(u"mappings_dock")
@@ -351,7 +351,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.live_preview_check_box = QCheckBox(self.dockWidgetContents_4)
         self.live_preview_check_box.setObjectName(u"live_preview_check_box")
-        self.live_preview_check_box.setChecked(True)
+        self.live_preview_check_box.setChecked(False)
 
         self.horizontalLayout.addWidget(self.live_preview_check_box)
 
