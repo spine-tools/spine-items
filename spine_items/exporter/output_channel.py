@@ -14,7 +14,7 @@ Contains :class:`OutputChannel` class.
 :authors: A. Soininen (VTT)
 :date:    4.1.2022
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -25,8 +25,12 @@ class OutputChannel:
 
     in_label: str
     """Label of input resource."""
-    out_label: str = ""
+    out_label: str = None
     """Label of output resource. Output file name in case of single file export."""
+
+    def __post_init__(self):
+        if self.out_label is None:
+            self.out_label = "exported_" + self.in_label
 
     def to_dict(self):
         """
