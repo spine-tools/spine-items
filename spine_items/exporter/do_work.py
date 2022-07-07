@@ -50,7 +50,8 @@ def do_work(
     specification = Specification.from_dict(specification)
     successes = list()
     written_files = dict()
-    for url, output_file_name in databases.items():
+    for url, output_label in databases.items():
+        output_file_name = _add_extension(output_label, specification.output_format)
         out_path = subdirectory_for_fork(output_file_name, out_dir, output_time_stamps, filter_id_hash)
         try:
             database_map = DatabaseMapping(url)
@@ -82,7 +83,7 @@ def do_work(
                     files = writer.output_files()
                 else:
                     files = {out_path}
-                written_files[output_file_name] = files
+                written_files[output_label] = files
                 if len(files) > 1:
                     anchors = list()
                     for path in (Path(f) for f in files):
@@ -121,3 +122,28 @@ def make_writer(output_format, out_path, gams_path):
     elif output_format == OutputFormat.SQL:
         return SqlWriter(out_path)
     return GdxWriter(out_path, gams_path)
+
+
+_EXTENSIONS = {
+    OutputFormat.CSV: ["csv", "dat", "txt"],
+    OutputFormat.EXCEL: ["xlsx"],
+    OutputFormat.SQL: ["sqlite", "sqlite3"],
+    OutputFormat.GDX: ["gdx"],
+}
+
+
+def _add_extension(label, file_format):
+    """Adds file format dependent extension to ``label`` if it is missing one.
+
+    Args:
+        label (str): label to add the extension to
+        file_format (OutputFormat): file format
+
+    Returns:
+        str: file name
+    """
+    extensions = _EXTENSIONS[file_format]
+    name, _, label_extension = label.rpartition(".")
+    if name and label_extension.lower() in extensions:
+        return label
+    return label + "." + extensions[0]

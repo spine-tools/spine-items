@@ -56,13 +56,13 @@ class ExecutableItem(ExporterExecutableItemBase):
 
     def _database_out_labels(self, resources):
         """
-        Connects full database urls to output file names.
+        Connects full database urls to output labels.
 
         Args:
             resources (Iterable of ProjectItemResource): forward database resources
 
         Returns:
-            dict: a mapping from full database URL to output file name
+            dict: a mapping from full database URL to output label
         """
         databases = {}
         for resource in resources:
@@ -76,7 +76,7 @@ class ExecutableItem(ExporterExecutableItemBase):
                     continue
             if not channel.out_label:
                 self._logger.msg_warning.emit(
-                    f"<b>{self.name}</b>: No output file name/label given to database {resource.label}. Skipping."
+                    f"<b>{self.name}</b>: No output label given to database {resource.label}. Skipping."
                 )
                 continue
             databases[resource.url] = channel.out_label

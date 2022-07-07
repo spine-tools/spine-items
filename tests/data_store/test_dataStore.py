@@ -149,7 +149,7 @@ class TestDataStore(unittest.TestCase):
         deactivating a Data Store and activating it again."""
         # FIXME: For now it only tests the mysql dialect
         url = dict(dialect="mysql", database="sqlite:///mock_db.sqlite")
-        self.ds._url = self.ds.parse_url(url)  # Set an URL for the Data Store
+        self.ds._url = self.ds.parse_url(url)  # Set a URL for the Data Store
         self.ds.activate()
         self.ds_properties_ui.comboBox_dialect.activated[str].emit("mysql")
         self.ds_properties_ui.lineEdit_host.setText("localhost")
