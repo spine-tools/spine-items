@@ -34,7 +34,7 @@ class TestImportEditorWindow(unittest.TestCase):
         spec.name = "spec_name"
         spec.description = "spec_desc"
         toolbox = QWidget()
-        toolbox.qsettings = mock.MagicMock(return_value=QSettings())
+        toolbox.qsettings = mock.MagicMock(return_value=QSettings(toolbox))
         toolbox.restore_and_activate = mock.MagicMock()
         widget = ImportEditorWindow(toolbox, spec)
         widget._app_settings = mock.NonCallableMagicMock()
@@ -49,6 +49,7 @@ class TestImportEditorWindow(unittest.TestCase):
         self.assertIn("windowState", saved_dict)
         self.assertIn("windowMaximized", saved_dict)
         self.assertIn("n_screens", saved_dict)
+        toolbox.deleteLater()
 
 
 if __name__ == '__main__':
