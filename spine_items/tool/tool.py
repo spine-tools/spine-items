@@ -19,7 +19,7 @@ import os
 from PySide2.QtCore import Slot, QItemSelection
 from PySide2.QtWidgets import QAction
 
-from project_commands import SetItemSpecificationCommand
+from spinetoolbox.project_commands import SetItemSpecificationCommand
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
