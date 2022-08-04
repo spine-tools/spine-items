@@ -16,16 +16,20 @@ Undo/redo commands for the Tool project item.
 :date:   5.5.2020
 """
 import copy
+
+from PySide2.QtWidgets import QUndoCommand
+
 from spine_items.commands import SpineToolboxCommand
 
 
 class UpdateToolExecuteInWorkCommand(SpineToolboxCommand):
-    def __init__(self, tool, execute_in_work):
-        """Command to update Tool execute_in_work setting.
+    """Command to update Tool execute_in_work setting."""
 
+    def __init__(self, tool, execute_in_work):
+        """
         Args:
             tool (Tool): the Tool
-            execute_in_work (bool): True or False
+            execute_in_work (bool): new value for the execute_in_work flag
         """
         super().__init__()
         self.tool = tool
@@ -40,9 +44,10 @@ class UpdateToolExecuteInWorkCommand(SpineToolboxCommand):
 
 
 class UpdateToolOptionsCommand(SpineToolboxCommand):
-    def __init__(self, tool, options):
-        """Command to update Tool options.
+    """Command to update Tool options."""
 
+    def __init__(self, tool, options):
+        """
         Args:
             tool (Tool): the Tool
             options (dict): The options that change
@@ -60,3 +65,76 @@ class UpdateToolOptionsCommand(SpineToolboxCommand):
 
     def undo(self):
         self.tool.do_set_options(self.old_options)
+
+
+class SetExecutionSetting(SpineToolboxCommand):
+    """Command to set execution settings for Tools."""
+
+    def __init__(self, text, execution_settings, value, previous_value, callback):
+        """
+        Args:
+            text (str): command's descriptive text
+            execution_settings (dict): execution settings
+            value (Any): new setting
+            previous_value (Any): setting's previous value
+            callback (Callable): function to call when undoing/redoing
+        """
+        super().__init__()
+        self._execution_settings = execution_settings
+        self._value = value
+        self._previous_value = previous_value
+        self._callback = callback
+        self.setText(text)
+
+    def redo(self):
+        self._callback(self._execution_settings, self._value)
+
+    def undo(self):
+        self._callback(self._execution_settings, self._previous_value)
+
+
+class StoreExecutionSettings(SpineToolboxCommand):
+    """Restores execution settings upon undo.
+
+    Not very useful in itself, but handy in undo macros.
+    """
+
+    def __init__(self, tool, execution_settings):
+        """
+        Args:
+            tool (Tool): tool
+            execution_settings (dict): execution settings
+        """
+        super().__init__()
+        self.setText("store execution settings")
+        self._tool = tool
+        self._settings = execution_settings
+
+    def redo(self):
+        pass
+
+    def undo(self):
+        self._tool.set_execution_settings(self._settings)
+
+
+class StoreOptionalWidgetContents(QUndoCommand):
+    """Restores Tool specification editor window's optional widget's contents upon undo.
+
+    Not very useful in itself, but handy in undo macros where one wants to restore
+    optional widget contents e.g. after tool type change.
+    """
+
+    def __init__(self, optional_widget):
+        """
+        Args:
+            optional_widget (OptionalWidget): optional widget
+        """
+        super().__init__("clear options")
+        self._optional_widget = optional_widget
+        self._undo_data = None
+
+    def redo(self):
+        self._undo_data = self._optional_widget.make_restore_data()
+
+    def undo(self):
+        self._optional_widget.restore(self._undo_data)

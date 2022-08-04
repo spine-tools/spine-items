@@ -23,8 +23,7 @@ class ToolPropertiesWidget(PropertiesWidgetBase):
     """Widget for the Tool Item Properties."""
 
     def __init__(self, toolbox):
-        """Init class.
-
+        """
         Args:
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
@@ -36,3 +35,4 @@ class ToolPropertiesWidget(PropertiesWidgetBase):
         model = self._toolbox.filtered_spec_factory_models["Tool"]
         self.ui.comboBox_tool.setModel(model)
         self.ui.options_widgets = {}
+        self.ui.execution_settings_widgets = {}

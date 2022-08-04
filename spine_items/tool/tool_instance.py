@@ -36,17 +36,19 @@ from spine_engine.execution_managers.persistent_execution_manager import (
 class ToolInstance:
     """Tool instance base class."""
 
-    def __init__(self, tool_specification, basedir, settings, logger, owner):
+    def __init__(self, tool_specification, basedir, execution_settings, settings, logger, owner):
         """
         Args:
             tool_specification (ToolSpecification): the tool specification for this instance
             basedir (str): the path to the directory where this instance should run
+            execution_settings (dict): execution settings
             settings (QSettings): Toolbox settings
             logger (LoggerInterface): a logger instance
             owner (ExecutableItemBase): The item that owns the instance
         """
         self.tool_specification = tool_specification
         self.basedir = basedir
+        self._execution_settings = execution_settings
         self._settings = settings
         self._logger = logger
         self._owner = owner
@@ -201,9 +203,7 @@ class PythonToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        self.tool_specification.set_execution_settings()  # Set default execution settings
-        use_jupyter_console = self.tool_specification.execution_settings["use_jupyter_console"]
-        if use_jupyter_console:
+        if self._execution_settings["use_jupyter_console"]:
             # Prepare command
             cd_command = f"%cd -q {self.basedir}"  # -q: quiet
             main_command = f'%run "{self.tool_specification.main_prgm}"'
@@ -213,13 +213,13 @@ class PythonToolInstance(ToolInstance):
             self.args = [cd_command, main_command]
             conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
             conda_exe = resolve_conda_executable(conda_exe)
-            k_spec = self.tool_specification.execution_settings["kernel_spec_name"]
-            env = self.tool_specification.execution_settings["env"]  # Activate environment if "conda"
+            k_spec = self._execution_settings["kernel_spec_name"]
+            env = self._execution_settings["env"]  # Activate environment if "conda"
             self.exec_mngr = KernelExecutionManager(
                 self._logger, k_spec, *self.args, group_id=self.owner.group_id, environment=env, conda_exe=conda_exe
             )
         else:
-            python_exe = self.tool_specification.execution_settings["executable"]
+            python_exe = self._execution_settings["executable"]
             python_exe = resolve_python_interpreter(python_exe)
             self.program = [python_exe]
             fp = self.tool_specification.main_prgm
@@ -273,8 +273,8 @@ class ExecutableToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         if not self.tool_specification.main_prgm:  # Run command
-            cmd = self.tool_specification.execution_settings["cmd"].split()  # Convert str to list
-            shell = self.tool_specification.execution_settings["shell"]
+            cmd = self.tool_specification.command.split()  # Convert str to list
+            shell = self._execution_settings["shell"]
             if not shell:
                 # If shell is not given (empty str), The first item in cmd list will be considered as self.program.
                 # The rest of the cmd list will be considered as cmd line args

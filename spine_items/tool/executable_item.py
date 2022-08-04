@@ -37,7 +37,15 @@ from spine_engine.project_item.project_item_resource import (
 )
 from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_executable, write_filter_id_file
 from .item_info import ItemInfo
-from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
+from .utils import (
+    file_paths_from_resources,
+    find_file,
+    flatten_file_path_duplicates,
+    is_pattern,
+    make_dir_if_necessary,
+    default_execution_settings,
+    legacy_execution_settings_in_specification,
+)
 from .output_resources import scan_for_resources
 
 
@@ -46,7 +54,18 @@ class ExecutableItem(ExecutableItemBase):
 
     _MAX_RETRIES = 3
 
-    def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, group_id, project_dir, logger):
+    def __init__(
+        self,
+        name,
+        work_dir,
+        tool_specification,
+        cmd_line_args,
+        options,
+        execution_settings,
+        group_id,
+        project_dir,
+        logger,
+    ):
         """
         Args:
             name (str): item's name
@@ -55,7 +74,8 @@ class ExecutableItem(ExecutableItemBase):
             tool_specification (ToolSpecification): a tool specification
             cmd_line_args (list): a list of command line argument to pass to the tool instance
             options (dict): misc tool options. See ``Tool`` for details.
-            group_id (str or None): execution group identifier
+            execution_settings (dict, optional): tool type specific execution environment settings
+            group_id (str, optional): execution group identifier
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
@@ -65,6 +85,7 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
         self._options = options
+        self._execution_settings = execution_settings
         self._tool_instance = None
         self._retry_count = 0
 
@@ -359,14 +380,13 @@ class ExecutableItem(ExecutableItemBase):
         if self._tool_specification is None:
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> not ready for execution. No specification.")
             return False
-        if self._tool_specification.tooltype.lower() == "python":
-            use_python_kernel = settings.value("appSettings/usePythonKernel", defaultValue="0")
-            python_kernel = settings.value("appSettings/pythonKernel", defaultValue="")
-            if use_python_kernel == "2" and python_kernel == "":
-                self._logger.msg_error.emit("No Python kernel spec selected. Please select one in Settings->Tools.")
+        tool_type = self._tool_specification.tooltype.lower()
+        if tool_type == "python":
+            if self._execution_settings["use_jupyter_console"] and not self._execution_settings["kernel_spec_name"]:
+                self._logger.msg_error.emit("No Jupyter kernel spec selected.")
                 return False
             # Note: no check for python path == "" because this should never happen
-        elif self._tool_specification.tooltype.lower() == "julia":
+        elif tool_type == "julia":
             use_julia_kernel = settings.value("appSettings/useJuliaKernel", defaultValue="0")
             julia_kernel = settings.value("appSettings/juliaKernel", defaultValue="")
             julia_path = resolve_julia_executable(settings.value("appSettings/juliaPath", defaultValue=""))
@@ -378,16 +398,16 @@ class ExecutableItem(ExecutableItemBase):
                     "Julia not found in PATH. Please select the Julia you want to use in Settings->Tools."
                 )
                 return False
-        elif self._tool_specification.tooltype.lower() == "gams":
+        elif tool_type == "gams":
             gams_path = resolve_gams_executable(settings.value("appSettings/gamsPath", defaultValue=""))
             if not gams_path:
                 self._logger.msg_error.emit(
                     "Gams not found in PATH. Please select the Gams you want to use in Settings->Tools."
                 )
                 return False
-        elif self._tool_specification.tooltype.lower() == "executable":
+        elif tool_type == "executable":
             if not self._tool_specification.main_prgm:
-                shell = self._tool_specification.execution_settings["shell"]
+                shell = self._execution_settings["shell"]
                 if sys.platform == "win32" and shell == "bash":
                     self._logger.msg_error.emit("Bash shell is not supported on Windows. Please select another shell.")
                     return False
@@ -470,7 +490,9 @@ class ExecutableItem(ExecutableItemBase):
                 f"specification."
             )
             return ItemExecutionFinishState.FAILURE
-        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
+        self._tool_instance = self._tool_specification.create_tool_instance(
+            execution_dir, self._execution_settings, self._logger, self
+        )
         resources = forward_resources + backward_resources
         with ExitStack() as stack:
             labelled_args = labelled_resource_args(resources, stack)
@@ -484,7 +506,7 @@ class ExecutableItem(ExecutableItemBase):
             return_code = self._tool_instance.execute()
             if return_code != 0 and self._tool_instance is not None and self._tool_instance.killed:
                 # NOTE: return_code will be 0 if the instance was killed by e.g. `exit(0)` in julia
-                # In this case we want to consider the tool successfull and not retry it
+                # In this case we want to consider the tool successful and not retry it
                 if self._retry_count < self._MAX_RETRIES:
                     # Try again
                     self._retry_count += 1
@@ -498,7 +520,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _find_input_files(self, resources):
         """
-        Iterates required input  files in tool specification and looks for them in the given resources.
+        Iterates required input files in tool specification and looks for them in the given resources.
 
         Args:
             resources (list): resources available
@@ -660,8 +682,16 @@ class ExecutableItem(ExecutableItemBase):
         )
         cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
+        execution_settings = item_dict.get("execution_settings")
+        if specification is not None and execution_settings is None:
+            if legacy_execution_settings_in_specification(specification):
+                execution_settings = specification.execution_settings
+            else:
+                execution_settings = default_execution_settings(specification.tooltype, app_settings)
         group_id = item_dict.get("group_id")
-        return cls(name, work_dir, specification, cmd_line_args, options, group_id, project_dir, logger)
+        return cls(
+            name, work_dir, specification, cmd_line_args, options, execution_settings, group_id, project_dir, logger
+        )
 
 
 def _count_files_and_dirs(paths):

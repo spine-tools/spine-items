@@ -28,12 +28,14 @@ from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine,
 
 
 class OptionsWidget(QWidget):
+    """Base class for options widgets."""
+
     def __init__(self):
         super().__init__()
         self._tool = None
 
     def set_tool(self, tool):
-        """Init class.
+        """Sets current tool.
 
         Args:
             tool (Tool)
@@ -54,8 +56,9 @@ class OptionsWidget(QWidget):
 
 
 class JuliaOptionsWidget(OptionsWidget):
+    """Options widget for showing Julia options on tool properties tab."""
+
     def __init__(self):
-        """Init class."""
         from ..ui.julia_options import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__()
