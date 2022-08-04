@@ -82,7 +82,7 @@ def find_file(filename, resources):
 
 def find_last_output_files(output_files, output_dir):
     """
-    Returns the latest output files.
+    Returns latest output files.
 
     Args:
         output_files (list): output file patterns from tool specification
@@ -166,42 +166,3 @@ def make_dir_if_necessary(d, directory):
         except OSError:
             return False
     return True
-
-
-def legacy_execution_settings_in_specification(specification):
-    """Checks if execution settings are available in tool specification.
-
-    Execution settings were stored as part of tool specifications in the past.
-
-    Args:
-        specification (ToolSpecification): specification
-
-    Returns:
-        bool: True if specification contains executions settings, False otherwise
-    """
-    if specification.tooltype.lower() not in ("python", "executable"):
-        return False
-    return bool(specification.execution_settings)
-
-
-def default_execution_settings(tool_type, app_settings):
-    """Generates default execution settings.
-
-    Args:
-        tool_type (str): tool type identifier
-        app_settings (QSettings): Toolbox settings
-
-    Returns:
-        dict: execution settings or None if tool type doesn't use such
-    """
-    tool_type = tool_type.lower()
-    if tool_type == "python":
-        return {
-            "kernel_spec_name": app_settings.value("appSettings/pythonKernel", defaultValue=""),
-            "env": "",
-            "use_jupyter_console": bool(int(app_settings.value("appSettings/usePythonKernel", defaultValue="0"))),
-            "executable": app_settings.value("appSettings/pythonPath", defaultValue=""),
-        }
-    elif tool_type == "executable":
-        return {"shell": ""}
-    return None

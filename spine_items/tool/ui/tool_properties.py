@@ -26,6 +26,7 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
 from PySide2.QtWidgets import *
 
 from ...widgets import ArgsTreeView
+from spinetoolbox.widgets.custom_qwidgets import ElidedLabel
 
 from spine_items import resources_icons_rc
 
@@ -171,11 +172,6 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
-        self.execution_settings_placeholder_layout = QHBoxLayout()
-        self.execution_settings_placeholder_layout.setObjectName(u"execution_settings_placeholder_layout")
-
-        self.verticalLayout_2.addLayout(self.execution_settings_placeholder_layout)
-
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.label_group_id = QLabel(self.frame)
@@ -190,6 +186,11 @@ class Ui_Form(object):
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+
+        self.label_jupyter = ElidedLabel(self.frame)
+        self.label_jupyter.setObjectName(u"label_jupyter")
+
+        self.verticalLayout_2.addWidget(self.label_jupyter)
 
 
         self.verticalLayout.addWidget(self.frame)
@@ -248,6 +249,7 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.lineEdit_group_id.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Type execution group identifier, or leave empty to run in isolation.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
+        self.label_jupyter.setText(QCoreApplication.translate("Form", u"Console info", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

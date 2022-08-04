@@ -40,7 +40,7 @@ OPTIONAL_KEYS = [
     "outputfiles",
     "cmdline_args",
     "execute_in_work",
-    "execution_settings",  # For backwards compatibility; execution settings live nowadays in the Tool itself.
+    "execution_settings",
 ]
 LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]  # These should be lists
 
@@ -165,19 +165,21 @@ class ToolSpecification(ProjectItemSpecification):
             "includes_main_path": self._includes_main_path_relative(),
         }
 
+    def set_execution_settings(self):
+        """Updates Tool specifications by adding the default execution settings dict for this specification."""
+
     def save(self):
         """See base class."""
         definition = self.to_dict()
         with open(self.definition_file_path, "w") as fp:
             try:
                 json.dump(definition, fp, indent=4)
+                return True
             except ValueError:
                 self._logger.msg_error.emit(
                     "Saving Tool specification file failed. Path:{0}".format(self.definition_file_path)
                 )
                 return False
-            else:
-                return True
 
     def is_equivalent(self, other):
         """See base class."""
@@ -217,24 +219,23 @@ class ToolSpecification(ProjectItemSpecification):
                 kwargs[p] = data[p]
             except KeyError:
                 if p in REQUIRED_KEYS:
-                    logger.msg_error.emit(f"Required keyword '{p}' missing")
+                    logger.msg_error.emit("Required keyword '{0}' missing".format(p))
                     return None
             # Check that some values are lists
             if p in LIST_REQUIRED_KEYS:
                 try:
                     if not isinstance(data[p], list):
-                        logger.msg_error.emit(f"Keyword '{p}' value must be a list")
+                        logger.msg_error.emit("Keyword '{0}' value must be a list".format(p))
                         return None
                 except KeyError:
                     pass
         return kwargs
 
-    def create_tool_instance(self, basedir, execution_settings, logger, owner):
+    def create_tool_instance(self, basedir, logger, owner):
         """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
             basedir (str): Path to the directory where the instance will run
-            execution_settings (dict, optional): execution settings
             logger (LoggerInterface): Logger
             owner (ExecutableItemBase): Project item that owns the instance
         """
@@ -397,9 +398,9 @@ class GAMSTool(ToolSpecification):
             return GAMSTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir, executions_settings, logger, owner):
+    def create_tool_instance(self, basedir, logger, owner):
         """See base class."""
-        return GAMSToolInstance(self, basedir, execution_settings, self._settings, logger, owner)
+        return GAMSToolInstance(self, basedir, self._settings, logger, owner)
 
 
 class JuliaTool(ToolSpecification):
@@ -472,9 +473,9 @@ class JuliaTool(ToolSpecification):
             return JuliaTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir, execution_settings, logger, owner):
+    def create_tool_instance(self, basedir, logger, owner):
         """See base class."""
-        return JuliaToolInstance(self, basedir, execution_settings, self._settings, logger, owner)
+        return JuliaToolInstance(self, basedir, self._settings, logger, owner)
 
 
 class PythonTool(ToolSpecification):
@@ -511,7 +512,7 @@ class PythonTool(ToolSpecification):
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (str, optional): Python tool command line arguments (read from tool definition file)
-            execution_settings (dict, optional): execution settings, for backwards compatibility
+            execution_settings (dict, optional): Python kernel spec settings
         """
         super().__init__(
             name,
@@ -535,7 +536,41 @@ class PythonTool(ToolSpecification):
     def to_dict(self):
         """Adds kernel spec settings dict to Tool spec dict."""
         d = super().to_dict()
+        d["execution_settings"] = self.execution_settings
         return d
+
+    def set_execution_settings(self):
+        """Sets the execution_setting instance attribute to defaults if this
+        Python Tool spec has not been updated yet.
+
+        Returns:
+            void
+        """
+        if not self.execution_settings:
+            # Use global (default) execution settings from Settings->Tools
+            # This part is for providing support for Python Tool specs that do not have
+            # the execution_settings dict yet
+            d = dict()
+            d["kernel_spec_name"] = self._settings.value("appSettings/pythonKernel", defaultValue="")
+            d["env"] = ""
+            d["use_jupyter_console"] = bool(
+                int(self._settings.value("appSettings/usePythonKernel", defaultValue="0"))
+            )  # bool(int(str))
+            d["executable"] = self._settings.value("appSettings/pythonPath", defaultValue="")
+            self.execution_settings = d
+        else:
+            # Make sure that required keys are included (for debugging)
+            if not isinstance(self.execution_settings, dict):
+                logging.error("self.execution_settings is not a dict")
+                return
+            if "use_jupyter_console" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 1")
+            elif "kernel_spec_name" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 2")
+            elif "env" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 3")
+            elif "executable" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 4")
 
     @staticmethod
     def load(path, data, settings, logger):
@@ -556,9 +591,9 @@ class PythonTool(ToolSpecification):
             return PythonTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir, execution_settings, logger, owner):
+    def create_tool_instance(self, basedir, logger, owner):
         """See base class."""
-        return PythonToolInstance(self, basedir, execution_settings, self._settings, logger, owner)
+        return PythonToolInstance(self, basedir, self._settings, logger, owner)
 
 
 class ExecutableTool(ToolSpecification):
@@ -580,7 +615,6 @@ class ExecutableTool(ToolSpecification):
         execute_in_work=True,
         execution_settings=None,
         definition_file_path=None,
-        command="",
     ):
         """
         Args:
@@ -597,10 +631,9 @@ class ExecutableTool(ToolSpecification):
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (str, optional): Tool command line arguments (read from tool definition file)
-            execution_settings (dict): Execution settings for backwards compatibility
+            execution_settings (dict): Settings for executing a (shell) command instead of a file
             definition_file_path (str): Absolute path to spec definition file. Only used when running a (shell) command
                 in 'source' execution mode
-            command (str): shell command to execute
         """
         super().__init__(
             name,
@@ -620,8 +653,7 @@ class ExecutableTool(ToolSpecification):
             self.main_prgm = includes[0]
         except IndexError:
             self.main_prgm = None
-        self.execution_settings = execution_settings if execution_settings is not None else {}
-        self._command = command
+        self.execution_settings = execution_settings
         if definition_file_path and not path:
             # Set the default execution dir in source execution mode when running a command (no program files)
             # This part is processed when Tool Specs are loaded at app startup or when Spine Engine loads them
@@ -631,14 +663,10 @@ class ExecutableTool(ToolSpecification):
         self.options = OrderedDict()
         self.return_codes = {0: "Normal exit", 1: "Error happened"}
 
-    @property
-    def command(self):
-        return self._command
-
     def to_dict(self):
-        """Adds command to Executable Tool spec dicts."""
+        """Adds execution settings dict to Executable Tool spec dicts."""
         d = super().to_dict()
-        d["command"] = self._command
+        d["execution_settings"] = self.execution_settings
         return d
 
     def _includes_main_path_relative(self):
@@ -646,6 +674,28 @@ class ExecutableTool(ToolSpecification):
             return None
         else:
             return super()._includes_main_path_relative()
+
+    def set_execution_settings(self):
+        """Updates old Executable Tool specifications by adding the
+        default execution settings dict for this specification.
+
+        Returns:
+            void
+        """
+        if not self.execution_settings:
+            d = dict()
+            d["cmd"] = ""
+            d["shell"] = ""
+            self.execution_settings = d
+        else:
+            # Make sure that required keys are included (for debugging)
+            if not isinstance(self.execution_settings, dict):
+                logging.error("self.execution_settings is not a dict")
+                return
+            if "cmd" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 1")
+            elif "shell" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 2")
 
     @staticmethod
     def load(path, data, settings, logger):
@@ -665,15 +715,10 @@ class ExecutableTool(ToolSpecification):
             # Add definition_file_path. 'data' does not have definition_file_path
             # when creating a new Tool spec or editing an existing one in Tool Spec Editor.
             kwargs["definition_file_path"] = data.get("definition_file_path", None)
-            command = data.get("command", "")
-            if not command and "execution_settings" in data:
-                # For backwards compatibility, check if command is stored in
-                # legacy execution_settings.
-                command = data["execution_settings"].get("cmd", "")
-            kwargs["command"] = command
+            # Return an executable model instance
             return ExecutableTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir, execution_settings, logger, owner):
+    def create_tool_instance(self, basedir, logger, owner):
         """See base class."""
-        return ExecutableToolInstance(self, basedir, execution_settings, self._settings, logger, owner)
+        return ExecutableToolInstance(self, basedir, self._settings, logger, owner)

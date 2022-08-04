@@ -31,7 +31,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(506, 33)
+        Form.resize(506, 69)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -62,6 +62,29 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(6, -1, 6, -1)
+        self.label = QLabel(Form)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout_3.addWidget(self.label)
+
+        self.comboBox_shell = QComboBox(Form)
+        self.comboBox_shell.setObjectName(u"comboBox_shell")
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.comboBox_shell.sizePolicy().hasHeightForWidth())
+        self.comboBox_shell.setSizePolicy(sizePolicy)
+        self.comboBox_shell.setMinimumSize(QSize(100, 24))
+        self.comboBox_shell.setMaximumSize(QSize(16777215, 24))
+
+        self.horizontalLayout_3.addWidget(self.comboBox_shell)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
+
 
         self.verticalLayout.addLayout(self.verticalLayout_2)
 
@@ -74,6 +97,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         self.label_2.setText(QCoreApplication.translate("Form", u"Command", None))
         self.lineEdit_command.setPlaceholderText(QCoreApplication.translate("Form", u"Type command here...", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Shell", None))
         pass
     # retranslateUi
 

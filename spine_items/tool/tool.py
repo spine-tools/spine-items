@@ -16,35 +16,26 @@ Tool class.
 :date:   19.12.2017
 """
 import os
-from PySide2.QtCore import Slot, QItemSelection
+from PySide2.QtCore import Slot, QItemSelection, Qt
 from PySide2.QtWidgets import QAction
-
-from project_commands import SetItemSpecificationCommand
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, cmd_line_arg_from_dict, LabelArg
-from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand, StoreExecutionSettings
-from .widgets.execution_settings_widgets import ExecutableExecutionSettingsWidget, PythonExecutionSettingsWidget
+from spine_engine.utils.helpers import resolve_python_interpreter
+from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
 from .widgets.options_widgets import JuliaOptionsWidget
 from .executable_item import ExecutableItem
-from .utils import (
-    flatten_file_path_duplicates,
-    find_file,
-    legacy_execution_settings_in_specification,
-    default_execution_settings,
-)
+from .utils import flatten_file_path_duplicates, find_file
 from ..models import ToolCommandLineArgsModel
 from .output_resources import scan_for_resources
 
 
 class Tool(ProjectItem):
-    """The Tool project item."""
-
     def __init__(
         self,
         name,
@@ -58,12 +49,12 @@ class Tool(ProjectItem):
         cmd_line_args=None,
         options=None,
         group_id=None,
-        execution_settings=None,
     ):
-        """
+        """Tool class.
+
         Args:
-            name (str): Project item name
-            description (str): Project item description
+            name (str): Object name
+            description (str): Object description
             x (float): Initial X coordinate of item icon
             y (float): Initial Y coordinate of item icon
             toolbox (ToolboxUI): QMainWindow instance
@@ -72,7 +63,6 @@ class Tool(ProjectItem):
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
             options (dict, optional): misc tool options. At the moment it just holds the location of the julia sysimage
-            execution_settings (dict, optional): execution settings
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -82,7 +72,7 @@ class Tool(ProjectItem):
         self.cmd_line_args = cmd_line_args
         self._cmdline_args_model = ToolCommandLineArgsModel(self)
         self._specification = self._project.get_specification(specification_name)
-        if specification_name and self._specification is None:
+        if specification_name and not self._specification:
             self._logger.msg_error.emit(
                 f"Tool <b>{self.name}</b> should have a Tool specification "
                 f"<b>{specification_name}</b> but it was not found"
@@ -91,15 +81,10 @@ class Tool(ProjectItem):
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
+        # Make directory for results
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self._specification_menu = None
         self._options = options if options is not None else {}
-        self._execution_settings = execution_settings
-        if execution_settings is None and self._specification is not None:
-            if legacy_execution_settings_in_specification(self._specification):
-                self._execution_settings = self._specification.execution_settings
-            else:
-                self._execution_settings = default_execution_settings(self._specification.tooltype, toolbox.qsettings())
         self._resources_from_upstream = list()
         self._resources_from_downstream = list()
 
@@ -119,35 +104,18 @@ class Tool(ProjectItem):
         Returns:
             OptionsWidget
         """
-        tool_type = self._specification.tooltype
-        options_widget = self._properties_ui.options_widgets.get(tool_type)
-        if options_widget is None:
-            constructors = {"julia": JuliaOptionsWidget}  # Add others as needed
-            constructor = constructors.get(tool_type)
-            if constructor is None:
-                return None
-            options_widget = constructor()
-            self._properties_ui.options_widgets[tool_type] = options_widget
+        # At the moment only Julia has options, but the code is made generic
+        constructors = {"julia": JuliaOptionsWidget}  # Add others as needed
+        tooltype = self.specification().tooltype
+        constructor = constructors.get(tooltype)
+        if constructor is None:
+            return None
+        if tooltype not in self._properties_ui.options_widgets:
+            self._properties_ui.options_widgets[tooltype] = constructor()
+        options_widget = self._properties_ui.options_widgets[tooltype]
         options_widget.set_tool(self)
         options_widget.do_update_options(self._options)
         return options_widget
-
-    def _get_execution_settings_widget(self):
-        """Returns execution settings widget for the properties tab.
-
-        Returns:
-            ExecutionSettingsWidget: execution settings widget for current tool type
-        """
-        tool_type = self._specification.tooltype
-        execution_settings_widget = self._properties_ui.execution_settings_widgets.get(tool_type)
-        if execution_settings_widget is None:
-            constructors = {"executable": ExecutableExecutionSettingsWidget, "python": PythonExecutionSettingsWidget}
-            constructor = constructors.get(tool_type)
-            if constructor is None:
-                return None
-            execution_settings_widget = constructor(self._toolbox.qsettings(), self._toolbox.undo_stack, self._logger)
-            self._properties_ui.execution_settings_widgets[tool_type] = execution_settings_widget
-        return execution_settings_widget
 
     @staticmethod
     def item_type():
@@ -216,6 +184,8 @@ class Tool(ProjectItem):
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
+        self._properties_ui.label_jupyter.elided_mode = Qt.ElideMiddle
+        self._properties_ui.label_jupyter.hide()
         self._update_tool_ui()
         self._do_update_add_args_button_enabled()
         self._do_update_remove_args_button_enabled()
@@ -303,27 +273,11 @@ class Tool(ProjectItem):
         undo_spec.execute_in_work = self.execute_in_work
         return undo_spec
 
-    def set_specification(self, specification):
-        """See base class."""
-        if self._execution_settings is None:
-            super().set_specification(specification)
-            return
-        self._toolbox.undo_stack.beginMacro(SetItemSpecificationCommand.make_text(self.name))
-        self._toolbox.undo_stack.push(StoreExecutionSettings(self, self._execution_settings))
-        super().set_specification(specification)
-        self._toolbox.undo_stack.endMacro()
-
     def do_set_specification(self, specification):
         """see base class"""
-        same_tool_type = (
-            hasattr(specification, "tooltype")
-            and self._specification is not None
-            and self._specification.tooltype == specification.tooltype
-        )
         if not super().do_set_specification(specification):
             return False
         self._populate_cmdline_args_model()
-        self._update_execution_settings(same_tool_type)
         if self._active:
             self._update_tool_ui()
         if specification:
@@ -346,42 +300,11 @@ class Tool(ProjectItem):
         if self._active:
             _ = self._get_options_widget()
 
-    def set_execution_settings(self, execution_settings):
-        """Sets new execution settings.
-
-        Args:
-            execution_settings (dict): execution settings
-        """
-        self._execution_settings = execution_settings
-        execution_settings_widget = self._get_execution_settings_widget()
-        execution_settings_widget.set_settings(execution_settings)
-
-    def _update_execution_settings(self, same_tool_type):
-        """Updates execution settings after new specification has been set.
-
-        Args:
-            same_tool_type (bool): If True, assume that the tool type remains unchanged
-        """
-        if self._specification is None:
-            self._execution_settings = None
-            return
-        elif same_tool_type:
-            return
-        if legacy_execution_settings_in_specification(self._specification):
-            self._execution_settings = self._specification.execution_settings
-        else:
-            self._execution_settings = default_execution_settings(
-                self._specification.tooltype, self._toolbox.qsettings()
-            )
-
     def _update_tool_ui(self):
         """Updates Tool properties UI. Used when Tool specification is changed.."""
-        options_layout_item = self._properties_ui.horizontalLayout_options.takeAt(0)
-        if options_layout_item is not None:
-            options_layout_item.widget().hide()
-        execution_settings_layout_item = self._properties_ui.execution_settings_placeholder_layout.takeAt(0)
-        if execution_settings_layout_item is not None:
-            execution_settings_layout_item.widget().hide()
+        options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
+        if options_widget:
+            options_widget.widget().hide()
         if not self.specification():
             self._properties_ui.comboBox_tool.setCurrentIndex(-1)
             self.do_update_execution_mode(True)
@@ -391,14 +314,22 @@ class Tool(ProjectItem):
         self._update_specification_menu()
         self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
         options_widget = self._get_options_widget()
-        if options_widget is not None:
+        if options_widget:
             self._properties_ui.horizontalLayout_options.addWidget(options_widget)
             options_widget.show()
-        execution_settings_widget = self._get_execution_settings_widget()
-        if execution_settings_widget is not None:
-            execution_settings_widget.set_settings(self._execution_settings)
-            self._properties_ui.execution_settings_placeholder_layout.addWidget(execution_settings_widget)
-            execution_settings_widget.show()
+        if self._specification.tooltype == "python":
+            self.specification().set_execution_settings()
+            k_spec_name = self.specification().execution_settings["kernel_spec_name"]
+            env = self.specification().execution_settings["env"]
+            use_console = self.specification().execution_settings["use_jupyter_console"]
+            self._properties_ui.label_jupyter.show()
+            if not use_console:
+                exe = self.specification().execution_settings["executable"]
+                p = resolve_python_interpreter(exe)
+                self._properties_ui.label_jupyter.setText(f"[Basic console] {p}")
+            else:
+                env = "" if not env else f"[{env}]"
+                self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
@@ -553,18 +484,11 @@ class Tool(ProjectItem):
             d["specification"] = self.specification().name
         d["execute_in_work"] = self.execute_in_work
         d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
-        if self._execution_settings is not None:
-            d["execution_settings"] = self._execution_settings
         if self._options:
             d["options"] = self._options
         if self._group_id:
             d["group_id"] = self._group_id
         return d
-
-    @staticmethod
-    def item_dict_local_entries():
-        """See base class."""
-        return [("execution_settings",)]
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
@@ -575,7 +499,6 @@ class Tool(ProjectItem):
         cmd_line_args = item_dict.get("cmd_line_args", [])
         cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in cmd_line_args]
         options = item_dict.get("options", {})
-        execution_settings = item_dict.get("execution_settings")
         group_id = item_dict.get("group_id")
         return Tool(
             name,
@@ -589,7 +512,6 @@ class Tool(ProjectItem):
             cmd_line_args,
             options,
             group_id,
-            execution_settings,
         )
 
     def rename(self, new_name, rename_data_dir_message):

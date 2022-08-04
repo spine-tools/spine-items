@@ -21,7 +21,6 @@ from unittest import mock
 
 from spine_engine.execution_managers.persistent_execution_manager import kill_persistent_processes
 from spine_items.tool.tool_specifications import PythonTool
-from spine_items.tool.utils import default_execution_settings
 
 
 class TestPythonToolInstance(unittest.TestCase):
@@ -76,9 +75,8 @@ class TestPythonToolInstance(unittest.TestCase):
         path = ""
         source_files = ["main.py"]
         specification = PythonTool("specification name", "python", path, source_files, settings, logger)
-        execution_settings = default_execution_settings(specification.tooltype, settings)
         base_directory = "path/"
-        return specification.create_tool_instance(base_directory, execution_settings, logger, mock.Mock())
+        return specification.create_tool_instance(base_directory, logger, mock.Mock())
 
 
 if __name__ == '__main__':

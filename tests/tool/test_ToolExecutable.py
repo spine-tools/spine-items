@@ -26,7 +26,6 @@ from spine_engine.execution_managers.persistent_execution_manager import kill_pe
 from spine_engine.project_item.project_item_resource import CmdLineArg
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
 from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
-from spine_items.tool.utils import default_execution_settings
 
 
 class TestToolExecutable(unittest.TestCase):
@@ -136,7 +135,6 @@ class TestToolExecutable(unittest.TestCase):
             tool_specification=None,
             cmd_line_args=[],
             options={},
-            execution_settings=None,
             group_id=None,
             project_dir=self._temp_dir.name,
             logger=logger,
@@ -154,19 +152,10 @@ class TestToolExecutable(unittest.TestCase):
         tool_specification = PythonTool(
             "Python tool", "Python", str(script_dir), script_files, app_settings, None, logger, outputfiles=output_files
         )
-        execution_settings = default_execution_settings(tool_specification.tooltype, app_settings)
         work_dir = pathlib.Path(self._temp_dir.name, "work")
         work_dir.mkdir()
         executable = ExecutableItem(
-            "Create files",
-            str(work_dir),
-            tool_specification,
-            [],
-            {},
-            execution_settings,
-            None,
-            self._temp_dir.name,
-            logger,
+            "Create files", str(work_dir), tool_specification, [], {}, None, self._temp_dir.name, logger
         )
         executable.execute([], [])
         while executable._tool_instance is not None:
@@ -187,14 +176,12 @@ class TestToolExecutable(unittest.TestCase):
         tool_specification = ToolSpecification(
             "spec name", "Python", self._temp_dir.name, [], None, logger, inputfiles_opt=optional_input_files
         )
-        execution_settings = default_execution_settings(tool_specification.tooltype, _MockSettings())
         executable = ExecutableItem(
             "executable name",
             work_dir=self._temp_dir.name,
             tool_specification=tool_specification,
             cmd_line_args=[],
             options={},
-            execution_settings=execution_settings,
             group_id=None,
             project_dir=self._temp_dir.name,
             logger=logger,
@@ -220,14 +207,12 @@ class TestToolExecutable(unittest.TestCase):
         tool_specification = ToolSpecification(
             "spec name", "Python", self._temp_dir.name, [], None, logger, inputfiles_opt=optional_input_files
         )
-        execution_settings = default_execution_settings(tool_specification.tooltype, _MockSettings())
         executable = ExecutableItem(
             "executable name",
             work_dir=self._temp_dir.name,
             tool_specification=tool_specification,
             cmd_line_args=[],
             options={},
-            execution_settings=execution_settings,
             group_id=None,
             project_dir=self._temp_dir.name,
             logger=logger,
@@ -254,14 +239,12 @@ class TestToolExecutable(unittest.TestCase):
         tool_specification = ToolSpecification(
             "spec name", "Python", self._temp_dir.name, [], None, logger, inputfiles_opt=optional_input_files
         )
-        execution_settings = default_execution_settings(tool_specification.tooltype, _MockSettings())
         executable = ExecutableItem(
             "executable name",
             work_dir=self._temp_dir.name,
             tool_specification=tool_specification,
             cmd_line_args=[],
             options={},
-            execution_settings=execution_settings,
             group_id=None,
             project_dir=self._temp_dir.name,
             logger=logger,
@@ -287,17 +270,8 @@ class TestToolExecutable(unittest.TestCase):
             logger=mock.MagicMock(),
             outputfiles=["results.gdx", "report.txt"],
         )
-        execution_settings = default_execution_settings(tool_specification.tooltype, _MockSettings())
         executable = ExecutableItem(
-            "name",
-            self._temp_dir.name,
-            tool_specification,
-            [],
-            {},
-            execution_settings,
-            None,
-            self._temp_dir.name,
-            logger,
+            "name", self._temp_dir.name, tool_specification, [], {}, None, self._temp_dir.name, logger
         )
         output_dir = pathlib.Path(executable._data_dir, "output")
         output_dir.mkdir()
@@ -330,10 +304,10 @@ class TestToolExecutable(unittest.TestCase):
             outputfiles=["results.gdx", "report.txt"],
         )
         executable = ExecutableItem(
-            "name", self._temp_dir.name, tool_specification, [], {}, None, None, self._temp_dir.name, logger
+            "name", self._temp_dir.name, tool_specification, [], {}, None, self._temp_dir.name, logger
         )
         executable._tool_instance = executable._tool_specification.create_tool_instance(
-            self._temp_dir.name, None, "name", mock.MagicMock()
+            self._temp_dir.name, "name", mock.MagicMock()
         )
         executable._tool_instance.exec_mngr = mock.MagicMock()
         executable.stop_execution()
