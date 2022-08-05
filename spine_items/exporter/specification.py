@@ -171,13 +171,6 @@ class Specification(ProjectItemSpecification):
         """
         return self._mapping_specifications[name].type
 
-    def save(self):
-        """See base class."""
-        specification_dict = self.to_dict()
-        with open(self.definition_file_path, "w") as fp:
-            json.dump(specification_dict, fp, indent=4)
-        return True
-
     def to_dict(self):
         """
         Serializes the specification into JSON compatible dictionary.

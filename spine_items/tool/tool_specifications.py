@@ -168,19 +168,6 @@ class ToolSpecification(ProjectItemSpecification):
     def set_execution_settings(self):
         """Updates Tool specifications by adding the default execution settings dict for this specification."""
 
-    def save(self):
-        """See base class."""
-        definition = self.to_dict()
-        with open(self.definition_file_path, "w") as fp:
-            try:
-                json.dump(definition, fp, indent=4)
-                return True
-            except ValueError:
-                self._logger.msg_error.emit(
-                    "Saving Tool specification file failed. Path:{0}".format(self.definition_file_path)
-                )
-                return False
-
     def is_equivalent(self, other):
         """See base class."""
         for k, v in other.__dict__.items():

@@ -80,10 +80,3 @@ class DataTransformerSpecification(ProjectItemSpecification):
             else:
                 settings = None
         return DataTransformerSpecification(name, settings, description)
-
-    def save(self):
-        """See base class."""
-        specification_dict = self.to_dict()
-        with open(self.definition_file_path, "w") as fp:
-            json.dump(specification_dict, fp, indent=4)
-        return True
