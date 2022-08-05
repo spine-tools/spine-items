@@ -165,6 +165,11 @@ class ToolSpecification(ProjectItemSpecification):
             "includes_main_path": self._includes_main_path_relative(),
         }
 
+    @staticmethod
+    def _definition_local_entries():
+        """See base class"""
+        return [("execution_settings",)]
+
     def set_execution_settings(self):
         """Updates Tool specifications by adding the default execution settings dict for this specification."""
 
