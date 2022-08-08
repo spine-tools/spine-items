@@ -339,7 +339,6 @@ class ConnectionWorker(QObject):
                 self.connectionReady.emit()
             except Exception as error:
                 self.connectionFailed.emit(f"Could not connect to source: {error}")
-                raise error
         else:
             self.connectionFailed.emit("Connection has no source")
 
@@ -350,7 +349,6 @@ class ConnectionWorker(QObject):
             self.tablesReady.emit(tables)
         except Exception as error:
             self.error.emit(f"Could not get tables from source: {error}")
-            raise error
 
     @busy_effect
     @Slot(str, dict, int, int)
@@ -363,7 +361,6 @@ class ConnectionWorker(QObject):
             self.dataReady.emit(data, header)
         except Exception as error:
             self.error.emit(f"Could not get data from source: {error}")
-            raise error
 
     @Slot(dict, dict, list, list, int)  # FIXME: Types do not match mapped_data_requested
     def mapped_data(self, table_mappings, options, types, table_row_types, max_rows):
@@ -372,7 +369,6 @@ class ConnectionWorker(QObject):
             self.mappedDataReady.emit(data, errors)
         except Exception as error:
             self.error.emit(f"Could not get mapped data from source: {error}")
-            raise error
 
     @Slot()
     def disconnect(self):
@@ -380,7 +376,6 @@ class ConnectionWorker(QObject):
             self._connection.disconnect()
         except Exception as error:
             self.error.emit(f"Could not disconnect from source: {error}")
-            raise error
 
     @Slot()
     def default_mapping(self):
@@ -389,4 +384,3 @@ class ConnectionWorker(QObject):
             self.defaultMappingReady.emit(mapping)
         except Exception as error:
             self.error.emit(f"Could not default mapping from source: {error}")
-            raise error
