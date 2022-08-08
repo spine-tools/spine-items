@@ -88,9 +88,7 @@ class ExecutableItem(ExecutableItemBase):
         labelled_sources = get_labelled_sources(forward_resources)
         sources = list()
         for label in self._selected_files:
-            source = labelled_sources.get(label)
-            if source is not None:
-                sources.append(source)
+            sources += labelled_sources.get(label, [])
         urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
