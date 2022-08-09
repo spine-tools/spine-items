@@ -26,6 +26,7 @@ from time import time
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL, make_url
 import spinedb_api
+from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spine_engine.utils.queue_logger import SuppressedMessage
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
 
@@ -229,6 +230,14 @@ class _NoLogger:
 
 
 def split_url_credentials(url):
+    """Pops username and password information from URL.
+
+    Args:
+        url (str): a URL
+
+    Returns:
+        tuple: URL without credentials and a tuple containing username, password pair
+    """
     sa_url = make_url(url)
     connect_args = sa_url.translate_connect_args()
     username = connect_args.pop("username", None)
@@ -238,8 +247,61 @@ def split_url_credentials(url):
 
 
 def unsplit_url_credentials(url, credentials):
+    """Inserts username and password into a URL.
+
+    Args:
+        url (str): a URL
+        credentials (tuple of str): username, password pair
+
+    Returns:
+        str: URL with credential information
+    """
     sa_url = make_url(url)
     connect_args = sa_url.translate_connect_args()
     connect_args["username"], connect_args["password"] = credentials
     new_sa_url = URL(sa_url.drivername, **connect_args)
     return str(new_sa_url)
+
+
+def generate_filter_subdirectory_name(resources, filter_id_hash):
+    """Generates an output directory name based on applied filters.
+
+    Args:
+        resources (Iterable of ProjectItemResource): item's forward resources
+        filter_id_hash (str): hashed filter id string
+
+    Returns:
+        str: subdirectory name
+    """
+    subdirectory = filter_id_hash
+    if subdirectory:
+        scenario_name = _single_scenario_name_or_none(resources)
+        if scenario_name is not None:
+            subdirectory = scenario_name[:15] + "_" + subdirectory
+    return subdirectory
+
+
+def _single_scenario_name_or_none(resources):
+    """Figures out if given resources have a single common scenario filter.
+
+    Args:
+        resources (Iterable of ProjectItemResource): resources to investigate
+
+    Returns:
+        str: scenario name or None
+    """
+    scenario_name = None
+    for resource in resources:
+        try:
+            filter_stack = resource.metadata["filter_stack"]
+        except KeyError:
+            continue
+        for filter_config in filter_stack:
+            name = scenario_name_from_dict(filter_config)
+            if name is None:
+                continue
+            if scenario_name is None:
+                scenario_name = name
+            elif name != scenario_name:
+                return None
+    return scenario_name

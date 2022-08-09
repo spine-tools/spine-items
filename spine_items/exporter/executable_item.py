@@ -22,7 +22,7 @@ from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spinedb_api import clear_filter_configs
-from spine_items.utils import Database, EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
+from spine_items.utils import Database, EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX, generate_filter_subdirectory_name
 from .do_work import do_work
 from .output_channel import OutputChannel
 from ..exporter_executable_item_base import ExporterExecutableItemBase
@@ -126,7 +126,7 @@ class ExecutableItem(ExporterExecutableItemBase):
                 str(out_dir),
                 databases,
                 self._filter_id,
-                self.hash_filter_id(),
+                generate_filter_subdirectory_name(forward_resources, self.hash_filter_id()),
                 self._logger,
             ),
         )

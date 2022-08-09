@@ -28,7 +28,15 @@ from .specification import Specification, OutputFormat
 
 
 def do_work(
-    specification, output_time_stamps, cancel_on_error, gams_path, out_dir, databases, filter_id, filter_id_hash, logger
+    specification,
+    output_time_stamps,
+    cancel_on_error,
+    gams_path,
+    out_dir,
+    databases,
+    filter_id,
+    filter_subdirectory,
+    logger,
 ):
     """
     Exports databases using given specification as export mapping.
@@ -41,7 +49,7 @@ def do_work(
         out_dir (str): base output directory
         databases (dict): databases to export
         filter_id (str): filter id
-        filter_id_hash (str): hashed filter id
+        filter_subdirectory (str): name of extra subdirectory used when filters have been applied
         logger (LoggerInterface): a logger
 
     Returns:
@@ -52,7 +60,7 @@ def do_work(
     written_files = dict()
     for url, output_label in databases.items():
         output_file_name = _add_extension(output_label, specification.output_format)
-        out_path = subdirectory_for_fork(output_file_name, out_dir, output_time_stamps, filter_id_hash)
+        out_path = subdirectory_for_fork(output_file_name, out_dir, output_time_stamps, filter_subdirectory)
         try:
             database_map = DatabaseMapping(url)
         except SpineDBAPIError as error:

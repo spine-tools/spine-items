@@ -39,6 +39,7 @@ from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_ex
 from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources
+from ..utils import generate_filter_subdirectory_name
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -71,17 +72,6 @@ class ExecutableItem(ExecutableItemBase):
     @property
     def options(self):
         return self._options
-
-    @ExecutableItemBase.filter_id.setter
-    def filter_id(self, filter_id):
-        self._filter_id = filter_id
-        self._logger.set_filter_id(filter_id)
-        filter_output_dir = os.path.join(self._output_dir, self.hash_filter_id())
-        try:
-            os.makedirs(filter_output_dir, exist_ok=True)
-            self._output_dir = filter_output_dir
-        except OSError:
-            self._logger.msg_error.emit(f"[OSError] Creating directory <b>{filter_output_dir}</b> failed.")
 
     @staticmethod
     def item_type():
@@ -266,7 +256,14 @@ class ExecutableItem(ExecutableItemBase):
         return saved_files, failed_files
 
     def _copy_program_files(self, execution_dir):
-        """Copies Tool specification source files to base directory."""
+        """Copies Tool specification source files to base directory.
+
+        Args:
+            execution_dir (str): path to execution directory
+
+        Returns:
+            bool: True if operation was successful, False otherwise
+        """
         n_copied_files = 0
         for source_pattern in self._tool_specification.includes:
             dir_name, file_pattern = os.path.split(source_pattern)
@@ -491,7 +488,7 @@ class ExecutableItem(ExecutableItemBase):
                     self._logger.msg_warning.emit("The Tool process was found dead. Retrying...")
                     return self.execute(forward_resources, backward_resources)
                 self._logger.msg_warning.emit("Maximum amount of retries reached.")
-        self._handle_output_files(return_code, self._filter_id, execution_dir)
+        self._handle_output_files(return_code, self._filter_id, forward_resources, execution_dir)
         self._tool_instance = None
         # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
         return ItemExecutionFinishState.SUCCESS if return_code == 0 else ItemExecutionFinishState.FAILURE
@@ -540,13 +537,24 @@ class ExecutableItem(ExecutableItemBase):
                 file_paths[file_path] = found_files
         return file_paths
 
-    def _handle_output_files(self, return_code, filter_id, execution_dir):
+    def _handle_output_files(self, return_code, filter_id, forward_resources, execution_dir):
         """Copies Tool specification output files from work directory to result directory.
 
         Args:
             return_code (int): Tool specification process return value
+            filter_id (str): filter identifier
+            forward_resources (Iterable of ProjectItemResource): forward resources
             execution_dir (str): path to the execution directory
         """
+        if filter_id:
+            filter_output_dir = os.path.join(
+                self._output_dir, generate_filter_subdirectory_name(forward_resources, self.hash_filter_id())
+            )
+            try:
+                os.makedirs(filter_output_dir, exist_ok=True)
+                self._output_dir = filter_output_dir
+            except OSError:
+                self._logger.msg_error.emit(f"[OSError] Creating directory <b>{filter_output_dir}</b> failed.")
         output_dir_timestamp = _create_output_dir_timestamp()  # Get timestamp when tool finished
         # Create an output folder with timestamp and copy output directly there
         if return_code != 0:
@@ -563,7 +571,7 @@ class ExecutableItem(ExecutableItemBase):
             return
         # Make link to output folder
         result_anchor = (
-            f"<a style='color:#BB99FF;' title='{result_path}'" f"href='file:///{result_path}'>results directory</a>"
+            f"<a style='color:#BB99FF;' title='{result_path}' href='file:///{result_path}'>results directory</a>"
         )
         if filter_id:
             write_filter_id_file(filter_id, os.path.dirname(result_path))
