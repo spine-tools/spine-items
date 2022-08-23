@@ -45,7 +45,6 @@ class ImportSources(QObject):
     Loads the 'Mappings' part of the window as the user changes the source table.
     """
 
-    mapped_data_ready = Signal(dict, list)
     preview_data_updated = Signal(int)
 
     def __init__(self, mappings_model, ui, undo_stack, parent):
@@ -106,7 +105,6 @@ class ImportSources(QObject):
         self._connector.connection_ready.connect(self.request_new_tables_from_connector)
         self._connector.data_ready.connect(self._update_source_data)
         self._connector.tables_ready.connect(self.update_tables)
-        self._connector.mapped_data_ready.connect(self.mapped_data_ready.emit)
         self._connector.default_mapping_ready.connect(self._set_default_mapping)
         self._ui_options_widget.set_connector(self._connector)
         self._source_data_model.more_data_needed.connect(self.fetch_more_data, Qt.UniqueConnection)

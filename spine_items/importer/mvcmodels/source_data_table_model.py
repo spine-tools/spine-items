@@ -16,7 +16,7 @@ Contains the source data table model.
 """
 from PySide2.QtCore import Qt, Signal, Slot, QModelIndex
 from spinedb_api import ParameterValueFormatError
-from spinedb_api.mapping import Position, is_pivoted
+from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel
 from spinedb_api.import_mapping.type_conversion import ConvertSpec
 from .mappings_model import Role

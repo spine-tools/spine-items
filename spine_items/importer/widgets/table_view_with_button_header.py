@@ -28,7 +28,6 @@ from PySide2.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QVBoxLayout,
-    QHBoxLayout,
     QFormLayout,
     QSpinBox,
     QDateTimeEdit,
@@ -37,7 +36,6 @@ from PySide2.QtWidgets import (
 )
 from spinedb_api import DateTime, Duration, ParameterValueFormatError
 from spinetoolbox.helpers import CharIconEngine
-from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
 from spinedb_api.spine_io.importers.reader import TYPE_STRING_TO_CLASS
 from spinedb_api.import_mapping.type_conversion import IntegerSequenceDateTimeConvertSpec, value_to_convert_spec
 from ..commands import SetColumnOrRowType

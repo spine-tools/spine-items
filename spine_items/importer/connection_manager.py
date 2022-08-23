@@ -26,7 +26,6 @@ class ConnectionManager(QObject):
 
     tables_requested = Signal()
     data_requested = Signal(str, dict, int, int)
-    mapped_data_requested = Signal(dict, dict, dict, dict, int)
     default_mapping_requested = Signal()
 
     connection_failed = Signal(str)
@@ -46,9 +45,6 @@ class ConnectionManager(QObject):
 
     tables_ready = Signal(dict)
     """tables from source is ready, should send a list of str of available tables  """
-
-    mapped_data_ready = Signal(dict, list)
-    """mapped data read from data source  """
 
     default_mapping_ready = Signal(dict)
     """default mapping ready from data source  """
@@ -139,24 +135,6 @@ class ConnectionManager(QObject):
         options = self._table_options.get(self._current_table, {})
         self.data_requested.emit(table, options, max_rows, start)
 
-    def request_mapped_data(self, table_mappings, max_rows=-1):
-        """Gets mapped data from source.
-
-        Args:
-            table_mappings (dict): dict with filename as key and a list of mappings as value
-            max_rows (int): number of rows to read, if -1 read all rows
-        """
-        if not self.is_connected:
-            return
-        options = {}
-        types = {}
-        row_types = {}
-        for table_name in table_mappings:
-            options[table_name] = self._table_options.get(table_name, {})
-            types.setdefault(table_name, self._table_types.get(table_name, {}))
-            row_types.setdefault(table_name, self._table_row_types.get(table_name, {}))
-        self.mapped_data_requested.emit(table_mappings, options, types, row_types, max_rows)
-
     def request_default_mapping(self):
         """Request default mapping from worker."""
         if self.is_connected:
@@ -189,14 +167,12 @@ class ConnectionManager(QObject):
         self._worker.connectionReady.connect(self._handle_connection_ready)
         self._worker.tablesReady.connect(self._handle_tables_ready)
         self._worker.dataReady.connect(self.data_ready.emit)
-        self._worker.mappedDataReady.connect(self.mapped_data_ready.emit)
         self._worker.defaultMappingReady.connect(self.default_mapping_ready.emit)
         self._worker.error.connect(self.error.emit)
         self._worker.connectionFailed.connect(self.connection_failed.emit)
         # connect start working signals
         self.tables_requested.connect(self._worker.tables)
         self.data_requested.connect(self._worker.data)
-        self.mapped_data_requested.connect(self._worker.mapped_data)
         self.default_mapping_requested.connect(self._worker.default_mapping)
         self.connection_closed.connect(self._worker.disconnect)
 
@@ -318,8 +294,6 @@ class ConnectionWorker(QObject):
     """Signal when tables from source is ready, list of table names"""
     dataReady = Signal(list, list)
     """Signal when data from a specific table in source is ready, list of data and list of headers"""
-    mappedDataReady = Signal(dict, list)
-    """Signal when data is read and mapped, dict with data and list of errors when reading data with mappings"""
     defaultMappingReady = Signal(dict)
     """Signal when default mapping is ready"""
 
@@ -361,14 +335,6 @@ class ConnectionWorker(QObject):
             self.dataReady.emit(data, header)
         except Exception as error:
             self.error.emit(f"Could not get data from source: {error}")
-
-    @Slot(dict, dict, list, list, int)  # FIXME: Types do not match mapped_data_requested
-    def mapped_data(self, table_mappings, options, types, table_row_types, max_rows):
-        try:
-            data, errors = self._connection.get_mapped_data(table_mappings, options, types, table_row_types, max_rows)
-            self.mappedDataReady.emit(data, errors)
-        except Exception as error:
-            self.error.emit(f"Could not get mapped data from source: {error}")
 
     @Slot()
     def disconnect(self):
