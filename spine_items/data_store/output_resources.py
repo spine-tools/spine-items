@@ -31,4 +31,4 @@ def scan_for_resources(provider, url):
     """
     if not url:
         return list()
-    return [database_resource(provider.name, str(url), label=database_label(provider.name))]
+    return [database_resource(provider.name, str(url), label=database_label(provider.name), filterable=True)]
