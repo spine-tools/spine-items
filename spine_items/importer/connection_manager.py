@@ -166,6 +166,7 @@ class ConnectionManager(QObject):
         # connect worker signals
         self._worker.connectionReady.connect(self._handle_connection_ready)
         self._worker.tablesReady.connect(self._handle_tables_ready)
+        self._worker.tablesReady[dict].connect(self._handle_tables_ready)
         self._worker.dataReady.connect(self.data_ready.emit)
         self._worker.defaultMappingReady.connect(self.default_mapping_ready.emit)
         self._worker.error.connect(self.error.emit)
@@ -185,6 +186,7 @@ class ConnectionManager(QObject):
         self._is_connected = True
         self.connection_ready.emit()
 
+    @Slot(list)
     @Slot(dict)
     def _handle_tables_ready(self, table_options):
         if isinstance(table_options, list):
@@ -290,8 +292,8 @@ class ConnectionWorker(QObject):
     """Signal with error message if something errors"""
     connectionReady = Signal()
     """Signal that connection is ready to be read"""
-    tablesReady = Signal(list)
-    """Signal when tables from source is ready, list of table names"""
+    tablesReady = Signal((list,), (dict,))
+    """Signal when tables from source is ready, a list of table names or dict mapping table name to table options."""
     dataReady = Signal(list, list)
     """Signal when data from a specific table in source is ready, list of data and list of headers"""
     defaultMappingReady = Signal(dict)
@@ -320,7 +322,10 @@ class ConnectionWorker(QObject):
     def tables(self):
         try:
             tables = self._connection.get_tables()
-            self.tablesReady.emit(tables)
+            if isinstance(tables, list):
+                self.tablesReady.emit(tables)
+            else:
+                self.tablesReady[dict].emit(tables)
         except Exception as error:
             self.error.emit(f"Could not get tables from source: {error}")
 
