@@ -41,6 +41,7 @@ class ExecutableItem(ExecutableItemBase):
         gams_path,
         cancel_on_error,
         purge_before_writing,
+        purge_settings,
         on_conflict,
         project_dir,
         logger,
@@ -53,6 +54,7 @@ class ExecutableItem(ExecutableItemBase):
             gams_path (str): path to system's GAMS executable or empty string for the default path
             cancel_on_error (bool): if True, revert changes on error and quit
             purge_before_writing (bool): if True, purge target dbs before writing
+            purge_settings (dict, optional): purge-before-writing settings
             on_conflict (str): conflict resolution strategy for spinedb_api.import_data
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
@@ -63,6 +65,7 @@ class ExecutableItem(ExecutableItemBase):
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
         self._purge_before_writing = purge_before_writing
+        self._purge_settings = purge_settings
         self._on_conflict = on_conflict
         self._process = None
 
@@ -109,6 +112,7 @@ class ExecutableItem(ExecutableItemBase):
                 self._mapping,
                 self._cancel_on_error,
                 self._purge_before_writing,
+                self._purge_settings,
                 self._on_conflict,
                 self._logs_dir,
                 sources,
@@ -143,6 +147,7 @@ class ExecutableItem(ExecutableItemBase):
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
         purge_before_writing = item_dict["purge_before_writing"]
+        purge_settings = item_dict.get("purge_settings")
         on_conflict = item_dict["on_conflict"]
         return cls(
             name,
@@ -151,6 +156,7 @@ class ExecutableItem(ExecutableItemBase):
             gams_path,
             cancel_on_error,
             purge_before_writing,
+            purge_settings,
             on_conflict,
             project_dir,
             logger,

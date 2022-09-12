@@ -18,8 +18,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>205</width>
-    <height>136</height>
+    <width>323</width>
+    <height>228</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -62,11 +62,38 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="checkBox_purge_before_writing">
-        <property name="text">
-         <string>Purge before writing</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QCheckBox" name="checkBox_purge_before_writing">
+          <property name="text">
+           <string>Purge before writing</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="purge_settings_button">
+          <property name="toolTip">
+           <string>Choose what database items to purge.</string>
+          </property>
+          <property name="text">
+           <string>Settings...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>

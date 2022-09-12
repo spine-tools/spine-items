@@ -24,19 +24,20 @@ from .do_work import do_work
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, cancel_on_error, purge_before_writing, project_dir, logger):
+    def __init__(self, name, cancel_on_error, purge_before_writing, purge_settings, project_dir, logger):
         """
         Args:
             name (str): item's name
-            logs_dir (str): path to the directory where logs should be stored
             cancel_on_error (bool): if True, revert changes on error and move on
             purge_before_writing (bool): if True, purge target dbs before writing
+            purge_settings (dict, optional): purge settings
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
         super().__init__(name, project_dir, logger)
         self._cancel_on_error = cancel_on_error
         self._purge_before_writing = purge_before_writing
+        self._purge_settings = purge_settings
         self._process = None
 
     @staticmethod
@@ -49,7 +50,8 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         cancel_on_error = item_dict["cancel_on_error"]
         purge_before_writing = item_dict["purge_before_writing"]
-        return cls(name, cancel_on_error, purge_before_writing, project_dir, logger)
+        purge_settings = item_dict.get("purge_settings")
+        return cls(name, cancel_on_error, purge_before_writing, purge_settings, project_dir, logger)
 
     def execute(self, forward_resources, backward_resources):
         """See base class."""
@@ -61,7 +63,15 @@ class ExecutableItem(ExecutableItemBase):
             return ItemExecutionFinishState.SUCCESS
         self._process = ReturningProcess(
             target=do_work,
-            args=(self._cancel_on_error, self._purge_before_writing, self._logs_dir, from_urls, to_urls, self._logger),
+            args=(
+                self._cancel_on_error,
+                self._purge_before_writing,
+                self._purge_settings,
+                self._logs_dir,
+                from_urls,
+                to_urls,
+                self._logger,
+            ),
         )
         return_value = self._process.run_until_complete()
         self._process = None

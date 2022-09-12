@@ -39,6 +39,28 @@ class UpdateCancelOnErrorCommand(SpineToolboxCommand):
         self._project_item.set_cancel_on_error(self._undo_cancel_on_error)
 
 
+class UpdatePurgeSettings(SpineToolboxCommand):
+    def __init__(self, project_item, purge_settings, previous_settings):
+        """Command to update database items that will be purged.
+
+        Args:
+            project_item (ProjectItem): Item
+            purge_settings (dict): New settings
+            previous_settings (dict): Old settings
+        """
+        super().__init__()
+        self._project_item = project_item
+        self._purge_settings = dict(purge_settings)
+        self._previous_settings = dict(previous_settings) if previous_settings is not None else None
+        self.setText(f"change {project_item.name} purge settings")
+
+    def redo(self):
+        self._project_item.set_purge_settings(self._purge_settings)
+
+    def undo(self):
+        self._project_item.set_purge_settings(self._previous_settings)
+
+
 class UpdatePurgeBeforeWritingCommand(SpineToolboxCommand):
     def __init__(self, project_item, purge_before_writing):
         """Command to update purge before running setting.

@@ -13,16 +13,13 @@
 ################################################################################
 ## Form generated from reading UI file 'importer_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from spine_items import resources_icons_rc
@@ -94,10 +91,24 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addWidget(self.cancel_on_error_checkBox)
 
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.checkBox_purge_before_writing = QCheckBox(self.frame)
         self.checkBox_purge_before_writing.setObjectName(u"checkBox_purge_before_writing")
 
-        self.verticalLayout_2.addWidget(self.checkBox_purge_before_writing)
+        self.horizontalLayout_2.addWidget(self.checkBox_purge_before_writing)
+
+        self.purge_settings_button = QPushButton(self.frame)
+        self.purge_settings_button.setObjectName(u"purge_settings_button")
+
+        self.horizontalLayout_2.addWidget(self.purge_settings_button)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
         self.label = QLabel(self.frame)
         self.label.setObjectName(u"label")
@@ -147,6 +158,10 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setText(QCoreApplication.translate("Form", u"Cancel import on error", None))
         self.checkBox_purge_before_writing.setText(QCoreApplication.translate("Form", u"Purge before writing", None))
+#if QT_CONFIG(tooltip)
+        self.purge_settings_button.setToolTip(QCoreApplication.translate("Form", u"Choose what database items to purge.", None))
+#endif // QT_CONFIG(tooltip)
+        self.purge_settings_button.setText(QCoreApplication.translate("Form", u"Settings...", None))
         self.label.setText(QCoreApplication.translate("Form", u"If values already exist", None))
         self.radioButton_on_conflict_keep.setText(QCoreApplication.translate("Form", u"Keep existing", None))
         self.radioButton_on_conflict_replace.setText(QCoreApplication.translate("Form", u"Replace", None))

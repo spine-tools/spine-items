@@ -305,3 +305,47 @@ def _single_scenario_name_or_none(resources):
             elif name != scenario_name:
                 return None
     return scenario_name
+
+
+def _ids_for_item_type(db_map, item_type):
+    """Queries ids for given database item type.
+
+    Args:
+        db_map (DatabaseMapping): database map
+        item_type (str): database item type
+
+    Returns:
+        set of int: item ids
+    """
+    return {row.id for row in db_map.query(getattr(db_map, item_type + "_sq"))}
+
+
+def purge(db_map, purge_settings, cancel_on_error, logger):
+    """Removes items from database.
+
+    Args:
+        db_map (DatabaseMapping): target database mapping
+        purge_settings (dict, optional): mapping from item type to purge flag
+        cancel_on_error (bool): if True, cancel operation on error, otherwise keep going
+        logger (LoggerInterface): logger
+
+    Returns:
+        bool: True if operation was successful, False otherwise
+    """
+    if purge_settings is None:
+        # Legacy Importers/Mergers didn't have explicit purge settings.
+        purge_settings = {item_type: True for item_type in spinedb_api.DatabaseMapping.ITEM_TYPES}
+    removable_db_map_data = {
+        item_type: _ids_for_item_type(db_map, item_type) for item_type, checked in purge_settings.items() if checked
+    }
+    removable_db_map_data = {item_type: ids for item_type, ids in removable_db_map_data.items() if ids}
+    if removable_db_map_data:
+        try:
+            logger.msg.emit("Purging database.")
+            db_map.cascade_remove_items(**removable_db_map_data)
+        except spinedb_api.SpineDBAPIError:
+            logger.msg_error.emit("Failed to purge database.")
+            if cancel_on_error:
+                logger.msg_error.emit("Cancel on error is set. Bailing out.")
+                return False
+    return True

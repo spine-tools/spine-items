@@ -17,6 +17,7 @@ Merger's execute kernel (do_work), as target for a multiprocess.Process
 """
 import os
 from spine_engine.utils.helpers import create_log_file_timestamp, remove_credentials_from_url
+from spine_items.utils import purge
 from spinedb_api import (
     clear_filter_configs,
     export_data,
@@ -24,15 +25,18 @@ from spinedb_api import (
     SpineDBAPIError,
     SpineDBVersionError,
     DatabaseMapping,
-    create_new_spine_database,
 )
 
 
-def _get_db_map(url, logger, purge_before_writing=False):
-    if purge_before_writing:
-        create_new_spine_database(url)
+def _get_db_map(url, logger, purge_before_writing=False, purge_settings=None):
     try:
         db_map = DatabaseMapping(url)
+        if purge_before_writing:
+            cancel_on_error = False
+            success = purge(db_map, purge_settings, cancel_on_error, logger)
+            if not success:
+                db_map.connection.close()
+                return None
     except (SpineDBAPIError, SpineDBVersionError) as err:
         sanitized_url = remove_credentials_from_url(url)
         logger.msg_warning.emit(f"Skipping url <b>{clear_filter_configs(sanitized_url)}</b>: {err}")
@@ -40,9 +44,9 @@ def _get_db_map(url, logger, purge_before_writing=False):
     return db_map
 
 
-def do_work(cancel_on_error, purge_before_writing, logs_dir, from_urls, to_urls, logger):
+def do_work(cancel_on_error, purge_before_writing, purge_settings, logs_dir, from_urls, to_urls, logger):
     from_db_maps_iter = (_get_db_map(url, logger) for url in from_urls)
-    to_db_maps_iter = (_get_db_map(url, logger, purge_before_writing) for url in to_urls)
+    to_db_maps_iter = (_get_db_map(url, logger, purge_before_writing, purge_settings) for url in to_urls)
     to_db_maps = [db_map for db_map in to_db_maps_iter if db_map is not None]
     from_db_map_data = {db_map: export_data(db_map) for db_map in from_db_maps_iter if db_map is not None}
     all_errors = []

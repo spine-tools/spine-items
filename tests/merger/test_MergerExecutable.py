@@ -19,7 +19,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from spinedb_api import create_new_spine_database, DatabaseMapping, DiffDatabaseMapping, import_functions
+from spinedb_api import create_new_spine_database, DatabaseMapping, import_functions
 from spine_items.merger.executable_item import ExecutableItem
 from spine_engine.project_item.project_item_resource import database_resource
 
@@ -50,7 +50,7 @@ class TestMergerExecutable(unittest.TestCase):
         self.assertEqual("Merger", item.item_type())
 
     def test_stop_execution(self):
-        executable = ExecutableItem("name", True, True, self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", True, True, None, self._temp_dir.name, mock.MagicMock())
         with mock.patch(
             "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
         ) as mock_stop_execution:
@@ -58,25 +58,23 @@ class TestMergerExecutable(unittest.TestCase):
             mock_stop_execution.assert_called_once()
 
     def test_execute(self):
-        executable = ExecutableItem("name", True, True, self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", True, True, None, self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
 
     def test_execute_merge_two_dbs(self):
         """Creates two db's with some data and merges them to a third db."""
         db1_path = Path(self._temp_dir.name, "db1.sqlite")
         db1_url = "sqlite:///" + str(db1_path)
-        create_new_spine_database(db1_url)
         # Add some data to db1
-        db1_map = DiffDatabaseMapping(db1_url)
+        db1_map = DatabaseMapping(db1_url, create=True)
         import_functions.import_object_classes(db1_map, ["a"])
         import_functions.import_objects(db1_map, [("a", "a_1")])
         # Commit to db1
         db1_map.commit_session("Add an object class 'a' and an object for unit tests.")
         db2_path = Path(self._temp_dir.name, "db2.sqlite")
         db2_url = "sqlite:///" + str(db2_path)
-        create_new_spine_database(db2_url)
         # Add some data to db2
-        db2_map = DiffDatabaseMapping(db2_url)
+        db2_map = DatabaseMapping(db2_url, create=True)
         import_functions.import_object_classes(db2_map, ["b"])
         import_functions.import_objects(db2_map, [("b", "b_1")])
         # Commit to db2
@@ -90,7 +88,7 @@ class TestMergerExecutable(unittest.TestCase):
         create_new_spine_database(db3_url)
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
-        executable = ExecutableItem("name", True, True, self._temp_dir.name, logger)
+        executable = ExecutableItem("name", True, True, None, self._temp_dir.name, logger)
         input_db_resources = [database_resource("provider", db1_url), database_resource("provider", db2_url)]
         output_db_resources = [database_resource("receiver", db3_url)]
         self.assertTrue(executable.execute(input_db_resources, output_db_resources))
@@ -106,6 +104,41 @@ class TestMergerExecutable(unittest.TestCase):
         object_list_b = output_db_map.object_list(class_id=class_list[1].id).all()
         self.assertEqual(len(object_list_b), 1)
         self.assertEqual(object_list_b[0].name, "b_1")
+        output_db_map.connection.close()
+
+    def test_purge_before_merging(self):
+        """Successfully purges items from target database before merging."""
+        source_db_path = Path(self._temp_dir.name, "db1.sqlite")
+        source_db_url = "sqlite:///" + str(source_db_path)
+        source_db_map = DatabaseMapping(source_db_url, create=True)
+        import_functions.import_object_classes(source_db_map, ["a"])
+        import_functions.import_objects(source_db_map, [("a", "a_1")])
+        source_db_map.commit_session("Add an object class 'a' and an object for unit tests.")
+        source_db_map.connection.close()
+        sink_db_path = Path(self._temp_dir.name, "db3.sqlite")
+        sink_db_url = "sqlite:///" + str(sink_db_path)
+        sink_db_map = DatabaseMapping(sink_db_url, create=True)
+        import_functions.import_alternatives(sink_db_map, ("my_alternative",))
+        import_functions.import_object_classes(sink_db_map, ("my_object_class",))
+        sink_db_map.commit_session("Add object classes and alternatives for unit tests.")
+        sink_db_map.connection.close()
+        logger = mock.MagicMock()
+        logger.__reduce__ = lambda _: (mock.MagicMock, ())
+        executable = ExecutableItem("name", True, True, {"object_class": True}, self._temp_dir.name, logger)
+        input_db_resources = [database_resource("provider", source_db_url)]
+        output_db_resources = [database_resource("receiver", sink_db_url)]
+        self.assertTrue(executable.execute(input_db_resources, output_db_resources))
+        output_db_map = DatabaseMapping(sink_db_url)
+        class_list = output_db_map.query(output_db_map.object_class_sq).all()
+        self.assertEqual(len(class_list), 1)
+        self.assertEqual(class_list[0].name, "a")
+        object_list = output_db_map.query(output_db_map.object_sq).all()
+        self.assertEqual(len(object_list), 1)
+        self.assertEqual(object_list[0].name, "a_1")
+        alternative_list = output_db_map.query(output_db_map.alternative_sq).all()
+        self.assertEqual(len(alternative_list), 2)
+        self.assertEqual(alternative_list[0].name, "Base")
+        self.assertEqual(alternative_list[1].name, "my_alternative")
         output_db_map.connection.close()
 
 
