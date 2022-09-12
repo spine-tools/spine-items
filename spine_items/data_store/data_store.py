@@ -197,6 +197,9 @@ class DataStore(ProjectItem):
 
     def do_update_url(self, **kwargs):
         old_url = convert_to_sqlalchemy_url(self._url, self.name)
+        new_dialect = kwargs.get("dialect")
+        if new_dialect == "sqlite":
+            kwargs.update({"username": "", "password": "", "host": "", "port": ""})
         self._url.update(kwargs)
         new_url = convert_to_sqlalchemy_url(self._url, self.name)
         self.load_url_into_selections(kwargs)
