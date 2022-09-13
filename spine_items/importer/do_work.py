@@ -87,6 +87,14 @@ def do_work(
                     )
                 all_data.append(data)
                 all_errors.extend(errors)
+        if all_data:
+            for url in urls_downstream:
+                success = _import_data_to_url(
+                    cancel_on_error, purge_before_writing, purge_settings, on_conflict, logs_dir, all_data, url, logger
+                )
+                if not success and cancel_on_error:
+                    return (False,)
+            all_data.clear()
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()
@@ -103,13 +111,6 @@ def do_work(
             logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
             return (False,)
         logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-    if all_data:
-        for url in urls_downstream:
-            success = _import_data_to_url(
-                cancel_on_error, purge_before_writing, purge_settings, on_conflict, logs_dir, all_data, url, logger
-            )
-            if not success and cancel_on_error:
-                return (False,)
     return (True,)
 
 
