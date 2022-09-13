@@ -392,6 +392,9 @@
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QPushButton" name="toolButton_vacuum">
+       <property name="toolTip">
+        <string>Remove outdated data from the database potentially freeing disk space.</string>
+       </property>
        <property name="text">
         <string>Vacuum</string>
        </property>

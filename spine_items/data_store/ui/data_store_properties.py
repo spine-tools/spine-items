@@ -13,16 +13,13 @@
 ################################################################################
 ## Form generated from reading UI file 'data_store_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
@@ -294,6 +291,9 @@ class Ui_Form(object):
         self.lineEdit_host.setPlaceholderText("")
         self.lineEdit_password.setPlaceholderText("")
         self.lineEdit_username.setPlaceholderText("")
+#if QT_CONFIG(tooltip)
+        self.toolButton_vacuum.setToolTip(QCoreApplication.translate("Form", u"Remove outdated data from the database potentially freeing disk space.", None))
+#endif // QT_CONFIG(tooltip)
         self.toolButton_vacuum.setText(QCoreApplication.translate("Form", u"Vacuum", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_copy_url.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Copy current database url to clipboard.</p></body></html>", None))
