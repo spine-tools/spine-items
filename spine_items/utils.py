@@ -317,7 +317,8 @@ def _ids_for_item_type(db_map, item_type):
     Returns:
         set of int: item ids
     """
-    return {row.id for row in db_map.query(getattr(db_map, item_type + "_sq"))}
+    sq_attr = db_map.cache_sqs[item_type]
+    return {row.id for row in db_map.query(getattr(db_map, sq_attr))}
 
 
 def purge(db_map, purge_settings, cancel_on_error, logger):
