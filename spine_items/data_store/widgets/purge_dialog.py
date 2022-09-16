@@ -18,10 +18,11 @@ from spinetoolbox.widgets.select_database_items import SelectDatabaseItems
 class PurgeDialog(QDialog):
     """Dialog for purging Data store's database."""
 
-    def __init__(self, purge_settings, parent=None):
+    def __init__(self, item_name, purge_settings, parent=None):
         """
         Args:
-            purge_settings (dict): purge settings
+            item_name (str): project item's name
+            purge_settings (dict, optional): purge settings
             parent (QWidget): parent widget
         """
         from ..ui.purge_dialog import Ui_Dialog
@@ -31,6 +32,7 @@ class PurgeDialog(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._ui = Ui_Dialog()
         self._ui.setupUi(self)
+        self.setWindowTitle(f"Purge items from {item_name}")
         self._item_check_boxes_widget = SelectDatabaseItems(purge_settings, self)
         self._ui.root_layout.insertWidget(0, self._item_check_boxes_widget)
         self._item_check_boxes_widget.checked_state_changed.connect(self._set_purge_button_enabled)
@@ -41,3 +43,11 @@ class PurgeDialog(QDialog):
     def _set_purge_button_enabled(self, _=None):
         """Enables or disables the purge button."""
         self._purge_button.setEnabled(self._item_check_boxes_widget.any_checked())
+
+    def get_purge_settings(self):
+        """Returns purge settings.
+
+        Returns:
+            dict: mapping from database item to purge flag
+        """
+        return self._item_check_boxes_widget.checked_states()

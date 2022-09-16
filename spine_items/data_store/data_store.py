@@ -30,6 +30,7 @@ from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
+from .widgets.purge_dialog import PurgeDialog
 from ..utils import database_label, convert_to_sqlalchemy_url
 
 
@@ -61,6 +62,7 @@ class DataStore(ProjectItem):
         self._open_url_action = QAction("Open URL in Spine DB editor")
         self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
         self._open_url_action.triggered.connect(self.open_url_in_spine_db_editor)
+        self._purge_settings = None
         self._purge_dialog = None
 
     @staticmethod
@@ -111,7 +113,7 @@ class DataStore(ProjectItem):
         s[self._properties_ui.lineEdit_host.editingFinished] = self.refresh_host
         s[self._properties_ui.lineEdit_port.editingFinished] = self.refresh_port
         s[self._properties_ui.lineEdit_database.editingFinished] = self.refresh_database
-        s[self._properties_ui.purge_button.clicked] = self._purge
+        s[self._properties_ui.purge_button.clicked] = self._show_purge_dialog
         return s
 
     def restore_selections(self):
@@ -262,10 +264,31 @@ class DataStore(ProjectItem):
         self.update_url(dialect=dialect)
 
     @Slot(bool)
-    def _purge(self, _=False):
-        """Purges the database."""
+    def _show_purge_dialog(self, _=False):
+        """Shows the Purge dialog."""
         if self._purge_dialog is not None:
             self._purge_dialog.raise_()
+            return
+        self._purge_dialog = PurgeDialog(self.name, self._purge_settings, self._toolbox)
+        self._purge_dialog.accepted.connect(self._purge)
+        self._purge_dialog.destroyed.connect(self._clean_up_purge_dialog)
+        self._purge_dialog.show()
+
+    @Slot()
+    def _purge(self):
+        """Purges the database."""
+        self._purge_settings = self._purge_dialog.get_purge_settings()
+        db_map = self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, self.name)
+        if db_map is None:
+            return
+        db_map_purge_data = {db_map: {item_type for item_type, checked in self._purge_settings.items() if checked}}
+        self._toolbox.db_mngr.purge_items(db_map_purge_data)
+        self._toolbox.db_mngr.commit_session("Purged the database.", db_map)
+
+    @Slot()
+    def _clean_up_purge_dialog(self):
+        """Cleans up stuff after Purge dialog has been closed."""
+        self._purge_dialog = None
 
     def actions(self):
         self._multi_db_editors_open = {x.name(): x for x in self._toolbox.db_mngr.get_all_multi_spine_db_editors()}
