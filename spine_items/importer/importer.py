@@ -18,7 +18,6 @@ Contains Importer project item class.
 
 import os
 from PySide2.QtCore import QModelIndex, Qt, Slot
-from PySide2.QtWidgets import QDialog
 
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem

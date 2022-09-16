@@ -391,6 +391,16 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
+      <widget class="QPushButton" name="purge_button">
+       <property name="toolTip">
+        <string>Mass remove database items.</string>
+       </property>
+       <property name="text">
+        <string>Purge...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="toolButton_vacuum">
        <property name="toolTip">
         <string>Remove outdated data from the database potentially freeing disk space.</string>

@@ -200,6 +200,11 @@ class Ui_Form(object):
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.purge_button = QPushButton(Form)
+        self.purge_button.setObjectName(u"purge_button")
+
+        self.horizontalLayout_3.addWidget(self.purge_button)
+
         self.toolButton_vacuum = QPushButton(Form)
         self.toolButton_vacuum.setObjectName(u"toolButton_vacuum")
         icon1 = QIcon()
@@ -291,6 +296,10 @@ class Ui_Form(object):
         self.lineEdit_host.setPlaceholderText("")
         self.lineEdit_password.setPlaceholderText("")
         self.lineEdit_username.setPlaceholderText("")
+#if QT_CONFIG(tooltip)
+        self.purge_button.setToolTip(QCoreApplication.translate("Form", u"Mass remove database items.", None))
+#endif // QT_CONFIG(tooltip)
+        self.purge_button.setText(QCoreApplication.translate("Form", u"Purge...", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_vacuum.setToolTip(QCoreApplication.translate("Form", u"Remove outdated data from the database potentially freeing disk space.", None))
 #endif // QT_CONFIG(tooltip)

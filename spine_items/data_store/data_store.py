@@ -61,6 +61,7 @@ class DataStore(ProjectItem):
         self._open_url_action = QAction("Open URL in Spine DB editor")
         self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
         self._open_url_action.triggered.connect(self.open_url_in_spine_db_editor)
+        self._purge_dialog = None
 
     @staticmethod
     def item_type():
@@ -110,6 +111,7 @@ class DataStore(ProjectItem):
         s[self._properties_ui.lineEdit_host.editingFinished] = self.refresh_host
         s[self._properties_ui.lineEdit_port.editingFinished] = self.refresh_port
         s[self._properties_ui.lineEdit_database.editingFinished] = self.refresh_database
+        s[self._properties_ui.purge_button.clicked] = self._purge
         return s
 
     def restore_selections(self):
@@ -258,6 +260,12 @@ class DataStore(ProjectItem):
     @Slot(str)
     def refresh_dialect(self, dialect):
         self.update_url(dialect=dialect)
+
+    @Slot(bool)
+    def _purge(self, _=False):
+        """Purges the database."""
+        if self._purge_dialog is not None:
+            self._purge_dialog.raise_()
 
     def actions(self):
         self._multi_db_editors_open = {x.name(): x for x in self._toolbox.db_mngr.get_all_multi_spine_db_editors()}

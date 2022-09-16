@@ -368,6 +368,7 @@ class PurgeSettingsDialog(QDialog):
         from .ui.purge_settings_dialog import Ui_Dialog  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
+        self.setWindowTitle("Database purge settings")
         self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._ui = Ui_Dialog()
