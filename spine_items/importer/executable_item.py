@@ -28,6 +28,7 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import get_labelled_sources
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
+from ..utils import purge_url
 from .item_info import ItemInfo
 from .do_work import do_work
 
@@ -81,6 +82,17 @@ class ExecutableItem(ExecutableItemBase):
             self._process.terminate()
             self._process = None
 
+    def execute_unfiltered(self, forward_resources, backward_resources):
+        if not super().execute_unfiltered(forward_resources, backward_resources):
+            return False
+        if not self._purge_before_writing:
+            return True
+        to_urls = (r.url for r in backward_resources if r.type_ == "database")
+        for url in to_urls:
+            if not purge_url(url, self._purge_settings, self._logger) and self._cancel_on_error:
+                return False
+        return True
+
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
@@ -93,6 +105,8 @@ class ExecutableItem(ExecutableItemBase):
         for label in self._selected_files:
             sources += labelled_sources.get(label, [])
         urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
+        if not sources or not urls_downstream:
+            return ItemExecutionFinishState.SUCCESS
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
             source_settings = {"gams_directory": self._gams_system_directory()}
@@ -111,8 +125,6 @@ class ExecutableItem(ExecutableItemBase):
             args=(
                 self._mapping,
                 self._cancel_on_error,
-                self._purge_before_writing,
-                self._purge_settings,
                 self._on_conflict,
                 self._logs_dir,
                 sources,

@@ -28,6 +28,7 @@ from sqlalchemy.engine.url import URL, make_url
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spine_engine.utils.queue_logger import SuppressedMessage
+from spine_engine.utils.helpers import remove_credentials_from_url
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
 
 
@@ -321,13 +322,24 @@ def _ids_for_item_type(db_map, item_type):
     return {row.id for row in db_map.query(getattr(db_map, sq_attr))}
 
 
-def purge(db_map, purge_settings, cancel_on_error, logger):
+def purge_url(url, purge_settings, logger):
+    try:
+        db_map = spinedb_api.DatabaseMapping(url)
+    except (spinedb_api.SpineDBAPIError, spinedb_api.SpineDBVersionError) as err:
+        sanitized_url = spinedb_api.clear_filter_configs(remove_credentials_from_url(url))
+        logger.msg_warning.emit(f"Failed to purge url <b>{sanitized_url}</b>: {err}")
+        return False
+    success = purge(db_map, purge_settings, logger)
+    db_map.connection.close()
+    return success
+
+
+def purge(db_map, purge_settings, logger):
     """Removes items from database.
 
     Args:
         db_map (DatabaseMapping): target database mapping
         purge_settings (dict, optional): mapping from item type to purge flag
-        cancel_on_error (bool): if True, cancel operation on error, otherwise keep going
         logger (LoggerInterface): logger
 
     Returns:
@@ -342,11 +354,9 @@ def purge(db_map, purge_settings, cancel_on_error, logger):
     removable_db_map_data = {item_type: ids for item_type, ids in removable_db_map_data.items() if ids}
     if removable_db_map_data:
         try:
-            logger.msg.emit("Purging database.")
+            logger.msg.emit("Purging database...")
             db_map.cascade_remove_items(**removable_db_map_data)
         except spinedb_api.SpineDBAPIError:
             logger.msg_error.emit("Failed to purge database.")
-            if cancel_on_error:
-                logger.msg_error.emit("Cancel on error is set. Bailing out.")
-                return False
+            return False
     return True

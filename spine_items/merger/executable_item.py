@@ -16,9 +16,11 @@ Contains Merger's executable item as well as support utilities.
 :date:   1.4.2020
 """
 
+from contextlib import ExitStack
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
+from ..utils import purge_url
 from .item_info import ItemInfo
 from .do_work import do_work
 
@@ -53,31 +55,43 @@ class ExecutableItem(ExecutableItemBase):
         purge_settings = item_dict.get("purge_settings")
         return cls(name, cancel_on_error, purge_before_writing, purge_settings, project_dir, logger)
 
+    def execute_unfiltered(self, forward_resources, backward_resources):
+        if not super().execute_unfiltered(forward_resources, backward_resources):
+            return False
+        if not self._purge_before_writing:
+            return True
+        to_urls = (r.url for r in backward_resources if r.type_ == "database")
+        for url in to_urls:
+            if not purge_url(url, self._purge_settings, self._logger) and self._cancel_on_error:
+                return False
+        return True
+
     def execute(self, forward_resources, backward_resources):
         """See base class."""
         if not super().execute(forward_resources, backward_resources):
             return ItemExecutionFinishState.FAILURE
-        from_urls = [r.url for r in forward_resources if r.type_ == "database"]
-        to_urls = [r.url for r in backward_resources if r.type_ == "database"]
-        if not from_urls or not to_urls:
+        from_resources = [r for r in forward_resources if r.type_ == "database"]
+        to_resources = [r for r in backward_resources if r.type_ == "database"]
+        if not from_resources or not to_resources:
             return ItemExecutionFinishState.SUCCESS
-        self._process = ReturningProcess(
-            target=do_work,
-            args=(
-                self._cancel_on_error,
-                self._purge_before_writing,
-                self._purge_settings,
-                self._logs_dir,
-                from_urls,
-                to_urls,
-                self._logger,
-            ),
-        )
-        return_value = self._process.run_until_complete()
-        self._process = None
-        if return_value[0]:
-            return ItemExecutionFinishState.SUCCESS
-        return ItemExecutionFinishState.FAILURE
+        with ExitStack() as stack:
+            from_server_urls = [stack.enter_context(resource.open()) for resource in from_resources]
+            to_server_urls = [stack.enter_context(resource.open()) for resource in to_resources]
+            self._process = ReturningProcess(
+                target=do_work,
+                args=(
+                    self._cancel_on_error,
+                    self._logs_dir,
+                    from_server_urls,
+                    to_server_urls,
+                    self._logger,
+                ),
+            )
+            return_value = self._process.run_until_complete()
+            self._process = None
+            if return_value[0]:
+                return ItemExecutionFinishState.SUCCESS
+            return ItemExecutionFinishState.FAILURE
 
     def stop_execution(self):
         """Stops executing this DS."""

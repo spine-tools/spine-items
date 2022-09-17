@@ -18,7 +18,6 @@ Importer's execute kernel (do_work), as target for a multiprocess.Process
 
 import os
 import spinedb_api
-from spine_items.utils import purge
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
@@ -26,8 +25,6 @@ from spine_engine.utils.helpers import create_log_file_timestamp
 def do_work(
     mapping,
     cancel_on_error,
-    purge_before_writing,
-    purge_settings,
     on_conflict,
     logs_dir,
     sources,
@@ -89,9 +86,7 @@ def do_work(
                 all_errors.extend(errors)
         if all_data:
             for url in urls_downstream:
-                success = _import_data_to_url(
-                    cancel_on_error, purge_before_writing, purge_settings, on_conflict, logs_dir, all_data, url, logger
-                )
+                success = _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, url, logger)
                 if not success and cancel_on_error:
                     return (False,)
             all_data.clear()
@@ -114,18 +109,12 @@ def do_work(
     return (True,)
 
 
-def _import_data_to_url(
-    cancel_on_error, purge_before_writing, purge_settings, on_conflict, logs_dir, all_data, url, logger
-):
+def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, url, logger):
     try:
         db_map = spinedb_api.DatabaseMapping(url, upgrade=False, username="Importer")
     except (spinedb_api.SpineDBAPIError, spinedb_api.SpineDBVersionError) as err:
         logger.msg_error.emit(f"Unable to create database mapping, all import operations will be omitted: {err}")
         return False
-    if purge_before_writing:
-        success = purge(db_map, purge_settings, cancel_on_error, logger)
-        if not success:
-            return False
     all_import_errors = []
     all_import_num = 0
     for data in all_data:
