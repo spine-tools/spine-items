@@ -356,6 +356,7 @@ def purge(db_map, purge_settings, logger):
         try:
             logger.msg.emit("Purging database...")
             db_map.cascade_remove_items(**removable_db_map_data)
+            db_map.commit_session("Purge database")
         except spinedb_api.SpineDBAPIError:
             logger.msg_error.emit("Failed to purge database.")
             return False

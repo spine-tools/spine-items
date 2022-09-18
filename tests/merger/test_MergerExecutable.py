@@ -127,6 +127,7 @@ class TestMergerExecutable(unittest.TestCase):
         executable = ExecutableItem("name", True, True, {"object_class": True}, self._temp_dir.name, logger)
         input_db_resources = [database_resource("provider", source_db_url)]
         output_db_resources = [database_resource("receiver", sink_db_url)]
+        self.assertTrue(executable.execute_unfiltered(input_db_resources, output_db_resources))
         self.assertTrue(executable.execute(input_db_resources, output_db_resources))
         output_db_map = DatabaseMapping(sink_db_url)
         class_list = output_db_map.query(output_db_map.object_class_sq).all()

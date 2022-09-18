@@ -108,6 +108,7 @@ class TestImporterExecutable(unittest.TestCase):
         )
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
+        self.assertTrue(executable.execute_unfiltered(file_resources, database_resources))
         self.assertTrue(executable.execute(file_resources, database_resources))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
@@ -168,6 +169,7 @@ class TestImporterExecutable(unittest.TestCase):
         )
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
+        self.assertTrue(executable.execute_unfiltered(file_resources, database_resources))
         self.assertTrue(executable.execute(file_resources, database_resources))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)

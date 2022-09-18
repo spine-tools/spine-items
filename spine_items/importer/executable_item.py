@@ -17,6 +17,7 @@ Contains Importer's executable item as well as support utilities.
 """
 
 import os
+from contextlib import ExitStack
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
@@ -104,8 +105,8 @@ class ExecutableItem(ExecutableItemBase):
         sources = list()
         for label in self._selected_files:
             sources += labelled_sources.get(label, [])
-        urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
-        if not sources or not urls_downstream:
+        to_resources = [r for r in backward_resources if r.type_ == "database"]
+        if not sources or not to_resources:
             return ItemExecutionFinishState.SUCCESS
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
@@ -120,22 +121,24 @@ class ExecutableItem(ExecutableItemBase):
             "DataPackageConnector": DataPackageConnector,
             "SqlAlchemyConnector": SqlAlchemyConnector,
         }[source_type](source_settings)
-        self._process = ReturningProcess(
-            target=do_work,
-            args=(
-                self._mapping,
-                self._cancel_on_error,
-                self._on_conflict,
-                self._logs_dir,
-                sources,
-                connector,
-                urls_downstream,
-                self._logger,
-            ),
-        )
-        return_value = self._process.run_until_complete()
-        self._process = None
-        return ItemExecutionFinishState.SUCCESS if return_value[0] else ItemExecutionFinishState.FAILURE
+        with ExitStack() as stack:
+            to_server_urls = [stack.enter_context(resource.open()) for resource in to_resources]
+            self._process = ReturningProcess(
+                target=do_work,
+                args=(
+                    self._mapping,
+                    self._cancel_on_error,
+                    self._on_conflict,
+                    self._logs_dir,
+                    sources,
+                    connector,
+                    to_server_urls,
+                    self._logger,
+                ),
+            )
+            return_value = self._process.run_until_complete()
+            self._process = None
+            return ItemExecutionFinishState.SUCCESS if return_value[0] else ItemExecutionFinishState.FAILURE
 
     def _gams_system_directory(self):
         """Returns GAMS system path or None if GAMS default is to be used."""
