@@ -27,7 +27,7 @@ def do_work(cancel_on_error, logs_dir, from_server_urls, to_server_urls, logger)
     for from_client in from_clients:
         data = from_client.export_data()['result']
         for to_client in to_clients:
-            opened = to_client.open_connection()
+            to_client.open_connection()
             import_count, import_errors = to_client.import_data(data, "")['result']
             all_errors += import_errors
             if import_errors and cancel_on_error and import_count:
@@ -46,8 +46,7 @@ def do_work(cancel_on_error, logs_dir, from_server_urls, to_server_urls, logger)
                     logger.msg_warning.emit(
                         "No new data merged from {0} into {1}".format(sanitized_from_url, sanitized_to_url)
                     )
-            if opened:
-                to_client.close_connection()
+            to_client.close_connection()
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()

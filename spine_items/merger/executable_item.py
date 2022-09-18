@@ -79,13 +79,7 @@ class ExecutableItem(ExecutableItemBase):
             to_server_urls = [stack.enter_context(resource.open()) for resource in to_resources]
             self._process = ReturningProcess(
                 target=do_work,
-                args=(
-                    self._cancel_on_error,
-                    self._logs_dir,
-                    from_server_urls,
-                    to_server_urls,
-                    self._logger,
-                ),
+                args=(self._cancel_on_error, self._logs_dir, from_server_urls, to_server_urls, self._logger),
             )
             return_value = self._process.run_until_complete()
             self._process = None
