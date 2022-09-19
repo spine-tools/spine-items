@@ -24,16 +24,7 @@ from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 
-def do_work(
-    mapping,
-    cancel_on_error,
-    on_conflict,
-    logs_dir,
-    sources,
-    connector,
-    to_server_urls,
-    logger,
-):
+def do_work(mapping, cancel_on_error, on_conflict, logs_dir, sources, connector, to_server_urls, logger):
     all_data = []
     all_errors = []
     table_mappings = {

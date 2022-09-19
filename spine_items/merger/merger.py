@@ -240,9 +240,12 @@ class Merger(ProjectItem):
         """See base class."""
         if source_item.item_type() == "Data Store":
             dst_ds_names = ", ".join(x.name for x in self.successor_data_stores())
-            self._logger.msg.emit(
-                "Link established. "
-                f"Data from <b>{source_item.name}</b> will be merged into <b>{dst_ds_names}</b> upon execution."
-            )
+            if dst_ds_names:
+                self._logger.msg.emit(
+                    "Link established. "
+                    f"Data from <b>{source_item.name}</b> will be merged into <b>{dst_ds_names}</b> upon execution."
+                )
+            else:
+                self._logger.msg.emit("Link established. " f"<b>{self.name} is missing output database, though.</b>")
         else:
             super().notify_destination(source_item)
