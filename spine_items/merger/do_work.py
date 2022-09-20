@@ -24,16 +24,16 @@ def do_work(cancel_on_error, logs_dir, from_server_urls, to_server_urls, logger)
     from_clients = [SpineDBClient.from_server_url(server_url) for server_url in from_server_urls]
     to_clients = [SpineDBClient.from_server_url(server_url) for server_url in to_server_urls]
     all_errors = []
-    for from_client in from_clients:
-        data = from_client.export_data()['result']
-        for to_client in to_clients:
-            to_client.open_connection()
+    from_url_data = [(from_client.get_db_url(), from_client.export_data()['result']) for from_client in from_clients]
+    for to_client in to_clients:
+        to_client.open_connection()
+        for from_url, data in from_url_data:
             import_count, import_errors = to_client.import_data(data, "")['result']
             all_errors += import_errors
             if import_errors and cancel_on_error and import_count:
                 to_client.call_method("rollback_session")
             else:
-                sanitized_from_url = remove_credentials_from_url(from_client.get_db_url())
+                sanitized_from_url = remove_credentials_from_url(from_url)
                 sanitized_to_url = remove_credentials_from_url(to_client.get_db_url())
                 if data:
                     to_client.call_method("commit_session", f"Import {import_count} items from {sanitized_from_url}")
@@ -46,7 +46,7 @@ def do_work(cancel_on_error, logs_dir, from_server_urls, to_server_urls, logger)
                     logger.msg_warning.emit(
                         "No new data merged from {0} into {1}".format(sanitized_from_url, sanitized_to_url)
                     )
-            to_client.close_connection()
+        to_client.close_connection()
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()
