@@ -84,9 +84,11 @@ def do_work(mapping, cancel_on_error, on_conflict, logs_dir, sources, connector,
                 all_errors.extend(errors)
         if all_data:
             for client in to_clients:
+                client.db_checkin()
                 client.open_connection()
                 success = _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client, logger)
                 client.close_connection()
+                client.db_checkout()
                 if not success and cancel_on_error:
                     return (False,)
             all_data.clear()

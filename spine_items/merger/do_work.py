@@ -22,10 +22,11 @@ from spinedb_api.spine_db_client import SpineDBClient
 
 def do_work(cancel_on_error, logs_dir, from_server_urls, to_server_urls, logger):
     from_clients = [SpineDBClient.from_server_url(server_url) for server_url in from_server_urls]
-    to_clients = [SpineDBClient.from_server_url(server_url) for server_url in to_server_urls]
     all_errors = []
     from_url_data = [(from_client.get_db_url(), from_client.export_data()['result']) for from_client in from_clients]
-    for to_client in to_clients:
+    for server_url in to_server_urls:
+        to_client = SpineDBClient.from_server_url(server_url)
+        to_client.db_checkin()
         to_client.open_connection()
         for from_url, data in from_url_data:
             import_count, import_errors = to_client.import_data(data, "")['result']
@@ -47,6 +48,7 @@ def do_work(cancel_on_error, logs_dir, from_server_urls, to_server_urls, logger)
                         "No new data merged from {0} into {1}".format(sanitized_from_url, sanitized_to_url)
                     )
         to_client.close_connection()
+        to_client.db_checkout()
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()
