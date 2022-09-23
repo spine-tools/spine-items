@@ -203,6 +203,8 @@ class PythonToolInstance(ToolInstance):
         """See base class."""
         self.tool_specification.set_execution_settings()  # Set default execution settings
         use_jupyter_console = self.tool_specification.execution_settings["use_jupyter_console"]
+        server_ip = self._settings.value("engineSettings/remoteHost", "")
+        remote_exec_enabled = True if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true" else False
         if use_jupyter_console:
             # Prepare command
             cd_command = f"%cd -q {self.basedir}"  # -q: quiet
@@ -216,7 +218,8 @@ class PythonToolInstance(ToolInstance):
             k_spec = self.tool_specification.execution_settings["kernel_spec_name"]
             env = self.tool_specification.execution_settings["env"]  # Activate environment if "conda"
             self.exec_mngr = KernelExecutionManager(
-                self._logger, k_spec, *self.args, group_id=self.owner.group_id, environment=env, conda_exe=conda_exe
+                self._logger, k_spec, *self.args, group_id=self.owner.group_id,
+                environment=env, conda_exe=conda_exe, remote_exec_enabled=remote_exec_enabled, server_ip=server_ip
             )
         else:
             python_exe = self.tool_specification.execution_settings["executable"]
@@ -231,7 +234,7 @@ class PythonToolInstance(ToolInstance):
             self.args += self._make_exec_code(fp, full_fp)
             alias = f"python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}"
             self.exec_mngr = PythonPersistentExecutionManager(
-                self._logger, self.program, self.args, alias, group_id=self.owner.group_id
+                self._logger, self.program, self.args, alias, group_id=self.owner.group_id, remote_exec_enabled=remote_exec_enabled, server_ip=server_ip
             )
 
     @staticmethod
