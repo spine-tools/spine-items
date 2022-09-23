@@ -354,32 +354,3 @@ class UrlSelector(UrlSelectorMixin, QDialog):
             return
         self.ui.lineEdit_database.setText(filepath)
         self._refresh_url()
-
-
-class PurgeSettingsDialog(QDialog):
-    """Importer's purge settings dialog."""
-
-    def __init__(self, purge_settings, parent=None):
-        """
-        Args:
-            purge_settings (dict): purge settings
-            parent (QWidget, optional): parent widget
-        """
-        from .ui.purge_settings_dialog import Ui_Dialog  # pylint: disable=import-outside-toplevel
-
-        super().__init__(parent)
-        self.setWindowTitle("Database purge settings")
-        self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self._ui = Ui_Dialog()
-        self._ui.setupUi(self)
-        self._item_check_boxes_widget = SelectDatabaseItems(purge_settings, self)
-        self._ui.root_layout.insertWidget(0, self._item_check_boxes_widget)
-
-    def get_purge_settings(self):
-        """Returns current purge settings.
-
-        Returns:
-            dict: mapping from purgeable database item name to purge flag
-        """
-        return self._item_check_boxes_widget.checked_states()

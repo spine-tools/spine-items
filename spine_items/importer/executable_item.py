@@ -29,25 +29,13 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import get_labelled_sources
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
-from ..utils import purge_url
+from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 from .item_info import ItemInfo
 from .do_work import do_work
 
 
-class ExecutableItem(ExecutableItemBase):
-    def __init__(
-        self,
-        name,
-        mapping,
-        selected_files,
-        gams_path,
-        cancel_on_error,
-        purge_before_writing,
-        purge_settings,
-        on_conflict,
-        project_dir,
-        logger,
-    ):
+class ExecutableItem(DBWriterExecutableItemBase):
+    def __init__(self, name, mapping, selected_files, gams_path, cancel_on_error, on_conflict, project_dir, logger):
         """
         Args:
             name (str): Importer's name
@@ -55,8 +43,6 @@ class ExecutableItem(ExecutableItemBase):
             selected_files (list): selected_files
             gams_path (str): path to system's GAMS executable or empty string for the default path
             cancel_on_error (bool): if True, revert changes on error and quit
-            purge_before_writing (bool): if True, purge target dbs before writing
-            purge_settings (dict, optional): purge-before-writing settings
             on_conflict (str): conflict resolution strategy for spinedb_api.import_data
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
@@ -66,8 +52,6 @@ class ExecutableItem(ExecutableItemBase):
         self._selected_files = selected_files
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
-        self._purge_before_writing = purge_before_writing
-        self._purge_settings = purge_settings
         self._on_conflict = on_conflict
         self._process = None
 
@@ -82,17 +66,6 @@ class ExecutableItem(ExecutableItemBase):
         if self._process is not None:
             self._process.terminate()
             self._process = None
-
-    def execute_unfiltered(self, forward_resources, backward_resources):
-        if not super().execute_unfiltered(forward_resources, backward_resources):
-            return False
-        if not self._purge_before_writing:
-            return True
-        to_urls = (r.url for r in backward_resources if r.type_ == "database")
-        for url in to_urls:
-            if not purge_url(url, self._purge_settings, self._logger) and self._cancel_on_error:
-                return False
-        return True
 
     def execute(self, forward_resources, backward_resources):
         """See base class."""
@@ -161,18 +134,5 @@ class ExecutableItem(ExecutableItemBase):
         selected_files = [filepath for filepath, selected in file_selection.items() if selected]
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
-        purge_before_writing = item_dict["purge_before_writing"]
-        purge_settings = item_dict.get("purge_settings")
         on_conflict = item_dict["on_conflict"]
-        return cls(
-            name,
-            mapping,
-            selected_files,
-            gams_path,
-            cancel_on_error,
-            purge_before_writing,
-            purge_settings,
-            on_conflict,
-            project_dir,
-            logger,
-        )
+        return cls(name, mapping, selected_files, gams_path, cancel_on_error, on_conflict, project_dir, logger)

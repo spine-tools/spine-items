@@ -22,14 +22,7 @@ from PySide2.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
-from ..widgets import PurgeSettingsDialog
-from ..commands import (
-    UpdateCancelOnErrorCommand,
-    ChangeItemSelectionCommand,
-    UpdatePurgeBeforeWritingCommand,
-    UpdateOnConflictCommand,
-    UpdatePurgeSettings,
-)
+from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand, UpdateOnConflictCommand
 from ..models import CheckableFileListModel
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
@@ -46,8 +39,6 @@ class Importer(ProjectItem):
         project,
         specification_name="",
         cancel_on_error=True,
-        purge_before_writing=False,
-        purge_settings=None,
         on_conflict="merge",
         file_selection=None,
     ):
@@ -62,8 +53,6 @@ class Importer(ProjectItem):
             project (SpineToolboxProject): the project this item belongs to
             specification_name (str, optional): a spec name
             cancel_on_error (bool): if True the item's execution will stop on import error
-            purge_before_writing (bool): if True the item will purge target dbs before running
-            purge_settings (dict, optional): database purging settings
             on_conflict (str): how to handle conflicts between parallel importers
             file_selection (dict, optional): a map from label to a bool indicating if the file item is checked
         """
@@ -82,13 +71,10 @@ class Importer(ProjectItem):
                 f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
             )
         self.cancel_on_error = cancel_on_error
-        self._purge_before_writing = purge_before_writing
-        self._purge_settings = purge_settings
         self.on_conflict = on_conflict
         self._file_model = CheckableFileListModel(header_label="Available resources")
         self._file_model.set_initial_state(file_selection if file_selection is not None else dict())
         self._file_model.checked_state_changed.connect(self._push_file_selection_change_to_undo_stack)
-        self._purge_settings_dialog = None
 
     @staticmethod
     def item_type():
@@ -132,8 +118,6 @@ class Importer(ProjectItem):
         s[self._properties_ui.radioButton_on_conflict_merge.clicked] = self._update_on_conflict
         s[self._properties_ui.radioButton_on_conflict_keep.clicked] = self._update_on_conflict
         s[self._properties_ui.radioButton_on_conflict_replace.clicked] = self._update_on_conflict
-        s[self._properties_ui.checkBox_purge_before_writing.stateChanged] = self._handle_purge_before_writing_changed
-        s[self._properties_ui.purge_settings_button.clicked] = self._open_purge_settings_dialog
         return s
 
     @Slot(str)
@@ -167,60 +151,6 @@ class Importer(ProjectItem):
         self._properties_ui.cancel_on_error_checkBox.blockSignals(True)
         self._properties_ui.cancel_on_error_checkBox.setCheckState(check_state)
         self._properties_ui.cancel_on_error_checkBox.blockSignals(False)
-
-    @Slot(int)
-    def _handle_purge_before_writing_changed(self, _state):
-        purge_before_writing = self._properties_ui.checkBox_purge_before_writing.isChecked()
-        if self._purge_before_writing == purge_before_writing:
-            return
-        self._toolbox.undo_stack.push(UpdatePurgeBeforeWritingCommand(self, purge_before_writing))
-        self._properties_ui.purge_settings_button.setEnabled(purge_before_writing)
-
-    def set_purge_before_writing(self, purge_before_writing):
-        """Sets purge_before_writing setting.
-
-        Args:
-            purge_before_writing (bool): purge_before_writing flag
-        """
-        self._purge_before_writing = purge_before_writing
-        if not self._active:
-            return
-        check_state = Qt.Checked if self._purge_before_writing else Qt.Unchecked
-        self._properties_ui.checkBox_purge_before_writing.blockSignals(True)
-        self._properties_ui.checkBox_purge_before_writing.setCheckState(check_state)
-        self._properties_ui.checkBox_purge_before_writing.blockSignals(False)
-
-    @Slot(bool)
-    def _open_purge_settings_dialog(self, _=False):
-        """Opens the purge settings dialog."""
-        if self._purge_settings_dialog is not None:
-            self._purge_settings_dialog.raise_()
-            return
-        self._purge_settings_dialog = PurgeSettingsDialog(self._purge_settings, self._toolbox)
-        self._purge_settings_dialog.accepted.connect(self._handle_purge_settings_changed)
-        self._purge_settings_dialog.destroyed.connect(self._clean_up_purge_settings_dialog)
-        self._purge_settings_dialog.show()
-
-    @Slot()
-    def _handle_purge_settings_changed(self):
-        """Pushes a command that sets new purge settings onto undo stack."""
-        purge_settings = self._purge_settings_dialog.get_purge_settings()
-        if purge_settings == self._purge_settings:
-            return
-        self._toolbox.undo_stack.push(UpdatePurgeSettings(self, purge_settings, self._purge_settings))
-
-    @Slot()
-    def _clean_up_purge_settings_dialog(self):
-        """Cleans things related to purge settings dialog."""
-        self._purge_settings_dialog = None
-
-    def set_purge_settings(self, settings):
-        """Sets purge settings.
-
-        Args:
-            settings (dict): purge settings; mapping from database item type to purge flag
-        """
-        self._purge_settings = settings
 
     def _on_conflict(self):
         """Reads the on_conflict strategy from UI."""
@@ -260,10 +190,6 @@ class Importer(ProjectItem):
     def restore_selections(self):
         """Restores selections into shared widgets when this project item is selected."""
         self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
-        self._properties_ui.checkBox_purge_before_writing.setCheckState(
-            Qt.Checked if self._purge_before_writing else Qt.Unchecked
-        )
-        self._properties_ui.purge_settings_button.setEnabled(self._purge_before_writing)
         self._set_on_conflict()
         self._properties_ui.treeView_files.setModel(self._file_model)
         self._update_ui()
@@ -374,9 +300,6 @@ class Importer(ProjectItem):
         else:
             d["specification"] = self.specification().name
         d["cancel_on_error"] = self.cancel_on_error
-        d["purge_before_writing"] = self._purge_before_writing
-        if self._purge_settings is not None:
-            d["purge_settings"] = self._purge_settings
         d["on_conflict"] = self.on_conflict
         selections = list()
         for row in range(self._file_model.rowCount()):
@@ -391,23 +314,10 @@ class Importer(ProjectItem):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         specification_name = item_dict.get("specification", "")
         cancel_on_error = item_dict.get("cancel_on_error", False)
-        purge_before_writing = item_dict.get("purge_before_writing", False)
-        purge_settings = item_dict.get("purge_settings")
         on_conflict = item_dict.get("on_conflict", "merge")
         file_selection = {label: selected for label, selected in item_dict.get("file_selection", list())}
         return Importer(
-            name,
-            description,
-            x,
-            y,
-            toolbox,
-            project,
-            specification_name,
-            cancel_on_error,
-            purge_before_writing,
-            purge_settings,
-            on_conflict,
-            file_selection,
+            name, description, x, y, toolbox, project, specification_name, cancel_on_error, on_conflict, file_selection
         )
 
     def notify_destination(self, source_item):

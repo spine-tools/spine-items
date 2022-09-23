@@ -28,7 +28,6 @@ import time
 import uuid
 from contextlib import ExitStack
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.project_item.project_item_resource import (
     cmd_line_arg_from_dict,
@@ -40,9 +39,10 @@ from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources
 from ..utils import generate_filter_subdirectory_name
+from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 
 
-class ExecutableItem(ExecutableItemBase):
+class ExecutableItem(DBWriterExecutableItemBase):
     """Tool project item's executable parts."""
 
     _MAX_RETRIES = 3

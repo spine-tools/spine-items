@@ -16,7 +16,8 @@ Merger's execute kernel (do_work), as target for a multiprocess.Process
 :date:   6.11.2020
 """
 import os
-from spine_engine.utils.helpers import create_log_file_timestamp, remove_credentials_from_url
+from spine_engine.utils.helpers import create_log_file_timestamp
+from spinedb_api.helpers import remove_credentials_from_url
 from spinedb_api.spine_db_client import SpineDBClient
 
 

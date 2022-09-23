@@ -11,7 +11,6 @@
 """Contains purge dialog's business code."""
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QDialog, QDialogButtonBox
-
 from spinetoolbox.widgets.select_database_items import SelectDatabaseItems
 
 

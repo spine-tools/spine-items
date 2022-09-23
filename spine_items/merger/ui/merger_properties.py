@@ -13,13 +13,16 @@
 ################################################################################
 ## Form generated from reading UI file 'merger_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 5.14.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 from spine_items import resources_icons_rc
@@ -47,25 +50,6 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addWidget(self.cancel_on_error_checkBox)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.checkBox_purge_before_writing = QCheckBox(self.frame)
-        self.checkBox_purge_before_writing.setObjectName(u"checkBox_purge_before_writing")
-
-        self.horizontalLayout.addWidget(self.checkBox_purge_before_writing)
-
-        self.purge_settings_button = QPushButton(self.frame)
-        self.purge_settings_button.setObjectName(u"purge_settings_button")
-
-        self.horizontalLayout.addWidget(self.purge_settings_button)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout.addItem(self.horizontalSpacer)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout)
-
 
         self.verticalLayout.addWidget(self.frame)
 
@@ -81,10 +65,5 @@ class Ui_Form(object):
         self.cancel_on_error_checkBox.setToolTip(QCoreApplication.translate("Form", u"If there are any errors when trying to import data cancel the whole import.", None))
 #endif // QT_CONFIG(tooltip)
         self.cancel_on_error_checkBox.setText(QCoreApplication.translate("Form", u"Cancel on error", None))
-        self.checkBox_purge_before_writing.setText(QCoreApplication.translate("Form", u"Purge before writing", None))
-#if QT_CONFIG(tooltip)
-        self.purge_settings_button.setToolTip(QCoreApplication.translate("Form", u"Choose what database items to purge.", None))
-#endif // QT_CONFIG(tooltip)
-        self.purge_settings_button.setText(QCoreApplication.translate("Form", u"Settings...", None))
     # retranslateUi
 

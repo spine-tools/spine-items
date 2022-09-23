@@ -1,0 +1,29 @@
+######################################################################################################################
+# Copyright (C) 2017-2021 Spine project consortium
+# This file is part of Spine Items.
+# Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
+# any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+# Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+######################################################################################################################
+
+"""
+Contains base classes for items that write to db.
+
+:authors: M. Marin (ER)
+:date:    23.9.2022
+"""
+from spine_engine.project_item.executable_item_base import ExecutableItemBase
+
+
+class DBWriterExecutableItemBase(ExecutableItemBase):
+    """Base class for items that might write to a Spine DB."""
+
+    def exclude_execution(self, forward_resources, backward_resources):
+        """Perform the checkout on output databases so concurrent items can proceed."""
+        to_resources = [r for r in backward_resources if r.type_ == "database"]
+        for resource in to_resources:
+            with resource.open(db_checkout=True):
+                pass
