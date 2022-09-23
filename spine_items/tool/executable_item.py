@@ -470,7 +470,7 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         resources = forward_resources + backward_resources
         with ExitStack() as stack:
-            labelled_args = labelled_resource_args(resources, stack)
+            labelled_args = labelled_resource_args(resources, stack, db_checkin=True, db_checkout=True)
             expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
             try:
                 self._tool_instance.prepare(expanded_args)
