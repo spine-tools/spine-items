@@ -19,7 +19,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from spinedb_api import create_new_spine_database, DatabaseMapping, import_alternatives, import_object_classes
+from spinedb_api import create_new_spine_database, DatabaseMapping
 from spine_engine.project_item.project_item_resource import database_resource, file_resource
 from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.importer_specification import ImporterSpecification
@@ -43,7 +43,6 @@ class TestImporterExecutable(unittest.TestCase):
             "y": 0,
             "specification": "importer_spec",
             "cancel_on_error": True,
-            "purge_before_writing": True,
             "on_conflict": "merge",
             "mapping_selection": [
                 [{"type": "path", "relative": True, "path": ".spinetoolbox/items/data/units.xlsx"}, True]
@@ -79,16 +78,12 @@ class TestImporterExecutable(unittest.TestCase):
         self.assertEqual("Importer", item.item_type())
 
     def test_stop_execution(self):
-        executable = ExecutableItem(
-            "name", {}, [], "", True, True, None, 'merge', self._temp_dir.name, mock.MagicMock()
-        )
+        executable = ExecutableItem("name", {}, [], "", True, 'merge', self._temp_dir.name, mock.MagicMock())
         executable.stop_execution()
         self.assertIsNone(executable._process)
 
     def test_execute_simplest_case(self):
-        executable = ExecutableItem(
-            "name", {}, [], "", True, True, None, 'merge', self._temp_dir.name, mock.MagicMock()
-        )
+        executable = ExecutableItem("name", {}, [], "", True, 'merge', self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
@@ -104,7 +99,7 @@ class TestImporterExecutable(unittest.TestCase):
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem(
-            "name", mapping, [str(data_file)], gams_path, True, True, None, 'merge', self._temp_dir.name, logger
+            "name", mapping, [str(data_file)], gams_path, True, 'merge', self._temp_dir.name, logger
         )
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
@@ -128,9 +123,7 @@ class TestImporterExecutable(unittest.TestCase):
         database_url = "sqlite:///" + str(database_path)
         create_new_spine_database(database_url)
         gams_path = ""
-        executable = ExecutableItem(
-            "name", {}, [], gams_path, True, True, None, 'merge', self._temp_dir.name, mock.MagicMock()
-        )
+        executable = ExecutableItem("name", {}, [], gams_path, True, 'merge', self._temp_dir.name, mock.MagicMock())
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
         self.assertTrue(executable.execute(file_resources, database_resources))
@@ -139,52 +132,6 @@ class TestImporterExecutable(unittest.TestCase):
         database_map = DatabaseMapping(database_url)
         class_list = database_map.object_class_list().all()
         self.assertEqual(len(class_list), 0)
-        database_map.connection.close()
-
-    def test_purge_data_before_writing(self):
-        data_file = Path(self._temp_dir.name, "data.dat")
-        self._write_simple_data(data_file)
-        mapping = self._simple_input_data_mapping()
-        database_path = Path(self._temp_dir.name, "database.sqlite")
-        database_url = "sqlite:///" + str(database_path)
-        in_db_map = DatabaseMapping(database_url, create=True)
-        x = import_alternatives(in_db_map, ("my_alternative",))
-        y = import_object_classes(in_db_map, ("my_object_class",))
-        in_db_map.commit_session("Add test data.")
-        in_db_map.connection.close()
-        gams_path = ""
-        logger = mock.MagicMock()
-        logger.__reduce__ = lambda _: (mock.MagicMock, ())
-        executable = ExecutableItem(
-            "name",
-            mapping,
-            [str(data_file)],
-            gams_path,
-            True,
-            True,
-            {"object_class": True},
-            'merge',
-            self._temp_dir.name,
-            logger,
-        )
-        database_resources = [database_resource("provider", database_url)]
-        file_resources = [file_resource("provider", str(data_file))]
-        self.assertTrue(executable.execute_unfiltered(file_resources, database_resources))
-        self.assertTrue(executable.execute(file_resources, database_resources))
-        # Check that _process is None after execution
-        self.assertIsNone(executable._process)
-        database_map = DatabaseMapping(database_url)
-        object_class_list = database_map.query(database_map.object_class_sq).all()
-        self.assertEqual(len(object_class_list), 1)
-        self.assertEqual(object_class_list[0].name, "class")
-        object_list = database_map.query(database_map.object_sq).all()
-        self.assertEqual(len(object_list), 1)
-        self.assertEqual(object_list[0].class_id, object_class_list[0].id)
-        self.assertEqual(object_list[0].name, "entity")
-        alternative_list = database_map.query(database_map.alternative_sq).all()
-        self.assertEqual(len(alternative_list), 2)
-        self.assertEqual(alternative_list[0].name, "Base")
-        self.assertEqual(alternative_list[1].name, "my_alternative")
         database_map.connection.close()
 
     @staticmethod

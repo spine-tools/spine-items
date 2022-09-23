@@ -663,7 +663,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         else:
             work_dir = None
         specification_name = item_dict["specification"]
-        specification = ExecutableItemBase._get_specification(
+        specification = DBWriterExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
         cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]

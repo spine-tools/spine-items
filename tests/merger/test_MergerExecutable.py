@@ -36,21 +36,14 @@ class TestMergerExecutable(unittest.TestCase):
 
     def test_from_dict(self):
         name = "Output Data Store"
-        item_dict = {
-            "type": "Data Store",
-            "description": "",
-            "x": 0,
-            "y": 0,
-            "cancel_on_error": True,
-            "purge_before_writing": True,
-        }
+        item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "cancel_on_error": True}
         logger = mock.MagicMock()
         item = ExecutableItem.from_dict(item_dict, name, self._temp_dir.name, None, dict(), logger)
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("Merger", item.item_type())
 
     def test_stop_execution(self):
-        executable = ExecutableItem("name", True, True, None, self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", True, self._temp_dir.name, mock.MagicMock())
         with mock.patch(
             "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
         ) as mock_stop_execution:
@@ -58,7 +51,7 @@ class TestMergerExecutable(unittest.TestCase):
             mock_stop_execution.assert_called_once()
 
     def test_execute(self):
-        executable = ExecutableItem("name", True, True, None, self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", True, self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
 
     def test_execute_merge_two_dbs(self):
@@ -88,7 +81,7 @@ class TestMergerExecutable(unittest.TestCase):
         create_new_spine_database(db3_url)
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
-        executable = ExecutableItem("name", True, True, None, self._temp_dir.name, logger)
+        executable = ExecutableItem("name", True, self._temp_dir.name, logger)
         input_db_resources = [database_resource("provider", db1_url), database_resource("provider", db2_url)]
         output_db_resources = [database_resource("receiver", db3_url)]
         self.assertTrue(executable.execute(input_db_resources, output_db_resources))
@@ -104,42 +97,6 @@ class TestMergerExecutable(unittest.TestCase):
         object_list_b = output_db_map.object_list(class_id=class_list[1].id).all()
         self.assertEqual(len(object_list_b), 1)
         self.assertEqual(object_list_b[0].name, "b_1")
-        output_db_map.connection.close()
-
-    def test_purge_before_merging(self):
-        """Successfully purges items from target database before merging."""
-        source_db_path = Path(self._temp_dir.name, "db1.sqlite")
-        source_db_url = "sqlite:///" + str(source_db_path)
-        source_db_map = DatabaseMapping(source_db_url, create=True)
-        import_functions.import_object_classes(source_db_map, ["a"])
-        import_functions.import_objects(source_db_map, [("a", "a_1")])
-        source_db_map.commit_session("Add an object class 'a' and an object for unit tests.")
-        source_db_map.connection.close()
-        sink_db_path = Path(self._temp_dir.name, "db3.sqlite")
-        sink_db_url = "sqlite:///" + str(sink_db_path)
-        sink_db_map = DatabaseMapping(sink_db_url, create=True)
-        import_functions.import_alternatives(sink_db_map, ("my_alternative",))
-        import_functions.import_object_classes(sink_db_map, ("my_object_class",))
-        sink_db_map.commit_session("Add object classes and alternatives for unit tests.")
-        sink_db_map.connection.close()
-        logger = mock.MagicMock()
-        logger.__reduce__ = lambda _: (mock.MagicMock, ())
-        executable = ExecutableItem("name", True, True, {"object_class": True}, self._temp_dir.name, logger)
-        input_db_resources = [database_resource("provider", source_db_url)]
-        output_db_resources = [database_resource("receiver", sink_db_url)]
-        self.assertTrue(executable.execute_unfiltered(input_db_resources, output_db_resources))
-        self.assertTrue(executable.execute(input_db_resources, output_db_resources))
-        output_db_map = DatabaseMapping(sink_db_url)
-        class_list = output_db_map.query(output_db_map.object_class_sq).all()
-        self.assertEqual(len(class_list), 1)
-        self.assertEqual(class_list[0].name, "a")
-        object_list = output_db_map.query(output_db_map.object_sq).all()
-        self.assertEqual(len(object_list), 1)
-        self.assertEqual(object_list[0].name, "a_1")
-        alternative_list = output_db_map.query(output_db_map.alternative_sq).all()
-        self.assertEqual(len(alternative_list), 2)
-        self.assertEqual(alternative_list[0].name, "Base")
-        self.assertEqual(alternative_list[1].name, "my_alternative")
         output_db_map.connection.close()
 
 
