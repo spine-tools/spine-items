@@ -22,7 +22,7 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.project_item.project_item_resource import CmdLineArg, cmd_line_arg_from_dict, LabelArg
+from spine_engine.project_item.project_item_resource import CmdLineArg, make_cmd_line_arg, LabelArg
 from spine_engine.utils.helpers import resolve_python_interpreter
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand
@@ -497,7 +497,7 @@ class Tool(ProjectItem):
         specification_name = item_dict.get("specification", "")
         execute_in_work = item_dict.get("execute_in_work", True)
         cmd_line_args = item_dict.get("cmd_line_args", [])
-        cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in cmd_line_args]
+        cmd_line_args = [make_cmd_line_arg(arg) for arg in cmd_line_args]
         options = item_dict.get("options", {})
         group_id = item_dict.get("group_id")
         return Tool(

@@ -29,7 +29,7 @@ from spine_engine.execution_managers.process_execution_manager import ProcessExe
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.project_item.project_item_resource import (
     CmdLineArg,
-    cmd_line_arg_from_dict,
+    make_cmd_line_arg,
     expand_cmd_line_args,
     labelled_resource_args,
     labelled_resource_filepaths,
@@ -82,7 +82,7 @@ class ExecutableItem(ExecutableItemBase):
                 logger.msg_error.emit(f"Error: Unsupported shell_index in project item {name}")
                 shell = ""
         cmd_list = [CmdLineArg(arg) for arg in split_cmdline_args(item_dict["cmd"])]
-        cmd_list += [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
+        cmd_list += [make_cmd_line_arg(arg) for arg in item_dict["cmd_line_args"]]
         if item_dict["work_dir_mode"]:
             work_dir = None
         else:

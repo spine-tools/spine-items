@@ -30,7 +30,7 @@ from contextlib import ExitStack
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.project_item.project_item_resource import (
-    cmd_line_arg_from_dict,
+    make_cmd_line_arg,
     expand_cmd_line_args,
     labelled_resource_args,
 )
@@ -72,6 +72,10 @@ class ExecutableItem(DBWriterExecutableItemBase):
     @property
     def options(self):
         return self._options
+
+    @property
+    def cmd_line_args(self):
+        return self._cmd_line_args
 
     @staticmethod
     def item_type():
@@ -419,7 +423,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             f"*** Executing Tool specification <b>{self._tool_specification.name}</b> in {anchor} ***"
         )
         if work_or_source == "work":
-            self._logger.msg.emit(f"*** Copying program files ***")
+            self._logger.msg.emit("*** Copying program files ***")
             if not self._copy_program_files(execution_dir):
                 self._logger.msg_error.emit("Copying program files failed")
                 return ItemExecutionFinishState.FAILURE
@@ -666,7 +670,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         specification = DBWriterExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
-        cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
+        cmd_line_args = [make_cmd_line_arg(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
         group_id = item_dict.get("group_id")
         return cls(name, work_dir, specification, cmd_line_args, options, group_id, project_dir, logger)

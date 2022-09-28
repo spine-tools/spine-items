@@ -664,8 +664,7 @@ class ExecutableTool(ToolSpecification):
     def _includes_main_path_relative(self):
         if not self.path:
             return None
-        else:
-            return super()._includes_main_path_relative()
+        return super()._includes_main_path_relative()
 
     def set_execution_settings(self):
         """Updates old Executable Tool specifications by adding the
