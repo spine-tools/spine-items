@@ -26,16 +26,7 @@ from .item_info import ItemInfo
 
 
 class Merger(ProjectItem):
-    def __init__(
-        self,
-        name,
-        description,
-        x,
-        y,
-        toolbox,
-        project,
-        cancel_on_error=False,
-    ):
+    def __init__(self, name, description, x, y, toolbox, project, cancel_on_error=False):
         """Data Store class.
 
         Args:

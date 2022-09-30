@@ -485,7 +485,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             return_code = self._tool_instance.execute()
             if return_code != 0 and self._tool_instance is not None and self._tool_instance.killed:
                 # NOTE: return_code will be 0 if the instance was killed by e.g. `exit(0)` in julia
-                # In this case we want to consider the tool successfull and not retry it
+                # In this case we want to consider the tool successful and not retry it
                 if self._retry_count < self._MAX_RETRIES:
                     # Try again
                     self._retry_count += 1
@@ -496,6 +496,14 @@ class ExecutableItem(DBWriterExecutableItemBase):
         self._tool_instance = None
         # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
         return ItemExecutionFinishState.SUCCESS if return_code == 0 else ItemExecutionFinishState.FAILURE
+
+    def exclude_execution(self, forward_resources, backward_resources):
+        """See base class."""
+        super().exclude_execution(forward_resources, backward_resources)
+        if self._filter_id:
+            self._output_dir = os.path.join(
+                self._output_dir, generate_filter_subdirectory_name(forward_resources, self.hash_filter_id())
+            )
 
     def _find_input_files(self, resources):
         """
