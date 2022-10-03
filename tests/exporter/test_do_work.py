@@ -51,7 +51,7 @@ class TestWithCsvWriter(unittest.TestCase):
         databases = {self._url: "test_export_database.csv"}
         logger = MagicMock()
         self.assertTrue(
-            do_work(specification.to_dict(), False, False, "", self._temp_dir.name, databases, "", "", logger)
+            do_work(None, specification.to_dict(), False, False, "", self._temp_dir.name, databases, "", "", logger)
         )
         out_path = os.path.join(self._temp_dir.name, "test_export_database.csv")
         self.assertTrue(os.path.exists(out_path))
