@@ -568,6 +568,7 @@ class FlattenedMappings:
         last_cls_mapping.child = last_cls_mapping_child
         last_obj_mapping.child = last_obj_mapping_child
         self.set_root_mapping(self._components[0])
+        self._ensure_consistent_import_objects()
 
     def may_import_objects(self):
         """Checks if the mappings can optionally import objects.
@@ -601,6 +602,13 @@ class FlattenedMappings:
         """
         for m in self._import_objects_mappings():
             m.import_objects = import_objects
+
+    def _ensure_consistent_import_objects(self):
+        """If any mapping has the import objects flag set, sets the flag also for all other mappings."""
+        mappings = self._import_objects_mappings()
+        if any(mapping.import_objects for mapping in mappings):
+            for m in mappings:
+                m.import_objects = True
 
     def has_parameters(self):
         """Returns True if the mappings have parameters.
