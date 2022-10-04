@@ -16,6 +16,7 @@ Contains base classes for items that write to db.
 :date:    23.9.2022
 """
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spinedb_api.spine_db_client import SpineDBClient
 
 
 class DBWriterExecutableItemBase(ExecutableItemBase):
@@ -27,3 +28,12 @@ class DBWriterExecutableItemBase(ExecutableItemBase):
         for resource in to_resources:
             with resource.open(db_checkout=True):
                 pass
+
+    def update(self, forward_resources, backward_resources):
+        if not super().update(forward_resources, backward_resources):
+            return False
+        to_resources = [r for r in backward_resources if r.type_ == "database"]
+        for resource in to_resources:
+            with resource.open() as server_url:
+                SpineDBClient.from_server_url(server_url).cancel_db_checkout()
+        return True
