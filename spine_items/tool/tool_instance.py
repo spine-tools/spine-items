@@ -153,10 +153,18 @@ class JuliaToolInstance(ToolInstance):
             self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
         self.args += [f'include("{self.tool_specification.main_prgm}")']
         if use_julia_kernel == "2":
+            server_ip = "127.0.0.1"
+            if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
+                server_ip = self._settings.value("engineSettings/remoteHost", "")
             kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
             extra_switches = [f"--sysimage={sysimage}"] if os.path.isfile(sysimage) else None
             self.exec_mngr = KernelExecutionManager(
-                self._logger, kernel_name, *self.args, group_id=self.owner.group_id, extra_switches=extra_switches
+                self._logger,
+                kernel_name,
+                *self.args,
+                group_id=self.owner.group_id,
+                extra_switches=extra_switches,
+                server_ip=server_ip
             )
             return
         julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
@@ -203,10 +211,10 @@ class PythonToolInstance(ToolInstance):
         """See base class."""
         self.tool_specification.set_execution_settings()  # Set default execution settings
         use_jupyter_console = self.tool_specification.execution_settings["use_jupyter_console"]
-        server_ip = "127.0.0.1"
-        if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
-            server_ip = self._settings.value("engineSettings/remoteHost", "")
         if use_jupyter_console:
+            server_ip = "127.0.0.1"
+            if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
+                server_ip = self._settings.value("engineSettings/remoteHost", "")
             # Prepare command
             cd_command = f"%cd -q {self.basedir}"  # -q: quiet
             main_command = f'%run "{self.tool_specification.main_prgm}"'
@@ -216,10 +224,15 @@ class PythonToolInstance(ToolInstance):
             self.args = [cd_command, main_command]
             conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
             conda_exe = resolve_conda_executable(conda_exe)
-            k_spec = self.tool_specification.execution_settings["kernel_spec_name"]
+            kernel_name = self.tool_specification.execution_settings["kernel_spec_name"]
             env = self.tool_specification.execution_settings["env"]  # Activate environment if "conda"
             self.exec_mngr = KernelExecutionManager(
-                self._logger, k_spec, *self.args, group_id=self.owner.group_id, environment=env, conda_exe=conda_exe,
+                self._logger,
+                kernel_name,
+                *self.args,
+                group_id=self.owner.group_id,
+                environment=env,
+                conda_exe=conda_exe,
                 server_ip=server_ip
             )
         else:
@@ -235,7 +248,7 @@ class PythonToolInstance(ToolInstance):
             self.args += self._make_exec_code(fp, full_fp)
             alias = f"python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}"
             self.exec_mngr = PythonPersistentExecutionManager(
-                self._logger, self.program, self.args, alias, group_id=self.owner.group_id, server_ip=server_ip
+                self._logger, self.program, self.args, alias, group_id=self.owner.group_id
             )
 
     @staticmethod
