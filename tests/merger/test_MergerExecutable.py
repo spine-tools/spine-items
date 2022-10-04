@@ -161,7 +161,7 @@ class TestMergerExecutable(unittest.TestCase):
             connections=[x.to_dict() for x in (conn1in, conn2in, conn1out, conn2out)],
             execution_permits=execution_permits,
         )
-        engine.make_item = lambda item_name, direction, unfiltered=False: items[item_name]
+        engine.make_item = lambda item_name, direction: items[item_name]
         # We can't easily enforce merger1 to execute before merger2 so the write index matters...
         # So for the moment, let's run 5 times and hope
         for _ in range(5):
