@@ -666,10 +666,10 @@ class FlattenedMappings:
         """
         value_mapping = self.value_mapping()
         if value_mapping is None:
-            return "None"
+            return "<no label>"
         if isinstance(value_mapping, (ParameterValueTypeMapping, ParameterValueMapping)):
-            return "Value"
-        return "Default value"
+            return "Value:"
+        return "Default value:"
 
     def value_mapping(self):
         """Finds first parameter value mapping component from flattened mappings.
