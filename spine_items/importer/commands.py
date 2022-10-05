@@ -752,6 +752,30 @@ class SetColumnOrRowType(QUndoCommand):
         self._header_widget.set_data_types(self._source_table_name, self._sections, self._previous_type)
 
 
+class SetColumnDefaultType(QUndoCommand):
+    """Command to change the default type of columns."""
+
+    def __init__(self, import_sources, source_table_name, new_type, previous_type):
+        """
+        Args:
+            import_sources (ImportSources): import sources manager
+            source_table_name (str): name of the source table
+            new_type (str): new column type
+            previous_type (str): previous column type
+        """
+        super().__init__("surplus column type")
+        self._import_sources = import_sources
+        self._table_name = source_table_name
+        self._new_type = new_type
+        self._previous_type = previous_type
+
+    def redo(self):
+        self._import_sources.change_default_column_type(self._table_name, self._new_type)
+
+    def undo(self):
+        self._import_sources.change_default_column_type(self._table_name, self._previous_type)
+
+
 class RestoreMappingsFromDict(QUndoCommand):
     """Restores mappings from a dict."""
 

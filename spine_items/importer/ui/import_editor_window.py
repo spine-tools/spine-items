@@ -13,16 +13,13 @@
 ################################################################################
 ## Form generated from reading UI file 'import_editor_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from spinetoolbox.widgets.custom_combobox import ElidedCombobox
@@ -82,14 +79,31 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_3 = QWidget()
         self.dockWidgetContents_3.setObjectName(u"dockWidgetContents_3")
         self.verticalLayout_3 = QVBoxLayout(self.dockWidgetContents_3)
-        self.verticalLayout_3.setSpacing(3)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.source_data_table = TableViewWithButtonHeader(self.dockWidgetContents_3)
         self.source_data_table.setObjectName(u"source_data_table")
         self.source_data_table.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.verticalLayout_3.addWidget(self.source_data_table)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.label = QLabel(self.dockWidgetContents_3)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout.addWidget(self.label)
+
+        self.default_column_type_combo_box = QComboBox(self.dockWidgetContents_3)
+        self.default_column_type_combo_box.setObjectName(u"default_column_type_combo_box")
+
+        self.horizontalLayout.addWidget(self.default_column_type_combo_box)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout.addItem(self.horizontalSpacer)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout)
 
         self.dockWidget_source_data.setWidget(self.dockWidgetContents_3)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_source_data)
@@ -288,6 +302,7 @@ class Ui_MainWindow(object):
 
         self.comboBox_source_file = ElidedCombobox(self.dockWidgetContents_7)
         self.comboBox_source_file.setObjectName(u"comboBox_source_file")
+        self.comboBox_source_file.setEnabled(False)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -340,6 +355,10 @@ class Ui_MainWindow(object):
         self.dockWidget_source_tables.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source tables", None))
         self.dockWidget_source_options.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source options", None))
         self.dockWidget_source_data.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source data", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Surplus column data type:", None))
+#if QT_CONFIG(tooltip)
+        self.default_column_type_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Select data type for additional columns in variable-length pivoted source data.", None))
+#endif // QT_CONFIG(tooltip)
         self.dockWidget_mappings.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mappings", None))
         self.new_button.setText(QCoreApplication.translate("MainWindow", u"New", None))
         self.remove_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))

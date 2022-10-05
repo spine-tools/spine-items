@@ -41,6 +41,9 @@ def do_work(process, mapping, cancel_on_error, on_conflict, logs_dir, sources, c
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_types", {}).items()
     }
+    table_default_column_convert_fns = {
+        tn: value_to_convert_spec(spec) for tn, spec in mapping.get("table_default_column_type", {}).items()
+    }
     table_row_convert_specs = {
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_row_types", {}).items()
@@ -64,6 +67,7 @@ def do_work(process, mapping, cancel_on_error, on_conflict, logs_dir, sources, c
                         {name: [spec]},
                         table_options,
                         table_column_convert_specs,
+                        table_default_column_convert_fns,
                         table_row_convert_specs,
                         unparse_value=to_database,
                     )
