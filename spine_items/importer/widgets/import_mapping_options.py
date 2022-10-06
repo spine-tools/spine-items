@@ -130,8 +130,7 @@ class ImportMappingOptions:
         Updates ui according to the current mapping type.
         """
         has_mapping = self._has_current_mappings()
-        for widget in self._ui.dockWidget_mapping_options.findChildren(QWidget):
-            widget.setEnabled(has_mapping)
+        self._ui.mapping_options_contents.setEnabled(has_mapping)
         if not has_mapping:
             return
 

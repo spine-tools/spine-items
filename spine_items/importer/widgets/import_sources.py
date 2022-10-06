@@ -188,13 +188,16 @@ class ImportSources(QObject):
             _deselected (QModelIndex): previous index
         """
         if self._connector is None:
+            self._ui_options_widget.setEnabled(False)
             return
         if not selected.isValid():
             table_name = ""
+            self._ui_options_widget.setEnabled(False)
             self._ui.default_column_type_combo_box.setEnabled(False)
         else:
             table_item = self._mappings_model.data(selected, Role.ITEM)
             table_name = table_item.name if table_item.real else ""
+            self._ui_options_widget.setEnabled(bool(table_name))
             self._ui.default_column_type_combo_box.setEnabled(bool(table_name))
             if table_name:
                 self._reset_default_column_type(table_name)
