@@ -19,7 +19,7 @@ Contains ImportPreviewWindow class.
 import os
 import json
 import fnmatch
-from PySide2.QtCore import Qt, Signal, Slot
+from PySide2.QtCore import Qt, Signal, Slot, QModelIndex, QItemSelectionModel
 from PySide2.QtWidgets import QFileDialog, QDockWidget, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
@@ -88,6 +88,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self.takeCentralWidget().deleteLater()
         self._filepath = filepath if filepath else self._FILE_LESS
         self._mappings_model = MappingsModel(self._undo_stack, self)
+        self._mappings_model.rowsInserted.connect(self._reselect_source_table)
         self._ui.source_list.setModel(self._mappings_model)
         self._ui.mapping_list.setModel(self._mappings_model)
         self._ui.mapping_list.setRootIndex(self._mappings_model.dummy_parent())
@@ -344,6 +345,23 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             mappings_dict.update(self._import_sources.store_connectors())
             json.dump(mappings_dict, file_p)
         self._show_status_bar_msg(f"Mapping saved to: {filename[0]}")
+
+    @Slot(QModelIndex, int, int)
+    def _reselect_source_table(self, parent, first, last):
+        """Selects added source table.
+
+        This is a workaround to get the correct source table selected after a new one has been added
+        since the source table view doesn't seem to update the current index correctly in this case.
+
+        Args:
+            parent (QModelIndex): parent index
+            first (int): first new row
+            last (int): last new row
+        """
+        if parent.isValid():
+            return
+        index = self._mappings_model.index(last, 0)
+        self._ui.source_list.selectionModel().setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
 
     def tear_down(self):
         if not super().tear_down():

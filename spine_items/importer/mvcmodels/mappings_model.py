@@ -49,7 +49,7 @@ from ..mapping_colors import ERROR_COLOR
 from .mappings_model_roles import Role
 
 
-UNNAMED_TABLE_NAME = "<unnamed table>"
+UNNAMED_TABLE_NAME = "<rename this to add table>"
 
 
 @unique
