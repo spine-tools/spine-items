@@ -583,7 +583,7 @@ class MappingsModel(QAbstractItemModel):
         min_row = None
         max_row = None
         for row in rows:
-            if self._mappings[row].checked == checked:
+            if not self._mappings[row].checkable or self._mappings[row].checked == checked:
                 continue
             if min_row is None:
                 min_row = row
