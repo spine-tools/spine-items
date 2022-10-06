@@ -202,6 +202,11 @@ class Ui_Form(object):
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.purge_button = QPushButton(Form)
         self.purge_button.setObjectName(u"purge_button")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.purge_button.sizePolicy().hasHeightForWidth())
+        self.purge_button.setSizePolicy(sizePolicy4)
 
         self.horizontalLayout_3.addWidget(self.purge_button)
 
@@ -236,11 +241,11 @@ class Ui_Form(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.pushButton_create_new_spine_db = QPushButton(Form)
         self.pushButton_create_new_spine_db.setObjectName(u"pushButton_create_new_spine_db")
-        sizePolicy4 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.pushButton_create_new_spine_db.sizePolicy().hasHeightForWidth())
-        self.pushButton_create_new_spine_db.setSizePolicy(sizePolicy4)
+        sizePolicy5 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.pushButton_create_new_spine_db.sizePolicy().hasHeightForWidth())
+        self.pushButton_create_new_spine_db.setSizePolicy(sizePolicy5)
         icon3 = QIcon()
         icon3.addFile(u":/icons/Spine_symbol.png", QSize(), QIcon.Normal, QIcon.Off)
         self.pushButton_create_new_spine_db.setIcon(icon3)
@@ -253,8 +258,11 @@ class Ui_Form(object):
 
         self.pushButton_ds_open_editor = QPushButton(Form)
         self.pushButton_ds_open_editor.setObjectName(u"pushButton_ds_open_editor")
-        sizePolicy4.setHeightForWidth(self.pushButton_ds_open_editor.sizePolicy().hasHeightForWidth())
-        self.pushButton_ds_open_editor.setSizePolicy(sizePolicy4)
+        sizePolicy6 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.pushButton_ds_open_editor.sizePolicy().hasHeightForWidth())
+        self.pushButton_ds_open_editor.setSizePolicy(sizePolicy6)
 
         self.horizontalLayout.addWidget(self.pushButton_ds_open_editor)
 

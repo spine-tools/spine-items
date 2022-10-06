@@ -65,30 +65,12 @@
      </item>
      <item>
       <widget class="QToolButton" name="toolButton_tool_specification">
-       <property name="minimumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tool specification options.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="icon">
         <iconset resource="../../ui/resources/resources_icons.qrc">
          <normaloff>:/icons/wrench.svg</normaloff>:/icons/wrench.svg</iconset>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>16</width>
-         <height>16</height>
-        </size>
        </property>
        <property name="popupMode">
         <enum>QToolButton::InstantPopup</enum>
@@ -162,18 +144,6 @@
        </item>
        <item row="0" column="0">
         <widget class="QToolButton" name="toolButton_add_file_path_arg">
-         <property name="minimumSize">
-          <size>
-           <width>22</width>
-           <height>22</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>22</width>
-           <height>22</height>
-          </size>
-         </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Append selected Available resources to Tool arguments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -183,12 +153,6 @@
          <property name="icon">
           <iconset resource="../../ui/resources/resources_icons.qrc">
            <normaloff>:/icons/file-upload.svg</normaloff>:/icons/file-upload.svg</iconset>
-         </property>
-         <property name="iconSize">
-          <size>
-           <width>16</width>
-           <height>16</height>
-          </size>
          </property>
          <property name="popupMode">
           <enum>QToolButton::InstantPopup</enum>

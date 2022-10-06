@@ -13,16 +13,13 @@
 ################################################################################
 ## Form generated from reading UI file 'exporter_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from spine_items import resources_icons_rc
@@ -60,12 +57,9 @@ class Ui_Form(object):
 
         self.specification_button = QToolButton(Form)
         self.specification_button.setObjectName(u"specification_button")
-        self.specification_button.setMinimumSize(QSize(22, 22))
-        self.specification_button.setMaximumSize(QSize(22, 22))
         icon = QIcon()
         icon.addFile(u":/icons/wrench.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.specification_button.setIcon(icon)
-        self.specification_button.setIconSize(QSize(16, 16))
         self.specification_button.setPopupMode(QToolButton.InstantPopup)
 
         self.horizontalLayout_9.addWidget(self.specification_button)
