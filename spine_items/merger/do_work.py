@@ -23,15 +23,23 @@ from spinedb_api.spine_db_client import SpineDBClient
 
 def do_work(process, cancel_on_error, logs_dir, from_server_urls, to_server_urls, logger):
     from_clients = [SpineDBClient.from_server_url(server_url) for server_url in from_server_urls]
-    all_errors = []
-    from_url_data = [(from_client.get_db_url(), from_client.export_data()['result']) for from_client in from_clients]
+    from_url_export_data_response = [
+        (from_client.get_db_url(), from_client.export_data()) for from_client in from_clients
+    ]
+    from_url_data = [
+        (url, response["result"]) for url, response in from_url_export_data_response if response.get("result")
+    ]
+    all_errors = [response["error"] for _, response in from_url_export_data_response if "error" in response]
     for server_url in to_server_urls:
         to_client = SpineDBClient.from_server_url(server_url)
         with process.maybe_idle:
             to_client.db_checkin()
-        to_client.open_connection()
         for from_url, data in from_url_data:
-            import_count, import_errors = to_client.import_data(data, "")['result']
+            response = to_client.import_data(data, "")
+            if "error" in response:
+                all_errors.append(response["error"])
+                continue
+            import_count, import_errors = response["result"]
             all_errors += import_errors
             if import_errors and cancel_on_error and import_count:
                 to_client.call_method("rollback_session")
@@ -49,7 +57,6 @@ def do_work(process, cancel_on_error, logs_dir, from_server_urls, to_server_urls
                     logger.msg_warning.emit(
                         "No new data merged from {0} into {1}".format(sanitized_from_url, sanitized_to_url)
                     )
-        to_client.close_connection()
         to_client.db_checkout()
     if all_errors:
         # Log errors in a time stamped file into the logs directory

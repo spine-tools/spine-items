@@ -90,9 +90,7 @@ def do_work(process, mapping, cancel_on_error, on_conflict, logs_dir, sources, c
             for client in to_clients:
                 with process.maybe_idle:
                     client.db_checkin()
-                client.open_connection()
                 success = _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client, logger)
-                client.close_connection()
                 client.db_checkout()
                 if not success and cancel_on_error:
                     return (False,)
@@ -118,24 +116,28 @@ def do_work(process, mapping, cancel_on_error, on_conflict, logs_dir, sources, c
 
 def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client, logger):
     all_import_errors = []
-    all_import_num = 0
+    all_import_count = 0
     for data in all_data:
-        import_num, import_errors = client.import_data({**data, "on_conflict": on_conflict}, "")["result"]
+        response = client.import_data({**data, "on_conflict": on_conflict}, "")
+        if "error" in response:
+            all_import_errors.append(response["error"])
+            continue
+        import_count, import_errors = response["result"]
         all_import_errors += import_errors
         if import_errors:
             logger.msg_error.emit("Errors while importing a table.")
             if cancel_on_error:
                 logger.msg_error.emit("Cancel import on error is set. Bailing out.")
-                if import_num:
+                if import_count:
                     logger.msg_error.emit("Rolling back changes.")
                     client.call_method("rollback_session")
                 break
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-        all_import_num += import_num
-    if all_import_num:
+        all_import_count += import_count
+    if all_import_count:
         client.call_method("commit_session", "Import data by Spine Toolbox Importer")
         logger.msg_success.emit(
-            f"Inserted {all_import_num} data with {len(all_import_errors)} errors into {client.get_db_url()}"
+            f"Inserted {all_import_count} data with {len(all_import_errors)} errors into {client.get_db_url()}"
         )
     else:
         logger.msg_warning.emit("No new data imported")
