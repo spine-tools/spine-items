@@ -57,12 +57,9 @@ class Ui_Form(object):
 
         self.toolButton_edit_specification = QToolButton(Form)
         self.toolButton_edit_specification.setObjectName(u"toolButton_edit_specification")
-        self.toolButton_edit_specification.setMinimumSize(QSize(22, 22))
-        self.toolButton_edit_specification.setMaximumSize(QSize(22, 22))
         icon = QIcon()
         icon.addFile(u":/icons/wrench.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_edit_specification.setIcon(icon)
-        self.toolButton_edit_specification.setIconSize(QSize(16, 16))
         self.toolButton_edit_specification.setPopupMode(QToolButton.InstantPopup)
 
         self.horizontalLayout_9.addWidget(self.toolButton_edit_specification)

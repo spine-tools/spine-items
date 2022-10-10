@@ -67,25 +67,6 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="minimumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add file references&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -123,25 +104,6 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="minimumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove selected references or all if nothing is selected&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -159,18 +121,6 @@
      </item>
      <item>
       <widget class="QToolButton" name="toolButton_add">
-       <property name="minimumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Copy file references to Data Connection's directory&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -180,12 +130,6 @@
        <property name="icon">
         <iconset resource="../../ui/resources/resources_icons.qrc">
          <normaloff>:/icons/file-download.svg</normaloff>:/icons/file-download.svg</iconset>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>16</width>
-         <height>16</height>
-        </size>
        </property>
        <property name="popupMode">
         <enum>QToolButton::InstantPopup</enum>
