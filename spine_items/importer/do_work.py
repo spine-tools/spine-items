@@ -123,18 +123,19 @@ def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client
             all_import_errors.append(response["error"])
             continue
         import_count, import_errors = response["result"]
+        all_import_count += import_count
         all_import_errors += import_errors
         if import_errors:
             logger.msg_error.emit("Errors while importing a table.")
             if cancel_on_error:
                 logger.msg_error.emit("Cancel import on error is set. Bailing out.")
-                if import_count:
+                if all_import_count > 0:
                     logger.msg_error.emit("Rolling back changes.")
                     client.call_method("rollback_session")
+                    all_import_count = 0
                 break
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-        all_import_count += import_count
-    if all_import_count:
+    if all_import_count > 0:
         client.call_method("commit_session", "Import data by Spine Toolbox Importer")
         logger.msg_success.emit(
             f"Inserted {all_import_count} data with {len(all_import_errors)} errors into {client.get_db_url()}"
