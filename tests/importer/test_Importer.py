@@ -24,8 +24,9 @@ from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication, QMenu
 from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
+from spine_items.importer.importer_specification import ImporterSpecification
 from spine_items.importer.item_info import ItemInfo
-from spine_engine.project_item.project_item_resource import transient_file_resource
+from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
@@ -41,10 +42,10 @@ class TestImporter(unittest.TestCase):
         factory = ImporterFactory()
         item_dict = {
             "type": "Importer",
-            "description": "",
+            "description": "Very best test importer",
             "specification": "importer_spec",
             "cancel_on_error": True,
-            "file_selection": list(),
+            "file_selection": [["file 99", True], ["file 01", False]],
             "x": 0,
             "y": 0,
         }
@@ -70,10 +71,29 @@ class TestImporter(unittest.TestCase):
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
+        specification = ImporterSpecification("import specification", {})
+        self.importer.do_set_specification(specification)
+        resources = [
+            file_resource("source 1", "/path/file1.dat", "<source 1>/file1.dat"),
+            file_resource("source 2", "/path/file2.dat", "<source 2>/file2.dat"),
+        ]
+        self.importer.upstream_resources_updated(resources)
+        index = self.importer._file_model.index(1, 0)
+        self.importer._file_model.setData(index, False, Qt.CheckStateRole)
         d = self.importer.item_dict()
-        a = ["type", "description", "x", "y", "specification", "cancel_on_error", "file_selection"]
-        for k in a:
-            self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
+        self.assertEqual(
+            d,
+            {
+                "cancel_on_error": True,
+                "description": "Very best test importer",
+                "file_selection": [["<source 1>/file1.dat", True], ["<source 2>/file2.dat", False]],
+                "on_conflict": "merge",
+                "specification": "import specification",
+                "type": "Importer",
+                "x": 0.0,
+                "y": 0.0,
+            },
+        )
 
     def test_notify_destination(self):
         self.importer.logger.msg = MagicMock()

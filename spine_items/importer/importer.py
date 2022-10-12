@@ -17,6 +17,8 @@ Contains Importer project item class.
 """
 
 import os
+from operator import itemgetter
+
 from PySide2.QtCore import QModelIndex, Qt, Slot
 
 from spinetoolbox.helpers import create_dir
@@ -305,7 +307,7 @@ class Importer(ProjectItem):
         for row in range(self._file_model.rowCount()):
             label, selected = self._file_model.checked_data(self._file_model.index(row, 0))
             selections.append([label, selected])
-        d["file_selection"] = selections
+        d["file_selection"] = sorted(selections, key=itemgetter(0))
         return d
 
     @staticmethod
