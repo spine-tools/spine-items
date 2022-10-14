@@ -26,8 +26,7 @@ class DBWriterExecutableItemBase(ExecutableItemBase):
         """Perform the checkout on output databases so concurrent items can proceed."""
         to_resources = [r for r in backward_resources if r.type_ == "database"]
         for resource in to_resources:
-            with resource.open(db_checkout=True):
-                pass
+            resource.quick_db_checkout()
 
     def update(self, forward_resources, backward_resources):
         if not super().update(forward_resources, backward_resources):
