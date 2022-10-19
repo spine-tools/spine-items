@@ -226,6 +226,7 @@ class DataStore(ProjectItem):
         is_sqlite = self._url["dialect"].lower() == "sqlite"
         self._properties_ui.pushButton_ds_open_editor.setEnabled(open_editor_enabled)
         self._properties_ui.pushButton_create_new_spine_db.setEnabled(is_sqlite or open_editor_enabled)
+        self._properties_ui.purge_button.setEnabled(open_editor_enabled)
         self._properties_ui.toolButton_copy_url.setEnabled(open_editor_enabled)
         self._properties_ui.toolButton_vacuum.setEnabled(is_sqlite and open_editor_enabled)
 
