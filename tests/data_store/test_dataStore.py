@@ -23,12 +23,13 @@ import os
 import logging
 import sys
 from spinedb_api import create_new_spine_database
+from spine_engine.project_item.project_item_resource import database_resource
 from PySide2.QtWidgets import QApplication
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.item_info import ItemInfo
-from spine_items.utils import convert_to_sqlalchemy_url
+from spine_items.utils import convert_to_sqlalchemy_url, database_label
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
@@ -287,6 +288,30 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(expected_db_path, le_db.text())
         # Check that the db file has actually been moved
         self.assertTrue(os.path.exists(le_db.text()))
+
+    def test_do_update_url_uses_filterable_resources_when_replacing_them(self):
+        database_1 = os.path.join(self._temp_dir.name, "db1.sqlite")
+        self.ds.do_update_url(dialect="sqlite", database=database_1)
+        self.project.notify_resource_changes_to_predecessors.assert_called_once_with(self.ds)
+        self.project.notify_resource_changes_to_successors.assert_called_once_with(self.ds)
+        database_2 = os.path.join(self._temp_dir.name, "db2.sqlite")
+        self.ds.do_update_url(dialect="sqlite", database=database_2)
+        expected_old_resources = [
+            database_resource(
+                self.ds.name, "sqlite:///" + database_1, label=database_label(self.ds.name), filterable=True
+            )
+        ]
+        expected_new_resources = [
+            database_resource(
+                self.ds.name, "sqlite:///" + database_2, label=database_label(self.ds.name), filterable=True
+            )
+        ]
+        self.project.notify_resource_replacement_to_predecessors.assert_called_once_with(
+            self.ds, expected_old_resources, expected_new_resources
+        )
+        self.project.notify_resource_replacement_to_successors.assert_called_once_with(
+            self.ds, expected_old_resources, expected_new_resources
+        )
 
 
 class MockEngine:

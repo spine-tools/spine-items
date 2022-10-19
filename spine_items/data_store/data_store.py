@@ -208,8 +208,8 @@ class DataStore(ProjectItem):
         new_url = convert_to_sqlalchemy_url(self._url, self.name)
         self.load_url_into_selections(kwargs)
         if old_url and new_url:
-            old = database_resource(self.name, str(old_url), label=database_label(self.name))
-            new = database_resource(self.name, str(new_url), label=database_label(self.name))
+            old = database_resource(self.name, str(old_url), label=database_label(self.name), filterable=True)
+            new = database_resource(self.name, str(new_url), label=database_label(self.name), filterable=True)
             self._resources_to_predecessors_replaced([old], [new])
             self._resources_to_successors_replaced([old], [new])
         else:
