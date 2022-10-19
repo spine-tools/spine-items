@@ -106,8 +106,7 @@ class Importer(ProjectItem):
                 if db_map:
                     committed_db_maps.add(db_map)
         if committed_db_maps:
-            cookie = self
-            self._toolbox.db_mngr.session_committed.emit(committed_db_maps, cookie)
+            self._toolbox.db_mngr.notify_session_committed(self, *committed_db_maps)
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
