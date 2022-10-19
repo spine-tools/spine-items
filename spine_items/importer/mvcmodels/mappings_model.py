@@ -1057,7 +1057,7 @@ class MappingsModel(QAbstractItemModel):
         flattened_mappings = self._mappings[table_row].mapping_list[list_row].flattened_mappings
         if not flattened_mappings.is_time_series_value():
             return
-        flattened_mappings.value_mapping.options["repeat"] = repeat
+        flattened_mappings.value_mapping().options["repeat"] = repeat
         table_index = self.index(table_row, 0)
         list_index = self.index(list_row, 0, table_index)
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
