@@ -28,6 +28,7 @@ from .specification import Specification, OutputFormat
 
 
 def do_work(
+    process,
     specification,
     output_time_stamps,
     cancel_on_error,

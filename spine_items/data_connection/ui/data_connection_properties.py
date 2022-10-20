@@ -13,16 +13,13 @@
 ################################################################################
 ## Form generated from reading UI file 'data_connection_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from spine_items.widgets import ReferencesTreeView
@@ -62,13 +59,6 @@ class Ui_Form(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.toolButton_plus_file.sizePolicy().hasHeightForWidth())
         self.toolButton_plus_file.setSizePolicy(sizePolicy1)
-        self.toolButton_plus_file.setMinimumSize(QSize(22, 22))
-        self.toolButton_plus_file.setMaximumSize(QSize(22, 22))
-        font = QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.toolButton_plus_file.setFont(font)
         icon = QIcon()
         icon.addFile(u":/icons/file-alt.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_plus_file.setIcon(icon)
@@ -88,9 +78,6 @@ class Ui_Form(object):
         self.toolButton_minus.setObjectName(u"toolButton_minus")
         sizePolicy1.setHeightForWidth(self.toolButton_minus.sizePolicy().hasHeightForWidth())
         self.toolButton_minus.setSizePolicy(sizePolicy1)
-        self.toolButton_minus.setMinimumSize(QSize(22, 22))
-        self.toolButton_minus.setMaximumSize(QSize(22, 22))
-        self.toolButton_minus.setFont(font)
         icon2 = QIcon()
         icon2.addFile(u":/icons/minus.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_minus.setIcon(icon2)
@@ -100,12 +87,9 @@ class Ui_Form(object):
 
         self.toolButton_add = QToolButton(Form)
         self.toolButton_add.setObjectName(u"toolButton_add")
-        self.toolButton_add.setMinimumSize(QSize(22, 22))
-        self.toolButton_add.setMaximumSize(QSize(22, 22))
         icon3 = QIcon()
         icon3.addFile(u":/icons/file-download.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_add.setIcon(icon3)
-        self.toolButton_add.setIconSize(QSize(16, 16))
         self.toolButton_add.setPopupMode(QToolButton.InstantPopup)
 
         self.horizontalLayout_2.addWidget(self.toolButton_add)

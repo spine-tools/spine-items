@@ -15,9 +15,6 @@ Contains Importer's specification.
 :authors: M. Marin (KTH)
 :date:    32.10.2020
 """
-import json
-import shutil
-import os
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from .item_info import ItemInfo
 

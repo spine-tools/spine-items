@@ -391,7 +391,26 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
+      <widget class="QPushButton" name="purge_button">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="toolTip">
+        <string>Mass remove database items.</string>
+       </property>
+       <property name="text">
+        <string>Purge...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="toolButton_vacuum">
+       <property name="toolTip">
+        <string>Remove outdated data from the database potentially freeing disk space.</string>
+       </property>
        <property name="text">
         <string>Vacuum</string>
        </property>
@@ -481,7 +500,7 @@
      <item>
       <widget class="QPushButton" name="pushButton_ds_open_editor">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>

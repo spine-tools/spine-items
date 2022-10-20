@@ -65,30 +65,12 @@
      </item>
      <item>
       <widget class="QToolButton" name="toolButton_edit_specification">
-       <property name="minimumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>22</width>
-         <height>22</height>
-        </size>
-       </property>
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Edit specification.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="icon">
         <iconset resource="../../ui/resources/resources_icons.qrc">
          <normaloff>:/icons/wrench.svg</normaloff>:/icons/wrench.svg</iconset>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>16</width>
-         <height>16</height>
-        </size>
        </property>
        <property name="popupMode">
         <enum>QToolButton::InstantPopup</enum>
@@ -132,13 +114,6 @@
         </property>
         <property name="checked">
          <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="checkBox_purge_before_writing">
-        <property name="text">
-         <string>Purge before writing</string>
         </property>
        </widget>
       </item>

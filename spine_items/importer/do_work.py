@@ -17,14 +17,14 @@ Importer's execute kernel (do_work), as target for a multiprocess.Process
 """
 
 import os
-import spinedb_api
+from spinedb_api import InvalidMapping
+from spinedb_api.spine_db_client import SpineDBClient
+from spinedb_api.parameter_value import to_database
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 
-def do_work(
-    mapping, cancel_on_error, purge_before_writing, on_conflict, logs_dir, sources, connector, urls_downstream, logger
-):
+def do_work(process, mapping, cancel_on_error, on_conflict, logs_dir, sources, connector, to_server_urls, logger):
     all_data = []
     all_errors = []
     table_mappings = {
@@ -41,10 +41,14 @@ def do_work(
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_types", {}).items()
     }
+    table_default_column_convert_fns = {
+        tn: value_to_convert_spec(spec) for tn, spec in mapping.get("table_default_column_type", {}).items()
+    }
     table_row_convert_specs = {
         tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
         for tn, cols in mapping.get("table_row_types", {}).items()
     }
+    to_clients = [SpineDBClient.from_server_url(server_url) for server_url in to_server_urls]
     for src in sources:
         file_anchor = f"<a style='color:#BB99FF;' title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
         logger.msg.emit("Importing " + file_anchor)
@@ -60,9 +64,14 @@ def do_work(
                 logger.msg.emit(f"* Applying mapping <b>{mapping_name}</b>...")
                 try:
                     data, errors = connector.get_mapped_data(
-                        {name: [spec]}, table_options, table_column_convert_specs, table_row_convert_specs
+                        {name: [spec]},
+                        table_options,
+                        table_column_convert_specs,
+                        table_default_column_convert_fns,
+                        table_row_convert_specs,
+                        unparse_value=to_database,
                     )
-                except spinedb_api.InvalidMapping as error:
+                except InvalidMapping as error:
                     logger.msg_error.emit(f"Failed to import: {error}")
                     if cancel_on_error:
                         logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
@@ -77,6 +86,15 @@ def do_work(
                     )
                 all_data.append(data)
                 all_errors.extend(errors)
+        if all_data:
+            for client in to_clients:
+                with process.maybe_idle:
+                    client.db_checkin()
+                success = _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client, logger)
+                client.db_checkout()
+                if not success and cancel_on_error:
+                    return (False,)
+            all_data.clear()
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()
@@ -93,47 +111,37 @@ def do_work(
             logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
             return (False,)
         logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-    if all_data:
-        for url in urls_downstream:
-            success = _import_data_to_url(
-                cancel_on_error, purge_before_writing, on_conflict, logs_dir, all_data, url, logger
-            )
-            if not success and cancel_on_error:
-                return (False,)
     return (True,)
 
 
-def _import_data_to_url(cancel_on_error, purge_before_writing, on_conflict, logs_dir, all_data, url, logger):
-    if purge_before_writing:
-        spinedb_api.create_new_spine_database(url)
-    try:
-        db_map = spinedb_api.DatabaseMapping(url, upgrade=False, username="Importer")
-    except (spinedb_api.SpineDBAPIError, spinedb_api.SpineDBVersionError) as err:
-        logger.msg_error.emit(f"Unable to create database mapping, all import operations will be omitted: {err}")
-        return False
+def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client, logger):
     all_import_errors = []
-    all_import_num = 0
+    all_import_count = 0
     for data in all_data:
-        import_num, import_errors = spinedb_api.import_data(db_map, on_conflict=on_conflict, **data)
+        response = client.import_data({**data, "on_conflict": on_conflict}, "")
+        if "error" in response:
+            all_import_errors.append(response["error"])
+            continue
+        import_count, import_errors = response["result"]
+        all_import_count += import_count
         all_import_errors += import_errors
         if import_errors:
             logger.msg_error.emit("Errors while importing a table.")
             if cancel_on_error:
                 logger.msg_error.emit("Cancel import on error is set. Bailing out.")
-                if db_map.has_pending_changes():
+                if all_import_count > 0:
                     logger.msg_error.emit("Rolling back changes.")
-                    db_map.rollback_session()
+                    client.call_method("rollback_session")
+                    all_import_count = 0
                 break
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
-        all_import_num += import_num
-    if db_map.has_pending_changes():
-        db_map.commit_session("Import data by Spine Toolbox Importer")
+    if all_import_count > 0:
+        client.call_method("commit_session", "Import data by Spine Toolbox Importer")
         logger.msg_success.emit(
-            f"Inserted {all_import_num} data with {len(all_import_errors)} errors into {db_map.codename}"
+            f"Inserted {all_import_count} data with {len(all_import_errors)} errors into {client.get_db_url()}"
         )
     else:
         logger.msg_warning.emit("No new data imported")
-    db_map.connection.close()
     if all_import_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()

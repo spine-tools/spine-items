@@ -23,7 +23,15 @@ from spine_items.utils import subdirectory_for_fork
 
 
 def do_work(
-    settings_pack, output_time_stamps, cancel_on_error, data_dir, gams_system_directory, databases, forks, logger
+    process,
+    settings_pack,
+    output_time_stamps,
+    cancel_on_error,
+    data_dir,
+    gams_system_directory,
+    databases,
+    forks,
+    logger,
 ):
     successes = list()
     written_files = dict()

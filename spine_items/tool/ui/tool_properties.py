@@ -13,16 +13,13 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from ...widgets import ArgsTreeView
@@ -63,12 +60,9 @@ class Ui_Form(object):
 
         self.toolButton_tool_specification = QToolButton(Form)
         self.toolButton_tool_specification.setObjectName(u"toolButton_tool_specification")
-        self.toolButton_tool_specification.setMinimumSize(QSize(22, 22))
-        self.toolButton_tool_specification.setMaximumSize(QSize(22, 22))
         icon = QIcon()
         icon.addFile(u":/icons/wrench.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_tool_specification.setIcon(icon)
-        self.toolButton_tool_specification.setIconSize(QSize(16, 16))
         self.toolButton_tool_specification.setPopupMode(QToolButton.InstantPopup)
 
         self.horizontalLayout_9.addWidget(self.toolButton_tool_specification)
@@ -117,12 +111,9 @@ class Ui_Form(object):
 
         self.toolButton_add_file_path_arg = QToolButton(self.gridLayoutWidget)
         self.toolButton_add_file_path_arg.setObjectName(u"toolButton_add_file_path_arg")
-        self.toolButton_add_file_path_arg.setMinimumSize(QSize(22, 22))
-        self.toolButton_add_file_path_arg.setMaximumSize(QSize(22, 22))
         icon2 = QIcon()
         icon2.addFile(u":/icons/file-upload.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.toolButton_add_file_path_arg.setIcon(icon2)
-        self.toolButton_add_file_path_arg.setIconSize(QSize(16, 16))
         self.toolButton_add_file_path_arg.setPopupMode(QToolButton.InstantPopup)
 
         self.gridLayout.addWidget(self.toolButton_add_file_path_arg, 0, 0, 1, 1)

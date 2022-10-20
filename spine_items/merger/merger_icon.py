@@ -45,16 +45,6 @@ class MergerIcon(ProjectItemIcon):
         self.animation_signaller.animation_started.connect(self.start_animation)
         self.animation_signaller.animation_stopped.connect(self.stop_animation)
 
-    def mouseDoubleClickEvent(self, e):
-        """Opens Spine database editor when this Data Store icon is double-clicked.
-
-        Args:
-            e (QGraphicsSceneMouseEvent): Event
-        """
-        super().mouseDoubleClickEvent(e)
-        item = self._toolbox.project_item_model.get_item(self._name)
-        item.project_item.open_url_in_spine_db_editor()
-
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
         rect = self.svg_item.sceneBoundingRect()

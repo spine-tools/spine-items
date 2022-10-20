@@ -19,7 +19,7 @@ import os
 from PySide2.QtCore import QModelIndex, Slot, Qt
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.config import GIMLET_WORK_DIR_NAME
-from spine_engine.project_item.project_item_resource import cmd_line_arg_from_dict, LabelArg
+from spine_engine.project_item.project_item_resource import make_cmd_line_arg, LabelArg
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .commands import UpdateShellCheckBoxCommand, UpdateShellComboboxCommand, UpdatecmdCommand, UpdateWorkDirModeCommand
@@ -333,7 +333,7 @@ class Gimlet(ProjectItem):
         selections = {label: selected for label, selected in item_dict.get("file_selection", list())}
         work_dir_mode = item_dict.get("work_dir_mode", True)
         cmd_line_args = item_dict.get("cmd_line_args", [])
-        cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in cmd_line_args]
+        cmd_line_args = [make_cmd_line_arg(arg) for arg in cmd_line_args]
         return Gimlet(
             name,
             description,

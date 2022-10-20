@@ -36,22 +36,25 @@ def scan_for_resources(provider, file_paths, urls, url_credentials, project_dir)
     """
     resources = list()
     for fp in file_paths:
-        if path_in_dir(fp, provider.data_dir):
-            resource = file_resource(
-                provider.name, fp, label=f"<{provider.name}>/" + Path(fp).relative_to(provider.data_dir).as_posix()
-            )
-        elif path_in_dir(fp, project_dir):
-            path = Path(fp)
-            label = "<project>/" + Path(fp).relative_to(project_dir).as_posix()
-            if path.exists():
-                resource = file_resource(provider.name, fp, label=label)
+        try:
+            if path_in_dir(fp, provider.data_dir):
+                resource = file_resource(
+                    provider.name, fp, label=f"<{provider.name}>/" + Path(fp).relative_to(provider.data_dir).as_posix()
+                )
+            elif path_in_dir(fp, project_dir):
+                path = Path(fp)
+                label = "<project>/" + Path(fp).relative_to(project_dir).as_posix()
+                if path.exists():
+                    resource = file_resource(provider.name, fp, label=label)
+                else:
+                    resource = transient_file_resource(provider.name, label)
             else:
-                resource = transient_file_resource(provider.name, label)
-        else:
-            if Path(fp).exists():
-                resource = file_resource(provider.name, fp)
-            else:
-                resource = transient_file_resource(provider.name, fp)
+                if Path(fp).exists():
+                    resource = file_resource(provider.name, fp)
+                else:
+                    resource = transient_file_resource(provider.name, fp)
+        except PermissionError:
+            continue
         resources.append(resource)
     for url in urls:
         credentials = url_credentials.get(url)

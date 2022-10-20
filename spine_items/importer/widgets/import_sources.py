@@ -16,6 +16,8 @@ Contains ImportSources widget and SourceDataTableMenu.
 :date:   1.6.2019
 """
 import pickle
+from operator import itemgetter
+
 from PySide2.QtCore import (
     QItemSelectionModel,
     QModelIndex,
@@ -27,16 +29,26 @@ from PySide2.QtCore import (
     QMimeData,
     QItemSelection,
 )
+from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import QApplication
 
+from spinetoolbox.helpers import CharIconEngine
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
-from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
+from spinedb_api.import_mapping.type_conversion import (
+    value_to_convert_spec,
+    IntegerSequenceDateTimeConvertSpec,
+    StringConvertSpec,
+)
 from .custom_menus import SourceListMenu, SourceDataTableMenu
 from .mime_types import MAPPING_LIST_MIME_TYPE, TABLE_OPTIONS_MIME_TYPE
 from .options_widget import OptionsWidget
-from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict, DeleteMapping
+from .table_view_with_button_header import TYPE_TO_FONT_AWESOME_ICON
+from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict, DeleteMapping, SetColumnDefaultType
 from ..mvcmodels.mappings_model import Role
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
+
+
+_EMPTY_DEFAULT_COLUMN_TYPE = "undefined"
 
 
 class ImportSources(QObject):
@@ -71,6 +83,7 @@ class ImportSources(QObject):
         self._ui_options_widget = OptionsWidget(self._undo_stack)
         self._ui.dockWidget_source_options.setWidget(self._ui_options_widget)
         self._ui.source_data_table.verticalHeader().display_all = False
+        self._fill_default_column_type_combo_box_items()
         # connect signals
         self._mappings_model.modelAboutToBeReset.connect(self._store_source_list_current_index)
         self._mappings_model.modelReset.connect(self._restore_source_list_current_index)
@@ -84,6 +97,7 @@ class ImportSources(QObject):
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_selected_table)
         self._ui.mapping_list.selectionModel().currentChanged.connect(self._change_selected_mapping)
         self._ui.source_data_table.customContextMenuRequested.connect(self._ui_source_data_table_menu.request_menu)
+        self._ui.default_column_type_combo_box.currentTextChanged.connect(self._set_default_column_type)
 
         self._source_data_model.mapping_data_changed.connect(self._update_display_row_types)
         self._source_data_model.column_types_updated.connect(self._new_column_types)
@@ -110,6 +124,19 @@ class ImportSources(QObject):
         self._source_data_model.more_data_needed.connect(self.fetch_more_data, Qt.UniqueConnection)
         self.restore_connectors(mapping)
 
+    def _fill_default_column_type_combo_box_items(self):
+        """Adds items to default column type combo box."""
+        combo_box = self._ui.default_column_type_combo_box
+        combo_box.addItem(_EMPTY_DEFAULT_COLUMN_TYPE)
+        for data_type_label, icon_character in sorted(TYPE_TO_FONT_AWESOME_ICON.items(), key=itemgetter(0)):
+            if data_type_label == IntegerSequenceDateTimeConvertSpec.DISPLAY_NAME:
+                # Skipping the more complicated conversion for now.
+                continue
+            engine = CharIconEngine(icon_character, 0)
+            icon = QIcon(engine.pixmap())
+            self._ui.default_column_type_combo_box.addItem(icon, data_type_label)
+        self._ui.default_column_type_combo_box.setCurrentText(_EMPTY_DEFAULT_COLUMN_TYPE)
+
     @Slot()
     def _polish_mappings_in_list(self):
         """Polishes mappings in mapping list."""
@@ -123,11 +150,13 @@ class ImportSources(QObject):
 
     @Slot(str)
     def _select_table_for_undo(self, table_name):
-        """Selects source table to load correct values to the options widget.
+        """Selects source table to load correct values to different widgets.
 
         Args:
             table_name (str): table name
         """
+        if table_name == self._connector.current_table:
+            return
         for row in range(self._mappings_model.rowCount()):
             table_index = self._mappings_model.index(row, 0)
             if table_index.data() == table_name:
@@ -156,15 +185,22 @@ class ImportSources(QObject):
 
         Args:
             selected (QModelIndex): current index
-            deselected (QModelIndex): previous index
+            _deselected (QModelIndex): previous index
         """
         if self._connector is None:
+            self._ui_options_widget.setEnabled(False)
             return
         if not selected.isValid():
             table_name = ""
+            self._ui_options_widget.setEnabled(False)
+            self._ui.default_column_type_combo_box.setEnabled(False)
         else:
             table_item = self._mappings_model.data(selected, Role.ITEM)
             table_name = table_item.name if table_item.real else ""
+            self._ui_options_widget.setEnabled(bool(table_name))
+            self._ui.default_column_type_combo_box.setEnabled(bool(table_name))
+            if table_name:
+                self._reset_default_column_type(table_name)
         self._connector.set_table(table_name)
         self._clear_source_data_model()
 
@@ -177,6 +213,44 @@ class ImportSources(QObject):
             previous (QModelIndex): previous mapping
         """
         self._source_data_model.set_mapping_list_index(current)
+
+    @Slot(str)
+    def _set_default_column_type(self, selected_label):
+        """Pushes a set default column type command to undo stack.
+
+        Args:
+            selected_label (str): new default column data type
+        """
+        table_name = self._connector.current_table
+        current_type = self._connector.table_default_column_type.get(table_name, _EMPTY_DEFAULT_COLUMN_TYPE)
+        self._undo_stack.push(SetColumnDefaultType(self, table_name, selected_label, current_type))
+
+    def change_default_column_type(self, table_name, column_type):
+        """Sets default column type.
+
+        Args:
+            table_name (str): table name
+            column_type (str): new default column type
+        """
+        self._select_table_for_undo(table_name)
+        if column_type != _EMPTY_DEFAULT_COLUMN_TYPE:
+            self._connector.update_table_default_column_type({table_name: value_to_convert_spec(column_type)})
+        else:
+            self._connector.clear_table_default_column_type(table_name)
+        if column_type != self._ui.default_column_type_combo_box.currentText():
+            self._reset_default_column_type(table_name)
+
+    def _reset_default_column_type(self, table_name):
+        """Updates the default column type combo box.
+
+        Args:
+            table_name (str): current_table_name
+        """
+        converter = self._connector.table_default_column_type.get(table_name)
+        column_type = converter.DISPLAY_NAME if converter is not None else _EMPTY_DEFAULT_COLUMN_TYPE
+        self._ui.default_column_type_combo_box.currentTextChanged.disconnect(self._set_default_column_type)
+        self._ui.default_column_type_combo_box.setCurrentText(column_type)
+        self._ui.default_column_type_combo_box.currentTextChanged.connect(self._set_default_column_type)
 
     @Slot(QModelIndex, QModelIndex, list)
     def _update_source_table_colors(self, top_left, bottom_right, roles):
@@ -247,10 +321,18 @@ class ImportSources(QObject):
         # Set header data before resetting model because the header needs to be there for some slots...
         self._source_data_model.set_horizontal_header_labels(header)
         self._source_data_model.append_rows(data)
-        types = self._connector.table_types.get(self._connector.current_table, {})
-        row_types = self._connector.table_row_types.get(self._connector.current_table, {})
+        table_name = self._connector.current_table
+        types = self._connector.table_types.get(table_name, {})
+        row_types = self._connector.table_row_types.get(table_name, {})
+        default_column_type = None
         for col in range(len(header)):
-            col_type = types.get(col, "string")
+            col_type = types.get(col)
+            if col_type is None:
+                if default_column_type is None:
+                    default_column_type = self._connector.table_default_column_type.get(table_name)
+                    if default_column_type is None:
+                        default_column_type = StringConvertSpec()
+                col_type = default_column_type.DISPLAY_NAME
             self._source_data_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Horizontal)
         for row, row_type in row_types.items():
             self._source_data_model.set_type(row, value_to_convert_spec(row_type), orientation=Qt.Vertical)
@@ -270,12 +352,16 @@ class ImportSources(QObject):
             tn: {int(col): value_to_convert_spec(spec) for col, spec in cols.items()}
             for tn, cols in mappings_dict.get("table_types", {}).items()
         }
+        table_default_column_type = {
+            tn: value_to_convert_spec(spec) for tn, spec in mappings_dict.get("table_default_column_type", {}).items()
+        }
         table_row_types = {
             tn: {int(row): value_to_convert_spec(spec) for row, spec in rows.items()}
             for tn, rows in mappings_dict.get("table_row_types", {}).items()
         }
         self._connector.set_table_options(mappings_dict.get("table_options", {}))
         self._connector.set_table_types(table_types)
+        self._connector.update_table_default_column_type(table_default_column_type)
         self._connector.set_table_row_types(table_row_types)
 
     @Slot()
@@ -303,6 +389,11 @@ class ImportSources(QObject):
             if cols
             if tn in table_names
         }
+        table_default_column_type = {
+            tn: column_type.to_json_value()
+            for tn, column_type in self._connector.table_default_column_type.items()
+            if tn in table_names
+        }
         table_row_types = {
             tn: {col: spec.to_json_value() for col, spec in cols.items()}
             for tn, cols in self._connector.table_row_types.items()
@@ -312,6 +403,7 @@ class ImportSources(QObject):
         return {
             "table_options": table_options,
             "table_types": table_types,
+            "table_default_column_type": table_default_column_type,
             "table_row_types": table_row_types,
             "source_type": self._connector.source_type,
         }

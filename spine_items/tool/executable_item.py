@@ -28,10 +28,9 @@ import time
 import uuid
 from contextlib import ExitStack
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.project_item.project_item_resource import (
-    cmd_line_arg_from_dict,
+    make_cmd_line_arg,
     expand_cmd_line_args,
     labelled_resource_args,
 )
@@ -40,9 +39,10 @@ from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources
 from ..utils import generate_filter_subdirectory_name
+from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 
 
-class ExecutableItem(ExecutableItemBase):
+class ExecutableItem(DBWriterExecutableItemBase):
     """Tool project item's executable parts."""
 
     _MAX_RETRIES = 3
@@ -72,6 +72,10 @@ class ExecutableItem(ExecutableItemBase):
     @property
     def options(self):
         return self._options
+
+    @property
+    def cmd_line_args(self):
+        return self._cmd_line_args
 
     @staticmethod
     def item_type():
@@ -419,7 +423,7 @@ class ExecutableItem(ExecutableItemBase):
             f"*** Executing Tool specification <b>{self._tool_specification.name}</b> in {anchor} ***"
         )
         if work_or_source == "work":
-            self._logger.msg.emit(f"*** Copying program files ***")
+            self._logger.msg.emit("*** Copying program files ***")
             if not self._copy_program_files(execution_dir):
                 self._logger.msg_error.emit("Copying program files failed")
                 return ItemExecutionFinishState.FAILURE
@@ -470,7 +474,7 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         resources = forward_resources + backward_resources
         with ExitStack() as stack:
-            labelled_args = labelled_resource_args(resources, stack)
+            labelled_args = labelled_resource_args(resources, stack, db_checkin=True, db_checkout=True)
             expanded_args = expand_cmd_line_args(self._cmd_line_args, labelled_args, self._logger)
             try:
                 self._tool_instance.prepare(expanded_args)
@@ -481,7 +485,7 @@ class ExecutableItem(ExecutableItemBase):
             return_code = self._tool_instance.execute()
             if return_code != 0 and self._tool_instance is not None and self._tool_instance.killed:
                 # NOTE: return_code will be 0 if the instance was killed by e.g. `exit(0)` in julia
-                # In this case we want to consider the tool successfull and not retry it
+                # In this case we want to consider the tool successful and not retry it
                 if self._retry_count < self._MAX_RETRIES:
                     # Try again
                     self._retry_count += 1
@@ -492,6 +496,14 @@ class ExecutableItem(ExecutableItemBase):
         self._tool_instance = None
         # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
         return ItemExecutionFinishState.SUCCESS if return_code == 0 else ItemExecutionFinishState.FAILURE
+
+    def exclude_execution(self, forward_resources, backward_resources):
+        """See base class."""
+        super().exclude_execution(forward_resources, backward_resources)
+        if self._filter_id:
+            self._output_dir = os.path.join(
+                self._output_dir, generate_filter_subdirectory_name(forward_resources, self.hash_filter_id())
+            )
 
     def _find_input_files(self, resources):
         """
@@ -663,10 +675,10 @@ class ExecutableItem(ExecutableItemBase):
         else:
             work_dir = None
         specification_name = item_dict["specification"]
-        specification = ExecutableItemBase._get_specification(
+        specification = DBWriterExecutableItemBase._get_specification(
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
-        cmd_line_args = [cmd_line_arg_from_dict(arg) for arg in item_dict["cmd_line_args"]]
+        cmd_line_args = [make_cmd_line_arg(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
         group_id = item_dict.get("group_id")
         return cls(name, work_dir, specification, cmd_line_args, options, group_id, project_dir, logger)

@@ -43,7 +43,6 @@ class TestImporterExecutable(unittest.TestCase):
             "y": 0,
             "specification": "importer_spec",
             "cancel_on_error": True,
-            "purge_before_writing": True,
             "on_conflict": "merge",
             "mapping_selection": [
                 [{"type": "path", "relative": True, "path": ".spinetoolbox/items/data/units.xlsx"}, True]
@@ -79,12 +78,12 @@ class TestImporterExecutable(unittest.TestCase):
         self.assertEqual("Importer", item.item_type())
 
     def test_stop_execution(self):
-        executable = ExecutableItem("name", {}, [], "", True, True, 'merge', self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", {}, [], "", True, 'merge', self._temp_dir.name, mock.MagicMock())
         executable.stop_execution()
         self.assertIsNone(executable._process)
 
     def test_execute_simplest_case(self):
-        executable = ExecutableItem("name", {}, [], "", True, True, 'merge', self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", {}, [], "", True, 'merge', self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], []))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
@@ -100,7 +99,7 @@ class TestImporterExecutable(unittest.TestCase):
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem(
-            "name", mapping, [str(data_file)], gams_path, True, True, 'merge', self._temp_dir.name, logger
+            "name", mapping, [str(data_file)], gams_path, True, 'merge', self._temp_dir.name, logger
         )
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
@@ -123,9 +122,7 @@ class TestImporterExecutable(unittest.TestCase):
         database_url = "sqlite:///" + str(database_path)
         create_new_spine_database(database_url)
         gams_path = ""
-        executable = ExecutableItem(
-            "name", {}, [], gams_path, True, True, 'merge', self._temp_dir.name, mock.MagicMock()
-        )
+        executable = ExecutableItem("name", {}, [], gams_path, True, 'merge', self._temp_dir.name, mock.MagicMock())
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
         self.assertTrue(executable.execute(file_resources, database_resources))

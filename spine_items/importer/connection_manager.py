@@ -66,6 +66,7 @@ class ConnectionManager(QObject):
         self._current_table = None
         self._table_options = {}
         self._table_types = {}
+        self._defaul_table_column_type = {}
         self._table_row_types = {}
         self._connection = connection
         self._connection_settings = connection_settings
@@ -90,6 +91,10 @@ class ConnectionManager(QObject):
     @property
     def table_types(self):
         return self._table_types
+
+    @property
+    def table_default_column_type(self):
+        return self._defaul_table_column_type
 
     @property
     def table_row_types(self):
@@ -166,6 +171,7 @@ class ConnectionManager(QObject):
         # connect worker signals
         self._worker.connectionReady.connect(self._handle_connection_ready)
         self._worker.tablesReady.connect(self._handle_tables_ready)
+        self._worker.tablesReady[dict].connect(self._handle_tables_ready)
         self._worker.dataReady.connect(self.data_ready.emit)
         self._worker.defaultMappingReady.connect(self.default_mapping_ready.emit)
         self._worker.error.connect(self.error.emit)
@@ -185,25 +191,20 @@ class ConnectionManager(QObject):
         self._is_connected = True
         self.connection_ready.emit()
 
+    @Slot(list)
     @Slot(dict)
     def _handle_tables_ready(self, table_options):
         if isinstance(table_options, list):
             table_options = {name: {} for name in table_options}
 
-        # save table options if they don't already exists
+        # save table options if they don't already exist
         for key, table_settings in table_options.items():
             options = table_settings.get("options", {})
             if options is not None:
                 self._table_options.setdefault(key, options)
-
-        # save table types if they don't already exists
-        for key, table_settings in table_options.items():
             types = table_settings.get("types", {})
             if types is not None:
                 self._table_types.setdefault(key, types)
-
-        # save table row types if they don't already exists
-        for key, table_settings in table_options.items():
             row_types = table_settings.get("row_types", {})
             if row_types is not None:
                 self._table_row_types.setdefault(key, row_types)
@@ -255,6 +256,22 @@ class ConnectionManager(QObject):
         """
         self._table_types.update(types)
 
+    def update_table_default_column_type(self, column_type):
+        """Updates default column type.
+
+        Args:
+            column_type (dict): mapping from table name to column type name
+        """
+        self._defaul_table_column_type.update(column_type)
+
+    def clear_table_default_column_type(self, table_name):
+        """Clears default column type.
+
+        Args:
+            table_name (str): table name
+        """
+        self._defaul_table_column_type.pop(table_name, None)
+
     def set_table_row_types(self, types):
         """Sets connection manager types for current connector
 
@@ -290,8 +307,8 @@ class ConnectionWorker(QObject):
     """Signal with error message if something errors"""
     connectionReady = Signal()
     """Signal that connection is ready to be read"""
-    tablesReady = Signal(list)
-    """Signal when tables from source is ready, list of table names"""
+    tablesReady = Signal((list,), (dict,))
+    """Signal when tables from source is ready, a list of table names or dict mapping table name to table options."""
     dataReady = Signal(list, list)
     """Signal when data from a specific table in source is ready, list of data and list of headers"""
     defaultMappingReady = Signal(dict)
@@ -320,7 +337,10 @@ class ConnectionWorker(QObject):
     def tables(self):
         try:
             tables = self._connection.get_tables()
-            self.tablesReady.emit(tables)
+            if isinstance(tables, list):
+                self.tablesReady.emit(tables)
+            else:
+                self.tablesReady[dict].emit(tables)
         except Exception as error:
             self.error.emit(f"Could not get tables from source: {error}")
 

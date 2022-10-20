@@ -49,7 +49,7 @@ from ..mapping_colors import ERROR_COLOR
 from .mappings_model_roles import Role
 
 
-UNNAMED_TABLE_NAME = "<unnamed table>"
+UNNAMED_TABLE_NAME = "<rename this to add table>"
 
 
 @unique
@@ -583,7 +583,7 @@ class MappingsModel(QAbstractItemModel):
         min_row = None
         max_row = None
         for row in rows:
-            if self._mappings[row].checked == checked:
+            if not self._mappings[row].checkable or self._mappings[row].checked == checked:
                 continue
             if min_row is None:
                 min_row = row
@@ -1057,7 +1057,7 @@ class MappingsModel(QAbstractItemModel):
         flattened_mappings = self._mappings[table_row].mapping_list[list_row].flattened_mappings
         if not flattened_mappings.is_time_series_value():
             return
-        flattened_mappings.value_mapping.options["repeat"] = repeat
+        flattened_mappings.value_mapping().options["repeat"] = repeat
         table_index = self.index(table_row, 0)
         list_index = self.index(list_row, 0, table_index)
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])

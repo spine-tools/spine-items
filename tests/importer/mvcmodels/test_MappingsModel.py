@@ -14,6 +14,8 @@ Contains unit tests for Import editor's :class:`MappingsModel`.
 import unittest
 from PySide2.QtCore import QObject, Qt
 from PySide2.QtWidgets import QApplication, QUndoStack
+
+from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spinetoolbox.helpers import signal_waiter
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spinedb_api import import_mapping_from_dict
@@ -40,6 +42,27 @@ class TestMappingsModel(unittest.TestCase):
         self.assertEqual(model.columnCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "Select All")
+
+    def test_set_time_series_repeat_flag(self):
+        model = MappingsModel(self._undo_stack, self._model_parent)
+        model.add_empty_row()
+        table_index = model.index(1, 0)
+        with signal_waiter(model.dataChanged) as waiter:
+            self.assertTrue(model.setData(table_index, "table"))
+            waiter.wait()
+        self.assertTrue(model.insertRow(0, table_index))
+        list_index = model.index(0, 0, table_index)
+        model.set_root_mapping(
+            table_index.row(), list_index.row(), import_mapping_from_dict({"map_type": "ObjectClass"})
+        )
+        model.set_parameter_type(table_index.row(), list_index.row(), "Value")
+        model.set_value_type(table_index.row(), list_index.row(), "Time series")
+        flattened_mappings = model.data(list_index, Role.FLATTENED_MAPPINGS)
+        self.assertNotIn("repeat", flattened_mappings.value_mapping().options)
+        with signal_waiter(model.dataChanged) as waiter:
+            model.set_time_series_repeat_flag(table_index.row(), list_index.row(), True)
+            waiter.wait()
+        self.assertTrue(flattened_mappings.value_mapping().options["repeat"])
 
 
 class TestTableList(unittest.TestCase):

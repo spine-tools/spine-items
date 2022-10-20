@@ -13,16 +13,13 @@
 ################################################################################
 ## Form generated from reading UI file 'data_store_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
@@ -203,6 +200,16 @@ class Ui_Form(object):
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.purge_button = QPushButton(Form)
+        self.purge_button.setObjectName(u"purge_button")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.purge_button.sizePolicy().hasHeightForWidth())
+        self.purge_button.setSizePolicy(sizePolicy4)
+
+        self.horizontalLayout_3.addWidget(self.purge_button)
+
         self.toolButton_vacuum = QPushButton(Form)
         self.toolButton_vacuum.setObjectName(u"toolButton_vacuum")
         icon1 = QIcon()
@@ -234,11 +241,11 @@ class Ui_Form(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.pushButton_create_new_spine_db = QPushButton(Form)
         self.pushButton_create_new_spine_db.setObjectName(u"pushButton_create_new_spine_db")
-        sizePolicy4 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.pushButton_create_new_spine_db.sizePolicy().hasHeightForWidth())
-        self.pushButton_create_new_spine_db.setSizePolicy(sizePolicy4)
+        sizePolicy5 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.pushButton_create_new_spine_db.sizePolicy().hasHeightForWidth())
+        self.pushButton_create_new_spine_db.setSizePolicy(sizePolicy5)
         icon3 = QIcon()
         icon3.addFile(u":/icons/Spine_symbol.png", QSize(), QIcon.Normal, QIcon.Off)
         self.pushButton_create_new_spine_db.setIcon(icon3)
@@ -251,8 +258,11 @@ class Ui_Form(object):
 
         self.pushButton_ds_open_editor = QPushButton(Form)
         self.pushButton_ds_open_editor.setObjectName(u"pushButton_ds_open_editor")
-        sizePolicy4.setHeightForWidth(self.pushButton_ds_open_editor.sizePolicy().hasHeightForWidth())
-        self.pushButton_ds_open_editor.setSizePolicy(sizePolicy4)
+        sizePolicy6 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.pushButton_ds_open_editor.sizePolicy().hasHeightForWidth())
+        self.pushButton_ds_open_editor.setSizePolicy(sizePolicy6)
 
         self.horizontalLayout.addWidget(self.pushButton_ds_open_editor)
 
@@ -294,6 +304,13 @@ class Ui_Form(object):
         self.lineEdit_host.setPlaceholderText("")
         self.lineEdit_password.setPlaceholderText("")
         self.lineEdit_username.setPlaceholderText("")
+#if QT_CONFIG(tooltip)
+        self.purge_button.setToolTip(QCoreApplication.translate("Form", u"Mass remove database items.", None))
+#endif // QT_CONFIG(tooltip)
+        self.purge_button.setText(QCoreApplication.translate("Form", u"Purge...", None))
+#if QT_CONFIG(tooltip)
+        self.toolButton_vacuum.setToolTip(QCoreApplication.translate("Form", u"Remove outdated data from the database potentially freeing disk space.", None))
+#endif // QT_CONFIG(tooltip)
         self.toolButton_vacuum.setText(QCoreApplication.translate("Form", u"Vacuum", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_copy_url.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Copy current database url to clipboard.</p></body></html>", None))

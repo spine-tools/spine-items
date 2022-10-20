@@ -29,7 +29,7 @@ class AnimationSignaller(QObject):
 
 
 class ImporterExporterAnimation:
-    def __init__(self, item, duration=1800, plane_count=4, point_size=10, loop_width=30, loop_aspect_ratio=3):
+    def __init__(self, item, duration=1800, plane_count=4, pixel_size=12, loop_width=30, loop_aspect_ratio=3):
         """Initializes animation stuff.
 
         Args:
@@ -42,7 +42,7 @@ class ImporterExporterAnimation:
         self._loop_width = loop_width
         self._loop_height = loop_width / loop_aspect_ratio
         self._font = QFont("Font Awesome 5 Free Solid")
-        self._font.setPointSize(point_size)
+        self._font.setPixelSize(pixel_size)
         self.time_line = QTimeLine()
         self.time_line.setDuration(duration)
         self.time_line.setLoopCount(0)  # loop forever

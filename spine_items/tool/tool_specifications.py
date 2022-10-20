@@ -157,9 +157,9 @@ class ToolSpecification(ProjectItemSpecification):
             "tooltype": self.tooltype,
             "includes": [src_file.replace(os.path.sep, "/") for src_file in self.includes],
             "description": self.description,
-            "inputfiles": list(self.inputfiles),
-            "inputfiles_opt": list(self.inputfiles_opt),
-            "outputfiles": list(self.outputfiles),
+            "inputfiles": sorted(self.inputfiles),
+            "inputfiles_opt": sorted(self.inputfiles_opt),
+            "outputfiles": sorted(self.outputfiles),
             "cmdline_args": self.cmdline_args,
             "execute_in_work": self.execute_in_work,
             "includes_main_path": self._includes_main_path_relative(),
@@ -664,8 +664,7 @@ class ExecutableTool(ToolSpecification):
     def _includes_main_path_relative(self):
         if not self.path:
             return None
-        else:
-            return super()._includes_main_path_relative()
+        return super()._includes_main_path_relative()
 
     def set_execution_settings(self):
         """Updates old Executable Tool specifications by adding the

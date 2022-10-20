@@ -13,16 +13,13 @@
 ################################################################################
 ## Form generated from reading UI file 'import_editor_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from spinetoolbox.widgets.custom_combobox import ElidedCombobox
@@ -69,27 +66,44 @@ class Ui_MainWindow(object):
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_source_tables)
         self.dockWidget_source_options = QDockWidget(MainWindow)
         self.dockWidget_source_options.setObjectName(u"dockWidget_source_options")
-        self.dockWidgetContents_2 = QWidget()
-        self.dockWidgetContents_2.setObjectName(u"dockWidgetContents_2")
-        self.verticalLayout_5 = QVBoxLayout(self.dockWidgetContents_2)
+        self.source_options_contents = QWidget()
+        self.source_options_contents.setObjectName(u"source_options_contents")
+        self.verticalLayout_5 = QVBoxLayout(self.source_options_contents)
         self.verticalLayout_5.setSpacing(0)
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.dockWidget_source_options.setWidget(self.dockWidgetContents_2)
+        self.dockWidget_source_options.setWidget(self.source_options_contents)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_source_options)
         self.dockWidget_source_data = QDockWidget(MainWindow)
         self.dockWidget_source_data.setObjectName(u"dockWidget_source_data")
         self.dockWidgetContents_3 = QWidget()
         self.dockWidgetContents_3.setObjectName(u"dockWidgetContents_3")
         self.verticalLayout_3 = QVBoxLayout(self.dockWidgetContents_3)
-        self.verticalLayout_3.setSpacing(3)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.source_data_table = TableViewWithButtonHeader(self.dockWidgetContents_3)
         self.source_data_table.setObjectName(u"source_data_table")
         self.source_data_table.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.verticalLayout_3.addWidget(self.source_data_table)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.label = QLabel(self.dockWidgetContents_3)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout.addWidget(self.label)
+
+        self.default_column_type_combo_box = QComboBox(self.dockWidgetContents_3)
+        self.default_column_type_combo_box.setObjectName(u"default_column_type_combo_box")
+
+        self.horizontalLayout.addWidget(self.default_column_type_combo_box)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout.addItem(self.horizontalSpacer)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout)
 
         self.dockWidget_source_data.setWidget(self.dockWidgetContents_3)
         MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.dockWidget_source_data)
@@ -133,19 +147,19 @@ class Ui_MainWindow(object):
         MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_mappings)
         self.dockWidget_mapping_options = QDockWidget(MainWindow)
         self.dockWidget_mapping_options.setObjectName(u"dockWidget_mapping_options")
-        self.dockWidgetContents_5 = QWidget()
-        self.dockWidgetContents_5.setObjectName(u"dockWidgetContents_5")
-        self.formLayout_2 = QFormLayout(self.dockWidgetContents_5)
+        self.mapping_options_contents = QWidget()
+        self.mapping_options_contents.setObjectName(u"mapping_options_contents")
+        self.formLayout_2 = QFormLayout(self.mapping_options_contents)
         self.formLayout_2.setObjectName(u"formLayout_2")
         self.formLayout_2.setHorizontalSpacing(6)
         self.formLayout_2.setVerticalSpacing(6)
         self.formLayout_2.setContentsMargins(9, 9, 9, 9)
-        self.class_type_label = QLabel(self.dockWidgetContents_5)
+        self.class_type_label = QLabel(self.mapping_options_contents)
         self.class_type_label.setObjectName(u"class_type_label")
 
         self.formLayout_2.setWidget(0, QFormLayout.LabelRole, self.class_type_label)
 
-        self.class_type_combo_box = QComboBox(self.dockWidgetContents_5)
+        self.class_type_combo_box = QComboBox(self.mapping_options_contents)
         self.class_type_combo_box.addItem("")
         self.class_type_combo_box.addItem("")
         self.class_type_combo_box.addItem("")
@@ -161,17 +175,17 @@ class Ui_MainWindow(object):
 
         self.formLayout_2.setWidget(0, QFormLayout.FieldRole, self.class_type_combo_box)
 
-        self.import_objects_check_box = QCheckBox(self.dockWidgetContents_5)
+        self.import_objects_check_box = QCheckBox(self.mapping_options_contents)
         self.import_objects_check_box.setObjectName(u"import_objects_check_box")
 
         self.formLayout_2.setWidget(1, QFormLayout.FieldRole, self.import_objects_check_box)
 
-        self.parameter_type_label = QLabel(self.dockWidgetContents_5)
+        self.parameter_type_label = QLabel(self.mapping_options_contents)
         self.parameter_type_label.setObjectName(u"parameter_type_label")
 
         self.formLayout_2.setWidget(2, QFormLayout.LabelRole, self.parameter_type_label)
 
-        self.parameter_type_combo_box = QComboBox(self.dockWidgetContents_5)
+        self.parameter_type_combo_box = QComboBox(self.mapping_options_contents)
         self.parameter_type_combo_box.addItem("")
         self.parameter_type_combo_box.addItem("")
         self.parameter_type_combo_box.addItem("")
@@ -179,12 +193,12 @@ class Ui_MainWindow(object):
 
         self.formLayout_2.setWidget(2, QFormLayout.FieldRole, self.parameter_type_combo_box)
 
-        self.value_type_label = QLabel(self.dockWidgetContents_5)
+        self.value_type_label = QLabel(self.mapping_options_contents)
         self.value_type_label.setObjectName(u"value_type_label")
 
         self.formLayout_2.setWidget(3, QFormLayout.LabelRole, self.value_type_label)
 
-        self.value_type_combo_box = QComboBox(self.dockWidgetContents_5)
+        self.value_type_combo_box = QComboBox(self.mapping_options_contents)
         self.value_type_combo_box.addItem("")
         self.value_type_combo_box.addItem("")
         self.value_type_combo_box.addItem("")
@@ -194,65 +208,65 @@ class Ui_MainWindow(object):
 
         self.formLayout_2.setWidget(3, QFormLayout.FieldRole, self.value_type_combo_box)
 
-        self.read_start_row_label = QLabel(self.dockWidgetContents_5)
+        self.read_start_row_label = QLabel(self.mapping_options_contents)
         self.read_start_row_label.setObjectName(u"read_start_row_label")
 
         self.formLayout_2.setWidget(5, QFormLayout.LabelRole, self.read_start_row_label)
 
-        self.start_read_row_spin_box = QSpinBox(self.dockWidgetContents_5)
+        self.start_read_row_spin_box = QSpinBox(self.mapping_options_contents)
         self.start_read_row_spin_box.setObjectName(u"start_read_row_spin_box")
         self.start_read_row_spin_box.setMinimum(1)
 
         self.formLayout_2.setWidget(5, QFormLayout.FieldRole, self.start_read_row_spin_box)
 
-        self.ignore_columns_label = QLabel(self.dockWidgetContents_5)
+        self.ignore_columns_label = QLabel(self.mapping_options_contents)
         self.ignore_columns_label.setObjectName(u"ignore_columns_label")
 
         self.formLayout_2.setWidget(6, QFormLayout.LabelRole, self.ignore_columns_label)
 
-        self.ignore_columns_button = QPushButton(self.dockWidgetContents_5)
+        self.ignore_columns_button = QPushButton(self.mapping_options_contents)
         self.ignore_columns_button.setObjectName(u"ignore_columns_button")
 
         self.formLayout_2.setWidget(6, QFormLayout.FieldRole, self.ignore_columns_button)
 
-        self.dimension_label = QLabel(self.dockWidgetContents_5)
+        self.dimension_label = QLabel(self.mapping_options_contents)
         self.dimension_label.setObjectName(u"dimension_label")
 
         self.formLayout_2.setWidget(7, QFormLayout.LabelRole, self.dimension_label)
 
-        self.dimension_spin_box = QSpinBox(self.dockWidgetContents_5)
+        self.dimension_spin_box = QSpinBox(self.mapping_options_contents)
         self.dimension_spin_box.setObjectName(u"dimension_spin_box")
         self.dimension_spin_box.setMinimum(1)
 
         self.formLayout_2.setWidget(7, QFormLayout.FieldRole, self.dimension_spin_box)
 
-        self.time_series_repeat_check_box = QCheckBox(self.dockWidgetContents_5)
+        self.time_series_repeat_check_box = QCheckBox(self.mapping_options_contents)
         self.time_series_repeat_check_box.setObjectName(u"time_series_repeat_check_box")
 
         self.formLayout_2.setWidget(8, QFormLayout.FieldRole, self.time_series_repeat_check_box)
 
-        self.map_dimensions_label = QLabel(self.dockWidgetContents_5)
+        self.map_dimensions_label = QLabel(self.mapping_options_contents)
         self.map_dimensions_label.setObjectName(u"map_dimensions_label")
 
         self.formLayout_2.setWidget(9, QFormLayout.LabelRole, self.map_dimensions_label)
 
-        self.map_dimension_spin_box = QSpinBox(self.dockWidgetContents_5)
+        self.map_dimension_spin_box = QSpinBox(self.mapping_options_contents)
         self.map_dimension_spin_box.setObjectName(u"map_dimension_spin_box")
         self.map_dimension_spin_box.setMinimum(1)
 
         self.formLayout_2.setWidget(9, QFormLayout.FieldRole, self.map_dimension_spin_box)
 
-        self.map_compression_check_box = QCheckBox(self.dockWidgetContents_5)
+        self.map_compression_check_box = QCheckBox(self.mapping_options_contents)
         self.map_compression_check_box.setObjectName(u"map_compression_check_box")
 
         self.formLayout_2.setWidget(10, QFormLayout.FieldRole, self.map_compression_check_box)
 
-        self.before_alternative_check_box = QCheckBox(self.dockWidgetContents_5)
+        self.before_alternative_check_box = QCheckBox(self.mapping_options_contents)
         self.before_alternative_check_box.setObjectName(u"before_alternative_check_box")
 
         self.formLayout_2.setWidget(4, QFormLayout.FieldRole, self.before_alternative_check_box)
 
-        self.dockWidget_mapping_options.setWidget(self.dockWidgetContents_5)
+        self.dockWidget_mapping_options.setWidget(self.mapping_options_contents)
         MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget_mapping_options)
         self.dockWidget_mapping_spec = QDockWidget(MainWindow)
         self.dockWidget_mapping_spec.setObjectName(u"dockWidget_mapping_spec")
@@ -288,6 +302,7 @@ class Ui_MainWindow(object):
 
         self.comboBox_source_file = ElidedCombobox(self.dockWidgetContents_7)
         self.comboBox_source_file.setObjectName(u"comboBox_source_file")
+        self.comboBox_source_file.setEnabled(False)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -340,6 +355,10 @@ class Ui_MainWindow(object):
         self.dockWidget_source_tables.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source tables", None))
         self.dockWidget_source_options.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source options", None))
         self.dockWidget_source_data.setWindowTitle(QCoreApplication.translate("MainWindow", u"Source data", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Surplus column data type:", None))
+#if QT_CONFIG(tooltip)
+        self.default_column_type_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Select data type for additional columns in variable-length pivoted source data.", None))
+#endif // QT_CONFIG(tooltip)
         self.dockWidget_mappings.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mappings", None))
         self.new_button.setText(QCoreApplication.translate("MainWindow", u"New", None))
         self.remove_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))

@@ -37,20 +37,28 @@ from PySide2.QtWidgets import (
 from spinedb_api import DateTime, Duration, ParameterValueFormatError
 from spinetoolbox.helpers import CharIconEngine
 from spinedb_api.spine_io.importers.reader import TYPE_STRING_TO_CLASS
-from spinedb_api.import_mapping.type_conversion import IntegerSequenceDateTimeConvertSpec, value_to_convert_spec
+from spinedb_api.import_mapping.type_conversion import (
+    IntegerSequenceDateTimeConvertSpec,
+    value_to_convert_spec,
+    BooleanConvertSpec,
+    StringConvertSpec,
+    DateTimeConvertSpec,
+    DurationConvertSpec,
+    FloatConvertSpec,
+)
 from ..commands import SetColumnOrRowType
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
 
 _ALLOWED_TYPES = list(sorted(TYPE_STRING_TO_CLASS.keys()))
 _ALLOWED_TYPES.append("integer sequence datetime")
 
-_TYPE_TO_FONT_AWESOME_ICON = {
-    "integer sequence datetime": chr(int('f073', 16)),
-    "boolean": chr(int('f6ad', 16)),
-    "string": chr(int('f031', 16)),
-    "datetime": chr(int('f073', 16)),
-    "duration": chr(int('f017', 16)),
-    "float": chr(int('f534', 16)),
+TYPE_TO_FONT_AWESOME_ICON = {
+    IntegerSequenceDateTimeConvertSpec.DISPLAY_NAME: chr(int('f073', 16)),
+    BooleanConvertSpec.DISPLAY_NAME: chr(int('f6ad', 16)),
+    StringConvertSpec.DISPLAY_NAME: chr(int('f031', 16)),
+    DateTimeConvertSpec.DISPLAY_NAME: chr(int('f073', 16)),
+    DurationConvertSpec.DISPLAY_NAME: chr(int('f017', 16)),
+    FloatConvertSpec.DISPLAY_NAME: chr(int('f534', 16)),
 }
 
 Margin = namedtuple("Margin", ("left", "right", "top", "bottom"))
@@ -213,6 +221,11 @@ class HeaderWithButton(QHeaderView):
     """Emitted when an undo/redo command is going to be executed."""
 
     def __init__(self, orientation, parent=None):
+        """
+        Args:
+            orientation (Orientation): header orientation
+            parent (QWidget, optional): parent widget
+        """
         super().__init__(orientation, parent)
         self._source_table_name = None
         self._undo_stack = None
@@ -409,10 +422,10 @@ class HeaderWithButton(QHeaderView):
         # get the type of the section.
         type_spec = self.model().get_type(logical_index, self.orientation())
         if type_spec is None:
-            type_spec = "string"
+            type_spec = StringConvertSpec.DISPLAY_NAME
         else:
             type_spec = type_spec.DISPLAY_NAME
-        font_str = _TYPE_TO_FONT_AWESOME_ICON[type_spec]
+        font_str = TYPE_TO_FONT_AWESOME_ICON[type_spec]
 
         # set data for both interaction button and render button.
         self._button.setText(font_str)
@@ -520,7 +533,7 @@ def _create_allowed_types_menu(parent, trigger_slot):
     """
     menu = QMenu(parent)
     for at in _ALLOWED_TYPES:
-        icon_char = _TYPE_TO_FONT_AWESOME_ICON[at]
+        icon_char = TYPE_TO_FONT_AWESOME_ICON[at]
         engine = CharIconEngine(icon_char, 0)
         icon = QIcon(engine.pixmap())
         menu.addAction(icon, at)

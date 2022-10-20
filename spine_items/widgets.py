@@ -22,6 +22,7 @@ from PySide2.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWid
 from PySide2.QtGui import QDrag, QIntValidator
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
+from spinetoolbox.widgets.select_database_items import SelectDatabaseItems
 from .utils import convert_to_sqlalchemy_url
 
 

@@ -17,6 +17,7 @@ Contains Importer's executable item as well as support utilities.
 """
 
 import os
+from contextlib import ExitStack
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
@@ -28,23 +29,13 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import get_labelled_sources
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
+from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 from .item_info import ItemInfo
 from .do_work import do_work
 
 
-class ExecutableItem(ExecutableItemBase):
-    def __init__(
-        self,
-        name,
-        mapping,
-        selected_files,
-        gams_path,
-        cancel_on_error,
-        purge_before_writing,
-        on_conflict,
-        project_dir,
-        logger,
-    ):
+class ExecutableItem(DBWriterExecutableItemBase):
+    def __init__(self, name, mapping, selected_files, gams_path, cancel_on_error, on_conflict, project_dir, logger):
         """
         Args:
             name (str): Importer's name
@@ -52,7 +43,6 @@ class ExecutableItem(ExecutableItemBase):
             selected_files (list): selected_files
             gams_path (str): path to system's GAMS executable or empty string for the default path
             cancel_on_error (bool): if True, revert changes on error and quit
-            purge_before_writing (bool): if True, purge target dbs before writing
             on_conflict (str): conflict resolution strategy for spinedb_api.import_data
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
@@ -62,7 +52,6 @@ class ExecutableItem(ExecutableItemBase):
         self._selected_files = selected_files
         self._gams_path = gams_path
         self._cancel_on_error = cancel_on_error
-        self._purge_before_writing = purge_before_writing
         self._on_conflict = on_conflict
         self._process = None
 
@@ -89,7 +78,9 @@ class ExecutableItem(ExecutableItemBase):
         sources = list()
         for label in self._selected_files:
             sources += labelled_sources.get(label, [])
-        urls_downstream = [r.url for r in backward_resources if r.type_ == "database"]
+        to_resources = [r for r in backward_resources if r.type_ == "database"]
+        if not sources or not to_resources:
+            return ItemExecutionFinishState.SUCCESS
         source_type = self._mapping["source_type"]
         if source_type == "GdxConnector":
             source_settings = {"gams_directory": self._gams_system_directory()}
@@ -103,23 +94,24 @@ class ExecutableItem(ExecutableItemBase):
             "DataPackageConnector": DataPackageConnector,
             "SqlAlchemyConnector": SqlAlchemyConnector,
         }[source_type](source_settings)
-        self._process = ReturningProcess(
-            target=do_work,
-            args=(
-                self._mapping,
-                self._cancel_on_error,
-                self._purge_before_writing,
-                self._on_conflict,
-                self._logs_dir,
-                sources,
-                connector,
-                urls_downstream,
-                self._logger,
-            ),
-        )
-        return_value = self._process.run_until_complete()
-        self._process = None
-        return ItemExecutionFinishState.SUCCESS if return_value[0] else ItemExecutionFinishState.FAILURE
+        with ExitStack() as stack:
+            to_server_urls = [stack.enter_context(resource.open()) for resource in to_resources]
+            self._process = ReturningProcess(
+                target=do_work,
+                args=(
+                    self._mapping,
+                    self._cancel_on_error,
+                    self._on_conflict,
+                    self._logs_dir,
+                    sources,
+                    connector,
+                    to_server_urls,
+                    self._logger,
+                ),
+            )
+            return_value = self._process.run_until_complete()
+            self._process = None
+            return ItemExecutionFinishState.SUCCESS if return_value[0] else ItemExecutionFinishState.FAILURE
 
     def _gams_system_directory(self):
         """Returns GAMS system path or None if GAMS default is to be used."""
@@ -142,16 +134,5 @@ class ExecutableItem(ExecutableItemBase):
         selected_files = [filepath for filepath, selected in file_selection.items() if selected]
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]
-        purge_before_writing = item_dict["purge_before_writing"]
         on_conflict = item_dict["on_conflict"]
-        return cls(
-            name,
-            mapping,
-            selected_files,
-            gams_path,
-            cancel_on_error,
-            purge_before_writing,
-            on_conflict,
-            project_dir,
-            logger,
-        )
+        return cls(name, mapping, selected_files, gams_path, cancel_on_error, on_conflict, project_dir, logger)

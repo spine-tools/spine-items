@@ -16,60 +16,48 @@ Merger's execute kernel (do_work), as target for a multiprocess.Process
 :date:   6.11.2020
 """
 import os
-from spine_engine.utils.helpers import create_log_file_timestamp, remove_credentials_from_url
-from spinedb_api import (
-    clear_filter_configs,
-    export_data,
-    import_data,
-    SpineDBAPIError,
-    SpineDBVersionError,
-    DatabaseMapping,
-    create_new_spine_database,
-)
+from spine_engine.utils.helpers import create_log_file_timestamp
+from spinedb_api.helpers import remove_credentials_from_url
+from spinedb_api.spine_db_client import SpineDBClient
 
 
-def _get_db_map(url, logger, purge_before_writing=False):
-    if purge_before_writing:
-        create_new_spine_database(url)
-    try:
-        db_map = DatabaseMapping(url)
-    except (SpineDBAPIError, SpineDBVersionError) as err:
-        sanitized_url = remove_credentials_from_url(url)
-        logger.msg_warning.emit(f"Skipping url <b>{clear_filter_configs(sanitized_url)}</b>: {err}")
-        return None
-    return db_map
-
-
-def do_work(cancel_on_error, purge_before_writing, logs_dir, from_urls, to_urls, logger):
-    from_db_maps_iter = (_get_db_map(url, logger) for url in from_urls)
-    to_db_maps_iter = (_get_db_map(url, logger, purge_before_writing) for url in to_urls)
-    to_db_maps = [db_map for db_map in to_db_maps_iter if db_map is not None]
-    from_db_map_data = {db_map: export_data(db_map) for db_map in from_db_maps_iter if db_map is not None}
-    all_errors = []
-    for from_db_map, data in from_db_map_data.items():
-        for to_db_map in to_db_maps:
-            import_count, import_errors = import_data(to_db_map, **data)
-            all_errors += import_errors
-            if import_errors and cancel_on_error and to_db_map.has_pending_changes():
-                to_db_map.rollback_session()
+def do_work(process, cancel_on_error, logs_dir, from_server_urls, to_server_urls, logger):
+    from_clients = [SpineDBClient.from_server_url(server_url) for server_url in from_server_urls]
+    from_url_export_data_response = [
+        (from_client.get_db_url(), from_client.export_data()) for from_client in from_clients
+    ]
+    from_url_data = [
+        (url, response["result"]) for url, response in from_url_export_data_response if response.get("result")
+    ]
+    all_errors = [response["error"] for _, response in from_url_export_data_response if "error" in response]
+    for server_url in to_server_urls:
+        to_client = SpineDBClient.from_server_url(server_url)
+        with process.maybe_idle:
+            to_client.db_checkin()
+        for from_url, data in from_url_data:
+            response = to_client.import_data(data, "")
+            if "error" in response:
+                all_errors.append(response["error"])
                 continue
-            sanitized_from_url = remove_credentials_from_url(from_db_map.db_url)
-            sanitized_to_url = remove_credentials_from_url(to_db_map.db_url)
-            if import_count:
-                to_db_map.commit_session(f"Import {import_count} items from {sanitized_from_url}")
-                logger.msg_success.emit(
-                    "Merged {0} items with {1} errors from {2} into {3}".format(
-                        import_count, len(import_errors), sanitized_from_url, sanitized_to_url
-                    )
-                )
+            import_count, import_errors = response["result"]
+            all_errors += import_errors
+            if import_errors and cancel_on_error and import_count:
+                to_client.call_method("rollback_session")
             else:
-                logger.msg_warning.emit(
-                    "No new data merged from {0} into {1}".format(sanitized_from_url, sanitized_to_url)
-                )
-    for db_map in from_db_map_data:
-        db_map.connection.close()
-    for db_map in to_db_maps:
-        db_map.connection.close()
+                sanitized_from_url = remove_credentials_from_url(from_url)
+                sanitized_to_url = remove_credentials_from_url(to_client.get_db_url())
+                if data:
+                    to_client.call_method("commit_session", f"Import {import_count} items from {sanitized_from_url}")
+                    logger.msg_success.emit(
+                        "Merged {0} items with {1} errors from {2} into {3}".format(
+                            import_count, len(import_errors), sanitized_from_url, sanitized_to_url
+                        )
+                    )
+                else:
+                    logger.msg_warning.emit(
+                        "No new data merged from {0} into {1}".format(sanitized_from_url, sanitized_to_url)
+                    )
+        to_client.db_checkout()
     if all_errors:
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()
@@ -80,4 +68,4 @@ def do_work(cancel_on_error, purge_before_writing, logs_dir, from_urls, to_urls,
         # Make error log file anchor with path as tooltip
         logfile_anchor = f"<a style='color:#BB99FF;' title='{logfilepath}' href='file:///{logfilepath}'>error log</a>"
         logger.msg_error.emit("Import errors. Logfile: {0}".format(logfile_anchor))
-    return (bool(from_db_map_data),)
+    return (True,)

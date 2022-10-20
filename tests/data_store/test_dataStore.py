@@ -15,20 +15,21 @@ Unit tests for DataStore class.
 :author: M. Marin (KTH), P. Savolainen (VTT)
 :date:   6.12.2018
 """
+from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from unittest.mock import MagicMock
 import os
 import logging
 import sys
 from spinedb_api import create_new_spine_database
+from spine_engine.project_item.project_item_resource import database_resource
 from PySide2.QtWidgets import QApplication
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.item_info import ItemInfo
-from spine_items.utils import convert_to_sqlalchemy_url
+from spine_items.utils import convert_to_sqlalchemy_url, database_label
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
@@ -117,7 +118,7 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(cb_dialect.currentText(), "")
         self.assertEqual(le_db.text(), "")
         # Click New Spine db button
-        self.toolbox.db_mngr = MagicMock()
+        self.toolbox.db_mngr = mock.MagicMock()
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
         self.assertEqual(cb_dialect.currentText(), "")
         self.assertEqual(le_db.text(), "")
@@ -149,20 +150,20 @@ class TestDataStore(unittest.TestCase):
         deactivating a Data Store and activating it again."""
         # FIXME: For now it only tests the mysql dialect
         url = dict(dialect="mysql", database="sqlite:///mock_db.sqlite")
-        self.ds._url = self.ds.parse_url(url)  # Set a URL for the Data Store
-        self.ds.activate()
-        self.ds_properties_ui.comboBox_dialect.activated[str].emit("mysql")
-        self.ds_properties_ui.lineEdit_host.setText("localhost")
-        self.ds_properties_ui.lineEdit_port.setText("8080")
-        self.ds_properties_ui.lineEdit_database.setText("foo")
-        self.ds_properties_ui.lineEdit_username.setText("bar")
-        self.ds_properties_ui.lineEdit_host.editingFinished.emit()
-        self.ds_properties_ui.lineEdit_host.editingFinished.emit()
-        self.ds_properties_ui.lineEdit_port.editingFinished.emit()
-        self.ds_properties_ui.lineEdit_database.editingFinished.emit()
-        self.ds_properties_ui.lineEdit_username.editingFinished.emit()
-        self.ds.deactivate()
-        self.ds.activate()
+        with mock.patch("spine_items.utils.create_engine", lambda _: MockEngine()):
+            self.ds._url = self.ds.parse_url(url)  # Set a URL for the Data Store
+            self.ds.activate()
+            self.ds_properties_ui.comboBox_dialect.activated[str].emit("mysql")
+            self.ds_properties_ui.lineEdit_host.setText("localhost")
+            self.ds_properties_ui.lineEdit_port.setText("8080")
+            self.ds_properties_ui.lineEdit_database.setText("foo")
+            self.ds_properties_ui.lineEdit_username.setText("bar")
+            self.ds_properties_ui.lineEdit_host.editingFinished.emit()
+            self.ds_properties_ui.lineEdit_port.editingFinished.emit()
+            self.ds_properties_ui.lineEdit_database.editingFinished.emit()
+            self.ds_properties_ui.lineEdit_username.editingFinished.emit()
+            self.ds.deactivate()
+            self.ds.activate()
         dialect = self.ds_properties_ui.comboBox_dialect.currentText()
         host = self.ds_properties_ui.lineEdit_host.text()
         port = self.ds_properties_ui.lineEdit_port.text()
@@ -201,7 +202,7 @@ class TestDataStore(unittest.TestCase):
             self.ds_properties_ui.toolButton_select_sqlite_file.click()
             mock_qfile_dialog.getOpenFileName.assert_called_once()
         # Open form
-        self.toolbox.db_mngr = MagicMock()
+        self.toolbox.db_mngr = mock.MagicMock()
         self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
         self.ds_properties_ui.pushButton_ds_open_editor.click()
         sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
@@ -220,7 +221,7 @@ class TestDataStore(unittest.TestCase):
         self.ds_properties_ui.lineEdit_database.setText(temp_db_path)
         self.ds_properties_ui.lineEdit_database.editingFinished.emit()
         # Open form
-        self.toolbox.db_mngr = MagicMock()
+        self.toolbox.db_mngr = mock.MagicMock()
         self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
         self.ds_properties_ui.pushButton_ds_open_editor.click()
         sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
@@ -287,6 +288,36 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(expected_db_path, le_db.text())
         # Check that the db file has actually been moved
         self.assertTrue(os.path.exists(le_db.text()))
+
+    def test_do_update_url_uses_filterable_resources_when_replacing_them(self):
+        database_1 = os.path.join(self._temp_dir.name, "db1.sqlite")
+        self.ds.do_update_url(dialect="sqlite", database=database_1)
+        self.project.notify_resource_changes_to_predecessors.assert_called_once_with(self.ds)
+        self.project.notify_resource_changes_to_successors.assert_called_once_with(self.ds)
+        database_2 = os.path.join(self._temp_dir.name, "db2.sqlite")
+        self.ds.do_update_url(dialect="sqlite", database=database_2)
+        expected_old_resources = [
+            database_resource(
+                self.ds.name, "sqlite:///" + database_1, label=database_label(self.ds.name), filterable=True
+            )
+        ]
+        expected_new_resources = [
+            database_resource(
+                self.ds.name, "sqlite:///" + database_2, label=database_label(self.ds.name), filterable=True
+            )
+        ]
+        self.project.notify_resource_replacement_to_predecessors.assert_called_once_with(
+            self.ds, expected_old_resources, expected_new_resources
+        )
+        self.project.notify_resource_replacement_to_successors.assert_called_once_with(
+            self.ds, expected_old_resources, expected_new_resources
+        )
+
+
+class MockEngine:
+    @contextmanager
+    def connect(self):
+        yield None
 
 
 if __name__ == "__main__":
