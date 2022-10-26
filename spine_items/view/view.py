@@ -17,14 +17,13 @@ Module for view class.
 """
 
 import os
-from PySide2.QtCore import Qt, Slot, Signal
+from PySide2.QtCore import Qt, Slot, Signal, QObject, QTimer
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
 from PySide2.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
 from sqlalchemy.engine.url import URL, make_url
-from spinedb_api import DatabaseMapping, from_database, Map
 from spinetoolbox.project_item.project_item import ProjectItem
-from spinetoolbox.plotting import PlotWidget, add_plot_to_widget, expand_maps
-from spinetoolbox.helpers import busy_effect
+from spinetoolbox.plotting import plot_db_mngr_items, PlottingError
+from spinetoolbox.helpers import busy_effect, FetchParent
 from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
 from spinetoolbox.widgets.notification import Notification
 from .item_info import ItemInfo
@@ -52,6 +51,9 @@ class View(ProjectItem):
         self.pinned_value_model = QStandardItemModel()
         self.reference_model = QStandardItemModel()
         self._spine_ref_icon = QIcon(QPixmap(":/icons/Spine_db_ref_icon.png"))
+        self._data_fetchers = []
+        self._fetched_parameter_values = []
+        self._pin_to_plot = None
         self.populate_pinned_values_list()
 
     @staticmethod
@@ -160,52 +162,80 @@ class View(ProjectItem):
 
     @Slot(bool)
     def plot_selected_pinned_values(self, _checked=False):
+        self._properties_ui.pushButton_plot_pinned.setEnabled(False)
         for index in self._selected_pinned_value_indexes():
             self._plot_pinned_value(index)
 
     @busy_effect
     def _make_plot_widget(self, index):
+        self._pin_to_plot = index.data()
         pinned_values = self._pinned_values[index.data()]
         pks_by_resource_label = {}
         for value in pinned_values:
             resource_label, pk = value
             pks_by_resource_label.setdefault(resource_label, list()).append(pk)
-        values = []
-        labels = []
+        fetch_id_base = 0
         for resource_label, pks in pks_by_resource_label.items():
             url_provider_tuple = self._references.get(resource_label)
             if url_provider_tuple is None:
                 self._logger.msg_error.emit(f"<b>{self.name}</b>: Can't find any resource with label {resource_label}")
                 continue
             url = url_provider_tuple[0]
-            db_map = DatabaseMapping(url)
-            row_by_pk = {
-                str(pk): db_map.query(db_map.entity_parameter_value_sq).filter_by(**pk).one_or_none() for pk in pks
-            }
-            value_by_id = {row.id: (row.value, row.type) for row in db_map.query(db_map.parameter_value_sq)}
-            db_map.connection.close()
-            for pk in pks:
-                row = row_by_pk.get(str(pk))
-                if row is None:
-                    self._logger.msg_error.emit(
-                        f"<b>{self.name}</b>: "
-                        f"Couldn't find any values having {_pk_to_ul(pk)} in <b>{db_map.codename}</b>"
-                    )
-                    continue
-                value = from_database(*value_by_id[row.id])
-                values.append(value)
-                label_parts = [db_map.codename] + [x for x in pk.values() if x]
-                labels.append(" | ".join(label_parts))
-        if not values:
+            db_map = self._toolbox.db_mngr.get_db_map(url, self._toolbox)
+            self._data_fetchers += [
+                _DatabaseFetch(fetch_id_base + i, self, self._toolbox.db_mngr, db_map, **pk) for i, pk in enumerate(pks)
+            ]
+            fetch_id_base += len(pks)
+        for fetcher in self._data_fetchers:
+            fetcher.start()
+
+    def add_to_plot(self, fetch_id, db_map, parameter_record):
+        """Adds parameter value to plot widget.
+
+        Args:
+            fetch_id (Any): id given to database fetcher
+            db_map (DatabaseMappingBase): database map
+            parameter_record (dict): parameter value's database data
+        """
+        if not self._data_fetchers:
             return
-        plot_widget = PlotWidget()
-        for value, label in zip(values, labels):
-            if isinstance(value, Map):
-                values, labels = expand_maps([value], [label])
-                add_plot_to_widget(values, labels, plot_widget)
-                continue
-            add_plot_to_widget([value], [label], plot_widget)
-        return plot_widget
+        if not self._fetched_parameter_values:
+            self._fetched_parameter_values = len(self._data_fetchers) * [None]
+        self._fetched_parameter_values[fetch_id] = (db_map, parameter_record)
+        self._plot_if_all_fetched()
+
+    def failed_to_plot(self, fetch_id, db_map, conditions):
+        self._logger.msg_warning.emit(
+            f"<b>{self.name}</b>: "
+            f"Couldn't find any values having {_pk_to_ul(conditions)} in <b>{db_map.codename}</b>"
+        )
+        if not self._fetched_parameter_values:
+            self._fetched_parameter_values = len(self._data_fetchers) * [None]
+        self._fetched_parameter_values[fetch_id] = "skip"
+        self._plot_if_all_fetched()
+
+    def _plot_if_all_fetched(self):
+        """Plots available data if all fetching has been finished."""
+        if any(v is None for v in self._fetched_parameter_values):
+            return
+        existing_fetched_parameter_values = [v for v in self._fetched_parameter_values if v != "skip"]
+        if any(v != "skip" for v in self._fetched_parameter_values):
+            plot_db_maps, plot_items = zip(*existing_fetched_parameter_values)
+            try:
+                plot_widget = plot_db_mngr_items(plot_items, plot_db_maps)
+            except PlottingError as error:
+                self._logger.msg_error.emit(str(error))
+                return
+            plot_widget.use_as_window(self._toolbox, self.name + " / " + self._pin_to_plot)
+            plot_widget.show()
+        else:
+            self._logger.msg_warning.emit("Nothing to plot.")
+        self._finalize_fetching()
+
+    def _finalize_fetching(self):
+        self._fetched_parameter_values.clear()
+        self._data_fetchers.clear()
+        self._properties_ui.pushButton_plot_pinned.setEnabled(True)
 
     def copy_selected_pinned_value_plot_data(self):
         index = self._properties_ui.treeView_pinned_values.selectionModel().currentIndex()
@@ -213,10 +243,7 @@ class View(ProjectItem):
         plot_widget.copy_plot_data()
 
     def _plot_pinned_value(self, index):
-        plot_widget = self._make_plot_widget(index)
-        plot_widget.add_legend()
-        plot_widget.use_as_window(self._toolbox, self.name + " / " + index.data())
-        plot_widget.show()
+        self._make_plot_widget(index)
 
     def populate_pinned_values_list(self):
         """Populates pinned values list."""
@@ -461,3 +488,111 @@ class _RenamePinDialog(_PinDialogMixin, QDialog):
         dialog = cls(view, old_name, parent)
         result = dialog.exec_()
         return dialog.new_name, result == QDialog.Accepted
+
+
+class _DatabaseFetch(FetchParent):
+    """A data collector that fetches parameter values from database manager."""
+
+    class _Signals(QObject):
+        fetched = Signal()
+
+        def __init__(self, database_fetch):
+            super().__init__()
+            self._database_fetch = database_fetch
+            self.fetched.connect(self._finish_fetch)
+
+        @Slot()
+        def _finish_fetch(self):
+            self._database_fetch.finished()
+
+    def __init__(self, id_, view, db_mngr, db_map, **conditions):
+        """
+        Args:
+            id_ (Any): fetch id
+            view (View): View item
+            db_mngr (SpineDBManager): database manager
+            db_map (DiffDatabaseMapping): database map
+            **conditions: filter conditions
+        """
+        super().__init__()
+        self._id = id_
+        self._view = view
+        self._db_mngr = db_mngr
+        self._db_map = db_map
+        self._conditions = conditions
+        self._value_fetched = False
+        self._signals = None
+
+    def start(self):
+        """Starts fetching the parameter value."""
+        cached_items = self._db_mngr.get_items(self._db_map, self.fetch_item_type)
+        cached_match = self._find_one_or_none(cached_items)
+        if cached_match is not None:
+            self._value_fetched = True
+            self._view.add_to_plot(self._id, self._db_map, cached_match)
+        else:
+            self._signals = _DatabaseFetch._Signals(self)
+            self._db_mngr.register_listener(self, self._db_map)
+            self._try_fetching()
+
+    def _try_fetching(self):
+        """Repeatedly tries to fetch more data until there is nothing to fetch."""
+        if self._db_mngr.can_fetch_more(self._db_map, self):
+            self._db_mngr.fetch_more(self._db_map, self)
+            QTimer.singleShot(50, self._try_fetching)
+
+    @property
+    def fetch_item_type(self):
+        """See base class."""
+        return "parameter_value"
+
+    def filter_query(self, query, subquery, db_map):
+        """See base class."""
+        return query.filter_by(**self._conditions)
+
+    def set_fetched(self, fetched):
+        """See base class."""
+        super().set_fetched(fetched)
+        if fetched and self._signals is not None:
+            self._signals.fetched.emit()
+
+    def receive_parameter_values_added(self, db_map_data):
+        """A callback that stores relevant parameter values.
+
+        Args:
+            db_map_data (dict): parameter value data
+        """
+        data = db_map_data.get(self._db_map)
+        if data is None:
+            return
+        match = self._find_one_or_none(data)
+        if match is not None:
+            self._value_fetched = True
+            self._view.add_to_plot(self._id, self._db_map, match)
+
+    def _find_one_or_none(self, parameter_value_items):
+        """Searches parameter value from given items and returns the match.
+
+        Args:
+            parameter_value_items (list of dict): parameter value items
+
+        Returns:
+            dict: match or None if not found
+        """
+        for parameter_value in parameter_value_items:
+            match = True
+            for key, filter_value in self._conditions.items():
+                if parameter_value[key] != filter_value:
+                    match = False
+                    break
+            if match:
+                return parameter_value
+        return None
+
+    def finished(self):
+        """Reports plotting failures to View."""
+        if not self._value_fetched:
+            self._view.failed_to_plot(self._id, self._db_map, self._conditions)
+        self._db_mngr.unregister_listener(self, self._db_map)
+        self._signals.deleteLater()
+        self._signals = None
