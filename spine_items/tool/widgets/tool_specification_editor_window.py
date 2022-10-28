@@ -87,12 +87,12 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             specification.set_execution_settings()  # Set default execution settings
             self._init_optional_widget(specification)
         # Init lists
-        programfiles = list(specification.includes) if specification else list()
+        programfiles = list(specification.includes) if specification else []
         # Get first item from programfiles list as the main program file
         main_program_file = programfiles.pop(0) if programfiles else None
-        inputfiles = list(specification.inputfiles) if specification else list()
-        inputfiles_opt = list(specification.inputfiles_opt) if specification else list()
-        outputfiles = list(specification.outputfiles) if specification else list()
+        inputfiles = list(specification.inputfiles) if specification else []
+        inputfiles_opt = list(specification.inputfiles_opt) if specification else []
+        outputfiles = list(specification.outputfiles) if specification else []
         self.includes_main_path = specification.path if specification else None
         self.spec_dict = deepcopy(specification.to_dict()) if specification else dict(item_type=ItemInfo.item_type())
         # Populate lists (this will also create headers)
@@ -138,8 +138,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def _update_window_modified(self, _clean):
-        clean = self._undo_stack.isClean()
-        clean &= not any([doc.isModified() for doc in self._programfile_documents.values()])
+        clean = self._undo_stack.isClean() and not any(doc.isModified() for doc in self._programfile_documents.values())
         super()._update_window_modified(clean)
 
     def _make_optional_widget(self, toolspectype):
@@ -160,9 +159,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return None
 
     def _get_optional_widget(self, toolspectype):
-        """Returns the current optional widget for given tool
-        spec type or None if unavailable."""
-        if toolspectype.lower() == "python" or toolspectype.lower() == "executable":
+        """Returns the current optional widget for given tool spec type or None if unavailable."""
+        if toolspectype.lower() in ("python", "executable"):
             optional_widget = self._ui.horizontalLayout_options_placeholder.itemAt(0)
             return optional_widget.widget()
         return None
@@ -191,9 +189,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         toolspectype = specification.tooltype.lower()
         opt_widget = self._get_optional_widget(toolspectype)
-        if not opt_widget:
-            return
-        opt_widget.init_widget(specification)
+        if opt_widget:
+            opt_widget.init_widget(specification)
 
     def _make_new_specification(self, spec_name):
         """See base class."""
@@ -207,10 +204,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if main_program_file is None and toolspectype != "executable":
             self.show_error("Please add a main program file")
             return None
-        new_spec_dict = dict()
-        new_spec_dict["name"] = spec_name
-        new_spec_dict["description"] = self._spec_toolbar.description()
-        new_spec_dict["tooltype"] = toolspectype
+        new_spec_dict = {"name": spec_name, "description": self._spec_toolbar.description(), "tooltype": toolspectype}
         main_prgm_dir, main_prgm_file_name = os.path.split(main_program_file) if main_program_file else ("", "")
         if not main_prgm_dir:
             self.includes_main_path = None
@@ -218,7 +212,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self.includes_main_path = os.path.abspath(main_prgm_dir)
         self._label_main_path.setText(self.includes_main_path)
         new_spec_dict["execute_in_work"] = self._ui.checkBox_execute_in_work.isChecked()
-        new_spec_dict["includes"] = [main_prgm_file_name] if main_prgm_file_name else list()
+        new_spec_dict["includes"] = [main_prgm_file_name] if main_prgm_file_name else []
         new_spec_dict["includes"] += self._additional_program_file_list()
         new_spec_dict["inputfiles"] = self._input_file_list()
         new_spec_dict["inputfiles_opt"] = self._opt_input_file_list()
@@ -519,23 +513,19 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         Sets the default execution settings into self.spec_dict when a Python
         Tool spec type is selected. Removes execution settings from self.spec_dict
         when any other Tool spec type is selected."""
-        if "execution_settings" in self.spec_dict.keys():
+        if "execution_settings" in self.spec_dict:
             self.spec_dict.pop("execution_settings")  # Clear execution settings
         if spec_type == "python":
-            self.spec_dict["execution_settings"] = dict()
-            default_use_jupyter_console = bool(
-                int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
-            )
-            default_k_spec = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
-            self.spec_dict["execution_settings"]["use_jupyter_console"] = default_use_jupyter_console
-            self.spec_dict["execution_settings"]["kernel_spec_name"] = default_k_spec
-            self.spec_dict["execution_settings"]["env"] = ""
-            default_python_exe = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
-            self.spec_dict["execution_settings"]["executable"] = default_python_exe
+            self.spec_dict["execution_settings"] = {
+                "use_jupyter_console": bool(
+                    int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
+                ),
+                "kernel_spec_name": self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue=""),
+                "env": "",
+                "executable": self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue=""),
+            }
         elif spec_type == "executable":
-            self.spec_dict["execution_settings"] = dict()
-            self.spec_dict["execution_settings"]["cmd"] = ""
-            self.spec_dict["execution_settings"]["shell"] = ""
+            self.spec_dict["execution_settings"] = {"cmd": "", "shell": ""}
 
     @Slot(int)
     def _push_change_kernel_spec_command(self, index):
@@ -674,7 +664,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             elif new_value:
                 new_program_files.append(new_value)
         else:
-            new_program_files = list()
+            new_program_files = []
         self._undo_stack.push(
             ChangeSpecPropertyCommand(
                 self._set_program_files, new_program_files, old_program_files, "change main program file"
@@ -911,7 +901,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._show_status_bar_msg("No program files to remove")
             return
         old_program_files = self.spec_dict.get("includes", [])
-        new_program_files = list()
+        new_program_files = []
         if self.includes_main_path is not None:
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
         self._undo_stack.push(
