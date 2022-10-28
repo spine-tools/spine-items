@@ -16,7 +16,7 @@ Provides an optional widget for Tool Specification Editor for each Tool Spec typ
 :date:   12.2.2021
 """
 
-from PySide2.QtCore import Slot
+from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QWidget
 from PySide2.QtGui import QStandardItemModel, QStandardItem
 from spine_engine.utils.helpers import resolve_conda_executable, resolve_python_interpreter
@@ -24,6 +24,7 @@ from spine_engine.execution_managers.conda_kernel_spec_manager import CondaKerne
 from spinetoolbox.helpers import busy_effect, file_is_valid, select_python_interpreter
 from spinetoolbox.widgets.notification import Notification
 from spinetoolbox.widgets.kernel_editor import KernelEditor, find_python_kernels
+from spinetoolbox.qthread_pool_executor import QtBasedThreadPoolExecutor
 
 
 class OptionalWidget(QWidget):
@@ -55,6 +56,9 @@ class OptionalWidget(QWidget):
 
 
 class PythonToolSpecOptionalWidget(OptionalWidget):
+
+    _kernel_spec_data_ready = Signal(list, list)
+
     def __init__(self, parent):
         """Init class."""
         from ..ui.python_kernel_spec_options import Ui_Form  # pylint: disable=import-outside-toplevel
@@ -64,8 +68,9 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.setupUi(self)
         self.kernel_spec_model = QStandardItemModel(self)
         self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
-        self._refresh_kernel_spec_model()
         self._kernel_spec_editor = None
+        self._kernel_spec_model_initialized = False
+        self._executor = QtBasedThreadPoolExecutor(max_workers=1)
         # Initialize UI elements with defaults
         use_jupyter_console = int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
         if use_jupyter_console == 2:
@@ -92,6 +97,8 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.toolButton_browse_python.clicked.connect(self.browse_python_button_clicked)
         self.ui.pushButton_open_kernel_spec_viewer.clicked.connect(self.show_python_kernel_spec_editor)
         self.ui.lineEdit_python_path.editingFinished.connect(self._parent._push_change_executable)
+        self._kernel_spec_data_ready.connect(self._do_refresh_kernel_spec_model)
+        qApp.aboutToQuit.connect(self._executor.shutdown)  # pylint: disable=undefined-variable
 
     def init_widget(self, specification):
         """Initializes UI elements based on specification
@@ -128,9 +135,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         """Collects execution settings based on optional widget state into a dictionary, which is returned."""
         idx = self.ui.comboBox_kernel_specs.currentIndex()
         if idx < 1:
-            d = dict()
-            d["kernel_spec_name"] = ""
-            d["env"] = ""
+            d = {"kernel_spec_name": "", "env": ""}
         else:
             item = self.ui.comboBox_kernel_specs.model().item(idx)
             k_spec_data = item.data()
@@ -146,13 +151,15 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         select_python_interpreter(self, self.ui.lineEdit_python_path)
         self._parent._push_change_executable()
 
-    def set_ui_for_jupyter_console(self, value):
+    def set_ui_for_jupyter_console(self, use_basic_console):
         """Enables or disables some UI elements in the optional widget according to checkBox state."""
-        self.ui.comboBox_kernel_specs.setDisabled(value)
-        self.ui.toolButton_refresh_kernel_specs.setDisabled(value)
-        self.ui.pushButton_open_kernel_spec_viewer.setDisabled(value)
-        self.ui.lineEdit_python_path.setDisabled((not value))
-        self.ui.toolButton_browse_python.setDisabled(not value)
+        self.ui.lineEdit_python_path.setEnabled(use_basic_console)
+        self.ui.toolButton_browse_python.setEnabled(use_basic_console)
+        self.ui.comboBox_kernel_specs.setDisabled(use_basic_console)
+        self.ui.toolButton_refresh_kernel_specs.setDisabled(use_basic_console)
+        self.ui.pushButton_open_kernel_spec_viewer.setDisabled(use_basic_console)
+        if not use_basic_console and not self._kernel_spec_model_initialized:
+            self._refresh_kernel_spec_model()
 
     def validate_executable(self):
         """Check that Python path in the line edit is a file it exists and the file name starts with 'python'.
@@ -224,8 +231,31 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         return -1
 
     @busy_effect
+    def _get_all_kernel_specs(self):
+        kernel_spec_data = []
+        conda_kernel_spec_data = []
+        kernel_specs = find_python_kernels()
+        for n in kernel_specs:
+            spec_data = {"kernel_spec_name": n, "env": ""}
+            kernel_spec_data.append(spec_data)
+        # Add auto-generated conda kernel spec names
+        conda_exe = self._toolbox.qsettings().value("appSettings/condaPath", defaultValue="")
+        conda_exe = resolve_conda_executable(conda_exe)
+        if conda_exe != "":
+            ksm = CondaKernelSpecManager(conda_exe=conda_exe)  # This is expensive
+            conda_specs = ksm._all_specs()
+            for i in conda_specs:
+                spec_data = {"kernel_spec_name": i, "env": "conda"}
+                conda_kernel_spec_data.append(spec_data)
+        self._kernel_spec_data_ready.emit(kernel_spec_data, conda_kernel_spec_data)
+
     @Slot(bool)
-    def _refresh_kernel_spec_model(self):
+    def _refresh_kernel_spec_model(self, _checked=False):
+        self._kernel_spec_model_initialized = True
+        self._executor.submit(self._get_all_kernel_specs)
+
+    @Slot(list, list)
+    def _do_refresh_kernel_spec_model(self, kernel_spec_data, conda_kernel_spec_data):
         item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
         if not item or not item.data():
             selected_kernel_spec = None
@@ -235,27 +265,15 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         first_item = QStandardItem("Select kernel spec...")
         self.kernel_spec_model.appendRow(first_item)
         # Add Python kernel specs
-        kernel_specs = find_python_kernels()
-        for n in kernel_specs.keys():
-            item = QStandardItem(n + " [Jupyter]")
-            spec_data = dict()
-            spec_data["kernel_spec_name"] = n
-            spec_data["env"] = ""
+        for spec_data in kernel_spec_data:
+            item = QStandardItem(spec_data["kernel_spec_name"] + " [Jupyter]")
             item.setData(spec_data)
             self.kernel_spec_model.appendRow(item)
         # Add auto-generated conda kernel spec names
-        conda_exe = self._toolbox.qsettings().value("appSettings/condaPath", defaultValue="")
-        conda_exe = resolve_conda_executable(conda_exe)
-        if conda_exe != "":
-            ksm = CondaKernelSpecManager(conda_exe=conda_exe)
-            conda_specs = ksm._all_specs()
-            for i in conda_specs.keys():
-                item = QStandardItem(i + " [Conda]")
-                spec_data = dict()
-                spec_data["kernel_spec_name"] = i
-                spec_data["env"] = "conda"
-                item.setData(spec_data)
-                self.kernel_spec_model.appendRow(item)
+        for spec_data in conda_kernel_spec_data:
+            item = QStandardItem(spec_data["kernel_spec_name"] + " [Conda]")
+            item.setData(spec_data)
+            self.kernel_spec_model.appendRow(item)
         # Set the previously selected kernel spec as the current item after the model has been rebuilt
         if selected_kernel_spec is not None:
             row = self.find_index_by_data(selected_kernel_spec)
@@ -291,10 +309,7 @@ class ExecutableToolSpecOptionalWidget(OptionalWidget):
 
     def add_execution_settings(self):
         """Collects execution settings based on optional widget state into a dictionary, which is returned."""
-        d = dict()
-        d["cmd"] = self.ui.lineEdit_command.text()
-        d["shell"] = self.get_current_shell()
-        return d
+        return {"cmd": self.ui.lineEdit_command.text(), "shell": self.get_current_shell()}
 
     def get_current_shell(self):
         """Returns the selected shell in the shell combo box."""

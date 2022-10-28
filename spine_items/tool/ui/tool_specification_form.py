@@ -101,9 +101,9 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy)
         self.verticalLayout_3 = QVBoxLayout(self.centralwidget)
-        self.verticalLayout_3.setSpacing(6)
+        self.verticalLayout_3.setSpacing(3)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(0, 6, 0, 6)
+        self.verticalLayout_3.setContentsMargins(3, 3, 3, 3)
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(6, -1, 6, -1)
@@ -120,6 +120,19 @@ class Ui_MainWindow(object):
         self.comboBox_tooltype.setMaximumSize(QSize(16777215, 24))
 
         self.horizontalLayout_2.addWidget(self.comboBox_tooltype)
+
+        self.line_3 = QFrame(self.centralwidget)
+        self.line_3.setObjectName(u"line_3")
+        self.line_3.setFrameShape(QFrame.VLine)
+        self.line_3.setFrameShadow(QFrame.Sunken)
+
+        self.horizontalLayout_2.addWidget(self.line_3)
+
+        self.checkBox_execute_in_work = QCheckBox(self.centralwidget)
+        self.checkBox_execute_in_work.setObjectName(u"checkBox_execute_in_work")
+        self.checkBox_execute_in_work.setChecked(True)
+
+        self.horizontalLayout_2.addWidget(self.checkBox_execute_in_work)
 
         self.line = QFrame(self.centralwidget)
         self.line.setObjectName(u"line")
@@ -146,19 +159,6 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.lineEdit_args)
 
-        self.line_3 = QFrame(self.centralwidget)
-        self.line_3.setObjectName(u"line_3")
-        self.line_3.setFrameShape(QFrame.VLine)
-        self.line_3.setFrameShadow(QFrame.Sunken)
-
-        self.horizontalLayout_2.addWidget(self.line_3)
-
-        self.checkBox_execute_in_work = QCheckBox(self.centralwidget)
-        self.checkBox_execute_in_work.setObjectName(u"checkBox_execute_in_work")
-        self.checkBox_execute_in_work.setChecked(True)
-
-        self.horizontalLayout_2.addWidget(self.checkBox_execute_in_work)
-
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_2)
 
@@ -184,7 +184,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_4 = QWidget()
         self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
         self.verticalLayout = QVBoxLayout(self.dockWidgetContents_4)
-        self.verticalLayout.setSpacing(2)
+        self.verticalLayout.setSpacing(3)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(3, 3, 3, 3)
         self.treeView_programfiles = SourcesTreeView(self.dockWidgetContents_4)
@@ -215,7 +215,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_2 = QWidget()
         self.dockWidgetContents_2.setObjectName(u"dockWidgetContents_2")
         self.verticalLayout_7 = QVBoxLayout(self.dockWidgetContents_2)
-        self.verticalLayout_7.setSpacing(2)
+        self.verticalLayout_7.setSpacing(3)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
         self.verticalLayout_7.setContentsMargins(3, 3, 3, 3)
         self.treeView_io_files = CustomTreeView(self.dockWidgetContents_2)
@@ -235,7 +235,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents = QWidget()
         self.dockWidgetContents.setObjectName(u"dockWidgetContents")
         self.verticalLayout_8 = QVBoxLayout(self.dockWidgetContents)
-        self.verticalLayout_8.setSpacing(2)
+        self.verticalLayout_8.setSpacing(3)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
         self.verticalLayout_8.setContentsMargins(3, 3, 3, 3)
         self.textEdit_program = CodeTextEdit(self.dockWidgetContents)
@@ -317,15 +317,15 @@ class Ui_MainWindow(object):
         self.comboBox_tooltype.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Tool specification type</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.comboBox_tooltype.setCurrentText("")
+#if QT_CONFIG(tooltip)
+        self.checkBox_execute_in_work.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>If checked, Tool specification is executed in a work directory (default).</p><p>If unchecked, Tool specification is executed in main program file directory.</p><p>It is recommended to uncheck this for <span style=\" font-weight:600;\">Executable</span> Tool specifications.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.checkBox_execute_in_work.setText(QCoreApplication.translate("MainWindow", u"Execute in work directory", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Command line arguments:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_args.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Command line arguments (space-delimited) for the main program (optional). Use '@@' tags to refer to input files or URLs, see the User Guide for details.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.lineEdit_args.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Type arguments here...", None))
-#if QT_CONFIG(tooltip)
-        self.checkBox_execute_in_work.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>If checked, Tool specification is executed in a work directory (default).</p><p>If unchecked, Tool specification is executed in main program file directory.</p><p>It is recommended to uncheck this for <span style=\" font-weight:600;\">Executable</span> Tool specifications.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_execute_in_work.setText(QCoreApplication.translate("MainWindow", u"Execute in work directory", None))
         self.dockWidget_program_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Program files", None))
         self.dockWidget_io_files.setWindowTitle(QCoreApplication.translate("MainWindow", u"Input && output files", None))
         self.dockWidget_program.setWindowTitle("")
