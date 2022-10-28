@@ -29,16 +29,6 @@
    <bool>true</bool>
   </property>
   <widget class="QWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1146</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QDockWidget" name="mappings_dock">
    <property name="windowTitle">
     <string>Mappings</string>
@@ -48,6 +38,21 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="leftMargin">
+      <number>3</number>
+     </property>
+     <property name="topMargin">
+      <number>3</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>3</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
@@ -154,6 +159,21 @@
    </attribute>
    <widget class="QWidget" name="mapping_options_contents">
     <layout class="QVBoxLayout" name="verticalLayout_7">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="leftMargin">
+      <number>3</number>
+     </property>
+     <property name="topMargin">
+      <number>3</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>3</number>
+     </property>
      <item>
       <layout class="QFormLayout" name="formLayout">
        <item row="0" column="0">
@@ -227,6 +247,16 @@
          </item>
         </widget>
        </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QCheckBox" name="always_export_header_check_box">
+         <property name="toolTip">
+          <string>Export header even when a table is otherwise empty.</string>
+         </property>
+         <property name="text">
+          <string>Always export header</string>
+         </property>
+        </widget>
+       </item>
        <item row="2" column="0">
         <widget class="QLabel" name="label_8">
          <property name="text">
@@ -238,6 +268,23 @@
         <widget class="QSpinBox" name="relationship_dimensions_spin_box">
          <property name="toolTip">
           <string>Number of expected relationship dimensions.</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Selected dimension:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QSpinBox" name="highlight_dimension_spin_box">
+         <property name="toolTip">
+          <string>Relationship dimension used to select object parameters for export.</string>
          </property>
          <property name="minimum">
           <number>1</number>
@@ -284,6 +331,16 @@
          </property>
         </widget>
        </item>
+       <item row="6" column="0">
+        <widget class="QCheckBox" name="fix_table_name_check_box">
+         <property name="text">
+          <string>Fixed table name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QLineEdit" name="fix_table_name_line_edit"/>
+       </item>
        <item row="7" column="0">
         <widget class="QLabel" name="label_6">
          <property name="text">
@@ -295,43 +352,6 @@
         <widget class="QComboBox" name="group_fn_combo_box">
          <property name="toolTip">
           <string>Group/aggregate data that ends up in the same cell in pivot tables.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QCheckBox" name="always_export_header_check_box">
-         <property name="toolTip">
-          <string>Export header even when a table is otherwise empty.</string>
-         </property>
-         <property name="text">
-          <string>Always export header</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QCheckBox" name="fix_table_name_check_box">
-         <property name="text">
-          <string>Fixed table name:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <widget class="QLineEdit" name="fix_table_name_line_edit"/>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Selected dimension:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QSpinBox" name="highlight_dimension_spin_box">
-         <property name="toolTip">
-          <string>Relationship dimension used to select object parameters for export.</string>
-         </property>
-         <property name="minimum">
-          <number>1</number>
          </property>
         </widget>
        </item>
@@ -365,6 +385,21 @@
      <bool>false</bool>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="leftMargin">
+      <number>3</number>
+     </property>
+     <property name="topMargin">
+      <number>3</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>3</number>
+     </property>
      <item>
       <widget class="QTableView" name="mapping_table_view">
        <property name="selectionMode">
@@ -417,6 +452,21 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_5">
     <layout class="QVBoxLayout" name="verticalLayout_3">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="leftMargin">
+      <number>3</number>
+     </property>
+     <property name="topMargin">
+      <number>3</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>3</number>
+     </property>
      <item>
       <widget class="QTreeView" name="preview_tree_view">
        <attribute name="headerVisible">
@@ -436,6 +486,21 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_6">
     <layout class="QVBoxLayout" name="verticalLayout_4">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="leftMargin">
+      <number>3</number>
+     </property>
+     <property name="topMargin">
+      <number>3</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>3</number>
+     </property>
      <item>
       <widget class="QTableView" name="preview_table_view"/>
      </item>
@@ -454,6 +519,21 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_7">
     <layout class="QVBoxLayout" name="verticalLayout_5">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="leftMargin">
+      <number>3</number>
+     </property>
+     <property name="topMargin">
+      <number>3</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>3</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
@@ -511,6 +591,21 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_4">
     <layout class="QVBoxLayout" name="verticalLayout_6">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="leftMargin">
+      <number>3</number>
+     </property>
+     <property name="topMargin">
+      <number>3</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>3</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
