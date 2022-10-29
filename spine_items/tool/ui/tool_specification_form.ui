@@ -334,7 +334,7 @@
   <action name="actionSelect_main_program_file">
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
-     <normaloff>:/icons/file.svg</normaloff>:/icons/file.svg</iconset>
+     <normaloff>:/icons/folder-open-regular.svg</normaloff>:/icons/folder-open-regular.svg</iconset>
    </property>
    <property name="text">
     <string>Select main program file</string>
@@ -346,25 +346,25 @@
   <action name="actionAdd_program_file">
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
-     <normaloff>:/icons/file.svg</normaloff>:/icons/file.svg</iconset>
+     <normaloff>:/icons/folder-open-regular.svg</normaloff>:/icons/folder-open-regular.svg</iconset>
    </property>
    <property name="text">
     <string>Add program files</string>
    </property>
    <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add additional program files from your computer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select additional program files from your computer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
   <action name="actionAdd_program_directory">
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
-     <normaloff>:/icons/folder.svg</normaloff>:/icons/folder.svg</iconset>
+     <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
    </property>
    <property name="text">
     <string>Add program directory</string>
    </property>
    <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add additional program directory from your computer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select additional program directory from your computer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
   <action name="actionRemove_selected_program_files">
@@ -385,7 +385,7 @@
   <action name="actionAdd_input_files">
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
-     <normaloff>:/icons/file-link.svg</normaloff>:/icons/file-link.svg</iconset>
+     <normaloff>:/icons/plus.svg</normaloff>:/icons/plus.svg</iconset>
    </property>
    <property name="text">
     <string>Add input files</string>
@@ -412,7 +412,7 @@
   <action name="actionAdd_opt_input_files">
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
-     <normaloff>:/icons/file-link.svg</normaloff>:/icons/file-link.svg</iconset>
+     <normaloff>:/icons/plus.svg</normaloff>:/icons/plus.svg</iconset>
    </property>
    <property name="text">
     <string>Add optional input files</string>
@@ -439,7 +439,7 @@
   <action name="actionAdd_output_files">
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
-     <normaloff>:/icons/file-link.svg</normaloff>:/icons/file-link.svg</iconset>
+     <normaloff>:/icons/plus.svg</normaloff>:/icons/plus.svg</iconset>
    </property>
    <property name="text">
     <string>Add output files</string>
@@ -498,7 +498,7 @@
     <string>Remove all program files</string>
    </property>
    <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Removes ALL program files. Useful with Executable Tool Specs.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove ALL program files. Useful with Executable Tool Specs.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
  </widget>
