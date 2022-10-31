@@ -13,13 +13,16 @@
 ################################################################################
 ## Form generated from reading UI file 'data_connection_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 5.14.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 from spine_items.widgets import ReferencesTreeView
@@ -32,6 +35,14 @@ class Ui_Form(object):
         if not Form.objectName():
             Form.setObjectName(u"Form")
         Form.resize(274, 438)
+        self.action_new_file_reference = QAction(Form)
+        self.action_new_file_reference.setObjectName(u"action_new_file_reference")
+        icon = QIcon()
+        icon.addFile(u":/icons/plus.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.action_new_file_reference.setIcon(icon)
+        self.action_new_db_reference = QAction(Form)
+        self.action_new_db_reference.setObjectName(u"action_new_db_reference")
+        self.action_new_db_reference.setIcon(icon)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.treeView_dc_references = ReferencesTreeView(Form)
@@ -52,30 +63,24 @@ class Ui_Form(object):
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.toolButton_plus_file = QToolButton(Form)
-        self.toolButton_plus_file.setObjectName(u"toolButton_plus_file")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.toolButton_plus_file.sizePolicy().hasHeightForWidth())
-        self.toolButton_plus_file.setSizePolicy(sizePolicy1)
-        icon = QIcon()
-        icon.addFile(u":/icons/file-alt.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_plus_file.setIcon(icon)
-        self.toolButton_plus_file.setPopupMode(QToolButton.InstantPopup)
-
-        self.horizontalLayout_2.addWidget(self.toolButton_plus_file)
-
-        self.toolButton_plus_url = QToolButton(Form)
-        self.toolButton_plus_url.setObjectName(u"toolButton_plus_url")
+        self.toolButton_add = QToolButton(Form)
+        self.toolButton_add.setObjectName(u"toolButton_add")
         icon1 = QIcon()
-        icon1.addFile(u":/icons/item_icons/database.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_plus_url.setIcon(icon1)
+        icon1.addFile(u":/icons/file-download.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_add.setIcon(icon1)
+        self.toolButton_add.setPopupMode(QToolButton.InstantPopup)
 
-        self.horizontalLayout_2.addWidget(self.toolButton_plus_url)
+        self.horizontalLayout_2.addWidget(self.toolButton_add)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
         self.toolButton_minus = QToolButton(Form)
         self.toolButton_minus.setObjectName(u"toolButton_minus")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.toolButton_minus.sizePolicy().hasHeightForWidth())
         self.toolButton_minus.setSizePolicy(sizePolicy1)
         icon2 = QIcon()
@@ -84,19 +89,6 @@ class Ui_Form(object):
         self.toolButton_minus.setPopupMode(QToolButton.InstantPopup)
 
         self.horizontalLayout_2.addWidget(self.toolButton_minus)
-
-        self.toolButton_add = QToolButton(Form)
-        self.toolButton_add.setObjectName(u"toolButton_add")
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/file-download.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_add.setIcon(icon3)
-        self.toolButton_add.setPopupMode(QToolButton.InstantPopup)
-
-        self.horizontalLayout_2.addWidget(self.toolButton_add)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
@@ -124,25 +116,25 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
+        self.action_new_file_reference.setText(QCoreApplication.translate("Form", u"New...", None))
+#if QT_CONFIG(tooltip)
+        self.action_new_file_reference.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add file reference</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.action_new_db_reference.setText(QCoreApplication.translate("Form", u"New...", None))
+#if QT_CONFIG(tooltip)
+        self.action_new_db_reference.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add DB reference</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.treeView_dc_references.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Drag-and-drop files here, they will be added as references.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
-        self.toolButton_plus_file.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add file references</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolButton_plus_file.setText("")
-#if QT_CONFIG(tooltip)
-        self.toolButton_plus_url.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add database reference</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolButton_plus_url.setText(QCoreApplication.translate("Form", u"...", None))
-#if QT_CONFIG(tooltip)
-        self.toolButton_minus.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected references or all if nothing is selected</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolButton_minus.setText("")
-#if QT_CONFIG(tooltip)
-        self.toolButton_add.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Copy file references to Data Connection's directory</p></body></html>", None))
+        self.toolButton_add.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Copy selected file references to this Data Connection's directory</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_add.setText("")
+#if QT_CONFIG(tooltip)
+        self.toolButton_minus.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected references</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.toolButton_minus.setText("")
 #if QT_CONFIG(tooltip)
         self.treeView_dc_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Drag-and-drop files here, they will be copied to the data directory.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

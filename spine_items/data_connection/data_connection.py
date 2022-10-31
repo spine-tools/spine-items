@@ -25,6 +25,7 @@ from PySide2.QtGui import QStandardItem, QStandardItemModel, QBrush
 from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from spinetoolbox.helpers import open_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand, MoveReferenceToData
@@ -61,17 +62,24 @@ class DataConnection(ProjectItem):
         if db_credentials is None:
             db_credentials = dict()
         self._toolbox = toolbox
-        self.reference_model = QStandardItemModel()  # References to files
+        self.reference_model = QStandardItemModel()  # References
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
         self.file_system_watcher = None
         self.file_references = list(file_references)
         self.db_references = list(db_references)
         self.db_credentials = db_credentials
-        self._file_ref_root = None
-        self._db_ref_root = None
+        self._file_ref_root = QStandardItem("File paths")
+        self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
+        self._db_ref_root = QStandardItem("URLs")
+        self._db_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
+        self._file_ref_root_widget = ToolBarWidget("File paths")
+        self._file_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self._db_ref_root_widget = ToolBarWidget("URLs")
+        self._db_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.file_refs_selected = False
         self.any_refs_selected = False
         self.any_data_selected = False
+        self.current_is_file_ref = False
         self.populate_reference_list()
         self.populate_data_list()
 
@@ -83,6 +91,8 @@ class DataConnection(ProjectItem):
         self.file_system_watcher.file_removed.connect(self._handle_file_removed)
         self.file_system_watcher.file_renamed.connect(self._handle_file_renamed)
         self.file_system_watcher.file_added.connect(self._handle_file_added)
+        self._file_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_file_reference)
+        self._db_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_db_reference)
 
     @staticmethod
     def item_type():
@@ -117,8 +127,6 @@ class DataConnection(ProjectItem):
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
         # pylint: disable=unnecessary-lambda
-        s[self._properties_ui.toolButton_plus_file.clicked] = self.show_add_file_references_dialog
-        s[self._properties_ui.toolButton_plus_url.clicked] = self.show_add_db_reference_dialog
         s[self._properties_ui.toolButton_minus.clicked] = self.remove_references
         s[self._properties_ui.toolButton_add.clicked] = self.copy_to_project
         s[self._properties_ui.treeView_dc_references.doubleClicked] = self.open_reference
@@ -130,6 +138,8 @@ class DataConnection(ProjectItem):
         s[self._properties_ui.treeView_dc_data.del_key_pressed] = self.remove_files
         s[self._properties_ui.treeView_dc_references.selectionModel().selectionChanged] = self._update_selection_state
         s[self._properties_ui.treeView_dc_data.selectionModel().selectionChanged] = self._update_selection_state
+        s[self._properties_ui.action_new_file_reference.triggered] = self.show_add_file_references_dialog
+        s[self._properties_ui.action_new_db_reference.triggered] = self.show_add_db_reference_dialog
         return s
 
     def restore_selections(self):
@@ -138,6 +148,12 @@ class DataConnection(ProjectItem):
         self._properties_ui.treeView_dc_data.setModel(self.data_model)
         self._do_update_selection_state()
         self._properties_ui.treeView_dc_references.expandAll()
+        self._properties_ui.treeView_dc_references.setIndexWidget(
+            self.reference_model.indexFromItem(self._file_ref_root), self._file_ref_root_widget
+        )
+        self._properties_ui.treeView_dc_references.setIndexWidget(
+            self.reference_model.indexFromItem(self._db_ref_root), self._db_ref_root_widget
+        )
 
     @Slot(QGraphicsItem, list)
     def receive_files_dropped_on_icon(self, icon, file_paths):
@@ -464,10 +480,6 @@ class DataConnection(ProjectItem):
         """List file references in QTreeView."""
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
-        self._file_ref_root = QStandardItem("File paths")
-        self._db_ref_root = QStandardItem("URLs")
-        self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
-        self._db_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
         self.reference_model.appendRow(self._file_ref_root)
         self.reference_model.appendRow(self._db_ref_root)
         self._append_file_references_to_model(*self.file_references)
