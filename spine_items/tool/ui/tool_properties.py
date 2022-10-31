@@ -13,13 +13,16 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 5.14.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 from ...widgets import ArgsTreeView
@@ -200,8 +203,6 @@ class Ui_Form(object):
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.pushButton_tool_results.sizePolicy().hasHeightForWidth())
         self.pushButton_tool_results.setSizePolicy(sizePolicy3)
-        self.pushButton_tool_results.setMinimumSize(QSize(75, 23))
-        self.pushButton_tool_results.setMaximumSize(QSize(16777215, 23))
 
         self.horizontalLayout_11.addWidget(self.pushButton_tool_results)
 
