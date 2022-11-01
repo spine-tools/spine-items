@@ -13,13 +13,16 @@
 ################################################################################
 ## Form generated from reading UI file 'data_store_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 5.14.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
+from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
+    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
+from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
+    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
+    QPixmap, QRadialGradient)
 from PySide2.QtWidgets import *
 
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
@@ -207,14 +210,17 @@ class Ui_Form(object):
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.purge_button.sizePolicy().hasHeightForWidth())
         self.purge_button.setSizePolicy(sizePolicy4)
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/bolt-lightning.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.purge_button.setIcon(icon1)
 
         self.horizontalLayout_3.addWidget(self.purge_button)
 
         self.toolButton_vacuum = QPushButton(Form)
         self.toolButton_vacuum.setObjectName(u"toolButton_vacuum")
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/broom.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_vacuum.setIcon(icon1)
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/broom.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_vacuum.setIcon(icon2)
 
         self.horizontalLayout_3.addWidget(self.toolButton_vacuum)
 
@@ -224,9 +230,9 @@ class Ui_Form(object):
 
         self.toolButton_copy_url = QPushButton(Form)
         self.toolButton_copy_url.setObjectName(u"toolButton_copy_url")
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/copy.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_copy_url.setIcon(icon2)
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/copy.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_copy_url.setIcon(icon3)
 
         self.horizontalLayout_3.addWidget(self.toolButton_copy_url)
 
@@ -246,9 +252,9 @@ class Ui_Form(object):
         sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.pushButton_create_new_spine_db.sizePolicy().hasHeightForWidth())
         self.pushButton_create_new_spine_db.setSizePolicy(sizePolicy5)
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/Spine_symbol.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.pushButton_create_new_spine_db.setIcon(icon3)
+        icon4 = QIcon()
+        icon4.addFile(u":/icons/Spine_symbol.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.pushButton_create_new_spine_db.setIcon(icon4)
 
         self.horizontalLayout.addWidget(self.pushButton_create_new_spine_db)
 

@@ -82,11 +82,13 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(2, mock_filenames.call_count)
             self.assertEqual(1, len(self.data_connection.file_references))
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(0, 0)))
+            self.assertEqual(str(a), self.ref_model.index(0, 0, self.ref_model.index(0, 0)).data())
             # Try to add a path that has already been added
             self.data_connection.show_add_file_references_dialog()
             self.assertEqual(3, mock_filenames.call_count)
             self.assertEqual(1, len(self.data_connection.file_references))
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(0, 0)))
+            self.assertEqual(str(a), self.ref_model.index(0, 0, self.ref_model.index(0, 0)).data())
             self.data_connection.file_references = list()
             self.data_connection.populate_reference_list()
             # Add two references (the other one is non-existing)
@@ -98,12 +100,15 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(4, mock_filenames.call_count)
             self.assertEqual(1, len(self.data_connection.file_references))
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(0, 0)))
+            self.assertEqual(str(b), self.ref_model.index(0, 0, self.ref_model.index(0, 0)).data())
             # Now add new reference
             mock_filenames.return_value = ([str(a)], "*.*")
             self.data_connection.show_add_file_references_dialog()
             self.assertEqual(5, mock_filenames.call_count)
             self.assertEqual(2, len(self.data_connection.file_references))
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
+            self.assertEqual(str(b), self.ref_model.index(0, 0, self.ref_model.index(0, 0)).data())
+            self.assertEqual(str(a), self.ref_model.index(1, 0, self.ref_model.index(0, 0)).data())
 
     def test_add_db_references(self):
         with mock.patch(

@@ -480,7 +480,9 @@ class DataConnection(ProjectItem):
         """List file references in QTreeView."""
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
+        self._file_ref_root.removeRows(0, self._file_ref_root.rowCount())
         self.reference_model.appendRow(self._file_ref_root)
+        self._db_ref_root.removeRows(0, self._db_ref_root.rowCount())
         self.reference_model.appendRow(self._db_ref_root)
         self._append_file_references_to_model(*self.file_references)
         self._append_db_references_to_model(*self.db_references)
