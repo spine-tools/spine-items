@@ -164,7 +164,7 @@ class JuliaToolInstance(ToolInstance):
                 *self.args,
                 group_id=self.owner.group_id,
                 extra_switches=extra_switches,
-                server_ip=server_ip
+                server_ip=server_ip,
             )
             return
         julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
@@ -233,7 +233,7 @@ class PythonToolInstance(ToolInstance):
                 group_id=self.owner.group_id,
                 environment=env,
                 conda_exe=conda_exe,
-                server_ip=server_ip
+                server_ip=server_ip,
             )
         else:
             python_exe = self.tool_specification.execution_settings["executable"]
@@ -321,6 +321,8 @@ class ExecutableToolInstance(ToolInstance):
                 else:
                     self.program = main_program_file
                 self.append_cmdline_args(args)
+            else:
+                raise RuntimeError(f"main program file {main_program_file} does not exist.")
         self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
