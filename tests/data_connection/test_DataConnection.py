@@ -400,5 +400,49 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         self.assertEqual(index.data(Qt.UserRole), str(self._item_dir / "renamed.dat"))
 
 
+class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
+    _NON_EXISTENT_PATH = "/path/to/non/existent/file.dat"
+
+    def setUp(self):
+        """Set up."""
+        self.toolbox = create_mock_toolbox()
+        factory = DataConnectionFactory()
+        item_dict = {
+            "type": "Data Connection",
+            "description": "",
+            "file_references": [self._NON_EXISTENT_PATH],
+            "x": 0,
+            "y": 0,
+        }
+        self._temp_dir = TemporaryDirectory()
+        self.project = create_mock_project(self._temp_dir.name)
+        self.toolbox.project.return_value = self.project
+        self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
+        self._properties_tab = mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
+        self.ref_model = self.data_connection.reference_model
+
+    def tearDown(self):
+        self.data_connection.tear_down()
+        self._temp_dir.cleanup()
+
+    @classmethod
+    def setUpClass(cls):
+        if not QApplication.instance():
+            QApplication()
+
+    def test_add_file_references(self):
+        temp_dir = Path(self._temp_dir.name, "references")
+        temp_dir.mkdir()
+        with mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames:
+            a = Path(temp_dir, "a.txt")
+            a.touch()
+            mock_filenames.return_value = ([str(a)], "*.*")
+            self.data_connection.show_add_file_references_dialog()
+            self.assertEqual(2, len(self.data_connection.file_references))
+            self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
+            self.assertEqual(self._NON_EXISTENT_PATH, self.ref_model.index(0, 0, self.ref_model.index(0, 0)).data())
+            self.assertEqual(str(a), self.ref_model.index(1, 0, self.ref_model.index(0, 0)).data())
+
+
 if __name__ == "__main__":
     unittest.main()

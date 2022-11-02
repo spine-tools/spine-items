@@ -191,10 +191,11 @@ class DataConnection(ProjectItem):
         """
         repeated_paths = []
         new_paths = []
+        existing_references = (reference for reference in self.file_references if os.path.isfile(reference))
         for path in paths:
             if not os.path.isfile(path):
                 continue
-            if any(os.path.samefile(path, ref) for ref in self.file_references):
+            if any(os.path.samefile(path, ref) for ref in existing_references):
                 repeated_paths.append(path)
             else:
                 new_paths.append(path)
