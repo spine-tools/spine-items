@@ -37,8 +37,6 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         # Class attributes
-        self.dc_ref_context_menu = None
-        self.dc_data_context_menu = None
         self.connect_signals()
 
     def connect_signals(self):
@@ -58,8 +56,9 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         dc_index = self._toolbox.ui.treeView_project.currentIndex()
         dc = self._toolbox.project_item_model.item(dc_index).project_item
         global_pos = self.ui.treeView_dc_references.viewport().mapToGlobal(pos)
-        self.dc_ref_context_menu = DcRefContextMenu(self, global_pos, index, dc)
-        option = self.dc_ref_context_menu.get_action()
+        dc_ref_context_menu = DcRefContextMenu(self, global_pos, index, dc)
+        option = dc_ref_context_menu.get_action()
+        dc_ref_context_menu.deleteLater()
         if option == "Open containing directory...":
             ref_path = self.ui.treeView_dc_references.model().itemFromIndex(index).data(Qt.DisplayRole)
             ref_dir = os.path.split(ref_path)[0]
@@ -75,6 +74,10 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
             dc.remove_references()
         elif option == "Copy file reference(s) to project":
             dc.copy_to_project()
+        elif option == "Refresh reference(s)":
+            dc.refresh_references()
+        elif option != "None":
+            raise RuntimeError(f"Unknown menu option '{option}'")
 
     @Slot(QPoint)
     def show_data_context_menu(self, pos):
@@ -88,8 +91,9 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         dc_index = self._toolbox.ui.treeView_project.currentIndex()
         dc = self._toolbox.project_item_model.item(dc_index).project_item
         global_pos = self.ui.treeView_dc_data.viewport().mapToGlobal(pos)
-        self.dc_data_context_menu = DcDataContextMenu(self, global_pos, index, dc)
-        option = self.dc_data_context_menu.get_action()
+        dc_data_context_menu = DcDataContextMenu(self, global_pos, index, dc)
+        option = dc_data_context_menu.get_action()
+        dc_data_context_menu.deleteLater()
         if option == "New file...":
             dc.make_new_file()
         elif option == "Open...":
@@ -98,3 +102,5 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
             dc.remove_files()
         elif option == "Open directory...":
             dc.open_directory()
+        elif option is not None:
+            raise RuntimeError(f"Unknown menu option '{option}'")

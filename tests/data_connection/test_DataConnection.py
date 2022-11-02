@@ -276,7 +276,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(self.data_connection.data_model.rowCount(), 1)
         index = self.data_connection.data_model.index(0, 0)
         self.assertEqual(index.data(), "a.txt")
-        self.assertEqual(index.data(Qt.UserRole), os.path.join(self.project.items_dir, "dc", "a.txt"))
+        self.assertEqual(index.data(Qt.UserRole + 1), os.path.join(self.project.items_dir, "dc", "a.txt"))
 
     def test_create_data_file(self):
         with mock.patch("spine_items.data_connection.data_connection.QInputDialog") as mock_input_dialog:
@@ -288,7 +288,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
-        self.assertEqual(index.data(Qt.UserRole), os.path.join(self.project.items_dir, "dc", "data.csv"))
+        self.assertEqual(index.data(Qt.UserRole + 1), os.path.join(self.project.items_dir, "dc", "data.csv"))
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -375,7 +375,7 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
-        self.assertEqual(index.data(Qt.UserRole), str(self._data_file_path))
+        self.assertEqual(index.data(Qt.UserRole + 1), str(self._data_file_path))
 
     def test_remove_data_file(self):
         self.data_connection.restore_selections()
@@ -397,24 +397,23 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "renamed.dat")
-        self.assertEqual(index.data(Qt.UserRole), str(self._item_dir / "renamed.dat"))
+        self.assertEqual(index.data(Qt.UserRole + 1), str(self._item_dir / "renamed.dat"))
 
 
 class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
-    _NON_EXISTENT_PATH = "/path/to/non/existent/file.dat"
-
     def setUp(self):
         """Set up."""
+        self._temp_dir = TemporaryDirectory()
+        self._non_existent_path = os.path.join(self._temp_dir.name, "file.dat")
         self.toolbox = create_mock_toolbox()
         factory = DataConnectionFactory()
         item_dict = {
             "type": "Data Connection",
             "description": "",
-            "file_references": [self._NON_EXISTENT_PATH],
+            "file_references": [self._non_existent_path],
             "x": 0,
             "y": 0,
         }
-        self._temp_dir = TemporaryDirectory()
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
@@ -440,8 +439,21 @@ class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
             self.data_connection.show_add_file_references_dialog()
             self.assertEqual(2, len(self.data_connection.file_references))
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
-            self.assertEqual(self._NON_EXISTENT_PATH, self.ref_model.index(0, 0, self.ref_model.index(0, 0)).data())
+            self.assertEqual(self._non_existent_path, self.ref_model.index(0, 0, self.ref_model.index(0, 0)).data())
             self.assertEqual(str(a), self.ref_model.index(1, 0, self.ref_model.index(0, 0)).data())
+
+    def test_refresh_file_reference(self):
+        root_index = self.ref_model.index(0, 0)
+        reference_index = self.ref_model.index(0, 0, root_index)
+        self.assertEqual(reference_index.data(Qt.ToolTipRole), "The file is missing.")
+        Path(self._non_existent_path).touch()
+        self.data_connection.restore_selections()
+        self._properties_tab.ui.treeView_dc_references.selectionModel().select(
+            reference_index, QItemSelectionModel.ClearAndSelect
+        )
+        self.data_connection.refresh_references()
+        self.assertIsNone(reference_index.data(Qt.ToolTipRole), "The file is missing.")
+        self.project.notify_resource_changes_to_successors.assert_called_once_with(self.data_connection)
 
 
 if __name__ == "__main__":

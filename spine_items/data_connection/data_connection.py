@@ -37,6 +37,10 @@ from ..widgets import UrlSelector
 from ..utils import split_url_credentials
 
 
+_DATA_FILE_PATH_ROLE = Qt.UserRole + 1
+_MISSING_ROLE = Qt.UserRole + 2
+
+
 class DataConnection(ProjectItem):
     def __init__(
         self, name, description, x, y, toolbox, project, file_references=None, db_references=None, db_credentials=None
@@ -303,7 +307,7 @@ class DataConnection(ProjectItem):
 
     def _remove_data_file(self, path):
         for k in reversed(range(self.data_model.rowCount())):
-            data_filepath = self.data_model.item(k).data(Qt.UserRole)
+            data_filepath = self.data_model.item(k).data(_DATA_FILE_PATH_ROLE)
             if _samepath(data_filepath, path):
                 self.data_model.removeRow(k)
                 return True
@@ -312,9 +316,9 @@ class DataConnection(ProjectItem):
     def _rename_data_file(self, old_path, new_path):
         for k in range(self.data_model.rowCount()):
             item = self.data_model.item(k)
-            if _samepath(item.data(Qt.UserRole), old_path):
+            if _samepath(item.data(_DATA_FILE_PATH_ROLE), old_path):
                 item.setText(os.path.basename(new_path))
-                item.setData(new_path, Qt.UserRole)
+                item.setData(new_path, _DATA_FILE_PATH_ROLE)
                 return True
         return False
 
@@ -384,6 +388,28 @@ class DataConnection(ProjectItem):
             except OSError:
                 self._logger.msg_error.emit("[OSError] Copying failed")
 
+    def refresh_references(self):
+        """Checks if missing file references have somehow come back to life."""
+        selected_indexes = self._properties_ui.treeView_dc_references.selectedIndexes()
+        fixed_references = []
+        if not selected_indexes:
+            return
+        for index in selected_indexes:
+            if self.reference_model.itemFromIndex(index.parent()) is not self._file_ref_root:
+                continue
+            item = self.reference_model.itemFromIndex(index)
+            path = item.data(Qt.DisplayRole)
+            if item.data(_MISSING_ROLE) and os.path.exists(path):
+                fixed_references.append(path)
+                item.clearData()
+                item.setFlags(~Qt.ItemIsEditable)
+                item.setData(path, Qt.DisplayRole)
+        if not fixed_references:
+            return
+        self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
+        self._check_notifications()
+        self._resources_to_successors_changed()
+
     @Slot(QModelIndex)
     def open_reference(self, index):
         """Open reference in default program."""
@@ -409,7 +435,7 @@ class DataConnection(ProjectItem):
         if not index.isValid():
             logging.error("Index not valid")
             return
-        data_file = index.data(Qt.UserRole)
+        data_file = index.data(_DATA_FILE_PATH_ROLE)
         url = "file:///" + data_file
         # noinspection PyTypeChecker, PyCallByClass, PyArgumentList
         res = open_url(url)
@@ -489,15 +515,22 @@ class DataConnection(ProjectItem):
         self._append_db_references_to_model(*self.db_references)
 
     def _append_file_references_to_model(self, *paths):
+        non_existent_paths = []
         for path in paths:
             item = QStandardItem(path)
             item.setFlags(~Qt.ItemIsEditable)
             if not os.path.exists(path):
-                self._logger.msg_error.emit(f"<b>{self.name}:</b> Could not find file reference {path}.")
+                non_existent_paths.append(path)
                 tooltip = "The file is missing."
                 item.setData(tooltip, Qt.ToolTipRole)
                 item.setData(QBrush(Qt.red), Qt.ForegroundRole)
+                item.setData(True, _MISSING_ROLE)
             self._file_ref_root.appendRow(item)
+        if non_existent_paths:
+            msg = f"<b>{self.name}:</b> Could not find file references:"
+            for path in non_existent_paths:
+                msg += f"<br><b>{os.path.basename(path)}</b>"
+            self._logger.msg_error.emit(msg)
 
     def _append_db_references_to_model(self, *urls):
         for url in urls:
@@ -517,7 +550,7 @@ class DataConnection(ProjectItem):
             item.setFlags(~Qt.ItemIsEditable)
             icon = QFileIconProvider().icon(QFileInfo(path))
             item.setData(icon, Qt.DecorationRole)
-            item.setData(path, Qt.UserRole)
+            item.setData(path, _DATA_FILE_PATH_ROLE)
             self.data_model.appendRow(item)
 
     def resources_for_direct_successors(self):
