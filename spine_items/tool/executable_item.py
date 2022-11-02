@@ -464,11 +464,8 @@ class ExecutableItem(DBWriterExecutableItemBase):
             return ItemExecutionFinishState.FAILURE
         if not os.path.isdir(execution_dir):
             self._logger.msg_warning.emit(
-                f"Work directory was not created because Tool Specification "
-                f"<b>{self._tool_specification.name}</b> does not contain any "
-                f"program files nor (optional) input files. Please <b>execute the "
-                f"Tool in source execution mode</b> or include files to the "
-                f"specification."
+                f"Project is not self-contained. Please make sure all Tool specification "
+                f"files are in the project directory."
             )
             return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
