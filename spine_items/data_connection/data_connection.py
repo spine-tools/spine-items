@@ -76,10 +76,6 @@ class DataConnection(ProjectItem):
         self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
         self._db_ref_root = QStandardItem("URLs")
         self._db_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
-        self._file_ref_root_widget = ToolBarWidget("File paths")
-        self._file_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self._db_ref_root_widget = ToolBarWidget("URLs")
-        self._db_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.file_refs_selected = False
         self.any_refs_selected = False
         self.any_data_selected = False
@@ -95,8 +91,6 @@ class DataConnection(ProjectItem):
         self.file_system_watcher.file_removed.connect(self._handle_file_removed)
         self.file_system_watcher.file_renamed.connect(self._handle_file_renamed)
         self.file_system_watcher.file_added.connect(self._handle_file_added)
-        self._file_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_file_reference)
-        self._db_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_db_reference)
 
     @staticmethod
     def item_type():
@@ -152,11 +146,17 @@ class DataConnection(ProjectItem):
         self._properties_ui.treeView_dc_data.setModel(self.data_model)
         self._do_update_selection_state()
         self._properties_ui.treeView_dc_references.expandAll()
+        file_ref_root_widget = ToolBarWidget("File paths")
+        file_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        file_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_file_reference)
         self._properties_ui.treeView_dc_references.setIndexWidget(
-            self.reference_model.indexFromItem(self._file_ref_root), self._file_ref_root_widget
+            self.reference_model.indexFromItem(self._file_ref_root), file_ref_root_widget
         )
+        db_ref_root_widget = ToolBarWidget("URLs")
+        db_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        db_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_db_reference)
         self._properties_ui.treeView_dc_references.setIndexWidget(
-            self.reference_model.indexFromItem(self._db_ref_root), self._db_ref_root_widget
+            self.reference_model.indexFromItem(self._db_ref_root), db_ref_root_widget
         )
 
     @Slot(QGraphicsItem, list)
