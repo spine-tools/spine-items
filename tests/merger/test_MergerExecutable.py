@@ -156,15 +156,15 @@ class TestMergerExecutable(unittest.TestCase):
         # Make and run engine
         items = {x.name: x for x in (merger1, merger2, input_ds1, input_ds2, output_ds)}
         execution_permits = {name: True for name in items}
-        engine = SpineEngine(
-            items=items,
-            connections=[x.to_dict() for x in (conn1in, conn2in, conn1out, conn2out)],
-            execution_permits=execution_permits,
-        )
-        engine.make_item = lambda item_name, direction: items[item_name]
         # We can't easily enforce merger1 to execute before merger2 so the write index matters...
         # So for the moment, let's run 5 times and hope
         for _ in range(5):
+            engine = SpineEngine(
+                items=items,
+                connections=[x.to_dict() for x in (conn1in, conn2in, conn1out, conn2out)],
+                execution_permits=execution_permits,
+            )
+            engine.make_item = lambda item_name, direction: items[item_name]
             create_new_spine_database(db3_url)
             engine.run()
             self.assertEqual(engine.state(), SpineEngineState.COMPLETED)
