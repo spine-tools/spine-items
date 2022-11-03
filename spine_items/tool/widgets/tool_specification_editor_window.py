@@ -23,7 +23,7 @@ from copy import deepcopy
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
 from PySide2.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex
-from spinetoolbox.helpers import busy_effect, open_url
+from spinetoolbox.helpers import busy_effect, open_url, same_path
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from spinetoolbox.config import STATUSBAR_SS
 from spinetoolbox.project_item.specification_editor_window import (
@@ -656,7 +656,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
         old_value = old_program_files[0] if old_program_files else ""
         if new_value is not None:  # Enables removing main program
-            if os.path.normcase(old_value) == os.path.normcase(new_value):
+            if same_path(old_value, new_value):
                 return
             new_program_files = old_program_files.copy()
             if new_program_files:
@@ -846,7 +846,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 continue
             if self.includes_main_path is not None:
                 common_prefix = os.path.commonprefix([os.path.abspath(self.includes_main_path), os.path.abspath(file)])
-                if os.path.normcase(common_prefix) != os.path.normcase(self.includes_main_path):
+                if not same_path(common_prefix, self.includes_main_path):
                     invalid.append(os.path.basename(file))
                     continue
             valid_files.append(file)

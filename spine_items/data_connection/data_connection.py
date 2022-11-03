@@ -26,7 +26,7 @@ from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QIn
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
-from spinetoolbox.helpers import open_url
+from spinetoolbox.helpers import open_url, same_path
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand, MoveReferenceToData
 from .custom_file_system_watcher import CustomFileSystemWatcher
@@ -280,7 +280,7 @@ class DataConnection(ProjectItem):
     def _remove_file_references(self, *refs):
         result = False
         for k in reversed(range(self._file_ref_root.rowCount())):
-            if any(_samepath(self._file_ref_root.child(k).text(), ref) for ref in refs):
+            if any(same_path(self._file_ref_root.child(k).text(), ref) for ref in refs):
                 self.file_references.pop(k)
                 self._file_ref_root.removeRow(k)
                 result = True
@@ -299,7 +299,7 @@ class DataConnection(ProjectItem):
     def _rename_file_reference(self, old_path, new_path):
         for k in range(self._file_ref_root.rowCount()):
             item = self._file_ref_root.child(k)
-            if _samepath(item.text(), old_path):
+            if same_path(item.text(), old_path):
                 item.setText(new_path)
                 self.file_references[k] = new_path
                 return True
@@ -308,7 +308,7 @@ class DataConnection(ProjectItem):
     def _remove_data_file(self, path):
         for k in reversed(range(self.data_model.rowCount())):
             data_filepath = self.data_model.item(k).data(_DATA_FILE_PATH_ROLE)
-            if _samepath(data_filepath, path):
+            if same_path(data_filepath, path):
                 self.data_model.removeRow(k)
                 return True
         return False
@@ -316,7 +316,7 @@ class DataConnection(ProjectItem):
     def _rename_data_file(self, old_path, new_path):
         for k in range(self.data_model.rowCount()):
             item = self.data_model.item(k)
-            if _samepath(item.data(_DATA_FILE_PATH_ROLE), old_path):
+            if same_path(item.data(_DATA_FILE_PATH_ROLE), old_path):
                 item.setText(os.path.basename(new_path))
                 item.setData(new_path, _DATA_FILE_PATH_ROLE)
                 return True
@@ -357,7 +357,7 @@ class DataConnection(ProjectItem):
 
     @Slot(str)
     def _handle_file_added(self, path):
-        if _samepath(os.path.dirname(path), self.data_dir):
+        if same_path(os.path.dirname(path), self.data_dir):
             self._append_data_files_to_model(path)
             self._check_notifications()
             self._resources_to_successors_changed()
@@ -623,7 +623,3 @@ class DataConnection(ProjectItem):
             self._logger.msg.emit("Link established")
         else:
             super().notify_destination(source_item)
-
-
-def _samepath(path1, path2):
-    return os.path.normcase(path1) == os.path.normcase(path2)
