@@ -20,7 +20,7 @@ import os
 import shutil
 import logging
 from sqlalchemy import create_engine
-from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection
+from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection, QTimer
 from PySide2.QtGui import QStandardItem, QStandardItemModel, QBrush
 from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
 from spine_engine.utils.serialization import deserialize_path, serialize_path
@@ -39,6 +39,9 @@ from ..utils import split_url_credentials
 
 _DATA_FILE_PATH_ROLE = Qt.UserRole + 1
 _MISSING_ROLE = Qt.UserRole + 2
+
+
+_MISSING_ITEM_FOREGROUND = QBrush(Qt.red)
 
 
 class DataConnection(ProjectItem):
@@ -296,15 +299,6 @@ class DataConnection(ProjectItem):
                 result = True
         return result
 
-    def _rename_file_reference(self, old_path, new_path):
-        for k in range(self._file_ref_root.rowCount()):
-            item = self._file_ref_root.child(k)
-            if same_path(item.text(), old_path):
-                item.setText(new_path)
-                self.file_references[k] = new_path
-                return True
-        return False
-
     def _remove_data_file(self, path):
         for k in reversed(range(self.data_model.rowCount())):
             data_filepath = self.data_model.item(k).data(_DATA_FILE_PATH_ROLE)
@@ -324,12 +318,41 @@ class DataConnection(ProjectItem):
 
     @Slot(str)
     def _handle_file_removed(self, path):
-        if self._remove_file_references(path) or self._remove_data_file(path):
+        """Marks file reference missing or removes data reference.
+
+        Args:
+            path (str): file path
+        """
+        resources_changed = self._try_to_mark_file_reference_missing(path) or self._remove_data_file(path)
+        if resources_changed:
             self._check_notifications()
             self._resources_to_successors_changed()
 
+    def _try_to_mark_file_reference_missing(self, path):
+        """Marks a file reference as missing if given path is in references.
+
+        Args:
+            path (str): file path
+
+        Returns:
+            bool: True if references was marked missing successfully, False otherwise
+        """
+        for row in range(self._file_ref_root.rowCount()):
+            item = self._file_ref_root.child(row)
+            if same_path(item.text(), path):
+                self._mark_as_missing(item)
+                return True
+        return False
+
     @Slot(str, str)
     def _handle_file_renamed(self, old_path, new_path):
+        """Marks file reference missing or renames data file.
+
+        Args:
+            old_path (str): original path
+            new_path (str): renamed path
+        """
+
         def replace_new_path(paths):
             for i, path in enumerate(paths):
                 if path == new_path:
@@ -337,10 +360,12 @@ class DataConnection(ProjectItem):
                     return True
             return False
 
-        renamed = self._rename_file_reference(old_path, new_path)
-        if not renamed:
-            renamed = self._rename_data_file(old_path, new_path)
-        if not renamed:
+        if self._try_to_mark_file_reference_missing(old_path):
+            self._refresh_file_reference_delayed(old_path)
+            self._check_notifications()
+            self._resources_to_successors_changed()
+            return
+        if not self._rename_data_file(old_path, new_path):
             return
         self._check_notifications()
         file_refs = list(self.file_references)
@@ -354,6 +379,36 @@ class DataConnection(ProjectItem):
             self, file_refs + data_files, self.db_references, self.db_credentials, self._project.project_dir
         )
         self._resources_to_successors_replaced(old_resources, new_resources)
+
+    def _refresh_file_reference_delayed(self, path):
+        """Checks if given file exists after certain delay.
+
+        Args:
+            path (str): file path
+        """
+        # Some software saves files by renaming them and then creating
+        # a new file with the same name for safety reasons.
+        # So, sometimes a file goes "missing" for a moment and then comes back.
+        # We'll try to refresh the file reference once in this case.
+        def refresh():
+            if not os.path.exists(path):
+                return
+            fixed_references = []
+            for row in range(self._file_ref_root.rowCount()):
+                item = self._file_ref_root.child(row, 0)
+                if not same_path(path, item.text()):
+                    continue
+                fixed_references.append(path)
+                item.clearData()
+                item.setFlags(~Qt.ItemIsEditable)
+                item.setData(path, Qt.DisplayRole)
+            if not fixed_references:
+                return
+            self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
+            self._check_notifications()
+            self._resources_to_successors_changed()
+
+        QTimer.singleShot(1000, refresh)
 
     @Slot(str)
     def _handle_file_added(self, path):
@@ -521,16 +576,24 @@ class DataConnection(ProjectItem):
             item.setFlags(~Qt.ItemIsEditable)
             if not os.path.exists(path):
                 non_existent_paths.append(path)
-                tooltip = "The file is missing."
-                item.setData(tooltip, Qt.ToolTipRole)
-                item.setData(QBrush(Qt.red), Qt.ForegroundRole)
-                item.setData(True, _MISSING_ROLE)
+                self._mark_as_missing(item)
             self._file_ref_root.appendRow(item)
         if non_existent_paths:
             msg = f"<b>{self.name}:</b> Could not find file references:"
             for path in non_existent_paths:
                 msg += f"<br><b>{os.path.basename(path)}</b>"
             self._logger.msg_error.emit(msg)
+
+    @staticmethod
+    def _mark_as_missing(item):
+        """Modifies given model item to appear as missing reference.
+
+        Args:
+            item (QStandardItem): item to modify
+        """
+        item.setData("The file is missing.", Qt.ToolTipRole)
+        item.setData(_MISSING_ITEM_FOREGROUND, Qt.ForegroundRole)
+        item.setData(True, _MISSING_ROLE)
 
     def _append_db_references_to_model(self, *urls):
         for url in urls:
