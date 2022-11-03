@@ -238,7 +238,7 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(0, len(self.data_connection.file_references))
             self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(0, 0)))
 
-    def test_rename_reference(self):
+    def test_renaming_file_marks_its_reference_as_missing(self):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
         a = Path(temp_dir, "a.txt")
@@ -251,8 +251,25 @@ class TestDataConnection(unittest.TestCase):
             a.rename(renamed_file)
             waiter.wait()
         index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
-        self.assertEqual(index.data(), str(renamed_file))
-        self.assertEqual(self.data_connection.file_references, [str(renamed_file)])
+        self.assertEqual(index.data(), str(a))
+        self.assertTrue(index.data(Qt.UserRole + 2))
+        self.assertEqual(self.data_connection.file_references, [str(a)])
+
+    def test_deleting_file_marks_its_reference_as_missing(self):
+        temp_dir = Path(self._temp_dir.name, "references")
+        temp_dir.mkdir()
+        a = Path(temp_dir, "a.txt")
+        a.touch()
+        with mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames:
+            mock_filenames.return_value = ([str(a)], "*.*")
+            self.data_connection.show_add_file_references_dialog()
+        with signal_waiter(self.data_connection.file_system_watcher.file_removed) as waiter:
+            a.unlink()
+            waiter.wait()
+        index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
+        self.assertEqual(index.data(), str(a))
+        self.assertTrue(index.data(Qt.UserRole + 2))
+        self.assertEqual(self.data_connection.file_references, [str(a)])
 
     def test_copy_reference_to_project(self):
         temp_dir = Path(self._temp_dir.name, "references")
@@ -289,6 +306,40 @@ class TestDataConnection(unittest.TestCase):
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
         self.assertEqual(index.data(Qt.UserRole + 1), os.path.join(self.project.items_dir, "dc", "data.csv"))
+
+    def test_deleting_data_file_removes_it_from_dc(self):
+        file_a = Path(self.data_connection.data_dir) / "data.dat"
+        with signal_waiter(self.data_connection.file_system_watcher.file_added) as waiter:
+            file_a.touch()
+            waiter.wait()
+        model = self.data_connection.data_model
+        self.assertEqual(model.rowCount(), 1)
+        index = model.index(0, 0)
+        self.assertEqual(index.data(), "data.dat")
+        self.assertEqual(index.data(Qt.UserRole + 1), str(file_a))
+        with signal_waiter(self.data_connection.file_system_watcher.file_removed) as waiter:
+            file_a.unlink()
+            waiter.wait()
+        self.assertEqual(model.rowCount(), 0)
+
+    def test_renaming_data_file_renames_it_in_dc_as_well(self):
+        file_a = Path(self.data_connection.data_dir) / "data.dat"
+        with signal_waiter(self.data_connection.file_system_watcher.file_added) as waiter:
+            file_a.touch()
+            waiter.wait()
+        model = self.data_connection.data_model
+        self.assertEqual(model.rowCount(), 1)
+        index = model.index(0, 0)
+        self.assertEqual(index.data(), "data.dat")
+        self.assertEqual(index.data(Qt.UserRole + 1), str(file_a))
+        renamed = file_a.parent / "sata.txt"
+        with signal_waiter(self.data_connection.file_system_watcher.file_renamed) as waiter:
+            file_a.rename(renamed)
+            waiter.wait()
+        self.assertEqual(model.rowCount(), 1)
+        index = model.index(0, 0)
+        self.assertEqual(index.data(), "sata.txt")
+        self.assertEqual(index.data(Qt.UserRole + 1), str(renamed))
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""

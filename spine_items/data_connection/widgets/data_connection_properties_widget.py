@@ -102,5 +102,5 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
             dc.remove_files()
         elif option == "Open directory...":
             dc.open_directory()
-        elif option is not None:
+        elif option != "None":
             raise RuntimeError(f"Unknown menu option '{option}'")
