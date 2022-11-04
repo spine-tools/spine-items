@@ -57,7 +57,7 @@ def build_qrc(input_path, output_path, force):
 
 print(
     """<Script for Building Spine Items GUI>
-Copyright (C) <2017-2020>  <Spine project consortium>
+Copyright (C) <2017-2022>  <Spine project consortium>
 This program comes with ABSOLUTELY NO WARRANTY; for details see 'about'
 box in the application. This is free software, and you are welcome to
 redistribute it under certain conditions; See files COPYING and
