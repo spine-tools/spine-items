@@ -532,7 +532,6 @@ class _DatabaseFetch(FetchParent):
             self._view.add_to_plot(self._id, self._db_map, cached_match)
         else:
             self._signals = _DatabaseFetch._Signals(self)
-            self._db_mngr.register_listener(self, self._db_map)
             self._try_fetching()
 
     def _try_fetching(self):
@@ -556,7 +555,7 @@ class _DatabaseFetch(FetchParent):
         if fetched and self._signals is not None:
             self._signals.fetched.emit()
 
-    def receive_parameter_values_added(self, db_map_data):
+    def handle_items_added(self, db_map_data):
         """A callback that stores relevant parameter values.
 
         Args:
@@ -593,6 +592,5 @@ class _DatabaseFetch(FetchParent):
         """Reports plotting failures to View."""
         if not self._value_fetched:
             self._view.failed_to_plot(self._id, self._db_map, self._conditions)
-        self._db_mngr.unregister_listener(self, self._db_map)
         self._signals.deleteLater()
         self._signals = None
