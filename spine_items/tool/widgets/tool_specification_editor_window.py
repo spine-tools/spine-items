@@ -20,6 +20,8 @@ is filled with all the information from the specification being edited.
 import logging
 import os
 from copy import deepcopy
+from operator import methodcaller
+
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
 from PySide2.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
 from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex
@@ -1172,9 +1174,9 @@ def _build_tree(root, components):
         else:
             item.setData(QFileIconProvider().icon(QFileInfo(parent)), Qt.DecorationRole)
             leafs.append(item)
-    for item in sorted(nodes, key=lambda x: x.text()):
+    for item in sorted(nodes, key=methodcaller("text")):
         root.appendRow(item)
-    for item in sorted(leafs, key=lambda x: x.text()):
+    for item in sorted(leafs, key=methodcaller("text")):
         root.appendRow(item)
 
 

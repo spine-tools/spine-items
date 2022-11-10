@@ -15,6 +15,8 @@ Contains model for export preview tables.
 :date:   5.1.2021
 """
 from itertools import takewhile
+from operator import methodcaller
+
 from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt
 
 
@@ -41,7 +43,7 @@ class PreviewTreeModel(QAbstractItemModel):
         if mapping_name not in self._tables:
             new_names = list(self._mapping_names)
             new_names.append(mapping_name)
-            new_names.sort(key=lambda n: n.lower())
+            new_names.sort(key=methodcaller("lower"))
             row = len(list(takewhile(lambda x: x[0] == x[1], zip(new_names, self._mapping_names))))
             self.beginInsertRows(QModelIndex(), row, row)
             self._tables[mapping_name] = dict()
@@ -67,7 +69,7 @@ class PreviewTreeModel(QAbstractItemModel):
                 self._tables[mapping_name][name] = table
                 new_names = list(self._table_names[mapping_name])
                 new_names.append(name)
-                new_names.sort(key=lambda n: n.lower())
+                new_names.sort(key=methodcaller("lower"))
                 row = len(list(takewhile(lambda x: x[0] == x[1], zip(new_names, self._table_names[mapping_name]))))
                 self.beginInsertRows(parent_index, row, row)
                 self._table_names[mapping_name] = new_names
@@ -137,7 +139,7 @@ class PreviewTreeModel(QAbstractItemModel):
         Returns:
             tuple of str: old name, new name
         """
-        new_names = sorted(new_names, key=lambda n: n.lower())
+        new_names = sorted(new_names, key=methodcaller("lower"))
         olds = set(self._mapping_names)
         news = set(new_names)
         try:

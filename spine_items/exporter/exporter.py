@@ -17,6 +17,7 @@ Contains the :class:`Exporter` project item.
 """
 from dataclasses import dataclass
 from itertools import combinations, zip_longest
+from operator import itemgetter
 from pathlib import Path
 
 from PySide2.QtCore import Slot, Qt
@@ -230,7 +231,7 @@ class Exporter(ExporterBase):
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()
-        serialized["output_labels"] = sorted([c.to_dict() for c in self._output_channels], key=lambda d: d["in_label"])
+        serialized["output_labels"] = sorted([c.to_dict() for c in self._output_channels], key=itemgetter("in_label"))
         serialized["specification"] = self._specification_name
         return serialized
 
