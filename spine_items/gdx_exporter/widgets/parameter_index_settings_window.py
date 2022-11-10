@@ -17,6 +17,8 @@ Parameter indexing settings window for .gdx export.
 """
 from contextlib import contextmanager
 from copy import deepcopy
+from operator import methodcaller
+
 from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
 from PySide2.QtGui import QStandardItem
 from PySide2.QtWidgets import QMessageBox, QWidget
@@ -382,7 +384,7 @@ class ParameterIndexSettingsWindow(QWidget):
                     else:
                         item.setText(f"{parameter_name} {domain_names}")
             items.append(item)
-        for item in sorted(items, key=lambda i: i.text()):
+        for item in sorted(items, key=methodcaller("text")):
             model.appendRow(item)
 
     def _fix_legacy_indexing_settings(self, indexing_settings):

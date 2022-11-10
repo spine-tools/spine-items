@@ -15,6 +15,8 @@ Contains model for export mapping setup table.
 :date:   11.12.2020
 """
 from enum import IntEnum, unique
+from operator import itemgetter
+
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide2.QtGui import QFont, QColor
 from spinedb_api.mapping import is_pivoted, is_regular, Position, value_index
@@ -414,17 +416,17 @@ class MappingEditorTableModel(QAbstractTableModel):
             pivoted_mappings = [
                 (m.position, m) for row, m in enumerate(self._mappings) if is_pivoted(m.position) and row != value_row
             ]
-            pivoted_mappings.sort(reverse=True, key=lambda x: x[0])
+            pivoted_mappings.sort(reverse=True, key=itemgetter(0))
             for row, item in enumerate(pivoted_mappings):
                 item[1].position = -(row + 1)
             regular_mappings = [
                 (m.position, m) for row, m in enumerate(self._mappings) if is_regular(m.position) and row != value_row
             ]
-            last_column = max(regular_mappings, key=lambda x: x[0], default=-1)[0]
+            last_column = max(regular_mappings, key=itemgetter(0), default=-1)[0]
             regular_mappings.append((last_column + 1, self._mappings[value_row]))
         else:
             regular_mappings = [(m.position, m) for m in self._mappings if is_regular(m.position)]
-        regular_mappings.sort(key=lambda x: x[0])
+        regular_mappings.sort(key=itemgetter(0))
         for column, item in enumerate(regular_mappings):
             item[1].position = column
         top_left = self.index(0, EditorColumn.POSITION)
