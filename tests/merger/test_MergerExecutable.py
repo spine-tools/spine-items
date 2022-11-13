@@ -20,6 +20,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spinedb_api import create_new_spine_database, DatabaseMapping, import_functions
+from spinedb_api.spine_db_server import db_server_manager
 from spine_engine.project_item.project_item_resource import database_resource
 from spine_engine.project_item.connection import Connection
 from spine_engine.spine_engine import SpineEngine, SpineEngineState
@@ -88,7 +89,10 @@ class TestMergerExecutable(unittest.TestCase):
         executable = ExecutableItem("name", True, self._temp_dir.name, logger)
         input_db_resources = [database_resource("provider", db1_url), database_resource("provider", db2_url)]
         output_db_resources = [database_resource("receiver", db3_url)]
-        self.assertTrue(executable.execute(input_db_resources, output_db_resources))
+        with db_server_manager() as mngr_address:
+            for r in input_db_resources + output_db_resources:
+                r.metadata["db_server_manager_address"] = mngr_address
+            self.assertTrue(executable.execute(input_db_resources, output_db_resources))
         # Check output db
         output_db_map = DatabaseMapping(db3_url)
         class_list = output_db_map.object_class_list().all()
