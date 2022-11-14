@@ -104,9 +104,9 @@ class TestImporterExecutable(unittest.TestCase):
         )
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
-        with db_server_manager() as mngr_address:
+        with db_server_manager() as mngr_queue:
             for r in database_resources:
-                r.metadata["db_server_manager_address"] = mngr_address
+                r.metadata["db_server_manager_queue"] = mngr_queue
             self.assertTrue(executable.execute(file_resources, database_resources))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
