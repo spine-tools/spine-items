@@ -89,9 +89,9 @@ class TestMergerExecutable(unittest.TestCase):
         executable = ExecutableItem("name", True, self._temp_dir.name, logger)
         input_db_resources = [database_resource("provider", db1_url), database_resource("provider", db2_url)]
         output_db_resources = [database_resource("receiver", db3_url)]
-        with db_server_manager() as mngr_address:
+        with db_server_manager() as mngr_queue:
             for r in input_db_resources + output_db_resources:
-                r.metadata["db_server_manager_address"] = mngr_address
+                r.metadata["db_server_manager_queue"] = mngr_queue
             self.assertTrue(executable.execute(input_db_resources, output_db_resources))
         # Check output db
         output_db_map = DatabaseMapping(db3_url)
