@@ -23,7 +23,8 @@ from PySide2.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QTextBrows
 from sqlalchemy.engine.url import URL, make_url
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.plotting import plot_db_mngr_items, PlottingError
-from spinetoolbox.helpers import busy_effect, FetchParent
+from spinetoolbox.helpers import busy_effect
+from spinetoolbox.fetch_parent import FetchParent
 from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
 from spinetoolbox.widgets.notification import Notification
 from .item_info import ItemInfo
@@ -545,9 +546,9 @@ class _DatabaseFetch(FetchParent):
         """See base class."""
         return "parameter_value"
 
-    def filter_query(self, query, subquery, db_map):
+    def accepts_item(self, item, db_map):
         """See base class."""
-        return query.filter_by(**self._conditions)
+        return all(item[key] == value for key, value in self._conditions.items())
 
     def set_fetched(self, fetched):
         """See base class."""
