@@ -1,5 +1,5 @@
--e git+https://github.com/Spine-project/Spine-Database-API.git#egg=spinedb_api
--e git+https://github.com/Spine-project/spine-engine.git#egg=spine_engine
--e git+https://github.com/Spine-project/Spine-Toolbox.git#egg=spinetoolbox
+-e git+https://github.com/Spine-project/Spine-Database-API.git@python310#egg=spinedb_api
+-e git+https://github.com/Spine-project/spine-engine.git@python310#egg=spine_engine
+-e git+https://github.com/Spine-project/Spine-Toolbox.git@python310#egg=spinetoolbox
 gdx2py >= 2.1.1  # Required by test_GdxExporterExecutable
 -e .
