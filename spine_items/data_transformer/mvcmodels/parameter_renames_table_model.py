@@ -15,7 +15,7 @@ Contains :class:`ParameterRenamesTableModel`.
 :date:   28.5.2021
 """
 from enum import IntEnum, unique
-from PySide2.QtCore import QModelIndex, Qt
+from PySide6.QtCore import QModelIndex, Qt
 from .parameter_drop_target_table_model import ParameterDropTargetTableModel
 from ..commands import SetData
 

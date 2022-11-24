@@ -16,7 +16,7 @@ Contains base class for project items.
 :date:   15.12.2020
 """
 
-from PySide2.QtCore import Qt, Slot
+from PySide6.QtCore import Qt, Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 from .commands import UpdateCancelOnErrorCommand, UpdateOutputTimeStampsFlag
 from .models import FullUrlListModel

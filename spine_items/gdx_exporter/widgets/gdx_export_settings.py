@@ -18,8 +18,8 @@ Export item's settings window for .gdx export.
 
 from copy import deepcopy
 import enum
-from PySide2.QtCore import QItemSelection, Qt, Signal, Slot
-from PySide2.QtWidgets import QDialogButtonBox, QMessageBox, QWidget
+from PySide6.QtCore import QItemSelection, Qt, Signal, Slot
+from PySide6.QtWidgets import QDialogButtonBox, QMessageBox, QWidget
 from spinedb_api import SpineDBAPIError
 import spinedb_api.spine_io.exporters.gdx as gdx
 from ..list_utils import move_selected_elements_by

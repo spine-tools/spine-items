@@ -19,7 +19,7 @@ Contains the GdxExporter project item.
 from copy import deepcopy
 from itertools import zip_longest
 import os.path
-from PySide2.QtCore import Slot, Qt
+from PySide6.QtCore import Slot, Qt
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path, serialize_url
 from spinedb_api import clear_filter_configs

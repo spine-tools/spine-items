@@ -17,7 +17,8 @@ Contains unit tests for the OptionsWidget class.
 """
 import unittest
 from unittest.mock import MagicMock
-from PySide2.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit, QSpinBox, QUndoStack
+from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit, QSpinBox
+from PySide6.QtGui import QUndoStack
 from spine_items.importer.widgets.options_widget import OptionsWidget
 
 

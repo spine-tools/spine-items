@@ -14,8 +14,8 @@ Contains mapping position editor delegate.
 :author: A. Soininen (VTT)
 :date:   5.1.2021
 """
-from PySide2.QtCore import Property, Slot
-from PySide2.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
+from PySide6.QtCore import Property, Slot
+from PySide6.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
 from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT
 
 

@@ -14,7 +14,7 @@ Contains model for a single export preview table.
 :author: A. Soininen (VTT)
 :date:   5.1.2021
 """
-from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 
 class PreviewTableModel(QAbstractTableModel):

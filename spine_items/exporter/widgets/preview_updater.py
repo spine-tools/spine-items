@@ -16,8 +16,8 @@ Contains :class:`PreviewUpdater`.
 """
 from copy import deepcopy
 from time import monotonic
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
-from PySide2.QtWidgets import QFileDialog
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtWidgets import QFileDialog
 
 from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.spine_io.exporters.writer import write

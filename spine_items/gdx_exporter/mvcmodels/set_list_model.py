@@ -15,8 +15,8 @@ Contains :class:`SetListModel`
 :author: A. Soininen (VTT)
 :date:   25.8.2020
 """
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
-from PySide2.QtGui import QColor
+from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
+from PySide6.QtGui import QColor
 from spinedb_api.spine_io.exporters import gdx
 from ..list_utils import move_list_elements
 

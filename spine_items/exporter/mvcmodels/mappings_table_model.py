@@ -14,7 +14,7 @@ Contains the :class:`MappingListModel` model.
 :authors: A. Soininen (VTT)
 :date:    30.12.2020
 """
-from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
@@ -38,16 +38,16 @@ class MappingsTableModel(QAbstractTableModel):
     write_order_changed = Signal()
     """Emitted after the write order has changed."""
 
-    MAPPING_SPECIFICATION_ROLE = Qt.UserRole + 1
-    MAPPING_TYPE_ROLE = Qt.UserRole + 2
-    MAPPING_ROOT_ROLE = Qt.UserRole + 3
-    ALWAYS_EXPORT_HEADER_ROLE = Qt.UserRole + 4
-    RELATIONSHIP_DIMENSIONS_ROLE = Qt.UserRole + 5
-    USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.UserRole + 6
-    FIXED_TABLE_NAME_ROLE = Qt.UserRole + 7
-    PARAMETER_DIMENSIONS_ROLE = Qt.UserRole + 8
-    GROUP_FN_ROLE = Qt.UserRole + 9
-    HIGHLIGHT_DIMENSION_ROLE = Qt.UserRole + 10
+    MAPPING_SPECIFICATION_ROLE = Qt.UserRole.value + 1
+    MAPPING_TYPE_ROLE = Qt.ItemDataRole.UserRole + 2
+    MAPPING_ROOT_ROLE = Qt.UserRole.value + 3
+    ALWAYS_EXPORT_HEADER_ROLE = Qt.UserRole.value + 4
+    RELATIONSHIP_DIMENSIONS_ROLE = Qt.UserRole.value + 5
+    USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.UserRole.value + 6
+    FIXED_TABLE_NAME_ROLE = Qt.UserRole.value + 7
+    PARAMETER_DIMENSIONS_ROLE = Qt.UserRole.value + 8
+    GROUP_FN_ROLE = Qt.UserRole.value + 9
+    HIGHLIGHT_DIMENSION_ROLE = Qt.UserRole.value + 10
 
     def __init__(self, mappings=None, parent=None):
         """

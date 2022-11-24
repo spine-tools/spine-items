@@ -22,7 +22,7 @@ import sys
 from unittest import mock
 from tempfile import NamedTemporaryFile
 from pathlib import Path
-from PySide2.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from tests.mock_helpers import create_mock_toolbox
 

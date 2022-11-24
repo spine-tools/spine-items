@@ -17,7 +17,7 @@ Module for MergerIcon class.
 """
 
 import random
-from PySide2.QtCore import QTimeLine, QPointF, Slot
+from PySide6.QtCore import QTimeLine, QPointF, Slot
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import AnimationSignaller
 

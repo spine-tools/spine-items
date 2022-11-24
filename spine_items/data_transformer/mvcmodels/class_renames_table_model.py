@@ -18,7 +18,7 @@ Contains the :class:`ClassRenamesTableModel` class.
 from enum import IntEnum, unique
 import pickle
 
-from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from ..commands import InsertRow, SetData
 from ..widgets.drop_target_table import DROP_MIME_TYPE
 

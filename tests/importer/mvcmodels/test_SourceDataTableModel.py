@@ -13,7 +13,7 @@ Contains unit tests for Import editor's SourceDataTableModel.
 """
 import unittest
 from unittest.mock import MagicMock
-from PySide2.QtCore import Qt
+from PySide6.QtCore import Qt
 
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict

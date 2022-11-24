@@ -14,7 +14,7 @@ Contains :class:`ParameterNameListModel`
 :author: A. Soininen (VTT)
 :date:   17.9.2020
 """
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
 
 
 class ParameterNameListModel(QAbstractListModel):

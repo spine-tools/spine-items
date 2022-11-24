@@ -15,7 +15,7 @@ Contains the :class:`MappingsTableProxy` model.
 :date:    12.5.2021
 """
 from itertools import takewhile
-from PySide2.QtCore import QSortFilterProxyModel
+from PySide6.QtCore import QSortFilterProxyModel
 
 
 class MappingsTableProxy(QSortFilterProxyModel):

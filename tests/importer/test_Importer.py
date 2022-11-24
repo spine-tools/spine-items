@@ -20,8 +20,8 @@ import os
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QApplication, QMenu
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMenu
 from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.importer_specification import ImporterSpecification
@@ -167,7 +167,7 @@ class TestImporter(unittest.TestCase):
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
         checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]
-        selected = [check == Qt.Checked for check in checked]
+        selected = [check == Qt.Checked.value for check in checked]
         self.assertTrue(all(selected))
 
     def test_handle_dag_changed_updates_previous_list_items(self):
@@ -187,7 +187,7 @@ class TestImporter(unittest.TestCase):
         file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(file_list, ["file2", "file3"])
         checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]
-        selected = [check == Qt.Checked for check in checked]
+        selected = [check == Qt.Checked.value for check in checked]
         self.assertEqual(selected, [False, True])
 
 

@@ -24,7 +24,7 @@ import logging
 import sys
 from spinedb_api import create_new_spine_database
 from spine_engine.project_item.project_item_resource import database_resource
-from PySide2.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.data_store_factory import DataStoreFactory
@@ -153,7 +153,7 @@ class TestDataStore(unittest.TestCase):
         with mock.patch("spine_items.utils.create_engine", lambda _: MockEngine()):
             self.ds._url = self.ds.parse_url(url)  # Set a URL for the Data Store
             self.ds.activate()
-            self.ds_properties_ui.comboBox_dialect.activated[str].emit("mysql")
+            self.ds_properties_ui.comboBox_dialect.currentTextChanged.emit("mysql")
             self.ds_properties_ui.lineEdit_host.setText("localhost")
             self.ds_properties_ui.lineEdit_port.setText("8080")
             self.ds_properties_ui.lineEdit_database.setText("foo")
@@ -195,7 +195,7 @@ class TestDataStore(unittest.TestCase):
         temp_db_path = self.create_temp_db()
         self.ds.activate()
         # Select the sqlite dialect
-        self.ds_properties_ui.comboBox_dialect.activated[str].emit("sqlite")
+        self.ds_properties_ui.comboBox_dialect.currentTextChanged.emit("sqlite")
         # Browse to an existing db file
         with mock.patch("spine_items.data_store.data_store.QFileDialog") as mock_qfile_dialog:
             mock_qfile_dialog.getOpenFileName.side_effect = lambda *args, **kwargs: [temp_db_path]
@@ -216,7 +216,7 @@ class TestDataStore(unittest.TestCase):
         temp_db_path = self.create_temp_db()
         self.ds.activate()
         # Select the sqlite dialect
-        self.ds_properties_ui.comboBox_dialect.activated[str].emit("sqlite")
+        self.ds_properties_ui.comboBox_dialect.currentTextChanged.emit("sqlite")
         # Type the path to an existing db file
         self.ds_properties_ui.lineEdit_database.setText(temp_db_path)
         self.ds_properties_ui.lineEdit_database.editingFinished.emit()

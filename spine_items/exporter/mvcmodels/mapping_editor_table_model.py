@@ -17,8 +17,8 @@ Contains model for export mapping setup table.
 from enum import IntEnum, unique
 from operator import itemgetter
 
-from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide2.QtGui import QFont, QColor
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtGui import QFont, QColor
 from spinedb_api.mapping import is_pivoted, is_regular, Position, value_index
 from spinedb_api.export_mapping.export_mapping import (
     AlternativeDescriptionMapping,

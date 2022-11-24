@@ -23,9 +23,9 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock, NonCallableMagicMock
 
-from PySide2.QtCore import QItemSelectionModel
-from PySide2.QtWidgets import QApplication, QMessageBox
-from PySide2.QtGui import QStandardItemModel, Qt
+from PySide6.QtCore import QItemSelectionModel
+from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtGui import QStandardItemModel, Qt
 from spinetoolbox.helpers import signal_waiter
 from spine_items.data_connection.data_connection import DataConnection
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory

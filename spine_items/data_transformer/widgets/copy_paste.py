@@ -15,8 +15,8 @@ Contains shared functions that provide copy-paste functionality.
 :date:   3.6.2021
 """
 import pickle
-from PySide2.QtCore import QMimeData
-from PySide2.QtWidgets import QApplication
+from PySide6.QtCore import QMimeData
+from PySide6.QtWidgets import QApplication
 from ..commands import InsertRow, SetData
 
 

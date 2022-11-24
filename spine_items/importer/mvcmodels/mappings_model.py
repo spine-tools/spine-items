@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum, unique
 import re
 
-from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 
 from spinetoolbox.helpers import unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type

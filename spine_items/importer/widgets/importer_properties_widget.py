@@ -16,7 +16,7 @@ Importer properties widget.
 :date:   12.9.2019
 """
 
-from PySide2.QtCore import QPoint, Slot
+from PySide6.QtCore import QPoint, Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from .custom_menus import FilesContextMenu
 from ..item_info import ItemInfo

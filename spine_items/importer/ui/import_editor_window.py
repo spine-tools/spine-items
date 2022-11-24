@@ -13,22 +13,28 @@
 ################################################################################
 ## Form generated from reading UI file 'import_editor_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.14.2
+## Created by: Qt User Interface Compiler version 6.4.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
-from PySide2.QtWidgets import *
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
+    QDockWidget, QFormLayout, QHBoxLayout, QHeaderView,
+    QLabel, QListView, QMainWindow, QPushButton,
+    QSizePolicy, QSpacerItem, QSpinBox, QTableView,
+    QToolButton, QVBoxLayout, QWidget)
 
-from spinetoolbox.widgets.custom_combobox import ElidedCombobox
-from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
 from spine_items.importer.widgets.multi_checkable_list_view import MultiCheckableListView
-
+from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
+from spinetoolbox.widgets.custom_combobox import ElidedCombobox
 from spine_items import resources_icons_rc
 
 class Ui_MainWindow(object):
@@ -314,7 +320,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.comboBox_source_file.sizePolicy().hasHeightForWidth())
         self.comboBox_source_file.setSizePolicy(sizePolicy)
-        self.comboBox_source_file.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLength)
+        self.comboBox_source_file.setSizeAdjustPolicy(QComboBox.AdjustToContentsOnFirstShow)
         self.comboBox_source_file.setMinimumContentsLength(0)
 
         self.horizontalLayout_2.addWidget(self.comboBox_source_file)

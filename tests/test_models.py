@@ -17,8 +17,8 @@ Unit tests for the ``models`` module.
 """
 from pathlib import Path
 import unittest
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QApplication
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
 from spine_engine.project_item.project_item_resource import file_resource, file_resource_in_pack
 from spine_items.models import CheckableFileListModel
 

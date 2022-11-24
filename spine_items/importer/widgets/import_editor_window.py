@@ -19,8 +19,8 @@ Contains ImportPreviewWindow class.
 import os
 import json
 import fnmatch
-from PySide2.QtCore import Qt, Signal, Slot, QModelIndex, QItemSelectionModel
-from PySide2.QtWidgets import QFileDialog, QDockWidget, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
+from PySide6.QtCore import Qt, Signal, Slot, QModelIndex, QItemSelectionModel
+from PySide6.QtWidgets import QFileDialog, QDockWidget, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH

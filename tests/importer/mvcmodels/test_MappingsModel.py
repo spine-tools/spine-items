@@ -12,8 +12,9 @@
 Contains unit tests for Import editor's :class:`MappingsModel`.
 """
 import unittest
-from PySide2.QtCore import QObject, Qt
-from PySide2.QtWidgets import QApplication, QUndoStack
+from PySide6.QtCore import QObject, Qt
+from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QUndoStack
 
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spinetoolbox.helpers import signal_waiter
@@ -83,13 +84,13 @@ class TestTableList(unittest.TestCase):
             self.assertTrue(self._model.setData(table_index, "table"))
             waiter.wait()
         self.assertEqual(self._model.rowCount(), 3)
-        self.assertEqual(int(self._model.flags(self._model.index(0, 0)) & Qt.ItemIsEditable), 0)
-        self.assertNotEqual(int(self._model.flags(self._model.index(1, 0)) & Qt.ItemIsEditable), 0)
-        self.assertNotEqual(int(self._model.flags(self._model.index(2, 0)) & Qt.ItemIsEditable), 0)
+        self.assertEqual(int((self._model.flags(self._model.index(0, 0)) & Qt.ItemFlag.ItemIsEditable).value), 0)
+        self.assertNotEqual(int((self._model.flags(self._model.index(1, 0)) & Qt.ItemFlag.ItemIsEditable).value), 0)
+        self.assertNotEqual(int((self._model.flags(self._model.index(2, 0)) & Qt.ItemFlag.ItemIsEditable).value), 0)
         self._model.set_tables_editable(False)
-        self.assertEqual(int(self._model.flags(self._model.index(0, 0)) & Qt.ItemIsEditable), 0)
-        self.assertEqual(int(self._model.flags(self._model.index(1, 0)) & Qt.ItemIsEditable), 0)
-        self.assertNotEqual(int(self._model.flags(self._model.index(2, 0)) & Qt.ItemIsEditable), 0)
+        self.assertEqual(int((self._model.flags(self._model.index(0, 0)) & Qt.ItemFlag.ItemIsEditable).value), 0)
+        self.assertEqual(int((self._model.flags(self._model.index(1, 0)) & Qt.ItemFlag.ItemIsEditable).value), 0)
+        self.assertNotEqual(int((self._model.flags(self._model.index(2, 0)) & Qt.ItemFlag.ItemIsEditable).value), 0)
 
 
 class TestMappingComponentsTable(unittest.TestCase):

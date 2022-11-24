@@ -20,9 +20,9 @@ import os
 import shutil
 import logging
 from sqlalchemy import create_engine
-from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection, QTimer
-from PySide2.QtGui import QStandardItem, QStandardItemModel, QBrush
-from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
+from PySide6.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection, QTimer
+from PySide6.QtGui import QStandardItem, QStandardItemModel, QBrush
+from PySide6.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget

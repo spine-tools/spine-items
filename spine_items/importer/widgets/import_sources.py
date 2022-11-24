@@ -18,7 +18,7 @@ Contains ImportSources widget and SourceDataTableMenu.
 import pickle
 from operator import itemgetter
 
-from PySide2.QtCore import (
+from PySide6.QtCore import (
     QItemSelectionModel,
     QModelIndex,
     QObject,
@@ -29,8 +29,8 @@ from PySide2.QtCore import (
     QMimeData,
     QItemSelection,
 )
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication
 
 from spinetoolbox.helpers import CharIconEngine
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec

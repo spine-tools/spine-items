@@ -17,7 +17,7 @@ Module for Merger class.
 """
 
 import os
-from PySide2.QtCore import Qt, Slot
+from PySide6.QtCore import Qt, Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
 from ..commands import UpdateCancelOnErrorCommand

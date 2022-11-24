@@ -17,8 +17,8 @@ Classes and functions that can be shared among unit test modules.
 """
 import os.path
 from unittest.mock import MagicMock
-from PySide2.QtGui import QStandardItemModel
-from PySide2.QtWidgets import QWidget
+from PySide6.QtGui import QStandardItemModel
+from PySide6.QtWidgets import QWidget
 
 
 class MockQWidget(QWidget):

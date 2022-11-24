@@ -19,9 +19,9 @@ from contextlib import contextmanager
 from copy import deepcopy
 from operator import methodcaller
 
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
-from PySide2.QtGui import QStandardItem
-from PySide2.QtWidgets import QMessageBox, QWidget
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
+from PySide6.QtGui import QStandardItem
+from PySide6.QtWidgets import QMessageBox, QWidget
 from spinedb_api.spine_io.exporters import gdx
 from spinedb_api import DatabaseMapping
 from .parameter_index_settings import IndexSettingsState, ParameterIndexSettings

@@ -16,8 +16,8 @@ Classes for context menus used alongside the Importer project item.
 :date:   9.1.2018
 """
 
-from PySide2.QtCore import Qt, QPoint, Slot, Signal
-from PySide2.QtWidgets import QMenu, QWidgetAction
+from PySide6.QtCore import Qt, QPoint, Slot, Signal
+from PySide6.QtWidgets import QMenu, QWidgetAction
 
 from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu, FilterMenuBase
 from ..mvcmodels.mappings_model_roles import Role

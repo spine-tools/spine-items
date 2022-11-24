@@ -16,7 +16,7 @@ Unit tests for :class:`RecordListModel`.
 :date:   26.9.2019
 """
 import unittest
-from PySide2.QtCore import QModelIndex, Qt
+from PySide6.QtCore import QModelIndex, Qt
 from spinedb_api.spine_io.exporters import gdx
 from spine_items.gdx_exporter.mvcmodels.record_list_model import RecordListModel
 

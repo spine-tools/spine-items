@@ -14,8 +14,8 @@ Contains a table view that can accept drops.
 :author: A. Soininen (VTT)
 :date:   25.5.2021
 """
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QTableView
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTableView
 
 
 DROP_MIME_TYPE = "application/spine_items-dtdata"

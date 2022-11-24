@@ -14,7 +14,7 @@ Contains the source data table model.
 :author: P. Vennström (VTT)
 :date:   1.6.2019
 """
-from PySide2.QtCore import Qt, Signal, Slot, QModelIndex
+from PySide6.QtCore import Qt, Signal, Slot, QModelIndex
 from spinedb_api import ParameterValueFormatError
 from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel

@@ -22,9 +22,9 @@ import os
 from copy import deepcopy
 from operator import methodcaller
 
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
-from PySide2.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
-from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
+from PySide6.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
+from PySide6.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex, QItemSelectionModel
 from spinetoolbox.helpers import busy_effect, open_url, same_path
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from spinetoolbox.config import STATUSBAR_SS
@@ -113,7 +113,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         parent = self.programfiles_model.index(0, 0)
         index = self.programfiles_model.index(0, 0, parent)
         selection_model = self._ui.treeView_programfiles.selectionModel()
-        selection_model.setCurrentIndex(index, selection_model.Select)
+        selection_model.setCurrentIndex(index, QItemSelectionModel.Select)
 
     def _make_ui(self):
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel

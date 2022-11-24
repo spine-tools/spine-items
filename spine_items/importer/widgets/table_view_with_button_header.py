@@ -10,17 +10,16 @@
 ######################################################################################################################
 
 """
-Classes for handling models in PySide2's model/view framework.
+Classes for handling models in PySide6's model/view framework.
 
 :author: P. Vennström (VTT)
 :date:   11.5.2020
 """
 from collections import namedtuple
 from collections.abc import Iterable
-from PySide2.QtCore import QPoint, Qt, Signal, Slot, QModelIndex
-from PySide2.QtGui import QCursor, QFont, QIcon
-from PySide2.QtWidgets import (
-    QAction,
+from PySide6.QtCore import QPoint, Qt, Signal, Slot, QModelIndex
+from PySide6.QtGui import QCursor, QFont, QIcon, QAction
+from PySide6.QtWidgets import (
     QHeaderView,
     QMenu,
     QTableView,

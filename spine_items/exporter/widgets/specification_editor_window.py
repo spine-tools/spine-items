@@ -16,9 +16,9 @@ Contains :class:`SpecificationEditorWindow`.
 """
 from copy import deepcopy
 import json
-from PySide2.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
-from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QAction, QApplication, QHeaderView, QMenu
+from PySide6.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
+from PySide6.QtGui import QKeySequence, QAction
+from PySide6.QtWidgets import QApplication, QHeaderView, QMenu
 
 from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
@@ -237,7 +237,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._mapping_editor_model,
             self._toolbox.project().project_dir,
         )
-        self._ui.mappings_table.setCurrentIndex(self._sort_mappings_table_model.index(0, 0))
+        ind = self._sort_mappings_table_model.index(0, 0)
+        self._ui.mappings_table.setCurrentIndex(ind)
 
     @property
     def settings_group(self):

@@ -19,9 +19,9 @@ import os
 import sys
 import uuid
 from spine_engine.utils.helpers import get_julia_command
-from PySide2.QtCore import Qt, Slot, QVariantAnimation, QPointF
-from PySide2.QtWidgets import QWidget, QFileDialog
-from PySide2.QtGui import QIcon, QLinearGradient, QPalette, QBrush
+from PySide6.QtCore import Qt, Slot, QVariantAnimation, QPointF
+from PySide6.QtWidgets import QWidget, QFileDialog
+from PySide6.QtGui import QIcon, QLinearGradient, QPalette, QBrush
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine, make_settings_dict_for_engine

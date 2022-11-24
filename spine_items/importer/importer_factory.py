@@ -16,7 +16,7 @@ The ImporterFactory class.
 :date:   15.4.2020
 """
 
-from PySide2.QtGui import QColor
+from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .widgets.import_editor_window import ImportEditorWindow
 from .importer import Importer

@@ -19,7 +19,7 @@ import os.path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
-from PySide2.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from spinedb_api import append_filter_config
 from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.data_transformer.data_transformer import DataTransformer

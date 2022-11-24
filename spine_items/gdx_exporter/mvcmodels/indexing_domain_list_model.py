@@ -15,7 +15,7 @@ Contains :class:`IndexingDomainListModel`.
 :author: A. Soininen (VTT)
 :date:   25.8.2020
 """
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
 from spinedb_api.spine_io.exporters import gdx
 
 

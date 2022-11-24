@@ -16,7 +16,7 @@ Module for tool icon class.
 :date:   4.4.2018
 """
 
-from PySide2.QtCore import QTimeLine, Slot, QPointF
+from PySide6.QtCore import QTimeLine, Slot, QPointF
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import AnimationSignaller
 

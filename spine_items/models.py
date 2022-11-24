@@ -19,7 +19,7 @@ as well.
 :date:    5.6.2020
 """
 from collections import namedtuple
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
 from spinetoolbox.mvcmodels.file_list_models import (
     FileListModel,
     CommandLineArgsModel,

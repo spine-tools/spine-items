@@ -17,8 +17,8 @@ Tests for :class:`IndexingTableModel`.
 """
 
 import unittest
-from PySide2.QtCore import QModelIndex, Qt
-from PySide2.QtWidgets import QApplication
+from PySide6.QtCore import QModelIndex, Qt
+from PySide6.QtWidgets import QApplication
 from spinedb_api.parameter_value import TimePattern
 import spinedb_api.spine_io.exporters.gdx as gdx
 from spine_items.gdx_exporter.mvcmodels.indexing_table_model import IndexingTableModel

@@ -17,9 +17,9 @@ Contains common & shared (Q)widgets.
 """
 
 import os
-from PySide2.QtCore import Qt, Signal, QUrl, QMimeData, Property
-from PySide2.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget, QDialog, QStatusBar
-from PySide2.QtGui import QDrag, QIntValidator
+from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property
+from PySide6.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget, QDialog, QStatusBar
+from PySide6.QtGui import QDrag, QIntValidator
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
 from spinetoolbox.widgets.select_database_items import SelectDatabaseItems

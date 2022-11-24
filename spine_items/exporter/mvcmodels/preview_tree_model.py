@@ -17,7 +17,7 @@ Contains model for export preview tables.
 from itertools import takewhile
 from operator import methodcaller
 
-from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt
 
 
 class PreviewTreeModel(QAbstractItemModel):

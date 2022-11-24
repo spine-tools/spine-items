@@ -15,8 +15,8 @@ Unit tests for :class:`ClassRenamesTableModel`.
 :date:   7.1.2021
 """
 import unittest
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QUndoStack
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QUndoStack
 from spine_items.data_transformer.mvcmodels.class_renames_table_model import ClassRenamesTableModel
 
 

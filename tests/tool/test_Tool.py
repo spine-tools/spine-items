@@ -20,8 +20,8 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 import os
-from PySide2.QtGui import QStandardItem, QStandardItemModel
-from PySide2.QtWidgets import QApplication, QMenu
+from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import QApplication, QMenu
 from spine_items.tool.item_info import ItemInfo
 from spine_items.tool.tool_specifications import ExecutableTool
 from spine_items.tool.tool import Tool

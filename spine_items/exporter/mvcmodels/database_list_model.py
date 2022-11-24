@@ -15,7 +15,7 @@ Contains a model for Exporter's output preview.
 :authors: A. Soininen (VTT)
 :date:    4.1.2022
 """
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
 
 
 class DatabaseListModel(QAbstractListModel):

@@ -17,7 +17,7 @@ Contains CustomFileSystemWatcher.
 """
 
 import os
-from PySide2.QtCore import QFileSystemWatcher, Signal, Slot
+from PySide6.QtCore import QFileSystemWatcher, Signal, Slot
 
 
 class CustomFileSystemWatcher(QFileSystemWatcher):

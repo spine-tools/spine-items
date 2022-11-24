@@ -19,7 +19,7 @@ Contains Importer project item class.
 import os
 from operator import itemgetter
 
-from PySide2.QtCore import QModelIndex, Qt, Slot
+from PySide6.QtCore import QModelIndex, Qt, Slot
 
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem

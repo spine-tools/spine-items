@@ -16,8 +16,8 @@ Contains OptionsWidget class.
 :date:   1.6.2019
 """
 import functools
-from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QComboBox,

@@ -16,7 +16,7 @@ Contains the :class:`DataTransformer` project item.
 :date:    2.10.2020
 """
 from json import dump
-from PySide2.QtCore import Slot
+from PySide6.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from .item_info import ItemInfo

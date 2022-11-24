@@ -9,8 +9,8 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """Contains purge dialog's business code."""
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QDialog, QDialogButtonBox
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QDialog, QDialogButtonBox
 from spinetoolbox.widgets.select_database_items import SelectDatabaseItems
 
 

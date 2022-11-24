@@ -14,8 +14,8 @@ Contains :class:`SpecificationEditorWindow`.
 :author: A. Soininen (VTT)
 :date:   2.10.2020
 """
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QFileDialog
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QFileDialog
 from spinetoolbox.project_item.specification_editor_window import (
     SpecificationEditorWindowBase,
     ChangeSpecPropertyCommand,

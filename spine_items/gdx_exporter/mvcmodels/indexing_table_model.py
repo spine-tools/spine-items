@@ -15,7 +15,7 @@ Contains :class:`IndexingTableModel`.
 :author: A. Soininen (VTT)
 :date:   25.8.2020
 """
-from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.spine_io.exporters import gdx
 
 

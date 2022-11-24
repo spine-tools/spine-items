@@ -17,9 +17,9 @@ Module for view class.
 """
 
 import os
-from PySide2.QtCore import Qt, Slot, Signal, QObject, QTimer
-from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
-from PySide2.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
+from PySide6.QtCore import Qt, Slot, Signal, QObject, QTimer
+from PySide6.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
 from sqlalchemy.engine.url import URL, make_url
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.plotting import plot_db_mngr_items, PlottingError

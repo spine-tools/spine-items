@@ -15,7 +15,7 @@ Contains a table model that can be used as drop target.
 :date:   28.5.2021
 """
 import pickle
-from PySide2.QtCore import QAbstractTableModel
+from PySide6.QtCore import QAbstractTableModel
 from ..commands import InsertRow
 from ..widgets.drop_target_table import DROP_MIME_TYPE
 

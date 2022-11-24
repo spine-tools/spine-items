@@ -18,8 +18,8 @@ The ToolFactory class.
 
 import os
 import uuid
-from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QFileDialog
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QFileDialog
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .tool import Tool
 from .tool_icon import ToolIcon

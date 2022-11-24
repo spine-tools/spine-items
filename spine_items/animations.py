@@ -16,9 +16,9 @@ Animation class for importers and exporters.
 :date:   12.11.2019
 """
 
-from PySide2.QtGui import QPainterPath, QFont, QFontMetrics
-from PySide2.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF, QPointF, QLineF
-from PySide2.QtWidgets import QGraphicsPathItem
+from PySide6.QtGui import QPainterPath, QFont, QFontMetrics
+from PySide6.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF, QPointF, QLineF
+from PySide6.QtWidgets import QGraphicsPathItem
 from spinetoolbox.helpers import color_from_index
 
 

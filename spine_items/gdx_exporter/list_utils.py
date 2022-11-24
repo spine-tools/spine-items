@@ -16,7 +16,7 @@ Contains list helper functions for list manipulation.
 :date:   12.12.2019
 """
 
-from PySide2.QtCore import QModelIndex
+from PySide6.QtCore import QModelIndex
 
 
 def move_list_elements(originals, first, last, target):

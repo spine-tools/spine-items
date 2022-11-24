@@ -20,7 +20,7 @@ import pathlib
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from PySide2.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication
 from spine_engine.project_item.project_item_resource import file_resource
 from spine_engine.execution_managers.persistent_execution_manager import kill_persistent_processes
 from spine_engine.project_item.project_item_resource import CmdLineArg

@@ -17,7 +17,7 @@ A worker based machinery to construct the settings data structures needed for gd
 """
 
 from copy import deepcopy
-from PySide2.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtCore import QObject, QThread, Signal, Slot
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from spinedb_api.spine_io.exporters import gdx
 

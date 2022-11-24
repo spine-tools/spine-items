@@ -17,8 +17,8 @@ Unit tests for :class:`SetListModel`.
 """
 
 import unittest
-from PySide2.QtCore import QModelIndex, Qt
-from PySide2.QtGui import QColor
+from PySide6.QtCore import QModelIndex, Qt
+from PySide6.QtGui import QColor
 from spine_items.gdx_exporter.mvcmodels.set_list_model import SetListModel
 from spinedb_api.spine_io.exporters.gdx import ExportFlag, Origin, SetMetadata, SetSettings
 
@@ -60,9 +60,9 @@ class TestSetListModel(unittest.TestCase):
         )
         model = SetListModel(set_settings)
         index = model.index(0, 0)
-        self.assertEqual(index.data(Qt.CheckStateRole), Qt.Unchecked)
+        self.assertEqual(index.data(Qt.CheckStateRole), Qt.Unchecked.value)
         index = model.index(1, 0)
-        self.assertEqual(index.data(Qt.CheckStateRole), Qt.Unchecked)
+        self.assertEqual(index.data(Qt.CheckStateRole), Qt.Unchecked.value)
 
     def test_flags(self):
         set_settings = SetSettings({"domain1"}, {"set1"}, {})

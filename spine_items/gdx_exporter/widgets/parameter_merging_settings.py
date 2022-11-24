@@ -16,8 +16,8 @@ Parameter merging settings widget.
 :date:   19.2.2020
 """
 
-from PySide2.QtCore import QItemSelection, QItemSelectionModel, Signal, Slot
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import QItemSelection, QItemSelectionModel, Signal, Slot
+from PySide6.QtWidgets import QWidget
 from spinedb_api.spine_io.exporters.gdx import MergingSetting
 from .merging_error_flag import MergingErrorFlag
 from ..mvcmodels.domain_name_list_model import DomainNameListModel

@@ -16,8 +16,8 @@ Tool class.
 :date:   19.12.2017
 """
 import os
-from PySide2.QtCore import Slot, QItemSelection, Qt
-from PySide2.QtWidgets import QAction
+from PySide6.QtCore import Slot, QItemSelection, Qt
+from PySide6.QtGui import QAction
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spinetoolbox.mvcmodels.file_list_models import FileListModel

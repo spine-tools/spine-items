@@ -19,7 +19,7 @@ import os.path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
-from PySide2.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from spine_engine.utils.helpers import shorten
 from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.exporter.exporter import Exporter
