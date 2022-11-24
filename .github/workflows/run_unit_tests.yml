@@ -27,7 +27,6 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get install -y unixodbc-dev
-        sudo apt install -y libopengl0
         sudo apt install -y libegl1
     - name: Install dependencies
       env:
