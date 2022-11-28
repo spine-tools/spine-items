@@ -17,8 +17,6 @@ Contains Exporter's specifications.
 """
 from dataclasses import dataclass
 from enum import Enum, unique
-import json
-
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spinedb_api.mapping import to_dict as mapping_to_dict, Position, unflatten
 from spinedb_api.export_mapping.export_mapping import (

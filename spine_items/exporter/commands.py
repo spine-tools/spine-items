@@ -124,7 +124,7 @@ class SetMappingEnabled(QUndoCommand):
         self._mappings_table_model = mappings_table_model
         name = self._mappings_table_model.index(row, 0).data()
         self._row = row
-        self._previously_enabled = self._mappings_table_model.index(self._row, 0).data(Qt.CheckStateRole) == Qt.Checked
+        self._previously_enabled = self._mappings_table_model.index(self._row, 0).data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value
         super().__init__(("disable" if self._previously_enabled else "enable") + f" '{name}'")
 
     def redo(self):

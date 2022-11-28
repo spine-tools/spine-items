@@ -39,7 +39,7 @@ class MappingsTableModel(QAbstractTableModel):
     """Emitted after the write order has changed."""
 
     MAPPING_SPECIFICATION_ROLE = Qt.UserRole.value + 1
-    MAPPING_TYPE_ROLE = Qt.ItemDataRole.UserRole + 2
+    MAPPING_TYPE_ROLE = Qt.UserRole.value + 2
     MAPPING_ROOT_ROLE = Qt.UserRole.value + 3
     ALWAYS_EXPORT_HEADER_ROLE = Qt.UserRole.value + 4
     RELATIONSHIP_DIMENSIONS_ROLE = Qt.UserRole.value + 5
@@ -113,7 +113,7 @@ class MappingsTableModel(QAbstractTableModel):
             if role == self.MAPPING_SPECIFICATION_ROLE:
                 return spec
             if role == self.MAPPING_TYPE_ROLE:
-                return spec.type
+                return spec.type.value
             if role == self.MAPPING_ROOT_ROLE:
                 return spec.root
             if role == self.ALWAYS_EXPORT_HEADER_ROLE:
@@ -145,7 +145,7 @@ class MappingsTableModel(QAbstractTableModel):
             return super().flags(index) | Qt.ItemIsUserCheckable | Qt.ItemIsEditable
         return super().flags(index)
 
-    def headerData(self, section, orientation, role):
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return ("Name", "Write order")[section]
         return None

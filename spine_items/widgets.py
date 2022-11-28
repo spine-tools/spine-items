@@ -18,11 +18,18 @@ Contains common & shared (Q)widgets.
 
 import os
 from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property
-from PySide6.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget, QDialog, QStatusBar
+from PySide6.QtWidgets import (
+    QApplication,
+    QTreeView,
+    QStyledItemDelegate,
+    QWidget,
+    QDialog,
+    QStatusBar,
+    QDialogButtonBox,
+)
 from PySide6.QtGui import QDrag, QIntValidator
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
-from spinetoolbox.widgets.select_database_items import SelectDatabaseItems
 from .utils import convert_to_sqlalchemy_url
 
 
@@ -221,7 +228,7 @@ class UrlSelectorMixin:
         self.ui.lineEdit_port.setValidator(QIntValidator())
 
     def enable_dialect(self, dialect):
-        """Enable the given dialect in the item controls."""
+        """Enables the given dialect in the item controls."""
         if dialect == "":
             self.enable_no_dialect()
         elif dialect == "sqlite":
@@ -241,13 +248,13 @@ class UrlSelectorMixin:
                 self.ui.comboBox_dsn.setCurrentIndex(-1)
                 self.enable_mssql()
             else:
-                msg = "Please create a SQL Server ODBC Data Source first."
-                self._logger.msg_warning.emit(msg)
+                msg = "Please create an SQL Server ODBC Data Source first."
+                self._toolbox.msg_warning.emit(msg)
         else:
             self.enable_common()
 
     def enable_no_dialect(self):
-        """Adjust widget enabled status to default when no dialect is selected."""
+        """Adjusts widget enabled status to default when no dialect is selected."""
         self.ui.comboBox_dialect.setEnabled(True)
         self.ui.comboBox_dsn.setEnabled(False)
         self.ui.toolButton_select_sqlite_file.setEnabled(False)
@@ -258,7 +265,7 @@ class UrlSelectorMixin:
         self.ui.lineEdit_password.setEnabled(False)
 
     def enable_mssql(self):
-        """Adjust controls to mssql connection specification."""
+        """Adjusts controls to mssql connection specification."""
         self.ui.comboBox_dsn.setEnabled(True)
         self.ui.toolButton_select_sqlite_file.setEnabled(False)
         self.ui.lineEdit_host.setEnabled(False)
@@ -271,7 +278,7 @@ class UrlSelectorMixin:
         self.ui.lineEdit_database.clear()
 
     def enable_sqlite(self):
-        """Adjust controls to sqlite connection specification."""
+        """Adjusts controls to sqlite connection specification."""
         self.ui.comboBox_dsn.setEnabled(False)
         self.ui.comboBox_dsn.setCurrentIndex(-1)
         self.ui.toolButton_select_sqlite_file.setEnabled(True)
@@ -286,7 +293,7 @@ class UrlSelectorMixin:
         self.ui.lineEdit_password.clear()
 
     def enable_common(self):
-        """Adjust controls to 'common' connection specification."""
+        """Adjusts controls to 'common' connection specification."""
         self.ui.comboBox_dsn.setEnabled(False)
         self.ui.comboBox_dsn.setCurrentIndex(-1)
         self.ui.toolButton_select_sqlite_file.setEnabled(False)
@@ -314,9 +321,9 @@ class UrlSelector(UrlSelectorMixin, QDialog):
         self.statusbar.setStyleSheet(STATUSBAR_SS)
         self.ui.horizontalLayout_statusbar_ph.addWidget(self.statusbar)
         self._sa_url = None
-        self.ui.buttonBox.button(self.ui.buttonBox.Ok).setEnabled(False)
+        self.ui.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self._setup(("mysql", "sqlite", "mssql", "postgresql", "oracle"))  # Others?
-        self.ui.comboBox_dialect.activated[str].connect(self.enable_dialect)
+        self.ui.comboBox_dialect.currentTextChanged.connect(self.enable_dialect)
         self.ui.comboBox_dialect.activated.connect(self._refresh_url)
         self.ui.toolButton_select_sqlite_file.clicked.connect(self._browse_sqlite_file)
         self.ui.lineEdit_username.editingFinished.connect(self._refresh_url)
@@ -342,13 +349,15 @@ class UrlSelector(UrlSelectorMixin, QDialog):
             "password": self.ui.lineEdit_password.text(),
         }
         self._sa_url = convert_to_sqlalchemy_url(url, logger=self)
-        self.ui.buttonBox.button(self.ui.buttonBox.Ok).setEnabled(self._sa_url is not None)
+        if self._sa_url is not None:
+            self.statusbar.clearMessage()
+        self.ui.buttonBox.button(QDialogButtonBox.Ok).setEnabled(self._sa_url is not None)
 
     def _browse_sqlite_file(self):
         filter_ = "*.sqlite;;*.*"
         key = "selectImportSourceSQLiteFile"
         filepath, _ = get_open_file_name_in_last_dir(
-            self._toolbox.qsettings(), key, self, "Select a SQLite file", APPLICATION_PATH, filter_=filter_
+            self._toolbox.qsettings(), key, self, "Select an SQLite file", APPLICATION_PATH, filter_=filter_
         )
         if not filepath:
             return

@@ -149,9 +149,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._mappings_table_model.mapping_enabled_state_change_requested.connect(self._set_mapping_enabled)
         self._mappings_table_model.set_all_mappings_enabled_requested.connect(self._enable_disable_all_mappings)
         self._mappings_table_model.write_order_about_to_change.connect(
-            lambda: self._expect_current_mapping_change(True)
+            lambda tr=True: self._expect_current_mapping_change(tr)
         )
-        self._mappings_table_model.write_order_changed.connect(lambda: self._expect_current_mapping_change(False))
+        self._mappings_table_model.write_order_changed.connect(lambda tr=False: self._expect_current_mapping_change(tr))
         self._mapping_editor_model = MappingEditorTableModel("", None, self._undo_stack, self, self)
         self._sort_mappings_table_model = MappingsTableProxy(self)
         self._sort_mappings_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
@@ -237,8 +237,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._mapping_editor_model,
             self._toolbox.project().project_dir,
         )
-        ind = self._sort_mappings_table_model.index(0, 0)
-        self._ui.mappings_table.setCurrentIndex(ind)
+        self._ui.mappings_table.setCurrentIndex(self._sort_mappings_table_model.index(0, 0))
 
     @property
     def settings_group(self):
@@ -347,7 +346,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         self.current_mapping_about_to_change.emit()
         current = self._sort_mappings_table_model.mapToSource(current)
-        mapping_type = current.data(MappingsTableModel.MAPPING_TYPE_ROLE)
+        mapping_type = MappingType(current.data(MappingsTableModel.MAPPING_TYPE_ROLE))
         self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
         self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
         self._set_always_export_header_silently(current.data(MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE))
@@ -393,6 +392,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.mapping_spec_contents.setEnabled(True)
         self.current_mapping_changed.emit()
 
+    @Slot(bool)
     def _expect_current_mapping_change(self, expect_change):
         """Connects and disconnects signals depending of if current mapping is expected to change or not
 
@@ -431,7 +431,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_parameter_dimensions_silently(top_left.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
             enable_controls = True
         if MappingsTableModel.MAPPING_TYPE_ROLE in roles:
-            mapping_type = top_left.data(MappingsTableModel.MAPPING_TYPE_ROLE)
+            mapping_type = MappingType(top_left.data(MappingsTableModel.MAPPING_TYPE_ROLE))
             self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
             self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
             enable_controls = True
@@ -755,7 +755,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             checked (int): checked state
         """
         index = self._ui.mappings_table.currentIndex()
-        self._undo_stack.push(SetAlwaysExportHeader(index, checked == Qt.Checked))
+        self._undo_stack.push(SetAlwaysExportHeader(index, checked == Qt.CheckState.Checked.value))
 
     def _set_always_export_header_silently(self, always_export_header):
         """
@@ -767,7 +767,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if always_export_header == self._ui.always_export_header_check_box.isChecked():
             return
         self._ui.always_export_header_check_box.stateChanged.disconnect(self._change_always_export_header)
-        self._ui.always_export_header_check_box.setCheckState(Qt.Checked if always_export_header else Qt.Unchecked)
+        self._ui.always_export_header_check_box.setCheckState(Qt.CheckState.Checked if always_export_header else Qt.CheckState.Unchecked)
         self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
 
     @Slot(int)
@@ -815,7 +815,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         index = self._ui.mappings_table.currentIndex()
         if not index.isValid():
             return
-        flag = checked == Qt.Checked
+        flag = checked == Qt.CheckState.Checked.value
         self._undo_stack.beginMacro(("check" if flag else "uncheck") + " fix table name checkbox")
         self._undo_stack.push(SetUseFixedTableNameFlag(index, flag))
         mapping = index.data(MappingsTableModel.MAPPING_ROOT_ROLE)
