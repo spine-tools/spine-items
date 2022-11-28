@@ -118,19 +118,19 @@ class TestDataConnection(unittest.TestCase):
             # Add nothing
             type(mock_url_selector).url = mock.PropertyMock(return_value="")
             self.data_connection.show_add_db_reference_dialog()
-            self.assertEqual(1, mock_url_selector.exec_.call_count)
+            self.assertEqual(1, mock_url_selector.exec.call_count)
             self.assertEqual(0, len(self.data_connection.db_references))
             self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Add one url
             type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://randy:creamfraiche@host:3306/db")
             self.data_connection.show_add_db_reference_dialog()
-            self.assertEqual(2, mock_url_selector.exec_.call_count)
+            self.assertEqual(2, mock_url_selector.exec.call_count)
             self.assertEqual(1, len(self.data_connection.db_references))
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Add same url with different username and password (should not be added)
             type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://scott:tiger@host:3306/db")
             self.data_connection.show_add_db_reference_dialog()
-            self.assertEqual(3, mock_url_selector.exec_.call_count)
+            self.assertEqual(3, mock_url_selector.exec.call_count)
             self.assertEqual(1, len(self.data_connection.db_references))
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
 
@@ -167,7 +167,7 @@ class TestDataConnection(unittest.TestCase):
             self.data_connection.show_add_db_reference_dialog()
             type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://randy:creamfraiche@host:3307/db")
             self.data_connection.show_add_db_reference_dialog()
-            self.assertEqual(2, mock_url_selector.exec_.call_count)
+            self.assertEqual(2, mock_url_selector.exec.call_count)
             self.assertEqual(2, len(self.data_connection.db_references))
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Test with no indexes selected
@@ -433,7 +433,7 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         index = self.data_connection.data_model.index(0, 0)
         self._properties_tab.ui.treeView_dc_data.selectionModel().select(index, QItemSelectionModel.ClearAndSelect)
         with mock.patch("spine_items.data_connection.data_connection.QMessageBox") as mock_message_box:
-            mock_message_box.exec_.return_value = QMessageBox.Ok
+            mock_message_box.exec.return_value = QMessageBox.Ok
             with signal_waiter(self.data_connection.file_system_watcher.file_removed) as waiter:
                 self.data_connection.remove_files()
                 waiter.wait()
