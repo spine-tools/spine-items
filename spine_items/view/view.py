@@ -487,7 +487,7 @@ class _RenamePinDialog(_PinDialogMixin, QDialog):
     @classmethod
     def get_new_name(cls, view, old_name, parent):
         dialog = cls(view, old_name, parent)
-        result = dialog.exec_()
+        result = dialog.exec()
         return dialog.new_name, result == QDialog.Accepted
 
 

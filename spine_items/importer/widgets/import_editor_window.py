@@ -186,7 +186,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     def _get_source_url(self):
         selector = UrlSelector(self._toolbox, parent=self)
-        selector.exec_()
+        selector.exec()
         return selector.url
 
     def _get_source_file_path(self):
@@ -301,7 +301,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if not spec_name:
             spec_name = "unnamed specification"
         dialog.setWindowTitle(f"Select connector for {spec_name}")
-        answer = dialog.exec_()
+        answer = dialog.exec()
         if not answer:
             return None
         row = connector_list_wg.currentIndex().row()

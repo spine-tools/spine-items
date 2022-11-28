@@ -216,7 +216,7 @@ class DataConnection(ProjectItem):
     def show_add_db_reference_dialog(self, checked=False):
         """Opens a dialog where user can select a url to be added as reference for this Data Connection."""
         selector = UrlSelector(self._toolbox, self._toolbox)
-        selector.exec_()
+        selector.exec()
         url = selector.url
         if not url:  # Cancel button clicked
             return
@@ -539,7 +539,7 @@ class DataConnection(ProjectItem):
             QMessageBox.Question, title, msg, QMessageBox.Ok | QMessageBox.Cancel, parent=self._toolbox
         )
         message_box.button(QMessageBox.Ok).setText("Remove Files")
-        answer = message_box.exec_()
+        answer = message_box.exec()
         if answer == QMessageBox.Cancel:
             return
         self.delete_files_from_project(file_list)

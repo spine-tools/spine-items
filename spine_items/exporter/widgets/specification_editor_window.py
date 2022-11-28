@@ -460,7 +460,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         Args:
             position (QPoint): requested menu position
         """
-        self._mappings_table_menu.exec_(self._ui.mappings_table.mapToGlobal(position))
+        self._mappings_table_menu.exec(self._ui.mappings_table.mapToGlobal(position))
 
     def _make_mappings_table_menu(self):
         """Creates context menu for Mappings table.

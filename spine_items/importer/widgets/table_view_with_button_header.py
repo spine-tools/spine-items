@@ -165,14 +165,14 @@ class TableViewWithButtonHeader(QTableView):
         """Opens the context menu of the horizontal header."""
         if self._horizontal_header.display_all or self._horizontal_header.sections_with_buttons:
             screen_pos = self._horizontal_header.mapToGlobal(pos)
-            self._horizontal_menu.exec_(screen_pos)
+            self._horizontal_menu.exec(screen_pos)
 
     @Slot(QPoint)
     def _show_vertical_header_menu(self, pos):
         """Opens the context menu of the vertical header."""
         if self._vertical_header.display_all or self._vertical_header.sections_with_buttons:
             screen_pos = self._vertical_header.mapToGlobal(pos)
-            self._vertical_menu.exec_(screen_pos)
+            self._vertical_menu.exec(screen_pos)
 
     @Slot(QAction)
     def _set_all_column_data_types(self, action):
@@ -293,7 +293,7 @@ class HeaderWithButton(QHeaderView):
                 if isinstance(section_type, IntegerSequenceDateTimeConvertSpec):
                     existing_spec = section_type
             dialog = IntegerSequenceDateTimeConvertSpecDialog(existing_spec, self)
-            if not dialog.exec_():
+            if not dialog.exec():
                 return
             convert_spec = dialog.get_spec()
         else:

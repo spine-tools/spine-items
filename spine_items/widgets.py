@@ -148,7 +148,7 @@ class DataTreeView(QTreeView):
             pixmap = icon.pixmap(32, 32)
             drag.setPixmap(pixmap)
             drag.setHotSpot(pixmap.rect().center())
-        drag.exec_()
+        drag.exec()
 
     def mouseReleaseEvent(self, event):
         """Forgets drag start position"""
