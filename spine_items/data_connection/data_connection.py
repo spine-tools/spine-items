@@ -536,11 +536,15 @@ class DataConnection(ProjectItem):
         msg = "The following files will be removed permanently from the project\n\n" f"{files}\n\n" "Are you sure?"
         title = f"Remove {len(file_list)} File(s)"
         message_box = QMessageBox(
-            QMessageBox.Question, title, msg, QMessageBox.Ok | QMessageBox.Cancel, parent=self._toolbox
+            QMessageBox.Icon.Question,
+            title,
+            msg,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+            parent=self._toolbox,
         )
-        message_box.button(QMessageBox.Ok).setText("Remove Files")
+        message_box.button(QMessageBox.StandardButton.Ok).setText("Remove Files")
         answer = message_box.exec()
-        if answer == QMessageBox.Cancel:
+        if answer == QMessageBox.StandardButton.Cancel:
             return
         self.delete_files_from_project(file_list)
 

@@ -433,7 +433,7 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         index = self.data_connection.data_model.index(0, 0)
         self._properties_tab.ui.treeView_dc_data.selectionModel().select(index, QItemSelectionModel.ClearAndSelect)
         with mock.patch("spine_items.data_connection.data_connection.QMessageBox") as mock_message_box:
-            mock_message_box.exec.return_value = QMessageBox.Ok
+            mock_message_box.exec.return_value = QMessageBox.StandardButton.Ok
             with signal_waiter(self.data_connection.file_system_watcher.file_removed) as waiter:
                 self.data_connection.remove_files()
                 waiter.wait()

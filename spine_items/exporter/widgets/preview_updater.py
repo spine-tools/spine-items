@@ -279,7 +279,11 @@ class PreviewUpdater:
             return
         make_index = self._mappings_table_model.index
         indexes = [make_index(row, 0) for row in range(self._mappings_table_model.rowCount())]
-        names = [index.data() for index in indexes if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value]
+        names = [
+            index.data()
+            for index in indexes
+            if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value
+        ]
         old_name, new_name = self._preview_tree_model.rename_mappings(names)
         if not old_name:
             return

@@ -767,7 +767,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if always_export_header == self._ui.always_export_header_check_box.isChecked():
             return
         self._ui.always_export_header_check_box.stateChanged.disconnect(self._change_always_export_header)
-        self._ui.always_export_header_check_box.setCheckState(Qt.CheckState.Checked if always_export_header else Qt.CheckState.Unchecked)
+        self._ui.always_export_header_check_box.setCheckState(
+            Qt.CheckState.Checked if always_export_header else Qt.CheckState.Unchecked
+        )
         self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
 
     @Slot(int)
