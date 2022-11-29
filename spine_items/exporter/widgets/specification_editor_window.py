@@ -270,21 +270,21 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 dock.setFloating(False)
                 self.addDockWidget(area, dock)
         # Left side
-        self.splitDockWidget(self._ui.export_options_dock, self._ui.mappings_dock, Qt.Vertical)
-        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_spec_dock, Qt.Vertical)
+        self.splitDockWidget(self._ui.export_options_dock, self._ui.mappings_dock, Qt.Orientation.Vertical)
+        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_spec_dock, Qt.Orientation.Vertical)
         some_docks = (self._ui.mappings_dock, self._ui.mapping_options_dock, self._ui.mapping_spec_dock)
         height = sum(d.height() for d in some_docks)
-        self.resizeDocks(some_docks, [height * x for x in (0.1, 0.3, 0.6)], Qt.Vertical)
-        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_options_dock, Qt.Horizontal)
+        self.resizeDocks(some_docks, [height * x for x in (0.1, 0.3, 0.6)], Qt.Orientation.Vertical)
+        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_options_dock, Qt.Orientation.Horizontal)
         # Right side
         some_docks = (self._ui.preview_tables_dock, self._ui.preview_controls_dock)
-        self.splitDockWidget(*some_docks, Qt.Vertical)
+        self.splitDockWidget(*some_docks, Qt.Orientation.Vertical)
         height = sum(d.height() for d in some_docks)
-        self.resizeDocks(some_docks, [height * x for x in (0.9, 0.1)], Qt.Vertical)
+        self.resizeDocks(some_docks, [height * x for x in (0.9, 0.1)], Qt.Orientation.Vertical)
         some_docks = (self._ui.preview_tables_dock, self._ui.preview_contents_dock)
-        self.splitDockWidget(*some_docks, Qt.Horizontal)
+        self.splitDockWidget(*some_docks, Qt.Orientation.Horizontal)
         width = sum(d.width() for d in some_docks)
-        self.resizeDocks(some_docks, [width * x for x in (0.3, 0.7)], Qt.Horizontal)
+        self.resizeDocks(some_docks, [width * x for x in (0.3, 0.7)], Qt.Orientation.Horizontal)
         qApp.processEvents()  # pylint: disable=undefined-variable
         self.resize(size)
 
@@ -415,7 +415,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             bottom_right (QModelIndex): bottom index of modified mappings
             roles (list of int):
         """
-        if Qt.DisplayRole in roles:
+        if Qt.ItemDataRole.DisplayRole in roles:
             self._sort_mappings_table_model.invalidate()
         if max(roles) < Qt.UserRole:
             return
@@ -426,7 +426,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         enable_controls = False
         if MappingsTableModel.MAPPING_ROOT_ROLE in roles:
             root_mapping = top_left.data(MappingsTableModel.MAPPING_ROOT_ROLE)
-            self._mapping_editor_model.set_mapping(top_left.data(Qt.DisplayRole), root_mapping)
+            self._mapping_editor_model.set_mapping(top_left.data(Qt.ItemDataRole.DisplayRole), root_mapping)
             self._set_relationship_dimensions_silently(top_left.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE))
             self._set_parameter_dimensions_silently(top_left.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
             enable_controls = True
@@ -593,7 +593,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     def _toggle_all_enabled(self):
         """Pushes a command that enables or disables all mappings to undo stack."""
         for row in range(self._mappings_table_model.rowCount()):
-            if self._mappings_table_model.index(row, 0).data(Qt.CheckStateRole) == Qt.Unchecked:
+            if self._mappings_table_model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) == Qt.Unchecked.value:
                 self._undo_stack.push(EnableAllMappings(self._mappings_table_model))
                 return
         self._undo_stack.push(DisableAllMappings(self._mappings_table_model))

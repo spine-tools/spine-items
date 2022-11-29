@@ -60,7 +60,7 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         option = dc_ref_context_menu.get_action()
         dc_ref_context_menu.deleteLater()
         if option == "Open containing directory...":
-            ref_path = self.ui.treeView_dc_references.model().itemFromIndex(index).data(Qt.DisplayRole)
+            ref_path = self.ui.treeView_dc_references.model().itemFromIndex(index).data(Qt.ItemDataRole.DisplayRole)
             ref_dir = os.path.split(ref_path)[0]
             file_url = "file:///" + ref_dir
             self._toolbox.open_anchor(QUrl(file_url, QUrl.TolerantMode))

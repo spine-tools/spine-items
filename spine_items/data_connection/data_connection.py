@@ -260,9 +260,9 @@ class DataConnection(ProjectItem):
             if not parent.isValid():
                 continue
             if parent == file_ref_root_index:
-                file_references.append(index.data(Qt.DisplayRole))
+                file_references.append(index.data(Qt.ItemDataRole.DisplayRole))
             elif parent == db_ref_root_index:
-                db_references.append(index.data(Qt.DisplayRole))
+                db_references.append(index.data(Qt.ItemDataRole.DisplayRole))
         self._toolbox.undo_stack.push(RemoveDCReferencesCommand(self, file_references, db_references))
         self._logger.msg.emit("Selected references removed")
 
@@ -401,7 +401,7 @@ class DataConnection(ProjectItem):
                 fixed_references.append(path)
                 item.clearData()
                 item.setFlags(~Qt.ItemIsEditable)
-                item.setData(path, Qt.DisplayRole)
+                item.setData(path, Qt.ItemDataRole.DisplayRole)
             if not fixed_references:
                 return
             self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
@@ -453,12 +453,12 @@ class DataConnection(ProjectItem):
             if self.reference_model.itemFromIndex(index.parent()) is not self._file_ref_root:
                 continue
             item = self.reference_model.itemFromIndex(index)
-            path = item.data(Qt.DisplayRole)
+            path = item.data(Qt.ItemDataRole.DisplayRole)
             if item.data(_MISSING_ROLE) and os.path.exists(path):
                 fixed_references.append(path)
                 item.clearData()
                 item.setFlags(~Qt.ItemIsEditable)
-                item.setData(path, Qt.DisplayRole)
+                item.setData(path, Qt.ItemDataRole.DisplayRole)
         if not fixed_references:
             return
         self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
@@ -595,7 +595,7 @@ class DataConnection(ProjectItem):
         Args:
             item (QStandardItem): item to modify
         """
-        item.setData("The file is missing.", Qt.ToolTipRole)
+        item.setData("The file is missing.", Qt.ItemDataRole.ToolTipRole)
         item.setData(_MISSING_ITEM_FOREGROUND, Qt.ForegroundRole)
         item.setData(True, _MISSING_ROLE)
 
@@ -616,7 +616,7 @@ class DataConnection(ProjectItem):
             item = QStandardItem(os.path.basename(path))
             item.setFlags(~Qt.ItemIsEditable)
             icon = QFileIconProvider().icon(QFileInfo(path))
-            item.setData(icon, Qt.DecorationRole)
+            item.setData(icon, Qt.ItemDataRole.DecorationRole)
             item.setData(path, _DATA_FILE_PATH_ROLE)
             self.data_model.appendRow(item)
 

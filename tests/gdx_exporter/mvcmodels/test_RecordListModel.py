@@ -32,8 +32,8 @@ class TestRecordListModel(unittest.TestCase):
 
     def test_headerData(self):
         model = RecordListModel()
-        self.assertEqual(model.headerData(0, Qt.Horizontal), "")
-        self.assertEqual(model.headerData(0, Qt.Vertical), 1)
+        self.assertEqual(model.headerData(0, Qt.Orientation.Horizontal), "")
+        self.assertEqual(model.headerData(0, Qt.Orientation.Vertical), 1)
 
     def test_moveRows_down(self):
         model = RecordListModel()

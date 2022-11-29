@@ -185,7 +185,7 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(0, 0)))
             # Check that the remaining file is the one that's supposed to be there
             self.assertEqual([str(b)], self.data_connection.file_references)
-            self.assertEqual(str(b), self.ref_model.item(0).child(0).data(Qt.DisplayRole))
+            self.assertEqual(str(b), self.ref_model.item(0).child(0).data(Qt.ItemDataRole.DisplayRole))
             # Set one db selected and remove it
             db1_index = self.ref_model.index(0, 0, self.ref_model.index(1, 0))
             mock_selected_indexes.return_value = [db1_index]
@@ -195,7 +195,7 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Check that the remaining db is the one that's supposed to be there
             self.assertEqual(["mysql://host:3307/db"], self.data_connection.db_references)
-            self.assertEqual("mysql://host:3307/db", self.ref_model.item(1).child(0).data(Qt.DisplayRole))
+            self.assertEqual("mysql://host:3307/db", self.ref_model.item(1).child(0).data(Qt.ItemDataRole.DisplayRole))
             # Now remove the remaining file and db
             b_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
             db2_index = self.ref_model.index(0, 0, self.ref_model.index(1, 0))
@@ -215,9 +215,9 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
             # Check that the two remaining items are the ones that are supposed to be there
             self.assertEqual(str(a), self.data_connection.file_references[0])
-            self.assertEqual(str(a), self.ref_model.item(0).child(0).data(Qt.DisplayRole))
+            self.assertEqual(str(a), self.ref_model.item(0).child(0).data(Qt.ItemDataRole.DisplayRole))
             self.assertEqual(str(b), self.data_connection.file_references[1])
-            self.assertEqual(str(b), self.ref_model.item(0).child(1).data(Qt.DisplayRole))
+            self.assertEqual(str(b), self.ref_model.item(0).child(1).data(Qt.ItemDataRole.DisplayRole))
             # Now select the two remaining ones and remove them
             a_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
             b_index = self.ref_model.index(1, 0, self.ref_model.index(0, 0))
@@ -496,14 +496,14 @@ class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
     def test_refresh_file_reference(self):
         root_index = self.ref_model.index(0, 0)
         reference_index = self.ref_model.index(0, 0, root_index)
-        self.assertEqual(reference_index.data(Qt.ToolTipRole), "The file is missing.")
+        self.assertEqual(reference_index.data(Qt.ItemDataRole.ToolTipRole), "The file is missing.")
         Path(self._non_existent_path).touch()
         self.data_connection.restore_selections()
         self._properties_tab.ui.treeView_dc_references.selectionModel().select(
             reference_index, QItemSelectionModel.ClearAndSelect
         )
         self.data_connection.refresh_references()
-        self.assertIsNone(reference_index.data(Qt.ToolTipRole), "The file is missing.")
+        self.assertIsNone(reference_index.data(Qt.ItemDataRole.ToolTipRole), "The file is missing.")
         self.project.notify_resource_changes_to_successors.assert_called_once_with(self.data_connection)
 
 

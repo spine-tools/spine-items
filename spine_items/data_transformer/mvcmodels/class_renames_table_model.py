@@ -37,7 +37,7 @@ class RenamesRoles(IntEnum):
 class ClassRenamesTableModel(QAbstractTableModel):
     """A table model for entity class renaming tables."""
 
-    GET_DATA_ROLES = (Qt.DisplayRole, Qt.DisplayRole)
+    GET_DATA_ROLES = (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.DisplayRole)
     SET_DATA_ROLES = (RenamesRoles.SILENT_EDIT, RenamesRoles.SILENT_EDIT)
 
     def __init__(self, undo_stack, renaming):
@@ -57,11 +57,11 @@ class ClassRenamesTableModel(QAbstractTableModel):
         """
         return 2
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """Returns table data for given role."""
         if not index.isValid():
             return None
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return self._renames[index.row()][index.column()]
         return None
 
@@ -85,9 +85,9 @@ class ClassRenamesTableModel(QAbstractTableModel):
     def flags(self, index):
         return super().flags(index) | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         """Returns header data."""
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
+        if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
             return ("Original", "Renamed")[section]
         return None
 
@@ -114,11 +114,11 @@ class ClassRenamesTableModel(QAbstractTableModel):
         """
         return len(self._renames)
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         if not index.isValid():
             return False
         column = index.column()
-        if role == Qt.EditRole:
+        if role == Qt.ItemDataRole.EditRole:
             old_value = self._renames[index.row()][column]
             if value == old_value:
                 return False
@@ -127,6 +127,6 @@ class ClassRenamesTableModel(QAbstractTableModel):
             return True
         if role == RenamesRoles.SILENT_EDIT:
             self._renames[index.row()][index.column()] = value
-            self.dataChanged.emit(index, index, [Qt.DisplayRole])
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
             return True
         return False

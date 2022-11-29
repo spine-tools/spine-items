@@ -78,8 +78,8 @@ class PreviewTreeModel(QAbstractItemModel):
     def columnCount(self, parent=QModelIndex()):
         return 1
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole:
             mapping_name_row = index.internalId() - 1
             if mapping_name_row < 0:
                 return self._mapping_names[index.row()]

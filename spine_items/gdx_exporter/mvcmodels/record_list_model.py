@@ -28,11 +28,11 @@ class RecordListModel(QAbstractListModel):
         self._records = gdx.LiteralRecords([])
         self._set_name = ""
 
-    def data(self, index, role=Qt.DisplayRole):
-        """With `role == Qt.DisplayRole` returns the record's keys as comma separated string."""
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        """With `role == Qt.ItemDataRole.DisplayRole` returns the record's keys as comma separated string."""
         if not index.isValid():
             return None
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             keys = self._records.records[index.row()]
             return ", ".join(keys)
         return None
@@ -42,9 +42,9 @@ class RecordListModel(QAbstractListModel):
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable
         return Qt.NoItemFlags
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         """Returns row and column header data."""
-        if orientation == Qt.Horizontal:
+        if orientation == Qt.Orientation.Horizontal:
             return ""
         return section + 1
 
@@ -92,4 +92,4 @@ class RecordListModel(QAbstractListModel):
         self._records.shuffle(sorted(self._records.records))
         top_left = self.index(0, 0)
         bottom_right = self.index(len(self._records) - 1, 0)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.DisplayRole])
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole])

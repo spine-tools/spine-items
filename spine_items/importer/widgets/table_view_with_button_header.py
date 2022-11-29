@@ -123,8 +123,8 @@ class TableViewWithButtonHeader(QTableView):
             parent (QWidget): a parent widget
         """
         super().__init__(parent)
-        self._horizontal_header = HeaderWithButton(Qt.Horizontal, self)
-        self._vertical_header = HeaderWithButton(Qt.Vertical, self)
+        self._horizontal_header = HeaderWithButton(Qt.Orientation.Horizontal, self)
+        self._vertical_header = HeaderWithButton(Qt.Orientation.Vertical, self)
         self.setHorizontalHeader(self._horizontal_header)
         self._horizontal_header.setContextMenuPolicy(Qt.CustomContextMenu)
         self._horizontal_header.customContextMenuRequested.connect(self._show_horizontal_header_menu)
@@ -328,7 +328,7 @@ class HeaderWithButton(QHeaderView):
         Returns:
             int: Width of widget
         """
-        if self.orientation() == Qt.Horizontal:
+        if self.orientation() == Qt.Orientation.Horizontal:
             return self.height()
         return self.sectionSize(0)
 
@@ -338,7 +338,7 @@ class HeaderWithButton(QHeaderView):
         Returns:
             int: Height of widget
         """
-        if self.orientation() == Qt.Horizontal:
+        if self.orientation() == Qt.Orientation.Horizontal:
             return self.height()
         return self.sectionSize(0)
 
@@ -381,7 +381,7 @@ class HeaderWithButton(QHeaderView):
             index (int): logical_index to set position and geometry to.
         """
         margin = self._margin
-        if self.orientation() == Qt.Horizontal:
+        if self.orientation() == Qt.Orientation.Horizontal:
             button.setGeometry(
                 self.sectionViewportPosition(index) + margin.left,
                 margin.top,
@@ -433,7 +433,7 @@ class HeaderWithButton(QHeaderView):
 
         # get pixmap from render button and draw into header section.
         rw = self._render_button.grab()
-        if self.orientation() == Qt.Horizontal:
+        if self.orientation() == Qt.Orientation.Horizontal:
             painter.drawPixmap(self.sectionViewportPosition(logical_index), 0, rw)
         else:
             painter.drawPixmap(0, self.sectionViewportPosition(logical_index), rw)
@@ -489,7 +489,7 @@ class HeaderWithButton(QHeaderView):
         """
         if isinstance(model, SourceDataTableModel):
             old_model = self.model()
-            if self.orientation() == Qt.Horizontal:
+            if self.orientation() == Qt.Orientation.Horizontal:
                 model.column_types_updated.connect(self.update_buttons)
                 if isinstance(old_model, SourceDataTableModel):
                     old_model.column_types_updated.disconnect(self.update_buttons)

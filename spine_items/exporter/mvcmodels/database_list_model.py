@@ -41,10 +41,10 @@ class DatabaseListModel(QAbstractListModel):
         self._databases.append(database)
         self.endInsertRows()
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return self._databases[index.row()].url
         return None
 
@@ -113,7 +113,7 @@ class DatabaseListModel(QAbstractListModel):
             if old == db.url:
                 db.url = new
                 index = self.index(row, 0)
-                self.dataChanged.emit(index, index, [Qt.DisplayRole])
+                self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
                 return
 
     def urls(self):

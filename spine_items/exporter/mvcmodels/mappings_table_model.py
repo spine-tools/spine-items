@@ -38,16 +38,16 @@ class MappingsTableModel(QAbstractTableModel):
     write_order_changed = Signal()
     """Emitted after the write order has changed."""
 
-    MAPPING_SPECIFICATION_ROLE = Qt.UserRole.value + 1
-    MAPPING_TYPE_ROLE = Qt.UserRole.value + 2
-    MAPPING_ROOT_ROLE = Qt.UserRole.value + 3
-    ALWAYS_EXPORT_HEADER_ROLE = Qt.UserRole.value + 4
-    RELATIONSHIP_DIMENSIONS_ROLE = Qt.UserRole.value + 5
-    USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.UserRole.value + 6
-    FIXED_TABLE_NAME_ROLE = Qt.UserRole.value + 7
-    PARAMETER_DIMENSIONS_ROLE = Qt.UserRole.value + 8
-    GROUP_FN_ROLE = Qt.UserRole.value + 9
-    HIGHLIGHT_DIMENSION_ROLE = Qt.UserRole.value + 10
+    MAPPING_SPECIFICATION_ROLE = Qt.ItemDataRole.UserRole + 1
+    MAPPING_TYPE_ROLE = Qt.ItemDataRole.UserRole + 2
+    MAPPING_ROOT_ROLE = Qt.ItemDataRole.UserRole + 3
+    ALWAYS_EXPORT_HEADER_ROLE = Qt.ItemDataRole.UserRole + 4
+    RELATIONSHIP_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 5
+    USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.ItemDataRole.UserRole + 6
+    FIXED_TABLE_NAME_ROLE = Qt.ItemDataRole.UserRole + 7
+    PARAMETER_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 8
+    GROUP_FN_ROLE = Qt.ItemDataRole.UserRole + 9
+    HIGHLIGHT_DIMENSION_ROLE = Qt.ItemDataRole.UserRole + 10
 
     def __init__(self, mappings=None, parent=None):
         """
@@ -61,7 +61,7 @@ class MappingsTableModel(QAbstractTableModel):
         self._names = list(mappings)
         self._mappings = mappings
 
-    def columnCount(self, parent):
+    def columnCount(self, parent=QModelIndex()):
         return 2
 
     def extend(self, mapping_specification, name=""):
@@ -86,16 +86,16 @@ class MappingsTableModel(QAbstractTableModel):
         self.endInsertRows()
         return position
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         column = index.column()
         if column == 0:
-            if role == Qt.CheckStateRole:
+            if role == Qt.ItemDataRole.CheckStateRole:
                 spec = self._mappings[self._names[index.row()]]
                 return Qt.Checked if spec.enabled else Qt.Unchecked
-            if role in (Qt.DisplayRole, Qt.EditRole):
+            if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
                 return self._names[index.row()]
         if column == 1:
-            if role in (Qt.DisplayRole, Qt.EditRole):
+            if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
                 order = str(index.row() + 1)
                 if order.endswith(("11", "12", "13")):
                     return order + "th"
@@ -108,7 +108,7 @@ class MappingsTableModel(QAbstractTableModel):
                 return order + "th"
             if role == Qt.TextAlignmentRole:
                 return Qt.AlignCenter
-        if role >= Qt.UserRole:
+        if role >= Qt.ItemDataRole.UserRole:
             spec = self._mappings[self._names[index.row()]]
             if role == self.MAPPING_SPECIFICATION_ROLE:
                 return spec
@@ -146,7 +146,7 @@ class MappingsTableModel(QAbstractTableModel):
         return super().flags(index)
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return ("Name", "Write order")[section]
         return None
 
@@ -208,19 +208,19 @@ class MappingsTableModel(QAbstractTableModel):
     def rowCount(self, parent=QModelIndex()):
         return len(self._names)
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         column = index.column()
         if column == 0:
-            if role == Qt.CheckStateRole:
+            if role == Qt.ItemDataRole.CheckStateRole:
                 row = index.row()
                 self.mapping_enabled_state_change_requested.emit(row)
                 return True
-            if role == Qt.EditRole:
+            if role == Qt.ItemDataRole.EditRole:
                 if not value or value in self._names:
                     return False
                 self.rename_requested.emit(index.row(), value)
                 return True
-        if role > Qt.UserRole:
+        if role > Qt.ItemDataRole.UserRole:
             name = self._names[index.row()]
             spec = self._mappings[name]
             if role == self.MAPPING_ROOT_ROLE:
@@ -291,7 +291,7 @@ class MappingsTableModel(QAbstractTableModel):
         self._names[row] = new_name
         self._mappings[new_name] = self._mappings.pop(previous)
         index = self.index(row, 1)
-        self.dataChanged.emit(index, index, [Qt.DisplayRole])
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
 
     def set_mapping_enabled(self, row, enabled):
         """Enables or disables a mapping.
@@ -304,7 +304,7 @@ class MappingsTableModel(QAbstractTableModel):
         spec = self._mappings[name]
         spec.enabled = enabled
         index = self.index(row, 0)
-        self.dataChanged.emit(index, index, [Qt.CheckStateRole])
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
 
     def set_all_enabled(self, enabled):
         """Enables/disables all mappings.
@@ -324,7 +324,7 @@ class MappingsTableModel(QAbstractTableModel):
         if first is not None:
             top_left = self.index(first, 0)
             bottom_right = self.index(last, 0)
-            self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
 
     def enable_mapping_rows(self, rows):
         """Enables mappings on given rows and disables the rest.
@@ -345,7 +345,7 @@ class MappingsTableModel(QAbstractTableModel):
         if first is not None:
             top_left = self.index(first, 0)
             bottom_right = self.index(last, 0)
-            self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
 
     def enabled_mapping_rows(self):
         """Returns enabled mapping rows.

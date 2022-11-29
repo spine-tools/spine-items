@@ -39,8 +39,8 @@ class CheckableFileListModel(FileListModel):
     checked_state_changed = Signal(QModelIndex, bool)
     """Emitted when an item's checked state changes."""
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.CheckStateRole:
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.CheckStateRole:
             if index.internalPointer() is None:
                 row = index.row()
                 if row < len(self._single_resources):
@@ -124,7 +124,7 @@ class CheckableFileListModel(FileListModel):
             if item.resource.provider_name == old_resource.provider_name and item.resource.label == old_resource.label:
                 self._single_resources[row] = item._replace(resource=new_resource)
                 index = self.index(row, 0)
-                self.dataChanged.emit(index, index, [Qt.DisplayRole, Qt.ToolTipRole])
+                self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole])
                 return
         for pack_row, pack in enumerate(self._pack_resources):
             for row, resource in enumerate(pack.resources):
@@ -133,7 +133,7 @@ class CheckableFileListModel(FileListModel):
                         pack.resources[row] = new_resource
                         pack_index = self.index(pack_row, 0)
                         index = self.index(row, 0, pack_index)
-                        self.dataChanged.emit(index, index, [Qt.DisplayRole, Qt.ToolTipRole])
+                        self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole])
                         return
                     else:
                         single_resources = [item.resource for item in self._single_resources]
@@ -147,9 +147,9 @@ class CheckableFileListModel(FileListModel):
                         self.update(single_resources + new_pack_resources)
                         return
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         """Sets data in the model."""
-        if role != Qt.CheckStateRole or not index.isValid():
+        if role != Qt.ItemDataRole.CheckStateRole or not index.isValid():
             return False
         checked = value == Qt.Checked
         self.checked_state_changed.emit(index, checked)
@@ -177,7 +177,7 @@ class CheckableFileListModel(FileListModel):
         else:
             row -= len(self._single_resources)
             self._pack_resources[row] = self._pack_resources[row]._replace(checked=checked)
-        self.dataChanged.emit(index, index, [Qt.CheckStateRole])
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
 
     def index_with_file_path(self):
         """Tries to find an item that has a valid file path.
@@ -254,10 +254,10 @@ class DatabaseListModel(QAbstractListModel):
         self._databases.append(database)
         self.endInsertRows()
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return self._databases[index.row()].url
         return None
 
@@ -326,7 +326,7 @@ class DatabaseListModel(QAbstractListModel):
             if old == db.url:
                 db.url = new
                 index = self.index(row, 0)
-                self.dataChanged.emit(index, index, [Qt.DisplayRole])
+                self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
                 return
 
     def urls(self):
@@ -360,10 +360,10 @@ class FullUrlListModel(QAbstractListModel):
         self._urls.append(url)
         self.endInsertRows()
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return self._urls[index.row()]
         return None
 
@@ -393,5 +393,5 @@ class FullUrlListModel(QAbstractListModel):
             if old == url:
                 self._urls[row] = new
                 index = self.index(row, 0)
-                self.dataChanged.emit(index, index, [Qt.DisplayRole])
+                self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
                 return

@@ -87,7 +87,7 @@ class SetListModel(QAbstractListModel):
         self._set_settings.metadata(domain_name).description = description
         row = self._set_settings.domain_tiers[domain_name]
         cell = self.index(row, 0)
-        self.dataChanged.emit(cell, cell, [Qt.DisplayRole])
+        self.dataChanged.emit(cell, cell, [Qt.ItemDataRole.DisplayRole])
 
     def update_indexing_domains(self, domains, descriptions):
         """
@@ -112,13 +112,13 @@ class SetListModel(QAbstractListModel):
         for name in domains_to_drop:
             self.drop_domain(name)
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """
         Returns the value for given role at given index.
 
-        Qt.DisplayRole returns the name of the domain or set
-        while Qt.CheckStateRole returns whether the exportable flag has been set or not.
-        Qt.BackgroundRole gives the item's background depending whether it is a domain or a set.
+        Qt.ItemDataRole.DisplayRole returns the name of the domain or set
+        while Qt.ItemDataRole.CheckStateRole returns whether the exportable flag has been set or not.
+        Qt.ItemDataRole.BackgroundRole gives the item's background depending whether it is a domain or a set.
 
         Args:
             index (QModelIndex): an index to the model
@@ -131,23 +131,23 @@ class SetListModel(QAbstractListModel):
             return None
         row = index.row()
         domain_count = len(self._sorted_domains)
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if row < domain_count:
                 return self._sorted_domains[row]
             return self._sorted_sets[row - domain_count]
-        if role == Qt.BackgroundRole:
+        if role == Qt.ItemDataRole.BackgroundRole:
             if row < domain_count:
                 if self._set_settings.is_additional(self._sorted_domains[row]):
                     return QColor(235, 235, 110)
                 return QColor(245, 245, 120)
             return None
-        if role == Qt.CheckStateRole:
+        if role == Qt.ItemDataRole.CheckStateRole:
             if row < domain_count:
                 checked = self._set_settings.is_exportable(self._sorted_domains[row])
             else:
                 checked = self._set_settings.is_exportable(self._sorted_sets[row - domain_count])
             return Qt.Checked if checked else Qt.Unchecked
-        if role == Qt.ToolTipRole:
+        if role == Qt.ItemDataRole.ToolTipRole:
             if row < domain_count:
                 domain_name = self._sorted_domains[row]
                 if domain_name == self._set_settings.global_parameters_domain_name:
@@ -164,9 +164,9 @@ class SetListModel(QAbstractListModel):
             return Qt.NoItemFlags
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         """Returns an empty string for horizontal header and row number for vertical header."""
-        if orientation == Qt.Horizontal:
+        if orientation == Qt.Orientation.Horizontal:
             return ""
         return section + 1
 
@@ -226,9 +226,9 @@ class SetListModel(QAbstractListModel):
         """Returns the number of rows."""
         return len(self._sorted_domains) + len(self._sorted_sets)
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         """Sets the exportable flag status for given row."""
-        if not index.isValid() or role != Qt.CheckStateRole:
+        if not index.isValid() or role != Qt.ItemDataRole.CheckStateRole:
             return False
         row = index.row()
         domain_count = len(self._sorted_domains)
@@ -241,8 +241,8 @@ class SetListModel(QAbstractListModel):
             metadata = self._set_settings.metadata(self._sorted_sets[row - domain_count])
             exportable = gdx.ExportFlag.EXPORTABLE if value == Qt.Checked else gdx.ExportFlag.NON_EXPORTABLE
             metadata.exportable = exportable
-            self.dataChanged.emit(index, index, [Qt.CheckStateRole, Qt.ToolTipRole])
-        self.dataChanged.emit(index, index, [Qt.CheckStateRole, Qt.ToolTipRole])
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.ToolTipRole])
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.ToolTipRole])
         return True
 
     def update_global_parameters_domain(self, domain_name):
@@ -253,8 +253,8 @@ class SetListModel(QAbstractListModel):
         if previous:
             row = self._set_settings.domain_tiers[previous]
             index = self.index(row, 0)
-            self.dataChanged.emit(index, index, [Qt.CheckStateRole, Qt.ToolTipRole])
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.ToolTipRole])
         if domain_name:
             row = self._set_settings.domain_tiers[domain_name]
             index = self.index(row, 0)
-            self.dataChanged.emit(index, index, [Qt.CheckStateRole, Qt.ToolTipRole])
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.ToolTipRole])

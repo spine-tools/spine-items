@@ -166,7 +166,7 @@ class MappingsModel(QAbstractItemModel):
             return 4
         return 0
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         index_item = index.internalPointer()
         if isinstance(index_item, SourceTableItem):
             return self._table_list_data(index, role)
@@ -186,9 +186,9 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             Any: data
         """
-        if role in (Qt.DisplayRole, Qt.EditRole):
+        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
             return self._mappings[index.row()].name
-        if role == Qt.CheckStateRole:
+        if role == Qt.ItemDataRole.CheckStateRole:
             return Qt.Checked if self._mappings[index.row()].checked else Qt.Unchecked
         if role == Role.ITEM:
             return self._mappings[index.row()]
@@ -206,7 +206,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             Any: data
         """
-        if role in (Qt.DisplayRole, Qt.EditRole):
+        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
             return list_item.name
         if role == Role.ITEM:
             return list_item
@@ -235,7 +235,7 @@ class MappingsModel(QAbstractItemModel):
             except ParameterValueFormatError:
                 return None
         column = index.column()
-        if role in (Qt.DisplayRole, Qt.EditRole):
+        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
             if column == FlattenedColumn.NAME:
                 return flattened_mappings.display_names[index.row()]
             if column == FlattenedColumn.POSITION_TYPE:
@@ -248,7 +248,7 @@ class MappingsModel(QAbstractItemModel):
             if column == FlattenedColumn.REGEXP:
                 return flattened_mappings.component_at(index.row()).filter_re
             raise RuntimeError("Column out of bounds.")
-        if role == Qt.BackgroundRole:
+        if role == Qt.ItemDataRole.BackgroundRole:
             if column == FlattenedColumn.NAME:
                 return flattened_mappings.display_colors[index.row()]
             if column == FlattenedColumn.POSITION:
@@ -256,7 +256,7 @@ class MappingsModel(QAbstractItemModel):
                 if issues:
                     return ERROR_COLOR
                 return None
-        if role == Qt.ToolTipRole:
+        if role == Qt.ItemDataRole.ToolTipRole:
             if column == FlattenedColumn.POSITION:
                 issues = flattened_mappings.display_row_issues(index.row())
                 if issues:
@@ -266,8 +266,8 @@ class MappingsModel(QAbstractItemModel):
                 return "Enter regular expression to filter importer data."
         return None
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
             return ("Target", "Source type", "Source ref.", "Filter")[section]
         return None
 
@@ -449,7 +449,7 @@ class MappingsModel(QAbstractItemModel):
             return len(parent_item.flattened_mappings.display_names)
         return 0
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         index_item = index.internalPointer()
         if isinstance(index_item, SourceTableItem):
             return self._set_table_list_data(index_item, index, value, role)
@@ -472,14 +472,14 @@ class MappingsModel(QAbstractItemModel):
             bool: True if data was set successfully, False otherwise
         """
         row = index.row()
-        if role == Qt.CheckStateRole and table_item.checkable:
+        if role == Qt.ItemDataRole.CheckStateRole and table_item.checkable:
             checked = value == Qt.Checked
             if row == 0:
                 self._set_multiple_checked_undoable(checked, *range(1, len(self._mappings)))
             else:
                 self._undo_stack.push(SetTableChecked(table_item.name, self, checked, row))
             return True
-        if role == Qt.EditRole:
+        if role == Qt.ItemDataRole.EditRole:
             if value == table_item.name:
                 return False
             if value in {table.name for table in self._mappings if table.real}:
@@ -503,7 +503,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             bool: True if data was set successfully, False otherwise
         """
-        if role == Qt.EditRole:
+        if role == Qt.ItemDataRole.EditRole:
             if not value or value in {m.name for m in list_item.source_table_item.mapping_list}:
                 return False
             previous = list_item.name
@@ -596,7 +596,7 @@ class MappingsModel(QAbstractItemModel):
             return
         top_left = self.index(min_row, 0)
         bottom_right = self.index(max_row, 0)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
         self._update_all_checked()
 
     def _update_all_checked(self):
@@ -607,7 +607,7 @@ class MappingsModel(QAbstractItemModel):
         if all_checked_item.checked != all_checked:
             self._mappings[0].checked = all_checked
             index = self.index(0, 0)
-            self.dataChanged.emit(index, index, [Qt.CheckStateRole])
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
 
     def append_new_table_with_mapping(self, table_name, root_mapping):
         """Appends a new source table and adds given ``root_mapping`` as its first mapping.
@@ -655,7 +655,7 @@ class MappingsModel(QAbstractItemModel):
         list_item.name = name
         parent = self.index(table_row, 0)
         index = self.index(list_row, 0, parent)
-        self.dataChanged.emit(index, index, [Qt.DisplayRole])
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
 
     def set_root_mapping(self, table_row, list_row, root_mapping):
         """
@@ -716,7 +716,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             bool: True if data was set successfully, False otherwise
         """
-        if role != Qt.EditRole:
+        if role != Qt.ItemDataRole.EditRole:
             return False
         column = index.column()
         if column < FlattenedColumn.POSITION_TYPE:
@@ -958,7 +958,7 @@ class MappingsModel(QAbstractItemModel):
         list_index = self.index(list_row, 0, table_index)
         top_left = self.index(row, 1, list_index)
         bottom_right = self.index(self.rowCount(list_index) - 1, 2, list_index)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole, Qt.DisplayRole, Qt.ToolTipRole])
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole])
 
     def set_mapping_position(self, table_row, list_row, row, position_type, position):
         """Modifies mapping component's position
@@ -976,7 +976,7 @@ class MappingsModel(QAbstractItemModel):
         list_index = self.index(list_row, 0, table_index)
         top_left = self.index(row, 1, list_index)
         bottom_right = self.index(self.rowCount(list_index) - 1, 2, list_index)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole, Qt.DisplayRole, Qt.ToolTipRole])
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole])
         self._recommend_source_table_column_or_row_types(flattened_mappings, row)
 
     def set_import_objects(self, table_row, list_row, import_objects):
@@ -1076,7 +1076,7 @@ class MappingsModel(QAbstractItemModel):
         table_index = self.index(table_row, 0)
         list_index = self.index(list_row, 0, table_index)
         index = self.index(row, FlattenedColumn.REGEXP, list_index)
-        self.dataChanged.emit(index, index, [Qt.DisplayRole])
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
 
     @staticmethod
     def polish_mapping(list_index, header):
@@ -1160,9 +1160,9 @@ class MappingsModel(QAbstractItemModel):
         if not isinstance(component.position, int):
             return
         if component.position >= 0:
-            self.row_or_column_type_recommended.emit(component.position, convert_spec, Qt.Horizontal)
+            self.row_or_column_type_recommended.emit(component.position, convert_spec, Qt.Orientation.Horizontal)
         else:
-            self.row_or_column_type_recommended.emit(-(component.position + 1), convert_spec, Qt.Vertical)
+            self.row_or_column_type_recommended.emit(-(component.position + 1), convert_spec, Qt.Orientation.Vertical)
 
     def set_tables_editable(self, editable):
         """Enables or disables table name editing.

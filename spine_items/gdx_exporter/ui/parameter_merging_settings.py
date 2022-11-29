@@ -114,7 +114,7 @@ class Ui_Form(object):
 
         self.splitter = QSplitter(self.frame)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Horizontal)
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.domains_list_view = QListView(self.splitter)
         self.domains_list_view.setObjectName(u"domains_list_view")
         self.splitter.addWidget(self.domains_list_view)

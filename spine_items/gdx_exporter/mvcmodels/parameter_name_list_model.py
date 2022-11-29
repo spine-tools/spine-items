@@ -31,13 +31,13 @@ class ParameterNameListModel(QAbstractListModel):
         self._selected_cache = dict()
         self._current_entity_class = None
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """Returns the model's data."""
         if not index.isValid():
             return None
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return self._names[index.row()]
-        if role == Qt.CheckStateRole:
+        if role == Qt.ItemDataRole.CheckStateRole:
             return Qt.Checked if self._selected[index.row()] else Qt.Unchecked
         return None
 
@@ -47,7 +47,7 @@ class ParameterNameListModel(QAbstractListModel):
             return Qt.NoItemFlags
         return Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         """Returns None."""
         return None
 
@@ -99,9 +99,9 @@ class ParameterNameListModel(QAbstractListModel):
         """Returns a list of the selected parameters."""
         return [name for name, select in zip(self._names, self._selected) if select]
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         """Selects or deselects the parameter at given index for inclusion in the merged parameter."""
-        if role != Qt.CheckStateRole or not index.isValid():
+        if role != Qt.ItemDataRole.CheckStateRole or not index.isValid():
             return False
         self._selected[index.row()] = value == Qt.Checked
         return True

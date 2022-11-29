@@ -76,9 +76,9 @@ class IndexingTableModel(QAbstractTableModel):
         """Returns the number of columns."""
         return len(self._parameter_values) + 1
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """Returns data associated with given model index and role."""
-        if role in (Qt.DisplayRole, Qt.ToolTipRole):
+        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole):
             row = index.row()
             column = index.column()
             if column == 0:
@@ -91,15 +91,15 @@ class IndexingTableModel(QAbstractTableModel):
                     self.records_operational = True
                     return value
             return self._values[column - 1][row]
-        if index.column() == 0 and role == Qt.CheckStateRole:
+        if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
             return Qt.Checked if self._selected[index.row()] else Qt.Unchecked
         return None
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         """Returns header data."""
-        if role != Qt.DisplayRole:
+        if role != Qt.ItemDataRole.DisplayRole:
             return None
-        if orientation == Qt.Vertical:
+        if orientation == Qt.Orientation.Vertical:
             return section + 1
         if section == 0:
             return self._index_name
@@ -149,17 +149,17 @@ class IndexingTableModel(QAbstractTableModel):
         self._selected = len(self._records) * [True]
         top_left = self.index(0, 0)
         bottom_right = self.index(self._rows_shown - 1, 0)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
         self._spread_values_over_selected_rows(0)
         self.selection_changed.emit()
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         """Sets the checked state for given index."""
-        if role != Qt.CheckStateRole:
+        if role != Qt.ItemDataRole.CheckStateRole:
             return False
         row = index.row()
         self._selected[row] = value == Qt.Checked
-        self.dataChanged.emit(index, index, [Qt.CheckStateRole])
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
         self._spread_values_over_selected_rows(row)
         self.selection_changed.emit()
         self.manual_selection.emit()
@@ -168,7 +168,7 @@ class IndexingTableModel(QAbstractTableModel):
     def set_index_name(self, name):
         """Sets the indexing domain name."""
         self._index_name = name
-        self.headerDataChanged.emit(Qt.Horizontal, 0, 0)
+        self.headerDataChanged.emit(Qt.Orientation.Horizontal, 0, 0)
 
     def set_records(self, records, pick_list=None):
         """Overwrites all new indexes."""
@@ -196,7 +196,7 @@ class IndexingTableModel(QAbstractTableModel):
             return
         top_left = self.index(0, 0)
         bottom_right = self.index(self._rows_shown - 1, 0)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.CheckStateRole])
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
         self._spread_values_over_selected_rows(0)
         self.selection_changed.emit()
 
@@ -217,4 +217,4 @@ class IndexingTableModel(QAbstractTableModel):
                     column[j] = None
         top_left = self.index(first_row, 1)
         bottom_right = self.index(self._rows_shown - 1, len(self._values))
-        self.dataChanged.emit(top_left, bottom_right, [Qt.DisplayRole, Qt.ToolTipRole])
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole])

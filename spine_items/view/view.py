@@ -256,7 +256,7 @@ class View(ProjectItem):
             qitem = QStandardItem(key)
             qitem.setFlags(~Qt.ItemIsEditable)
             tool_tip = _format_pinned_values(values)
-            qitem.setData(tool_tip, Qt.ToolTipRole)
+            qitem.setData(tool_tip, Qt.ItemDataRole.ToolTipRole)
             self.pinned_value_model.appendRow(qitem)
 
     def _update_buttons_enabled(self):
@@ -272,7 +272,7 @@ class View(ProjectItem):
         for db in sorted(self._references, reverse=True):
             qitem = QStandardItem(db)
             qitem.setFlags(~Qt.ItemIsEditable)
-            qitem.setData(self._spine_ref_icon, Qt.DecorationRole)
+            qitem.setData(self._spine_ref_icon, Qt.ItemDataRole.DecorationRole)
             self.reference_model.appendRow(qitem)
 
     def upstream_resources_updated(self, resources):
@@ -325,7 +325,7 @@ class View(ProjectItem):
 
     def _db_url_codenames(self, indexes):
         """Returns a dict mapping url to provider's name for given indexes in the reference model."""
-        return dict(self._references[index.data(Qt.DisplayRole)] for index in indexes)
+        return dict(self._references[index.data(Qt.ItemDataRole.DisplayRole)] for index in indexes)
 
     def notify_destination(self, source_item):
         """See base class."""

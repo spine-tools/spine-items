@@ -85,7 +85,7 @@ class Ui_Form(object):
 
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Vertical)
+        self.splitter.setOrientation(Qt.Orientation.Vertical)
         self.treeView_cmdline_args = ArgsTreeView(self.splitter)
         self.treeView_cmdline_args.setObjectName(u"treeView_cmdline_args")
         sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

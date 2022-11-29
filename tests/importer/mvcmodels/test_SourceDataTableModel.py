@@ -45,13 +45,13 @@ class TestSourceDataTableModel(unittest.TestCase):
         self._model.reset_model(
             [["1", "1", "1.1"], ["2h", "1h", "2h"], ["2018-01-01 00:00", "2018-01-01 00:00", "2018-01-01 00:00"]]
         )
-        self._model.set_type(0, value_to_convert_spec('float'), orientation=Qt.Vertical)
+        self._model.set_type(0, value_to_convert_spec('float'), orientation=Qt.Orientation.Vertical)
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
-        self._model.set_type(1, value_to_convert_spec('duration'), orientation=Qt.Vertical)
+        self._model.set_type(1, value_to_convert_spec('duration'), orientation=Qt.Orientation.Vertical)
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
-        self._model.set_type(2, value_to_convert_spec('datetime'), orientation=Qt.Vertical)
+        self._model.set_type(2, value_to_convert_spec('datetime'), orientation=Qt.Orientation.Vertical)
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
 
@@ -81,7 +81,7 @@ class TestSourceDataTableModel(unittest.TestCase):
 
     def test_row_type_checking_produces_error(self):
         self._model.reset_model([["1", "2.4"], ["Not a valid number", "3"]])
-        self._model.set_type(1, value_to_convert_spec('float'), orientation=Qt.Vertical)
+        self._model.set_type(1, value_to_convert_spec('float'), orientation=Qt.Orientation.Vertical)
         error_index = (1, 0)
         self.assertEqual(len(self._model._row_type_errors), 1)
         self.assertEqual(self._model._column_type_errors, {})
@@ -107,21 +107,21 @@ class TestSourceDataTableModel(unittest.TestCase):
         list_index = self._add_mapping(mappings_model, {"map_type": "ObjectClass", "name": 0})
         self._model.set_mapping_list_index(list_index)
         entity_class_color = self._find_color(list_index, "Object class names")
-        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), entity_class_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
+        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color)
         # row not showing color if the start reading row is specified
         list_index = self._add_mapping(mappings_model, {"map_type": "ObjectClass", "name": 0, "read_start_row": 1})
         self._model.set_mapping_list_index(list_index)
         entity_class_color = self._find_color(list_index, "Object class names")
-        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
+        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color)
         # row not showing color if the row is pivoted
         list_index = self._add_mapping(
             mappings_model, {"map_type": "ObjectClass", "name": 0, "object": {"map_type": "row", "value_reference": 0}}
         )
         self._model.set_mapping_list_index(list_index)
-        self.assertNotEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), entity_class_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
+        self.assertNotEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color)
         mappings_model.deleteLater()
 
     def test_mapping_pivoted_colors(self):
@@ -135,10 +135,10 @@ class TestSourceDataTableModel(unittest.TestCase):
         self._model.set_mapping_list_index(list_index)
         entity_color = self._find_color(list_index, "Object names")
         metadata_color = self._find_color(list_index, "Object metadata")
-        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), entity_color)
-        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.BackgroundRole), entity_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), metadata_color)
-        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.BackgroundRole), metadata_color)
+        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), entity_color)
+        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), metadata_color)
+        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.ItemDataRole.BackgroundRole), metadata_color)
         # column not showing color if the columns is skipped
         list_index = self._add_mapping(
             mappings_model,
@@ -146,9 +146,9 @@ class TestSourceDataTableModel(unittest.TestCase):
         )
         self._model.set_mapping_list_index(list_index)
         entity_color = self._find_color(list_index, "Object names")
-        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.BackgroundRole), entity_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), None)
         mappings_model.deleteLater()
 
     def test_mapping_column_and_pivot_colors(self):
@@ -163,10 +163,10 @@ class TestSourceDataTableModel(unittest.TestCase):
         entity_class_color = self._find_color(list_index, "Object class names")
         entity_color = self._find_color(list_index, "Object names")
         metadata_color = self._find_color(list_index, "Object metadata")
-        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.BackgroundRole), entity_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), entity_class_color)
-        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.BackgroundRole), metadata_color)
+        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color)
+        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.ItemDataRole.BackgroundRole), metadata_color)
         mappings_model.deleteLater()
 
     def test_mapping_column_and_pivot_colors_with_value_mapping_position_set_to_random_column(self):
@@ -196,14 +196,14 @@ class TestSourceDataTableModel(unittest.TestCase):
         alternative_color = self._find_color(list_index, "Alternative names")
         index_color = self._find_color(list_index, "Parameter indexes")
         value_color = self._find_color(list_index, "Parameter values")
-        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(0, 2), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(0, 3), role=Qt.BackgroundRole), parameter_definition_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), alternative_color)
-        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.BackgroundRole), entity_color)
-        self.assertEqual(self._model.data(self._model.index(1, 2), role=Qt.BackgroundRole), index_color)
-        self.assertEqual(self._model.data(self._model.index(1, 3), role=Qt.BackgroundRole), value_color)
+        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 2), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 3), role=Qt.ItemDataRole.BackgroundRole), parameter_definition_color)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), alternative_color)
+        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
+        self.assertEqual(self._model.data(self._model.index(1, 2), role=Qt.ItemDataRole.BackgroundRole), index_color)
+        self.assertEqual(self._model.data(self._model.index(1, 3), role=Qt.ItemDataRole.BackgroundRole), value_color)
         mappings_model.deleteLater()
 
     def test_mapping_column_and_pivot_colors_with_value_mapping_position_set_to_column_in_pivot(self):
@@ -233,14 +233,14 @@ class TestSourceDataTableModel(unittest.TestCase):
         alternative_color = self._find_color(list_index, "Alternative names")
         index_color = self._find_color(list_index, "Parameter indexes")
         value_color = self._find_color(list_index, "Parameter values")
-        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(0, 2), role=Qt.BackgroundRole), None)
-        self.assertEqual(self._model.data(self._model.index(0, 3), role=Qt.BackgroundRole), parameter_definition_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.BackgroundRole), alternative_color)
-        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.BackgroundRole), entity_color)
-        self.assertEqual(self._model.data(self._model.index(1, 2), role=Qt.BackgroundRole), index_color)
-        self.assertEqual(self._model.data(self._model.index(1, 3), role=Qt.BackgroundRole), value_color)
+        self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 2), role=Qt.ItemDataRole.BackgroundRole), None)
+        self.assertEqual(self._model.data(self._model.index(0, 3), role=Qt.ItemDataRole.BackgroundRole), parameter_definition_color)
+        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), alternative_color)
+        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
+        self.assertEqual(self._model.data(self._model.index(1, 2), role=Qt.ItemDataRole.BackgroundRole), index_color)
+        self.assertEqual(self._model.data(self._model.index(1, 3), role=Qt.ItemDataRole.BackgroundRole), value_color)
         mappings_model.deleteLater()
 
     @staticmethod

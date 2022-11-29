@@ -36,7 +36,7 @@ class TransformationsTableRole(IntEnum):
 class ValueTransformationsTableModel(ParameterDropTargetTableModel):
     """A table model that contains parameter value transformations."""
 
-    GET_DATA_ROLES = (Qt.DisplayRole, Qt.DisplayRole, TransformationsTableRole.INSTRUCTIONS)
+    GET_DATA_ROLES = (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.DisplayRole, TransformationsTableRole.INSTRUCTIONS)
     SET_DATA_ROLES = (
         TransformationsTableRole.SILENT_EDIT,
         TransformationsTableRole.SILENT_EDIT,
@@ -64,8 +64,8 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
     def columnCount(self, parent=QModelIndex()):
         return 3
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole:
             column = index.column()
             if column != TransformationsTableColumn.INSTRUCTIONS:
                 return self._instructions[index.row()][column]
@@ -81,8 +81,8 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
             flags |= Qt.ItemIsEditable
         return flags
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return ("Class", "Parameter", "Instructions")[section]
         return None
 
@@ -106,8 +106,8 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
     def rowCount(self, parent=QModelIndex()):
         return len(self._instructions)
 
-    def setData(self, index, value, role=Qt.EditRole):
-        if role == Qt.EditRole:
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
+        if role == Qt.ItemDataRole.EditRole:
             if not value or not isinstance(value, str):
                 return False
             column = index.column()
@@ -119,13 +119,13 @@ class ValueTransformationsTableModel(ParameterDropTargetTableModel):
             if not isinstance(value, str):
                 return False
             self._instructions[index.row()][index.column()] = value
-            self.dataChanged.emit(index, index, [Qt.DisplayRole])
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
             return True
         if role == TransformationsTableRole.INSTRUCTIONS and index.column() == TransformationsTableColumn.INSTRUCTIONS:
             if not isinstance(value, list):
                 return False
             row = index.row()
             self._instructions[row][index.column()] = value
-            self.dataChanged.emit(index, index, [Qt.DisplayRole, TransformationsTableRole.INSTRUCTIONS])
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole, TransformationsTableRole.INSTRUCTIONS])
             return True
         return False

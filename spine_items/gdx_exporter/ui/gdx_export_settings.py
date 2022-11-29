@@ -44,7 +44,7 @@ class Ui_Form(object):
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.splitter = QSplitter(self.controls_group)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Horizontal)
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.set_group_box = QGroupBox(self.splitter)
         self.set_group_box.setObjectName(u"set_group_box")
         self.horizontalLayout = QHBoxLayout(self.set_group_box)

@@ -143,7 +143,7 @@ class DataTreeView(QTreeView):
             urls.append(QUrl.fromLocalFile(file_path))
         mimeData.setUrls(urls)
         drag.setMimeData(mimeData)
-        icon = self.drag_indexes[0].data(Qt.DecorationRole)
+        icon = self.drag_indexes[0].data(Qt.ItemDataRole.DecorationRole)
         if icon:
             pixmap = icon.pixmap(32, 32)
             drag.setPixmap(pixmap)

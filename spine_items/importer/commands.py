@@ -735,7 +735,7 @@ class SetColumnOrRowType(QUndoCommand):
             new_type (ConvertSpec): conversion specification for the rows/columns
             previous_type (ConvertSpec): previous conversion specification for the rows/columns
         """
-        text = ("row" if header_widget.orientation() == Qt.Vertical else "column") + " type change"
+        text = ("row" if header_widget.orientation() == Qt.Orientation.Vertical else "column") + " type change"
         super().__init__(text)
         self._source_table_name = source_table_name
         self._header_widget = header_widget

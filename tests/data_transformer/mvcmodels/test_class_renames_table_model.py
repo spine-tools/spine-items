@@ -51,9 +51,9 @@ class TestClassRenamesTableModel(unittest.TestCase):
 
     def test_headers(self):
         model = ClassRenamesTableModel(self._undo_stack, {"a": "A"})
-        self.assertIsNone(model.headerData(0, Qt.Vertical))
-        self.assertEqual(model.headerData(0, Qt.Horizontal), "Original")
-        self.assertEqual(model.headerData(1, Qt.Horizontal), "Renamed")
+        self.assertIsNone(model.headerData(0, Qt.Orientation.Vertical))
+        self.assertEqual(model.headerData(0, Qt.Orientation.Horizontal), "Original")
+        self.assertEqual(model.headerData(1, Qt.Orientation.Horizontal), "Renamed")
 
     def test_renaming_settings(self):
         model = ClassRenamesTableModel(self._undo_stack, {"a": "A", "b": "b", "c": ""})

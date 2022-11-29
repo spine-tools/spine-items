@@ -275,7 +275,7 @@ class PreviewUpdater:
             bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
-        if Qt.DisplayRole not in roles or self._current_url is None:
+        if Qt.ItemDataRole.DisplayRole not in roles or self._current_url is None:
             return
         make_index = self._mappings_table_model.index
         indexes = [make_index(row, 0) for row in range(self._mappings_table_model.rowCount())]

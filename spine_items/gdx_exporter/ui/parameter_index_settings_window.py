@@ -48,7 +48,7 @@ class Ui_Form(object):
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.splitter = QSplitter(self.settings_page)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Horizontal)
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.settings_area = QScrollArea(self.splitter)
         self.settings_area.setObjectName(u"settings_area")
         self.settings_area.setWidgetResizable(True)

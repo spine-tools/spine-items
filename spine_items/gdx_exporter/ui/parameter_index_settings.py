@@ -84,7 +84,7 @@ class Ui_Form(object):
 
         self.splitter = QSplitter(self.box)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Horizontal)
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.verticalLayoutWidget_3 = QWidget(self.splitter)
         self.verticalLayoutWidget_3.setObjectName(u"verticalLayoutWidget_3")
         self.verticalLayout_4 = QVBoxLayout(self.verticalLayoutWidget_3)
