@@ -42,7 +42,7 @@ class Ui_Dialog(object):
         self.button_box = QDialogButtonBox(Dialog)
         self.button_box.setObjectName(u"button_box")
         self.button_box.setOrientation(Qt.Horizontal)
-        self.button_box.setStandardButtons(QDialogButtonBox.Cancel)
+        self.button_box.setStandardButtons(QDialogButtonBox.StandardButton.Cancel)
 
         self.root_layout.addWidget(self.button_box)
 

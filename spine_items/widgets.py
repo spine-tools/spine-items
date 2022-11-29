@@ -187,7 +187,7 @@ class FilterEdit(QWidget):
             parent (QWidget):
         """
         super().__init__(parent)
-        self.setWindowFlags(Qt.Popup)
+        self.setWindowFlags(Qt.WindowType.Popup)
         self._ui = ui_form
         self._ui.setupUi(self)
         self._focused = False
@@ -321,7 +321,7 @@ class UrlSelector(UrlSelectorMixin, QDialog):
         self.statusbar.setStyleSheet(STATUSBAR_SS)
         self.ui.horizontalLayout_statusbar_ph.addWidget(self.statusbar)
         self._sa_url = None
-        self.ui.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self._setup(("mysql", "sqlite", "mssql", "postgresql", "oracle"))  # Others?
         self.ui.comboBox_dialect.currentTextChanged.connect(self.enable_dialect)
         self.ui.comboBox_dialect.activated.connect(self._refresh_url)
@@ -351,7 +351,7 @@ class UrlSelector(UrlSelectorMixin, QDialog):
         self._sa_url = convert_to_sqlalchemy_url(url, logger=self)
         if self._sa_url is not None:
             self.statusbar.clearMessage()
-        self.ui.buttonBox.button(QDialogButtonBox.Ok).setEnabled(self._sa_url is not None)
+        self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(self._sa_url is not None)
 
     def _browse_sqlite_file(self):
         filter_ = "*.sqlite;;*.*"

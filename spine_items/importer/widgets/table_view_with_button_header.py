@@ -71,10 +71,10 @@ class IntegerSequenceDateTimeConvertSpecDialog(QDialog):
             parent (QWidget, optional): parent widget
         """
         super().__init__(parent)
-        self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.setWindowTitle("New integer sequence datetime")
 
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
@@ -103,9 +103,9 @@ class IntegerSequenceDateTimeConvertSpecDialog(QDialog):
         try:
             Duration(self.duration.text())
         except ParameterValueFormatError:
-            self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+            self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
             return
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
     def get_spec(self):
         start_datetime = DateTime(self.datetime.dateTime().toString(Qt.ISODate))

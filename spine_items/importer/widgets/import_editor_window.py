@@ -291,9 +291,9 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
                 row = k
         if row is not None:
             connector_list_wg.setCurrentRow(row)
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.button(QDialogButtonBox.Ok).clicked.connect(dialog.accept)
-        button_box.button(QDialogButtonBox.Cancel).clicked.connect(dialog.reject)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Ok).clicked.connect(dialog.accept)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(dialog.reject)
         connector_list_wg.doubleClicked.connect(dialog.accept)
         dialog.layout().addWidget(connector_list_wg)
         dialog.layout().addWidget(button_box)

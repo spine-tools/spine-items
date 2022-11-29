@@ -151,12 +151,12 @@ class GdxExportSettings(QWidget):
         self._indexing_settings = indexing_settings
         self._merging_settings = merging_settings
         self._ui.controls_group.setEnabled(True)
-        self._ui.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
+        self._ui.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
         self._check_state()
 
     def settings_reading_cancelled(self):
         self._ui.controls_group.setEnabled(True)
-        self._ui.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
+        self._ui.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
     def _check_state(self):
         """Checks if there are parameters in need for indexing."""
@@ -289,7 +289,7 @@ class GdxExportSettings(QWidget):
         if not url:
             return
         self._ui.controls_group.setEnabled(False)
-        self._ui.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self._ui.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self.update_requested.emit(url)
 
     @Slot(str)
