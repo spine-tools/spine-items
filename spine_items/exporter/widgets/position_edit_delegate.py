@@ -27,7 +27,7 @@ def position_section_width():
     fm = qApp.fontMetrics()
     style = qApp.style()
     option = QStyleOptionComboBox()
-    rect = style.subControlRect(QStyle.CC_ComboBox, option, QStyle.SC_ComboBoxArrow)
+    rect = style.subControlRect(QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow)
     return max(fm.horizontalAdvance(pos) for pos in _positions) + rect.width()
 
 
@@ -47,7 +47,7 @@ class _PositionEdit(QComboBox):
         super().__init__(parent)
         self.addItems(_positions)
         self.setEditable(True)
-        self.setInsertPolicy(QComboBox.NoInsert)
+        self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.currentTextChanged.connect(self._insert)
         self.setLineEdit(_SelectingLineEdit())
 

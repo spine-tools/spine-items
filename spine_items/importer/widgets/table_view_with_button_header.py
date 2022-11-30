@@ -205,7 +205,7 @@ class TableViewWithButtonHeader(QTableView):
 def _make_type_button(parent, menu, font):
     button = QToolButton(parent=parent)
     button.setMenu(menu)
-    button.setPopupMode(QToolButton.InstantPopup)
+    button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
     button.setFont(font)
     button.setCursor(Qt.ArrowCursor)
     return button

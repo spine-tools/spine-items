@@ -158,7 +158,7 @@ class MappingEditorTableModel(QAbstractTableModel):
             return font
         elif role == Qt.ItemDataRole.BackgroundRole and column == EditorColumn.ROW_LABEL:
             m = self._mappings[index.row()]
-            return self._mapping_colors.get(m.position, QColor(Qt.gray).lighter())
+            return self._mapping_colors.get(m.position, QColor(Qt.GlobalColor.gray).lighter())
         elif role == Qt.ItemDataRole.ToolTipRole:
             if column == EditorColumn.FILTER:
                 return "Regular expression to filter database items."
