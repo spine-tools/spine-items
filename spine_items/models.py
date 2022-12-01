@@ -151,7 +151,7 @@ class CheckableFileListModel(FileListModel):
         """Sets data in the model."""
         if role != Qt.ItemDataRole.CheckStateRole or not index.isValid():
             return False
-        checked = value == Qt.Checked
+        checked = value == Qt.CheckState.Checked.value
         self.checked_state_changed.emit(index, checked)
         return True
 
