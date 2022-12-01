@@ -291,13 +291,13 @@ class ImportMappingOptions:
             )
         )
 
-    @Slot(bool)
+    @Slot(int)
     def _change_use_before_alternative(self, state):
         """
         Pushes SetUseBeforeAlternative command to the undo stack.
 
         Args:
-            state (bool): new flag value
+            state (int): New state value
         """
         if self._block_signals or not self._has_current_mappings():
             return
@@ -307,24 +307,24 @@ class ImportMappingOptions:
                 self._list_index.parent().row(),
                 self._list_index.row(),
                 self._mappings_model,
-                state == Qt.Checked,
+                state == Qt.CheckState.Checked.value,
                 previous_mapping,
             )
         )
 
-    @Slot(bool)
+    @Slot(int)
     def _change_import_objects(self, state):
         """
         Pushes SetImportObjectsFlag command to the undo stack.
 
         Args:
-            state (bool): new flag value
+            state (int): new state
         """
         if self._block_signals or not self._has_current_mappings():
             return
         self._undo_stack.push(
             SetImportObjectsFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, state == Qt.Checked
+                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, state == Qt.CheckState.Checked.value
             )
         )
 
@@ -367,19 +367,19 @@ class ImportMappingOptions:
             )
         )
 
-    @Slot(bool)
+    @Slot(int)
     def _change_time_series_repeat_flag(self, repeat):
         """
         Pushes :class:`SetTimeSeriesRepeatFlag` to the undo stack.
 
         Args:
-            repeat (bool): True if repeat is enable, False otherwise
+            repeat (int): New check box Qt.CheckState enum value
         """
         if self._block_signals or not self._has_current_mappings():
             return
         self._undo_stack.push(
             SetTimeSeriesRepeatFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, repeat
+                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, repeat == Qt.CheckState.Checked.value
             )
         )
 
@@ -404,19 +404,19 @@ class ImportMappingOptions:
             )
         )
 
-    @Slot(bool)
+    @Slot(int)
     def _change_map_compression_flag(self, compress):
         """
         Pushes :class:`SetMapCompressFlag` to the undo stack.
 
         Args:
-            compress (CheckState): if ``Qt.Checked``, Maps will be compressed
+            compress (int): if ``Qt.Checked.value``, Maps will be compressed
         """
         if self._block_signals or not self._has_current_mappings():
             return
         self._undo_stack.push(
             SetMapCompressFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, compress == Qt.Checked
+                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, compress == Qt.CheckState.Checked.value
             )
         )
 
@@ -452,4 +452,4 @@ class ImportMappingOptions:
         self._ui.map_dimension_spin_box.setEnabled(is_map)
         self._ui.map_dimension_spin_box.setValue(dimension_count)
         self._ui.map_compression_check_box.setEnabled(is_map)
-        self._ui.map_compression_check_box.setChecked(Qt.Checked if is_map and value_mapping.compress else Qt.Unchecked)
+        self._ui.map_compression_check_box.setChecked(True if is_map and value_mapping.compress else False)

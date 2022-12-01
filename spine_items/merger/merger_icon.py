@@ -37,7 +37,7 @@ class MergerIcon(ProjectItemIcon):
         self._time_line = QTimeLine()
         self._time_line.setLoopCount(0)  # loop forever
         self._time_line.setFrameRange(0, 10)
-        self._time_line.setDirection(QTimeLine.Backward)
+        self._time_line.setDirection(QTimeLine.Direction.Backward)
         self._time_line.valueChanged.connect(self._handle_time_line_value_changed)
         self._time_line.stateChanged.connect(self._handle_time_line_state_changed)
         self._svg_item_pos = self.svg_item.pos()
@@ -56,19 +56,19 @@ class MergerIcon(ProjectItemIcon):
 
     @Slot(QTimeLine.State)
     def _handle_time_line_state_changed(self, new_state):
-        if new_state == QTimeLine.NotRunning:
+        if new_state == QTimeLine.State.NotRunning:
             self.svg_item.setPos(self._svg_item_pos)
 
     @Slot()
     def start_animation(self):
         """Start the animation that plays when the Merger associated to this GraphicsItem is running."""
-        if self._time_line.state() == QTimeLine.Running:
+        if self._time_line.state() == QTimeLine.State.Running:
             return
         self._time_line.start()
 
     @Slot()
     def stop_animation(self):
         """Stop animation"""
-        if self._time_line.state() != QTimeLine.Running:
+        if self._time_line.state() != QTimeLine.State.Running:
             return
         self._time_line.stop()
