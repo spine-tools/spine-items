@@ -473,7 +473,7 @@ class MappingsModel(QAbstractItemModel):
         """
         row = index.row()
         if role == Qt.ItemDataRole.CheckStateRole and table_item.checkable:
-            checked = value == Qt.Checked
+            checked = value == Qt.CheckState.Checked.value
             if row == 0:
                 self._set_multiple_checked_undoable(checked, *range(1, len(self._mappings)))
             else:
