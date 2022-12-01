@@ -112,7 +112,7 @@ class Exporter(ExporterBase):
             outputs_layout.addWidget(item)
             item.out_label_changed.connect(self._update_out_label)
         self._properties_ui.output_time_stamps_check_box.setCheckState(
-            Qt.Checked if self._append_output_time_stamps else Qt.Unchecked
+            Qt.CheckState.Checked if self._append_output_time_stamps else Qt.CheckState.Unchecked
         )
         self._properties_ui.cancel_on_error_check_box.setCheckState(
             Qt.Checked if self._cancel_on_error else Qt.Unchecked

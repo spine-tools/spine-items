@@ -96,7 +96,7 @@ class ExporterBase(ProjectItem):
         Args:
             checkbox_state (int): setting's checkbox state on properties tab
         """
-        flag = checkbox_state == Qt.Checked
+        flag = checkbox_state == Qt.CheckState.Checked.value
         if flag == self._append_output_time_stamps:
             return
         self._toolbox.undo_stack.push(UpdateOutputTimeStampsFlag(self, flag))
@@ -113,7 +113,7 @@ class ExporterBase(ProjectItem):
     @Slot(int)
     def _cancel_on_error_option_changed(self, checkbox_state):
         """Handles changes to the Cancel export on error option."""
-        cancel = checkbox_state == Qt.Checked
+        cancel = checkbox_state == Qt.CheckState.Checked.value
         if self._cancel_on_error == cancel:
             return
         self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel))
