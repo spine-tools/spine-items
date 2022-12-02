@@ -291,13 +291,13 @@ class ImportMappingOptions:
             )
         )
 
-    @Slot(bool)
+    @Slot(int)
     def _change_use_before_alternative(self, state):
         """
         Pushes SetUseBeforeAlternative command to the undo stack.
 
         Args:
-            state (bool): new flag value
+            state (int): new flag value
         """
         if self._block_signals or not self._has_current_mappings():
             return
@@ -312,13 +312,13 @@ class ImportMappingOptions:
             )
         )
 
-    @Slot(bool)
+    @Slot(int)
     def _change_import_objects(self, state):
         """
         Pushes SetImportObjectsFlag command to the undo stack.
 
         Args:
-            state (bool): new flag value
+            state (int): new flag value
         """
         if self._block_signals or not self._has_current_mappings():
             return
@@ -367,19 +367,19 @@ class ImportMappingOptions:
             )
         )
 
-    @Slot(bool)
+    @Slot(int)
     def _change_time_series_repeat_flag(self, repeat):
         """
         Pushes :class:`SetTimeSeriesRepeatFlag` to the undo stack.
 
         Args:
-            repeat (bool): True if repeat is enable, False otherwise
+            repeat (int): True if repeat is enable, False otherwise
         """
         if self._block_signals or not self._has_current_mappings():
             return
         self._undo_stack.push(
             SetTimeSeriesRepeatFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, repeat
+                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, repeat == Qt.Checked
             )
         )
 
@@ -404,13 +404,13 @@ class ImportMappingOptions:
             )
         )
 
-    @Slot(bool)
+    @Slot(int)
     def _change_map_compression_flag(self, compress):
         """
         Pushes :class:`SetMapCompressFlag` to the undo stack.
 
         Args:
-            compress (CheckState): if ``Qt.Checked``, Maps will be compressed
+            compress (int): if ``Qt.Checked``, Maps will be compressed
         """
         if self._block_signals or not self._has_current_mappings():
             return
