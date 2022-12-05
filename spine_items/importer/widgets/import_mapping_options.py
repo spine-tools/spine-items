@@ -318,7 +318,7 @@ class ImportMappingOptions:
         Pushes SetImportObjectsFlag command to the undo stack.
 
         Args:
-            state (int): new state
+            state (int): New state value
         """
         if self._block_signals or not self._has_current_mappings():
             return
@@ -373,7 +373,7 @@ class ImportMappingOptions:
         Pushes :class:`SetTimeSeriesRepeatFlag` to the undo stack.
 
         Args:
-            repeat (int): New check box Qt.CheckState enum value
+            repeat (int): True if repeat is enabled, False otherwise
         """
         if self._block_signals or not self._has_current_mappings():
             return
@@ -410,7 +410,7 @@ class ImportMappingOptions:
         Pushes :class:`SetMapCompressFlag` to the undo stack.
 
         Args:
-            compress (int): if ``Qt.Checked.value``, Maps will be compressed
+            compress (int): if ``Qt.CheckState.Checked.value``, Maps will be compressed
         """
         if self._block_signals or not self._has_current_mappings():
             return
