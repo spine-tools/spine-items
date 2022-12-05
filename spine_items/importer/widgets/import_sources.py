@@ -333,7 +333,9 @@ class ImportSources(QObject):
                     if default_column_type is None:
                         default_column_type = StringConvertSpec()
                 col_type = default_column_type.DISPLAY_NAME
-            self._source_data_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Orientation.Horizontal)
+            self._source_data_model.set_type(
+                col, value_to_convert_spec(col_type), orientation=Qt.Orientation.Horizontal
+            )
         for row, row_type in row_types.items():
             self._source_data_model.set_type(row, value_to_convert_spec(row_type), orientation=Qt.Orientation.Vertical)
         self.preview_data_updated.emit(self._source_data_model.columnCount())

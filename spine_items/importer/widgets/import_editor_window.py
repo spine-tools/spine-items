@@ -149,9 +149,13 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self.splitDockWidget(*docks[1:], Qt.Orientation.Vertical)
         height = sum(d.size().height() for d in docks)
         self.resizeDocks(docks, [0.1 * height, 0.2 * height, 0.7 * height], Qt.Orientation.Vertical)
-        self.splitDockWidget(self._ui.dockWidget_source_tables, self._ui.dockWidget_source_options, Qt.Orientation.Horizontal)
+        self.splitDockWidget(
+            self._ui.dockWidget_source_tables, self._ui.dockWidget_source_options, Qt.Orientation.Horizontal
+        )
         self.splitDockWidget(self._ui.dockWidget_mappings, self._ui.dockWidget_mapping_options, Qt.Orientation.Vertical)
-        self.splitDockWidget(self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec, Qt.Orientation.Vertical)
+        self.splitDockWidget(
+            self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec, Qt.Orientation.Vertical
+        )
         docks = (self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec)
         height = sum(d.size().height() for d in docks)
         self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Orientation.Vertical)

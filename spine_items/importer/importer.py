@@ -190,7 +190,9 @@ class Importer(ProjectItem):
 
     def restore_selections(self):
         """Restores selections into shared widgets when this project item is selected."""
-        self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.CheckState.Checked if self.cancel_on_error else Qt.CheckState.Unchecked)
+        self._properties_ui.cancel_on_error_checkBox.setCheckState(
+            Qt.CheckState.Checked if self.cancel_on_error else Qt.CheckState.Unchecked
+        )
         self._set_on_conflict()
         self._properties_ui.treeView_files.setModel(self._file_model)
         self._update_ui()

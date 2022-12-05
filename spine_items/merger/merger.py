@@ -70,7 +70,9 @@ class Merger(ProjectItem):
 
     def restore_selections(self):
         """Load url into selections."""
-        self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.CheckState.Checked if self.cancel_on_error else Qt.CheckState.Unchecked)
+        self._properties_ui.cancel_on_error_checkBox.setCheckState(
+            Qt.CheckState.Checked if self.cancel_on_error else Qt.CheckState.Unchecked
+        )
 
     def project(self):
         """Returns current project or None if no project open."""

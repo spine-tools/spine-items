@@ -323,7 +323,10 @@ class ImportMappingOptions:
             return
         self._undo_stack.push(
             SetImportObjectsFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, state == Qt.CheckState.Checked.value
+                self._list_index.parent().row(),
+                self._list_index.row(),
+                self._mappings_model,
+                state == Qt.CheckState.Checked.value,
             )
         )
 
@@ -378,7 +381,10 @@ class ImportMappingOptions:
             return
         self._undo_stack.push(
             SetTimeSeriesRepeatFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, repeat == Qt.CheckState.Checked.value
+                self._list_index.parent().row(),
+                self._list_index.row(),
+                self._mappings_model,
+                repeat == Qt.CheckState.Checked.value,
             )
         )
 
@@ -415,7 +421,10 @@ class ImportMappingOptions:
             return
         self._undo_stack.push(
             SetMapCompressFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, compress == Qt.CheckState.Checked.value
+                self._list_index.parent().row(),
+                self._list_index.row(),
+                self._mappings_model,
+                compress == Qt.CheckState.Checked.value,
             )
         )
 

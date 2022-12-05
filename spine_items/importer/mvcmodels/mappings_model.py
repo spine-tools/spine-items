@@ -958,7 +958,11 @@ class MappingsModel(QAbstractItemModel):
         list_index = self.index(list_row, 0, table_index)
         top_left = self.index(row, 1, list_index)
         bottom_right = self.index(self.rowCount(list_index) - 1, 2, list_index)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole])
+        self.dataChanged.emit(
+            top_left,
+            bottom_right,
+            [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole],
+        )
 
     def set_mapping_position(self, table_row, list_row, row, position_type, position):
         """Modifies mapping component's position
@@ -976,7 +980,11 @@ class MappingsModel(QAbstractItemModel):
         list_index = self.index(list_row, 0, table_index)
         top_left = self.index(row, 1, list_index)
         bottom_right = self.index(self.rowCount(list_index) - 1, 2, list_index)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole])
+        self.dataChanged.emit(
+            top_left,
+            bottom_right,
+            [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole],
+        )
         self._recommend_source_table_column_or_row_types(flattened_mappings, row)
 
     def set_import_objects(self, table_row, list_row, import_objects):

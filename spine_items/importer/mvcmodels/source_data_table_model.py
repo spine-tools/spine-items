@@ -339,7 +339,11 @@ class SourceDataTableModel(MinimalTableModel):
         return column == mapping.position
 
     def headerData(self, section, orientation=Qt.Orientation.Horizontal, role=Qt.ItemDataRole.DisplayRole):
-        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.BackgroundRole and self._mapping_list_index.isValid():
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.BackgroundRole
+            and self._mapping_list_index.isValid()
+        ):
             flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
             for k in range(len(flattened_mappings.display_names)):
                 component_mapping = flattened_mappings.component_at(k)

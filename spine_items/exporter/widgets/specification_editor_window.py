@@ -593,7 +593,10 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     def _toggle_all_enabled(self):
         """Pushes a command that enables or disables all mappings to undo stack."""
         for row in range(self._mappings_table_model.rowCount()):
-            if self._mappings_table_model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
+            if (
+                self._mappings_table_model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole)
+                == Qt.CheckState.Unchecked.value
+            ):
                 self._undo_stack.push(EnableAllMappings(self._mappings_table_model))
                 return
         self._undo_stack.push(DisableAllMappings(self._mappings_table_model))

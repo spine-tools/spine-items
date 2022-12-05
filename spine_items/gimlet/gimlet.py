@@ -149,7 +149,9 @@ class Gimlet(ProjectItem):
         if not self._active:
             return
         # This does not trigger the stateChanged signal.
-        self._properties_ui.checkBox_shell.setCheckState(Qt.CheckState.Checked if use_shell else Qt.CheckState.Unchecked)
+        self._properties_ui.checkBox_shell.setCheckState(
+            Qt.CheckState.Checked if use_shell else Qt.CheckState.Unchecked
+        )
         self._properties_ui.comboBox_shell.setEnabled(bool(use_shell))
 
     @Slot(int)
