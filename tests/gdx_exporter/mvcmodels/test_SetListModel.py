@@ -60,9 +60,9 @@ class TestSetListModel(unittest.TestCase):
         )
         model = SetListModel(set_settings)
         index = model.index(0, 0)
-        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.Unchecked.value)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked.value)
         index = model.index(1, 0)
-        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.Unchecked.value)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked.value)
 
     def test_flags(self):
         set_settings = SetSettings({"domain1"}, {"set1"}, {})
@@ -136,14 +136,14 @@ class TestSetListModel(unittest.TestCase):
         set_settings = SetSettings({"domain1"}, {"set1"}, {})
         model = SetListModel(set_settings)
         index = model.index(0, 0)
-        model.setData(index, Qt.Unchecked, Qt.ItemDataRole.CheckStateRole)
+        model.setData(index, Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole)
         self.assertEqual(set_settings.metadata("domain1"), SetMetadata(ExportFlag.NON_EXPORTABLE))
         self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.EXPORTABLE))
-        model.setData(index, Qt.Checked, Qt.ItemDataRole.CheckStateRole)
+        model.setData(index, Qt.CheckState.Checked, Qt.ItemDataRole.CheckStateRole)
         self.assertEqual(set_settings.metadata("domain1"), SetMetadata(ExportFlag.EXPORTABLE))
         self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.EXPORTABLE))
         index = model.index(1, 0)
-        model.setData(index, Qt.Unchecked, Qt.ItemDataRole.CheckStateRole)
+        model.setData(index, Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole)
         self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.NON_EXPORTABLE))
 
 

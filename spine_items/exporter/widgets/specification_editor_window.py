@@ -593,7 +593,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     def _toggle_all_enabled(self):
         """Pushes a command that enables or disables all mappings to undo stack."""
         for row in range(self._mappings_table_model.rowCount()):
-            if self._mappings_table_model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) == Qt.Unchecked.value:
+            if self._mappings_table_model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
                 self._undo_stack.push(EnableAllMappings(self._mappings_table_model))
                 return
         self._undo_stack.push(DisableAllMappings(self._mappings_table_model))
@@ -850,7 +850,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if flag == self._ui.fix_table_name_check_box.isChecked():
             return
         self._ui.fix_table_name_check_box.stateChanged.disconnect(self._change_fix_table_name_flag)
-        self._ui.fix_table_name_check_box.setCheckState(Qt.Checked if flag else Qt.Unchecked)
+        self._ui.fix_table_name_check_box.setCheckState(Qt.CheckState.Checked if flag else Qt.CheckState.Unchecked)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
 
     def _set_fixed_table_name_silently(self, name):

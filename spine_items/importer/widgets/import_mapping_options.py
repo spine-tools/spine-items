@@ -156,7 +156,7 @@ class ImportMappingOptions:
         # update item mapping settings
         if flattened_mappings.may_import_objects():
             self._ui.import_objects_check_box.setEnabled(True)
-            check_state = Qt.Checked if flattened_mappings.import_objects() else Qt.Unchecked
+            check_state = Qt.CheckState.Checked if flattened_mappings.import_objects() else Qt.CheckState.Unchecked
             self._ui.import_objects_check_box.setCheckState(check_state)
         else:
             self._ui.import_objects_check_box.setEnabled(False)
@@ -431,7 +431,7 @@ class ImportMappingOptions:
         is_time_series = flattened_mappings.is_time_series_value()
         self._ui.time_series_repeat_check_box.setEnabled(is_time_series)
         self._ui.time_series_repeat_check_box.setCheckState(
-            Qt.Checked if is_time_series and value_mapping.options.get("repeat") else Qt.Unchecked
+            Qt.CheckState.Checked if is_time_series and value_mapping.options.get("repeat") else Qt.CheckState.Unchecked
         )
 
     def _update_map_options(self):

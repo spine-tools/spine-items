@@ -92,7 +92,7 @@ class IndexingTableModel(QAbstractTableModel):
                     return value
             return self._values[column - 1][row]
         if index.column() == 0 and role == Qt.ItemDataRole.CheckStateRole:
-            return Qt.Checked if self._selected[index.row()] else Qt.Unchecked
+            return Qt.CheckState.Checked if self._selected[index.row()] else Qt.CheckState.Unchecked
         return None
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
@@ -158,7 +158,7 @@ class IndexingTableModel(QAbstractTableModel):
         if role != Qt.ItemDataRole.CheckStateRole:
             return False
         row = index.row()
-        self._selected[row] = value == Qt.Checked
+        self._selected[row] = value == Qt.CheckState.Checked
         self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
         self._spread_values_over_selected_rows(row)
         self.selection_changed.emit()

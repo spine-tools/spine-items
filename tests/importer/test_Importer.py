@@ -167,7 +167,7 @@ class TestImporter(unittest.TestCase):
         file_list = [model.index(row, 0).data(Qt.ItemDataRole.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
         checked = [model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) for row in range(model.rowCount())]
-        selected = [check == Qt.Checked.value for check in checked]
+        selected = [check == Qt.CheckState.Checked.value for check in checked]
         self.assertTrue(all(selected))
 
     def test_handle_dag_changed_updates_previous_list_items(self):
@@ -180,14 +180,14 @@ class TestImporter(unittest.TestCase):
         model = self.importer._properties_ui.treeView_files.model()
         for row in range(2):
             index = model.index(row, 0)
-            model.setData(index, Qt.Unchecked, Qt.ItemDataRole.CheckStateRole)
+            model.setData(index, Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole)
         # Update with one existing, one new file
         resources = [transient_file_resource("provider", label=name) for name in ["file2", "file3"]]
         self.importer.upstream_resources_updated(resources)
         file_list = [model.index(row, 0).data(Qt.ItemDataRole.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(file_list, ["file2", "file3"])
         checked = [model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) for row in range(model.rowCount())]
-        selected = [check == Qt.Checked.value for check in checked]
+        selected = [check == Qt.CheckState.Checked.value for check in checked]
         self.assertEqual(selected, [False, True])
 
 

@@ -124,7 +124,7 @@ class ExporterBase(ProjectItem):
         if not self._active:
             return
         # This does not trigger the stateChanged signal.
-        self._properties_ui.cancel_on_error_check_box.setCheckState(Qt.Checked if cancel else Qt.Unchecked)
+        self._properties_ui.cancel_on_error_check_box.setCheckState(Qt.CheckState.Checked if cancel else Qt.CheckState.Unchecked)
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item's configuration."""

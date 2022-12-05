@@ -91,7 +91,7 @@ class MappingsTableModel(QAbstractTableModel):
         if column == 0:
             if role == Qt.ItemDataRole.CheckStateRole:
                 spec = self._mappings[self._names[index.row()]]
-                return Qt.Checked if spec.enabled else Qt.Unchecked
+                return Qt.CheckState.Checked if spec.enabled else Qt.CheckState.Unchecked
             if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
                 return self._names[index.row()]
         if column == 1:

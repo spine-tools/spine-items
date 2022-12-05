@@ -189,7 +189,7 @@ class MappingsModel(QAbstractItemModel):
         if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
             return self._mappings[index.row()].name
         if role == Qt.ItemDataRole.CheckStateRole:
-            return Qt.Checked if self._mappings[index.row()].checked else Qt.Unchecked
+            return Qt.CheckState.Checked if self._mappings[index.row()].checked else Qt.CheckState.Unchecked
         if role == Role.ITEM:
             return self._mappings[index.row()]
         return None

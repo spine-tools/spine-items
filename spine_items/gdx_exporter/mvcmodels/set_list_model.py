@@ -146,7 +146,7 @@ class SetListModel(QAbstractListModel):
                 checked = self._set_settings.is_exportable(self._sorted_domains[row])
             else:
                 checked = self._set_settings.is_exportable(self._sorted_sets[row - domain_count])
-            return Qt.Checked if checked else Qt.Unchecked
+            return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
         if role == Qt.ItemDataRole.ToolTipRole:
             if row < domain_count:
                 domain_name = self._sorted_domains[row]
@@ -235,11 +235,11 @@ class SetListModel(QAbstractListModel):
         if row < domain_count:
             name = self._sorted_domains[row]
             metadata = self._set_settings.metadata(name)
-            exportable = gdx.ExportFlag.EXPORTABLE if value == Qt.Checked else gdx.ExportFlag.NON_EXPORTABLE
+            exportable = gdx.ExportFlag.EXPORTABLE if value == Qt.CheckState.Checked else gdx.ExportFlag.NON_EXPORTABLE
             metadata.exportable = exportable
         else:
             metadata = self._set_settings.metadata(self._sorted_sets[row - domain_count])
-            exportable = gdx.ExportFlag.EXPORTABLE if value == Qt.Checked else gdx.ExportFlag.NON_EXPORTABLE
+            exportable = gdx.ExportFlag.EXPORTABLE if value == Qt.CheckState.Checked else gdx.ExportFlag.NON_EXPORTABLE
             metadata.exportable = exportable
             self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.ToolTipRole])
         self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole, Qt.ItemDataRole.ToolTipRole])

@@ -133,7 +133,7 @@ class Gimlet(ProjectItem):
         Args:
             state (int): New check box state (Qt.CheckState enum)
         """
-        use_shell = state == Qt.Checked
+        use_shell = state == Qt.CheckState.Checked
         if self.use_shell == use_shell:
             return
         self._toolbox.undo_stack.push(UpdateShellCheckBoxCommand(self, use_shell))
@@ -149,7 +149,7 @@ class Gimlet(ProjectItem):
         if not self._active:
             return
         # This does not trigger the stateChanged signal.
-        self._properties_ui.checkBox_shell.setCheckState(Qt.Checked if use_shell else Qt.Unchecked)
+        self._properties_ui.checkBox_shell.setCheckState(Qt.CheckState.Checked if use_shell else Qt.CheckState.Unchecked)
         self._properties_ui.comboBox_shell.setEnabled(bool(use_shell))
 
     @Slot(int)

@@ -38,7 +38,7 @@ class ParameterNameListModel(QAbstractListModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return self._names[index.row()]
         if role == Qt.ItemDataRole.CheckStateRole:
-            return Qt.Checked if self._selected[index.row()] else Qt.Unchecked
+            return Qt.CheckState.Checked if self._selected[index.row()] else Qt.CheckState.Unchecked
         return None
 
     def flags(self, index):
@@ -103,5 +103,5 @@ class ParameterNameListModel(QAbstractListModel):
         """Selects or deselects the parameter at given index for inclusion in the merged parameter."""
         if role != Qt.ItemDataRole.CheckStateRole or not index.isValid():
             return False
-        self._selected[index.row()] = value == Qt.Checked
+        self._selected[index.row()] = value == Qt.CheckState.Checked
         return True

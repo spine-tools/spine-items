@@ -148,10 +148,10 @@ class MappingEditorTableModel(QAbstractTableModel):
         elif role == Qt.ItemDataRole.CheckStateRole:
             if column == EditorColumn.PIVOTED:
                 if is_pivoted(self._mappings[index.row()].position):
-                    return Qt.Checked
-                return Qt.Unchecked
+                    return Qt.CheckState.Checked
+                return Qt.CheckState.Unchecked
             if column == EditorColumn.NULLABLE:
-                return Qt.Checked if self._mappings[index.row()].is_ignorable() else Qt.Unchecked
+                return Qt.CheckState.Checked if self._mappings[index.row()].is_ignorable() else Qt.CheckState.Unchecked
         elif role == Qt.FontRole and column == EditorColumn.ROW_LABEL:
             font = QFont()
             font.setBold(True)

@@ -180,10 +180,10 @@ class GdxExporter(ExporterBase):
             database_list_storage.addWidget(item)
             item.file_name_changed.connect(self._update_out_file_name)
         self._properties_ui.output_time_stamps_check_box.setCheckState(
-            Qt.Checked if self._append_output_time_stamps else Qt.Unchecked
+            Qt.CheckState.Checked if self._append_output_time_stamps else Qt.CheckState.Unchecked
         )
         self._properties_ui.cancel_on_error_check_box.setCheckState(
-            Qt.Checked if self._cancel_on_error else Qt.Unchecked
+            Qt.CheckState.Checked if self._cancel_on_error else Qt.CheckState.Unchecked
         )
 
     def upstream_resources_updated(self, resources):

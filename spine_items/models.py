@@ -47,7 +47,7 @@ class CheckableFileListModel(FileListModel):
                     checked = self._single_resources[row].checked
                 else:
                     checked = self._pack_resources[row - len(self._single_resources)].checked
-                return Qt.Checked if checked else Qt.Unchecked
+                return Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
             return None
         return super().data(index, role)
 
