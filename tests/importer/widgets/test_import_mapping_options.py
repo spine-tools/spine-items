@@ -13,9 +13,9 @@
 import unittest
 from contextlib import contextmanager
 
-from PySide2.QtCore import Qt, QItemSelectionModel
-from PySide2.QtWidgets import QApplication, QUndoStack, QMainWindow
-
+from PySide6.QtCore import Qt, QItemSelectionModel
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtGui import QUndoStack
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.ui.import_editor_window import Ui_MainWindow
