@@ -12,7 +12,6 @@
 """Contains unit tests for the ``import_mapping_options`` module."""
 import unittest
 from contextlib import contextmanager
-
 from PySide6.QtCore import Qt, QItemSelectionModel
 from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtGui import QUndoStack

@@ -16,7 +16,6 @@ ImportMappingOptions widget.
 :date:   12.5.2020
 """
 from PySide6.QtCore import Qt, Slot, QModelIndex
-from PySide6.QtWidgets import QWidget
 from .custom_menus import SimpleFilterMenu
 from ..commands import (
     SetImportObjectsFlag,
