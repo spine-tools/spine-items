@@ -18,13 +18,13 @@ Tool class.
 import os
 from PySide2.QtCore import Slot, QItemSelection, Qt
 from PySide2.QtWidgets import QAction
-from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import open_url
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, make_cmd_line_arg, LabelArg
 from spine_engine.utils.helpers import resolve_python_interpreter
 from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
+from ..db_writer_item_base import DBWriterItemBase
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand
 from .item_info import ItemInfo
 from .widgets.custom_menus import ToolSpecificationMenu
@@ -35,7 +35,7 @@ from ..models import ToolCommandLineArgsModel
 from .output_resources import scan_for_resources
 
 
-class Tool(ProjectItem):
+class Tool(DBWriterItemBase):
     def __init__(
         self,
         name,
@@ -410,6 +410,7 @@ class Tool(ProjectItem):
 
     def handle_execution_successful(self, execution_direction, engine_state):
         """See base class."""
+        super().handle_execution_successful(execution_direction, engine_state)
         if execution_direction != "FORWARD":
             return
         self._resources_to_successors_changed()
@@ -493,7 +494,7 @@ class Tool(ProjectItem):
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
         """See base class."""
-        description, x, y = ProjectItem.parse_item_dict(item_dict)
+        description, x, y = DBWriterItemBase.parse_item_dict(item_dict)
         specification_name = item_dict.get("specification", "")
         execute_in_work = item_dict.get("execute_in_work", True)
         cmd_line_args = item_dict.get("cmd_line_args", [])
