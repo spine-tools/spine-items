@@ -18,19 +18,17 @@ Contains Importer project item class.
 
 import os
 from operator import itemgetter
-
 from PySide6.QtCore import QModelIndex, Qt, Slot
-
 from spinetoolbox.helpers import create_dir
-from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
+from ..db_writer_item_base import DBWriterItemBase
 from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand, UpdateOnConflictCommand
 from ..models import CheckableFileListModel
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 
 
-class Importer(ProjectItem):
+class Importer(DBWriterItemBase):
     def __init__(
         self,
         name,
@@ -91,22 +89,6 @@ class Importer(ProjectItem):
     @property
     def executable_class(self):
         return ExecutableItem
-
-    @Slot(object, object)
-    def handle_execution_successful(self, execution_direction, engine_state):
-        """Notifies Toolbox of successful database import."""
-        if execution_direction != "FORWARD":
-            return
-        successors = [self._project.get_item(name) for name in self._project.successor_names(self.name)]
-        committed_db_maps = set()
-        for successor in successors:
-            if successor.item_type() == "Data Store":
-                url = successor.sql_alchemy_url()
-                db_map = self._toolbox.db_mngr.db_map(url)
-                if db_map:
-                    committed_db_maps.add(db_map)
-        if committed_db_maps:
-            self._toolbox.db_mngr.notify_session_committed(self, *committed_db_maps)
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
@@ -314,7 +296,7 @@ class Importer(ProjectItem):
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
         """See base class."""
-        description, x, y = ProjectItem.parse_item_dict(item_dict)
+        description, x, y = DBWriterItemBase.parse_item_dict(item_dict)
         specification_name = item_dict.get("specification", "")
         cancel_on_error = item_dict.get("cancel_on_error", False)
         on_conflict = item_dict.get("on_conflict", "merge")

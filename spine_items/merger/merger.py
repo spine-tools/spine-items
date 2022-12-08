@@ -18,14 +18,14 @@ Module for Merger class.
 
 import os
 from PySide6.QtCore import Qt, Slot
-from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
 from ..commands import UpdateCancelOnErrorCommand
+from ..db_writer_item_base import DBWriterItemBase
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 
 
-class Merger(ProjectItem):
+class Merger(DBWriterItemBase):
     def __init__(self, name, description, x, y, toolbox, project, cancel_on_error=False):
         """Data Store class.
 
@@ -100,26 +100,6 @@ class Merger(ProjectItem):
             if item.item_type() == "Data Store":
                 yield item
 
-    def successor_data_stores(self):
-        for name in self._project.successor_names(self.name):
-            item = self._project.get_item(name)
-            if item.item_type() == "Data Store":
-                yield item
-
-    @Slot(object, object)
-    def handle_execution_successful(self, execution_direction, engine_state):
-        """Notifies Toolbox of successful database import."""
-        if execution_direction != "FORWARD":
-            return
-        committed_db_maps = set()
-        for successor in self.successor_data_stores():
-            url = successor.sql_alchemy_url()
-            db_map = self._toolbox.db_mngr.db_map(url)
-            if db_map:
-                committed_db_maps.add(db_map)
-        if committed_db_maps:
-            self._toolbox.db_mngr.notify_session_committed(self, *committed_db_maps)
-
     def upstream_resources_updated(self, resources):
         self._check_notifications()
 
@@ -149,7 +129,7 @@ class Merger(ProjectItem):
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
         """See base class."""
-        description, x, y = ProjectItem.parse_item_dict(item_dict)
+        description, x, y = DBWriterItemBase.parse_item_dict(item_dict)
         cancel_on_error = item_dict.get("cancel_on_error", False)
         return Merger(name, description, x, y, toolbox, project, cancel_on_error)
 
