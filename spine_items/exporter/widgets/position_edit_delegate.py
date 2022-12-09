@@ -22,10 +22,14 @@ from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT
 _positions = list(POSITION_DISPLAY_TEXT.values())
 
 
-def position_section_width():
-    # pylint: disable=undefined-variable
-    fm = qApp.fontMetrics()
-    style = qApp.style()
+def position_section_width(w):
+    """Returns section width.
+
+    Args:
+        w (QWidget): Widget whose font metrics are used
+    """
+    fm = w.fontMetrics()
+    style = qApp.style()  # pylint: disable=undefined-variable
     option = QStyleOptionComboBox()
     rect = style.subControlRect(QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow)
     return max(fm.horizontalAdvance(pos) for pos in _positions) + rect.width()

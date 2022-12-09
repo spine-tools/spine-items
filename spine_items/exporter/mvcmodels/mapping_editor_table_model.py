@@ -152,7 +152,7 @@ class MappingEditorTableModel(QAbstractTableModel):
                 return Qt.CheckState.Unchecked
             if column == EditorColumn.NULLABLE:
                 return Qt.CheckState.Checked if self._mappings[index.row()].is_ignorable() else Qt.CheckState.Unchecked
-        elif role == Qt.FontRole and column == EditorColumn.ROW_LABEL:
+        elif role == Qt.ItemDataRole.FontRole and column == EditorColumn.ROW_LABEL:
             font = QFont()
             font.setBold(True)
             return font
