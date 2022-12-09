@@ -325,7 +325,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         root_item = self.programfiles_model.itemFromIndex(index)
         if not root_item.hasChildren():
             return None
-        return root_item.child(0).data(Qt.UserRole)
+        return root_item.child(0).data(Qt.ItemDataRole.UserRole)
 
     def _additional_program_file_list(self):
         return self.spec_dict.get("includes", [])[1:]
@@ -343,7 +343,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             item = QStandardItem(os.path.basename(file_path))
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.ItemDataRole.DecorationRole)
-            item.setData(file_path, Qt.UserRole)
+            item.setData(file_path, Qt.ItemDataRole.UserRole)
             root_item.appendRow(item)
             QTimer.singleShot(0, self._push_change_main_program_file_command)
 
@@ -396,7 +396,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             index (QModelIndex): index in program files model
             dirty (bool)
         """
-        basename = os.path.basename(index.data(Qt.UserRole))
+        basename = os.path.basename(index.data(Qt.ItemDataRole.UserRole))
         if dirty:
             basename += "*"
         self.programfiles_model.setData(index, basename, role=Qt.ItemDataRole.DisplayRole)
@@ -1165,7 +1165,7 @@ def _build_tree(root, components):
     leafs = []
     for parent, children in components.items():
         item = QStandardItem(parent)
-        item.setData(parent, Qt.UserRole)
+        item.setData(parent, Qt.ItemDataRole.UserRole)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         _build_tree(item, children)
         if item.hasChildren():
@@ -1183,6 +1183,6 @@ def _build_tree(root, components):
 def _path_components_from_index(index):
     components = []
     while index.parent().isValid():
-        components.insert(0, index.data(Qt.UserRole))
+        components.insert(0, index.data(Qt.ItemDataRole.UserRole))
         index = index.parent()
     return components

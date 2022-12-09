@@ -252,7 +252,7 @@ class TestDataConnection(unittest.TestCase):
             waiter.wait()
         index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
         self.assertEqual(index.data(), str(a))
-        self.assertTrue(index.data(Qt.UserRole + 2))
+        self.assertTrue(index.data(Qt.ItemDataRole.UserRole + 2))
         self.assertEqual(self.data_connection.file_references, [str(a)])
 
     def test_deleting_file_marks_its_reference_as_missing(self):
@@ -268,7 +268,7 @@ class TestDataConnection(unittest.TestCase):
             waiter.wait()
         index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
         self.assertEqual(index.data(), str(a))
-        self.assertTrue(index.data(Qt.UserRole + 2))
+        self.assertTrue(index.data(Qt.ItemDataRole.UserRole + 2))
         self.assertEqual(self.data_connection.file_references, [str(a)])
 
     def test_copy_reference_to_project(self):
@@ -293,7 +293,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(self.data_connection.data_model.rowCount(), 1)
         index = self.data_connection.data_model.index(0, 0)
         self.assertEqual(index.data(), "a.txt")
-        self.assertEqual(index.data(Qt.UserRole + 1), os.path.join(self.project.items_dir, "dc", "a.txt"))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self.project.items_dir, "dc", "a.txt"))
 
     def test_create_data_file(self):
         with mock.patch("spine_items.data_connection.data_connection.QInputDialog") as mock_input_dialog:
@@ -305,7 +305,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
-        self.assertEqual(index.data(Qt.UserRole + 1), os.path.join(self.project.items_dir, "dc", "data.csv"))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self.project.items_dir, "dc", "data.csv"))
 
     def test_deleting_data_file_removes_it_from_dc(self):
         file_a = Path(self.data_connection.data_dir) / "data.dat"
@@ -316,7 +316,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.dat")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(file_a))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(file_a))
         with signal_waiter(self.data_connection.file_system_watcher.file_removed) as waiter:
             file_a.unlink()
             waiter.wait()
@@ -331,7 +331,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.dat")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(file_a))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(file_a))
         renamed = file_a.parent / "sata.txt"
         with signal_waiter(self.data_connection.file_system_watcher.file_renamed) as waiter:
             file_a.rename(renamed)
@@ -339,7 +339,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "sata.txt")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(renamed))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(renamed))
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -426,7 +426,7 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(self._data_file_path))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(self._data_file_path))
 
     def test_remove_data_file(self):
         self.data_connection.restore_selections()
@@ -448,7 +448,7 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "renamed.dat")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(self._item_dir / "renamed.dat"))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(self._item_dir / "renamed.dat"))
 
 
 class TestDataConnectionWithInvalidFileReference(unittest.TestCase):

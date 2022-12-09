@@ -417,7 +417,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         if Qt.ItemDataRole.DisplayRole in roles:
             self._sort_mappings_table_model.invalidate()
-        if max(roles) < Qt.UserRole:
+        if max(roles) < Qt.ItemDataRole.UserRole:
             return
         sorted_index = self._sort_mappings_table_model.mapFromSource(top_left)
         if sorted_index != self._ui.mappings_table.currentIndex():

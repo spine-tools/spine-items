@@ -37,8 +37,8 @@ from ..widgets import UrlSelector
 from ..utils import split_url_credentials
 
 
-_DATA_FILE_PATH_ROLE = Qt.UserRole + 1
-_MISSING_ROLE = Qt.UserRole + 2
+_DATA_FILE_PATH_ROLE = Qt.ItemDataRole.UserRole + 1
+_MISSING_ROLE = Qt.ItemDataRole.UserRole + 2
 
 
 _MISSING_ITEM_FOREGROUND = QBrush(Qt.red)

@@ -20,5 +20,5 @@ from enum import IntEnum, unique
 
 @unique
 class Role(IntEnum):
-    ITEM = Qt.UserRole + 1
-    FLATTENED_MAPPINGS = Qt.UserRole + 2
+    ITEM = Qt.ItemDataRole.UserRole + 1
+    FLATTENED_MAPPINGS = Qt.ItemDataRole.UserRole + 2

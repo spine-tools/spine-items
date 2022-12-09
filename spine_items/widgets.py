@@ -139,7 +139,7 @@ class DataTreeView(QTreeView):
         mimeData = QMimeData()
         urls = list()
         for index in self.drag_indexes:
-            file_path = index.data(Qt.UserRole)
+            file_path = index.data(Qt.ItemDataRole.UserRole)
             if not file_path:
                 return
             urls.append(QUrl.fromLocalFile(file_path))

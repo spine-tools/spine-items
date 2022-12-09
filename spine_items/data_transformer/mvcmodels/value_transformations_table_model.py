@@ -29,8 +29,8 @@ class TransformationsTableColumn(IntEnum):
 
 @unique
 class TransformationsTableRole(IntEnum):
-    INSTRUCTIONS = Qt.UserRole + 1
-    SILENT_EDIT = Qt.UserRole + 2
+    INSTRUCTIONS = Qt.ItemDataRole.UserRole + 1
+    SILENT_EDIT = Qt.ItemDataRole.UserRole + 2
 
 
 class ValueTransformationsTableModel(ParameterDropTargetTableModel):

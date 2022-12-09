@@ -29,7 +29,7 @@ class RenamesTableColumn(IntEnum):
 
 @unique
 class RenamesRoles(IntEnum):
-    SILENT_EDIT = Qt.UserRole + 1
+    SILENT_EDIT = Qt.ItemDataRole.UserRole + 1
 
 
 class ParameterRenamesTableModel(ParameterDropTargetTableModel):

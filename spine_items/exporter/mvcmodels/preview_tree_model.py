@@ -22,7 +22,7 @@ from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt
 
 class PreviewTreeModel(QAbstractItemModel):
 
-    TABLE_ROLE = Qt.UserRole + 1
+    TABLE_ROLE = Qt.ItemDataRole.UserRole + 1
 
     def __init__(self):
         super().__init__()

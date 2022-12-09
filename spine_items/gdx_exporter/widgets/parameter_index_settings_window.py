@@ -27,8 +27,8 @@ from spinedb_api import DatabaseMapping
 from .parameter_index_settings import IndexSettingsState, ParameterIndexSettings
 from ..mvcmodels.indexing_domain_list_model import IndexingDomainListModel
 
-_PARAMETER_ROLE = Qt.UserRole + 1
-_PARAMETER_NAME_ROLE = Qt.UserRole + 2
+_PARAMETER_ROLE = Qt.ItemDataRole.UserRole + 1
+_PARAMETER_NAME_ROLE = Qt.ItemDataRole.UserRole + 2
 
 
 class ParameterIndexSettingsWindow(QWidget):
