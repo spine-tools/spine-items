@@ -135,7 +135,7 @@ class DataConnection(ProjectItem):
         s[self._properties_ui.treeView_dc_references.files_dropped] = self._add_file_references
         s[self._properties_ui.treeView_dc_data.files_dropped] = self.add_data_files
         s[self.get_icon().files_dropped_on_icon] = self.receive_files_dropped_on_icon
-        s[self._properties_ui.treeView_dc_references.del_key_pressed] = lambda: self.remove_references
+        s[self._properties_ui.treeView_dc_references.del_key_pressed] = lambda b=False: self.remove_references(b)
         s[self._properties_ui.treeView_dc_data.del_key_pressed] = self.remove_files
         s[self._properties_ui.treeView_dc_references.selectionModel().selectionChanged] = self._update_selection_state
         s[self._properties_ui.treeView_dc_data.selectionModel().selectionChanged] = self._update_selection_state
@@ -181,7 +181,7 @@ class DataConnection(ProjectItem):
                 self._logger.msg_error.emit("[OSError] Copying failed")
 
     @Slot(bool)
-    def show_add_file_references_dialog(self, checked=False):
+    def show_add_file_references_dialog(self, _=False):
         """Opens a file browser where user can select files to be added as references for this Data Connection."""
         answer = QFileDialog.getOpenFileNames(self._toolbox, "Add file references", self._project.project_dir, "*.*")
         file_paths = answer[0]
@@ -213,7 +213,7 @@ class DataConnection(ProjectItem):
             self._toolbox.undo_stack.push(AddDCReferencesCommand(self, new_paths, []))
 
     @Slot(bool)
-    def show_add_db_reference_dialog(self, checked=False):
+    def show_add_db_reference_dialog(self, _=False):
         """Opens a dialog where user can select a url to be added as reference for this Data Connection."""
         selector = UrlSelector(self._toolbox, self._toolbox)
         selector.exec_()
@@ -245,7 +245,7 @@ class DataConnection(ProjectItem):
         self._resources_to_successors_changed()
 
     @Slot(bool)
-    def remove_references(self, checked=False):
+    def remove_references(self, _=False):
         """Pushes a remove references command to undo stack"""
         indexes = self._properties_ui.treeView_dc_references.selectedIndexes()
         if not indexes:  # Nothing selected
@@ -418,7 +418,7 @@ class DataConnection(ProjectItem):
             self._resources_to_successors_changed()
 
     @Slot(bool)
-    def copy_to_project(self, checked=False):
+    def copy_to_project(self, _=False):
         """Copy selected file references to this Data Connection's data directory."""
         selected_indexes = self._properties_ui.treeView_dc_references.selectedIndexes()
         if not selected_indexes:

@@ -238,6 +238,53 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(0, len(self.data_connection.file_references))
             self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(0, 0)))
 
+    def test_remove_references_with_del_key(self):
+        temp_dir = Path(self._temp_dir.name, "references")
+        temp_dir.mkdir()
+        with mock.patch(
+            "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
+        ) as mock_filenames, mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelector"
+        ) as mock_url_selector_class, mock.patch(
+            "spine_items.data_connection.data_connection.create_engine"
+        ):
+            mock_url_selector_class.return_value = mock_url_selector = mock.MagicMock()
+            a = Path(temp_dir, "a.txt")
+            a.touch()
+            b = Path(temp_dir, "b.txt")
+            b.touch()
+            self.assertTrue(os.path.isfile(str(a)) and os.path.isfile(str(b)))  # existing files
+            self.data_connection.restore_selections()
+            self.data_connection._connect_signals()
+            # First add a couple of files as refs
+            mock_filenames.return_value = ([str(a), str(b)], "*.*")
+            self.data_connection.show_add_file_references_dialog()
+            self.assertEqual(1, mock_filenames.call_count)
+            self.assertEqual(2, len(self.data_connection.file_references))
+            self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
+            # Second add a couple of dbs as refs
+            type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://scott:tiger@host:3306/db")
+            self.data_connection.show_add_db_reference_dialog()
+            indexes = self.data_connection._properties_ui.treeView_dc_references.selectedIndexes()
+            self.assertTrue(len(indexes) == 0)
+            # Set index selected
+            file_ref_root_index = self.ref_model.index(0, 0)
+            ref_index = self.ref_model.index(0, 0, file_ref_root_index)
+            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(ref_index, QItemSelectionModel.Select)
+            indexes = self.data_connection._properties_ui.treeView_dc_references.selectedIndexes()
+            self.assertTrue(len(indexes) == 1)
+            self.data_connection._properties_ui.treeView_dc_references.del_key_pressed.emit()
+            self.assertEqual(1, len(self.data_connection.file_references))
+            # Remove remaining two simultaneously by selecting bith and removing them with delete key
+            file_ref_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
+            db_ref_index = self.ref_model.index(0, 0, self.ref_model.index(1, 0))
+            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(file_ref_index, QItemSelectionModel.Select)
+            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(db_ref_index, QItemSelectionModel.Select)
+            indexes = self.data_connection._properties_ui.treeView_dc_references.selectedIndexes()
+            self.data_connection._properties_ui.treeView_dc_references.del_key_pressed.emit()
+            self.assertEqual(0, len(self.data_connection.file_references))
+            self.assertEqual(0, len(self.data_connection.db_references))
+
     def test_renaming_file_marks_its_reference_as_missing(self):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
