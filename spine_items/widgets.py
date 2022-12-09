@@ -40,17 +40,17 @@ class ArgsTreeView(QTreeView):
 
 
 class ReferencesTreeView(QTreeView):
-    """Custom QTreeView class for Data Connection and View properties.
-
-    Attributes:
-        parent (QWidget): The parent of this view
-    """
+    """Custom QTreeView class for Data Connection and View properties."""
 
     files_dropped = Signal(list)
     del_key_pressed = Signal()
 
     def __init__(self, parent):
-        """Initializes the view."""
+        """Initializes the view.
+
+        Args:
+            parent (QWidget): The parent of this view
+        """
         super().__init__(parent=parent)
 
     def dragEnterEvent(self, event):
@@ -82,17 +82,17 @@ class ReferencesTreeView(QTreeView):
 
 
 class DataTreeView(QTreeView):
-    """Custom QTreeView class for the 'Data' files in DataConnection properties.
-
-    Attributes:
-        parent (QWidget): The parent of this view
-    """
+    """Custom QTreeView class for the 'Data' files in DataConnection properties."""
 
     files_dropped = Signal(list)
     del_key_pressed = Signal()
 
     def __init__(self, parent):
-        """Initializes the view."""
+        """Initializes the view.
+
+        Args:
+            parent (QWidget): The parent of this view
+        """
         super().__init__(parent=parent)
         self.drag_start_pos = None
         self.drag_indexes = list()
@@ -121,7 +121,7 @@ class DataTreeView(QTreeView):
     def mousePressEvent(self, event):
         """Registers drag start position."""
         if event.button() == Qt.LeftButton:
-            self.drag_start_pos = event.pos()
+            self.drag_start_pos = event.position().toPoint()
             self.drag_indexes = self.selectedIndexes()
         super().mousePressEvent(event)
 
@@ -133,13 +133,15 @@ class DataTreeView(QTreeView):
             return
         if not self.drag_indexes:
             return
-        if (event.pos() - self.drag_start_pos).manhattanLength() < QApplication.startDragDistance():
+        if (event.position().toPoint() - self.drag_start_pos).manhattanLength() < QApplication.startDragDistance():
             return
         drag = QDrag(self)
         mimeData = QMimeData()
         urls = list()
         for index in self.drag_indexes:
             file_path = index.data(Qt.UserRole)
+            if not file_path:
+                return
             urls.append(QUrl.fromLocalFile(file_path))
         mimeData.setUrls(urls)
         drag.setMimeData(mimeData)
