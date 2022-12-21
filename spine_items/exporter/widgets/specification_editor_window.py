@@ -787,9 +787,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         mapping = self._mappings_table_model.data(index, MappingsTableModel.MAPPING_ROOT_ROLE)
         modified = deepcopy(mapping)
         if self._mappings_table_model.data(index, MappingsTableModel.MAPPING_TYPE_ROLE) in (
-            MappingType.object_parameter_values,
-            MappingType.relationship_parameter_values,
-            MappingType.relationship_object_parameter_values,
+            MappingType.object_parameter_values.value,
+            MappingType.relationship_parameter_values.value,
+            MappingType.relationship_object_parameter_values.value,
         ):
             set_parameter_dimensions(modified, dimensions)
         else:
