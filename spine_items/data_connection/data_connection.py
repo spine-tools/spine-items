@@ -316,6 +316,30 @@ class DataConnection(ProjectItem):
                 return True
         return False
 
+    def copy_local_data(self, item_dict):
+        """See base class."""
+        original_data_dir = item_dict.get("original_data_dir")  # (str) original dir of duplicated ProjectItem
+        duplicate_files = item_dict.get("duplicate_files")  # (bool) Flag indicating if linked files should be copied
+        if not original_data_dir and not duplicate_files:
+            return
+        if duplicate_files:
+            try:
+                os.makedirs(self.data_dir, exist_ok=True)  # Make data dir
+            except OSError as e:
+                self._logger.msg_error.emit(f"Creating directory {self.data_dir} failed. {e}.")
+                return
+            for f in os.listdir(original_data_dir):
+                src_file = os.path.join(original_data_dir, f)
+                if os.path.isfile(src_file):
+                    dst_file = os.path.join(self.data_dir, f)
+                    try:
+                        shutil.copy(src_file, dst_file)  # Copy file
+                    except OSError as e:
+                        self._logger.msg_error.emit(f"Copying file <b>{f}</b> to <b>{self.data_dir}</b> failed. [{e}]")
+                        continue
+                    self._logger.msg.emit(f"File <b>{f}</b> copied to <b>{self.data_dir}</b>")
+        self.populate_data_list()
+
     @Slot(str)
     def _handle_file_removed(self, path):
         """Marks file reference missing or removes data reference.
