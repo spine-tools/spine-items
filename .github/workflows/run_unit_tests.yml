@@ -43,7 +43,11 @@ jobs:
         if [ "$RUNNER_OS" != "Windows" ]; then
           export QT_QPA_PLATFORM=offscreen
         fi
-        coverage run -m unittest discover --verbose
+        if [ "$RUNNER_OS" == "Windows" ] && [ $(python -V) == python 3.10* ]; then
+          coverage run -m unittest discover --verbose
+        else
+          run -m unittest discover -- verbose
+        fi
       shell: bash
     - name: Run Codecov
       if: matrix.os == 'windows-latest' && matrix.python-version == '3.10'
