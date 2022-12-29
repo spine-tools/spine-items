@@ -46,7 +46,7 @@ jobs:
         if [ "$RUNNER_OS" == "Windows" ] && [ $(python -V) == "Python 3.10*" ]; then
           coverage run -m unittest discover --verbose
         else
-          run -m unittest discover -- verbose
+          run -m unittest discover --verbose
         fi
       shell: bash
     - name: Run Codecov
