@@ -15,6 +15,7 @@ Unit tests for DataConnectionExecutable.
 :author: A. Soininen (VTT)
 :date:   6.4.2020
 """
+from multiprocessing import Lock
 import pathlib
 import tempfile
 import unittest
@@ -63,7 +64,7 @@ class TestDataConnectionExecutable(unittest.TestCase):
 
     def test_execute(self):
         executable = ExecutableItem("name", [], [], {}, self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], []))
+        self.assertTrue(executable.execute([], [], Lock()))
 
     def test_output_resources_backward(self):
         dc_data_dir = pathlib.Path(self._temp_dir.name, ".spinetoolbox", "items", "name")

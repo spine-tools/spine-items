@@ -15,7 +15,7 @@ Unit tests for :class:`ExporterExecutable`.
 :author: A. Soininen (VTT)
 :date:   6.4.2020
 """
-
+from multiprocessing import Lock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -128,7 +128,7 @@ class TestGdxExporterExecutable(unittest.TestCase):
     @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
     def test_execute_no_output(self):
         executable = ExecutableItem("name", SettingsPack(), [], False, False, "", self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], []))
+        self.assertTrue(executable.execute([], [], Lock()))
 
     @unittest.skipIf(gdx_utils.find_gams_directory() is None, "No working GAMS installation found.")
     def test_execute_exports_simple_database_to_gdx(self):
@@ -153,7 +153,7 @@ class TestGdxExporterExecutable(unittest.TestCase):
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem("name", settings_pack, databases, False, False, "", self._temp_dir.name, logger)
         resources = [database_resource("provider", database_url)]
-        self.assertTrue(executable.execute(resources, []))
+        self.assertTrue(executable.execute(resources, [], Lock()))
         self.assertTrue(Path(executable._data_dir, "output.gdx").exists())
         gams_directory = gdx.find_gams_directory()
         with GdxFile(str(Path(executable._data_dir, "output.gdx")), "r", gams_directory) as gdx_file:

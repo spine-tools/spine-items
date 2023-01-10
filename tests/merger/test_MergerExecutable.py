@@ -15,6 +15,7 @@ Unit tests for MergerExecutable.
 :author: A. Soininen
 :date:   6.4.2020
 """
+from multiprocessing import Lock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -57,7 +58,7 @@ class TestMergerExecutable(unittest.TestCase):
 
     def test_execute(self):
         executable = ExecutableItem("name", True, self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], []))
+        self.assertTrue(executable.execute([], [], Lock()))
 
     def test_execute_merge_two_dbs(self):
         """Creates two db's with some data and merges them to a third db."""
@@ -92,7 +93,7 @@ class TestMergerExecutable(unittest.TestCase):
         with db_server_manager() as mngr_queue:
             for r in input_db_resources + output_db_resources:
                 r.metadata["db_server_manager_queue"] = mngr_queue
-            self.assertTrue(executable.execute(input_db_resources, output_db_resources))
+            self.assertTrue(executable.execute(input_db_resources, output_db_resources, Lock()))
         # Check output db
         output_db_map = DatabaseMapping(db3_url)
         class_list = output_db_map.object_class_list().all()

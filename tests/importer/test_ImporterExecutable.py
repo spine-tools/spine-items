@@ -15,6 +15,7 @@ Unit tests for ImporterExecutable.
 :authors: A. Soininen (VTT)
 :date:    6.4.2020
 """
+from multiprocessing import Lock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -85,7 +86,7 @@ class TestImporterExecutable(unittest.TestCase):
 
     def test_execute_simplest_case(self):
         executable = ExecutableItem("name", {}, [], "", True, 'merge', self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], []))
+        self.assertTrue(executable.execute([], [], Lock()))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
 
@@ -107,7 +108,7 @@ class TestImporterExecutable(unittest.TestCase):
         with db_server_manager() as mngr_queue:
             for r in database_resources:
                 r.metadata["db_server_manager_queue"] = mngr_queue
-            self.assertTrue(executable.execute(file_resources, database_resources))
+            self.assertTrue(executable.execute(file_resources, database_resources, Lock()))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
         database_map = DatabaseMapping(database_url)
@@ -129,7 +130,7 @@ class TestImporterExecutable(unittest.TestCase):
         executable = ExecutableItem("name", {}, [], gams_path, True, 'merge', self._temp_dir.name, mock.MagicMock())
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
-        self.assertTrue(executable.execute(file_resources, database_resources))
+        self.assertTrue(executable.execute(file_resources, database_resources, Lock()))
         # Check that _process is None after execution
         self.assertIsNone(executable._process)
         database_map = DatabaseMapping(database_url)

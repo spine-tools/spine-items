@@ -15,6 +15,7 @@ Contains unit tests for :class:`DataTransformerExecutable`.
 :authors: A. Soininen (VTT)
 :date:    7.1.2021
 """
+from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock
@@ -42,7 +43,7 @@ class TestDataTransformerExecutable(unittest.TestCase):
         logger = MagicMock()
         item = ExecutableItem("T", None, self._temp_dir.name, logger)
         db_resource = database_resource("provider", "sqlite:///db.sqlite")
-        self.assertTrue(item.execute([db_resource], []))
+        self.assertTrue(item.execute([db_resource], [], Lock()))
         expected_resource = database_resource(item.name, "sqlite:///db.sqlite")
         self.assertEqual(item.output_resources(ExecutionDirection.FORWARD), [expected_resource])
 
@@ -50,7 +51,7 @@ class TestDataTransformerExecutable(unittest.TestCase):
         logger = MagicMock()
         item = ExecutableItem("T", None, self._temp_dir.name, logger)
         db_resource = database_resource("provider", "sqlite:///db.sqlite")
-        item.exclude_execution([db_resource], [])
+        item.exclude_execution([db_resource], [], Lock())
         expected_resource = database_resource(item.name, "sqlite:///db.sqlite")
         self.assertEqual(item.output_resources(ExecutionDirection.FORWARD), [expected_resource])
 
@@ -60,7 +61,7 @@ class TestDataTransformerExecutable(unittest.TestCase):
         logger = MagicMock()
         transformer = ExecutableItem("T", specification, self._temp_dir.name, logger)
         db_resource = database_resource("provider", "sqlite:///db.sqlite")
-        self.assertTrue(transformer.execute([db_resource], []))
+        self.assertTrue(transformer.execute([db_resource], [], Lock()))
         filter_url = append_filter_config("sqlite:///db.sqlite", transformer._filter_config_path)
         expected_resource = database_resource(transformer.name, filter_url)
         self.assertEqual(transformer.output_resources(ExecutionDirection.FORWARD), [expected_resource])
@@ -71,7 +72,7 @@ class TestDataTransformerExecutable(unittest.TestCase):
         logger = MagicMock()
         transformer = ExecutableItem("T", specification, self._temp_dir.name, logger)
         db_resource = database_resource("provider", "sqlite:///db.sqlite")
-        transformer.exclude_execution([db_resource], [])
+        transformer.exclude_execution([db_resource], [], Lock())
         filter_url = append_filter_config("sqlite:///db.sqlite", transformer._filter_config_path)
         expected_resource = database_resource(transformer.name, filter_url)
         self.assertEqual(transformer.output_resources(ExecutionDirection.FORWARD), [expected_resource])
