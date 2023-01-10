@@ -22,10 +22,9 @@ from pathlib import Path
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock, NonCallableMagicMock
-
 from PySide6.QtCore import QItemSelectionModel
 from PySide6.QtWidgets import QApplication, QMessageBox
-from PySide6.QtGui import QStandardItemModel, Qt
+from PySide6.QtGui import Qt
 from spinetoolbox.helpers import signal_waiter
 from spine_items.data_connection.data_connection import DataConnection
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
