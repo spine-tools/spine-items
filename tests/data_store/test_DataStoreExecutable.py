@@ -15,6 +15,7 @@ Unit tests for DataStoreExecutable.
 :author: A. Soininen
 :date:   6.4.2020
 """
+from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -71,7 +72,7 @@ class TestDataStoreExecutable(unittest.TestCase):
 
     def test_execute(self):
         executable = ExecutableItem("name", "", self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], []))
+        self.assertTrue(executable.execute([], [], Lock()))
 
     def test_output_resources_backward(self):
         executable = ExecutableItem("name", "sqlite:///database.sqlite", self._temp_dir.name, mock.MagicMock())

@@ -78,9 +78,9 @@ class ExecutableItem(ExporterExecutableItemBase):
             databases[full_url] = database.output_file_name
         return databases
 
-    def execute(self, forward_resources, backward_resources):
+    def execute(self, forward_resources, backward_resources, lock):
         """See base class."""
-        if not super().execute(forward_resources, backward_resources):
+        if not super().execute(forward_resources, backward_resources, lock):
             return ItemExecutionFinishState.FAILURE
         if self._settings_pack.settings is None:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")

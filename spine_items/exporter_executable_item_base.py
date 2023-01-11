@@ -60,7 +60,7 @@ class ExporterExecutableItemBase(ExecutableItemBase):
             self._process.terminate()
             self._process = None
 
-    def exclude_execution(self, forward_resources, backward_resources):
+    def exclude_execution(self, forward_resources, backward_resources, lock):
         """See base class."""
         manifest_file_name = (
             EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")

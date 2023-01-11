@@ -98,9 +98,9 @@ class ExecutableItem(ExporterExecutableItemBase):
             channel.in_label = resource.label
         return channel
 
-    def execute(self, forward_resources, backward_resources):
+    def execute(self, forward_resources, backward_resources, lock):
         """See base class."""
-        status = super().execute(forward_resources, backward_resources)
+        status = super().execute(forward_resources, backward_resources, lock)
         if status != ItemExecutionFinishState.SUCCESS:
             return status
         if self._specification is None:

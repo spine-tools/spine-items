@@ -15,6 +15,7 @@ Unit tests for ViewExecutable.
 :author: A. Soininen (VTT)
 :date:   6.4.2020
 """
+from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -49,11 +50,11 @@ class TestViewExecutable(unittest.TestCase):
 
     def test_execute_backward(self):
         executable = ExecutableItem("name", self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], []))
+        self.assertTrue(executable.execute([], [], Lock()))
 
     def test_execute_forward(self):
         executable = ExecutableItem("name", self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], []))
+        self.assertTrue(executable.execute([], [], Lock()))
 
     def test_output_resources_backward(self):
         executable = ExecutableItem("name", self._temp_dir.name, mock.MagicMock())

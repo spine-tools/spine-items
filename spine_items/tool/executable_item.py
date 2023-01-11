@@ -400,7 +400,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     return False
         return True
 
-    def execute(self, forward_resources, backward_resources):
+    def execute(self, forward_resources, backward_resources, lock):
         """See base class.
 
         Before launching the tool script in a separate instance,
@@ -408,7 +408,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         and copying input files where needed.
         After execution archives the output files.
         """
-        if not super().execute(forward_resources, backward_resources):
+        if not super().execute(forward_resources, backward_resources, lock):
             return ItemExecutionFinishState.FAILURE
         execution_dir = _execution_directory(self._work_dir, self._tool_specification)
         if execution_dir is None:
@@ -487,16 +487,16 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     # Try again
                     self._retry_count += 1
                     self._logger.msg_warning.emit("The Tool process was found dead. Retrying...")
-                    return self.execute(forward_resources, backward_resources)
+                    return self.execute(forward_resources, backward_resources, lock)
                 self._logger.msg_warning.emit("Maximum amount of retries reached.")
         self._handle_output_files(return_code, self._filter_id, forward_resources, execution_dir)
         self._tool_instance = None
         # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
         return ItemExecutionFinishState.SUCCESS if return_code == 0 else ItemExecutionFinishState.FAILURE
 
-    def exclude_execution(self, forward_resources, backward_resources):
+    def exclude_execution(self, forward_resources, backward_resources, lock):
         """See base class."""
-        super().exclude_execution(forward_resources, backward_resources)
+        super().exclude_execution(forward_resources, backward_resources, lock)
         if self._filter_id:
             self._output_dir = os.path.join(
                 self._output_dir, generate_filter_subdirectory_name(forward_resources, self.hash_filter_id())
