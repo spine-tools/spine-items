@@ -15,6 +15,7 @@ Unit tests for ToolExecutable item.
 :author: A. Soininen (VTT)
 :date:   2.4.2020
 """
+from multiprocessing import Lock
 import sys
 import pathlib
 from tempfile import TemporaryDirectory
@@ -157,7 +158,7 @@ class TestToolExecutable(unittest.TestCase):
         executable = ExecutableItem(
             "Create files", str(work_dir), tool_specification, [], {}, None, self._temp_dir.name, logger
         )
-        executable.execute([], [])
+        executable.execute([], [], Lock())
         while executable._tool_instance is not None:
             QCoreApplication.processEvents()
         archives = list(pathlib.Path(executable._data_dir, "output").iterdir())

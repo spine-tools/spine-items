@@ -22,7 +22,7 @@ from spinedb_api.spine_db_client import SpineDBClient
 class DBWriterExecutableItemBase(ExecutableItemBase):
     """Base class for items that might write to a Spine DB."""
 
-    def exclude_execution(self, forward_resources, backward_resources):
+    def exclude_execution(self, forward_resources, backward_resources, lock):
         """Perform the checkout on output databases so concurrent items can proceed."""
         to_resources = [r for r in backward_resources if r.type_ == "database"]
         for resource in to_resources:

@@ -55,17 +55,17 @@ class ExecutableItem(ExecutableItemBase):
             return False
         return True
 
-    def execute(self, forward_resources, backward_resources):
+    def execute(self, forward_resources, backward_resources, lock):
         """See base class."""
-        if not super().execute(forward_resources, backward_resources):
+        if not super().execute(forward_resources, backward_resources, lock):
             return ItemExecutionFinishState.FAILURE
         self._db_resources = [r for r in forward_resources if r.type_ == "database"]
         return ItemExecutionFinishState.SUCCESS
 
     # pylint: disable=no-self-use
-    def exclude_execution(self, forward_resources, backward_resources):
+    def exclude_execution(self, forward_resources, backward_resources, lock):
         """See base class."""
-        self.execute(forward_resources, backward_resources)
+        self.execute(forward_resources, backward_resources, lock)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):

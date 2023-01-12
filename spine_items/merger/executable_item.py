@@ -48,9 +48,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
         cancel_on_error = item_dict["cancel_on_error"]
         return cls(name, cancel_on_error, project_dir, logger)
 
-    def execute(self, forward_resources, backward_resources):
+    def execute(self, forward_resources, backward_resources, lock):
         """See base class."""
-        if not super().execute(forward_resources, backward_resources):
+        if not super().execute(forward_resources, backward_resources, lock):
             return ItemExecutionFinishState.FAILURE
         from_resources = [r for r in forward_resources if r.type_ == "database"]
         to_resources = [r for r in backward_resources if r.type_ == "database"]
@@ -61,7 +61,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             to_server_urls = [stack.enter_context(resource.open()) for resource in to_resources]
             self._process = ReturningProcess(
                 target=do_work,
-                args=(self._cancel_on_error, self._logs_dir, from_server_urls, to_server_urls, self._logger),
+                args=(self._cancel_on_error, self._logs_dir, from_server_urls, to_server_urls, lock, self._logger),
             )
             return_value = self._process.run_until_complete()
             self._process = None
