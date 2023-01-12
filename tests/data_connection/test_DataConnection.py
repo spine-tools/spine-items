@@ -270,7 +270,9 @@ class TestDataConnection(unittest.TestCase):
             # Set index selected
             file_ref_root_index = self.ref_model.index(0, 0)
             ref_index = self.ref_model.index(0, 0, file_ref_root_index)
-            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(ref_index, QItemSelectionModel.Select)
+            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(
+                ref_index, QItemSelectionModel.Select
+            )
             indexes = self.data_connection._properties_ui.treeView_dc_references.selectedIndexes()
             self.assertTrue(len(indexes) == 1)
             self.data_connection._properties_ui.treeView_dc_references.del_key_pressed.emit()
@@ -278,8 +280,12 @@ class TestDataConnection(unittest.TestCase):
             # Remove remaining two simultaneously by selecting bith and removing them with delete key
             file_ref_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
             db_ref_index = self.ref_model.index(0, 0, self.ref_model.index(1, 0))
-            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(file_ref_index, QItemSelectionModel.Select)
-            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(db_ref_index, QItemSelectionModel.Select)
+            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(
+                file_ref_index, QItemSelectionModel.Select
+            )
+            self.data_connection._properties_ui.treeView_dc_references.selectionModel().select(
+                db_ref_index, QItemSelectionModel.Select
+            )
             indexes = self.data_connection._properties_ui.treeView_dc_references.selectedIndexes()
             self.data_connection._properties_ui.treeView_dc_references.del_key_pressed.emit()
             self.assertEqual(0, len(self.data_connection.file_references))

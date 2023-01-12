@@ -15,6 +15,7 @@ Unit tests for Gimlet ExecutableItem.
 :author: P. Savolainen (VTT)
 :date:   25.5.2020
 """
+from multiprocessing import Lock
 import os
 import sys
 import unittest
@@ -106,14 +107,14 @@ class TestGimletExecutable(unittest.TestCase):
             expected_result = ItemExecutionFinishState.SUCCESS
         else:
             expected_result = ItemExecutionFinishState.FAILURE
-        self.assertEqual(expected_result, executable.execute([], []))
+        self.assertEqual(expected_result, executable.execute([], [], Lock()))
         # Test that bash shell execution works on Linux.
         executable = ExecutableItem("name", "bash", ["ls"], None, [], self._temp_dir.name, mock.MagicMock())
         if sys.platform == "linux":
             expected_result = ItemExecutionFinishState.SUCCESS
         else:
             expected_result = ItemExecutionFinishState.FAILURE
-        self.assertEqual(expected_result, executable.execute([], []))
+        self.assertEqual(expected_result, executable.execute([], [], Lock()))
 
     def test_output_resources_backward(self):
         executable = ExecutableItem("name", "cmd.exe", ["cd"], None, [], self._temp_dir.name, mock.MagicMock())

@@ -100,9 +100,9 @@ class ExecutableItem(ExecutableItemBase):
             self._exec_mngr.stop_execution()
             self._exec_mngr = None
 
-    def execute(self, forward_resources, backward_resources):
+    def execute(self, forward_resources, backward_resources, lock):
         """See base class."""
-        if not super().execute(forward_resources, backward_resources):
+        if not super().execute(forward_resources, backward_resources, lock):
             return ItemExecutionFinishState.FAILURE
         if not self._work_dir:
             self._logger.msg_warning.emit("Work directory not set.")

@@ -67,9 +67,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._process.terminate()
             self._process = None
 
-    def execute(self, forward_resources, backward_resources):
+    def execute(self, forward_resources, backward_resources, lock):
         """See base class."""
-        if not super().execute(forward_resources, backward_resources):
+        if not super().execute(forward_resources, backward_resources, lock):
             return ItemExecutionFinishState.FAILURE
         if not self._mapping:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No mappings configured. Skipping.")
@@ -106,6 +106,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     sources,
                     connector,
                     to_server_urls,
+                    lock,
                     self._logger,
                 ),
             )
