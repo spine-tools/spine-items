@@ -16,12 +16,11 @@ Classes for context menus used alongside the Importer project item.
 :date:   9.1.2018
 """
 
-from PySide6.QtCore import Qt, QPoint, Slot, Signal
-from PySide6.QtWidgets import QMenu, QWidgetAction
-
+from PySide6.QtCore import QPoint, Slot, Signal
+from PySide6.QtWidgets import QMenu
 from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu, FilterMenuBase
+from spinetoolbox.mvcmodels.filter_checkbox_list_model import DataToValueFilterCheckboxListModel
 from ..mvcmodels.mappings_model_roles import Role
-from .simple_filter_widget import SimpleFilterWidget
 
 
 class FilesContextMenu(CustomContextMenu):
@@ -150,11 +149,7 @@ class SimpleFilterMenu(FilterMenuBase):
             parent (SpineDBEditor)
         """
         super().__init__(parent)
-        self._filter = SimpleFilterWidget(self, show_empty=show_empty)
-        self._filter_action = QWidgetAction(parent)
-        self._filter_action.setDefaultWidget(self._filter)
-        self.addAction(self._filter_action)
-        self.connect_signals()
+        self._set_up(DataToValueFilterCheckboxListModel, self, str, show_empty=show_empty)
 
     def emit_filter_changed(self, valid_values):
         self.filterChanged.emit(valid_values)
