@@ -151,13 +151,23 @@ class DataStore(ProjectItem):
         self.set_path_to_sqlite_file(file_path)
         return True
 
-    def _new_sqlite_file(self, checked=False):
+    def _new_sqlite_file(self):
+        """Shows a file dialog and creates a new sqlite file at the chosen path.
+
+        Returns:
+            bool: True if the file was created successfully, False otherwise
+        """
         candidate_path = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
         answer = QFileDialog.getSaveFileName(self._toolbox, "Create SQLite file", candidate_path)
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
             return False
-        self.set_path_to_sqlite_file(file_path)
+        abs_path = os.path.abspath(file_path)
+        url = dict(self._url)
+        url["database"] = abs_path
+        sa_url = convert_to_sqlalchemy_url(url, self.name)
+        self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
+        self.update_url(dialect="sqlite", database=abs_path)
         return True
 
     def load_url_into_selections(self, url):
@@ -358,8 +368,8 @@ class DataStore(ProjectItem):
         if not sa_url:
             if self._url["dialect"] != "sqlite" or not self._new_sqlite_file():
                 return
-            sa_url = convert_to_sqlalchemy_url(self._url, self.name)
-        self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
+        else:
+            self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
         self._check_notifications()
 
     def _check_notifications(self):

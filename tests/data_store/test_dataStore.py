@@ -22,7 +22,7 @@ from unittest import mock
 import os
 import logging
 import sys
-from spinedb_api import create_new_spine_database
+from spinedb_api import create_new_spine_database, DatabaseMapping
 from spine_engine.project_item.project_item_resource import database_resource
 from PySide6.QtWidgets import QApplication
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
@@ -144,6 +144,45 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual("sqlite", cb_dialect.currentText())
         self.assertEqual(temp_path, le_db.text())
         self.assertTrue(os.path.exists(le_db.text()))
+
+    def test_new_database_is_created_before_advertising_resources(self):
+        self.ds.activate()
+        dialect_combo_box = self.ds_properties_ui.comboBox_dialect
+        dialect_combo_box.setCurrentText("sqlite")
+        self.assertEqual(dialect_combo_box.currentText(), "sqlite")
+        # Data store connects to combo box activated signal.
+        # We need to trigger the slot here manually.
+        self.ds.refresh_dialect(dialect_combo_box.currentText())
+        database_file_path = os.path.join(self._temp_dir.name, "test_db.sqlite")
+        failure_messages = []
+
+        def check_database_exists(data_store, for_successors):
+            if for_successors:
+                resources = data_store.resources_for_direct_successors()
+            else:
+                resources = data_store.resources_for_direct_predecessors()
+            if len(resources) != 1:
+                failure_messages.append("resources length is not equal to 1")
+                return
+            call_args = self.toolbox.db_mngr.create_new_spine_database.call_args
+            if len(call_args[0]) != 2:
+                failure_messages.append("call_args *args length is not equal to 2")
+                return
+            if str(call_args[0][0]) != resources[0].url:
+                failure_messages.append("create_new_spine_database() called with wrong URL")
+
+        with mock.patch("spine_items.data_store.data_store.QFileDialog") as file_dialog:
+            file_dialog.getSaveFileName.return_value = (database_file_path,)
+            self.project.notify_resource_changes_to_successors.side_effect = lambda item: check_database_exists(
+                item, True
+            )
+            self.project.notify_resource_changes_to_predecessors.side_effect = lambda item: check_database_exists(
+                item, False
+            )
+            self.assertTrue(self.ds_properties_ui.pushButton_create_new_spine_db.isEnabled())
+            self.ds_properties_ui.pushButton_create_new_spine_db.click()
+        if failure_messages:
+            self.fail(failure_messages[0])
 
     def test_save_and_restore_selections(self):
         """Test that selections are saved and restored when
