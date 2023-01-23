@@ -1,6 +1,6 @@
 (description of changes)
 
-Fixes Spine-project/Spine-Toolbox# (issue)
+Fixes spine-tools/Spine-Toolbox# (issue)
 
 ## Checklist before merging
 - [ ] Documentation (also in Toolbox repo) is up-to-date
