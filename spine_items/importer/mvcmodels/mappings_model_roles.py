@@ -14,11 +14,11 @@ Contains user data roles for :class:`MappingsModel`.
 :author: A. Soininen (VTT)
 :date:   15.10.2021
 """
-from PySide2.QtCore import Qt
+from PySide6.QtCore import Qt
 from enum import IntEnum, unique
 
 
 @unique
 class Role(IntEnum):
-    ITEM = Qt.UserRole + 1
-    FLATTENED_MAPPINGS = Qt.UserRole + 2
+    ITEM = Qt.ItemDataRole.UserRole + 1
+    FLATTENED_MAPPINGS = Qt.ItemDataRole.UserRole + 2

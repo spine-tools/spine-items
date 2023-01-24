@@ -16,7 +16,7 @@ Unit tests for :class:`RecordListModel`.
 :date:   26.9.2019
 """
 import unittest
-from PySide2.QtCore import QModelIndex, Qt
+from PySide6.QtCore import QModelIndex, Qt
 from spinedb_api.spine_io.exporters import gdx
 from spine_items.gdx_exporter.mvcmodels.record_list_model import RecordListModel
 
@@ -32,8 +32,8 @@ class TestRecordListModel(unittest.TestCase):
 
     def test_headerData(self):
         model = RecordListModel()
-        self.assertEqual(model.headerData(0, Qt.Horizontal), "")
-        self.assertEqual(model.headerData(0, Qt.Vertical), 1)
+        self.assertEqual(model.headerData(0, Qt.Orientation.Horizontal), "")
+        self.assertEqual(model.headerData(0, Qt.Orientation.Vertical), 1)
 
     def test_moveRows_down(self):
         model = RecordListModel()

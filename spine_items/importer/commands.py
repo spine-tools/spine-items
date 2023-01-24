@@ -16,8 +16,8 @@ Contains undo and redo commands for Import editor.
 """
 import pickle
 from enum import auto, IntEnum, unique
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QUndoCommand
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QUndoCommand
 
 from spinedb_api import import_mapping_from_dict
 from spinedb_api.import_mapping.import_mapping_compat import parse_named_mapping_spec
@@ -735,7 +735,7 @@ class SetColumnOrRowType(QUndoCommand):
             new_type (ConvertSpec): conversion specification for the rows/columns
             previous_type (ConvertSpec): previous conversion specification for the rows/columns
         """
-        text = ("row" if header_widget.orientation() == Qt.Vertical else "column") + " type change"
+        text = ("row" if header_widget.orientation() == Qt.Orientation.Vertical else "column") + " type change"
         super().__init__(text)
         self._source_table_name = source_table_name
         self._header_widget = header_widget

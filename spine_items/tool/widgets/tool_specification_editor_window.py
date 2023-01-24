@@ -22,9 +22,9 @@ import os
 from copy import deepcopy
 from operator import methodcaller
 
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
-from PySide2.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
-from PySide2.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
+from PySide6.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
+from PySide6.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex, QItemSelectionModel
 from spinetoolbox.helpers import busy_effect, open_url, same_path
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from spinetoolbox.config import STATUSBAR_SS
@@ -113,7 +113,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         parent = self.programfiles_model.index(0, 0)
         index = self.programfiles_model.index(0, 0, parent)
         selection_model = self._ui.treeView_programfiles.selectionModel()
-        selection_model.setCurrentIndex(index, selection_model.Select)
+        selection_model.setCurrentIndex(index, QItemSelectionModel.Select)
 
     def _make_ui(self):
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
@@ -130,13 +130,13 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _restore_dock_widgets(self):
         docks = (self._ui.dockWidget_program_files, self._ui.dockWidget_program)
-        self.splitDockWidget(*docks, Qt.Horizontal)
+        self.splitDockWidget(*docks, Qt.Orientation.Horizontal)
         width = sum(d.width() for d in docks)
-        self.resizeDocks(docks, [width * x for x in (0.3, 0.7)], Qt.Horizontal)
+        self.resizeDocks(docks, [width * x for x in (0.3, 0.7)], Qt.Orientation.Horizontal)
         docks = (self._ui.dockWidget_program_files, self._ui.dockWidget_io_files)
-        self.splitDockWidget(*docks, Qt.Vertical)
+        self.splitDockWidget(*docks, Qt.Orientation.Vertical)
         height = sum(d.height() for d in docks)
-        self.resizeDocks(docks, [height * x for x in (0.6, 0.4)], Qt.Vertical)
+        self.resizeDocks(docks, [height * x for x in (0.6, 0.4)], Qt.Orientation.Vertical)
 
     @Slot(bool)
     def _update_window_modified(self, _clean):
@@ -317,7 +317,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             '<p><span style=" font-weight:600;">Tip</span>: '
             'You can Drag &amp; Drop files and/or directories here from your computer.</p>'
         )
-        self.programfiles_model.setData(index, tool_tip, role=Qt.ToolTipRole)
+        self.programfiles_model.setData(index, tool_tip, role=Qt.ItemDataRole.ToolTipRole)
 
     def _current_main_program_file(self):
         """Returns the full path to the current main program file or None if there's no main program."""
@@ -325,7 +325,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         root_item = self.programfiles_model.itemFromIndex(index)
         if not root_item.hasChildren():
             return None
-        return root_item.child(0).data(Qt.UserRole)
+        return root_item.child(0).data(Qt.ItemDataRole.UserRole)
 
     def _additional_program_file_list(self):
         return self.spec_dict.get("includes", [])[1:]
@@ -342,8 +342,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if file_path:  # Do only if the spec has a main program (Executable Tool specs may not have one)
             item = QStandardItem(os.path.basename(file_path))
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.DecorationRole)
-            item.setData(file_path, Qt.UserRole)
+            item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.ItemDataRole.DecorationRole)
+            item.setData(file_path, Qt.ItemDataRole.UserRole)
             root_item.appendRow(item)
             QTimer.singleShot(0, self._push_change_main_program_file_command)
 
@@ -396,10 +396,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             index (QModelIndex): index in program files model
             dirty (bool)
         """
-        basename = os.path.basename(index.data(Qt.UserRole))
+        basename = os.path.basename(index.data(Qt.ItemDataRole.UserRole))
         if dirty:
             basename += "*"
-        self.programfiles_model.setData(index, basename, role=Qt.DisplayRole)
+        self.programfiles_model.setData(index, basename, role=Qt.ItemDataRole.DisplayRole)
 
     def init_io_file_list(self):
         for name in ("Input files", "Optional input files", "Output files"):
@@ -439,7 +439,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         root_item.removeRows(0, root_item.rowCount())
         for name in names:
             item = QStandardItem(name)
-            item.setData(QFileIconProvider().icon(QFileInfo(name)), Qt.DecorationRole)
+            item.setData(QFileIconProvider().icon(QFileInfo(name)), Qt.ItemDataRole.DecorationRole)
             root_item.appendRow(item)
         self._ui.treeView_io_files.expand(index)
 
@@ -1033,7 +1033,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             bottom_right (QModelIndex): bottom right index to renamed files
             roles (list of int):
         """
-        if Qt.DisplayRole not in roles:
+        if Qt.ItemDataRole.DisplayRole not in roles:
             return
         parent_index = top_left.parent()
         if parent_index.row() == 0:
@@ -1078,7 +1078,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if not indexes:  # Nothing selected
             self._show_status_bar_msg("Please select the input files to remove")
             return
-        removed_files = {ind.data(Qt.DisplayRole) for ind in indexes}
+        removed_files = {ind.data(Qt.ItemDataRole.DisplayRole) for ind in indexes}
         old_files = self.spec_dict.get("inputfiles", [])
         new_files = [f for f in old_files if f not in removed_files]
         self._undo_stack.push(
@@ -1093,7 +1093,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if not indexes:  # Nothing selected
             self._show_status_bar_msg("Please select the optional input files to remove")
             return
-        removed_files = {ind.data(Qt.DisplayRole) for ind in indexes}
+        removed_files = {ind.data(Qt.ItemDataRole.DisplayRole) for ind in indexes}
         old_files = self.spec_dict.get("inputfiles_opt", [])
         new_files = [f for f in old_files if f not in removed_files]
         self._undo_stack.push(
@@ -1110,7 +1110,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if not indexes:  # Nothing selected
             self._show_status_bar_msg("Please select the output files to remove")
             return
-        removed_files = {ind.data(Qt.DisplayRole) for ind in indexes}
+        removed_files = {ind.data(Qt.ItemDataRole.DisplayRole) for ind in indexes}
         old_files = self.spec_dict.get("outputfiles", [])
         new_files = [f for f in old_files if f not in removed_files]
         self._undo_stack.push(
@@ -1165,14 +1165,14 @@ def _build_tree(root, components):
     leafs = []
     for parent, children in components.items():
         item = QStandardItem(parent)
-        item.setData(parent, Qt.UserRole)
+        item.setData(parent, Qt.ItemDataRole.UserRole)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         _build_tree(item, children)
         if item.hasChildren():
             nodes.append(item)
-            item.setData(QFileIconProvider().icon(QFileIconProvider.Folder), Qt.DecorationRole)
+            item.setData(QFileIconProvider().icon(QFileIconProvider.Folder), Qt.ItemDataRole.DecorationRole)
         else:
-            item.setData(QFileIconProvider().icon(QFileInfo(parent)), Qt.DecorationRole)
+            item.setData(QFileIconProvider().icon(QFileInfo(parent)), Qt.ItemDataRole.DecorationRole)
             leafs.append(item)
     for item in sorted(nodes, key=methodcaller("text")):
         root.appendRow(item)
@@ -1183,6 +1183,6 @@ def _build_tree(root, components):
 def _path_components_from_index(index):
     components = []
     while index.parent().isValid():
-        components.insert(0, index.data(Qt.UserRole))
+        components.insert(0, index.data(Qt.ItemDataRole.UserRole))
         index = index.parent()
     return components

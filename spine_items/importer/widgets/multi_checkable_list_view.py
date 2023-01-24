@@ -15,8 +15,8 @@ Contains :class:`MultiCheckableListView`.
 :author: A. Soininen (VTT)
 :date:   13.8.2020
 """
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QListView
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QListView
 
 
 class MultiCheckableListView(QListView):
@@ -34,7 +34,11 @@ class MultiCheckableListView(QListView):
         selected = selection_model.selectedIndexes()
         model = self.model()
         if len(selected) == 1:
-            check_state = Qt.Checked if selected[0].data(Qt.CheckStateRole) == Qt.Unchecked else Qt.Unchecked
-            model.setData(selected[0], check_state, Qt.CheckStateRole)
+            check_state = (
+                Qt.CheckState.Checked
+                if selected[0].data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value
+                else Qt.CheckState.Unchecked
+            )
+            model.setData(selected[0], check_state, Qt.ItemDataRole.CheckStateRole)
         else:
             model.toggle_checked_tables(selected)

@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-22.04]
-        python-version: [3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.8, 3.9, "3.10", 3.11]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -23,10 +23,12 @@ jobs:
     - name: Display Python version
       run:
          python -c "import sys; print(sys.version)"
-    - name: Install unixodbc
+    - name: Install additional packages for Linux
       if: runner.os == 'Linux'
-      run:
-        sudo apt-get install -y unixodbc-dev  # Install to get sql.h headers
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y unixodbc-dev
+        sudo apt-get install -y libegl1
     - name: Install dependencies
       env:
         PYTHONUTF8: 1
@@ -36,6 +38,8 @@ jobs:
         pip install -r requirements.txt
         pip install coverage
         pip install codecov
+    - name: List packages
+      run:
         pip list
     - name: Run tests
       run: |
@@ -44,6 +48,6 @@ jobs:
         fi
         coverage run -m unittest discover --verbose
       shell: bash
-    - name: Run codecov
+    - name: Upload coverage report to Codecov
       run:
         codecov

@@ -17,8 +17,8 @@ Tests for :class:`IndexingTableModel`.
 """
 
 import unittest
-from PySide2.QtCore import QModelIndex, Qt
-from PySide2.QtWidgets import QApplication
+from PySide6.QtCore import QModelIndex, Qt
+from PySide6.QtWidgets import QApplication
 from spinedb_api.parameter_value import TimePattern
 import spinedb_api.spine_io.exporters.gdx as gdx
 from spine_items.gdx_exporter.mvcmodels.indexing_table_model import IndexingTableModel
@@ -40,8 +40,8 @@ class TestIndexingTableModel(unittest.TestCase):
         self.assertEqual(self._model.get_picking(), gdx.FixedPicking([]))
         self.assertEqual(self._model.columnCount(), 3)
         self.assertEqual(self._model.rowCount(), 0)
-        self.assertEqual(self._model.headerData(1, Qt.Horizontal), "A1, B1")
-        self.assertEqual(self._model.headerData(2, Qt.Horizontal), "A2, B2")
+        self.assertEqual(self._model.headerData(1, Qt.Orientation.Horizontal), "A1, B1")
+        self.assertEqual(self._model.headerData(2, Qt.Orientation.Horizontal), "A2, B2")
 
     def test_set_records(self):
         self._model.set_records(gdx.LiteralRecords([("i1",), ("i2",)]))

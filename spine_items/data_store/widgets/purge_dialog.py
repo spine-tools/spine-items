@@ -9,8 +9,8 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """Contains purge dialog's business code."""
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QDialog, QDialogButtonBox
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QDialog, QDialogButtonBox
 from spinetoolbox.widgets.select_database_items import SelectDatabaseItems
 
 
@@ -27,7 +27,7 @@ class PurgeDialog(QDialog):
         from ..ui.purge_dialog import Ui_Dialog
 
         super().__init__(parent)
-        self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._ui = Ui_Dialog()
         self._ui.setupUi(self)
@@ -35,7 +35,7 @@ class PurgeDialog(QDialog):
         self._item_check_boxes_widget = SelectDatabaseItems(purge_settings, self)
         self._ui.root_layout.insertWidget(0, self._item_check_boxes_widget)
         self._item_check_boxes_widget.checked_state_changed.connect(self._set_purge_button_enabled)
-        self._purge_button = self._ui.button_box.addButton("Purge", QDialogButtonBox.AcceptRole)
+        self._purge_button = self._ui.button_box.addButton("Purge", QDialogButtonBox.ButtonRole.AcceptRole)
         self._purge_button.setEnabled(self._item_check_boxes_widget.any_checked())
 
     @Slot(int)

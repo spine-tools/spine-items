@@ -17,8 +17,8 @@ Unit tests for :class:`SetListModel`.
 """
 
 import unittest
-from PySide2.QtCore import QModelIndex, Qt
-from PySide2.QtGui import QColor
+from PySide6.QtCore import QModelIndex, Qt
+from PySide6.QtGui import QColor
 from spine_items.gdx_exporter.mvcmodels.set_list_model import SetListModel
 from spinedb_api.spine_io.exporters.gdx import ExportFlag, Origin, SetMetadata, SetSettings
 
@@ -40,13 +40,13 @@ class TestSetListModel(unittest.TestCase):
         set_settings.metadata("extra_domain2").origin = Origin.MERGING
         model = SetListModel(set_settings)
         index = model.index(0, 0)
-        self.assertEqual(index.data(Qt.BackgroundRole), QColor(245, 245, 120))
+        self.assertEqual(index.data(Qt.ItemDataRole.BackgroundRole), QColor(245, 245, 120))
         index = model.index(1, 0)
-        self.assertEqual(index.data(Qt.BackgroundRole), QColor(235, 235, 110))
+        self.assertEqual(index.data(Qt.ItemDataRole.BackgroundRole), QColor(235, 235, 110))
         index = model.index(2, 0)
-        self.assertEqual(index.data(Qt.BackgroundRole), QColor(235, 235, 110))
+        self.assertEqual(index.data(Qt.ItemDataRole.BackgroundRole), QColor(235, 235, 110))
         index = model.index(3, 0)
-        self.assertEqual(index.data(Qt.BackgroundRole), None)
+        self.assertEqual(index.data(Qt.ItemDataRole.BackgroundRole), None)
 
     def test_data_CheckStateRole(self):
         set_settings = SetSettings(
@@ -60,9 +60,9 @@ class TestSetListModel(unittest.TestCase):
         )
         model = SetListModel(set_settings)
         index = model.index(0, 0)
-        self.assertEqual(index.data(Qt.CheckStateRole), Qt.Unchecked)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked.value)
         index = model.index(1, 0)
-        self.assertEqual(index.data(Qt.CheckStateRole), Qt.Unchecked)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked.value)
 
     def test_flags(self):
         set_settings = SetSettings({"domain1"}, {"set1"}, {})
@@ -73,7 +73,7 @@ class TestSetListModel(unittest.TestCase):
     def test_headerData(self):
         set_settings = SetSettings(set(), set(), {})
         model = SetListModel(set_settings)
-        self.assertEqual(model.headerData(0, Qt.Horizontal), "")
+        self.assertEqual(model.headerData(0, Qt.Orientation.Horizontal), "")
 
     def test_is_domain(self):
         set_settings = SetSettings({"domain1"}, {"set1"}, {})
@@ -136,14 +136,14 @@ class TestSetListModel(unittest.TestCase):
         set_settings = SetSettings({"domain1"}, {"set1"}, {})
         model = SetListModel(set_settings)
         index = model.index(0, 0)
-        model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
+        model.setData(index, Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole)
         self.assertEqual(set_settings.metadata("domain1"), SetMetadata(ExportFlag.NON_EXPORTABLE))
         self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.EXPORTABLE))
-        model.setData(index, Qt.Checked, Qt.CheckStateRole)
+        model.setData(index, Qt.CheckState.Checked, Qt.ItemDataRole.CheckStateRole)
         self.assertEqual(set_settings.metadata("domain1"), SetMetadata(ExportFlag.EXPORTABLE))
         self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.EXPORTABLE))
         index = model.index(1, 0)
-        model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
+        model.setData(index, Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole)
         self.assertEqual(set_settings.metadata("set1"), SetMetadata(ExportFlag.NON_EXPORTABLE))
 
 

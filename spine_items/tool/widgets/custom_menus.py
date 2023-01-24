@@ -16,7 +16,7 @@ Classes for custom context menus and pop-up menus.
 :date:   9.1.2018
 """
 import os
-from PySide2.QtCore import QUrl, Slot
+from PySide6.QtCore import QUrl, Slot
 from spinetoolbox.helpers import open_url
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu, CustomPopupMenu
 

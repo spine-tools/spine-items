@@ -20,7 +20,7 @@ import os
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
-from PySide2.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.gimlet.item_info import ItemInfo
 from spine_items.gimlet.gimlet import Gimlet

@@ -16,9 +16,9 @@ Provides an optional widget for Tool Specification Editor for each Tool Spec typ
 :date:   12.2.2021
 """
 
-from PySide2.QtCore import Signal, Slot
-from PySide2.QtWidgets import QWidget
-from PySide2.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 from spine_engine.utils.helpers import resolve_conda_executable, resolve_python_interpreter
 from spine_engine.execution_managers.conda_kernel_spec_manager import CondaKernelSpecManager
 from spinetoolbox.helpers import busy_effect, file_is_valid, select_python_interpreter

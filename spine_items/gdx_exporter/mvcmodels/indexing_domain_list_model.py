@@ -15,7 +15,7 @@ Contains :class:`IndexingDomainListModel`.
 :author: A. Soininen (VTT)
 :date:   25.8.2020
 """
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, Signal
 from spinedb_api.spine_io.exporters import gdx
 
 
@@ -90,7 +90,7 @@ class IndexingDomainListModel(QAbstractListModel):
         """Adds a new domain as the last element in the list."""
         self.insertRows(self.rowCount(), 1)
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """
         Returns the domain name at given row on ``DisplayRole``.
 
@@ -98,7 +98,7 @@ class IndexingDomainListModel(QAbstractListModel):
             index (QModelIndex): an index to the list
             role (int): data role
         """
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return self._domains[index.row()].name
         return None
 
@@ -227,7 +227,7 @@ class IndexingDomainListModel(QAbstractListModel):
         """
         return len(self._domains)
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         """
         Sets domain name at given index on ``EditRole``.
 
@@ -239,7 +239,7 @@ class IndexingDomainListModel(QAbstractListModel):
         Returns:
             bool: True if a domain name was changed
         """
-        if role != Qt.EditRole:
+        if role != Qt.ItemDataRole.EditRole:
             return False
         reserved = {d.name for d in self._domains} | self._set_settings.set_names
         if value in reserved:
@@ -248,5 +248,5 @@ class IndexingDomainListModel(QAbstractListModel):
         old_name = item.name
         item.name = value
         self.domain_renamed.emit(old_name, value)
-        self.dataChanged.emit(index, index, [Qt.DisplayRole])
+        self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
         return True

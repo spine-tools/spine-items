@@ -16,8 +16,8 @@ A small widget to set up a database in Exporter properties tab.
 :date:   10.9.2019
 """
 
-from PySide2.QtCore import Signal, Slot
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import QWidget
 
 
 class ExportListItem(QWidget):

@@ -17,9 +17,9 @@ Module for view class.
 """
 
 import os
-from PySide2.QtCore import Qt, Slot, Signal, QObject, QTimer
-from PySide2.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
-from PySide2.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
+from PySide6.QtCore import Qt, Slot, Signal, QObject, QTimer
+from PySide6.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
 from sqlalchemy.engine.url import URL, make_url
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.plotting import plot_db_mngr_items, PlottingError
@@ -256,7 +256,7 @@ class View(ProjectItem):
             qitem = QStandardItem(key)
             qitem.setFlags(~Qt.ItemIsEditable)
             tool_tip = _format_pinned_values(values)
-            qitem.setData(tool_tip, Qt.ToolTipRole)
+            qitem.setData(tool_tip, Qt.ItemDataRole.ToolTipRole)
             self.pinned_value_model.appendRow(qitem)
 
     def _update_buttons_enabled(self):
@@ -272,7 +272,7 @@ class View(ProjectItem):
         for db in sorted(self._references, reverse=True):
             qitem = QStandardItem(db)
             qitem.setFlags(~Qt.ItemIsEditable)
-            qitem.setData(self._spine_ref_icon, Qt.DecorationRole)
+            qitem.setData(self._spine_ref_icon, Qt.ItemDataRole.DecorationRole)
             self.reference_model.appendRow(qitem)
 
     def upstream_resources_updated(self, resources):
@@ -325,7 +325,7 @@ class View(ProjectItem):
 
     def _db_url_codenames(self, indexes):
         """Returns a dict mapping url to provider's name for given indexes in the reference model."""
-        return dict(self._references[index.data(Qt.DisplayRole)] for index in indexes)
+        return dict(self._references[index.data(Qt.ItemDataRole.DisplayRole)] for index in indexes)
 
     def notify_destination(self, source_item):
         """See base class."""
@@ -410,8 +410,8 @@ class _PinValuesDialog(_PinDialogMixin, QDialog):
         self._pinned_values = []
         outer_layout = QVBoxLayout(self)
         button_box = QDialogButtonBox(self)
-        button_box.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self._ok_button = button_box.button(QDialogButtonBox.Ok)
+        button_box.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self._ok_button = button_box.button(QDialogButtonBox.StandardButton.Ok)
         self._ok_button.setEnabled(False)
         self._line_edit = QLineEdit()
         self._line_edit.setPlaceholderText("Type a name for the pin here...")
@@ -461,8 +461,8 @@ class _RenamePinDialog(_PinDialogMixin, QDialog):
         self.setWindowTitle("Rename pin")
         outer_layout = QVBoxLayout(self)
         button_box = QDialogButtonBox(self)
-        button_box.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self._ok_button = button_box.button(QDialogButtonBox.Ok)
+        button_box.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self._ok_button = button_box.button(QDialogButtonBox.StandardButton.Ok)
         self._line_edit = QLineEdit()
         self._line_edit.setText(old_name)
         outer_layout.addWidget(QLabel("New name:"))
@@ -487,8 +487,8 @@ class _RenamePinDialog(_PinDialogMixin, QDialog):
     @classmethod
     def get_new_name(cls, view, old_name, parent):
         dialog = cls(view, old_name, parent)
-        result = dialog.exec_()
-        return dialog.new_name, result == QDialog.Accepted
+        result = dialog.exec()
+        return dialog.new_name, result == QDialog.DialogCode.Accepted
 
 
 class _DatabaseFetch(FetchParent):

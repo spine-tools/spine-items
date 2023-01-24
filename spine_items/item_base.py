@@ -16,7 +16,7 @@ Contains base class for project items.
 :date:   15.12.2020
 """
 
-from PySide2.QtCore import Qt, Slot
+from PySide6.QtCore import Qt, Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 from .commands import UpdateCancelOnErrorCommand, UpdateOutputTimeStampsFlag
 from .models import FullUrlListModel
@@ -96,7 +96,7 @@ class ExporterBase(ProjectItem):
         Args:
             checkbox_state (int): setting's checkbox state on properties tab
         """
-        flag = checkbox_state == Qt.Checked
+        flag = checkbox_state == Qt.CheckState.Checked.value
         if flag == self._append_output_time_stamps:
             return
         self._toolbox.undo_stack.push(UpdateOutputTimeStampsFlag(self, flag))
@@ -113,7 +113,7 @@ class ExporterBase(ProjectItem):
     @Slot(int)
     def _cancel_on_error_option_changed(self, checkbox_state):
         """Handles changes to the Cancel export on error option."""
-        cancel = checkbox_state == Qt.Checked
+        cancel = checkbox_state == Qt.CheckState.Checked.value
         if self._cancel_on_error == cancel:
             return
         self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel))
@@ -124,7 +124,9 @@ class ExporterBase(ProjectItem):
         if not self._active:
             return
         # This does not trigger the stateChanged signal.
-        self._properties_ui.cancel_on_error_check_box.setCheckState(Qt.Checked if cancel else Qt.Unchecked)
+        self._properties_ui.cancel_on_error_check_box.setCheckState(
+            Qt.CheckState.Checked if cancel else Qt.CheckState.Unchecked
+        )
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item's configuration."""

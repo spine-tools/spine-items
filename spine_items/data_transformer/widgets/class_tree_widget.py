@@ -15,8 +15,8 @@ Contains :class:`ClassTreeWidget`.
 :date:   31.5.2021
 """
 import pickle
-from PySide2.QtCore import QMimeData
-from PySide2.QtWidgets import QTreeWidget, QMessageBox, QTreeWidgetItem
+from PySide6.QtCore import QMimeData
+from PySide6.QtWidgets import QTreeWidget, QMessageBox, QTreeWidgetItem
 
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from .drop_target_table import DROP_MIME_TYPE

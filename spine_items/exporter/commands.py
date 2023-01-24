@@ -15,8 +15,8 @@ Contains Exporter's undo commands.
 :date:    11.12.2020
 """
 from copy import deepcopy
-from PySide2.QtCore import QModelIndex, Qt
-from PySide2.QtWidgets import QUndoCommand
+from PySide6.QtCore import QModelIndex, Qt
+from PySide6.QtGui import QUndoCommand
 from spinetoolbox.project_commands import SpineToolboxCommand
 from .mvcmodels.mappings_table_model import MappingsTableModel
 
@@ -124,7 +124,10 @@ class SetMappingEnabled(QUndoCommand):
         self._mappings_table_model = mappings_table_model
         name = self._mappings_table_model.index(row, 0).data()
         self._row = row
-        self._previously_enabled = self._mappings_table_model.index(self._row, 0).data(Qt.CheckStateRole) == Qt.Checked
+        self._previously_enabled = (
+            self._mappings_table_model.index(self._row, 0).data(Qt.ItemDataRole.CheckStateRole)
+            == Qt.CheckState.Checked.value
+        )
         super().__init__(("disable" if self._previously_enabled else "enable") + f" '{name}'")
 
     def redo(self):

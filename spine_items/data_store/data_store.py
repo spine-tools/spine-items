@@ -18,8 +18,9 @@ Module for data store class.
 
 import os
 from shutil import copyfile
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QAction, QFileDialog, QApplication, QMenu
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QFileDialog, QApplication, QMenu
+from PySide6.QtGui import QAction
 from spinedb_api.helpers import vacuum
 from spine_engine.project_item.project_item_resource import database_resource
 from spinetoolbox.project_item.project_item import ProjectItem
@@ -105,7 +106,7 @@ class DataStore(ProjectItem):
         s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
         s[self._properties_ui.toolButton_copy_url.clicked] = self.copy_url
         s[self._properties_ui.toolButton_vacuum.clicked] = self.vacuum
-        s[self._properties_ui.comboBox_dialect.activated[str]] = self.refresh_dialect
+        s[self._properties_ui.comboBox_dialect.currentTextChanged] = self.refresh_dialect
         s[self._properties_ui.toolButton_select_sqlite_file.clicked] = self.select_sqlite_file
         s[self._properties_ui.lineEdit_database.file_dropped] = self.set_path_to_sqlite_file
         s[self._properties_ui.lineEdit_username.editingFinished] = self.refresh_username

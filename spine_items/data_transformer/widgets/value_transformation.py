@@ -14,7 +14,7 @@ Contains classes to manage parameter value transformation.
 :author: A. Soininen (VTT)
 :date:   1.6.2021
 """
-from PySide2.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
+from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.value_transformations_table_model import (

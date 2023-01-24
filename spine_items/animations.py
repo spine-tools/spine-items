@@ -16,9 +16,9 @@ Animation class for importers and exporters.
 :date:   12.11.2019
 """
 
-from PySide2.QtGui import QPainterPath, QFont, QFontMetrics
-from PySide2.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF, QPointF, QLineF
-from PySide2.QtWidgets import QGraphicsPathItem
+from PySide6.QtGui import QPainterPath, QFont, QFontMetrics
+from PySide6.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF, QPointF, QLineF
+from PySide6.QtWidgets import QGraphicsPathItem
 from spinetoolbox.helpers import color_from_index
 
 
@@ -110,7 +110,7 @@ class ImporterExporterAnimation:
             ]
         for k, plane in enumerate(self._planes):
             plane.color = color_from_index(k, len(self._planes))
-        if new_state == QTimeLine.NotRunning:
+        if new_state == QTimeLine.State.NotRunning:
             for plane in self._planes:
                 plane.wipe_out()
             self._planes.clear()
@@ -118,7 +118,7 @@ class ImporterExporterAnimation:
     @Slot()
     def start(self):
         """Starts the animation."""
-        if self.time_line.state() == QTimeLine.Running:
+        if self.time_line.state() == QTimeLine.State.Running:
             return
         self.time_line.start()
 

@@ -16,7 +16,7 @@ Module for tool icon class.
 :date:   4.4.2018
 """
 
-from PySide2.QtCore import QTimeLine, Slot, QPointF
+from PySide6.QtCore import QTimeLine, Slot, QPointF
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import AnimationSignaller
 
@@ -35,7 +35,7 @@ class ToolIcon(ProjectItemIcon):
         self.time_line.setLoopCount(0)  # loop forever
         self.time_line.setFrameRange(0, 10)
         self.time_line.setDuration(1200)
-        self.time_line.setDirection(QTimeLine.Backward)
+        self.time_line.setDirection(QTimeLine.Direction.Backward)
         self.time_line.valueChanged.connect(self._handle_time_line_value_changed)
         self.time_line.stateChanged.connect(self._handle_time_line_state_changed)
         self._svg_item_pos = self.svg_item.pos()
@@ -56,9 +56,9 @@ class ToolIcon(ProjectItemIcon):
 
     @Slot(int)
     def _handle_time_line_state_changed(self, new_state):
-        if new_state == QTimeLine.Running:
+        if new_state == QTimeLine.State.Running:
             self.svg_item.setTransformOriginPoint(0, self._anim_transformation_origin_point_y)
-        elif new_state == QTimeLine.NotRunning:
+        elif new_state == QTimeLine.State.NotRunning:
             self.svg_item.setTransformOriginPoint(0, 0)
             self.svg_item.setPos(self._svg_item_pos)
             self.svg_item.setRotation(0)
@@ -67,14 +67,14 @@ class ToolIcon(ProjectItemIcon):
     def start_animation(self):
         """Starts the item execution animation.
         """
-        if self.time_line.state() == QTimeLine.Running:
+        if self.time_line.state() == QTimeLine.State.Running:
             return
         self.time_line.start()
 
     @Slot()
     def stop_animation(self):
         """Stop animation"""
-        if self.time_line.state() != QTimeLine.Running:
+        if self.time_line.state() != QTimeLine.State.Running:
             return
         self.time_line.stop()
 

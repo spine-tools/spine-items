@@ -15,7 +15,7 @@ Contains :class:`ParameterRenamesTableModel`.
 :date:   28.5.2021
 """
 from enum import IntEnum, unique
-from PySide2.QtCore import QModelIndex, Qt
+from PySide6.QtCore import QModelIndex, Qt
 from .parameter_drop_target_table_model import ParameterDropTargetTableModel
 from ..commands import SetData
 
@@ -29,12 +29,12 @@ class RenamesTableColumn(IntEnum):
 
 @unique
 class RenamesRoles(IntEnum):
-    SILENT_EDIT = Qt.UserRole + 1
+    SILENT_EDIT = Qt.ItemDataRole.UserRole + 1
 
 
 class ParameterRenamesTableModel(ParameterDropTargetTableModel):
 
-    GET_DATA_ROLES = (Qt.DisplayRole, Qt.DisplayRole, Qt.DisplayRole)
+    GET_DATA_ROLES = (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.DisplayRole)
     SET_DATA_ROLES = (RenamesRoles.SILENT_EDIT, RenamesRoles.SILENT_EDIT, RenamesRoles.SILENT_EDIT)
 
     def __init__(self, settings, undo_stack, parent):
@@ -58,16 +58,16 @@ class ParameterRenamesTableModel(ParameterDropTargetTableModel):
     def columnCount(self, parent=QModelIndex()):
         return 3
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role != Qt.DisplayRole:
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role != Qt.ItemDataRole.DisplayRole:
             return None
         return self._renames[index.row()][index.column()]
 
     def flags(self, index):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return ("Class", "Parameter", "New name")[section]
         return None
 
@@ -91,8 +91,8 @@ class ParameterRenamesTableModel(ParameterDropTargetTableModel):
     def rowCount(self, parent=QModelIndex()):
         return len(self._renames)
 
-    def setData(self, index, value, role=Qt.EditRole):
-        if role == Qt.EditRole:
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
+        if role == Qt.ItemDataRole.EditRole:
             column = index.column()
             if column == RenamesTableColumn.CLASS:
                 message = "change class name"
@@ -109,6 +109,6 @@ class ParameterRenamesTableModel(ParameterDropTargetTableModel):
             row = index.row()
             column = index.column()
             self._renames[row][column] = value
-            self.dataChanged.emit(index, index, [Qt.DisplayRole])
+            self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
             return True
         return False

@@ -15,8 +15,8 @@ Unit tests for :class:`ClassRenamesTableModel`.
 :date:   7.1.2021
 """
 import unittest
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QUndoStack
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QUndoStack
 from spine_items.data_transformer.mvcmodels.class_renames_table_model import ClassRenamesTableModel
 
 
@@ -51,9 +51,9 @@ class TestClassRenamesTableModel(unittest.TestCase):
 
     def test_headers(self):
         model = ClassRenamesTableModel(self._undo_stack, {"a": "A"})
-        self.assertIsNone(model.headerData(0, Qt.Vertical))
-        self.assertEqual(model.headerData(0, Qt.Horizontal), "Original")
-        self.assertEqual(model.headerData(1, Qt.Horizontal), "Renamed")
+        self.assertIsNone(model.headerData(0, Qt.Orientation.Vertical))
+        self.assertEqual(model.headerData(0, Qt.Orientation.Horizontal), "Original")
+        self.assertEqual(model.headerData(1, Qt.Orientation.Horizontal), "Renamed")
 
     def test_renaming_settings(self):
         model = ClassRenamesTableModel(self._undo_stack, {"a": "A", "b": "b", "c": ""})

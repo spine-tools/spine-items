@@ -15,8 +15,7 @@ ImportMappingOptions widget.
 :author: P. Vennström (VTT)
 :date:   12.5.2020
 """
-from PySide2.QtCore import Qt, Slot, QModelIndex
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import Qt, Slot, QModelIndex
 from .custom_menus import SimpleFilterMenu
 from ..commands import (
     SetImportObjectsFlag,
@@ -157,7 +156,7 @@ class ImportMappingOptions:
         # update item mapping settings
         if flattened_mappings.may_import_objects():
             self._ui.import_objects_check_box.setEnabled(True)
-            check_state = Qt.Checked if flattened_mappings.import_objects() else Qt.Unchecked
+            check_state = Qt.CheckState.Checked if flattened_mappings.import_objects() else Qt.CheckState.Unchecked
             self._ui.import_objects_check_box.setCheckState(check_state)
         else:
             self._ui.import_objects_check_box.setEnabled(False)
@@ -297,7 +296,7 @@ class ImportMappingOptions:
         Pushes SetUseBeforeAlternative command to the undo stack.
 
         Args:
-            state (int): new flag value
+            state (int): New state value
         """
         if self._block_signals or not self._has_current_mappings():
             return
@@ -307,7 +306,7 @@ class ImportMappingOptions:
                 self._list_index.parent().row(),
                 self._list_index.row(),
                 self._mappings_model,
-                state == Qt.Checked,
+                state == Qt.CheckState.Checked.value,
                 previous_mapping,
             )
         )
@@ -318,13 +317,16 @@ class ImportMappingOptions:
         Pushes SetImportObjectsFlag command to the undo stack.
 
         Args:
-            state (int): new flag value
+            state (int): New state value
         """
         if self._block_signals or not self._has_current_mappings():
             return
         self._undo_stack.push(
             SetImportObjectsFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, state == Qt.Checked
+                self._list_index.parent().row(),
+                self._list_index.row(),
+                self._mappings_model,
+                state == Qt.CheckState.Checked.value,
             )
         )
 
@@ -373,13 +375,16 @@ class ImportMappingOptions:
         Pushes :class:`SetTimeSeriesRepeatFlag` to the undo stack.
 
         Args:
-            repeat (int): True if repeat is enable, False otherwise
+            repeat (int): True if repeat is enabled, False otherwise
         """
         if self._block_signals or not self._has_current_mappings():
             return
         self._undo_stack.push(
             SetTimeSeriesRepeatFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, repeat == Qt.Checked
+                self._list_index.parent().row(),
+                self._list_index.row(),
+                self._mappings_model,
+                repeat == Qt.CheckState.Checked.value,
             )
         )
 
@@ -410,13 +415,16 @@ class ImportMappingOptions:
         Pushes :class:`SetMapCompressFlag` to the undo stack.
 
         Args:
-            compress (int): if ``Qt.Checked``, Maps will be compressed
+            compress (int): if ``Qt.CheckState.Checked.value``, Maps will be compressed
         """
         if self._block_signals or not self._has_current_mappings():
             return
         self._undo_stack.push(
             SetMapCompressFlag(
-                self._list_index.parent().row(), self._list_index.row(), self._mappings_model, compress == Qt.Checked
+                self._list_index.parent().row(),
+                self._list_index.row(),
+                self._mappings_model,
+                compress == Qt.CheckState.Checked.value,
             )
         )
 
@@ -432,7 +440,7 @@ class ImportMappingOptions:
         is_time_series = flattened_mappings.is_time_series_value()
         self._ui.time_series_repeat_check_box.setEnabled(is_time_series)
         self._ui.time_series_repeat_check_box.setCheckState(
-            Qt.Checked if is_time_series and value_mapping.options.get("repeat") else Qt.Unchecked
+            Qt.CheckState.Checked if is_time_series and value_mapping.options.get("repeat") else Qt.CheckState.Unchecked
         )
 
     def _update_map_options(self):
@@ -452,4 +460,4 @@ class ImportMappingOptions:
         self._ui.map_dimension_spin_box.setEnabled(is_map)
         self._ui.map_dimension_spin_box.setValue(dimension_count)
         self._ui.map_compression_check_box.setEnabled(is_map)
-        self._ui.map_compression_check_box.setChecked(Qt.Checked if is_map and value_mapping.compress else Qt.Unchecked)
+        self._ui.map_compression_check_box.setChecked(True if is_map and value_mapping.compress else False)

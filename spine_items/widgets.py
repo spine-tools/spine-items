@@ -17,12 +17,19 @@ Contains common & shared (Q)widgets.
 """
 
 import os
-from PySide2.QtCore import Qt, Signal, QUrl, QMimeData, Property
-from PySide2.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QWidget, QDialog, QStatusBar
-from PySide2.QtGui import QDrag, QIntValidator
+from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property
+from PySide6.QtWidgets import (
+    QApplication,
+    QTreeView,
+    QStyledItemDelegate,
+    QWidget,
+    QDialog,
+    QStatusBar,
+    QDialogButtonBox,
+)
+from PySide6.QtGui import QDrag, QIntValidator
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
-from spinetoolbox.widgets.select_database_items import SelectDatabaseItems
 from .utils import convert_to_sqlalchemy_url
 
 
@@ -33,17 +40,17 @@ class ArgsTreeView(QTreeView):
 
 
 class ReferencesTreeView(QTreeView):
-    """Custom QTreeView class for Data Connection and View properties.
-
-    Attributes:
-        parent (QWidget): The parent of this view
-    """
+    """Custom QTreeView class for Data Connection and View properties."""
 
     files_dropped = Signal(list)
     del_key_pressed = Signal()
 
     def __init__(self, parent):
-        """Initializes the view."""
+        """Initializes the view.
+
+        Args:
+            parent (QWidget): The parent of this view
+        """
         super().__init__(parent=parent)
 
     def dragEnterEvent(self, event):
@@ -75,17 +82,17 @@ class ReferencesTreeView(QTreeView):
 
 
 class DataTreeView(QTreeView):
-    """Custom QTreeView class for the 'Data' files in DataConnection properties.
-
-    Attributes:
-        parent (QWidget): The parent of this view
-    """
+    """Custom QTreeView class for the 'Data' files in DataConnection properties."""
 
     files_dropped = Signal(list)
     del_key_pressed = Signal()
 
     def __init__(self, parent):
-        """Initializes the view."""
+        """Initializes the view.
+
+        Args:
+            parent (QWidget): The parent of this view
+        """
         super().__init__(parent=parent)
         self.drag_start_pos = None
         self.drag_indexes = list()
@@ -114,7 +121,7 @@ class DataTreeView(QTreeView):
     def mousePressEvent(self, event):
         """Registers drag start position."""
         if event.button() == Qt.LeftButton:
-            self.drag_start_pos = event.pos()
+            self.drag_start_pos = event.position().toPoint()
             self.drag_indexes = self.selectedIndexes()
         super().mousePressEvent(event)
 
@@ -126,22 +133,24 @@ class DataTreeView(QTreeView):
             return
         if not self.drag_indexes:
             return
-        if (event.pos() - self.drag_start_pos).manhattanLength() < QApplication.startDragDistance():
+        if (event.position().toPoint() - self.drag_start_pos).manhattanLength() < QApplication.startDragDistance():
             return
         drag = QDrag(self)
         mimeData = QMimeData()
         urls = list()
         for index in self.drag_indexes:
-            file_path = index.data(Qt.UserRole)
+            file_path = index.data(Qt.ItemDataRole.UserRole)
+            if not file_path:
+                return
             urls.append(QUrl.fromLocalFile(file_path))
         mimeData.setUrls(urls)
         drag.setMimeData(mimeData)
-        icon = self.drag_indexes[0].data(Qt.DecorationRole)
+        icon = self.drag_indexes[0].data(Qt.ItemDataRole.DecorationRole)
         if icon:
             pixmap = icon.pixmap(32, 32)
             drag.setPixmap(pixmap)
             drag.setHotSpot(pixmap.rect().center())
-        drag.exec_()
+        drag.exec()
 
     def mouseReleaseEvent(self, event):
         """Forgets drag start position"""
@@ -180,7 +189,7 @@ class FilterEdit(QWidget):
             parent (QWidget):
         """
         super().__init__(parent)
-        self.setWindowFlags(Qt.Popup)
+        self.setWindowFlags(Qt.WindowType.Popup)
         self._ui = ui_form
         self._ui.setupUi(self)
         self._focused = False
@@ -221,7 +230,7 @@ class UrlSelectorMixin:
         self.ui.lineEdit_port.setValidator(QIntValidator())
 
     def enable_dialect(self, dialect):
-        """Enable the given dialect in the item controls."""
+        """Enables the given dialect in the item controls."""
         if dialect == "":
             self.enable_no_dialect()
         elif dialect == "sqlite":
@@ -241,13 +250,13 @@ class UrlSelectorMixin:
                 self.ui.comboBox_dsn.setCurrentIndex(-1)
                 self.enable_mssql()
             else:
-                msg = "Please create a SQL Server ODBC Data Source first."
-                self._logger.msg_warning.emit(msg)
+                msg = "Please create an SQL Server ODBC Data Source first."
+                self._toolbox.msg_warning.emit(msg)
         else:
             self.enable_common()
 
     def enable_no_dialect(self):
-        """Adjust widget enabled status to default when no dialect is selected."""
+        """Adjusts widget enabled status to default when no dialect is selected."""
         self.ui.comboBox_dialect.setEnabled(True)
         self.ui.comboBox_dsn.setEnabled(False)
         self.ui.toolButton_select_sqlite_file.setEnabled(False)
@@ -258,7 +267,7 @@ class UrlSelectorMixin:
         self.ui.lineEdit_password.setEnabled(False)
 
     def enable_mssql(self):
-        """Adjust controls to mssql connection specification."""
+        """Adjusts controls to mssql connection specification."""
         self.ui.comboBox_dsn.setEnabled(True)
         self.ui.toolButton_select_sqlite_file.setEnabled(False)
         self.ui.lineEdit_host.setEnabled(False)
@@ -271,7 +280,7 @@ class UrlSelectorMixin:
         self.ui.lineEdit_database.clear()
 
     def enable_sqlite(self):
-        """Adjust controls to sqlite connection specification."""
+        """Adjusts controls to sqlite connection specification."""
         self.ui.comboBox_dsn.setEnabled(False)
         self.ui.comboBox_dsn.setCurrentIndex(-1)
         self.ui.toolButton_select_sqlite_file.setEnabled(True)
@@ -286,7 +295,7 @@ class UrlSelectorMixin:
         self.ui.lineEdit_password.clear()
 
     def enable_common(self):
-        """Adjust controls to 'common' connection specification."""
+        """Adjusts controls to 'common' connection specification."""
         self.ui.comboBox_dsn.setEnabled(False)
         self.ui.comboBox_dsn.setCurrentIndex(-1)
         self.ui.toolButton_select_sqlite_file.setEnabled(False)
@@ -314,9 +323,9 @@ class UrlSelector(UrlSelectorMixin, QDialog):
         self.statusbar.setStyleSheet(STATUSBAR_SS)
         self.ui.horizontalLayout_statusbar_ph.addWidget(self.statusbar)
         self._sa_url = None
-        self.ui.buttonBox.button(self.ui.buttonBox.Ok).setEnabled(False)
+        self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self._setup(("mysql", "sqlite", "mssql", "postgresql", "oracle"))  # Others?
-        self.ui.comboBox_dialect.activated[str].connect(self.enable_dialect)
+        self.ui.comboBox_dialect.currentTextChanged.connect(self.enable_dialect)
         self.ui.comboBox_dialect.activated.connect(self._refresh_url)
         self.ui.toolButton_select_sqlite_file.clicked.connect(self._browse_sqlite_file)
         self.ui.lineEdit_username.editingFinished.connect(self._refresh_url)
@@ -342,13 +351,15 @@ class UrlSelector(UrlSelectorMixin, QDialog):
             "password": self.ui.lineEdit_password.text(),
         }
         self._sa_url = convert_to_sqlalchemy_url(url, logger=self)
-        self.ui.buttonBox.button(self.ui.buttonBox.Ok).setEnabled(self._sa_url is not None)
+        if self._sa_url is not None:
+            self.statusbar.clearMessage()
+        self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(self._sa_url is not None)
 
     def _browse_sqlite_file(self):
         filter_ = "*.sqlite;;*.*"
         key = "selectImportSourceSQLiteFile"
         filepath, _ = get_open_file_name_in_last_dir(
-            self._toolbox.qsettings(), key, self, "Select a SQLite file", APPLICATION_PATH, filter_=filter_
+            self._toolbox.qsettings(), key, self, "Select an SQLite file", APPLICATION_PATH, filter_=filter_
         )
         if not filepath:
             return

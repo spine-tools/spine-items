@@ -16,8 +16,8 @@ Parameter merging settings window.
 :date:   19.2.2020
 """
 
-from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtWidgets import QMessageBox, QWidget
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtWidgets import QMessageBox, QWidget
 from spinedb_api import DatabaseMapping
 from .merging_error_flag import MergingErrorFlag
 from .parameter_merging_settings import ParameterMergingSettings

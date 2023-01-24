@@ -17,8 +17,8 @@ Parameter indexing settings widget for .gdx export.
 """
 from contextlib import contextmanager
 import enum
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QWidget
 from spinedb_api.spine_io.exporters import gdx
 from ..mvcmodels.indexing_table_model import IndexingTableModel
 

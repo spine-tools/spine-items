@@ -14,7 +14,7 @@ Contains model for a single export preview table.
 :author: A. Soininen (VTT)
 :date:   5.1.2021
 """
-from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 
 class PreviewTableModel(QAbstractTableModel):
@@ -45,13 +45,13 @@ class PreviewTableModel(QAbstractTableModel):
             return 0
         return min(max(len(row) for row in self._table), self.MAX_COLUMNS)
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole:
             row = self._table[index.row()]
             column = index.column()
             if column < len(row):
                 return row[column]
-        if role == Qt.BackgroundRole:
+        if role == Qt.ItemDataRole.BackgroundRole:
             if self._index_in_pivot(index):
                 return self._in_pivot_color
             color_row = self._row_to_map_color.get(index.row())
@@ -65,8 +65,8 @@ class PreviewTableModel(QAbstractTableModel):
     def _index_in_pivot(self, index):
         return index.row() > self._max_mapping_row and index.column() > self._max_mapping_column
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole:
             return section + 1
         return None
 

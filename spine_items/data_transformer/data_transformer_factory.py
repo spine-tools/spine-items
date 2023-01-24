@@ -16,7 +16,7 @@ Contains the :class:`DataTransformerFactory` class.
 :date:   2.10.2020
 """
 
-from PySide2.QtGui import QColor
+from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from .data_transformer import DataTransformer

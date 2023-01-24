@@ -18,8 +18,8 @@ Contains unit tests for the ImportEditorWindow class.
 
 import unittest
 from unittest import mock
-from PySide2.QtCore import QSettings
-from PySide2.QtWidgets import QApplication, QWidget
+from PySide6.QtCore import QSettings
+from PySide6.QtWidgets import QApplication, QWidget
 from spine_items.importer.widgets.import_editor_window import ImportEditorWindow
 
 

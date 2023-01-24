@@ -14,8 +14,8 @@ Contains controller that manages value transformations editor.
 :author: A. Soininen (VTT)
 :date:   26.5.2021
 """
-from PySide2.QtCore import QModelIndex, QObject, Slot
-from PySide2.QtWidgets import QLineEdit, QFormLayout
+from PySide6.QtCore import QModelIndex, QObject, Slot
+from PySide6.QtWidgets import QLineEdit, QFormLayout
 from ..commands import AppendInstruction, ChangeInstructionParameter, ChangeOperation, RemoveInstruction
 from ..mvcmodels.value_transformations_table_model import TransformationsTableColumn, TransformationsTableRole
 

@@ -16,8 +16,8 @@ Contains :class:`PreviewUpdater`.
 """
 from copy import deepcopy
 from time import monotonic
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
-from PySide2.QtWidgets import QFileDialog
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtWidgets import QFileDialog
 
 from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.spine_io.exporters.writer import write
@@ -100,7 +100,7 @@ class PreviewUpdater:
         self._stamps.clear()
         for row in range(self._mappings_table_model.rowCount()):
             index = self._mappings_table_model.index(row, 0)
-            if index.data(Qt.CheckStateRole) == Qt.Checked:
+            if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value:
                 self._load_preview_data(index.data())
 
     @Slot(QModelIndex, QModelIndex)
@@ -146,7 +146,7 @@ class PreviewUpdater:
             return
         current = self._mappings_proxy_model.mapToSource(current)
         mappings_index = self._mappings_table_model.index(current.row(), 0)
-        if mappings_index.data(Qt.CheckStateRole) == Qt.Unchecked:
+        if mappings_index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
             return
         current_preview = self._ui.preview_tree_view.selectionModel().currentIndex()
         if current_preview.parent().row() >= self._preview_tree_model.rowCount():
@@ -259,7 +259,7 @@ class PreviewUpdater:
             return
         for row in range(last, first - 1, -1):
             index = self._mappings_table_model.index(row, 0)
-            if index.data(Qt.CheckStateRole) == Qt.Unchecked:
+            if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
                 continue
             removed_name = index.data()
             self._preview_tree_model.remove_mapping(removed_name)
@@ -275,11 +275,15 @@ class PreviewUpdater:
             bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
-        if Qt.DisplayRole not in roles or self._current_url is None:
+        if Qt.ItemDataRole.DisplayRole not in roles or self._current_url is None:
             return
         make_index = self._mappings_table_model.index
         indexes = [make_index(row, 0) for row in range(self._mappings_table_model.rowCount())]
-        names = [index.data() for index in indexes if index.data(Qt.CheckStateRole) == Qt.Checked]
+        names = [
+            index.data()
+            for index in indexes
+            if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value
+        ]
         old_name, new_name = self._preview_tree_model.rename_mappings(names)
         if not old_name:
             return
@@ -296,13 +300,13 @@ class PreviewUpdater:
             bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
-        if Qt.CheckStateRole not in roles or self._current_url is None:
+        if Qt.ItemDataRole.CheckStateRole.value not in roles or self._current_url is None:
             return
         first = top_left.row()
         last = bottom_right.row()
         for row in range(first, last + 1):
             index = self._mappings_table_model.index(row, 0)
-            enabled = index.data(Qt.CheckStateRole) == Qt.Checked
+            enabled = index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value
             name = index.data()
             if not enabled and self._preview_tree_model.has_name(name):
                 self._preview_tree_model.remove_mapping(name)
@@ -328,7 +332,7 @@ class PreviewUpdater:
             return
         row = self._mappings_proxy_model.mapToSource(self._ui.mappings_table.currentIndex()).row()
         index = self._mappings_table_model.index(row, 0)
-        if index.data(Qt.CheckStateRole) == Qt.Unchecked:
+        if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
             return
         name = index.data()
         self._load_preview_data(name)
@@ -343,7 +347,7 @@ class PreviewUpdater:
             return
         row = self._mappings_proxy_model.mapToSource(current_index).row()
         index = self._mappings_table_model.index(row, 0)
-        if index.data(Qt.CheckStateRole) == Qt.Unchecked:
+        if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
             return
         mapping_name = index.data()
         self._load_preview_data(mapping_name)
@@ -361,7 +365,7 @@ class PreviewUpdater:
             return
         for row in range(first, last + 1):
             index = self._mappings_table_model.index(first, 0)
-            if index.data(Qt.CheckStateRole) == Qt.Unchecked:
+            if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
                 continue
             mapping_name = index.data()
             self._load_preview_data(mapping_name)

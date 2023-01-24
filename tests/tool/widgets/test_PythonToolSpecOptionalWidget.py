@@ -20,7 +20,7 @@ import unittest
 from unittest import mock
 import logging
 import sys
-from PySide2.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QWidget
 from spine_items.tool.widgets.tool_spec_optional_widgets import PythonToolSpecOptionalWidget
 
 

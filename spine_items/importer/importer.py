@@ -18,9 +18,7 @@ Contains Importer project item class.
 
 import os
 from operator import itemgetter
-
-from PySide2.QtCore import QModelIndex, Qt, Slot
-
+from PySide6.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from ..db_writer_item_base import DBWriterItemBase
@@ -132,7 +130,7 @@ class Importer(DBWriterItemBase):
         self.cancel_on_error = cancel_on_error
         if not self._active:
             return
-        check_state = Qt.Checked if self.cancel_on_error else Qt.Unchecked
+        check_state = Qt.CheckState.Checked if self.cancel_on_error else Qt.CheckState.Unchecked
         self._properties_ui.cancel_on_error_checkBox.blockSignals(True)
         self._properties_ui.cancel_on_error_checkBox.setCheckState(check_state)
         self._properties_ui.cancel_on_error_checkBox.blockSignals(False)
@@ -174,7 +172,9 @@ class Importer(DBWriterItemBase):
 
     def restore_selections(self):
         """Restores selections into shared widgets when this project item is selected."""
-        self._properties_ui.cancel_on_error_checkBox.setCheckState(Qt.Checked if self.cancel_on_error else Qt.Unchecked)
+        self._properties_ui.cancel_on_error_checkBox.setCheckState(
+            Qt.CheckState.Checked if self.cancel_on_error else Qt.CheckState.Unchecked
+        )
         self._set_on_conflict()
         self._properties_ui.treeView_files.setModel(self._file_model)
         self._update_ui()

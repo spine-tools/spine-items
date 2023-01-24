@@ -18,7 +18,7 @@ Contains ImportSources widget and SourceDataTableMenu.
 import pickle
 from operator import itemgetter
 
-from PySide2.QtCore import (
+from PySide6.QtCore import (
     QItemSelectionModel,
     QModelIndex,
     QObject,
@@ -29,8 +29,8 @@ from PySide2.QtCore import (
     QMimeData,
     QItemSelection,
 )
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication
 
 from spinetoolbox.helpers import CharIconEngine
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
@@ -333,9 +333,11 @@ class ImportSources(QObject):
                     if default_column_type is None:
                         default_column_type = StringConvertSpec()
                 col_type = default_column_type.DISPLAY_NAME
-            self._source_data_model.set_type(col, value_to_convert_spec(col_type), orientation=Qt.Horizontal)
+            self._source_data_model.set_type(
+                col, value_to_convert_spec(col_type), orientation=Qt.Orientation.Horizontal
+            )
         for row, row_type in row_types.items():
-            self._source_data_model.set_type(row, value_to_convert_spec(row_type), orientation=Qt.Vertical)
+            self._source_data_model.set_type(row, value_to_convert_spec(row_type), orientation=Qt.Orientation.Vertical)
         self.preview_data_updated.emit(self._source_data_model.columnCount())
 
     def _clear_source_data_model(self):
@@ -416,12 +418,12 @@ class ImportSources(QObject):
 
     @Slot()
     def _new_column_types(self):
-        new_types = self._source_data_model.get_types(orientation=Qt.Horizontal)
+        new_types = self._source_data_model.get_types(orientation=Qt.Orientation.Horizontal)
         self._connector.set_table_types({self._connector.current_table: new_types})
 
     @Slot()
     def _new_row_types(self):
-        new_types = self._source_data_model.get_types(orientation=Qt.Vertical)
+        new_types = self._source_data_model.get_types(orientation=Qt.Orientation.Vertical)
         self._connector.set_table_row_types({self._connector.current_table: new_types})
 
     @Slot()

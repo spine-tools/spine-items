@@ -12,10 +12,9 @@
 """Contains unit tests for the ``import_mapping_options`` module."""
 import unittest
 from contextlib import contextmanager
-
-from PySide2.QtCore import Qt, QItemSelectionModel
-from PySide2.QtWidgets import QApplication, QUndoStack, QMainWindow
-
+from PySide6.QtCore import Qt, QItemSelectionModel
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtGui import QUndoStack
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.ui.import_editor_window import Ui_MainWindow
@@ -45,14 +44,14 @@ class TestImportMappingOptions(unittest.TestCase):
             ui.source_list.selectionModel().setCurrentIndex(table_index, QItemSelectionModel.ClearAndSelect)
             mapping_list_index = mappings_model.index(0, 0, table_index)
             ui.mapping_list.selectionModel().setCurrentIndex(mapping_list_index, QItemSelectionModel.ClearAndSelect)
-            self.assertEqual(ui.time_series_repeat_check_box.checkState(), Qt.Unchecked)
+            self.assertEqual(ui.time_series_repeat_check_box.checkState(), Qt.CheckState.Unchecked)
             table_index = mappings_model.index(1, 0)
             flattened_mappings = mappings_model.index(0, 0, table_index).data(Role.FLATTENED_MAPPINGS)
             self.assertEqual(flattened_mappings.value_mapping().options.get("repeat", False), False)
             with signal_waiter(ui.time_series_repeat_check_box.stateChanged) as waiter:
                 ui.time_series_repeat_check_box.setChecked(True)
                 waiter.wait()
-            self.assertEqual(ui.time_series_repeat_check_box.checkState(), Qt.Checked)
+            self.assertEqual(ui.time_series_repeat_check_box.checkState(), Qt.CheckState.Checked)
             table_index = mappings_model.index(1, 0)
             flattened_mappings = mappings_model.index(0, 0, table_index).data(Role.FLATTENED_MAPPINGS)
             self.assertEqual(flattened_mappings.value_mapping().options["repeat"], True)

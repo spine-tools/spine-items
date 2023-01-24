@@ -14,7 +14,7 @@ Contains the source data table model.
 :author: P. Vennström (VTT)
 :date:   1.6.2019
 """
-from PySide2.QtCore import Qt, Signal, Slot, QModelIndex
+from PySide6.QtCore import Qt, Signal, Slot, QModelIndex
 from spinedb_api import ParameterValueFormatError
 from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel
@@ -113,14 +113,14 @@ class SourceDataTableModel(MinimalTableModel):
         self._mapping_list_index = index
         self.handle_mapping_data_changed()
 
-    def validate(self, section, orientation=Qt.Horizontal):
+    def validate(self, section, orientation=Qt.Orientation.Horizontal):
         converter = self.get_type(section, orientation)
         if converter is None:
             return
-        if orientation == Qt.Horizontal:
+        if orientation == Qt.Orientation.Horizontal:
             for row in range(self.rowCount()):
                 self._column_type_errors.pop((row, section), None)
-                data = self.index(row, section).data(Qt.EditRole)
+                data = self.index(row, section).data(Qt.ItemDataRole.EditRole)
                 if isinstance(data, str) and not data:
                     data = None
                 if data is not None:
@@ -134,7 +134,7 @@ class SourceDataTableModel(MinimalTableModel):
         else:
             for column in range(self.columnCount()):
                 self._row_type_errors.pop((section, column), None)
-                data = self.index(section, column).data(Qt.EditRole)
+                data = self.index(section, column).data(Qt.ItemDataRole.EditRole)
                 if isinstance(data, str) and not data:
                     data = None
                 if data is not None:
@@ -147,19 +147,19 @@ class SourceDataTableModel(MinimalTableModel):
             bottom_right = self.index(section, self.columnCount() - 1)
         self.dataChanged.emit(top_left, bottom_right)
 
-    def get_type(self, section, orientation=Qt.Horizontal):
-        if orientation == Qt.Horizontal:
+    def get_type(self, section, orientation=Qt.Orientation.Horizontal):
+        if orientation == Qt.Orientation.Horizontal:
             return self._column_types.get(section, None)
         return self._row_types.get(section, None)
 
-    def get_types(self, orientation=Qt.Horizontal):
-        if orientation == Qt.Horizontal:
+    def get_types(self, orientation=Qt.Orientation.Horizontal):
+        if orientation == Qt.Orientation.Horizontal:
             return self._column_types
         return self._row_types
 
     @Slot(int, object, object)
-    def set_type(self, section, section_type, orientation=Qt.Horizontal):
-        if orientation == Qt.Horizontal:
+    def set_type(self, section, section_type, orientation=Qt.Orientation.Horizontal):
+        if orientation == Qt.Orientation.Horizontal:
             count = self.columnCount()
             emit_signal = self.column_types_updated
             type_dict = self._column_types
@@ -178,11 +178,11 @@ class SourceDataTableModel(MinimalTableModel):
         self.validate(section, orientation)
 
     def set_types(self, sections, section_type, orientation):
-        type_dict = self._column_types if orientation == Qt.Horizontal else self._row_types
+        type_dict = self._column_types if orientation == Qt.Orientation.Horizontal else self._row_types
         for section in sections:
             type_dict[section] = section_type
             self.validate(section, orientation)
-        if orientation == Qt.Horizontal:
+        if orientation == Qt.Orientation.Horizontal:
             self.column_types_updated.emit()
         else:
             self.row_types_updated.emit()
@@ -202,19 +202,19 @@ class SourceDataTableModel(MinimalTableModel):
     def update_colors(self):
         top_left = self.index(0, 0)
         bottom_right = self.index(self.rowCount() - 1, self.columnCount() - 1)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.BackgroundRole])
-        self.headerDataChanged.emit(Qt.Horizontal, 0, self.columnCount() - 1)
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
+        self.headerDataChanged.emit(Qt.Orientation.Horizontal, 0, self.columnCount() - 1)
 
-    def data_error(self, error, index, role=Qt.DisplayRole, orientation=Qt.Horizontal):
-        if role == Qt.ToolTipRole:
+    def data_error(self, error, index, role=Qt.ItemDataRole.DisplayRole, orientation=Qt.Orientation.Horizontal):
+        if role == Qt.ItemDataRole.ToolTipRole:
             type_display_name = self.get_type(index.column(), orientation).DISPLAY_NAME
             value = self._main_data[index.row()][index.column()]
             return f'<p>Could not parse value: "{value}" as a {type_display_name}: {error}</p>'
-        if role == Qt.BackgroundRole:
+        if role == Qt.ItemDataRole.BackgroundRole:
             return ERROR_COLOR
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role in (Qt.ToolTipRole, Qt.BackgroundRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if role in (Qt.ItemDataRole.ToolTipRole, Qt.ItemDataRole.BackgroundRole):
             flattened_mappings = None
             if self._mapping_list_index.isValid():
                 flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
@@ -228,20 +228,20 @@ class SourceDataTableModel(MinimalTableModel):
             if index.row() > max(last_pivot_row, read_start_row - 1):
                 error = self._column_type_errors.get((row, column))
                 if error is not None:
-                    return self.data_error(error, index, role, orientation=Qt.Horizontal)
+                    return self.data_error(error, index, role, orientation=Qt.Orientation.Horizontal)
 
             if row <= last_pivot_row and column not in self._non_pivoted_and_skipped_columns(flattened_mappings):
                 error = self._row_type_errors.get((row, column))
                 if error is not None:
-                    return self.data_error(error, index, role, orientation=Qt.Vertical)
+                    return self.data_error(error, index, role, orientation=Qt.Orientation.Vertical)
 
-        if role == Qt.BackgroundRole and self._mapping_list_index.isValid():
+        if role == Qt.ItemDataRole.BackgroundRole and self._mapping_list_index.isValid():
             return self.data_color(index)
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             converted_data = self._converted_data.get((index.row(), index.column()))
             if converted_data is not None:
                 return str(converted_data)
-        if self._infinite and role == Qt.DisplayRole:
+        if self._infinite and role == Qt.ItemDataRole.DisplayRole:
             return f"item_{index.row() + 1}_{index.column() + 1}"
         return super().data(index, role)
 
@@ -338,14 +338,18 @@ class SourceDataTableModel(MinimalTableModel):
             return False
         return column == mapping.position
 
-    def headerData(self, section, orientation=Qt.Horizontal, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.BackgroundRole and self._mapping_list_index.isValid():
+    def headerData(self, section, orientation=Qt.Orientation.Horizontal, role=Qt.ItemDataRole.DisplayRole):
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.BackgroundRole
+            and self._mapping_list_index.isValid()
+        ):
             flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
             for k in range(len(flattened_mappings.display_names)):
                 component_mapping = flattened_mappings.component_at(k)
                 if self.section_in_mapping(component_mapping, section):
                     return flattened_mappings.display_colors[k]
-        if self._infinite and orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if self._infinite and orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return f"header_{section + 1}"
         return super().headerData(section, orientation, role)
 

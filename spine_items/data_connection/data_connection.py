@@ -20,9 +20,9 @@ import os
 import shutil
 import logging
 from sqlalchemy import create_engine
-from PySide2.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection, QTimer
-from PySide2.QtGui import QStandardItem, QStandardItemModel, QBrush
-from PySide2.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
+from PySide6.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection, QTimer
+from PySide6.QtGui import QStandardItem, QStandardItemModel, QBrush
+from PySide6.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
@@ -37,8 +37,8 @@ from ..widgets import UrlSelector
 from ..utils import split_url_credentials
 
 
-_DATA_FILE_PATH_ROLE = Qt.UserRole + 1
-_MISSING_ROLE = Qt.UserRole + 2
+_DATA_FILE_PATH_ROLE = Qt.ItemDataRole.UserRole + 1
+_MISSING_ROLE = Qt.ItemDataRole.UserRole + 2
 
 
 _MISSING_ITEM_FOREGROUND = QBrush(Qt.red)
@@ -216,7 +216,7 @@ class DataConnection(ProjectItem):
     def show_add_db_reference_dialog(self, _=False):
         """Opens a dialog where user can select a url to be added as reference for this Data Connection."""
         selector = UrlSelector(self._toolbox, self._toolbox)
-        selector.exec_()
+        selector.exec()
         url = selector.url
         if not url:  # Cancel button clicked
             return
@@ -260,9 +260,9 @@ class DataConnection(ProjectItem):
             if not parent.isValid():
                 continue
             if parent == file_ref_root_index:
-                file_references.append(index.data(Qt.DisplayRole))
+                file_references.append(index.data(Qt.ItemDataRole.DisplayRole))
             elif parent == db_ref_root_index:
-                db_references.append(index.data(Qt.DisplayRole))
+                db_references.append(index.data(Qt.ItemDataRole.DisplayRole))
         self._toolbox.undo_stack.push(RemoveDCReferencesCommand(self, file_references, db_references))
         self._logger.msg.emit("Selected references removed")
 
@@ -425,7 +425,7 @@ class DataConnection(ProjectItem):
                 fixed_references.append(path)
                 item.clearData()
                 item.setFlags(~Qt.ItemIsEditable)
-                item.setData(path, Qt.DisplayRole)
+                item.setData(path, Qt.ItemDataRole.DisplayRole)
             if not fixed_references:
                 return
             self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
@@ -477,12 +477,12 @@ class DataConnection(ProjectItem):
             if self.reference_model.itemFromIndex(index.parent()) is not self._file_ref_root:
                 continue
             item = self.reference_model.itemFromIndex(index)
-            path = item.data(Qt.DisplayRole)
+            path = item.data(Qt.ItemDataRole.DisplayRole)
             if item.data(_MISSING_ROLE) and os.path.exists(path):
                 fixed_references.append(path)
                 item.clearData()
                 item.setFlags(~Qt.ItemIsEditable)
-                item.setData(path, Qt.DisplayRole)
+                item.setData(path, Qt.ItemDataRole.DisplayRole)
         if not fixed_references:
             return
         self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
@@ -560,11 +560,15 @@ class DataConnection(ProjectItem):
         msg = "The following files will be removed permanently from the project\n\n" f"{files}\n\n" "Are you sure?"
         title = f"Remove {len(file_list)} File(s)"
         message_box = QMessageBox(
-            QMessageBox.Question, title, msg, QMessageBox.Ok | QMessageBox.Cancel, parent=self._toolbox
+            QMessageBox.Icon.Question,
+            title,
+            msg,
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+            parent=self._toolbox,
         )
-        message_box.button(QMessageBox.Ok).setText("Remove Files")
-        answer = message_box.exec_()
-        if answer == QMessageBox.Cancel:
+        message_box.button(QMessageBox.StandardButton.Ok).setText("Remove Files")
+        answer = message_box.exec()
+        if answer == QMessageBox.StandardButton.Cancel:
             return
         self.delete_files_from_project(file_list)
 
@@ -615,7 +619,7 @@ class DataConnection(ProjectItem):
         Args:
             item (QStandardItem): item to modify
         """
-        item.setData("The file is missing.", Qt.ToolTipRole)
+        item.setData("The file is missing.", Qt.ItemDataRole.ToolTipRole)
         item.setData(_MISSING_ITEM_FOREGROUND, Qt.ForegroundRole)
         item.setData(True, _MISSING_ROLE)
 
@@ -636,7 +640,7 @@ class DataConnection(ProjectItem):
             item = QStandardItem(os.path.basename(path))
             item.setFlags(~Qt.ItemIsEditable)
             icon = QFileIconProvider().icon(QFileInfo(path))
-            item.setData(icon, Qt.DecorationRole)
+            item.setData(icon, Qt.ItemDataRole.DecorationRole)
             item.setData(path, _DATA_FILE_PATH_ROLE)
             self.data_model.appendRow(item)
 

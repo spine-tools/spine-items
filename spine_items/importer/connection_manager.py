@@ -16,8 +16,8 @@ Contains ConnectionManager class.
 :date:   1.6.2019
 """
 
-from PySide2.QtCore import QObject, QThread, Signal, Slot
-from PySide2.QtWidgets import QFileDialog
+from PySide6.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtWidgets import QFileDialog
 from spinetoolbox.helpers import busy_effect
 
 

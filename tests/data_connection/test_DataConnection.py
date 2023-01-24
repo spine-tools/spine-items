@@ -22,10 +22,9 @@ from pathlib import Path
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock, NonCallableMagicMock
-
-from PySide2.QtCore import QItemSelectionModel
-from PySide2.QtWidgets import QApplication, QMessageBox
-from PySide2.QtGui import QStandardItemModel, Qt
+from PySide6.QtCore import QItemSelectionModel
+from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtGui import Qt
 from spinetoolbox.helpers import signal_waiter
 from spine_items.data_connection.data_connection import DataConnection
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
@@ -118,19 +117,19 @@ class TestDataConnection(unittest.TestCase):
             # Add nothing
             type(mock_url_selector).url = mock.PropertyMock(return_value="")
             self.data_connection.show_add_db_reference_dialog()
-            self.assertEqual(1, mock_url_selector.exec_.call_count)
+            self.assertEqual(1, mock_url_selector.exec.call_count)
             self.assertEqual(0, len(self.data_connection.db_references))
             self.assertEqual(0, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Add one url
             type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://randy:creamfraiche@host:3306/db")
             self.data_connection.show_add_db_reference_dialog()
-            self.assertEqual(2, mock_url_selector.exec_.call_count)
+            self.assertEqual(2, mock_url_selector.exec.call_count)
             self.assertEqual(1, len(self.data_connection.db_references))
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Add same url with different username and password (should not be added)
             type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://scott:tiger@host:3306/db")
             self.data_connection.show_add_db_reference_dialog()
-            self.assertEqual(3, mock_url_selector.exec_.call_count)
+            self.assertEqual(3, mock_url_selector.exec.call_count)
             self.assertEqual(1, len(self.data_connection.db_references))
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
 
@@ -167,7 +166,7 @@ class TestDataConnection(unittest.TestCase):
             self.data_connection.show_add_db_reference_dialog()
             type(mock_url_selector).url = mock.PropertyMock(return_value="mysql://randy:creamfraiche@host:3307/db")
             self.data_connection.show_add_db_reference_dialog()
-            self.assertEqual(2, mock_url_selector.exec_.call_count)
+            self.assertEqual(2, mock_url_selector.exec.call_count)
             self.assertEqual(2, len(self.data_connection.db_references))
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Test with no indexes selected
@@ -185,7 +184,7 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(0, 0)))
             # Check that the remaining file is the one that's supposed to be there
             self.assertEqual([str(b)], self.data_connection.file_references)
-            self.assertEqual(str(b), self.ref_model.item(0).child(0).data(Qt.DisplayRole))
+            self.assertEqual(str(b), self.ref_model.item(0).child(0).data(Qt.ItemDataRole.DisplayRole))
             # Set one db selected and remove it
             db1_index = self.ref_model.index(0, 0, self.ref_model.index(1, 0))
             mock_selected_indexes.return_value = [db1_index]
@@ -195,7 +194,7 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(1, self.ref_model.rowCount(self.ref_model.index(1, 0)))
             # Check that the remaining db is the one that's supposed to be there
             self.assertEqual(["mysql://host:3307/db"], self.data_connection.db_references)
-            self.assertEqual("mysql://host:3307/db", self.ref_model.item(1).child(0).data(Qt.DisplayRole))
+            self.assertEqual("mysql://host:3307/db", self.ref_model.item(1).child(0).data(Qt.ItemDataRole.DisplayRole))
             # Now remove the remaining file and db
             b_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
             db2_index = self.ref_model.index(0, 0, self.ref_model.index(1, 0))
@@ -215,9 +214,9 @@ class TestDataConnection(unittest.TestCase):
             self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
             # Check that the two remaining items are the ones that are supposed to be there
             self.assertEqual(str(a), self.data_connection.file_references[0])
-            self.assertEqual(str(a), self.ref_model.item(0).child(0).data(Qt.DisplayRole))
+            self.assertEqual(str(a), self.ref_model.item(0).child(0).data(Qt.ItemDataRole.DisplayRole))
             self.assertEqual(str(b), self.data_connection.file_references[1])
-            self.assertEqual(str(b), self.ref_model.item(0).child(1).data(Qt.DisplayRole))
+            self.assertEqual(str(b), self.ref_model.item(0).child(1).data(Qt.ItemDataRole.DisplayRole))
             # Now select the two remaining ones and remove them
             a_index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
             b_index = self.ref_model.index(1, 0, self.ref_model.index(0, 0))
@@ -305,7 +304,7 @@ class TestDataConnection(unittest.TestCase):
             waiter.wait()
         index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
         self.assertEqual(index.data(), str(a))
-        self.assertTrue(index.data(Qt.UserRole + 2))
+        self.assertTrue(index.data(Qt.ItemDataRole.UserRole + 2))
         self.assertEqual(self.data_connection.file_references, [str(a)])
 
     def test_deleting_file_marks_its_reference_as_missing(self):
@@ -321,7 +320,7 @@ class TestDataConnection(unittest.TestCase):
             waiter.wait()
         index = self.ref_model.index(0, 0, self.ref_model.index(0, 0))
         self.assertEqual(index.data(), str(a))
-        self.assertTrue(index.data(Qt.UserRole + 2))
+        self.assertTrue(index.data(Qt.ItemDataRole.UserRole + 2))
         self.assertEqual(self.data_connection.file_references, [str(a)])
 
     def test_copy_reference_to_project(self):
@@ -346,7 +345,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(self.data_connection.data_model.rowCount(), 1)
         index = self.data_connection.data_model.index(0, 0)
         self.assertEqual(index.data(), "a.txt")
-        self.assertEqual(index.data(Qt.UserRole + 1), os.path.join(self.project.items_dir, "dc", "a.txt"))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self.project.items_dir, "dc", "a.txt"))
 
     def test_create_data_file(self):
         with mock.patch("spine_items.data_connection.data_connection.QInputDialog") as mock_input_dialog:
@@ -358,7 +357,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
-        self.assertEqual(index.data(Qt.UserRole + 1), os.path.join(self.project.items_dir, "dc", "data.csv"))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self.project.items_dir, "dc", "data.csv"))
 
     def test_deleting_data_file_removes_it_from_dc(self):
         file_a = Path(self.data_connection.data_dir) / "data.dat"
@@ -369,7 +368,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.dat")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(file_a))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(file_a))
         with signal_waiter(self.data_connection.file_system_watcher.file_removed) as waiter:
             file_a.unlink()
             waiter.wait()
@@ -384,7 +383,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.dat")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(file_a))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(file_a))
         renamed = file_a.parent / "sata.txt"
         with signal_waiter(self.data_connection.file_system_watcher.file_renamed) as waiter:
             file_a.rename(renamed)
@@ -392,7 +391,7 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "sata.txt")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(renamed))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(renamed))
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -479,14 +478,14 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(self._data_file_path))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(self._data_file_path))
 
     def test_remove_data_file(self):
         self.data_connection.restore_selections()
         index = self.data_connection.data_model.index(0, 0)
         self._properties_tab.ui.treeView_dc_data.selectionModel().select(index, QItemSelectionModel.ClearAndSelect)
         with mock.patch("spine_items.data_connection.data_connection.QMessageBox") as mock_message_box:
-            mock_message_box.exec_.return_value = QMessageBox.Ok
+            mock_message_box.exec.return_value = QMessageBox.StandardButton.Ok
             with signal_waiter(self.data_connection.file_system_watcher.file_removed) as waiter:
                 self.data_connection.remove_files()
                 waiter.wait()
@@ -501,7 +500,7 @@ class TestDataConnectionWithInitialDataFile(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "renamed.dat")
-        self.assertEqual(index.data(Qt.UserRole + 1), str(self._item_dir / "renamed.dat"))
+        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), str(self._item_dir / "renamed.dat"))
 
 
 class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
@@ -549,14 +548,14 @@ class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
     def test_refresh_file_reference(self):
         root_index = self.ref_model.index(0, 0)
         reference_index = self.ref_model.index(0, 0, root_index)
-        self.assertEqual(reference_index.data(Qt.ToolTipRole), "The file is missing.")
+        self.assertEqual(reference_index.data(Qt.ItemDataRole.ToolTipRole), "The file is missing.")
         Path(self._non_existent_path).touch()
         self.data_connection.restore_selections()
         self._properties_tab.ui.treeView_dc_references.selectionModel().select(
             reference_index, QItemSelectionModel.ClearAndSelect
         )
         self.data_connection.refresh_references()
-        self.assertIsNone(reference_index.data(Qt.ToolTipRole), "The file is missing.")
+        self.assertIsNone(reference_index.data(Qt.ItemDataRole.ToolTipRole), "The file is missing.")
         self.project.notify_resource_changes_to_successors.assert_called_once_with(self.data_connection)
 
 

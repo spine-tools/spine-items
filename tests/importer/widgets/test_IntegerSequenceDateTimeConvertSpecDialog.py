@@ -16,8 +16,8 @@ Contains unit tests for :class:`IntegerSequenceDateTimeConvertSpecDialog`.
 :date:   12.11.2020
 """
 import unittest
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QApplication
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
 from spinedb_api import DateTime, Duration
 from spinedb_api.import_mapping.type_conversion import IntegerSequenceDateTimeConvertSpec
 from spine_items.importer.widgets.table_view_with_button_header import IntegerSequenceDateTimeConvertSpecDialog

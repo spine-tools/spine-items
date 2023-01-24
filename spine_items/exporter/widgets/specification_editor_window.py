@@ -16,9 +16,9 @@ Contains :class:`SpecificationEditorWindow`.
 """
 from copy import deepcopy
 import json
-from PySide2.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
-from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QAction, QApplication, QHeaderView, QMenu
+from PySide6.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
+from PySide6.QtGui import QKeySequence, QAction
+from PySide6.QtWidgets import QApplication, QHeaderView, QMenu
 
 from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
@@ -149,9 +149,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._mappings_table_model.mapping_enabled_state_change_requested.connect(self._set_mapping_enabled)
         self._mappings_table_model.set_all_mappings_enabled_requested.connect(self._enable_disable_all_mappings)
         self._mappings_table_model.write_order_about_to_change.connect(
-            lambda: self._expect_current_mapping_change(True)
+            lambda tr=True: self._expect_current_mapping_change(tr)
         )
-        self._mappings_table_model.write_order_changed.connect(lambda: self._expect_current_mapping_change(False))
+        self._mappings_table_model.write_order_changed.connect(lambda tr=False: self._expect_current_mapping_change(tr))
         self._mapping_editor_model = MappingEditorTableModel("", None, self._undo_stack, self, self)
         self._sort_mappings_table_model = MappingsTableProxy(self)
         self._sort_mappings_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
@@ -199,7 +199,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.mappings_table.sortByColumn(0, Qt.AscendingOrder)
         self._ui.mappings_table.customContextMenuRequested.connect(self._show_mappings_table_context_menu)
         self._expect_current_mapping_change(False)
-        self._ui.mappings_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self._ui.mappings_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._ui.group_fn_combo_box.addItems(GROUP_FUNCTION_DISPLAY_NAMES)
         self._ui.item_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
@@ -219,12 +219,12 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._filter_edit_delegate = FilterEditDelegate(self)
         self._ui.mapping_table_view.setItemDelegateForColumn(EditorColumn.FILTER, self._filter_edit_delegate)
         table_header = self._ui.mapping_table_view.horizontalHeader()
-        table_header.setSectionResizeMode(EditorColumn.ROW_LABEL, QHeaderView.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.PIVOTED, QHeaderView.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.NULLABLE, QHeaderView.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.HEADER, QHeaderView.ResizeToContents)
-        table_header.setMinimumSectionSize(position_section_width())
+        table_header.setSectionResizeMode(EditorColumn.ROW_LABEL, QHeaderView.ResizeMode.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeMode.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.PIVOTED, QHeaderView.ResizeMode.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.NULLABLE, QHeaderView.ResizeMode.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.HEADER, QHeaderView.ResizeMode.ResizeToContents)
+        table_header.setMinimumSectionSize(position_section_width(self))
         self._enable_mapping_specification_editing()
         if specification is None:
             self._mappings_table_model.extend(_new_mapping_specification(MappingType.objects))
@@ -270,21 +270,21 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 dock.setFloating(False)
                 self.addDockWidget(area, dock)
         # Left side
-        self.splitDockWidget(self._ui.export_options_dock, self._ui.mappings_dock, Qt.Vertical)
-        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_spec_dock, Qt.Vertical)
+        self.splitDockWidget(self._ui.export_options_dock, self._ui.mappings_dock, Qt.Orientation.Vertical)
+        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_spec_dock, Qt.Orientation.Vertical)
         some_docks = (self._ui.mappings_dock, self._ui.mapping_options_dock, self._ui.mapping_spec_dock)
         height = sum(d.height() for d in some_docks)
-        self.resizeDocks(some_docks, [height * x for x in (0.1, 0.3, 0.6)], Qt.Vertical)
-        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_options_dock, Qt.Horizontal)
+        self.resizeDocks(some_docks, [height * x for x in (0.1, 0.3, 0.6)], Qt.Orientation.Vertical)
+        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_options_dock, Qt.Orientation.Horizontal)
         # Right side
         some_docks = (self._ui.preview_tables_dock, self._ui.preview_controls_dock)
-        self.splitDockWidget(*some_docks, Qt.Vertical)
+        self.splitDockWidget(*some_docks, Qt.Orientation.Vertical)
         height = sum(d.height() for d in some_docks)
-        self.resizeDocks(some_docks, [height * x for x in (0.9, 0.1)], Qt.Vertical)
+        self.resizeDocks(some_docks, [height * x for x in (0.9, 0.1)], Qt.Orientation.Vertical)
         some_docks = (self._ui.preview_tables_dock, self._ui.preview_contents_dock)
-        self.splitDockWidget(*some_docks, Qt.Horizontal)
+        self.splitDockWidget(*some_docks, Qt.Orientation.Horizontal)
         width = sum(d.width() for d in some_docks)
-        self.resizeDocks(some_docks, [width * x for x in (0.3, 0.7)], Qt.Horizontal)
+        self.resizeDocks(some_docks, [width * x for x in (0.3, 0.7)], Qt.Orientation.Horizontal)
         qApp.processEvents()  # pylint: disable=undefined-variable
         self.resize(size)
 
@@ -346,7 +346,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         self.current_mapping_about_to_change.emit()
         current = self._sort_mappings_table_model.mapToSource(current)
-        mapping_type = current.data(MappingsTableModel.MAPPING_TYPE_ROLE)
+        mapping_type = MappingType(current.data(MappingsTableModel.MAPPING_TYPE_ROLE))
         self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
         self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
         self._set_always_export_header_silently(current.data(MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE))
@@ -392,6 +392,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.mapping_spec_contents.setEnabled(True)
         self.current_mapping_changed.emit()
 
+    @Slot(bool)
     def _expect_current_mapping_change(self, expect_change):
         """Connects and disconnects signals depending of if current mapping is expected to change or not
 
@@ -414,9 +415,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             bottom_right (QModelIndex): bottom index of modified mappings
             roles (list of int):
         """
-        if Qt.DisplayRole in roles:
+        if Qt.ItemDataRole.DisplayRole in roles:
             self._sort_mappings_table_model.invalidate()
-        if max(roles) < Qt.UserRole:
+        if max(roles) < Qt.ItemDataRole.UserRole:
             return
         sorted_index = self._sort_mappings_table_model.mapFromSource(top_left)
         if sorted_index != self._ui.mappings_table.currentIndex():
@@ -425,12 +426,12 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         enable_controls = False
         if MappingsTableModel.MAPPING_ROOT_ROLE in roles:
             root_mapping = top_left.data(MappingsTableModel.MAPPING_ROOT_ROLE)
-            self._mapping_editor_model.set_mapping(top_left.data(Qt.DisplayRole), root_mapping)
+            self._mapping_editor_model.set_mapping(top_left.data(Qt.ItemDataRole.DisplayRole), root_mapping)
             self._set_relationship_dimensions_silently(top_left.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE))
             self._set_parameter_dimensions_silently(top_left.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
             enable_controls = True
         if MappingsTableModel.MAPPING_TYPE_ROLE in roles:
-            mapping_type = top_left.data(MappingsTableModel.MAPPING_TYPE_ROLE)
+            mapping_type = MappingType(top_left.data(MappingsTableModel.MAPPING_TYPE_ROLE))
             self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
             self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
             enable_controls = True
@@ -459,7 +460,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         Args:
             position (QPoint): requested menu position
         """
-        self._mappings_table_menu.exec_(self._ui.mappings_table.mapToGlobal(position))
+        self._mappings_table_menu.exec(self._ui.mappings_table.mapToGlobal(position))
 
     def _make_mappings_table_menu(self):
         """Creates context menu for Mappings table.
@@ -592,7 +593,10 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     def _toggle_all_enabled(self):
         """Pushes a command that enables or disables all mappings to undo stack."""
         for row in range(self._mappings_table_model.rowCount()):
-            if self._mappings_table_model.index(row, 0).data(Qt.CheckStateRole) == Qt.Unchecked:
+            if (
+                self._mappings_table_model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole)
+                == Qt.CheckState.Unchecked.value
+            ):
                 self._undo_stack.push(EnableAllMappings(self._mappings_table_model))
                 return
         self._undo_stack.push(DisableAllMappings(self._mappings_table_model))
@@ -754,7 +758,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             checked (int): checked state
         """
         index = self._ui.mappings_table.currentIndex()
-        self._undo_stack.push(SetAlwaysExportHeader(index, checked == Qt.Checked))
+        self._undo_stack.push(SetAlwaysExportHeader(index, checked == Qt.CheckState.Checked.value))
 
     def _set_always_export_header_silently(self, always_export_header):
         """
@@ -766,7 +770,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if always_export_header == self._ui.always_export_header_check_box.isChecked():
             return
         self._ui.always_export_header_check_box.stateChanged.disconnect(self._change_always_export_header)
-        self._ui.always_export_header_check_box.setCheckState(Qt.Checked if always_export_header else Qt.Unchecked)
+        self._ui.always_export_header_check_box.setCheckState(
+            Qt.CheckState.Checked if always_export_header else Qt.CheckState.Unchecked
+        )
         self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
 
     @Slot(int)
@@ -781,9 +787,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         mapping = self._mappings_table_model.data(index, MappingsTableModel.MAPPING_ROOT_ROLE)
         modified = deepcopy(mapping)
         if self._mappings_table_model.data(index, MappingsTableModel.MAPPING_TYPE_ROLE) in (
-            MappingType.object_parameter_values,
-            MappingType.relationship_parameter_values,
-            MappingType.relationship_object_parameter_values,
+            MappingType.object_parameter_values.value,
+            MappingType.relationship_parameter_values.value,
+            MappingType.relationship_object_parameter_values.value,
         ):
             set_parameter_dimensions(modified, dimensions)
         else:
@@ -814,7 +820,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         index = self._ui.mappings_table.currentIndex()
         if not index.isValid():
             return
-        flag = checked == Qt.Checked
+        flag = checked == Qt.CheckState.Checked.value
         self._undo_stack.beginMacro(("check" if flag else "uncheck") + " fix table name checkbox")
         self._undo_stack.push(SetUseFixedTableNameFlag(index, flag))
         mapping = index.data(MappingsTableModel.MAPPING_ROOT_ROLE)
@@ -847,7 +853,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if flag == self._ui.fix_table_name_check_box.isChecked():
             return
         self._ui.fix_table_name_check_box.stateChanged.disconnect(self._change_fix_table_name_flag)
-        self._ui.fix_table_name_check_box.setCheckState(Qt.Checked if flag else Qt.Unchecked)
+        self._ui.fix_table_name_check_box.setCheckState(Qt.CheckState.Checked if flag else Qt.CheckState.Unchecked)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
 
     def _set_fixed_table_name_silently(self, name):

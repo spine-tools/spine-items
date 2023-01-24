@@ -14,7 +14,7 @@ Contains classes to manage parameter renaming.
 :author: A. Soininen (VTT)
 :date:   31.5.2021
 """
-from PySide2.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
+from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.parameter_renames_table_model import ParameterRenamesTableModel, RenamesTableColumn

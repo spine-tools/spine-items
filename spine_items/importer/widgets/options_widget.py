@@ -16,8 +16,8 @@ Contains OptionsWidget class.
 :date:   1.6.2019
 """
 import functools
-from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QComboBox,
@@ -256,7 +256,7 @@ def _emit_check_box_option_changed(state, option_key, options_widget):
         options_widget.undo_stack.push(
             SetConnectorOption(options_widget.current_source_table, option_key, options_widget, state, previous_value)
         )
-    options = {option_key: state == Qt.Checked}
+    options = {option_key: state == Qt.CheckState.Checked}
     options_widget.options_changed.emit(options)
 
 

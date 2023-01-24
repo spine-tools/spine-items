@@ -19,16 +19,16 @@ from contextlib import contextmanager
 from copy import deepcopy
 from operator import methodcaller
 
-from PySide2.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
-from PySide2.QtGui import QStandardItem
-from PySide2.QtWidgets import QMessageBox, QWidget
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
+from PySide6.QtGui import QStandardItem
+from PySide6.QtWidgets import QMessageBox, QWidget
 from spinedb_api.spine_io.exporters import gdx
 from spinedb_api import DatabaseMapping
 from .parameter_index_settings import IndexSettingsState, ParameterIndexSettings
 from ..mvcmodels.indexing_domain_list_model import IndexingDomainListModel
 
-_PARAMETER_ROLE = Qt.UserRole + 1
-_PARAMETER_NAME_ROLE = Qt.UserRole + 2
+_PARAMETER_ROLE = Qt.ItemDataRole.UserRole + 1
+_PARAMETER_NAME_ROLE = Qt.ItemDataRole.UserRole + 2
 
 
 class ParameterIndexSettingsWindow(QWidget):

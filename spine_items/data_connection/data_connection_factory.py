@@ -16,7 +16,7 @@ The DataConnectionFactory class.
 :date:   15.4.2020
 """
 
-from PySide2.QtGui import QColor
+from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .data_connection_icon import DataConnectionIcon
 from .data_connection import DataConnection

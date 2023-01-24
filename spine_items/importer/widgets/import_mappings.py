@@ -16,8 +16,8 @@ ImportMappings widget.
 :date:   1.6.2019
 """
 import pickle
-from PySide2.QtCore import QPoint, QItemSelectionModel, Slot, QModelIndex, QMimeData, QItemSelection
-from PySide2.QtWidgets import QStyledItemDelegate, QApplication
+from PySide6.QtCore import QPoint, QItemSelectionModel, Slot, QModelIndex, QMimeData, QItemSelection
+from PySide6.QtWidgets import QStyledItemDelegate, QApplication
 
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate

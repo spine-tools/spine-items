@@ -14,20 +14,24 @@ Contains mapping position editor delegate.
 :author: A. Soininen (VTT)
 :date:   5.1.2021
 """
-from PySide2.QtCore import Property, Slot
-from PySide2.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
+from PySide6.QtCore import Property, Slot
+from PySide6.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
 from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT
 
 
 _positions = list(POSITION_DISPLAY_TEXT.values())
 
 
-def position_section_width():
-    # pylint: disable=undefined-variable
-    fm = qApp.fontMetrics()
-    style = qApp.style()
+def position_section_width(w):
+    """Returns section width.
+
+    Args:
+        w (QWidget): Widget whose font metrics are used
+    """
+    fm = w.fontMetrics()
+    style = qApp.style()  # pylint: disable=undefined-variable
     option = QStyleOptionComboBox()
-    rect = style.subControlRect(QStyle.CC_ComboBox, option, QStyle.SC_ComboBoxArrow)
+    rect = style.subControlRect(QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow)
     return max(fm.horizontalAdvance(pos) for pos in _positions) + rect.width()
 
 
@@ -47,7 +51,7 @@ class _PositionEdit(QComboBox):
         super().__init__(parent)
         self.addItems(_positions)
         self.setEditable(True)
-        self.setInsertPolicy(QComboBox.NoInsert)
+        self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.currentTextChanged.connect(self._insert)
         self.setLineEdit(_SelectingLineEdit())
 

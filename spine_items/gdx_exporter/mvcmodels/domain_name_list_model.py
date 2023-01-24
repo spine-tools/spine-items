@@ -14,7 +14,7 @@ Contains :class:`DomainNameListModel`
 :author: A. Soininen (VTT)
 :date:   17.9.2020
 """
-from PySide2.QtCore import QAbstractListModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
 
 
 class DomainNameListModel(QAbstractListModel):
@@ -32,13 +32,13 @@ class DomainNameListModel(QAbstractListModel):
         super().__init__()
         self._entity_classes = entity_classes
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """Returns model's data for given index."""
-        if role != Qt.DisplayRole or not index.isValid():
+        if role != Qt.ItemDataRole.DisplayRole or not index.isValid():
             return None
         return self._entity_classes[index.row()].name
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         """Returns None."""
         return None
 

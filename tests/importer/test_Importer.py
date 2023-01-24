@@ -20,8 +20,8 @@ import os
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QApplication, QMenu
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMenu
 from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.importer_specification import ImporterSpecification
@@ -79,7 +79,7 @@ class TestImporter(unittest.TestCase):
         ]
         self.importer.upstream_resources_updated(resources)
         index = self.importer._file_model.index(1, 0)
-        self.importer._file_model.setData(index, False, Qt.CheckStateRole)
+        self.importer._file_model.setData(index, False, Qt.ItemDataRole.CheckStateRole)
         d = self.importer.item_dict()
         self.assertEqual(
             d,
@@ -164,10 +164,10 @@ class TestImporter(unittest.TestCase):
         resources = [transient_file_resource("provider", label=file_name) for file_name in expected_file_list]
         self.importer.upstream_resources_updated(resources)
         model = self.importer._properties_ui.treeView_files.model()
-        file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
+        file_list = [model.index(row, 0).data(Qt.ItemDataRole.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
-        checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]
-        selected = [check == Qt.Checked for check in checked]
+        checked = [model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) for row in range(model.rowCount())]
+        selected = [check == Qt.CheckState.Checked.value for check in checked]
         self.assertTrue(all(selected))
 
     def test_handle_dag_changed_updates_previous_list_items(self):
@@ -180,14 +180,14 @@ class TestImporter(unittest.TestCase):
         model = self.importer._properties_ui.treeView_files.model()
         for row in range(2):
             index = model.index(row, 0)
-            model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
+            model.setData(index, Qt.CheckState.Unchecked, Qt.ItemDataRole.CheckStateRole)
         # Update with one existing, one new file
         resources = [transient_file_resource("provider", label=name) for name in ["file2", "file3"]]
         self.importer.upstream_resources_updated(resources)
-        file_list = [model.index(row, 0).data(Qt.DisplayRole) for row in range(model.rowCount())]
+        file_list = [model.index(row, 0).data(Qt.ItemDataRole.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(file_list, ["file2", "file3"])
-        checked = [model.index(row, 0).data(Qt.CheckStateRole) for row in range(model.rowCount())]
-        selected = [check == Qt.Checked for check in checked]
+        checked = [model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) for row in range(model.rowCount())]
+        selected = [check == Qt.CheckState.Checked.value for check in checked]
         self.assertEqual(selected, [False, True])
 
 

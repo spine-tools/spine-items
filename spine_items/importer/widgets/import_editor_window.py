@@ -19,8 +19,8 @@ Contains ImportPreviewWindow class.
 import os
 import json
 import fnmatch
-from PySide2.QtCore import Qt, Signal, Slot, QModelIndex, QItemSelectionModel
-from PySide2.QtWidgets import QFileDialog, QDockWidget, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
+from PySide6.QtCore import Qt, Signal, Slot, QModelIndex, QItemSelectionModel
+from PySide6.QtWidgets import QFileDialog, QDockWidget, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH
@@ -141,20 +141,24 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             dock.setFloating(False)
             self.addDockWidget(Qt.RightDockWidgetArea, dock)
         docks = (self._ui.dockWidget_source_files, self._ui.dockWidget_mappings)
-        self.splitDockWidget(*docks, Qt.Horizontal)
+        self.splitDockWidget(*docks, Qt.Orientation.Horizontal)
         width = sum(d.size().width() for d in docks)
-        self.resizeDocks(docks, [0.9 * width, 0.1 * width], Qt.Horizontal)
+        self.resizeDocks(docks, [0.9 * width, 0.1 * width], Qt.Orientation.Horizontal)
         docks = (self._ui.dockWidget_source_files, self._ui.dockWidget_source_tables, self._ui.dockWidget_source_data)
-        self.splitDockWidget(*docks[:-1], Qt.Vertical)
-        self.splitDockWidget(*docks[1:], Qt.Vertical)
+        self.splitDockWidget(*docks[:-1], Qt.Orientation.Vertical)
+        self.splitDockWidget(*docks[1:], Qt.Orientation.Vertical)
         height = sum(d.size().height() for d in docks)
-        self.resizeDocks(docks, [0.1 * height, 0.2 * height, 0.7 * height], Qt.Vertical)
-        self.splitDockWidget(self._ui.dockWidget_source_tables, self._ui.dockWidget_source_options, Qt.Horizontal)
-        self.splitDockWidget(self._ui.dockWidget_mappings, self._ui.dockWidget_mapping_options, Qt.Vertical)
-        self.splitDockWidget(self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec, Qt.Vertical)
+        self.resizeDocks(docks, [0.1 * height, 0.2 * height, 0.7 * height], Qt.Orientation.Vertical)
+        self.splitDockWidget(
+            self._ui.dockWidget_source_tables, self._ui.dockWidget_source_options, Qt.Orientation.Horizontal
+        )
+        self.splitDockWidget(self._ui.dockWidget_mappings, self._ui.dockWidget_mapping_options, Qt.Orientation.Vertical)
+        self.splitDockWidget(
+            self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec, Qt.Orientation.Vertical
+        )
         docks = (self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec)
         height = sum(d.size().height() for d in docks)
-        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Vertical)
+        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Orientation.Vertical)
         qApp.processEvents()  # pylint: disable=undefined-variable
         self.resize(size)
 
@@ -186,7 +190,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     def _get_source_url(self):
         selector = UrlSelector(self._toolbox, parent=self)
-        selector.exec_()
+        selector.exec()
         return selector.url
 
     def _get_source_file_path(self):
@@ -291,9 +295,9 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
                 row = k
         if row is not None:
             connector_list_wg.setCurrentRow(row)
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.button(QDialogButtonBox.Ok).clicked.connect(dialog.accept)
-        button_box.button(QDialogButtonBox.Cancel).clicked.connect(dialog.reject)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Ok).clicked.connect(dialog.accept)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(dialog.reject)
         connector_list_wg.doubleClicked.connect(dialog.accept)
         dialog.layout().addWidget(connector_list_wg)
         dialog.layout().addWidget(button_box)
@@ -301,7 +305,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if not spec_name:
             spec_name = "unnamed specification"
         dialog.setWindowTitle(f"Select connector for {spec_name}")
-        answer = dialog.exec_()
+        answer = dialog.exec()
         if not answer:
             return None
         row = connector_list_wg.currentIndex().row()
