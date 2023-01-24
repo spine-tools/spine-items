@@ -27,11 +27,11 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
 from spine_engine.utils.serialization import serialize_path, deserialize_path
+from spinetoolbox.widgets.custom_qwidgets import SelectDatabaseItemsDialog
 from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from .widgets.purge_dialog import PurgeDialog
 from ..utils import database_label, convert_to_sqlalchemy_url
 
 
@@ -281,7 +281,8 @@ class DataStore(ProjectItem):
         if self._purge_dialog is not None:
             self._purge_dialog.raise_()
             return
-        self._purge_dialog = PurgeDialog(self.name, self._purge_settings, self._toolbox)
+        self._purge_dialog = SelectDatabaseItemsDialog(self._purge_settings, "Purge", self._toolbox)
+        self._purge_dialog.setWindowTitle(f"Purge items from {self.name}")
         self._purge_dialog.accepted.connect(self._purge)
         self._purge_dialog.destroyed.connect(self._clean_up_purge_dialog)
         self._purge_dialog.show()
@@ -289,7 +290,7 @@ class DataStore(ProjectItem):
     @Slot()
     def _purge(self):
         """Purges the database."""
-        self._purge_settings = self._purge_dialog.get_purge_settings()
+        self._purge_settings = self._purge_dialog.get_checked_states()
         db_map = self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, self.name)
         if db_map is None:
             return
