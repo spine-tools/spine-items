@@ -357,7 +357,9 @@ class TestDataConnection(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
-        self.assertEqual(index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self.project.items_dir, "dc", "data.csv"))
+        self.assertEqual(
+            index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self.project.items_dir, "dc", "data.csv")
+        )
 
     def test_deleting_data_file_removes_it_from_dc(self):
         file_a = Path(self.data_connection.data_dir) / "data.dat"

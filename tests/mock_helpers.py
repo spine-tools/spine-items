@@ -16,9 +16,11 @@ Classes and functions that can be shared among unit test modules.
 :date:   30.9.2020
 """
 import os.path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from PySide6.QtGui import QStandardItemModel
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QApplication, QWidget
+
+from spinetoolbox.ui_main import ToolboxUI
 
 
 class MockQWidget(QWidget):
@@ -55,3 +57,70 @@ def mock_finish_project_item_construction(factory, project_item, mock_toolbox):
     project_item.set_properties_ui(properties_widget.ui)
     project_item.set_up()
     return properties_widget
+
+
+def create_toolboxui():
+    """Returns ToolboxUI, where QSettings among others has been mocked."""
+    with patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"), patch(
+        "spinetoolbox.ui_main.QSettings.value"
+    ) as mock_qsettings_value:
+        mock_qsettings_value.side_effect = qsettings_value_side_effect
+        toolbox = ToolboxUI()
+    return toolbox
+
+
+def create_project(toolbox, project_dir):
+    """Creates a project for the given ToolboxUI."""
+    with patch("spinetoolbox.ui_main.ToolboxUI.update_recent_projects"), patch(
+        "spinetoolbox.ui_main.QSettings.setValue"
+    ), patch("spinetoolbox.ui_main.QSettings.sync"):
+        toolbox.create_project(project_dir)
+
+
+def create_toolboxui_with_project(project_dir):
+    """Returns ToolboxUI with a project instance where
+    QSettings among others has been mocked."""
+    with patch("spinetoolbox.ui_main.ToolboxUI.save_project"), patch(
+        "spinetoolbox.ui_main.QSettings.value"
+    ) as mock_qsettings_value, patch("spinetoolbox.ui_main.QSettings.setValue"), patch(
+        "spinetoolbox.ui_main.QSettings.sync"
+    ), patch(
+        "spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"
+    ), patch(
+        "spinetoolbox.ui_main.QScrollArea.setWidget"
+    ):
+        mock_qsettings_value.side_effect = qsettings_value_side_effect
+        toolbox = ToolboxUI()
+        toolbox.create_project(project_dir)
+    return toolbox
+
+
+def clean_up_toolbox(toolbox):
+    """Cleans up toolbox and project."""
+    with patch("spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value:
+        mock_qsettings_value.side_effect = qsettings_value_side_effect
+        if toolbox.project():
+            toolbox.close_project(ask_confirmation=False)
+            QApplication.processEvents()  # Makes sure Design view animations finish properly.
+            mock_qsettings_value.assert_called()  # The call in _shutdown_engine_kernels()
+    toolbox.db_mngr.close_all_sessions()
+    toolbox.db_mngr.clean_up()
+    toolbox.db_mngr = None
+    # Delete undo stack explicitly to prevent emitting certain signals well after ToolboxUI has been destroyed.
+    toolbox.undo_stack.deleteLater()
+    toolbox.deleteLater()
+
+
+# noinspection PyMethodMayBeStatic, PyPep8Naming,SpellCheckingInspection
+def qsettings_value_side_effect(key, defaultValue="0"):
+    """Returns Toolbox app settings values.
+
+    Args:
+        key (str): Key to read
+        defaultValue (Any): Default value if key is missing
+
+    Returns:
+        Any: settings value
+    """
+    # Tip: add return values for specific keys here as needed.
+    return defaultValue

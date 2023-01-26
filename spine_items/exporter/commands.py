@@ -15,10 +15,16 @@ Contains Exporter's undo commands.
 :date:    11.12.2020
 """
 from copy import deepcopy
+from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QUndoCommand
 from spinetoolbox.project_commands import SpineToolboxCommand
 from .mvcmodels.mappings_table_model import MappingsTableModel
+
+
+@unique
+class _ID(IntEnum):
+    CHANGE_POSITION = 1
 
 
 class UpdateOutLabel(SpineToolboxCommand):
@@ -339,11 +345,79 @@ class SetMappingPositions(QUndoCommand):
         self._positions = positions
         self._previous_positions = previous_positions
 
+    @property
+    def mapping_editor_table_model(self):
+        return self._mapping_editor_table_model
+
+    @property
+    def mapping_name(self):
+        return self._mapping_name
+
+    @property
+    def positions(self):
+        return self._positions
+
+    @property
+    def previous_positions(self):
+        return self._previous_positions
+
+    def id(self):
+        return int(_ID.CHANGE_POSITION)
+
     def redo(self):
         self._mapping_editor_table_model.set_positions(self._positions, self._mapping_name)
 
     def undo(self):
         self._mapping_editor_table_model.set_positions(self._previous_positions, self._mapping_name)
+
+
+class ClearFixedTableName(QUndoCommand):
+    def __init__(self, editor, is_fixed_table_checked, previous_fixed_table_name, mapping_index, mapping_root):
+        """
+        Args:
+            editor (SpecificationEditor): specification editor window
+            is_fixed_table_checked (bool): state of the fixed table name checkbox before clearing
+            previous_fixed_table_name (str): fixed table name before clearing
+            mapping_index (QModelIndex): mapping's row index
+            mapping_root (Mapping): mapping root
+        """
+        super().__init__("change mapping item's position")
+        self._editor = editor
+        self._is_fixed_table_checked = is_fixed_table_checked
+        self._previous_fixed_table_name = previous_fixed_table_name
+        self._mapping_editor_table_model = None
+        self._mapping_name = None
+        self._positions = None
+        self._previous_positions = None
+        self._mapping_index = mapping_index
+        self._mapping_root = mapping_root
+        self._previous_mapping_root = self._mapping_index.data(MappingsTableModel.MAPPING_ROOT_ROLE)
+
+    def id(self):
+        return int(_ID.CHANGE_POSITION)
+
+    def mergeWith(self, other):
+        if self._mapping_editor_table_model is not None:
+            return False
+        self._mapping_editor_table_model = other.mapping_editor_table_model
+        self._mapping_name = other.mapping_name
+        self._positions = other.positions
+        self._previous_positions = other.previous_positions
+        return True
+
+    def redo(self):
+        self._editor.clear_fixed_table_name()
+        self._mapping_index.model().setData(
+            self._mapping_index, deepcopy(self._mapping_root), MappingsTableModel.MAPPING_ROOT_ROLE
+        )
+
+    def undo(self):
+        self._mapping_index.model().setData(
+            self._mapping_index, deepcopy(self._previous_mapping_root), MappingsTableModel.MAPPING_ROOT_ROLE
+        )
+        self._editor.enable_fixed_table_name(self._is_fixed_table_checked, self._previous_fixed_table_name)
+        if self._mapping_editor_table_model is not None:
+            self._mapping_editor_table_model.set_positions(self._previous_positions, self._mapping_name)
 
 
 class SetMappingProperty(QUndoCommand):
