@@ -58,6 +58,19 @@ class TestMappingTableModel(unittest.TestCase):
         self.assertTrue(model.setData(model.index(0, 1), "23"))
         self.assertEqual(model.index(0, 1).data(), "23")
 
+    def test_setData_prevents_duplicate_table_name_positions(self):
+        model = MappingEditorTableModel("mapping", object_export(Position.table_name, 0), self._undo_stack, MagicMock())
+        self.assertEqual(model.rowCount(), 2)
+        self.assertEqual(model.index(0, 0).data(), "Object classes")
+        self.assertEqual(model.index(0, 1).data(), "table name")
+        self.assertEqual(model.index(1, 0).data(), "Objects")
+        self.assertEqual(model.index(1, 1).data(), "1")
+        model.setData(model.index(1, 1), "table name")
+        self.assertEqual(model.index(0, 0).data(), "Object classes")
+        self.assertEqual(model.index(0, 1).data(), "1")
+        self.assertEqual(model.index(1, 0).data(), "Objects")
+        self.assertEqual(model.index(1, 1).data(), "table name")
+
 
 if __name__ == "__main__":
     unittest.main()

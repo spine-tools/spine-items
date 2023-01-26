@@ -57,6 +57,7 @@ from spinetoolbox.project_item.specification_editor_window import SpecificationE
 from .preview_updater import PreviewUpdater
 from ..commands import (
     ChangeWriteOrder,
+    ClearFixedTableName,
     CompactMapping,
     DisableAllMappings,
     EnableAllMappings,
@@ -153,6 +154,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         )
         self._mappings_table_model.write_order_changed.connect(lambda tr=False: self._expect_current_mapping_change(tr))
         self._mapping_editor_model = MappingEditorTableModel("", None, self._undo_stack, self, self)
+        self._mapping_editor_model.dataChanged.connect(self._validate_fixed_table_name)
         self._sort_mappings_table_model = MappingsTableProxy(self)
         self._sort_mappings_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
         self._sort_mappings_table_model.setSourceModel(self._mappings_table_model)
@@ -381,10 +383,13 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_parameter_dimensions_silently(current.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
         else:
             self._set_parameter_dimensions_silently(0)
+        root_mapping = current.data(MappingsTableModel.MAPPING_ROOT_ROLE)
         self._set_use_fixed_table_name_flag_silently(current.data(MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE))
         self._set_fixed_table_name_silently(current.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE))
+        if any(m.position == Position.table_name for m in root_mapping.flatten()):
+            self._ui.fix_table_name_check_box.setEnabled(False)
+            self._ui.fix_table_name_line_edit.setEnabled(False)
         self._set_group_fn_silently(group_function_display_from_name(current.data(MappingsTableModel.GROUP_FN_ROLE)))
-        root_mapping = current.data(MappingsTableModel.MAPPING_ROOT_ROLE)
         mapping_name = self._mappings_table_model.index(current.row(), 0).data()
         self._mapping_editor_model.set_mapping(mapping_name, root_mapping)
         self._enable_relationship_controls()
@@ -868,6 +873,71 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.fix_table_name_line_edit.editingFinished.disconnect(self._change_fix_table_name)
         self._ui.fix_table_name_line_edit.setText(name)
         self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
+
+    @Slot(QModelIndex, QModelIndex, list)
+    def _validate_fixed_table_name(self, top_left, bottom_right, roles):
+        """Checks if any mapping position is set to Table name and disables fixed table name accordingly.
+
+        Args:
+            top_left (QModelIndex): top left of changed mapping table model index
+            bottom_right (QModelIndex): bottom right of changed mapping table model index
+            roles (list of int): model roles
+        """
+        if (
+            Qt.ItemDataRole.DisplayRole not in roles
+            or top_left.column() > EditorColumn.POSITION
+            or bottom_right.column() < EditorColumn.POSITION
+        ):
+            return
+        for row in range(top_left.row(), bottom_right.row() + 1):
+            mapping_item = self._mapping_editor_model.index(row, EditorColumn.POSITION).data(
+                MappingEditorTableModel.MAPPING_ITEM_ROLE
+            )
+            if mapping_item.position == Position.table_name:
+                if self._ui.fix_table_name_check_box.isChecked():
+                    index = self._ui.mappings_table.currentIndex()
+                    mapping_root = index.data(MappingsTableModel.MAPPING_ROOT_ROLE)
+                    mapping_root = deepcopy(mapping_root)
+                    mapping_root = _remove_fixed_table_name(mapping_root)
+                    command = ClearFixedTableName(
+                        self,
+                        self._ui.fix_table_name_check_box.isChecked(),
+                        self._ui.fix_table_name_line_edit.text(),
+                        index,
+                        mapping_root,
+                    )
+                    self._undo_stack.push(command)
+                else:
+                    self._ui.fix_table_name_check_box.setEnabled(False)
+                    self._ui.fix_table_name_line_edit.setEnabled(False)
+                return
+        for row in range(top_left.model().rowCount()):
+            mapping_item = self._mapping_editor_model.index(row, EditorColumn.POSITION).data(
+                MappingEditorTableModel.MAPPING_ITEM_ROLE
+            )
+            if mapping_item.position == Position.table_name:
+                self._ui.fix_table_name_check_box.setEnabled(False)
+                self._ui.fix_table_name_line_edit.setEnabled(False)
+                return
+        self._ui.fix_table_name_check_box.setEnabled(True)
+
+    def clear_fixed_table_name(self):
+        """Clears and disable fixed table name widgets."""
+        self._set_fixed_table_name_silently("")
+        self._set_use_fixed_table_name_flag_silently(False)
+        self._ui.fix_table_name_check_box.setEnabled(False)
+
+    def enable_fixed_table_name(self, checked, name):
+        """Enables and sets fixed table name widgets.
+
+        Args:
+            checked (bool): fixed table name checkbox state
+            name (str): fixed table name
+        """
+        self._set_use_fixed_table_name_flag_silently(checked)
+        self._ui.fix_table_name_check_box.setEnabled(True)
+        self._set_fixed_table_name_silently(name)
+        self._ui.fix_table_name_line_edit.setEnabled(True)
 
     @Slot(str)
     def _change_root_mapping_group_fn(self, text):

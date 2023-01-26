@@ -113,11 +113,20 @@ class MappingEditorTableModel(QAbstractTableModel):
         if self._mappings and isinstance(self._mappings[0], FixedValueMapping):
             # Pop the first element if it's a FixedValueMapping. We don't want to have the fixed table name here.
             self._mappings.pop(0)
-        self._reset_colors()
+        self._reset_colors(emit_data_changed=False)
 
-    def _reset_colors(self):
+    def _reset_colors(self, emit_data_changed=True):
+        """Recalculates position column background colors.
+
+        Args:
+            emit_data_changed (boo): if True emits relevant dataChanged signal
+        """
         positions = [m.position for m in self._mappings if isinstance(m.position, int)]
         self._mapping_colors = {p: color_from_index(i, len(positions)).lighter() for i, p in enumerate(positions)}
+        if emit_data_changed:
+            top_left = self.index(0, EditorColumn.POSITION)
+            bottom_right = self.index(len(self._mappings), EditorColumn.POSITION)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
 
     def mapping_colors(self):
         return self._mapping_colors
@@ -316,9 +325,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         pivot_top = top
         bottom = len(self._mappings)
         pivot_bottom = bottom
-        for row in range(len(self._mappings)):
-            mapping = self._mappings[row]
-            position = positions[row]
+        for row, (mapping, position) in enumerate(zip(self._mappings, positions)):
             if position != mapping.position:
                 top = row
                 bottom = min(bottom, row)
@@ -431,7 +438,7 @@ class MappingEditorTableModel(QAbstractTableModel):
             item[1].position = column
         top_left = self.index(0, EditorColumn.POSITION)
         bottom_right = self.index(self.rowCount() - 1, EditorColumn.POSITION)
-        self.dataChanged.emit(top_left, bottom_right, Qt.ItemDataRole.DisplayRole)
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole])
         self._reset_colors()
 
 
@@ -518,6 +525,13 @@ def _propose_positions(mappings, target_index, new_position):
     if isinstance(new_position, int):
         _insert_into_position(positions, target_index, new_position)
     else:
+        if new_position == Position.table_name:
+            try:
+                other_table_name_index = positions.index(Position.table_name)
+            except ValueError:
+                pass
+            else:
+                positions[other_table_name_index] = positions[target_index]
         positions[target_index] = new_position
     return positions
 
