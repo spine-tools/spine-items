@@ -28,5 +28,5 @@ def filter_config_path(data_dir):
     Returns:
         str: a path to the config file
     """
-    file_name = "filter_config.json"
+    file_name = ".filter_config.json"
     return str(Path(data_dir, file_name))
