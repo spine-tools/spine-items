@@ -251,12 +251,13 @@ def _emit_check_box_option_changed(state, option_key, options_widget):
         option_key (str): option's key
         options_widget (OptionsWidget): options widget
     """
+    checked = state == Qt.CheckState.Checked.value
     if options_widget.undo_enabled:
         previous_value = options_widget.connector.get_current_option_value(option_key)
         options_widget.undo_stack.push(
-            SetConnectorOption(options_widget.current_source_table, option_key, options_widget, state, previous_value)
+            SetConnectorOption(options_widget.current_source_table, option_key, options_widget, checked, previous_value)
         )
-    options = {option_key: state == Qt.CheckState.Checked}
+    options = {option_key: checked}
     options_widget.options_changed.emit(options)
 
 
