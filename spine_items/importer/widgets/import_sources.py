@@ -104,10 +104,6 @@ class ImportSources(QObject):
         self._source_data_model.row_types_updated.connect(self._new_row_types)
         self._source_data_model.polish_mapping_requested.connect(self._polish_mappings_in_list)
 
-    @property
-    def checked_tables(self):
-        return self._source_table_model.checked_table_names()
-
     def set_connector(self, connector, mapping):
         """Sets connector.
 
@@ -287,9 +283,6 @@ class ImportSources(QObject):
         Args:
             tables (dict): updated source tables
         """
-        selection_model = self._ui.source_list.selectionModel()
-        current_row = selection_model.currentIndex().row()
-        selection_model.setCurrentIndex(QModelIndex(), QItemSelectionModel.ClearAndSelect)
         is_file_less = self.parent().is_file_less()
         if is_file_less:
             self._mappings_model.add_empty_row()
@@ -302,6 +295,9 @@ class ImportSources(QObject):
             if t_name not in table_names:
                 self._mappings_model.append_new_table_with_mapping(t_name, t_mapping)
         # reselect current table if existing otherwise select first table
+        selection_model = self._ui.source_list.selectionModel()
+        current_row = selection_model.currentIndex().row()
+        selection_model.setCurrentIndex(QModelIndex(), QItemSelectionModel.ClearAndSelect)
         if current_row >= 0:
             self._select_table_row(min(current_row, self._mappings_model.rowCount() - 1))
         else:
@@ -309,18 +305,19 @@ class ImportSources(QObject):
 
     @Slot(list, list)
     def _update_source_data(self, data, header):
-        if not data:
+        if not data and not header:
             return
-        try:
-            data = _sanitize_data(data, header)
-        except RuntimeError as error:
-            self.parent().show_error(str(error))
-            return
-        if not header:
-            header = list(range(1, len(data[0]) + 1))
+        if data:
+            try:
+                data = _sanitize_data(data, header)
+            except RuntimeError as error:
+                self.parent().show_error(str(error))
+                return
+            self._source_data_model.append_rows(data)
+            if not header:
+                header = list(range(1, len(data[0]) + 1))
         # Set header data before resetting model because the header needs to be there for some slots...
         self._source_data_model.set_horizontal_header_labels(header)
-        self._source_data_model.append_rows(data)
         table_name = self._connector.current_table
         types = self._connector.table_types.get(table_name, {})
         row_types = self._connector.table_row_types.get(table_name, {})
