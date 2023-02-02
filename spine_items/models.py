@@ -12,7 +12,7 @@
 """
 Common models.
 Contains a generic File list model and an Item for that model.
-Used by the Importer, Gimlet and Tool project items but this may be handy for other project items
+Used by the Importer and Tool project items but this may be handy for other project items
 as well.
 
 :authors: P. Savolainen (VTT), P. Vennström (VTT), A. Soininen (VTT)
@@ -193,21 +193,6 @@ class CheckableFileListModel(FileListModel):
                     if resource.hasfilepath:
                         return self.index(row, 0, self.index(pack_row, 0))
         return QModelIndex()
-
-
-class GimletCommandLineArgsModel(CommandLineArgsModel):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.invisibleRootItem().appendRow(NewCommandLineArgItem())
-
-    def reset_model(self, args):
-        self._args = args
-        self._reset_root(
-            self.invisibleRootItem(), args, dict(editable=True, selectable=True, drag_enabled=True), has_empty_row=True
-        )
-
-    def canDropMimeData(self, data, drop_action, row, column, parent):
-        return row >= 0
 
 
 class ToolCommandLineArgsModel(CommandLineArgsModel):

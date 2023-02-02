@@ -61,7 +61,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         return ItemInfo.item_type()
 
     def stop_execution(self):
-        """Stops executing this Gimlet."""
+        """Stops executing this Importer."""
         super().stop_execution()
         if self._process is not None:
             self._process.terminate()
