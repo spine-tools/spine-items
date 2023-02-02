@@ -15,22 +15,28 @@ Contains Exporter's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:    11.12.2020
 """
+import json
+import os
 from json import dump
 from pathlib import Path
 
+from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.project_item.project_item_resource import file_resource_in_pack
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spinedb_api import clear_filter_configs
-from spine_items.utils import Database, EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX, generate_filter_subdirectory_name
+from ..utils import generate_filter_subdirectory_name
+from .utils import Database
+from spinedb_api.spine_io import gdx_utils
+from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 from .do_work import do_work
 from .output_channel import OutputChannel
-from ..exporter_executable_item_base import ExporterExecutableItemBase
 from .item_info import ItemInfo
 from .specification import OutputFormat
 
 
-class ExecutableItem(ExporterExecutableItemBase):
+class ExecutableItem(ExecutableItemBase):
     def __init__(
         self, name, specification, output_channels, output_time_stamps, cancel_on_error, gams_path, project_dir, logger
     ):
@@ -45,7 +51,13 @@ class ExecutableItem(ExporterExecutableItemBase):
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
-        super().__init__(name, output_time_stamps, cancel_on_error, gams_path, project_dir, logger)
+        super().__init__(name, project_dir, logger)
+        self._output_time_stamps = output_time_stamps
+        self._cancel_on_error = cancel_on_error
+        self._gams_path = gams_path
+        self._forks = dict()
+        self._result_files = None
+        self._process = None
         self._specification = specification
         self._output_channels = output_channels
 
@@ -98,6 +110,13 @@ class ExecutableItem(ExporterExecutableItemBase):
             channel.in_label = resource.label
         return channel
 
+    def stop_execution(self):
+        """Stops executing this item."""
+        super().stop_execution()
+        if self._process is not None:
+            self._process.terminate()
+            self._process = None
+
     def execute(self, forward_resources, backward_resources, lock):
         """See base class."""
         status = super().execute(forward_resources, backward_resources, lock)
@@ -148,13 +167,45 @@ class ExecutableItem(ExporterExecutableItemBase):
         self._process = None
         return ItemExecutionFinishState.SUCCESS if result[0] else ItemExecutionFinishState.FAILURE
 
+    def exclude_execution(self, forward_resources, backward_resources, lock):
+        """See base class."""
+        manifest_file_name = (
+            EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")
+        ) + ".json"
+        manifest_file_path = Path(self._data_dir, manifest_file_name)
+        if not manifest_file_path.exists():
+            return
+        with open(Path(self._data_dir, manifest_file_name)) as manifest_file:
+            manifest = json.load(manifest_file)
+        self._result_files = {label: set(files) for label, files in manifest.items()}
+
+    def _output_resources_forward(self):
+        """See base class."""
+        if self._result_files is None:
+            return []
+        resources = list()
+        for label, output_files in self._result_files.items():
+            resources += [file_resource_in_pack(self.name, label, str(Path(self._data_dir, f))) for f in output_files]
+        return resources
+
+    def _resolve_gams_system_directory(self):
+        """Returns GAMS system path from Toolbox settings or None if GAMS default is to be used.
+
+        Returns:
+            str: GAMS system path
+        """
+        path = self._gams_path
+        if not path:
+            path = gdx_utils.find_gams_directory()
+        if path is not None and os.path.isfile(path):
+            path = os.path.dirname(path)
+        return path
+
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         specification_name = item_dict["specification"]
-        specification = ExporterExecutableItemBase._get_specification(
-            name, ItemInfo.item_type(), specification_name, specifications, logger
-        )
+        specification = cls._get_specification(name, ItemInfo.item_type(), specification_name, specifications, logger)
         output_channels = [OutputChannel.from_dict(d) for d in item_dict.get("output_labels", [])]
         for db_dict in item_dict.get("databases", []):
             # legacy

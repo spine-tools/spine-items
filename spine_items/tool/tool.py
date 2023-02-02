@@ -534,7 +534,7 @@ class Tool(DBWriterItemBase):
                 f"Link established. Tool <b>{self.name}</b> will look for input "
                 f"files from <b>{source_item.name}</b>'s references and data directory."
             )
-        elif source_item.item_type() in ("GdxExporter", "Exporter"):
+        elif source_item.item_type() == "Exporter":
             self._logger.msg.emit(
                 f"Link established. The file exported by <b>{source_item.name}</b> are now "
                 f"available in <b>{self.name}</b>."

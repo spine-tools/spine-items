@@ -15,9 +15,11 @@ Contains utilities to manage export manifest files.
 :authors: A. Soininen (VTT)
 :date:    5.1.2022
 """
+import json
+from itertools import dropwhile
 from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
-from spine_items.utils import collect_execution_manifests
+from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 
 
 def exported_files_as_resources(item_name, exported_files, data_dir, output_channels):
@@ -32,11 +34,11 @@ def exported_files_as_resources(item_name, exported_files, data_dir, output_chan
     Returns:
         tuple: output resources and updated exported files cache
     """
-    manifests = collect_execution_manifests(data_dir)
+    manifests = _collect_execution_manifests(data_dir)
     if manifests is not None:
         out_labels = {c.out_label for c in output_channels}
         manifests = {
-            label: files for label, files in collect_execution_manifests(data_dir).items() if label in out_labels
+            label: files for label, files in _collect_execution_manifests(data_dir).items() if label in out_labels
         }
         exported_files = {label: [str(Path(data_dir, f)) for f in files] for label, files in manifests.items()}
     resources = list()
@@ -53,3 +55,39 @@ def exported_files_as_resources(item_name, exported_files, data_dir, output_chan
             if channel.out_label:
                 resources.append(transient_file_resource(item_name, channel.out_label))
     return resources, exported_files
+
+
+def _collect_execution_manifests(data_dir):
+    """Collects output file names from export manifest files written by exporter's executable item.
+
+    Args:
+        data_dir (str): item's data directory
+
+    Returns:
+        dict: mapping from output label to list of file paths, or None if no manifest files were found
+    """
+    manifests = None
+    for path in Path(data_dir).iterdir():
+        if path.name.startswith(EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX) and path.suffix == ".json":
+            with open(path) as manifest_file:
+                manifest = json.load(manifest_file)
+            for out_file_name, paths in manifest.items():
+                relative_paths = list()
+                for file_path in paths:
+                    p = Path(file_path)
+                    if p.is_absolute():
+                        # Legacy manifests had absolute paths
+                        try:
+                            relative_paths.append(p.relative_to(data_dir))
+                        except ValueError:
+                            # Project may have been moved to another directory (or system)
+                            # so data_dir is differs from manifest file content.
+                            # Try resolving the relative path manually.
+                            parts = tuple(dropwhile(lambda part: part != "output", p.parts))
+                            relative_paths.append(str(Path(*parts)))
+                    else:
+                        relative_paths.append(file_path)
+                if manifests is None:
+                    manifests = dict()
+                manifests.setdefault(out_file_name, list()).extend(paths)
+    return manifests

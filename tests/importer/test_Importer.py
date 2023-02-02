@@ -114,11 +114,6 @@ class TestImporter(unittest.TestCase):
             "Link established. Interaction between a "
             "<b>Data Transformer</b> and a <b>Importer</b> has not been implemented yet."
         )
-        source_item.item_type = MagicMock(return_value="GdxExporter")
-        self.importer.notify_destination(source_item)
-        self.importer.logger.msg.emit.assert_called_with(
-            "Link established. You can define mappings on data from <b>source name</b> using <b>I</b>."
-        )
         source_item.item_type = MagicMock(return_value="Exporter")
         self.importer.notify_destination(source_item)
         self.importer.logger.msg.emit.assert_called_with(
