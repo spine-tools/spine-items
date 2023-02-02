@@ -138,7 +138,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         Args:
             toolbox (ToolboxUI): Toolbox main window
-            specification (ProjectItemSpecification, optional): exporter specification
+            specification (Specification, optional): exporter specification
             item (ProjectItem, optional): invoking project item, if window was opened from its properties tab
             url_model (QAbstractListModel): model that provides URLs of connected databases
         """
@@ -386,7 +386,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         root_mapping = current.data(MappingsTableModel.MAPPING_ROOT_ROLE)
         self._set_use_fixed_table_name_flag_silently(current.data(MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE))
         self._set_fixed_table_name_silently(current.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE))
-        if any(m.position == Position.table_name for m in root_mapping.flatten()):
+        if any(
+            m.position == Position.table_name for m in root_mapping.flatten() if not isinstance(m, FixedValueMapping)
+        ):
             self._ui.fix_table_name_check_box.setEnabled(False)
             self._ui.fix_table_name_line_edit.setEnabled(False)
         self._set_group_fn_silently(group_function_display_from_name(current.data(MappingsTableModel.GROUP_FN_ROLE)))
