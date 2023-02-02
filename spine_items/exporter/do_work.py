@@ -105,7 +105,10 @@ def do_work(
                         )
                     logger.msg_success.emit(f"Wrote multiple files:<br>{'<br>'.join(anchors)}")
                 else:
-                    file_anchor = f"<a style='color:#BB99FF;' title='{file}' href='file:///{file}'>{file.name}</a>"
+                    only_file = Path(next(iter(files)))
+                    file_anchor = (
+                        f"<a style='color:#BB99FF;' title='{only_file}' href='file:///{only_file}'>{only_file.name}</a>"
+                    )
                     logger.msg_success.emit(f"Wrote {file_anchor}")
                 if filter_id:
                     write_filter_id_file(filter_id, Path(out_path).parent)
