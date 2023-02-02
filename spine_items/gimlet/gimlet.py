@@ -361,7 +361,7 @@ class Gimlet(ProjectItem):
         if source_item.item_type() in ["Data Store", "Data Transformer", "Data Connection", "Tool", "Gimlet"]:
             self._logger.msg.emit("Link established")
             return
-        if source_item.item_type() in ("GdxExporter", "Exporter"):
+        if source_item.item_type() == "Exporter":
             self._logger.msg.emit(
                 f"Link established. Files exported by <b>{source_item.name}</b> are "
                 f"now available in <b>{self.name}</b>."

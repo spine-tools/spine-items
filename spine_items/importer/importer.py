@@ -307,7 +307,7 @@ class Importer(DBWriterItemBase):
 
     def notify_destination(self, source_item):
         """See base class."""
-        if source_item.item_type() in ("Data Connection", "Tool", "Gimlet", "GdxExporter", "Exporter"):
+        if source_item.item_type() in ("Data Connection", "Tool", "Gimlet", "Exporter"):
             self._logger.msg.emit(
                 "Link established. You can define mappings on data from "
                 f"<b>{source_item.name}</b> using <b>{self.name}</b>."

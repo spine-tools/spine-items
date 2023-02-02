@@ -33,7 +33,7 @@ class UpdateOutLabel(SpineToolboxCommand):
     def __init__(self, exporter, out_label, in_label, previous_label):
         """
         Args:
-            exporter (ExporterBase): exporter
+            exporter (Exporter): exporter
             out_label (str): new output resource label
             in_label (str): associated input resource label
             previous_label (str): previous output resource label
@@ -506,3 +506,24 @@ class SetExportFormat(QUndoCommand):
 
     def undo(self):
         self._specification_editor.set_export_format_silently(self._previous_format)
+
+
+class UpdateOutputTimeStampsFlag(SpineToolboxCommand):
+    """Command to set exporter's output directory time stamps flag."""
+
+    def __init__(self, exporter, value):
+        """
+        Args:
+            exporter (Exporter): exporter item
+            value (bool): flag's new value
+        """
+        super().__init__()
+        self.setText(f"toggle output time stamps setting of {exporter.name}")
+        self._exporter = exporter
+        self._value = value
+
+    def redo(self):
+        self._exporter.set_output_time_stamps_flag(self._value)
+
+    def undo(self):
+        self._exporter.set_output_time_stamps_flag(not self._value)

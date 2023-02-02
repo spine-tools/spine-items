@@ -15,7 +15,11 @@ Exporter's execute kernel (do_work), as target for a multiprocess.Process
 :authors: A. Soininen (VTT)
 :date:    14.12.2020
 """
+import os
+from datetime import datetime
 from pathlib import Path
+from time import time
+
 from spinedb_api.spine_io.exporters.writer import write, WriterException
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
 from spinedb_api.spine_io.exporters.excel_writer import ExcelWriter
@@ -23,7 +27,6 @@ from spinedb_api.spine_io.exporters.gdx_writer import GdxWriter
 from spinedb_api.spine_io.exporters.sql_writer import SqlWriter
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from spine_engine.utils.helpers import write_filter_id_file
-from spine_items.utils import subdirectory_for_fork
 from .specification import Specification, OutputFormat
 
 
@@ -43,6 +46,7 @@ def do_work(
     Exports databases using given specification as export mapping.
 
     Args:
+        process (Process): unused
         specification (dict): export specification dictionary
         output_time_stamps (bool): if True, puts output files into time stamped subdirectories
         cancel_on_error (bool): if True, bails out on non-fatal errors
@@ -61,7 +65,7 @@ def do_work(
     written_files = dict()
     for url, output_label in databases.items():
         output_file_name = _add_extension(output_label, specification.output_format)
-        out_path = subdirectory_for_fork(output_file_name, out_dir, output_time_stamps, filter_subdirectory)
+        out_path = _subdirectory_for_fork(output_file_name, out_dir, output_time_stamps, filter_subdirectory)
         try:
             database_map = DatabaseMapping(url)
         except SpineDBAPIError as error:
@@ -156,3 +160,31 @@ def _add_extension(label, file_format):
     if name and label_extension.lower() in extensions:
         return label
     return label + "." + extensions[0]
+
+
+def _subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, filter_id_hash):
+    """
+    Creates scenario/tool based output directory for forked workflow.
+
+    Args:
+        output_file_name (str): file name
+        data_dir (str): project item's data directory
+        output_time_stamps (bool): True if time stamp data should be included in the output path
+        filter_id_hash (str): hashed filter id
+
+    Returns:
+        str: absolute output path
+    """
+    if output_time_stamps:
+        stamp = datetime.fromtimestamp(time())
+        time_stamp = "run@" + stamp.isoformat(timespec="seconds").replace(":", ".")
+    else:
+        time_stamp = ""
+    if filter_id_hash:
+        if time_stamp:
+            path = os.path.join(data_dir, filter_id_hash + "_" + time_stamp, output_file_name)
+        else:
+            path = os.path.join(data_dir, filter_id_hash, output_file_name)
+    else:
+        path = os.path.join(data_dir, time_stamp, output_file_name)
+    return path

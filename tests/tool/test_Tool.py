@@ -115,11 +115,6 @@ class TestTool(unittest.TestCase):
         tool.logger.msg.emit.assert_called_with(
             "Link established. Data Store <b>source name</b> url will " "be passed to Tool <b>T</b> when executing."
         )
-        source_item.item_type = mock.MagicMock(return_value="GdxExporter")
-        tool.notify_destination(source_item)
-        tool.logger.msg.emit.assert_called_with(
-            "Link established. The file exported by <b>source name</b> are now available in <b>T</b>."
-        )
         source_item.item_type = mock.MagicMock(return_value="Exporter")
         tool.notify_destination(source_item)
         tool.logger.msg.emit.assert_called_with(

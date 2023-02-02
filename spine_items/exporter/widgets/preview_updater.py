@@ -23,7 +23,7 @@ from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping, SpineDBVersionError, SpineDBAPIError
 from spinetoolbox.helpers import busy_effect
-from ...models import FullUrlListModel
+from ..mvcmodels.full_url_list_model import FullUrlListModel
 from ..mvcmodels.mappings_table_model import MappingsTableModel
 from ..mvcmodels.preview_tree_model import PreviewTreeModel
 from ..mvcmodels.preview_table_model import PreviewTableModel

@@ -25,13 +25,14 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
 from .export_manifest import exported_files_as_resources
-from ..utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
-from ..item_base import ExporterBase
+from ..commands import UpdateCancelOnErrorCommand
+from .mvcmodels.full_url_list_model import FullUrlListModel
 from .widgets.export_list_item import ExportListItem
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
-from .commands import UpdateOutLabel
+from .commands import UpdateOutLabel, UpdateOutputTimeStampsFlag
 from .output_channel import OutputChannel
+from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 
 
 @dataclass
@@ -43,7 +44,7 @@ class _Notifications:
     missing_specification: bool = False
 
 
-class Exporter(ExporterBase):
+class Exporter(ProjectItem):
     """Exporter project item."""
 
     def __init__(
@@ -72,7 +73,14 @@ class Exporter(ExporterBase):
             output_time_stamps (bool): True to include time stamps to output directory names
             cancel_on_error (bool): True to fail execution in case of non-fatal errors
         """
-        super().__init__(name, description, x, y, toolbox, project, output_time_stamps, cancel_on_error)
+        super().__init__(name, description, x, y, project)
+        self._toolbox = toolbox
+        self._append_output_time_stamps = output_time_stamps
+        self._cancel_on_error = cancel_on_error
+        self._output_filenames = dict()
+        self._export_list_items = dict()
+        self._full_url_model = FullUrlListModel()
+        self._exported_files = None
         self._notifications = _Notifications()
         self._output_channels = []
         if output_channels is None:
@@ -99,6 +107,39 @@ class Exporter(ExporterBase):
     @property
     def executable_class(self):
         return ExecutableItem
+
+    def handle_execution_successful(self, execution_direction, engine_state):
+        """See base class."""
+        if execution_direction != "FORWARD":
+            return
+        self._resources_to_successors_changed()
+
+    def full_url_model(self):
+        """
+        Returns the full URL model held by the exporter.
+
+        Returns:
+            FullUrlListModel: full URL model
+        """
+        return self._full_url_model
+
+    @Slot(int)
+    def _cancel_on_error_option_changed(self, checkbox_state):
+        """Handles changes to the Cancel export on error option."""
+        cancel = checkbox_state == Qt.CheckState.Checked.value
+        if self._cancel_on_error == cancel:
+            return
+        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel))
+
+    def set_cancel_on_error(self, cancel):
+        """Sets the Cancel export on error option."""
+        self._cancel_on_error = cancel
+        if not self._active:
+            return
+        # This does not trigger the stateChanged signal.
+        self._properties_ui.cancel_on_error_check_box.setCheckState(
+            Qt.CheckState.Checked if cancel else Qt.CheckState.Unchecked
+        )
 
     def _update_properties_tab(self):
         """Updates the labels list in the properties tab."""
@@ -231,6 +272,8 @@ class Exporter(ExporterBase):
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()
+        serialized["output_time_stamps"] = self._append_output_time_stamps
+        serialized["cancel_on_error"] = self._cancel_on_error
         serialized["output_labels"] = sorted([c.to_dict() for c in self._output_channels], key=itemgetter("in_label"))
         serialized["specification"] = self._specification_name
         return serialized
@@ -297,9 +340,35 @@ class Exporter(ExporterBase):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
+        s[self._properties_ui.output_time_stamps_check_box.stateChanged] = self._change_output_time_stamps_flag
+        s[self._properties_ui.cancel_on_error_check_box.stateChanged] = self._cancel_on_error_option_changed
         s[self._properties_ui.specification_button.clicked] = self.show_specification_window
         s[self._properties_ui.specification_combo_box.textActivated] = self._change_specification
         return s
+
+    @Slot(int)
+    def _change_output_time_stamps_flag(self, checkbox_state):
+        """
+        Pushes a command that changes the output time stamps flag value.
+
+        Args:
+            checkbox_state (int): setting's checkbox state on properties tab
+        """
+        flag = checkbox_state == Qt.CheckState.Checked.value
+        if flag == self._append_output_time_stamps:
+            return
+        self._toolbox.undo_stack.push(UpdateOutputTimeStampsFlag(self, flag))
+
+    def set_output_time_stamps_flag(self, flag):
+        """
+        Sets the output time stamps flag.
+
+        Args:
+            flag (bool): flag value
+        """
+        self._append_output_time_stamps = flag
+        if self._active:
+            self._properties_ui.output_time_stamps_check_box.setChecked(flag)
 
     def _check_missing_specification(self):
         """Checks specification's status."""
@@ -352,8 +421,12 @@ class Exporter(ExporterBase):
 
     def restore_selections(self):
         """See base class."""
-        super().restore_selections()
+        self._update_properties_tab()
         if self._specification_name:
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
         else:
             self._properties_ui.specification_combo_box.setCurrentIndex(-1)
+
+    def tear_down(self):
+        super().tear_down()
+        self._full_url_model.deleteLater()

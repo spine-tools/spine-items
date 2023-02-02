@@ -413,12 +413,6 @@ class TestDataConnection(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="Data Store")
         self.data_connection.notify_destination(source_item)
         self.data_connection.logger.msg.emit.assert_called_with("Link established")
-        source_item.item_type = MagicMock(return_value="GdxExporter")
-        self.data_connection.notify_destination(source_item)
-        self.data_connection.logger.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a <b>GdxExporter</b> and"
-            " a <b>Data Connection</b> has not been implemented yet."
-        )
         source_item.item_type = MagicMock(return_value="Tool")
         self.data_connection.notify_destination(source_item)
         self.data_connection.logger.msg.emit.assert_called_with(
