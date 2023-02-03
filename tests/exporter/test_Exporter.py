@@ -95,11 +95,6 @@ class TestExporter(unittest.TestCase):
         self._exporter.logger.msg_warning.emit.assert_called_with(
             'Link established. Interaction between a <b>Exporter</b> and a <b>Exporter</b> has not been implemented yet.'
         )
-        source_item.item_type = MagicMock(return_value="Gimlet")
-        self._exporter.notify_destination(source_item)
-        self._exporter.logger.msg_warning.emit.assert_called_with(
-            'Link established. Interaction between a <b>Gimlet</b> and a <b>Exporter</b> has not been implemented yet.'
-        )
         source_item.item_type = MagicMock(return_value="Importer")
         self._exporter.notify_destination(source_item)
         self._exporter.logger.msg_warning.emit.assert_called_with(

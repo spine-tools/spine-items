@@ -541,11 +541,6 @@ class Tool(DBWriterItemBase):
             )
         elif source_item.item_type() in ["Data Transformer", "Tool"]:
             self._logger.msg.emit("Link established")
-        elif source_item.item_type() == "Gimlet":
-            self._logger.msg.emit(
-                f"Link established. Tool <b>{self.name}</b> will look for input "
-                f"files from <b>{source_item.name}</b>."
-            )
         else:
             super().notify_destination(source_item)
 
