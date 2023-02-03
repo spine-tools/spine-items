@@ -11,10 +11,11 @@
 """Unit tests for the ``specification_editor_window`` module."""
 from tempfile import TemporaryDirectory
 import unittest
+from unittest import mock
 
 from PySide6.QtWidgets import QApplication
 
-from spine_items.exporter.specification import MappingSpecification, MappingType, Specification
+from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
 from spine_items.exporter.widgets.specification_editor_window import SpecificationEditorWindow
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping, ObjectClassMapping
 from spinedb_api.mapping import Position, unflatten
@@ -65,6 +66,33 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         self.assertTrue(editor._ui.fix_table_name_check_box.isChecked())
         self.assertTrue(editor._ui.fix_table_name_line_edit.isEnabled())
         self.assertEqual(editor._ui.fix_table_name_line_edit.text(), "nice table name")
+
+    def test_duplicate_specification(self):
+        flattened_mappings = [FixedValueMapping(Position.table_name, "nice table name"), ObjectClassMapping(0)]
+        mapping_specification = MappingSpecification(
+            MappingType.objects, True, True, "", True, unflatten(flattened_mappings)
+        )
+        specification = Specification("spec name", mapping_specifications={"my mappings": mapping_specification})
+        editor = SpecificationEditorWindow(self._toolbox, specification)
+        editor._spec_toolbar._line_edit_name.setText("my spec name")
+        editor._spec_toolbar._line_edit_description.setText("A cool exporter.")
+        editor._ui.export_format_combo_box.setCurrentText(OutputFormat.SQL.value)
+        with mock.patch.object(self._toolbox, "show_specification_form") as show_duplicate:
+            editor._spec_toolbar.duplicate_action.trigger()
+            show_duplicate.assert_called_once()
+            self.assertEqual(show_duplicate.call_args.args[0], "Exporter")
+            self.assertEqual(show_duplicate.call_args.args[1].name, "")
+            self.assertEqual(show_duplicate.call_args.args[1].description, "A cool exporter.")
+            self.assertEqual(show_duplicate.call_args.args[1].output_format, OutputFormat.SQL)
+            self.assertEqual(show_duplicate.call_args.args[1].definition_file_path, "")
+            duplicate_mapping_specification_dicts = {
+                key: s.to_dict() for key, s in show_duplicate.call_args.args[1].mapping_specifications().items()
+            }
+            self.assertEqual(duplicate_mapping_specification_dicts, {"my mappings": mapping_specification.to_dict()})
+            self.assertIsNot(
+                show_duplicate.call_args.args[1].mapping_specifications()["my mappings"], mapping_specification
+            )
+            self.assertEqual(show_duplicate.call_args.kwargs, {})
 
 
 if __name__ == '__main__':
