@@ -161,7 +161,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._sort_mappings_table_model.rowsInserted.connect(self._select_inserted_row)
         self._sort_mappings_table_model.rowsRemoved.connect(self._check_for_empty_mappings_list)
         self.takeCentralWidget().deleteLater()
-        self._ui.export_format_combo_box.addItems([format.value for format in OutputFormat])
+        self._ui.export_format_combo_box.addItems([output_format.value for output_format in OutputFormat])
         self._ui.export_format_combo_box.setCurrentText(self._new_spec.output_format.value)
         self._ui.export_format_combo_box.currentTextChanged.connect(self._change_format)
         self._add_mapping_action = QAction("Add Mapping", self)
@@ -293,9 +293,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     def _make_new_specification(self, spec_name):
         """See base class."""
         description = self._spec_toolbar.description()
-        self._new_spec.name = spec_name
-        self._new_spec.description = description
-        return deepcopy(self._new_spec)
+        mapping_specification = deepcopy(self._new_spec.mapping_specifications())
+        output_format = self._new_spec.output_format
+        return Specification(spec_name, description, mapping_specification, output_format)
 
     @Slot(str)
     def _change_format(self, current):
