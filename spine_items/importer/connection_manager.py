@@ -16,7 +16,7 @@ Contains ConnectionManager class.
 :date:   1.6.2019
 """
 
-from PySide6.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
 from PySide6.QtWidgets import QFileDialog
 from spinetoolbox.helpers import busy_effect
 
@@ -180,7 +180,7 @@ class ConnectionManager(QObject):
         self.tables_requested.connect(self._worker.tables)
         self.data_requested.connect(self._worker.data)
         self.default_mapping_requested.connect(self._worker.default_mapping)
-        self.connection_closed.connect(self._worker.disconnect)
+        self.connection_closed.connect(self._worker.disconnect, type=Qt.ConnectionType.BlockingQueuedConnection)
 
         # when thread is started, connect worker to source
         self._thread.started.connect(self._worker.init_connection)
@@ -285,6 +285,7 @@ class ConnectionManager(QObject):
         self._is_connected = False
         self.connection_closed.emit()
         if self._worker:
+            self.connection_closed.disconnect(self._worker.disconnect)
             self._worker.deleteLater()
             self._worker = None
         if self._thread:
