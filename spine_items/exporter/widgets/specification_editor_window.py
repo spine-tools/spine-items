@@ -143,7 +143,13 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             url_model (QAbstractListModel): model that provides URLs of connected databases
         """
         super().__init__(toolbox, specification, item)
-        self._new_spec = deepcopy(specification) if specification is not None else Specification()
+        if specification is None:
+            output_format = self._sniff_export_format() if item is not None else OutputFormat.default()
+        else:
+            output_format = specification.output_format
+        self._new_spec = (
+            deepcopy(specification) if specification is not None else Specification(output_format=output_format)
+        )
         self._mappings_table_model = MappingsTableModel(self._new_spec.mapping_specifications(), self)
         self._mappings_table_model.dataChanged.connect(self._update_ui_after_mapping_change)
         self._mappings_table_model.rename_requested.connect(self._rename_mapping)
@@ -320,6 +326,23 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._ui.export_format_combo_box.currentTextChanged.disconnect(self._change_format)
             self._ui.export_format_combo_box.setCurrentText(export_format.value)
             self._ui.export_format_combo_box.currentTextChanged.connect(self._change_format)
+
+    def _sniff_export_format(self):
+        """Tries to guess the export file format from user given export label.
+
+        Returns:
+            OutputFormat: export file format
+        """
+        out_labels = self.item.get_out_labels()
+        for label in out_labels:
+            name, separator, extension = label.rpartition(".")
+            if not separator:
+                continue
+            output_format = OutputFormat.output_format_from_extension(extension)
+            if output_format is None:
+                return OutputFormat.default()
+            return output_format if output_format is not None else OutputFormat.default()
+        return OutputFormat.default()
 
     def show_on_table(self, mapping_name):
         """

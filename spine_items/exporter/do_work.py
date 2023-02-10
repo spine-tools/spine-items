@@ -140,14 +140,6 @@ def make_writer(output_format, out_path, gams_path):
     return GdxWriter(out_path, gams_path)
 
 
-_EXTENSIONS = {
-    OutputFormat.CSV: ["csv", "dat", "txt"],
-    OutputFormat.EXCEL: ["xlsx"],
-    OutputFormat.SQL: ["sqlite", "sqlite3"],
-    OutputFormat.GDX: ["gdx"],
-}
-
-
 def _add_extension(label, file_format):
     """Adds file format dependent extension to ``label`` if it is missing one.
 
@@ -158,11 +150,10 @@ def _add_extension(label, file_format):
     Returns:
         str: file name
     """
-    extensions = _EXTENSIONS[file_format]
     name, _, label_extension = label.rpartition(".")
-    if name and label_extension.lower() in extensions:
+    if name and file_format.is_compatible_file_extension(label_extension):
         return label
-    return label + "." + extensions[0]
+    return label + "." + file_format.file_extension()
 
 
 def _subdirectory_for_fork(output_file_name, data_dir, output_time_stamps, filter_id_hash):

@@ -25,6 +25,7 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
 from .export_manifest import exported_files_as_resources
+from .specification import OutputFormat
 from ..commands import UpdateCancelOnErrorCommand
 from .mvcmodels.full_url_list_model import FullUrlListModel
 from .widgets.export_list_item import ExportListItem
@@ -41,6 +42,7 @@ class _Notifications:
 
     duplicate_out_label: bool = False
     missing_out_label: bool = False
+    unrecognized_extension: bool = False
     missing_specification: bool = False
 
 
@@ -143,6 +145,14 @@ class Exporter(ProjectItem):
 
     def _update_properties_tab(self):
         """Updates the labels list in the properties tab."""
+        if self._specification is None:
+            message = ""
+        else:
+            if self._specification.is_exporting_multiple_files():
+                message = f"Currently exporting multiple files in {self._specification.output_format.value} format. The file names are given by the specification."
+            else:
+                message = f"Currently exporting in {self._specification.output_format.value} format. The Output labels below are treated as file names."
+        self._properties_ui.message_label.setText(message)
         outputs_layout = self._properties_ui.outputs_list_layout
         while not outputs_layout.isEmpty():
             widget_to_remove = outputs_layout.takeAt(0)
@@ -178,9 +188,9 @@ class Exporter(ProjectItem):
                     # legacy: when in_label was url
                     # we actually have out_label already
                     inactive = inactive_channels.pop(url)
-                    self._output_channels.append(OutputChannel(in_label, inactive.out_label))
+                    self._output_channels.append(OutputChannel(in_label, self.name, inactive.out_label))
                 else:
-                    self._output_channels.append(OutputChannel(in_label))
+                    self._output_channels.append(OutputChannel(in_label, self.name))
         self._inactive_output_channels = list(inactive_channels.values())
         self._full_url_model.set_urls(set(r.url for r in database_resources))
         if self._output_channels != old_output_channels:
@@ -204,6 +214,7 @@ class Exporter(ProjectItem):
         """See base class."""
         self._check_missing_out_labels()
         self._check_duplicate_out_labels()
+        self._check_unrecognized_extension()
         self._check_missing_specification()
         self._report_notifications()
 
@@ -218,16 +229,44 @@ class Exporter(ProjectItem):
             self.add_notification("Output label(s) missing.")
         if self._notifications.missing_specification:
             self.add_notification("Export specification missing.")
+        if self._notifications.unrecognized_extension:
+            self.add_notification("File extensions don't match the output format.")
 
     def _check_missing_out_labels(self):
         """Checks the status of out labels"""
-        self._notifications.missing_output_file_name = not all(bool(c.out_label) for c in self._output_channels)
+        self._notifications.missing_out_label = not all(bool(c.out_label) for c in self._output_channels)
 
     def _check_duplicate_out_labels(self):
         """Checks for duplicate output file names."""
         self._notifications.duplicate_out_label = any(
-            c1.out_label == c2.out_label for c1, c2 in combinations(self._output_channels, 2) if c1 and c2
+            c1.out_label == c2.out_label
+            for c1, c2 in combinations(self._output_channels, 2)
+            if c1.out_label and c2.out_label
         )
+
+    def _check_unrecognized_extension(self):
+        """Checks that file extensions match with selected output format."""
+        if self._notifications.missing_specification or self._notifications.missing_out_label:
+            self._notifications.unrecognized_extension = False
+            return
+        output_formats = set()
+        for channel in self._output_channels:
+            name, separator, extension = channel.out_label.rpartition(".")
+            if not separator:
+                continue
+            output_format = OutputFormat.output_format_from_extension(extension)
+            if output_format is None:
+                self._notifications.unrecognized_extension = True
+                return
+            output_formats.add(output_format)
+        if len(output_formats) == 0:
+            self._notifications.unrecognized_extension = False
+            return
+        if len(output_formats) > 1:
+            self._notifications.unrecognized_extension = True
+            return
+        output_format = next(iter(output_formats))
+        self._notifications.unrecognized_extension = output_format != self._specification.output_format
 
     @Slot(str, str)
     def _update_out_label(self, out_label, in_label):
@@ -256,6 +295,7 @@ class Exporter(ProjectItem):
         channel.out_label = out_label
         self._check_missing_out_labels()
         self._check_duplicate_out_labels()
+        self._check_unrecognized_extension()
         self._report_notifications()
         if self._exported_files is not None:
             exported_files = self._exported_files.pop(old_out_label, None)
@@ -268,6 +308,14 @@ class Exporter(ProjectItem):
             olds = [resource for resource in old_resources if resource.label == old_out_label]
             news = [resource for resource in new_resources if resource.label == out_label]
             self._resources_to_successors_replaced(olds, news)
+
+    def get_out_labels(self):
+        """Returns output labels.
+
+        Returns:
+            set: output labels
+        """
+        return {channel.out_label for channel in self._output_channels}
 
     def item_dict(self):
         """See base class."""
@@ -289,12 +337,12 @@ class Exporter(ProjectItem):
     def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
-        output_channels = [OutputChannel.from_dict(d) for d in item_dict.get("output_labels", [])]
+        output_channels = [OutputChannel.from_dict(d, name) for d in item_dict.get("output_labels", [])]
         for db_dict in item_dict.get("databases", []):
             # Legacy item dict.
             out_label = db_dict["output_file_name"]
             url = clear_filter_configs(deserialize_path(db_dict["database_url"], project.project_dir))
-            output_channels.append(OutputChannel(url, out_label))
+            output_channels.append(OutputChannel(url, name, out_label))
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         specification_name = item_dict.get("specification", "")
