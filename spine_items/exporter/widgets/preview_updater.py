@@ -51,8 +51,9 @@ class PreviewUpdater:
         if url_model is None:
             url_model = FullUrlListModel(self._ui.database_url_combo_box)
         self._url_model = url_model
-        self._url_model.rowsInserted.connect(lambda *_: self._enable_controls())
+        self._url_model.rowsInserted.connect(self._enable_controls_after_url_insertion)
         self._url_model.modelReset.connect(self._enable_controls)
+        self._url_model.destroyed.connect(self._forget_url_model)
         self._ui.database_url_combo_box.setModel(self._url_model)
         self._mappings_table_model = mappings_table_model
         self._set_expect_removals_and_inserts(False)
@@ -381,6 +382,11 @@ class PreviewUpdater:
         else:
             self._mapping_editor_table_model.modelReset.connect(self._update_current_mappings_tables)
 
+    @Slot(QModelIndex, int, int)
+    def _enable_controls_after_url_insertion(self, parent, first, last):
+        """Enables controls after new preview database URL has been inserted."""
+        self._enable_controls()
+
     @Slot()
     def _enable_controls(self):
         """Enables and disables widgets as needed."""
@@ -456,12 +462,24 @@ class PreviewUpdater:
         """
         return QFileDialog.getOpenFileName(self._window, "Select database", self._project_dir, "sqlite (*.sqlite)")[0]
 
+    @Slot()
+    def _forget_url_model(self):
+        """Replaces current URL model with a mock one."""
+        self._url_model = FullUrlListModel(self._ui.database_url_combo_box)
+        self._url_model.rowsInserted.connect(self._enable_controls_after_url_insertion)
+        self._url_model.modelReset.connect(self._enable_controls)
+        self._url_model.destroyed.connect(self._forget_url_model)
+        self._ui.database_url_combo_box.setModel(self._url_model)
+        self._reload_preview()
+
     def tear_down(self):
         """Stops all workers."""
         self._stamps.clear()
         self._thread_pool.clear()
         self._thread_pool.deleteLater()
+        self._url_model.rowsInserted.disconnect(self._enable_controls_after_url_insertion)
         self._url_model.modelReset.disconnect(self._enable_controls)
+        self._url_model.destroyed.disconnect(self._forget_url_model)
 
 
 class _Worker(QRunnable):
