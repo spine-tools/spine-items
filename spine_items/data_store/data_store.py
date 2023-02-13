@@ -296,7 +296,7 @@ class DataStore(ProjectItem):
             return
         db_map_purge_data = {db_map: {item_type for item_type, checked in self._purge_settings.items() if checked}}
         self._toolbox.db_mngr.purge_items(db_map_purge_data)
-        self._toolbox.db_mngr.commit_session("Purged the database.", db_map)
+        self._toolbox.db_mngr.commit_session("Purge the database.", db_map)
         self._logger.msg_success.emit(f"<b>{self.name}</b>: Database purged.")
 
     @Slot()
