@@ -21,7 +21,6 @@ import logging
 import os
 from copy import deepcopy
 from operator import methodcaller
-
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
 from PySide6.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
 from PySide6.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex, QItemSelectionModel
@@ -1170,7 +1169,7 @@ def _build_tree(root, components):
         _build_tree(item, children)
         if item.hasChildren():
             nodes.append(item)
-            item.setData(QFileIconProvider().icon(QFileIconProvider.Folder), Qt.ItemDataRole.DecorationRole)
+            item.setData(QFileIconProvider().icon(QFileIconProvider.IconType.Folder), Qt.ItemDataRole.DecorationRole)
         else:
             item.setData(QFileIconProvider().icon(QFileInfo(parent)), Qt.ItemDataRole.DecorationRole)
             leafs.append(item)
