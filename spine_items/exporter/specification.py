@@ -60,6 +60,74 @@ class OutputFormat(Enum):
     GDX = "gdx"
     SQL = "SQL"
 
+    def is_compatible_file_extension(self, extension):
+        """Tests if given file extension is acceptable for current output format.
+
+        Args:
+            extension (str): file extension without the dot
+        """
+        if self == OutputFormat.CSV:
+            return extension in ("csv", "dat", "txt")
+        if self == OutputFormat.EXCEL:
+            return extension == "xlsx"
+        if self == OutputFormat.GDX:
+            return extension == "gdx"
+        if self == OutputFormat.SQL:
+            return extension in ("sqlite", "sqlite3")
+        return False
+
+    def file_extension(self):
+        """Returns a file extension for the output format.
+
+        Returns:
+            str: file extension without the dot
+        """
+        return {
+            OutputFormat.CSV: "csv",
+            OutputFormat.EXCEL: "xlsx",
+            OutputFormat.GDX: "gdx",
+            OutputFormat.SQL: "sqlite",
+        }[self]
+
+    @staticmethod
+    def output_format_from_extension(extension):
+        """Creates an output format from given file extension.
+
+        Args:
+            extension (str): file extension without the dot
+
+        Returns:
+            OutputFormat: output format or None if extension is unknown
+        """
+        try:
+            return {
+                "csv": OutputFormat.CSV,
+                "dat": OutputFormat.CSV,
+                "gdx": OutputFormat.GDX,
+                "sqlite": OutputFormat.SQL,
+                "txt": OutputFormat.CSV,
+                "xlsx": OutputFormat.EXCEL,
+            }[extension]
+        except KeyError:
+            return None
+
+    @staticmethod
+    def default():
+        """Return the default output format.
+
+        Returns:
+            OutputFormat: default output format
+        """
+        return OutputFormat.CSV
+
+    def is_multi_file_capable(self):
+        """Tests if the output format is capable of having multiple output files.
+
+        Returns:
+            bool: True if multiple output files are possible, False otherwise
+        """
+        return self == OutputFormat.CSV
+
 
 @dataclass(eq=False)
 class MappingSpecification:
@@ -99,7 +167,7 @@ class MappingSpecification:
 class Specification(ProjectItemSpecification):
     """Exporter's specification."""
 
-    def __init__(self, name="", description="", mapping_specifications=None, output_format=OutputFormat.CSV):
+    def __init__(self, name="", description="", mapping_specifications=None, output_format=OutputFormat.default()):
         """
         Args:
             name (str): specification name
@@ -169,6 +237,21 @@ class Specification(ProjectItemSpecification):
         """
         return self._mapping_specifications[name].type
 
+    def is_exporting_multiple_files(self):
+        """Tests if this specification would result in multiple files being exported.
+
+        Returns:
+            bool: True if multiple files will be exporter, False otherwise
+        """
+        if not self.output_format.is_multi_file_capable():
+            return False
+        for mapping_spec in self._mapping_specifications.values():
+            if mapping_spec.use_fixed_table_name_flag or any(
+                m.position == Position.table_name for m in mapping_spec.root.flatten()
+            ):
+                return True
+        return False
+
     def to_dict(self):
         """
         Serializes the specification into JSON compatible dictionary.
@@ -220,7 +303,7 @@ class Specification(ProjectItemSpecification):
         try:
             output_format = OutputFormat(specification_dict["output_format"])
         except ValueError:
-            output_format = OutputFormat.CSV
+            output_format = OutputFormat.default()
         return Specification(
             specification_dict["name"], specification_dict["description"], mapping_specifications, output_format
         )

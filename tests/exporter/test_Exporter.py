@@ -22,11 +22,21 @@ from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtWidgets import QApplication
 from spine_engine.utils.helpers import shorten
 from spine_engine.project_item.project_item_resource import database_resource
+from spine_items.data_store.data_store import DataStore
 from spine_items.exporter.exporter import Exporter
 from spine_items.exporter.exporter_factory import ExporterFactory
 from spine_items.exporter.item_info import ItemInfo
-from spine_items.exporter.specification import Specification
-from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
+from spine_items.exporter.specification import OutputFormat, Specification
+from spine_items.utils import database_label
+from spinedb_api import DatabaseMapping
+from spinetoolbox.project_item.logging_connection import LoggingConnection
+from ..mock_helpers import (
+    clean_up_toolbox,
+    create_toolboxui_with_project,
+    mock_finish_project_item_construction,
+    create_mock_project,
+    create_mock_toolbox,
+)
 
 
 class TestExporter(unittest.TestCase):
@@ -132,6 +142,56 @@ class TestExporter(unittest.TestCase):
         self.assertIn(model.index(0, 0).data(), expected_out_labels)
         self.assertIn(model.index(1, 0).data(), expected_out_labels)
         self.assertEqual(self._exporter._properties_ui.outputs_list_layout.count(), len(expected_out_labels))
+
+
+class TestExporterWithToolbox(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not QApplication.instance():
+            QApplication()
+
+    def setUp(self):
+        self._temp_dir = TemporaryDirectory()
+        self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
+
+    def tearDown(self):
+        clean_up_toolbox(self._toolbox)
+        self._temp_dir.cleanup()
+
+    def test_notifications_when_not_configured(self):
+        project = self._toolbox.project()
+        exporter = Exporter("Test exporter", "Exporter for unit testing", 0.0, 0.0, self._toolbox, project)
+        project.add_item(exporter)
+        self.assertEqual(exporter.get_icon().exclamation_icon._notifications, ["Export specification missing."])
+
+    def test_notifications_when_specification_is_set(self):
+        project = self._toolbox.project()
+        specification = Specification("Test spec", "Exporter specification for testing")
+        project.add_specification(specification)
+        exporter = Exporter("Test exporter", "Exporter for unit testing", 0.0, 0.0, self._toolbox, project, "Test spec")
+        project.add_item(exporter)
+        self.assertEqual(exporter.get_icon().exclamation_icon._notifications, [])
+
+    def test_notifications_when_output_file_name_extension_mismatches_with_specification_output_format(self):
+        project = self._toolbox.project()
+        url = "sqlite:///" + os.path.join(self._temp_dir.name, "db.sqlite")
+        db_map = DatabaseMapping(url, create=True)
+        db_map.connection.close()
+        url_dict = {"dialect": "sqlite", "database": os.path.join(self._temp_dir.name, "db.sqlite")}
+        data_store = DataStore("Dummy data store", "", 0.0, 0.0, self._toolbox, project, url_dict)
+        project.add_item(data_store)
+        specification = Specification("Test spec", "Exporter specification for testing", output_format=OutputFormat.CSV)
+        project.add_specification(specification)
+        exporter = Exporter("Test exporter", "Exporter for unit testing", 0.0, 0.0, self._toolbox, project, "Test spec")
+        project.add_item(exporter)
+        connection = LoggingConnection("Dummy data store", "right", "Test exporter", "left", toolbox=self._toolbox)
+        project.add_connection(connection)
+        self.assertEqual(exporter.get_icon().exclamation_icon._notifications, [])
+        exporter.activate()
+        exporter.set_out_label("exported_file.xlsx", database_label("Dummy data store"))
+        self.assertEqual(
+            exporter.get_icon().exclamation_icon._notifications, ["File extensions don't match the output format."]
+        )
 
 
 if __name__ == "__main__":

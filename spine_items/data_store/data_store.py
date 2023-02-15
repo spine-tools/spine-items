@@ -46,7 +46,7 @@ class DataStore(ProjectItem):
             y (float): Initial Y coordinate of item icon
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
-            url (str or dict, optional): SQLAlchemy url
+            url (dict, optional): SQLAlchemy url
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox

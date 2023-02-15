@@ -34,7 +34,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(306, 94)
+        Form.resize(306, 106)
         self.verticalLayout_2 = QVBoxLayout(Form)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.frame = QFrame(Form)
@@ -50,15 +50,15 @@ class Ui_Form(object):
 
         self.formLayout = QFormLayout()
         self.formLayout.setObjectName(u"formLayout")
-        self.out_label_edit = PropertyQLineEdit(self.frame)
-        self.out_label_edit.setObjectName(u"out_label_edit")
-
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.out_label_edit)
-
         self.out_label_label = QLabel(self.frame)
         self.out_label_label.setObjectName(u"out_label_label")
 
         self.formLayout.setWidget(0, QFormLayout.LabelRole, self.out_label_label)
+
+        self.out_label_edit = PropertyQLineEdit(self.frame)
+        self.out_label_edit.setObjectName(u"out_label_edit")
+
+        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.out_label_edit)
 
 
         self.verticalLayout.addLayout(self.formLayout)
@@ -75,10 +75,10 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.input_label_field.setText(QCoreApplication.translate("Form", u"TextLabel", None))
+        self.out_label_label.setText(QCoreApplication.translate("Form", u"Output file/label:", None))
 #if QT_CONFIG(tooltip)
         self.out_label_edit.setToolTip(QCoreApplication.translate("Form", u"Identifier for the output file(s). This is the  filename if a single file is exported.", None))
 #endif // QT_CONFIG(tooltip)
         self.out_label_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type output resource label here...", None))
-        self.out_label_label.setText(QCoreApplication.translate("Form", u"Output file/label:", None))
     # retranslateUi
 

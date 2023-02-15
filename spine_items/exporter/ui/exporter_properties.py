@@ -73,10 +73,11 @@ class Ui_Form(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_9)
 
-        self.issues_label = QLabel(Form)
-        self.issues_label.setObjectName(u"issues_label")
+        self.message_label = QLabel(Form)
+        self.message_label.setObjectName(u"message_label")
+        self.message_label.setWordWrap(True)
 
-        self.verticalLayout.addWidget(self.issues_label)
+        self.verticalLayout.addWidget(self.message_label)
 
         self.outputs_list_layout = QVBoxLayout()
         self.outputs_list_layout.setSpacing(0)
@@ -123,7 +124,7 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.specification_button.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Edit specification.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.issues_label.setText("")
+        self.message_label.setText("")
 #if QT_CONFIG(tooltip)
         self.output_time_stamps_check_box.setToolTip(QCoreApplication.translate("Form", u"Checking this will add time stamps to output directory names.", None))
 #endif // QT_CONFIG(tooltip)
