@@ -18,7 +18,6 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 
 class PreviewTableModel(QAbstractTableModel):
-
     MAX_COLUMNS = 50
 
     def __init__(self):

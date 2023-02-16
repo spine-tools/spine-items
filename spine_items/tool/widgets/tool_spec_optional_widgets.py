@@ -56,8 +56,8 @@ class OptionalWidget(QWidget):
 
 
 class PythonToolSpecOptionalWidget(OptionalWidget):
-
     _kernel_spec_data_ready = Signal(list, list)
+    _kernel_spec_model_ready = Signal()
 
     def __init__(self, parent):
         """Init class."""
@@ -70,22 +70,21 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
         self._kernel_spec_editor = None
         self._kernel_spec_model_initialized = False
+        self._saved_kernel_spec_name = None
         self._executor = QtBasedThreadPoolExecutor(max_workers=1)
         # Initialize UI elements with defaults
-        use_jupyter_console = int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
-        if use_jupyter_console == 2:
+        use_jupyter_console = bool(
+            int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
+        )
+        if use_jupyter_console:
             self.ui.radioButton_jupyter_console.setChecked(True)
+            # Get the default kernel spec from Settings->Tools for new Jupyter Console Tool Specs
+            self._saved_kernel_spec_name = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
         else:
             self.ui.radioButton_python_console.setChecked(True)
         default_python_path = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
         self.ui.lineEdit_python_path.setPlaceholderText(resolve_python_interpreter(""))
         self.ui.lineEdit_python_path.setText(default_python_path)
-        default_kernel_spec = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
-        row = self.find_index_by_data(default_kernel_spec)
-        if row == -1:
-            self.ui.comboBox_kernel_specs.setCurrentIndex(0)
-        else:
-            self.ui.comboBox_kernel_specs.setCurrentIndex(row)
         self.set_ui_for_jupyter_console(not use_jupyter_console)
         self.connect_signals()
 
@@ -98,6 +97,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.pushButton_open_kernel_spec_viewer.clicked.connect(self.show_python_kernel_spec_editor)
         self.ui.lineEdit_python_path.editingFinished.connect(self._parent._push_change_executable)
         self._kernel_spec_data_ready.connect(self._do_refresh_kernel_spec_model)
+        self._kernel_spec_model_ready.connect(self._set_saved_kernel_spec)
         qApp.aboutToQuit.connect(self._executor.shutdown)  # pylint: disable=undefined-variable
 
     def init_widget(self, specification):
@@ -116,20 +116,27 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.radioButton_jupyter_console.blockSignals(False)
         self.ui.radioButton_python_console.blockSignals(False)
         self.set_ui_for_jupyter_console(not use_jupyter_console)
-        k_spec = specification.execution_settings["kernel_spec_name"]
-        if k_spec == "":
+        # Must wait until model is initialized to set kernel spec name
+        self._saved_kernel_spec_name = specification.execution_settings["kernel_spec_name"]
+        self.set_executable(specification.execution_settings["executable"])
+
+    @Slot()
+    def _set_saved_kernel_spec(self):
+        """Sets index of the kernel spec combobox to show the item that was saved with the Tool Specification.
+        Make sure this is called after available kernel specs have been loaded."""
+        if not self._saved_kernel_spec_name:
             self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Set 'Select kernel spec...'
         else:
-            row = self.find_index_by_data(k_spec)
+            row = self.find_index_by_data(self._saved_kernel_spec_name)
             if row == -1:
                 notification = Notification(
-                    self._parent, f"This Tool spec has kernel spec '{k_spec}' saved " f"but it could not be found."
+                    self._parent,
+                    f"This Tool spec has kernel spec '{self._saved_kernel_spec_name}' "
+                    f"saved but it could not be found.",
                 )
                 notification.show()
-                # TODO: What to do when a kernel spec name that is saved to Tool spec is not found?
                 row += 1  # Set 'Select kernel spec...'
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
-        self.set_executable(specification.execution_settings["executable"])
 
     def add_execution_settings(self):
         """Collects execution settings based on optional widget state into a dictionary, which is returned."""
@@ -282,6 +289,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
                 self._parent._push_change_kernel_spec_command(0)
                 return
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
+        self._kernel_spec_model_ready.emit()
 
 
 class ExecutableToolSpecOptionalWidget(OptionalWidget):

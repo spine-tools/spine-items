@@ -23,7 +23,6 @@ from spinetoolbox.helpers import color_from_index
 
 
 class AnimationSignaller(QObject):
-
     animation_started = Signal()
     animation_stopped = Signal()
 

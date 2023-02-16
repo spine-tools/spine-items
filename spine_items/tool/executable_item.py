@@ -376,15 +376,13 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 return False
             if use_julia_kernel == "0" and julia_path == "":
                 self._logger.msg_error.emit(
-                    "Julia not found in PATH. Please select the Julia you want to use in Settings->Tools."
+                    "Julia not found in PATH. Please select a Julia executable in Settings->Tools."
                 )
                 return False
         elif self._tool_specification.tooltype.lower() == "gams":
             gams_path = resolve_gams_executable(settings.value("appSettings/gamsPath", defaultValue=""))
             if not gams_path:
-                self._logger.msg_error.emit(
-                    "Gams not found in PATH. Please select the Gams you want to use in Settings->Tools."
-                )
+                self._logger.msg_error.emit("Gams not found in PATH. Please set a path to Gams in Settings->Tools.")
                 return False
         elif self._tool_specification.tooltype.lower() == "executable":
             if not self._tool_specification.main_prgm:

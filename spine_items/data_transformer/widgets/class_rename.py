@@ -23,7 +23,6 @@ from .copy_paste import copy_table_data, paste_table_data
 
 
 class ClassRename(QObject):
-
     _MIME_TYPE = "application/spine-dtclassrename"
 
     def __init__(self, ui, undo_stack, settings, parent):

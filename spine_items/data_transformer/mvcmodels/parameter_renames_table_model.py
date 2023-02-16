@@ -33,7 +33,6 @@ class RenamesRoles(IntEnum):
 
 
 class ParameterRenamesTableModel(ParameterDropTargetTableModel):
-
     GET_DATA_ROLES = (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.DisplayRole)
     SET_DATA_ROLES = (RenamesRoles.SILENT_EDIT, RenamesRoles.SILENT_EDIT, RenamesRoles.SILENT_EDIT)
 

@@ -21,8 +21,7 @@ from PySide6.QtCore import QFileSystemWatcher, Signal, Slot
 
 
 class CustomFileSystemWatcher(QFileSystemWatcher):
-    """A file system watcher that keeps track of renamed files.
-    """
+    """A file system watcher that keeps track of renamed files."""
 
     file_renamed = Signal(str, str)
     file_removed = Signal(str)

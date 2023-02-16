@@ -355,8 +355,7 @@ class HeaderWithButton(QHeaderView):
             self._button.hide()
 
     def mouseMoveEvent(self, mouse_event):
-        """Moves the button to the correct section so that interacting with the button works.
-        """
+        """Moves the button to the correct section so that interacting with the button works."""
         logical_index = self.logicalIndexAt(mouse_event.x(), mouse_event.y())
         self._hide_or_show_button(logical_index)
         super().mouseMoveEvent(mouse_event)
@@ -470,8 +469,7 @@ class HeaderWithButton(QHeaderView):
         self._set_button_geometry(self._button, logical_index)
 
     def fix_widget_positions(self):
-        """Update position of interaction button
-        """
+        """Update position of interaction button"""
         mouse_position = self.mapFromGlobal(QCursor.pos())
         logical_index = self.logicalIndexAt(mouse_position)
         self._set_button_geometry(self._button, logical_index)
