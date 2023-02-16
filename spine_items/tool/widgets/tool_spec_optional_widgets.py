@@ -56,7 +56,6 @@ class OptionalWidget(QWidget):
 
 
 class PythonToolSpecOptionalWidget(OptionalWidget):
-
     _kernel_spec_data_ready = Signal(list, list)
     _kernel_spec_model_ready = Signal()
 
@@ -74,20 +73,18 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self._saved_kernel_spec_name = None
         self._executor = QtBasedThreadPoolExecutor(max_workers=1)
         # Initialize UI elements with defaults
-        use_jupyter_console = int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
-        if use_jupyter_console == 2:
+        use_jupyter_console = bool(
+            int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
+        )
+        if use_jupyter_console:
             self.ui.radioButton_jupyter_console.setChecked(True)
+            # Get the default kernel spec from Settings->Tools for new Jupyter Console Tool Specs
+            self._saved_kernel_spec_name = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
         else:
             self.ui.radioButton_python_console.setChecked(True)
         default_python_path = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
         self.ui.lineEdit_python_path.setPlaceholderText(resolve_python_interpreter(""))
         self.ui.lineEdit_python_path.setText(default_python_path)
-        default_kernel_spec = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
-        row = self.find_index_by_data(default_kernel_spec)
-        if row == -1:
-            self.ui.comboBox_kernel_specs.setCurrentIndex(0)
-        else:
-            self.ui.comboBox_kernel_specs.setCurrentIndex(row)
         self.set_ui_for_jupyter_console(not use_jupyter_console)
         self.connect_signals()
 
@@ -125,14 +122,17 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
 
     @Slot()
     def _set_saved_kernel_spec(self):
+        """Sets index of the kernel spec combobox to show the item that was saved with the Tool Specification.
+        Make sure this is called after available kernel specs have been loaded."""
         if not self._saved_kernel_spec_name:
             self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Set 'Select kernel spec...'
         else:
             row = self.find_index_by_data(self._saved_kernel_spec_name)
             if row == -1:
                 notification = Notification(
-                    self._parent, f"This Tool spec has kernel spec '{self._saved_kernel_spec_name}' "
-                                  f"saved but it could not be found."
+                    self._parent,
+                    f"This Tool spec has kernel spec '{self._saved_kernel_spec_name}' "
+                    f"saved but it could not be found.",
                 )
                 notification.show()
                 row += 1  # Set 'Select kernel spec...'

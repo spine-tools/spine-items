@@ -28,7 +28,6 @@ from ..settings import ValueTransformSettings
 
 
 class ValueTransformation(QObject):
-
     _MIME_TYPE = "application/spine-dtparameterrename"
 
     def __init__(self, ui, undo_stack, settings, parent):

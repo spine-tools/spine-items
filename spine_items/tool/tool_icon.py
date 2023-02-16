@@ -65,8 +65,7 @@ class ToolIcon(ProjectItemIcon):
 
     @Slot()
     def start_animation(self):
-        """Starts the item execution animation.
-        """
+        """Starts the item execution animation."""
         if self.time_line.state() == QTimeLine.State.Running:
             return
         self.time_line.start()

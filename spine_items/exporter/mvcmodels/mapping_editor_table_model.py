@@ -80,7 +80,6 @@ class EditorColumn(IntEnum):
 
 
 class MappingEditorTableModel(QAbstractTableModel):
-
     MAPPING_ITEM_ROLE = Qt.ItemDataRole.UserRole + 1
 
     def __init__(self, mapping_name, root_mapping, undo_stack, mapping_provider, parent=None):

@@ -53,7 +53,6 @@ class SourceListMenu(CustomContextMenu):
     """
 
     def __init__(self, parent, position, can_paste_option, can_paste_mapping):
-
         super().__init__(parent, position)
         self.add_action("Copy options")
         self.add_action("Copy mappings")
@@ -70,7 +69,6 @@ class MappingListMenu(CustomContextMenu):
     """
 
     def __init__(self, parent, position, can_copy, can_paste):
-
         super().__init__(parent, position)
         self.add_action("Copy mapping(s)", enabled=can_copy)
         self.add_action("Paste mapping(s)", enabled=can_paste)
@@ -140,7 +138,6 @@ class SourceDataTableMenu(QMenu):
 
 
 class SimpleFilterMenu(FilterMenuBase):
-
     filterChanged = Signal(set)
 
     def __init__(self, parent, show_empty=True):

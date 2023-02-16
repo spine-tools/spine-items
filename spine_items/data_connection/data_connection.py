@@ -410,6 +410,7 @@ class DataConnection(ProjectItem):
         Args:
             path (str): file path
         """
+
         # Some software saves files by renaming them and then creating
         # a new file with the same name for safety reasons.
         # So, sometimes a file goes "missing" for a moment and then comes back.
