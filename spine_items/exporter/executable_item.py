@@ -206,12 +206,12 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         specification_name = item_dict["specification"]
         specification = cls._get_specification(name, ItemInfo.item_type(), specification_name, specifications, logger)
-        output_channels = [OutputChannel.from_dict(d) for d in item_dict.get("output_labels", [])]
+        output_channels = [OutputChannel.from_dict(d, name) for d in item_dict.get("output_labels", [])]
         for db_dict in item_dict.get("databases", []):
             # legacy
             db = Database.from_dict(db_dict)
             db.url = clear_filter_configs(deserialize_path(db_dict["database_url"], project_dir))
-            output_channels.append(OutputChannel(db.url, db.output_file_name))
+            output_channels.append(OutputChannel(db.url, name, db.output_file_name))
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)

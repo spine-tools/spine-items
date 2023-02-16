@@ -80,9 +80,12 @@
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="issues_label">
+    <widget class="QLabel" name="message_label">
      <property name="text">
       <string/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
