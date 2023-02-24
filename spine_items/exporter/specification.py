@@ -21,7 +21,11 @@ from spine_engine.project_item.project_item_specification import ProjectItemSpec
 from spinedb_api.mapping import to_dict as mapping_to_dict, Position, unflatten
 from spinedb_api.export_mapping.export_mapping import (
     ExportMapping,
+    FixedValueMapping,
     from_dict as mapping_from_dict,
+    ObjectClassMapping,
+    ObjectGroupMapping,
+    ObjectGroupObjectMapping,
     ParameterValueIndexMapping,
     ParameterDefaultValueIndexMapping,
     IndexNameMapping,
@@ -37,7 +41,6 @@ class MappingType(Enum):
     features = "features"
     objects = "objects"
     object_groups = "object_groups"
-    object_group_parameter_values = "object_group_parameter_values"
     object_parameter_default_values = "object_default_parameter_values"
     object_parameter_values = "object_parameter_values"
     parameter_value_lists = "parameter_value_lists"
@@ -157,7 +160,7 @@ class MappingSpecification:
             mapping_dict (dict): serialized specification
 
         Returns:
-            MappingSpecifiation: deserialized specification
+            MappingSpecification: deserialized specification
         """
         root = mapping_from_dict(mapping_dict.pop("root"))
         type_ = MappingType(mapping_dict.pop("type"))
@@ -289,6 +292,18 @@ class Specification(ProjectItemSpecification):
         Returns:
             Specification: restored specification
         """
+        for spec_dict in specification_dict["mappings"].values():
+            # Legacy: remove parameter value mappings from object group mappings,
+            # they're not supported anymore.
+            if spec_dict["type"] == "object_group_parameter_values":
+                spec_dict["type"] = MappingType.object_groups.value
+                keep_map_types = {
+                    FixedValueMapping.MAP_TYPE,
+                    ObjectClassMapping.MAP_TYPE,
+                    ObjectGroupMapping.MAP_TYPE,
+                    ObjectGroupObjectMapping.MAP_TYPE,
+                }
+                spec_dict["mapping"] = [m for m in spec_dict["mapping"] if m["map_type"] in keep_map_types]
         mapping_specifications = {
             name: MappingSpecification(
                 MappingType(spec_dict["type"]),
