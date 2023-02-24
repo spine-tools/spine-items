@@ -616,7 +616,7 @@ class FlattenedMappings:
         Returns:
             bool: True if mapping has parameter, False otherwise
         """
-        return self._map_type in (MappingType.ObjectClass, MappingType.ObjectGroup, MappingType.RelationshipClass)
+        return self._map_type in (MappingType.ObjectClass, MappingType.RelationshipClass)
 
     def _parameter_definition_component(self):
         """Searches for ParameterDefinitionMapping within the components.
