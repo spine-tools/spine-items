@@ -33,10 +33,10 @@ from .commands import PinOrUnpinDBValuesCommand
 
 
 class View(ProjectItem):
+    """View's main class."""
+
     def __init__(self, name, description, x, y, toolbox, project, pinned_values=None):
         """
-        View class.
-
         Args:
             name (str): Object name
             description (str): Object description

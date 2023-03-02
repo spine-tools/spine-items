@@ -22,14 +22,13 @@ from .custom_menus import ViewRefsContextMenu, ViewSelectionsContextMenu
 
 
 class ViewPropertiesWidget(PropertiesWidgetBase):
-    """Widget for the View Item Properties.
-
-    Args:
-        toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
-    """
+    """Widget for the View Item Properties."""
 
     def __init__(self, toolbox):
-        """Init class."""
+        """
+        Args:
+            toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
+        """
         from ..ui.view_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(toolbox)
