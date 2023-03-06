@@ -32,7 +32,8 @@ from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from ..utils import database_label, convert_to_sqlalchemy_url
+from ..database_validation import DatabaseConnectionValidator
+from ..utils import database_label, convert_to_sqlalchemy_url, check_database_url
 
 
 class DataStore(ProjectItem):
@@ -65,6 +66,7 @@ class DataStore(ProjectItem):
         self._open_url_action.triggered.connect(self.open_url_in_spine_db_editor)
         self._purge_settings = None
         self._purge_dialog = None
+        self._database_validator = DatabaseConnectionValidator(self)
 
     @staticmethod
     def item_type():
@@ -102,18 +104,11 @@ class DataStore(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
+        s[self._properties_ui.url_selector_widget.url_changed] = self._update_url_from_properties
         s[self._properties_ui.pushButton_ds_open_editor.clicked] = self.open_url_in_spine_db_editor
         s[self._properties_ui.pushButton_create_new_spine_db.clicked] = self.create_new_spine_database
         s[self._properties_ui.toolButton_copy_url.clicked] = self.copy_url
         s[self._properties_ui.toolButton_vacuum.clicked] = self.vacuum
-        s[self._properties_ui.comboBox_dialect.currentTextChanged] = self.refresh_dialect
-        s[self._properties_ui.toolButton_select_sqlite_file.clicked] = self.select_sqlite_file
-        s[self._properties_ui.lineEdit_database.file_dropped] = self.set_path_to_sqlite_file
-        s[self._properties_ui.lineEdit_username.editingFinished] = self.refresh_username
-        s[self._properties_ui.lineEdit_password.editingFinished] = self.refresh_password
-        s[self._properties_ui.lineEdit_host.editingFinished] = self.refresh_host
-        s[self._properties_ui.lineEdit_port.editingFinished] = self.refresh_port
-        s[self._properties_ui.lineEdit_database.editingFinished] = self.refresh_database
         s[self._properties_ui.purge_button.clicked] = self._show_purge_dialog
         return s
 
@@ -133,23 +128,12 @@ class DataStore(ProjectItem):
         """Returns current project or None if no project open."""
         return self._project
 
-    @Slot(str)
-    def set_path_to_sqlite_file(self, file_path):
-        """Set path to SQLite file."""
-        abs_path = os.path.abspath(file_path)
-        self.update_url(dialect="sqlite", database=abs_path)
-
-    @Slot(bool)
-    def select_sqlite_file(self, checked=False):
-        """Open file browser where user can select the path to an SQLite
-        file that they want to use."""
+    def select_sqlite_file(self):
+        """Open file browser where user can select the path to an SQLite file that they want to use."""
         candidate_path = os.path.abspath(self._url["database"]) if self._url["database"] else self.data_dir
         answer = QFileDialog.getOpenFileName(self._toolbox, "Select SQLite file", candidate_path)
         file_path = answer[0]
-        if not file_path:  # Cancel button clicked
-            return False
-        self.set_path_to_sqlite_file(file_path)
-        return True
+        return file_path if file_path else None
 
     def _new_sqlite_file(self):
         """Shows a file dialog and creates a new sqlite file at the chosen path.
@@ -171,39 +155,30 @@ class DataStore(ProjectItem):
         return True
 
     def load_url_into_selections(self, url):
-        """Load given url attribute into shared widget selections."""
+        """Load given url attribute into shared widget selections.
+
+        Args:
+            url (dict): URL dict
+        """
         if not self._active:
             return
         if not url:
             return
-        dialect = url.get("dialect")
-        host = url.get("host")
-        port = url.get("port")
-        database = url.get("database")
-        username = url.get("username")
-        password = url.get("password")
-        if dialect is not None:
-            self._properties_ui.controller.enable_dialect(dialect)
-            if dialect == "":
-                self._properties_ui.comboBox_dialect.setCurrentIndex(-1)
-            else:
-                self._properties_ui.comboBox_dialect.setCurrentText(dialect)
-        if host is not None:
-            self._properties_ui.lineEdit_host.setText(host)
-        if port is not None:
-            self._properties_ui.lineEdit_port.setText(str(port))
-        if database is not None:
-            if dialect == "sqlite":
-                database = os.path.abspath(database)
-            self._properties_ui.lineEdit_database.setText(database)
-        if username is not None:
-            self._properties_ui.lineEdit_username.setText(username)
-        if password is not None:
-            self._properties_ui.lineEdit_password.setText(password)
+        self._properties_ui.url_selector_widget.set_url(url)
         self._update_actions_enabled()
 
+    @Slot()
+    def _update_url_from_properties(self):
+        """Gets new URL from Properties tab."""
+        url = self._properties_ui.url_selector_widget.url_dict()
+        self.update_url(**url)
+
     def update_url(self, **kwargs):
-        """Set url key to value."""
+        """Sets new URL.
+
+        Args:
+            **kwargs: URL keys and values
+        """
         kwargs = {k: v for k, v in kwargs.items() if v != self._url[k]}
         if not kwargs:
             return False
@@ -217,7 +192,7 @@ class DataStore(ProjectItem):
             kwargs.update({"username": "", "password": "", "host": "", "port": ""})
         self._url.update(kwargs)
         new_url = convert_to_sqlalchemy_url(self._url, self.name)
-        self.load_url_into_selections(kwargs)
+        self.load_url_into_selections(self._url)
         if old_url and new_url:
             old = database_resource(self.name, str(old_url), label=database_label(self.name), filterable=True)
             new = database_resource(self.name, str(new_url), label=database_label(self.name), filterable=True)
@@ -240,40 +215,6 @@ class DataStore(ProjectItem):
         self._properties_ui.purge_button.setEnabled(open_editor_enabled)
         self._properties_ui.toolButton_copy_url.setEnabled(open_editor_enabled)
         self._properties_ui.toolButton_vacuum.setEnabled(is_sqlite and open_editor_enabled)
-
-    @Slot()
-    def refresh_host(self):
-        """Refresh host from selections."""
-        host = self._properties_ui.lineEdit_host.text()
-        self.update_url(host=host)
-
-    @Slot()
-    def refresh_port(self):
-        """Refresh port from selections."""
-        port = self._properties_ui.lineEdit_port.text()
-        self.update_url(port=port)
-
-    @Slot()
-    def refresh_database(self):
-        """Refresh database from selections."""
-        database = self._properties_ui.lineEdit_database.text()
-        self.update_url(database=database)
-
-    @Slot()
-    def refresh_username(self):
-        """Refresh username from selections."""
-        username = self._properties_ui.lineEdit_username.text()
-        self.update_url(username=username)
-
-    @Slot()
-    def refresh_password(self):
-        """Refresh password from selections."""
-        password = self._properties_ui.lineEdit_password.text()
-        self.update_url(password=password)
-
-    @Slot(str)
-    def refresh_dialect(self, dialect):
-        self.update_url(dialect=dialect)
 
     @Slot(bool)
     def _show_purge_dialog(self, _=False):
@@ -375,11 +316,30 @@ class DataStore(ProjectItem):
 
     def _check_notifications(self):
         """Updates the SqlAlchemy format URL and checks for notifications"""
-        self.clear_notifications()
-        if convert_to_sqlalchemy_url(self._url, self.name) is None:
+        sa_url = convert_to_sqlalchemy_url(self._url, self.name)
+        if sa_url is None:
+            self.clear_notifications()
             self.add_notification(
                 "The URL for this Data Store is not correctly set. Set it in the Data Store Properties panel."
             )
+            return
+        self._database_validator.validate_url(
+            self._url["dialect"], sa_url, self._set_invalid_url_notification, self._clear_notifications
+        )
+
+    @Slot(str)
+    def _set_invalid_url_notification(self, error_message):
+        """Sets a single notification that warns about broken URL.
+
+        Args:
+            error_message (str): URL failure message
+        """
+        self.clear_notifications()
+        self.add_notification(f"Couldn't connect to the database: {error_message}")
+
+    @Slot()
+    def _clear_notifications(self):
+        self.clear_notifications()
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
@@ -478,3 +438,8 @@ class DataStore(ProjectItem):
     def resources_for_direct_predecessors(self):
         """See base class."""
         return self.resources_for_direct_successors()
+
+    def tear_down(self):
+        """See base class"""
+        self._database_validator.wait_for_finish()
+        super().tear_down()

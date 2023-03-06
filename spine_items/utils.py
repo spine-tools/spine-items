@@ -15,6 +15,7 @@ Contains utilities shared between project items.
 :authors: A. Soininen (VTT)
 :date:    1.4.2020
 """
+import os.path
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL, make_url
@@ -50,6 +51,9 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
             logger.msg_error.emit(f"Unable to generate URL from {selections}: invalid dialect {dialect}.")
             return None
         if dialect == "sqlite":
+            database = url.get("database", "")
+            if database:
+                url["database"] = os.path.abspath(database)
             sa_url = URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
         else:
             db_api = spinedb_api.SUPPORTED_DIALECTS[dialect]
@@ -62,15 +66,39 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
     if not sa_url.database:
         logger.msg_error.emit(f"Unable to generate URL from {selections}: database missing.")
         return None
-    # Final check
+    if dialect != "sqlite":
+        if sa_url.host is None:
+            logger.msg_error.emit(f"Unable to generate URL from {selections}: missing host.")
+            return None
+        if sa_url.port is None:
+            logger.msg_error.emit(f"Unable to generate URL from {selections}: missing port.")
+            return None
+        if sa_url.username is None:
+            logger.msg_error.emit(f"Unable to generate URL from {selections}: missing username.")
+            return None
+        if sa_url.password is None:
+            logger.msg_error.emit(f"Unable to generate URL from {selections}: missing password.")
+            return None
+    return sa_url
+
+
+def check_database_url(sa_url):
+    """Checks if URL points to a real database.
+
+    Args:
+        sa_url (URL): SQLAlchemy URL
+
+    Returns:
+        str: error message or None if URL works fine
+    """
     try:
         engine = create_engine(sa_url)
         with engine.connect():
             pass
-    except Exception as e:  # pylint: disable=broad-except
-        logger.msg_error.emit(f"Unable to generate URL from {selections}: {e}")
+    except Exception as error:  # pylint: disable=broad-except
+        return str(error)
+    else:
         return None
-    return sa_url
 
 
 class _NoLogger:

@@ -19,7 +19,6 @@ Module for data connection class.
 import os
 import shutil
 import logging
-from sqlalchemy import create_engine
 from PySide6.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection, QTimer
 from PySide6.QtGui import QStandardItem, QStandardItemModel, QBrush
 from PySide6.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
@@ -33,7 +32,8 @@ from .custom_file_system_watcher import CustomFileSystemWatcher
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from ..widgets import UrlSelector
+from ..database_validation import DatabaseConnectionValidator
+from ..widgets import UrlSelectorDialog
 from ..utils import split_url_credentials
 
 
@@ -85,6 +85,7 @@ class DataConnection(ProjectItem):
         self.current_is_file_ref = False
         self.populate_reference_list()
         self.populate_data_list()
+        self._database_validator = DatabaseConnectionValidator()
 
     def set_up(self):
         super().set_up()
@@ -215,24 +216,29 @@ class DataConnection(ProjectItem):
     @Slot(bool)
     def show_add_db_reference_dialog(self, _=False):
         """Opens a dialog where user can select a url to be added as reference for this Data Connection."""
-        selector = UrlSelector(self._toolbox, self._toolbox)
+        selector = UrlSelectorDialog(self._toolbox, self._toolbox)
         selector.exec()
         url = selector.url
         if not url:  # Cancel button clicked
-            return
-        try:
-            engine = create_engine(url)
-            with engine.connect():
-                pass
-        except Exception as e:  # pylint: disable=broad-except
-            self._logger.msg_error.emit(f"Unable to connect to <b>{url}</b>: {e}")
             return
         url, credentials = split_url_credentials(url)
         if url in self.db_references:
             self._logger.msg_warning.emit(f"Reference to database <b>{url}</b> already exists")
             return
+        self._database_validator.validate_url(
+            selector.dialect, url, self._log_database_reference_error, success_slot=None
+        )
         self.db_credentials[url] = credentials
         self._toolbox.undo_stack.push(AddDCReferencesCommand(self, [], [url]))
+
+    @Slot(str)
+    def _log_database_reference_error(self, error):
+        """Logs final database validation error messages.
+
+        Args:
+            error (str): message
+        """
+        self._logger.msg_error.emit(f"<b>{self.name}</b>: invalid database URL: {error}")
 
     def do_add_references(self, file_refs, db_refs):
         file_refs = [os.path.abspath(ref) for ref in file_refs]
@@ -702,6 +708,7 @@ class DataConnection(ProjectItem):
         """Tears down this item. Called by toolbox just before closing."""
         super().tear_down()
         self.file_system_watcher.tear_down()
+        self._database_validator.wait_for_finish()
 
     def notify_destination(self, source_item):
         """See base class."""

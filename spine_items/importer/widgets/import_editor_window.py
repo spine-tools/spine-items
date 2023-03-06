@@ -39,7 +39,7 @@ from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
 from ..importer_specification import ImporterSpecification
 from ..mvcmodels.mappings_model import MappingsModel
-from ...widgets import UrlSelector
+from ...widgets import UrlSelectorDialog
 
 _CONNECTOR_NAME_TO_CLASS = {
     "CSVConnector": CSVConnector,
@@ -189,7 +189,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.comboBox_source_file.setCurrentText(filepath)
 
     def _get_source_url(self):
-        selector = UrlSelector(self._toolbox, parent=self)
+        selector = UrlSelectorDialog(self._toolbox, parent=self)
         selector.exec()
         return selector.url
 
