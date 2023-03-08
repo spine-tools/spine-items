@@ -42,7 +42,7 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
     if logger is None:
         logger = _NoLogger()
     if not urllib_url:
-        logger.msg_error.emit(f"No URL specified for <b>{item_name}</b>. Please specify one and try again")
+        logger.msg_error.emit(f"No URL specified for {selections}. Please specify one and try again")
         return None
     try:
         url = {key: value for key, value in urllib_url.items() if value}

@@ -189,7 +189,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.comboBox_source_file.setCurrentText(filepath)
 
     def _get_source_url(self):
-        selector = UrlSelectorDialog(self._toolbox, parent=self)
+        selector = UrlSelectorDialog(self._toolbox.qsettigns(), self._toolbox, parent=self)
         selector.exec()
         return selector.url
 

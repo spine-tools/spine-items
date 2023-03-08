@@ -14,7 +14,7 @@ Contains Exporter's undo commands.
 :authors: A. Soininen (VTT)
 :date:    11.12.2020
 """
-from copy import deepcopy
+from copy import copy, deepcopy
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QUndoCommand
@@ -50,6 +50,31 @@ class UpdateOutLabel(SpineToolboxCommand):
 
     def undo(self):
         self._exporter.set_out_label(self._previous_out_label, self._in_label)
+
+
+class UpdateOutUrl(SpineToolboxCommand):
+    """Command to update exporter's output URL."""
+
+    def __init__(self, exporter, in_label, url, previous_url):
+        """
+        Args:
+            exporter (Exporter): exporter
+            in_label (str): input resource label
+            url (dict, optional): new URL dict
+            previous_url (dict, optional): previous URL dict
+        """
+        super().__init__()
+        self._exporter = exporter
+        self._in_label = in_label
+        self._url = copy(url)
+        self._previous_url = copy(previous_url)
+        self.setText(f"change output URL in {exporter.name}")
+
+    def redo(self):
+        self._exporter.set_out_url(self._in_label, copy(self._url))
+
+    def undo(self):
+        self._exporter.set_out_url(self._in_label, copy(self._previous_url))
 
 
 class NewMapping(QUndoCommand):

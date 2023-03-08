@@ -526,20 +526,22 @@ class UrlSelectorWidget(QWidget):
 class UrlSelectorDialog(QDialog):
     msg_error = Signal(str)
 
-    def __init__(self, toolbox, parent=None):
+    def __init__(self, app_settings, logger, parent=None):
         """
         Args:
-            toolbox (ToolboxUI): Toolbox main window
-            parent (QWidget, optional): parent widget; toolbox will be used if not set
+            app_settings (QSettings): Toolbox settings
+            logger (LoggerInterface): logger
+            parent (QWidget, optional): parent widget
         """
         from .ui.url_selector_dialog import Ui_Dialog  # pylint: disable=import-outside-toplevel
 
-        super().__init__(parent if parent is not None else toolbox)
+        super().__init__(parent)
         self._sa_url = None
-        self._toolbox = toolbox
+        self._app_settings = app_settings
+        self._logger = logger
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
-        self.ui.url_selector_widget.setup(KNOWN_SQL_DIALECTS, self._browse_sqlite_file, self._toolbox)
+        self.ui.url_selector_widget.setup(KNOWN_SQL_DIALECTS, self._browse_sqlite_file, self._logger)
         self.ui.url_selector_widget.url_changed.connect(self._refresh_url)
         # Add status bar to form
         self.statusbar = QStatusBar(self)
@@ -555,6 +557,17 @@ class UrlSelectorDialog(QDialog):
         if self._sa_url is None:
             return ""
         return str(self._sa_url)
+
+    def url_dict(self):
+        return self.ui.url_selector_widget.url_dict()
+
+    def set_url_dict(self, url):
+        """Sets the URL.
+
+        Args:
+            url (dict): URL as dict
+        """
+        self.ui.url_selector_widget.set_url(url)
 
     @property
     def dialect(self):
@@ -578,6 +591,6 @@ class UrlSelectorDialog(QDialog):
         filter_ = "*.sqlite;;*.*"
         key = "selectImportSourceSQLiteFile"
         filepath, _ = get_open_file_name_in_last_dir(
-            self._toolbox.qsettings(), key, self, "Select an SQLite file", APPLICATION_PATH, filter_=filter_
+            self._app_settings, key, self, "Select an SQLite file", APPLICATION_PATH, filter_=filter_
         )
         return filepath if filepath else None

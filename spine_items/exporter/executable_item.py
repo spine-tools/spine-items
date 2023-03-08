@@ -27,7 +27,7 @@ from spine_engine.utils.serialization import deserialize_path
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spinedb_api import clear_filter_configs
 from ..utils import generate_filter_subdirectory_name
-from .utils import Database
+from .utils import Database, output_database_resources
 from spinedb_api.spine_io import gdx_utils
 from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 from .do_work import do_work
@@ -110,6 +110,27 @@ class ExecutableItem(ExecutableItemBase):
             channel.in_label = resource.label
         return channel
 
+    def _out_urls(self, resources):
+        """Returns output URLs for given input databases.
+
+        Args:
+            resources (Iterable of ProjectItemResource): forward database resources
+
+        Returns:
+            dict: a mapping from full database URL to output URL
+        """
+        out_urls = {}
+        for resource in resources:
+            channel = next((channel for channel in self._output_channels if channel.in_label == resource.label), None)
+            if channel is None:
+                channel = self._find_legacy_output_channel(resource)
+                if channel is None:
+                    continue
+            if not channel.out_label:
+                continue
+            out_urls[resource.url] = channel.out_url
+        return out_urls
+
     def stop_execution(self):
         """Stops executing this item."""
         super().stop_execution()
@@ -125,9 +146,11 @@ class ExecutableItem(ExecutableItemBase):
         if self._specification is None:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No export settings configured. Skipping.")
             return ItemExecutionFinishState.SKIPPED
-        databases = self._database_out_labels(r for r in forward_resources if r.type_ == "database")
+        database_resources = tuple(r for r in forward_resources if r.type_ == "database")
+        databases = self._database_out_labels(database_resources)
         if not databases:
             return ItemExecutionFinishState.SKIPPED
+        out_urls = self._out_urls(database_resources)
         gams_system_directory = ""
         if self._specification.output_format == OutputFormat.GDX:
             gams_system_directory = self._resolve_gams_system_directory()
@@ -144,13 +167,13 @@ class ExecutableItem(ExecutableItemBase):
                 gams_system_directory,
                 str(out_dir),
                 databases,
+                out_urls,
                 self._filter_id,
                 generate_filter_subdirectory_name(forward_resources, self.hash_filter_id()),
                 self._logger,
             ),
         )
         result = self._process.run_until_complete()
-        # result contains only the success flag if execution was forcibly stopped.
         if len(result) > 1:
             self._result_files = result[1]
             file_name = (
@@ -181,11 +204,11 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        if self._result_files is None:
-            return []
         resources = list()
         for label, output_files in self._result_files.items():
             resources += [file_resource_in_pack(self.name, label, str(Path(self._data_dir, f))) for f in output_files]
+        if self._specification is not None and self._specification.output_format == OutputFormat.SQL:
+            resources += output_database_resources(self.name, self._output_channels)
         return resources
 
     def _resolve_gams_system_directory(self):
@@ -206,12 +229,16 @@ class ExecutableItem(ExecutableItemBase):
         """See base class."""
         specification_name = item_dict["specification"]
         specification = cls._get_specification(name, ItemInfo.item_type(), specification_name, specifications, logger)
-        output_channels = [OutputChannel.from_dict(d, name) for d in item_dict.get("output_labels", [])]
+        output_channels = [OutputChannel.from_dict(d, name, project_dir) for d in item_dict.get("output_labels", [])]
         for db_dict in item_dict.get("databases", []):
             # legacy
             db = Database.from_dict(db_dict)
             db.url = clear_filter_configs(deserialize_path(db_dict["database_url"], project_dir))
             output_channels.append(OutputChannel(db.url, name, db.output_file_name))
+        for in_label, credentials in item_dict.get("db_credentials", {}).items():
+            for channel in output_channels:
+                if channel.in_label == in_label:
+                    channel.out_url.update(credentials)
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
