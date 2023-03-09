@@ -172,6 +172,7 @@ class TestTool(unittest.TestCase):
             self._assert_is_no_tool(tool)
             # Set the simple_exec tool specification manually
             tool._properties_ui.comboBox_tool.textActivated.emit("simple_exec")
+            tool._properties_ui.radioButton_execute_in_source.setChecked(True)
             self._assert_is_simple_exec_tool(tool)
             tool.deactivate()
             tool.activate()
