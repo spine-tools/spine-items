@@ -49,7 +49,6 @@ class TestTool(unittest.TestCase):
                 inputfiles_opt=["opt_input.csv"],
                 outputfiles=["output1.csv", "output2.csv"],
                 cmdline_args="<args>",
-                execute_in_work=False,
             ),
             ExecutableTool(
                 name="complex_exec",
@@ -63,7 +62,6 @@ class TestTool(unittest.TestCase):
                 inputfiles_opt=["opt/*.ini", "?abc.txt"],
                 outputfiles=["output1.csv", "output/output2.csv"],
                 cmdline_args="subunit",
-                execute_in_work=True,
             ),
         ]
         self.specification_dict = {x.name: x for x in specifications}
@@ -174,6 +172,7 @@ class TestTool(unittest.TestCase):
             self._assert_is_no_tool(tool)
             # Set the simple_exec tool specification manually
             tool._properties_ui.comboBox_tool.textActivated.emit("simple_exec")
+            tool._properties_ui.radioButton_execute_in_source.setChecked(True)
             self._assert_is_simple_exec_tool(tool)
             tool.deactivate()
             tool.activate()

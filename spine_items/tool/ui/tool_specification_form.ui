@@ -37,22 +37,25 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <property name="spacing">
-     <number>3</number>
+     <number>6</number>
     </property>
     <property name="leftMargin">
-     <number>3</number>
+     <number>0</number>
     </property>
     <property name="topMargin">
-     <number>3</number>
+     <number>6</number>
     </property>
     <property name="rightMargin">
-     <number>3</number>
+     <number>0</number>
     </property>
     <property name="bottomMargin">
-     <number>3</number>
+     <number>0</number>
     </property>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="spacing">
+       <number>9</number>
+      </property>
       <property name="leftMargin">
        <number>6</number>
       </property>
@@ -95,36 +98,9 @@
        </widget>
       </item>
       <item>
-       <widget class="Line" name="line_3">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="checkBox_execute_in_work">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, Tool specification is executed in a work directory (default).&lt;/p&gt;&lt;p&gt;If unchecked, Tool specification is executed in main program file directory.&lt;/p&gt;&lt;p&gt;It is recommended to uncheck this for &lt;span style=&quot; font-weight:600;&quot;&gt;Executable&lt;/span&gt; Tool specifications.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>Execute in work directory</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Command line arguments:</string>
+         <string>Command line arguments</string>
         </property>
        </widget>
       </item>

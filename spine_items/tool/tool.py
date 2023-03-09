@@ -209,7 +209,7 @@ class Tool(DBWriterItemBase):
         self.update_execute_in_work_button()
 
     def update_execute_in_work_button(self):
-        """Sets the execute in work radio button check state according to
+        """Sets execute in work radio button check state according to
         execute_in_work instance variable."""
         if not self._active:
             return
@@ -270,7 +270,6 @@ class Tool(DBWriterItemBase):
         if self._specification is None:
             return None
         undo_spec = self._specification.clone()
-        undo_spec.execute_in_work = self.execute_in_work
         return undo_spec
 
     def do_set_specification(self, specification):
@@ -280,8 +279,6 @@ class Tool(DBWriterItemBase):
         self._populate_cmdline_args_model()
         if self._active:
             self._update_tool_ui()
-        if specification:
-            self.do_update_execution_mode(specification.execute_in_work)
         self._resources_to_successors_changed()
         self._check_notifications()
         return True

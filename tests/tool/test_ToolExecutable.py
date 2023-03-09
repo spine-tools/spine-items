@@ -63,7 +63,6 @@ class TestToolExecutable(unittest.TestCase):
             includes=script_files,
             settings=mock_settings,
             logger=mock.MagicMock(),
-            execute_in_work=True,
         )
         specs_in_project = {"Tool": {"Python Tool": python_tool_spec}}
         temp_project_dir = str(pathlib.Path(self._temp_dir.name, "project"))

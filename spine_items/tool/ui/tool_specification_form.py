@@ -26,10 +26,10 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
-    QDockWidget, QFrame, QHBoxLayout, QHeaderView,
-    QLabel, QLineEdit, QMainWindow, QSizePolicy,
-    QStatusBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QDockWidget,
+    QFrame, QHBoxLayout, QHeaderView, QLabel,
+    QLineEdit, QMainWindow, QSizePolicy, QStatusBar,
+    QVBoxLayout, QWidget)
 
 from spinetoolbox.widgets.code_text_edit import CodeTextEdit
 from spinetoolbox.widgets.custom_qtreeview import (CustomTreeView, SourcesTreeView)
@@ -105,10 +105,11 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy)
         self.verticalLayout_3 = QVBoxLayout(self.centralwidget)
-        self.verticalLayout_3.setSpacing(3)
+        self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(3, 3, 3, 3)
+        self.verticalLayout_3.setContentsMargins(0, 6, 0, 0)
         self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setSpacing(9)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(6, -1, 6, -1)
         self.label_tooltype = QLabel(self.centralwidget)
@@ -124,26 +125,6 @@ class Ui_MainWindow(object):
         self.comboBox_tooltype.setMaximumSize(QSize(16777215, 24))
 
         self.horizontalLayout_2.addWidget(self.comboBox_tooltype)
-
-        self.line_3 = QFrame(self.centralwidget)
-        self.line_3.setObjectName(u"line_3")
-        self.line_3.setFrameShape(QFrame.VLine)
-        self.line_3.setFrameShadow(QFrame.Sunken)
-
-        self.horizontalLayout_2.addWidget(self.line_3)
-
-        self.checkBox_execute_in_work = QCheckBox(self.centralwidget)
-        self.checkBox_execute_in_work.setObjectName(u"checkBox_execute_in_work")
-        self.checkBox_execute_in_work.setChecked(True)
-
-        self.horizontalLayout_2.addWidget(self.checkBox_execute_in_work)
-
-        self.line = QFrame(self.centralwidget)
-        self.line.setObjectName(u"line")
-        self.line.setFrameShape(QFrame.VLine)
-        self.line.setFrameShadow(QFrame.Sunken)
-
-        self.horizontalLayout_2.addWidget(self.line)
 
         self.label_3 = QLabel(self.centralwidget)
         self.label_3.setObjectName(u"label_3")
@@ -321,11 +302,7 @@ class Ui_MainWindow(object):
         self.comboBox_tooltype.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Tool specification type</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.comboBox_tooltype.setCurrentText("")
-#if QT_CONFIG(tooltip)
-        self.checkBox_execute_in_work.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>If checked, Tool specification is executed in a work directory (default).</p><p>If unchecked, Tool specification is executed in main program file directory.</p><p>It is recommended to uncheck this for <span style=\" font-weight:600;\">Executable</span> Tool specifications.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_execute_in_work.setText(QCoreApplication.translate("MainWindow", u"Execute in work directory", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Command line arguments:", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Command line arguments", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_args.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Command line arguments (space-delimited) for the main program (optional). Use '@@' tags to refer to input files or URLs, see the User Guide for details.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
