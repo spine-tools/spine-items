@@ -20,7 +20,6 @@ from collections import OrderedDict
 import copy
 import logging
 import os.path
-import json
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .item_info import ItemInfo
@@ -39,7 +38,6 @@ OPTIONAL_KEYS = [
     "inputfiles_opt",
     "outputfiles",
     "cmdline_args",
-    "execute_in_work",
     "execution_settings",
 ]
 LIST_REQUIRED_KEYS = ["includes", "inputfiles", "inputfiles_opt", "outputfiles"]  # These should be lists
@@ -105,7 +103,6 @@ class ToolSpecification(ProjectItemSpecification):
         inputfiles_opt=None,
         outputfiles=None,
         cmdline_args=None,
-        execute_in_work=True,
     ):
         """
 
@@ -121,7 +118,6 @@ class ToolSpecification(ProjectItemSpecification):
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (str, optional): Tool command line arguments (read from tool definition file)
-            execute_in_work (bool): Execute in work folder
         """
         super().__init__(name, description, item_type=ItemInfo.item_type(), item_category=ItemInfo.item_category())
         self._settings = settings
@@ -141,7 +137,6 @@ class ToolSpecification(ProjectItemSpecification):
         self.inputfiles_opt = set(inputfiles_opt) if inputfiles_opt else set()
         self.outputfiles = set(outputfiles) if outputfiles else set()
         self.return_codes = {}
-        self.execute_in_work = execute_in_work
 
     def _includes_main_path_relative(self):
         return os.path.relpath(self.path, os.path.dirname(self.definition_file_path)).replace(os.path.sep, "/")
@@ -161,7 +156,6 @@ class ToolSpecification(ProjectItemSpecification):
             "inputfiles_opt": sorted(self.inputfiles_opt),
             "outputfiles": sorted(self.outputfiles),
             "cmdline_args": self.cmdline_args,
-            "execute_in_work": self.execute_in_work,
             "includes_main_path": self._includes_main_path_relative(),
         }
 
@@ -250,7 +244,6 @@ class GAMSTool(ToolSpecification):
         inputfiles_opt=None,
         outputfiles=None,
         cmdline_args=None,
-        execute_in_work=True,
     ):
         """
 
@@ -280,7 +273,6 @@ class GAMSTool(ToolSpecification):
             inputfiles_opt,
             outputfiles,
             cmdline_args,
-            execute_in_work,
         )
         main_file = includes[0]
         # Add .lst file to list of output files
@@ -411,7 +403,6 @@ class JuliaTool(ToolSpecification):
         inputfiles_opt=None,
         outputfiles=None,
         cmdline_args=None,
-        execute_in_work=True,
     ):
         """
         Args:
@@ -440,7 +431,6 @@ class JuliaTool(ToolSpecification):
             inputfiles_opt,
             outputfiles,
             cmdline_args,
-            execute_in_work,
         )
         self.main_prgm = includes[0]
         self.julia_options = OrderedDict()
@@ -486,7 +476,6 @@ class PythonTool(ToolSpecification):
         inputfiles_opt=None,
         outputfiles=None,
         cmdline_args=None,
-        execute_in_work=True,
         execution_settings=None,
     ):
         """
@@ -518,7 +507,6 @@ class PythonTool(ToolSpecification):
             inputfiles_opt,
             outputfiles,
             cmdline_args,
-            execute_in_work,
         )
         self.main_prgm = includes[0]
         self.python_options = OrderedDict()
@@ -604,7 +592,6 @@ class ExecutableTool(ToolSpecification):
         inputfiles_opt=None,
         outputfiles=None,
         cmdline_args=None,
-        execute_in_work=True,
         execution_settings=None,
         definition_file_path=None,
     ):
@@ -639,7 +626,6 @@ class ExecutableTool(ToolSpecification):
             inputfiles_opt,
             outputfiles,
             cmdline_args,
-            execute_in_work,
         )
         try:
             self.main_prgm = includes[0]

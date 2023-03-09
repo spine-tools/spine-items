@@ -49,7 +49,6 @@ class TestTool(unittest.TestCase):
                 inputfiles_opt=["opt_input.csv"],
                 outputfiles=["output1.csv", "output2.csv"],
                 cmdline_args="<args>",
-                execute_in_work=False,
             ),
             ExecutableTool(
                 name="complex_exec",
@@ -63,7 +62,6 @@ class TestTool(unittest.TestCase):
                 inputfiles_opt=["opt/*.ini", "?abc.txt"],
                 outputfiles=["output1.csv", "output/output2.csv"],
                 cmdline_args="subunit",
-                execute_in_work=True,
             ),
         ]
         self.specification_dict = {x.name: x for x in specifications}

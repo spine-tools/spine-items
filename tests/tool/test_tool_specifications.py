@@ -30,7 +30,6 @@ class TestToolSpecification(unittest.TestCase):
             ["*.dat", "a.csv", "z.zip", "*.xlsx"],
             ["*.zip", "*.atk"],
             ["99", "10"],
-            execute_in_work=False,
         )
         specification.definition_file_path = "/path/to/specification/file.json"
         specification_dict = specification.to_dict()
@@ -45,7 +44,6 @@ class TestToolSpecification(unittest.TestCase):
                 "inputfiles_opt": ["*.dat", "*.xlsx", "a.csv", "z.zip"],
                 "outputfiles": ["*.atk", "*.zip"],
                 "cmdline_args": ["99", "10"],
-                "execute_in_work": False,
                 "includes_main_path": "../tool",
             },
         )

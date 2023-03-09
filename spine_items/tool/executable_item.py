@@ -90,9 +90,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._tool_instance = None
 
     def _copy_input_files(self, paths, execution_dir):
-        """
-        Copies input files from given paths to work or source directory, depending on
-        where the Tool specification requires them to be.
+        """Copies input files from given paths to work or source
+        directory, depending on where the Tool specification
+        requires them to be.
 
         Args:
             paths (dict): key is path to destination file, value is path to source file
@@ -160,9 +160,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
         return True
 
     def _copy_optional_input_files(self, paths, execution_dir):
-        """
-        Copies optional input files from given paths to work or source directory, depending on
-        where the Tool specification requires them to be.
+        """Copies optional input files from given paths to work or source
+        directory, depending on where the Tool specification requires
+        them to be.
 
         Args:
             paths (dict): key is the source path, value is the destination path
@@ -501,8 +501,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             )
 
     def _find_input_files(self, resources):
-        """
-        Iterates required input  files in tool specification and looks for them in the given resources.
+        """Iterates required input  files in tool specification and looks for them in the given resources.
 
         Args:
             resources (list): resources available
@@ -520,8 +519,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         return file_paths
 
     def _find_optional_input_files(self, resources):
-        """
-        Tries to find optional input files from previous project items in the DAG.
+        """Tries to find optional input files from previous project items in the DAG.
 
         Args:
             resources (list): resources available
@@ -610,8 +608,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._logger.msg_warning.emit(f"\tNo output files defined for this Tool specification. {tip_anchor}")
 
     def _optional_output_destination_paths(self, paths, execution_dir):
-        """
-        Returns a dictionary telling where optional output files should be copied to before execution.
+        """Returns a dictionary telling where optional output files should be copied to before execution.
 
         Args:
             paths (dict): key is the optional file name pattern, value is a list of paths to source files
@@ -680,14 +677,13 @@ class ExecutableItem(DBWriterExecutableItemBase):
 
 
 def _count_files_and_dirs(paths):
-    """
-    Counts the number of files and directories in given paths.
+    """Counts the number of files and directories in given paths.
 
     Args:
         paths (list): list of paths
 
     Returns:
-        Tuple containing the number of required files and directories.
+        tuple: Tuple containing the number of required files and directories.
     """
     n_dir = 0
     n_file = 0
@@ -717,16 +713,27 @@ def _create_output_dir_timestamp():
 
 
 def _execution_directory(work_dir, tool_specification):
-    """
-    Returns the path to the execution directory, depending on ``execute_in_work``.
+    """Returns the path to the execution directory.
 
-    If ``execute_in_work`` is ``True``, a new unique path will be returned.
-    If a main program file does not exist, Tool spec definition file path is
-    returned. Otherwise, the main program file path from tool specification
-    is returned.
+    The returned path is a new unique path when the user
+    has selected to execute the Tool in work directory.
+
+    The returned path is the directory where the Tool spec's
+    main program file is located when the user has selected
+    to execute the Tool in source directory.
+
+    The returned path is the directory where the Tool spec's
+    definition file is located when the user has selected
+    to execute the Tool in source directory and the Tool
+    spec has no main program file (it is an Executable Tool
+    spec).
+
+    Args:
+        work_dir (str): Path to work dir or None
+        tool_specification (ToolSpecification): Tool spec instance
 
     Returns:
-        str: a full path to next basedir
+        str: Full path to execution dir
     """
     if work_dir is not None:
         basedir = os.path.join(work_dir, _unique_dir_name(tool_specification))
@@ -737,12 +744,12 @@ def _execution_directory(work_dir, tool_specification):
 
 
 def _find_files_in_pattern(pattern, available_file_paths):
-    """
-    Returns a list of files that match the given pattern.
+    """Returns a list of files that match the given pattern.
 
     Args:
-        pattern (str): file pattern
-        available_file_paths (list): list of available file paths from upstream items
+        pattern (str): File pattern
+        available_file_paths (list): List of available file paths from upstream items
+
     Returns:
         list: List of (full) paths
     """

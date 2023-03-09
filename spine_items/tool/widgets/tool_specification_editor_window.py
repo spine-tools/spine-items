@@ -78,7 +78,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.comboBox_tooltype.setCurrentIndex(-1)
         # if a specification is given, fill the form with data from it
         if specification is not None:
-            self._ui.checkBox_execute_in_work.setChecked(specification.execute_in_work)
             self._ui.lineEdit_args.setText(" ".join(specification.cmdline_args))
             tooltype = specification.tooltype.lower()
             index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == tooltype), -1)
@@ -212,7 +211,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         else:
             self.includes_main_path = os.path.abspath(main_prgm_dir)
         self._label_main_path.setText(self.includes_main_path)
-        new_spec_dict["execute_in_work"] = self._ui.checkBox_execute_in_work.isChecked()
         new_spec_dict["includes"] = [main_prgm_file_name] if main_prgm_file_name else []
         new_spec_dict["includes"] += self._additional_program_file_list()
         new_spec_dict["inputfiles"] = self._input_file_list()
@@ -483,7 +481,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # Push undo commands
         self._ui.comboBox_tooltype.currentIndexChanged.connect(self._push_change_tooltype_command)
         self._ui.comboBox_tooltype.currentIndexChanged.connect(self._show_optional_widget)
-        self._ui.checkBox_execute_in_work.toggled.connect(self._push_change_execute_in_work_command)
         self._ui.lineEdit_args.editingFinished.connect(self._push_change_args_command)
         self.io_files_model.dataChanged.connect(self._push_io_file_renamed_command)
         # Selection changed
@@ -607,19 +604,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         opt_widget = self._get_optional_widget("executable")
         index = next(iter(k for k, t in enumerate(opt_widget.shells) if t.lower() == value), 0)
         opt_widget.ui.comboBox_shell.setCurrentIndex(index)
-
-    @Slot(bool)
-    def _push_change_execute_in_work_command(self, new_value):
-        old_value = self.spec_dict.get("execute_in_work", True)
-        if new_value == old_value:
-            return
-        self._undo_stack.push(
-            ChangeSpecPropertyCommand(self._set_execute_in_work, new_value, old_value, "change execute in work")
-        )
-
-    def _set_execute_in_work(self, value):
-        self.spec_dict["execute_in_work"] = value
-        self._ui.checkBox_execute_in_work.setChecked(value)
 
     @Slot()
     def _push_change_args_command(self):
