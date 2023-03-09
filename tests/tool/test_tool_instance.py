@@ -40,22 +40,20 @@ class TestPythonToolInstance(unittest.TestCase):
             instance.prepare([])
         self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py"'])
 
-    @unittest.skip("It get's stuck waiting for the persistent process to interrupt")
     def test_prepare_with_cmd_line_arguments_in_persistent_process(self):
         instance = self._make_tool_instance(False)
         with mock.patch("spine_engine.execution_managers.persistent_execution_manager.PersistentManagerBase"):
             instance.prepare(["arg1", "arg2"])
         self.assertEqual(instance.program, [sys.executable])
-        self.assertEqual(instance.exec_mngr.alias, "# Running 'python main.py arg1 arg2'")
+        self.assertEqual(instance.exec_mngr.alias, "python main.py arg1 arg2")
         instance.terminate_instance()
 
-    @unittest.skip("It get's stuck waiting for the persistent process to interrupt")
     def test_prepare_without_cmd_line_arguments_in_persistent_process(self):
         instance = self._make_tool_instance(False)
         with mock.patch("spine_engine.execution_managers.persistent_execution_manager.PersistentManagerBase"):
             instance.prepare([])
         self.assertEqual(instance.program, [sys.executable])
-        self.assertEqual(instance.exec_mngr.alias, "# Running 'python main.py'")
+        self.assertEqual(instance.exec_mngr.alias, "python main.py")
         instance.terminate_instance()
 
     @staticmethod
