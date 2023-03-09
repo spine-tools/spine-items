@@ -105,10 +105,11 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy)
         self.verticalLayout_3 = QVBoxLayout(self.centralwidget)
-        self.verticalLayout_3.setSpacing(3)
+        self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(3, 3, 3, 3)
+        self.verticalLayout_3.setContentsMargins(0, 6, 0, 0)
         self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setSpacing(9)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(6, -1, 6, -1)
         self.label_tooltype = QLabel(self.centralwidget)
@@ -124,13 +125,6 @@ class Ui_MainWindow(object):
         self.comboBox_tooltype.setMaximumSize(QSize(16777215, 24))
 
         self.horizontalLayout_2.addWidget(self.comboBox_tooltype)
-
-        self.line = QFrame(self.centralwidget)
-        self.line.setObjectName(u"line")
-        self.line.setFrameShape(QFrame.VLine)
-        self.line.setFrameShadow(QFrame.Sunken)
-
-        self.horizontalLayout_2.addWidget(self.line)
 
         self.label_3 = QLabel(self.centralwidget)
         self.label_3.setObjectName(u"label_3")
@@ -308,7 +302,7 @@ class Ui_MainWindow(object):
         self.comboBox_tooltype.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Tool specification type</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.comboBox_tooltype.setCurrentText("")
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Command line arguments:", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Command line arguments", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_args.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Command line arguments (space-delimited) for the main program (optional). Use '@@' tags to refer to input files or URLs, see the User Guide for details.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
