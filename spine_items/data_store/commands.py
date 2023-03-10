@@ -15,25 +15,59 @@ Undo/redo commands for the DataStore project item.
 :authors: M. Marin (KTH)
 :date:   5.5.2020
 """
+from enum import IntEnum, unique
 from spine_items.commands import SpineToolboxCommand
 
 
+@unique
+class CommandId(IntEnum):
+    UPDATE_URL = 1
+
+
 class UpdateDSURLCommand(SpineToolboxCommand):
-    def __init__(self, ds, **kwargs):
+    def __init__(self, ds, was_url_valid, **kwargs):
         """Command to update DS url.
 
         Args:
             ds (DataStore): the DS
+            was_url_valid (bool): True if previous URL was valid, False otherwise
             kwargs: url keys and their values
         """
         super().__init__()
         self.ds = ds
+        self._undo_url_is_valid = was_url_valid
         self.redo_kwargs = kwargs
-        self.undo_kwargs = {k: self.ds._url[k] for k in kwargs}
+        self.undo_kwargs = {k: self.ds.url()[k] for k in kwargs}
         if len(kwargs) == 1:
             self.setText(f"change {list(kwargs.keys())[0]} of {ds.name}")
         else:
             self.setText(f"change url of {ds.name}")
+
+    def id(self):
+        return CommandId.UPDATE_URL.value
+
+    def mergeWith(self, command):
+        if not isinstance(command, UpdateDSURLCommand) or self.ds is not command.ds or command._undo_url_is_valid:
+            return False
+        diff_key = None
+        for key, value in self.redo_kwargs.items():
+            old_value = self.undo_kwargs[key]
+            if value != old_value:
+                if diff_key is not None:
+                    return False
+                diff_key = key
+                break
+        else:
+            raise RuntimeError("Logic error: nothing changes between undo and redo URLs.")
+        if diff_key == "dialect":
+            return False
+        changed_value = command.redo_kwargs[diff_key]
+        if self.redo_kwargs[diff_key] == changed_value:
+            return False
+        self.redo_kwargs[diff_key] = changed_value
+        if self.redo_kwargs[diff_key] == self.undo_kwargs[diff_key]:
+            self.setObsolete(True)
+        return True
 
     def redo(self):
         self.ds.do_update_url(**self.redo_kwargs)

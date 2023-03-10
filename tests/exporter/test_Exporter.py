@@ -180,6 +180,8 @@ class TestExporterWithToolbox(unittest.TestCase):
         url_dict = {"dialect": "sqlite", "database": os.path.join(self._temp_dir.name, "db.sqlite")}
         data_store = DataStore("Dummy data store", "", 0.0, 0.0, self._toolbox, project, url_dict)
         project.add_item(data_store)
+        while not data_store.is_url_validated():
+            QApplication.processEvents()
         specification = Specification("Test spec", "Exporter specification for testing", output_format=OutputFormat.CSV)
         project.add_specification(specification)
         exporter = Exporter("Test exporter", "Exporter for unit testing", 0.0, 0.0, self._toolbox, project, "Test spec")

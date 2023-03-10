@@ -16,6 +16,7 @@ Unit tests for DataStore class.
 :date:   6.12.2018
 """
 from contextlib import contextmanager
+from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -155,14 +156,18 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.ds._update_url_from_properties()
         url = self.ds_properties_ui.url_selector_widget.url_dict()
         self.assertEqual(url["dialect"], "sqlite")
+        calls_with_non_empty_resources = []
         failure_messages = []
 
-        def check_database_exists(data_store, for_successors):
+        def check_database_exists(data_store, for_successors, non_empty_calls):
             if for_successors:
                 resources = data_store.resources_for_direct_successors()
             else:
                 resources = data_store.resources_for_direct_predecessors()
-            if len(resources) != 1:
+            if len(resources) == 0:
+                return
+            non_empty_calls.append(1)
+            if len(resources) > 1:
                 failure_messages.append("resources length is not equal to 1")
                 return
             call_args = self.toolbox.db_mngr.create_new_spine_database.call_args
@@ -173,15 +178,19 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
                 failure_messages.append("create_new_spine_database() called with wrong URL")
 
         with mock.patch("spine_items.data_store.data_store.QFileDialog") as file_dialog:
+            Path(database_file_path).touch()
             file_dialog.getSaveFileName.return_value = (database_file_path,)
             self.project.notify_resource_changes_to_successors.side_effect = lambda item: check_database_exists(
-                item, True
+                item, True, calls_with_non_empty_resources
             )
             self.project.notify_resource_changes_to_predecessors.side_effect = lambda item: check_database_exists(
-                item, False
+                item, False, calls_with_non_empty_resources
             )
             self.assertTrue(self.ds_properties_ui.pushButton_create_new_spine_db.isEnabled())
             self.ds_properties_ui.pushButton_create_new_spine_db.click()
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
+        self.assertGreater(len(calls_with_non_empty_resources), 0)
         if failure_messages:
             self.fail(failure_messages[0])
 
@@ -235,8 +244,11 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.ds._update_url_from_properties()
         self.toolbox.db_mngr = mock.MagicMock()
         self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
+        self.assertTrue(self.ds_properties_ui.pushButton_ds_open_editor.isEnabled())
         self.ds_properties_ui.pushButton_ds_open_editor.click()
-        sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
+        sa_url = convert_to_sqlalchemy_url(self.ds.url(), "DS", logger=None)
         self.assertIsNotNone(sa_url)
         self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: 'DS'})
 
@@ -250,8 +262,11 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.ds._update_url_from_properties()
         self.toolbox.db_mngr = mock.MagicMock()
         self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
+        self.assertTrue(self.ds_properties_ui.pushButton_ds_open_editor.isEnabled())
         self.ds_properties_ui.pushButton_ds_open_editor.click()
-        sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
+        sa_url = convert_to_sqlalchemy_url(self.ds.url(), "DS", logger=None)
         self.assertIsNotNone(sa_url)
         self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: 'DS'})
 
@@ -313,11 +328,15 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
 
     def test_do_update_url_uses_filterable_resources_when_replacing_them(self):
         database_1 = os.path.join(self._temp_dir.name, "db1.sqlite")
+        Path(database_1).touch()
         self.ds.do_update_url(dialect="sqlite", database=database_1)
         self.project.notify_resource_changes_to_predecessors.assert_called_once_with(self.ds)
         self.project.notify_resource_changes_to_successors.assert_called_once_with(self.ds)
         database_2 = os.path.join(self._temp_dir.name, "db2.sqlite")
+        Path(database_2).touch()
         self.ds.do_update_url(dialect="sqlite", database=database_2)
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
         expected_old_resources = [
             database_resource(
                 self.ds.name, "sqlite:///" + database_1, label=database_label(self.ds.name), filterable=True

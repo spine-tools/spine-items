@@ -15,14 +15,14 @@ Contains Data Store's executable item as well as support utilities.
 :authors: A. Soininen (VTT)
 :date:   1.4.2020
 """
-
+from pathlib import Path
 from spinedb_api import DatabaseMapping
 from spinedb_api.exception import SpineDBAPIError, SpineDBVersionError
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from ..utils import convert_to_sqlalchemy_url
+from ..utils import check_database_url, convert_to_sqlalchemy_url
 
 
 class ExecutableItem(ExecutableItemBase):
@@ -30,32 +30,60 @@ class ExecutableItem(ExecutableItemBase):
         """
         Args:
             name (str): item's name
-            url (str): database's URL
-            logs_dir (str): path to the directory where logs should be stored
+            url (URL): database's URL
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
         super().__init__(name, project_dir, logger)
         self._url = url
+        self._validated = False
 
     @staticmethod
     def item_type():
         """Returns the data store executable's type identifier string."""
         return ItemInfo.item_type()
 
+    def ready_to_execute(self, settings):
+        """See base class."""
+        if not super().ready_to_execute(settings) or not self._check_sqlite_file_exists():
+            return False
+        error = check_database_url(self._url)
+        return error is None
+
     def _get_url(self):
-        try:
-            DatabaseMapping.create_engine(self._url, create=True)
-            return self._url
-        except SpineDBVersionError as v_err:
-            prompt = {"type": "upgrade_db", "url": self._url, "current": v_err.current, "expected": v_err.expected}
-            if not self._logger.prompt.emit(prompt):
-                return None
-            DatabaseMapping.create_engine(self._url, upgrade=True)
-            return self._url
-        except SpineDBAPIError as err:
-            self._logger.msg_error.emit(str(err))
+        if not self._check_sqlite_file_exists():
+            self._logger.msg_error.emit("SQLite file does not exist.")
             return None
+        if not self._validated:
+            try:
+                DatabaseMapping.create_engine(self._url, create=True)
+                return self._url
+            except SpineDBVersionError as v_err:
+                prompt = {"type": "upgrade_db", "url": self._url, "current": v_err.current, "expected": v_err.expected}
+                if not self._logger.prompt.emit(prompt):
+                    return None
+                DatabaseMapping.create_engine(self._url, upgrade=True)
+                return self._url
+            except SpineDBAPIError as err:
+                self._logger.msg_error.emit(str(err))
+                return None
+            finally:
+                self._validated = True
+        return self._url
+
+    def _check_sqlite_file_exists(self):
+        """Checks that the database file exists for SQLite databases.
+
+        Returns:
+            bool: True if SQLite file exists or database has different dialect, False otherwise
+        """
+        if self._url.drivername.startswith("sqlite"):
+            database_path = Path(self._url.database)
+            if not database_path.exists():
+                return False
+            elif database_path.is_dir():
+                return False
+        return True
 
     def _output_resources_backward(self):
         """See base class."""
@@ -63,8 +91,6 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        if self._url is None:
-            return []
         return scan_for_resources(self, self._get_url())
 
     @classmethod

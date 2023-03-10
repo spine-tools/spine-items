@@ -59,6 +59,8 @@ class DataStore(ProjectItem):
         if url is None:
             url = dict()
         self._url = self.parse_url(url)
+        self._url_validated = False
+        self._resource_to_replace = None
         self._multi_db_editors_open = {}
         self._open_url_menu = QMenu("Open URL in Spine DB editor", self._toolbox)
         self._open_url_action = QAction("Open URL in Spine DB editor")
@@ -179,10 +181,12 @@ class DataStore(ProjectItem):
         Args:
             **kwargs: URL keys and values
         """
+        invalidating_url = self._url_validated
+        self._url_validated = False
         kwargs = {k: v for k, v in kwargs.items() if v != self._url[k]}
         if not kwargs:
             return False
-        self._toolbox.undo_stack.push(UpdateDSURLCommand(self, **kwargs))
+        self._toolbox.undo_stack.push(UpdateDSURLCommand(self, invalidating_url, **kwargs))
         return True
 
     def do_update_url(self, **kwargs):
@@ -194,27 +198,27 @@ class DataStore(ProjectItem):
         new_url = convert_to_sqlalchemy_url(self._url, self.name)
         self.load_url_into_selections(self._url)
         if old_url and new_url:
-            old = database_resource(self.name, str(old_url), label=database_label(self.name), filterable=True)
-            new = database_resource(self.name, str(new_url), label=database_label(self.name), filterable=True)
-            self._resources_to_predecessors_replaced([old], [new])
-            self._resources_to_successors_replaced([old], [new])
+            self._resource_to_replace = database_resource(
+                self.name, str(old_url), label=database_label(self.name), filterable=True
+            )
         else:
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
         self._check_notifications()
 
     def _update_actions_enabled(self):
-        open_editor_enabled = convert_to_sqlalchemy_url(self._url, self.name) is not None
-        self._open_url_action.setEnabled(open_editor_enabled)
-        self._open_url_menu.setEnabled(open_editor_enabled)
+        url_exists = convert_to_sqlalchemy_url(self._url, self.name) is not None
+        url_valid = url_exists and self._url_validated
+        self._open_url_action.setEnabled(url_valid)
+        self._open_url_menu.setEnabled(url_valid)
         if not self._active:
             return
         is_sqlite = self._url["dialect"].lower() == "sqlite"
-        self._properties_ui.pushButton_ds_open_editor.setEnabled(open_editor_enabled)
-        self._properties_ui.pushButton_create_new_spine_db.setEnabled(is_sqlite or open_editor_enabled)
-        self._properties_ui.purge_button.setEnabled(open_editor_enabled)
-        self._properties_ui.toolButton_copy_url.setEnabled(open_editor_enabled)
-        self._properties_ui.toolButton_vacuum.setEnabled(is_sqlite and open_editor_enabled)
+        self._properties_ui.pushButton_ds_open_editor.setEnabled(url_valid)
+        self._properties_ui.pushButton_create_new_spine_db.setEnabled(is_sqlite or url_valid)
+        self._properties_ui.purge_button.setEnabled(url_valid)
+        self._properties_ui.toolButton_copy_url.setEnabled(url_exists)
+        self._properties_ui.toolButton_vacuum.setEnabled(is_sqlite and url_valid)
 
     @Slot(bool)
     def _show_purge_dialog(self, _=False):
@@ -268,6 +272,11 @@ class DataStore(ProjectItem):
     @Slot(bool)
     def open_url_in_spine_db_editor(self, checked=False):
         """Opens current url in the Spine database editor."""
+        if not self._url_validated:
+            self._logger.msg_error.emit(
+                f"<b>{self.name}</b> is still validating the database URL or the URL is invalid."
+            )
+            return
         sa_url = self.sql_alchemy_url()
         if sa_url is not None:
             db_url_codenames = {sa_url: self.name}
@@ -275,11 +284,19 @@ class DataStore(ProjectItem):
         self._check_notifications()
 
     def _open_url_in_new_db_editor(self, checked=False):
+        if not self._url_validated:
+            self._logger.msg_error.emit(
+                f"<b>{self.name}</b> is still validating the database URL or the URL is invalid."
+            )
+            return
         sa_url = self.sql_alchemy_url()
         if sa_url is not None:
             MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name}).show()
 
     def _open_url_in_existing_db_editor(self, db_editor):
+        if not self._url_validated:
+            db_editor.add_message(f"<b>{self.name}</b> is still validating the database URL or the URL is invalid.")
+            return
         sa_url = self.sql_alchemy_url()
         if sa_url is not None:
             db_editor.add_new_tab({sa_url: self.name})
@@ -316,6 +333,7 @@ class DataStore(ProjectItem):
 
     def _check_notifications(self):
         """Updates the SqlAlchemy format URL and checks for notifications"""
+        self._update_actions_enabled()
         sa_url = convert_to_sqlalchemy_url(self._url, self.name)
         if sa_url is None:
             self.clear_notifications()
@@ -324,7 +342,7 @@ class DataStore(ProjectItem):
             )
             return
         self._database_validator.validate_url(
-            self._url["dialect"], sa_url, self._set_invalid_url_notification, self._clear_notifications
+            self._url["dialect"], sa_url, self._set_invalid_url_notification, self._accept_url
         )
 
     @Slot(str)
@@ -336,10 +354,33 @@ class DataStore(ProjectItem):
         """
         self.clear_notifications()
         self.add_notification(f"Couldn't connect to the database: {error_message}")
+        if self._resource_to_replace is None:
+            self._resources_to_predecessors_changed()
+            self._resources_to_successors_changed()
 
     @Slot()
-    def _clear_notifications(self):
+    def _accept_url(self):
+        """Sets URL as validated and updates advertised resources."""
+        self._url_validated = True
         self.clear_notifications()
+        if self._resource_to_replace is not None:
+            sa_url = convert_to_sqlalchemy_url(self._url, self.name)
+            new = database_resource(self.name, str(sa_url), label=database_label(self.name), filterable=True)
+            self._resources_to_predecessors_replaced([self._resource_to_replace], [new])
+            self._resources_to_successors_replaced([self._resource_to_replace], [new])
+            self._resource_to_replace = None
+        else:
+            self._resources_to_predecessors_changed()
+            self._resources_to_successors_changed()
+        self._update_actions_enabled()
+
+    def is_url_validated(self):
+        """Tests whether the URL has been validated.
+
+        Returns:
+            bool: True if URL has been validated, False otherwise
+        """
+        return self._url_validated
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
@@ -431,6 +472,8 @@ class DataStore(ProjectItem):
 
     def resources_for_direct_successors(self):
         """See base class."""
+        if not self._url_validated:
+            return []
         sa_url = convert_to_sqlalchemy_url(self._url, self.name)
         resources = scan_for_resources(self, sa_url)
         return resources
