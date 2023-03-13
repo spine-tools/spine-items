@@ -25,32 +25,26 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractButton, QApplication, QComboBox, QDialog,
-    QDialogButtonBox, QFrame, QGridLayout, QHBoxLayout,
-    QLabel, QLineEdit, QSizePolicy, QSpacerItem,
+from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
+    QHBoxLayout, QLabel, QLineEdit, QSizePolicy,
     QToolButton, QVBoxLayout, QWidget)
 
-from spinetoolbox.widgets.custom_qlineedits import (CustomQLineEdit, PropertyQLineEdit)
+from spine_items.widgets import FileDropTargetLineEdit
 from spine_items import resources_icons_rc
 
-class Ui_Dialog(object):
-    def setupUi(self, Dialog):
-        if not Dialog.objectName():
-            Dialog.setObjectName(u"Dialog")
-        Dialog.resize(363, 279)
-        self.verticalLayout = QVBoxLayout(Dialog)
-        self.verticalLayout.setSpacing(0)
+class Ui_Form(object):
+    def setupUi(self, Form):
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
+        Form.resize(381, 221)
+        self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_2 = QVBoxLayout()
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(9, 9, 9, 9)
-        self.frame = QFrame(Dialog)
+        self.frame = QFrame(Form)
         self.frame.setObjectName(u"frame")
         self.gridLayout = QGridLayout(self.frame)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(3, 3, 3, 3)
-        self.lineEdit_password = PropertyQLineEdit(self.frame)
+        self.lineEdit_password = QLineEdit(self.frame)
         self.lineEdit_password.setObjectName(u"lineEdit_password")
         self.lineEdit_password.setEnabled(False)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -102,7 +96,7 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_dialect, 0, 0, 1, 1)
 
-        self.lineEdit_port = PropertyQLineEdit(self.frame)
+        self.lineEdit_port = QLineEdit(self.frame)
         self.lineEdit_port.setObjectName(u"lineEdit_port")
         self.lineEdit_port.setEnabled(False)
         sizePolicy.setHeightForWidth(self.lineEdit_port.sizePolicy().hasHeightForWidth())
@@ -137,7 +131,7 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.comboBox_dsn, 1, 1, 1, 5)
 
-        self.lineEdit_host = PropertyQLineEdit(self.frame)
+        self.lineEdit_host = QLineEdit(self.frame)
         self.lineEdit_host.setObjectName(u"lineEdit_host")
         self.lineEdit_host.setEnabled(False)
         sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -158,7 +152,7 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_password, 3, 0, 1, 1)
 
-        self.lineEdit_username = PropertyQLineEdit(self.frame)
+        self.lineEdit_username = QLineEdit(self.frame)
         self.lineEdit_username.setObjectName(u"lineEdit_username")
         self.lineEdit_username.setEnabled(False)
         sizePolicy.setHeightForWidth(self.lineEdit_username.sizePolicy().hasHeightForWidth())
@@ -178,7 +172,7 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.lineEdit_database = CustomQLineEdit(self.frame)
+        self.lineEdit_database = FileDropTargetLineEdit(self.frame)
         self.lineEdit_database.setObjectName(u"lineEdit_database")
         self.lineEdit_database.setEnabled(False)
         sizePolicy.setHeightForWidth(self.lineEdit_database.sizePolicy().hasHeightForWidth())
@@ -207,31 +201,7 @@ class Ui_Dialog(object):
         self.gridLayout.addLayout(self.horizontalLayout_4, 6, 1, 1, 5)
 
 
-        self.verticalLayout_2.addWidget(self.frame)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.verticalLayout_2.addItem(self.verticalSpacer)
-
-        self.buttonBox = QDialogButtonBox(Dialog)
-        self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
-
-        self.verticalLayout_2.addWidget(self.buttonBox)
-
-
-        self.verticalLayout.addLayout(self.verticalLayout_2)
-
-        self.horizontalLayout_statusbar_ph = QHBoxLayout()
-        self.horizontalLayout_statusbar_ph.setObjectName(u"horizontalLayout_statusbar_ph")
-        self.widget_invisible_dummy = QWidget(Dialog)
-        self.widget_invisible_dummy.setObjectName(u"widget_invisible_dummy")
-
-        self.horizontalLayout_statusbar_ph.addWidget(self.widget_invisible_dummy)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_statusbar_ph)
+        self.verticalLayout.addWidget(self.frame)
 
         QWidget.setTabOrder(self.comboBox_dialect, self.comboBox_dsn)
         QWidget.setTabOrder(self.comboBox_dsn, self.lineEdit_username)
@@ -241,29 +211,27 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.lineEdit_port, self.lineEdit_database)
         QWidget.setTabOrder(self.lineEdit_database, self.toolButton_select_sqlite_file)
 
-        self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(Dialog.accept)
-        self.buttonBox.rejected.connect(Dialog.reject)
+        self.retranslateUi(Form)
 
-        QMetaObject.connectSlotsByName(Dialog)
+        QMetaObject.connectSlotsByName(Form)
     # setupUi
 
-    def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Select URL", None))
+    def retranslateUi(self, Form):
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.lineEdit_password.setPlaceholderText("")
-        self.label_port.setText(QCoreApplication.translate("Dialog", u"Port", None))
-        self.label_dsn.setText(QCoreApplication.translate("Dialog", u"DSN", None))
-        self.label_dialect.setText(QCoreApplication.translate("Dialog", u"Dialect", None))
+        self.label_port.setText(QCoreApplication.translate("Form", u"Port:", None))
+        self.label_dsn.setText(QCoreApplication.translate("Form", u"DSN:", None))
+        self.label_dialect.setText(QCoreApplication.translate("Form", u"Dialect:", None))
         self.lineEdit_port.setPlaceholderText("")
-        self.label_username.setText(QCoreApplication.translate("Dialog", u"Username", None))
-        self.label_database.setText(QCoreApplication.translate("Dialog", u"Database", None))
+        self.label_username.setText(QCoreApplication.translate("Form", u"Username:", None))
+        self.label_database.setText(QCoreApplication.translate("Form", u"Database:", None))
         self.lineEdit_host.setPlaceholderText("")
-        self.label_password.setText(QCoreApplication.translate("Dialog", u"Password", None))
+        self.label_password.setText(QCoreApplication.translate("Form", u"Password:", None))
         self.lineEdit_username.setPlaceholderText("")
-        self.label_host.setText(QCoreApplication.translate("Dialog", u"Host", None))
+        self.label_host.setText(QCoreApplication.translate("Form", u"Host:", None))
         self.lineEdit_database.setPlaceholderText("")
 #if QT_CONFIG(tooltip)
-        self.toolButton_select_sqlite_file.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Select SQLite file</p></body></html>", None))
+        self.toolButton_select_sqlite_file.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select SQLite file</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
     # retranslateUi
 

@@ -16,15 +16,18 @@ Unit tests for Exporter's :func:`do_work` function.
 """
 from csv import reader
 import os.path
+import sqlite3
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock
 
-from spinedb_api import DiffDatabaseMapping, import_object_classes, import_objects
+from spinedb_api import DatabaseMapping, import_object_classes, import_objects
+from spinedb_api.export_mapping.export_mapping import FixedValueMapping
 from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.export_mapping import object_export
 from spine_items.exporter.do_work import do_work
-from spine_items.exporter.specification import Specification, MappingSpecification, MappingType
+from spine_items.exporter.specification import OutputFormat, Specification, MappingSpecification, MappingType
+from spinedb_api.mapping import Position
 
 
 class TestWithCsvWriter(unittest.TestCase):
@@ -36,7 +39,7 @@ class TestWithCsvWriter(unittest.TestCase):
         cls._temp_dir = TemporaryDirectory()
         db_file = os.path.join(cls._temp_dir.name, "test_db.sqlite")
         cls._url = "sqlite:///" + db_file
-        db_map = DiffDatabaseMapping(cls._url, create=True)
+        db_map = DatabaseMapping(cls._url, create=True)
         try:
             import_object_classes(db_map, ("oc1", "oc2"))
             import_objects(db_map, (("oc1", "o11"), ("oc1", "o12"), ("oc2", "o21"), ("oc2", "o22"), ("oc2", "o23")))
@@ -51,7 +54,7 @@ class TestWithCsvWriter(unittest.TestCase):
         databases = {self._url: "test_export_database.csv"}
         logger = MagicMock()
         self.assertTrue(
-            do_work(None, specification.to_dict(), False, False, "", self._temp_dir.name, databases, "", "", logger)
+            do_work(None, specification.to_dict(), False, False, "", self._temp_dir.name, databases, {}, "", "", logger)
         )
         out_path = os.path.join(self._temp_dir.name, "test_export_database.csv")
         self.assertTrue(os.path.exists(out_path))
@@ -60,6 +63,40 @@ class TestWithCsvWriter(unittest.TestCase):
             table = [row for row in csv_reader]
         expected = [["oc1", "o11"], ["oc1", "o12"], ["oc2", "o21"], ["oc2", "o22"], ["oc2", "o23"]]
         self.assertEqual(table, expected)
+
+    def test_export_to_output_database(self):
+        object_root = object_export(class_position=0, object_position=1)
+        object_root.header = "object_class"
+        object_root.child.header = "object"
+        root_mapping = FixedValueMapping(Position.table_name, "data_table")
+        root_mapping.child = object_root
+        mapping_specification = MappingSpecification(MappingType.objects, True, True, NoGroup.NAME, False, root_mapping)
+        specification = Specification("name", "description", {"mapping": mapping_specification}, OutputFormat.SQL)
+        databases = {self._url: "output label"}
+        out_path = os.path.join(self._temp_dir.name, "out_database.sqlite")
+        out_urls = {self._url: {"dialect": "sqlite", "database": out_path}}
+        logger = MagicMock()
+        self.assertTrue(
+            do_work(
+                None,
+                specification.to_dict(),
+                False,
+                False,
+                "",
+                self._temp_dir.name,
+                databases,
+                out_urls,
+                "",
+                "",
+                logger,
+            )
+        )
+        self.assertTrue(os.path.exists(out_path))
+        connection = sqlite3.connect(out_path)
+        cursor = connection.cursor()
+        expected = [("oc1", "o11"), ("oc1", "o12"), ("oc2", "o21"), ("oc2", "o22"), ("oc2", "o23")]
+        self.assertEqual(cursor.execute("SELECT * FROM data_table").fetchall(), expected)
+        connection.close()
 
 
 if __name__ == "__main__":

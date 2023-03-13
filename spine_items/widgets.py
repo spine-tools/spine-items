@@ -17,9 +17,10 @@ Contains common & shared (Q)widgets.
 """
 
 import os
-from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property
+from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property, Slot
 from PySide6.QtWidgets import (
     QApplication,
+    QLineEdit,
     QTreeView,
     QStyledItemDelegate,
     QWidget,
@@ -223,6 +224,38 @@ class FilterEdit(QWidget):
     """Property used to communicate with the editor delegate."""
 
 
+class FileDropTargetLineEdit(QLineEdit):
+    """A line edit that accepts file drops and displays the path."""
+
+    def dragEnterEvent(self, event):
+        """Accept a single file drop from the filesystem."""
+        urls = event.mimeData().urls()
+        if len(urls) > 1:
+            event.ignore()
+            return
+        url = urls[0]
+        if not url.isLocalFile():
+            event.ignore()
+            return
+        if not os.path.isfile(url.toLocalFile()):
+            event.ignore()
+            return
+        event.accept()
+        event.setDropAction(Qt.LinkAction)
+
+    def dragMoveEvent(self, event):
+        """Accept event."""
+        event.accept()
+
+    def dropEvent(self, event):
+        """Sets the text to the file path."""
+        url = event.mimeData().urls()[0]
+        self.setText(url.toLocalFile())
+
+
+KNOWN_SQL_DIALECTS = ("mysql", "sqlite", "mssql", "postgresql", "oracle")
+
+
 class UrlSelectorMixin:
     def _setup(self, dialects):
         self.ui.comboBox_dialect.addItems(dialects)
@@ -306,33 +339,217 @@ class UrlSelectorMixin:
         self.ui.lineEdit_password.setEnabled(True)
 
 
-class UrlSelector(UrlSelectorMixin, QDialog):
+def _set_line_edit_text(edit, text):
+    """Sets QLineEdit's text only if it is changing.
+
+    Avoids sudden jumps in cursors when e.g. the latest change goes through the
+    undo stack
+
+    Args:
+        edit (QLineEdit): line edit
+        text (str): new text to set for the edit
+    """
+    if text != edit.text():
+        edit.setText(text)
+
+
+class UrlSelectorWidget(QWidget):
+    """Widget for setting up database URLs."""
+
+    url_changed = Signal()
+    """Emitted whenever the URL changes."""
+
+    def __init__(self, parent=None):
+        """
+        Args:
+            parent (QWidget, optional): parent widget
+        """
+        from .ui.url_selector_widget import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__(parent)
+        self._url = None
+        self._get_sqlite_file_path = None
+        self._logger = None
+        self._ui = Ui_Form()
+        self._ui.setupUi(self)
+        self._ui.comboBox_dialect.setCurrentIndex(-1)
+        self._ui.lineEdit_port.setValidator(QIntValidator())
+        self._ui.comboBox_dialect.currentTextChanged.connect(self._enable_dialect)
+        self._ui.toolButton_select_sqlite_file.clicked.connect(self._select_sqlite_file)
+        self._ui.comboBox_dialect.currentTextChanged.connect(lambda: self.url_changed.emit())
+        self._ui.lineEdit_host.textChanged.connect(lambda: self.url_changed.emit())
+        self._ui.lineEdit_port.textChanged.connect(lambda: self.url_changed.emit())
+        self._ui.lineEdit_database.textChanged.connect(lambda: self.url_changed.emit())
+        self._ui.lineEdit_username.textChanged.connect(lambda: self.url_changed.emit())
+        self._ui.lineEdit_password.textChanged.connect(lambda: self.url_changed.emit())
+
+    def setup(self, dialects, select_sqlite_file_callback, logger):
+        """Sets the widget up for usage.
+
+        Args:
+            dialects (Sequence of str): available SQL dialects
+            select_sqlite_file_callback (Callable): function that returns a path to SQLite file or None
+            logger (LoggerInterface): logger
+        """
+        self._get_sqlite_file_path = select_sqlite_file_callback
+        self._logger = logger
+        self._ui.comboBox_dialect.addItems(dialects)
+
+    def set_url(self, url):
+        """Sets the URL for the widget.
+
+        Args:
+            url (dict): URL as dict
+        """
+        dialect = url.get("dialect", "")
+        host = url.get("host", "")
+        port = url.get("port", "")
+        database = url.get("database", "")
+        username = url.get("username", "")
+        password = url.get("password", "")
+        self.blockSignals(True)
+        if dialect == "":
+            self._ui.comboBox_dialect.setCurrentIndex(-1)
+        elif dialect != self._ui.comboBox_dialect.currentText():
+            self._ui.comboBox_dialect.setCurrentText(dialect)
+        _set_line_edit_text(self._ui.lineEdit_host, host)
+        _set_line_edit_text(self._ui.lineEdit_port, port)
+        _set_line_edit_text(self._ui.lineEdit_database, database)
+        _set_line_edit_text(self._ui.lineEdit_username, username)
+        _set_line_edit_text(self._ui.lineEdit_password, password)
+        self.blockSignals(False)
+
+    def url_dict(self):
+        """Returns the URL as dictionary.
+
+        Returns:
+            dict: URL as dict
+        """
+        return {
+            "dialect": self._ui.comboBox_dialect.currentText(),
+            "host": self._ui.lineEdit_host.text(),
+            "port": self._ui.lineEdit_port.text(),
+            "database": self._ui.lineEdit_database.text(),
+            "username": self._ui.lineEdit_username.text(),
+            "password": self._ui.lineEdit_password.text(),
+        }
+
+    @Slot(bool)
+    def _select_sqlite_file(self, _=False):
+        """Select SQLite file."""
+        file_path = self._get_sqlite_file_path()
+        if file_path is not None:
+            self._ui.lineEdit_database.setText(file_path)
+
+    @Slot(str)
+    def _enable_dialect(self, dialect):
+        """Enables the given dialect in the item controls.
+
+        Args:
+            dialect (str): SQL dialect
+        """
+        if dialect == "":
+            self.enable_no_dialect()
+        elif dialect == "sqlite":
+            self.enable_sqlite()
+        elif dialect == "mssql":
+            import pyodbc  # pylint: disable=import-outside-toplevel
+
+            dsns = pyodbc.dataSources()
+            # Collect dsns which use the msodbcsql driver
+            mssql_dsns = list()
+            for key, value in dsns.items():
+                if "msodbcsql" in value.lower():
+                    mssql_dsns.append(key)
+            if mssql_dsns:
+                self._ui.comboBox_dsn.clear()
+                self._ui.comboBox_dsn.addItems(mssql_dsns)
+                self._ui.comboBox_dsn.setCurrentIndex(-1)
+                self.enable_mssql()
+            else:
+                msg = "Please create an SQL Server ODBC Data Source first."
+                self._logger.msg_warning.emit(msg)
+        else:
+            self.enable_common()
+
+    def enable_no_dialect(self):
+        """Adjusts widget enabled status to default when no dialect is selected."""
+        self._ui.comboBox_dialect.setEnabled(True)
+        self._ui.comboBox_dsn.setEnabled(False)
+        self._ui.toolButton_select_sqlite_file.setEnabled(False)
+        self._ui.lineEdit_host.setEnabled(False)
+        self._ui.lineEdit_port.setEnabled(False)
+        self._ui.lineEdit_database.setEnabled(False)
+        self._ui.lineEdit_username.setEnabled(False)
+        self._ui.lineEdit_password.setEnabled(False)
+
+    def enable_mssql(self):
+        """Adjusts controls to mssql connection specification."""
+        self._ui.comboBox_dsn.setEnabled(True)
+        self._ui.toolButton_select_sqlite_file.setEnabled(False)
+        self._ui.lineEdit_host.setEnabled(False)
+        self._ui.lineEdit_port.setEnabled(False)
+        self._ui.lineEdit_database.setEnabled(False)
+        self._ui.lineEdit_username.setEnabled(True)
+        self._ui.lineEdit_password.setEnabled(True)
+        self._ui.lineEdit_host.clear()
+        self._ui.lineEdit_port.clear()
+        self._ui.lineEdit_database.clear()
+
+    def enable_sqlite(self):
+        """Adjusts controls to sqlite connection specification."""
+        self._ui.comboBox_dsn.setEnabled(False)
+        self._ui.comboBox_dsn.setCurrentIndex(-1)
+        self._ui.toolButton_select_sqlite_file.setEnabled(True)
+        self._ui.lineEdit_host.setEnabled(False)
+        self._ui.lineEdit_port.setEnabled(False)
+        self._ui.lineEdit_database.setEnabled(True)
+        self._ui.lineEdit_username.setEnabled(False)
+        self._ui.lineEdit_password.setEnabled(False)
+        self._ui.lineEdit_host.clear()
+        self._ui.lineEdit_port.clear()
+        self._ui.lineEdit_username.clear()
+        self._ui.lineEdit_password.clear()
+
+    def enable_common(self):
+        """Adjusts controls to 'common' connection specification."""
+        self._ui.comboBox_dsn.setEnabled(False)
+        self._ui.comboBox_dsn.setCurrentIndex(-1)
+        self._ui.toolButton_select_sqlite_file.setEnabled(False)
+        self._ui.lineEdit_host.setEnabled(True)
+        self._ui.lineEdit_port.setEnabled(True)
+        self._ui.lineEdit_database.setEnabled(True)
+        self._ui.lineEdit_username.setEnabled(True)
+        self._ui.lineEdit_password.setEnabled(True)
+
+
+class UrlSelectorDialog(QDialog):
     msg_error = Signal(str)
 
-    def __init__(self, toolbox, parent=None):
-        from .ui.url_selector_widget import Ui_Dialog  # pylint: disable=import-outside-toplevel
+    def __init__(self, app_settings, logger, parent=None):
+        """
+        Args:
+            app_settings (QSettings): Toolbox settings
+            logger (LoggerInterface): logger
+            parent (QWidget, optional): parent widget
+        """
+        from .ui.url_selector_dialog import Ui_Dialog  # pylint: disable=import-outside-toplevel
 
-        super().__init__(parent if parent is not None else toolbox)
-        self._toolbox = toolbox
+        super().__init__(parent)
+        self._sa_url = None
+        self._app_settings = app_settings
+        self._logger = logger
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self.ui.url_selector_widget.setup(KNOWN_SQL_DIALECTS, self._browse_sqlite_file, self._logger)
+        self.ui.url_selector_widget.url_changed.connect(self._refresh_url)
         # Add status bar to form
         self.statusbar = QStatusBar(self)
         self.statusbar.setFixedHeight(20)
         self.statusbar.setSizeGripEnabled(False)
         self.statusbar.setStyleSheet(STATUSBAR_SS)
         self.ui.horizontalLayout_statusbar_ph.addWidget(self.statusbar)
-        self._sa_url = None
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
-        self._setup(("mysql", "sqlite", "mssql", "postgresql", "oracle"))  # Others?
-        self.ui.comboBox_dialect.currentTextChanged.connect(self.enable_dialect)
-        self.ui.comboBox_dialect.activated.connect(self._refresh_url)
-        self.ui.toolButton_select_sqlite_file.clicked.connect(self._browse_sqlite_file)
-        self.ui.lineEdit_username.editingFinished.connect(self._refresh_url)
-        self.ui.lineEdit_password.editingFinished.connect(self._refresh_url)
-        self.ui.lineEdit_host.editingFinished.connect(self._refresh_url)
-        self.ui.lineEdit_port.editingFinished.connect(self._refresh_url)
-        self.ui.lineEdit_database.editingFinished.connect(self._refresh_url)
         self.msg_error.connect(self.statusbar.showMessage)
 
     @property
@@ -341,27 +558,39 @@ class UrlSelector(UrlSelectorMixin, QDialog):
             return ""
         return str(self._sa_url)
 
+    def url_dict(self):
+        return self.ui.url_selector_widget.url_dict()
+
+    def set_url_dict(self, url):
+        """Sets the URL.
+
+        Args:
+            url (dict): URL as dict
+        """
+        self.ui.url_selector_widget.set_url(url)
+
+    @property
+    def dialect(self):
+        return self.ui.url_selector_widget.url_dict().get("dialect")
+
+    @Slot()
     def _refresh_url(self):
-        url = {
-            "dialect": self.ui.comboBox_dialect.currentText(),
-            "host": self.ui.lineEdit_host.text(),
-            "port": self.ui.lineEdit_port.text(),
-            "database": self.ui.lineEdit_database.text(),
-            "username": self.ui.lineEdit_username.text(),
-            "password": self.ui.lineEdit_password.text(),
-        }
+        """Updates the URL widget and status bar."""
+        url = self.ui.url_selector_widget.url_dict()
         self._sa_url = convert_to_sqlalchemy_url(url, logger=self)
         if self._sa_url is not None:
             self.statusbar.clearMessage()
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(self._sa_url is not None)
 
     def _browse_sqlite_file(self):
+        """Opens a browser to select a SQLite file.
+
+        Returns:
+            str: path to the file or None if operation was cancelled
+        """
         filter_ = "*.sqlite;;*.*"
         key = "selectImportSourceSQLiteFile"
         filepath, _ = get_open_file_name_in_last_dir(
-            self._toolbox.qsettings(), key, self, "Select an SQLite file", APPLICATION_PATH, filter_=filter_
+            self._app_settings, key, self, "Select an SQLite file", APPLICATION_PATH, filter_=filter_
         )
-        if not filepath:
-            return
-        self.ui.lineEdit_database.setText(filepath)
-        self._refresh_url()
+        return filepath if filepath else None

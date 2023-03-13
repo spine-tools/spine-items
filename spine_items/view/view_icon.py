@@ -20,12 +20,4 @@ from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
 class ViewIcon(ProjectItemIcon):
-    def __init__(self, toolbox, icon, icon_color):
-        """View icon for the Design View.
-
-        Args:
-            toolbox (ToolBoxUI): QMainWindow instance
-            icon (str): icon resource path
-            icon_color (QColor): Icon's color
-        """
-        super().__init__(toolbox, icon, icon_color)
+    """View icon for the Design View."""

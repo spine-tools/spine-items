@@ -28,6 +28,7 @@ from spinedb_api.spine_io.exporters.sql_writer import SqlWriter
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from spine_engine.utils.helpers import write_filter_id_file
 from .specification import Specification, OutputFormat
+from ..utils import convert_to_sqlalchemy_url, split_url_credentials
 
 
 def do_work(
@@ -38,6 +39,7 @@ def do_work(
     gams_path,
     out_dir,
     databases,
+    out_urls,
     filter_id,
     filter_subdirectory,
     logger,
@@ -53,6 +55,7 @@ def do_work(
         gams_path (str): path to GAMS installation
         out_dir (str): base output directory
         databases (dict): databases to export
+        out_urls (dict): output URLs
         filter_id (str): filter id
         filter_subdirectory (str): name of extra subdirectory used when filters have been applied
         logger (LoggerInterface): a logger
@@ -64,58 +67,150 @@ def do_work(
     successes = list()
     written_files = dict()
     for url, output_label in databases.items():
-        output_file_name = _add_extension(output_label, specification.output_format)
-        out_path = _subdirectory_for_fork(output_file_name, out_dir, output_time_stamps, filter_subdirectory)
         try:
             database_map = DatabaseMapping(url)
         except SpineDBAPIError as error:
-            logger.msg_error.emit(f"Failed to export <b>{url}</b>: {error}")
+            sanitized_url, _ = split_url_credentials(url)
+            logger.msg_error.emit(f"Failed to export <b>{sanitized_url}</b>: {error}")
             if cancel_on_error:
                 return False, written_files
             successes.append(False)
             continue
         try:
-            try:
-                file = Path(out_path)
-                file.parent.mkdir(parents=True, exist_ok=True)
-                if file.exists():
-                    file.unlink()
-                writer = make_writer(specification.output_format, out_path, gams_path)
-                specifications = specification.enabled_specifications().values()
-                mappings = (m.root for m in specifications)
-                header_always = (m.always_export_header for m in specifications)
-                group_fns = (m.group_fn for m in specifications)
-                write(database_map, writer, *mappings, empty_data_header=header_always, group_fns=group_fns)
-            except (PermissionError, WriterException) as e:
-                logger.msg_error.emit(str(e))
-                if cancel_on_error:
-                    return False, written_files
-                successes.append(False)
+            out_url = out_urls.get(url)
+            if specification.output_format == OutputFormat.SQL and out_url is not None:
+                successful = _export_to_database(
+                    database_map, specification, out_url, successes, cancel_on_error, logger
+                )
             else:
-                if isinstance(writer, CsvWriter):
-                    files = writer.output_files()
-                else:
-                    files = {out_path}
-                written_files[output_label] = files
-                if len(files) > 1:
-                    anchors = list()
-                    for path in (Path(f) for f in files):
-                        anchors.append(
-                            f"\t<a style='color:#BB99FF;' title='{path}' href='file:///{path}'>{path.name}</a>"
-                        )
-                    logger.msg_success.emit(f"Wrote multiple files:<br>{'<br>'.join(anchors)}")
-                else:
-                    only_file = Path(next(iter(files)))
-                    file_anchor = (
-                        f"<a style='color:#BB99FF;' title='{only_file}' href='file:///{only_file}'>{only_file.name}</a>"
-                    )
-                    logger.msg_success.emit(f"Wrote {file_anchor}")
-                if filter_id:
-                    write_filter_id_file(filter_id, Path(out_path).parent)
-                successes.append(True)
+                successful = _export_to_file(
+                    database_map,
+                    specification,
+                    output_label,
+                    output_time_stamps,
+                    successes,
+                    written_files,
+                    cancel_on_error,
+                    gams_path,
+                    out_dir,
+                    filter_id,
+                    filter_subdirectory,
+                    logger,
+                )
+            if not successful:
+                return False, written_files
         finally:
             database_map.connection.close()
     return all(successes), written_files
+
+
+def _export_to_file(
+    database_map,
+    specification,
+    output_label,
+    output_time_stamps,
+    successes,
+    written_files,
+    cancel_on_error,
+    gams_path,
+    out_dir,
+    filter_id,
+    filter_subdirectory,
+    logger,
+):
+    """Exports into file(s) including a new SQLite file.
+
+    Args:
+        database_map (DatabaseMapping): source database map
+        specification (Specification): export specification dictionary
+        output_label (str): output label
+        output_time_stamps (bool): if True, puts output files into time stamped subdirectories
+        successes (list of bool): history of success statuses
+        written_files (dict): mapping from output label to completed output files
+        cancel_on_error (bool): if True, bails out on non-fatal errors
+        gams_path (str): path to GAMS installation
+        out_dir (str): base output directory
+        filter_id (str): filter id
+        filter_subdirectory (str): name of extra subdirectory used when filters have been applied
+        logger (LoggerInterface): a logger
+
+    Returns:
+        bool: True if operation was successful, False otherwise
+    """
+    output_file_name = _add_extension(output_label, specification.output_format)
+    out_path = _subdirectory_for_fork(output_file_name, out_dir, output_time_stamps, filter_subdirectory)
+    try:
+        file = Path(out_path)
+        file.parent.mkdir(parents=True, exist_ok=True)
+        if file.exists():
+            file.unlink()
+        writer = make_writer(specification.output_format, out_path, gams_path)
+        specifications = specification.enabled_specifications().values()
+        mappings = (m.root for m in specifications)
+        header_always = (m.always_export_header for m in specifications)
+        group_fns = (m.group_fn for m in specifications)
+        write(database_map, writer, *mappings, empty_data_header=header_always, group_fns=group_fns)
+    except (PermissionError, WriterException) as e:
+        logger.msg_error.emit(str(e))
+        if cancel_on_error:
+            return False
+        successes.append(False)
+    else:
+        if isinstance(writer, CsvWriter):
+            files = writer.output_files()
+        else:
+            files = {out_path}
+        written_files[output_label] = files
+        if len(files) > 1:
+            anchors = list()
+            for path in (Path(f) for f in files):
+                anchors.append(f"\t<a style='color:#BB99FF;' title='{path}' href='file:///{path}'>{path.name}</a>")
+            logger.msg_success.emit(f"Wrote multiple files:<br>{'<br>'.join(anchors)}")
+        else:
+            only_file = Path(next(iter(files)))
+            file_anchor = (
+                f"<a style='color:#BB99FF;' title='{only_file}' href='file:///{only_file}'>{only_file.name}</a>"
+            )
+            logger.msg_success.emit(f"Wrote {file_anchor}")
+        if filter_id:
+            write_filter_id_file(filter_id, Path(out_path).parent)
+        successes.append(True)
+    return True
+
+
+def _export_to_database(database_map, specification, out_url, successes, cancel_on_error, logger):
+    """Exports into fixed output database.
+
+    Args:
+        database_map (DatabaseMapping): source database map
+        specification (Specification): export specification dictionary
+        out_url (dict): output URL
+        successes (list of bool): history of success statuses
+        cancel_on_error (bool): if True, bails out on non-fatal errors
+        logger (LoggerInterface): a logger
+
+    Returns:
+        bool: True if operation was successful, False otherwise
+    """
+    url = convert_to_sqlalchemy_url(out_url, logger=logger)
+    if url is None:
+        return True
+    try:
+        writer = SqlWriter(str(url), overwrite_existing=False)
+        specifications = specification.enabled_specifications().values()
+        mappings = (m.root for m in specifications)
+        header_always = (m.always_export_header for m in specifications)
+        group_fns = (m.group_fn for m in specifications)
+        write(database_map, writer, *mappings, empty_data_header=header_always, group_fns=group_fns)
+    except WriterException as e:
+        logger.msg_error.emit(str(e))
+        if cancel_on_error:
+            return False
+        successes.append(False)
+    else:
+        logger.msg_success.emit(f"Wrote to database.")
+        successes.append(True)
+    return True
 
 
 def make_writer(output_format, out_path, gams_path):
@@ -136,7 +231,7 @@ def make_writer(output_format, out_path, gams_path):
     elif output_format == OutputFormat.EXCEL:
         return ExcelWriter(out_path)
     elif output_format == OutputFormat.SQL:
-        return SqlWriter(out_path)
+        return SqlWriter(out_path, overwrite_existing=True)
     return GdxWriter(out_path, gams_path)
 
 

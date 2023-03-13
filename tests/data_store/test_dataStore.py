@@ -16,6 +16,7 @@ Unit tests for DataStore class.
 :date:   6.12.2018
 """
 from contextlib import contextmanager
+from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -33,8 +34,18 @@ from spine_items.utils import convert_to_sqlalchemy_url, database_label
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
-# noinspection PyUnusedLocal
 class TestDataStore(unittest.TestCase):
+    def test_item_type(self):
+        """Tests that the item type is correct."""
+        self.assertEqual(DataStore.item_type(), ItemInfo.item_type())
+
+    def test_item_category(self):
+        """Tests that the item category is correct."""
+        self.assertEqual(DataStore.item_category(), ItemInfo.item_category())
+
+
+# noinspection PyUnusedLocal
+class TestDataStoreWithMockToolbox(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Overridden method. Runs once before all tests in this class."""
@@ -68,6 +79,7 @@ class TestDataStore(unittest.TestCase):
         """
         ds_db_path = os.path.join(self.ds.data_dir, "DS.sqlite")
         temp_db_path = os.path.join(self.ds.data_dir, "temp_db.sqlite")
+        self.ds.tear_down()
         if os.path.exists(ds_db_path):
             try:
                 os.remove(ds_db_path)
@@ -89,14 +101,6 @@ class TestDataStore(unittest.TestCase):
         self.ds._url = self.ds.parse_url(url)  # Set an URL for the Data Store
         return temp_db_path
 
-    def test_item_type(self):
-        """Tests that the item type is correct."""
-        self.assertEqual(DataStore.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        """Tests that the item category is correct."""
-        self.assertEqual(DataStore.item_category(), ItemInfo.item_category())
-
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.ds.item_dict()
@@ -112,56 +116,58 @@ class TestDataStore(unittest.TestCase):
         """Test that a new Spine database is not created when clicking on 'New Spine db tool button'
         with an empty Data Store.
         """
-        cb_dialect = self.ds_properties_ui.comboBox_dialect  # Dialect comboBox
-        le_db = self.ds_properties_ui.lineEdit_database  # Database lineEdit
         self.ds.activate()
-        self.assertEqual(cb_dialect.currentText(), "")
-        self.assertEqual(le_db.text(), "")
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["dialect"], "")
+        self.assertEqual(url["database"], "")
         # Click New Spine db button
         self.toolbox.db_mngr = mock.MagicMock()
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
-        self.assertEqual(cb_dialect.currentText(), "")
-        self.assertEqual(le_db.text(), "")
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["dialect"], "")
+        self.assertEqual(url["database"], "")
         self.toolbox.db_mngr.create_new_spine_database.assert_not_called()
 
     def test_create_new_empty_spine_database2(self):
         """Test that a new Spine database is created when clicking on 'New Spine db tool button'
         with a Data Store that already has an .sqlite db.
         """
-        cb_dialect = self.ds_properties_ui.comboBox_dialect  # Dialect comboBox
-        le_db = self.ds_properties_ui.lineEdit_database  # Database lineEdit
         temp_path = self.create_temp_db()
         # Connect to an existing .sqlite db
         url = dict(dialect="sqlite", database=temp_path)
         self.ds._url = self.ds.parse_url(url)
         self.ds.activate()  # This loads the url into properties UI widgets
         # DS should now have "sqlite" selected in the combobox
-        self.assertEqual("sqlite", cb_dialect.currentText())
-        self.assertEqual(temp_path, le_db.text())
-        self.assertTrue(os.path.exists(le_db.text()))  # temp_db.sqlite should exist in DS data_dir at this point
-        # Click New Spine db button. This overwrites the existing sqlite file!
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["dialect"], "sqlite")
+        self.assertEqual(url["database"], temp_path)
+        self.assertTrue(os.path.exists(url["database"]))
+        # Click New Spine db button. Creates the sqlite file.
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
-        self.assertEqual("sqlite", cb_dialect.currentText())
-        self.assertEqual(temp_path, le_db.text())
-        self.assertTrue(os.path.exists(le_db.text()))
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["dialect"], "sqlite")
+        self.assertEqual(url["database"], temp_path)
+        self.assertTrue(os.path.exists(url["database"]))
 
     def test_new_database_is_created_before_advertising_resources(self):
         self.ds.activate()
-        dialect_combo_box = self.ds_properties_ui.comboBox_dialect
-        dialect_combo_box.setCurrentText("sqlite")
-        self.assertEqual(dialect_combo_box.currentText(), "sqlite")
-        # Data store connects to combo box activated signal.
-        # We need to trigger the slot here manually.
-        self.ds.refresh_dialect(dialect_combo_box.currentText())
         database_file_path = os.path.join(self._temp_dir.name, "test_db.sqlite")
+        self.ds_properties_ui.url_selector_widget.set_url({"dialect": "sqlite"})
+        self.ds._update_url_from_properties()
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["dialect"], "sqlite")
+        calls_with_non_empty_resources = []
         failure_messages = []
 
-        def check_database_exists(data_store, for_successors):
+        def check_database_exists(data_store, for_successors, non_empty_calls):
             if for_successors:
                 resources = data_store.resources_for_direct_successors()
             else:
                 resources = data_store.resources_for_direct_predecessors()
-            if len(resources) != 1:
+            if len(resources) == 0:
+                return
+            non_empty_calls.append(1)
+            if len(resources) > 1:
                 failure_messages.append("resources length is not equal to 1")
                 return
             call_args = self.toolbox.db_mngr.create_new_spine_database.call_args
@@ -172,47 +178,48 @@ class TestDataStore(unittest.TestCase):
                 failure_messages.append("create_new_spine_database() called with wrong URL")
 
         with mock.patch("spine_items.data_store.data_store.QFileDialog") as file_dialog:
+            Path(database_file_path).touch()
             file_dialog.getSaveFileName.return_value = (database_file_path,)
             self.project.notify_resource_changes_to_successors.side_effect = lambda item: check_database_exists(
-                item, True
+                item, True, calls_with_non_empty_resources
             )
             self.project.notify_resource_changes_to_predecessors.side_effect = lambda item: check_database_exists(
-                item, False
+                item, False, calls_with_non_empty_resources
             )
             self.assertTrue(self.ds_properties_ui.pushButton_create_new_spine_db.isEnabled())
             self.ds_properties_ui.pushButton_create_new_spine_db.click()
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
+        self.assertGreater(len(calls_with_non_empty_resources), 0)
         if failure_messages:
             self.fail(failure_messages[0])
 
-    def test_save_and_restore_selections(self):
-        """Test that selections are saved and restored when
+    def test_save_and_restore_mysql_selections(self):
+        """Test that MySQL selections are saved and restored when
         deactivating a Data Store and activating it again."""
-        # FIXME: For now it only tests the mysql dialect
         url = dict(dialect="mysql", database="sqlite:///mock_db.sqlite")
-        with mock.patch("spine_items.utils.create_engine", lambda _: MockEngine()):
-            self.ds._url = self.ds.parse_url(url)  # Set a URL for the Data Store
-            self.ds.activate()
-            self.ds_properties_ui.comboBox_dialect.currentTextChanged.emit("mysql")
-            self.ds_properties_ui.lineEdit_host.setText("localhost")
-            self.ds_properties_ui.lineEdit_port.setText("8080")
-            self.ds_properties_ui.lineEdit_database.setText("foo")
-            self.ds_properties_ui.lineEdit_username.setText("bar")
-            self.ds_properties_ui.lineEdit_host.editingFinished.emit()
-            self.ds_properties_ui.lineEdit_port.editingFinished.emit()
-            self.ds_properties_ui.lineEdit_database.editingFinished.emit()
-            self.ds_properties_ui.lineEdit_username.editingFinished.emit()
-            self.ds.deactivate()
-            self.ds.activate()
-        dialect = self.ds_properties_ui.comboBox_dialect.currentText()
-        host = self.ds_properties_ui.lineEdit_host.text()
-        port = self.ds_properties_ui.lineEdit_port.text()
-        database = self.ds_properties_ui.lineEdit_database.text()
-        username = self.ds_properties_ui.lineEdit_username.text()
-        self.assertEqual("mysql", dialect)
-        self.assertEqual("localhost", host)
-        self.assertEqual("8080", port)
-        self.assertEqual("foo", database)
-        self.assertEqual("bar", username)
+        self.ds._url = self.ds.parse_url(url)  # Set a URL for the Data Store
+        self.ds.activate()
+        self.ds_properties_ui.url_selector_widget.set_url(
+            {
+                "dialect": "mysql",
+                "host": "localhost",
+                "port": "8080",
+                "database": "foo",
+                "username": "bar",
+                "password": "s3cr3t",
+            }
+        )
+        self.ds._update_url_from_properties()
+        self.ds.deactivate()
+        self.ds.activate()
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["dialect"], "mysql")
+        self.assertEqual(url["host"], "localhost")
+        self.assertEqual(url["port"], "8080")
+        self.assertEqual(url["database"], "foo")
+        self.assertEqual(url["username"], "bar")
+        self.assertEqual(url["password"], "s3cr3t")
 
     def test_copy_db_url_to_clipboard(self):
         """Test that the database url from current selections is copied to clipboard."""
@@ -233,18 +240,15 @@ class TestDataStore(unittest.TestCase):
         """
         temp_db_path = self.create_temp_db()
         self.ds.activate()
-        # Select the sqlite dialect
-        self.ds_properties_ui.comboBox_dialect.currentTextChanged.emit("sqlite")
-        # Browse to an existing db file
-        with mock.patch("spine_items.data_store.data_store.QFileDialog") as mock_qfile_dialog:
-            mock_qfile_dialog.getOpenFileName.side_effect = lambda *args, **kwargs: [temp_db_path]
-            self.ds_properties_ui.toolButton_select_sqlite_file.click()
-            mock_qfile_dialog.getOpenFileName.assert_called_once()
-        # Open form
+        self.ds_properties_ui.url_selector_widget.set_url({"dialect": "sqlite", "database": temp_db_path})
+        self.ds._update_url_from_properties()
         self.toolbox.db_mngr = mock.MagicMock()
         self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
+        self.assertTrue(self.ds_properties_ui.pushButton_ds_open_editor.isEnabled())
         self.ds_properties_ui.pushButton_ds_open_editor.click()
-        sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
+        sa_url = convert_to_sqlalchemy_url(self.ds.url(), "DS", logger=None)
         self.assertIsNotNone(sa_url)
         self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: 'DS'})
 
@@ -254,16 +258,15 @@ class TestDataStore(unittest.TestCase):
         """
         temp_db_path = self.create_temp_db()
         self.ds.activate()
-        # Select the sqlite dialect
-        self.ds_properties_ui.comboBox_dialect.currentTextChanged.emit("sqlite")
-        # Type the path to an existing db file
-        self.ds_properties_ui.lineEdit_database.setText(temp_db_path)
-        self.ds_properties_ui.lineEdit_database.editingFinished.emit()
-        # Open form
+        self.ds_properties_ui.url_selector_widget.set_url({"dialect": "sqlite", "database": temp_db_path})
+        self.ds._update_url_from_properties()
         self.toolbox.db_mngr = mock.MagicMock()
         self.toolbox.db_mngr.get_all_multi_spine_db_editors = lambda: iter([])
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
+        self.assertTrue(self.ds_properties_ui.pushButton_ds_open_editor.isEnabled())
         self.ds_properties_ui.pushButton_ds_open_editor.click()
-        sa_url = convert_to_sqlalchemy_url(self.ds._url, "DS", logger=None)
+        sa_url = convert_to_sqlalchemy_url(self.ds.url(), "DS", logger=None)
         self.assertIsNotNone(sa_url)
         self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: 'DS'})
 
@@ -281,7 +284,8 @@ class TestDataStore(unittest.TestCase):
         source_item.item_type = mock.MagicMock(return_value="Importer")
         self.ds.notify_destination(source_item)
         self.ds.logger.msg.emit.assert_called_with(
-            "Link established. Mapped data generated by <b>source name</b> will be imported in <b>DS</b> when executing."
+            "Link established. "
+            "Mapped data generated by <b>source name</b> will be imported in <b>DS</b> when executing."
         )
         source_item.item_type = mock.MagicMock(return_value="Tool")
         self.ds.notify_destination(source_item)
@@ -295,8 +299,6 @@ class TestDataStore(unittest.TestCase):
 
     def test_rename(self):
         """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
-        cb_dialect = self.ds_properties_ui.comboBox_dialect  # Dialect comboBox
-        le_db = self.ds_properties_ui.lineEdit_database  # Database lineEdit
         temp_path = self.create_temp_db()
         url = dict(dialect="sqlite", database=temp_path)
         self.ds._url = self.ds.parse_url(url)
@@ -304,9 +306,10 @@ class TestDataStore(unittest.TestCase):
         # Click New Spine db button
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
         # Check that DS is connected to an existing DS.sqlite file that is in data_dir
-        self.assertEqual("sqlite", cb_dialect.currentText())
-        self.assertEqual(os.path.join(self.ds.data_dir, "temp_db.sqlite"), le_db.text())  # data_dir before rename
-        self.assertTrue(os.path.exists(le_db.text()))
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["dialect"], "sqlite")
+        self.assertEqual(url["database"], os.path.join(self.ds.data_dir, "temp_db.sqlite"))  # data_dir before rename
+        self.assertTrue(os.path.exists(url["database"]))
         expected_name = "ABC"
         expected_short_name = "abc"
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
@@ -318,17 +321,22 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
         # Check that the database path in properties has been updated
         expected_db_path = os.path.join(expected_data_dir, "temp_db.sqlite")
-        self.assertEqual(expected_db_path, le_db.text())
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["database"], expected_db_path)
         # Check that the db file has actually been moved
-        self.assertTrue(os.path.exists(le_db.text()))
+        self.assertTrue(os.path.exists(url["database"]))
 
     def test_do_update_url_uses_filterable_resources_when_replacing_them(self):
         database_1 = os.path.join(self._temp_dir.name, "db1.sqlite")
+        Path(database_1).touch()
         self.ds.do_update_url(dialect="sqlite", database=database_1)
         self.project.notify_resource_changes_to_predecessors.assert_called_once_with(self.ds)
         self.project.notify_resource_changes_to_successors.assert_called_once_with(self.ds)
         database_2 = os.path.join(self._temp_dir.name, "db2.sqlite")
+        Path(database_2).touch()
         self.ds.do_update_url(dialect="sqlite", database=database_2)
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
         expected_old_resources = [
             database_resource(
                 self.ds.name, "sqlite:///" + database_1, label=database_label(self.ds.name), filterable=True

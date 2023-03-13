@@ -21,6 +21,7 @@ from operator import itemgetter
 from pathlib import Path
 
 from PySide6.QtCore import Slot, Qt
+
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
@@ -31,9 +32,9 @@ from .mvcmodels.full_url_list_model import FullUrlListModel
 from .widgets.export_list_item import ExportListItem
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
-from .commands import UpdateOutLabel, UpdateOutputTimeStampsFlag
+from .commands import UpdateOutLabel, UpdateOutputTimeStampsFlag, UpdateOutUrl
 from .output_channel import OutputChannel
-from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
+from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX, output_database_resources
 
 
 @dataclass
@@ -110,6 +111,14 @@ class Exporter(ProjectItem):
     def executable_class(self):
         return ExecutableItem
 
+    def has_out_url(self):
+        """Returns whether any output channel has a URL set.
+
+        Returns:
+            bool: True if any channel has output URL, False otherwise
+        """
+        return any(c.out_url is not None for c in self._output_channels)
+
     def handle_execution_successful(self, execution_direction, engine_state):
         """See base class."""
         if execution_direction != "FORWARD":
@@ -145,29 +154,43 @@ class Exporter(ProjectItem):
 
     def _update_properties_tab(self):
         """Updates the labels list in the properties tab."""
-        if self._specification is None:
-            message = ""
-        else:
-            if self._specification.is_exporting_multiple_files():
-                message = f"Currently exporting multiple files in {self._specification.output_format.value} format. The file names are given by the specification."
-            else:
-                message = f"Currently exporting in {self._specification.output_format.value} format. The Output labels below are treated as file names."
-        self._properties_ui.message_label.setText(message)
+        self._set_properties_message()
         outputs_layout = self._properties_ui.outputs_list_layout
         while not outputs_layout.isEmpty():
             widget_to_remove = outputs_layout.takeAt(0)
             widget_to_remove.widget().deleteLater()
         self._export_list_items.clear()
         for channel in self._output_channels:
-            item = self._export_list_items[channel.in_label] = ExportListItem(channel.in_label, channel.out_label)
+            item = self._export_list_items[channel.in_label] = ExportListItem(
+                channel.in_label, channel.out_label, channel.out_url, self._toolbox.qsettings(), self._toolbox
+            )
             outputs_layout.addWidget(item)
+            output_format = self._specification.output_format if self._specification is not None else None
+            item.set_out_url_enabled(output_format is None or output_format == OutputFormat.SQL)
             item.out_label_changed.connect(self._update_out_label)
+            item.out_url_changed.connect(self._update_out_url)
         self._properties_ui.output_time_stamps_check_box.setCheckState(
             Qt.CheckState.Checked if self._append_output_time_stamps else Qt.CheckState.Unchecked
         )
         self._properties_ui.cancel_on_error_check_box.setCheckState(
             Qt.CheckState.Checked if self._cancel_on_error else Qt.CheckState.Unchecked
         )
+
+    def _set_properties_message(self):
+        if self._specification is None:
+            message = ""
+        else:
+            if self._specification.is_exporting_multiple_files():
+                message = (
+                    f"Currently exporting multiple files in {self._specification.output_format.value} format."
+                    " The file names are given by the specification."
+                )
+            else:
+                message = (
+                    f"Currently exporting in {self._specification.output_format.value} format."
+                    " The Output labels below are treated as file names."
+                )
+        self._properties_ui.message_label.setText(message)
 
     def upstream_resources_updated(self, resources):
         """See base class."""
@@ -208,6 +231,8 @@ class Exporter(ProjectItem):
                 if channel.in_label == old_resource.label:
                     channel.in_label = new_resource.label
                     break
+            else:
+                raise RuntimeError(f"Logic error: cannot find channel for {old_resource.label}")
             self._full_url_model.update_url(old_resource.url, new_resource.url)
 
     def _check_notifications(self):
@@ -279,6 +304,39 @@ class Exporter(ProjectItem):
         previous = next(c for c in self._output_channels if c.in_label == in_label)
         self._toolbox.undo_stack.push(UpdateOutLabel(self, out_label, in_label, previous.out_label))
 
+    @Slot(str, dict)
+    def _update_out_url(self, in_label, url_dict):
+        """Pushes a command to change the output URL to undo stack.
+
+        Args:
+            in_label (str): input label
+            url_dict (dict): URL
+        """
+        for channel in self._output_channels:
+            if channel.in_label == in_label:
+                if channel.out_url != url_dict:
+                    self._toolbox.undo_stack.push(UpdateOutUrl(self, in_label, url_dict, channel.out_url))
+                break
+        else:
+            raise RuntimeError(f"Logic error: cannot find channel for input label {in_label}")
+
+    def set_out_url(self, in_label, url_dict):
+        """Sets output URL for an output channel.
+
+        Args:
+            in_label (str): input label
+            url_dict (dict): URL
+        """
+        for channel in self._output_channels:
+            if channel.in_label == in_label:
+                channel.out_url = url_dict
+                if self._active:
+                    export_list_item = self._export_list_items[in_label]
+                    export_list_item.set_out_url(url_dict)
+                break
+        else:
+            raise RuntimeError(f"Logic error: cannot find channel for input label {in_label}")
+
     def set_out_label(self, out_label, in_label):
         """Updates the output label.
 
@@ -322,27 +380,50 @@ class Exporter(ProjectItem):
         serialized = super().item_dict()
         serialized["output_time_stamps"] = self._append_output_time_stamps
         serialized["cancel_on_error"] = self._cancel_on_error
-        serialized["output_labels"] = sorted([c.to_dict() for c in self._output_channels], key=itemgetter("in_label"))
+        serialized["output_labels"] = sorted(
+            [c.to_dict(self._project.project_dir) for c in self._output_channels], key=itemgetter("in_label")
+        )
+        if self._specification is not None and self._specification.output_format == OutputFormat.SQL:
+            for channel in self._output_channels:
+                if channel.out_url is not None:
+                    serialized.setdefault("db_credentials", {})[channel.in_label] = {
+                        "username": channel.out_url.get("username"),
+                        "password": channel.out_url.get("password"),
+                    }
         serialized["specification"] = self._specification_name
         return serialized
 
+    @staticmethod
+    def item_dict_local_entries():
+        """See base class."""
+        return [("db_credentials",)]
+
     def resources_for_direct_successors(self):
         """See base class."""
+        output_format = self._specification.output_format if self._specification is not None else None
         resources, self._exported_files = exported_files_as_resources(
-            self.name, self._exported_files, self.data_dir, self._output_channels
+            self.name, self._exported_files, self.data_dir, self._output_channels, output_format
         )
+        if output_format == OutputFormat.SQL:
+            resources += output_database_resources(self.name, self._output_channels)
         return resources
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
-        output_channels = [OutputChannel.from_dict(d, name) for d in item_dict.get("output_labels", [])]
+        output_channels = [
+            OutputChannel.from_dict(d, name, project.project_dir) for d in item_dict.get("output_labels", [])
+        ]
         for db_dict in item_dict.get("databases", []):
             # Legacy item dict.
             out_label = db_dict["output_file_name"]
             url = clear_filter_configs(deserialize_path(db_dict["database_url"], project.project_dir))
             output_channels.append(OutputChannel(url, name, out_label))
+        for in_label, credentials in item_dict.get("db_credentials", {}).items():
+            for channel in output_channels:
+                if channel.in_label == in_label:
+                    channel.out_url.update(credentials)
         output_time_stamps = item_dict.get("output_time_stamps", False)
         cancel_on_error = item_dict.get("cancel_on_error", True)
         specification_name = item_dict.get("specification", "")
@@ -434,6 +515,11 @@ class Exporter(ProjectItem):
         self._check_notifications()
         if self._active:
             self._properties_ui.specification_combo_box.setCurrentText(self._specification_name)
+            self._set_properties_message()
+            output_format = specification.output_format if specification is not None else None
+            out_url_enabled = output_format is None or output_format == OutputFormat.SQL
+            for item in self._export_list_items.values():
+                item.set_out_url_enabled(out_url_enabled)
         return True
 
     @Slot(bool)

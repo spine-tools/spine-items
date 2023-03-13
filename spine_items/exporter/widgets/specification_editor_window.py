@@ -330,6 +330,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         Returns:
             OutputFormat: export file format
         """
+        if self.item.has_out_url():
+            return OutputFormat.SQL
         out_labels = self.item.get_out_labels()
         for label in out_labels:
             name, separator, extension = label.rpartition(".")

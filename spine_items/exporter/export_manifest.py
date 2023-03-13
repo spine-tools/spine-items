@@ -19,10 +19,11 @@ import json
 from itertools import dropwhile
 from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
+from .specification import OutputFormat
 from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
 
 
-def exported_files_as_resources(item_name, exported_files, data_dir, output_channels):
+def exported_files_as_resources(item_name, exported_files, data_dir, output_channels, output_format):
     """Collects exported files from 'export manifests'.
 
     Args:
@@ -30,11 +31,14 @@ def exported_files_as_resources(item_name, exported_files, data_dir, output_chan
         exported_files (dict, optional): item's exported files cache
         data_dir (str): item's data directory
         output_channels (Iterable of OutputChannel): item's output channels
+        output_format (OutputFormat, optional): output format
 
     Returns:
         tuple: output resources and updated exported files cache
     """
     manifests = _collect_execution_manifests(data_dir)
+    if output_format == OutputFormat.SQL:
+        output_channels = tuple(c for c in output_channels if c.out_url is None)
     if manifests is not None:
         out_labels = {c.out_label for c in output_channels}
         manifests = {

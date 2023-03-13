@@ -32,7 +32,29 @@ class DataStorePropertiesWidget(UrlSelectorMixin, PropertiesWidgetBase):
         from ..ui.data_store_properties import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(toolbox)
+        self._active_item = None
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.controller = self
-        self._setup(list(SUPPORTED_DIALECTS.keys()))
+        self.ui.url_selector_widget.setup(list(SUPPORTED_DIALECTS.keys()), self._select_sqlite_file, self._toolbox)
+
+    def set_item(self, data_store):
+        """Sets the active project item for the properties widget.
+
+        Args:
+            data_store (DataStore): data store
+        """
+        self._active_item = data_store
+
+    def unset_item(self):
+        """Unsets the active item."""
+        self._active_item = None
+
+    def _select_sqlite_file(self):
+        """Lets active item select an SQLite file.
+
+        Returns:
+            str: file path or None if operation was cancelled
+        """
+        if self._active_item is None:
+            return None
+        return self._active_item.select_sqlite_file()

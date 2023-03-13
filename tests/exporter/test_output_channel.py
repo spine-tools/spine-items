@@ -11,6 +11,7 @@
 
 """Unit tests for the ``output_channel`` module."""
 import unittest
+from pathlib import Path
 
 from spine_items.exporter.output_channel import OutputChannel
 
@@ -28,10 +29,54 @@ class TestOutputChannel(unittest.TestCase):
 
     def test_serialization(self):
         channel = OutputChannel("In label", "Exporter 1", "Out label")
-        channel_dict = channel.to_dict()
-        restored = OutputChannel.from_dict(channel_dict, "Exporter 1")
+        channel_dict = channel.to_dict("/project/path/")
+        restored = OutputChannel.from_dict(channel_dict, "Exporter 1", "/project/path/")
         self.assertEqual(restored.in_label, "In label")
         self.assertEqual(restored.out_label, "Out label")
+
+    def test_serialization_hides_credentials_from_url(self):
+        channel = OutputChannel(
+            "In label",
+            "Exporter 1",
+            "Out label",
+            {
+                "dialect": "mysql",
+                "host": "dummy.test.org",
+                "port": 99,
+                "database": "data_leak",
+                "username": "admin",
+                "password": "s3cr3t",
+            },
+        )
+        channel_dict = channel.to_dict("/project/path/")
+        self.assertNotIn("username", channel_dict["out_url"])
+        self.assertNotIn("password", channel_dict["out_url"])
+        restored = OutputChannel.from_dict(channel_dict, "Exporter 1", "/project/path/")
+        self.assertEqual(restored.in_label, "In label")
+        self.assertEqual(restored.out_label, "Out label")
+        self.assertEqual(
+            restored.out_url, {"dialect": "mysql", "host": "dummy.test.org", "port": 99, "database": "data_leak"}
+        )
+
+    def test_database_paths_serialized_as_relative_when_inside_project_dir(self):
+        initial_project_dir = Path("project_1", "dir")
+        relative_database_path = Path("data", "base.sqlite")
+        channel = OutputChannel(
+            "In label",
+            "Exporter 1",
+            "Out label",
+            {"dialect": "sqlite", "database": str(initial_project_dir / relative_database_path)},
+        )
+        channel_dict = channel.to_dict(str(initial_project_dir))
+        self.assertNotIn("username", channel_dict["out_url"])
+        self.assertNotIn("password", channel_dict["out_url"])
+        new_project_dir = Path("project_2")
+        restored = OutputChannel.from_dict(channel_dict, "Exporter 1", str(new_project_dir))
+        self.assertEqual(restored.in_label, "In label")
+        self.assertEqual(restored.out_label, "Out label")
+        self.assertEqual(
+            restored.out_url, {"dialect": "sqlite", "database": str(new_project_dir / relative_database_path)}
+        )
 
 
 if __name__ == '__main__':

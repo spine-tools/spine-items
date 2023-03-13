@@ -16,11 +16,13 @@ Unit tests for DataStoreExecutable.
 :date:   6.4.2020
 """
 from multiprocessing import Lock
+from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spine_engine import ExecutionDirection
 from spine_items.data_store.executable_item import ExecutableItem
+from spine_items.utils import convert_to_sqlalchemy_url
 
 
 class TestDataStoreExecutable(unittest.TestCase):
@@ -75,23 +77,29 @@ class TestDataStoreExecutable(unittest.TestCase):
         self.assertTrue(executable.execute([], [], Lock()))
 
     def test_output_resources_backward(self):
-        executable = ExecutableItem("name", "sqlite:///database.sqlite", self._temp_dir.name, mock.MagicMock())
+        db_file_path = Path(self._temp_dir.name, "database.sqlite")
+        db_file_path.touch()
+        url = convert_to_sqlalchemy_url({"dialect": "sqlite", "database": str(db_file_path)})
+        executable = ExecutableItem("name", url, self._temp_dir.name, mock.MagicMock())
         with mock.patch("spine_items.data_store.executable_item.DatabaseMapping.create_engine"):
             resources = executable.output_resources(ExecutionDirection.BACKWARD)
         self.assertEqual(len(resources), 1)
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
-        self.assertEqual(resource.url, "sqlite:///database.sqlite")
+        self.assertEqual(resource.url, "sqlite:///" + str(db_file_path))
         self.assertEqual(resource.label, "db_url@name")
 
     def test_output_resources_forward(self):
-        executable = ExecutableItem("name", "sqlite:///database.sqlite", self._temp_dir.name, mock.MagicMock())
+        db_file_path = Path(self._temp_dir.name, "database.sqlite")
+        db_file_path.touch()
+        url = convert_to_sqlalchemy_url({"dialect": "sqlite", "database": str(db_file_path)})
+        executable = ExecutableItem("name", url, self._temp_dir.name, mock.MagicMock())
         with mock.patch("spine_items.data_store.executable_item.DatabaseMapping.create_engine"):
             resources = executable.output_resources(ExecutionDirection.FORWARD)
         self.assertEqual(len(resources), 1)
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
-        self.assertEqual(resource.url, "sqlite:///database.sqlite")
+        self.assertEqual(resource.url, "sqlite:///" + str(db_file_path))
         self.assertEqual(resource.label, "db_url@name")
 
 

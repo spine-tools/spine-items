@@ -25,8 +25,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QFormLayout, QFrame, QLabel,
-    QSizePolicy, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFormLayout, QFrame, QHBoxLayout,
+    QLabel, QPushButton, QSizePolicy, QSpacerItem,
+    QVBoxLayout, QWidget)
 
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
 
@@ -34,7 +35,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(306, 106)
+        Form.resize(306, 187)
         self.verticalLayout_2 = QVBoxLayout(Form)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.frame = QFrame(Form)
@@ -45,6 +46,7 @@ class Ui_Form(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.input_label_field = QLabel(self.frame)
         self.input_label_field.setObjectName(u"input_label_field")
+        self.input_label_field.setTextFormat(Qt.RichText)
 
         self.verticalLayout.addWidget(self.input_label_field)
 
@@ -52,6 +54,7 @@ class Ui_Form(object):
         self.formLayout.setObjectName(u"formLayout")
         self.out_label_label = QLabel(self.frame)
         self.out_label_label.setObjectName(u"out_label_label")
+        self.out_label_label.setTextFormat(Qt.PlainText)
 
         self.formLayout.setWidget(0, QFormLayout.LabelRole, self.out_label_label)
 
@@ -62,6 +65,37 @@ class Ui_Form(object):
 
 
         self.verticalLayout.addLayout(self.formLayout)
+
+        self.out_url_status_label = QLabel(self.frame)
+        self.out_url_status_label.setObjectName(u"out_url_status_label")
+
+        self.verticalLayout.addWidget(self.out_url_status_label)
+
+        self.out_url_widget = QWidget(self.frame)
+        self.out_url_widget.setObjectName(u"out_url_widget")
+        self.verticalLayout_3 = QVBoxLayout(self.out_url_widget)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.out_url_setup_button = QPushButton(self.out_url_widget)
+        self.out_url_setup_button.setObjectName(u"out_url_setup_button")
+
+        self.horizontalLayout.addWidget(self.out_url_setup_button)
+
+        self.out_url_clear_button = QPushButton(self.out_url_widget)
+        self.out_url_clear_button.setObjectName(u"out_url_clear_button")
+
+        self.horizontalLayout.addWidget(self.out_url_clear_button)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout.addItem(self.horizontalSpacer)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout)
+
+
+        self.verticalLayout.addWidget(self.out_url_widget)
 
 
         self.verticalLayout_2.addWidget(self.frame)
@@ -80,5 +114,10 @@ class Ui_Form(object):
         self.out_label_edit.setToolTip(QCoreApplication.translate("Form", u"Identifier for the output file(s). This is the  filename if a single file is exported.", None))
 #endif // QT_CONFIG(tooltip)
         self.out_label_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type output resource label here...", None))
+#if QT_CONFIG(tooltip)
+        self.out_url_setup_button.setToolTip(QCoreApplication.translate("Form", u"Opens a dialog where you can set the database URL.", None))
+#endif // QT_CONFIG(tooltip)
+        self.out_url_setup_button.setText(QCoreApplication.translate("Form", u"Set URL...", None))
+        self.out_url_clear_button.setText(QCoreApplication.translate("Form", u"Clear URL", None))
     # retranslateUi
 

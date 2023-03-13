@@ -11,29 +11,21 @@
 """Contains utilities for Exporter."""
 from dataclasses import dataclass
 
+from spine_engine.project_item.project_item_resource import url_resource
+from spine_items.utils import convert_to_sqlalchemy_url
+
 EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX = ".export-manifest"
 """Prefix for the temporary files that exporter's executable uses to communicate output paths."""
 
 
 @dataclass
 class Database:
-    """
-    Database specific export settings.
-    """
+    """Legacy class for Database specific export settings."""
 
     url: str = ""
     """Database URL."""
     output_file_name: str = ""
     """Output file name; relative to item's data dir."""
-
-    def to_dict(self):
-        """
-        Serializes :class:`Database` into a dictionary.
-
-        Returns:
-            dict: serialized :class:`Database`
-        """
-        return {"output_file_name": self.output_file_name}
 
     @staticmethod
     def from_dict(database_dict):
@@ -49,3 +41,22 @@ class Database:
         db = Database()
         db.output_file_name = database_dict["output_file_name"]
         return db
+
+
+def output_database_resources(item_name, output_channels):
+    """Gathers output database resources from output channels that have an out URL set.
+
+    Args
+        item_name (str): exporter's name
+        output_channels (Iterable of OutputChannel): output channels
+
+    Returns:
+        list of ProjectItemResource: database resources
+    """
+    resources = []
+    for channel in output_channels:
+        if channel.out_url is None:
+            continue
+        url = str(convert_to_sqlalchemy_url(channel.out_url))
+        resources.append(url_resource(item_name, url, channel.out_label))
+    return resources
