@@ -33,6 +33,7 @@ class _ValidationTask(QRunnable):
         self._dialect = dialect
         self._sa_url = sa_url
         self._signals = _TaskSignals()
+        self._signals.moveToThread(None)
         self._signals.validation_failed.connect(fail_slot)
         if success_slot is not None:
             self._signals.validation_succeeded.connect(success_slot)
