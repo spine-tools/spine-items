@@ -461,11 +461,21 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._logger.msg_error.emit("Creating output subdirectories failed. Tool execution aborted.")
             return ItemExecutionFinishState.FAILURE
         if not os.path.isdir(execution_dir):
-            self._logger.msg_warning.emit(
-                f"Project is not self-contained. Please make sure all Tool specification "
-                f"files are in the project directory."
-            )
-            return ItemExecutionFinishState.FAILURE
+            if self._tool_specification.tooltype.lower() == "executable":
+                try:
+                    os.makedirs(execution_dir, exist_ok=True)
+                except OSError:
+                    self._logger.msg_error.emit(
+                        f"Creating work directory {execution_dir} failed. Try execution "
+                        f"in source directory instead."
+                    )
+                    return ItemExecutionFinishState.FAILURE
+            else:
+                self._logger.msg_warning.emit(
+                    f"Project is not self-contained. Please make sure all Tool specification "
+                    f"files are in the project directory."
+                )
+                return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
         resources = forward_resources + backward_resources
         with ExitStack() as stack:
