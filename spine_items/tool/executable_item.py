@@ -47,7 +47,18 @@ class ExecutableItem(DBWriterExecutableItemBase):
 
     _MAX_RETRIES = 3
 
-    def __init__(self, name, work_dir, tool_specification, cmd_line_args, options, group_id, project_dir, logger):
+    def __init__(
+        self,
+        name,
+        work_dir,
+        tool_specification,
+        cmd_line_args,
+        options,
+        kill_completed_processes,
+        group_id,
+        project_dir,
+        logger,
+    ):
         """
         Args:
             name (str): item's name
@@ -56,6 +67,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             tool_specification (ToolSpecification): a tool specification
             cmd_line_args (list): a list of command line argument to pass to the tool instance
             options (dict): misc tool options. See ``Tool`` for details.
+            kill_completed_processes (bool): whether to kill completed persistent processes after execution
             group_id (str or None): execution group identifier
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
@@ -66,6 +78,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
         self._options = options
+        self._kill_completed_processes = kill_completed_processes
         self._tool_instance = None
         self._retry_count = 0
 
@@ -476,7 +489,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     f"files are in the project directory."
                 )
                 return ItemExecutionFinishState.FAILURE
-        self._tool_instance = self._tool_specification.create_tool_instance(execution_dir, self._logger, self)
+        self._tool_instance = self._tool_specification.create_tool_instance(
+            execution_dir, self._kill_completed_processes, self._logger, self
+        )
         resources = forward_resources + backward_resources
         with ExitStack() as stack:
             labelled_args = labelled_resource_args(resources, stack, db_checkin=True, db_checkout=True)
@@ -682,8 +697,19 @@ class ExecutableItem(DBWriterExecutableItemBase):
         )
         cmd_line_args = [make_cmd_line_arg(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
+        kill_completed_processes = item_dict.get("kill_completed_processes", False)
         group_id = item_dict.get("group_id")
-        return cls(name, work_dir, specification, cmd_line_args, options, group_id, project_dir, logger)
+        return cls(
+            name,
+            work_dir,
+            specification,
+            cmd_line_args,
+            options,
+            kill_completed_processes,
+            group_id,
+            project_dir,
+            logger,
+        )
 
 
 def _count_files_and_dirs(paths):

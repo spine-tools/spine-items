@@ -135,6 +135,7 @@ class TestToolExecutable(unittest.TestCase):
             tool_specification=None,
             cmd_line_args=[],
             options={},
+            kill_completed_processes=False,
             group_id=None,
             project_dir=self._temp_dir.name,
             logger=logger,
@@ -155,7 +156,7 @@ class TestToolExecutable(unittest.TestCase):
         work_dir = pathlib.Path(self._temp_dir.name, "work")
         work_dir.mkdir()
         executable = ExecutableItem(
-            "Create files", str(work_dir), tool_specification, [], {}, None, self._temp_dir.name, logger
+            "Create files", str(work_dir), tool_specification, [], {}, False, None, self._temp_dir.name, logger
         )
         executable.execute([], [], Lock())
         while executable._tool_instance is not None:
@@ -182,6 +183,7 @@ class TestToolExecutable(unittest.TestCase):
             tool_specification=tool_specification,
             cmd_line_args=[],
             options={},
+            kill_completed_processes=False,
             group_id=None,
             project_dir=self._temp_dir.name,
             logger=logger,
@@ -213,6 +215,7 @@ class TestToolExecutable(unittest.TestCase):
             tool_specification=tool_specification,
             cmd_line_args=[],
             options={},
+            kill_completed_processes=False,
             group_id=None,
             project_dir=self._temp_dir.name,
             logger=logger,
@@ -245,6 +248,7 @@ class TestToolExecutable(unittest.TestCase):
             tool_specification=tool_specification,
             cmd_line_args=[],
             options={},
+            kill_completed_processes=False,
             group_id=None,
             project_dir=self._temp_dir.name,
             logger=logger,
@@ -271,7 +275,7 @@ class TestToolExecutable(unittest.TestCase):
             outputfiles=["results.gdx", "report.txt"],
         )
         executable = ExecutableItem(
-            "name", self._temp_dir.name, tool_specification, [], {}, None, self._temp_dir.name, logger
+            "name", self._temp_dir.name, tool_specification, [], {}, False, None, self._temp_dir.name, logger
         )
         output_dir = pathlib.Path(executable._data_dir, "output")
         output_dir.mkdir()
@@ -304,10 +308,10 @@ class TestToolExecutable(unittest.TestCase):
             outputfiles=["results.gdx", "report.txt"],
         )
         executable = ExecutableItem(
-            "name", self._temp_dir.name, tool_specification, [], {}, None, self._temp_dir.name, logger
+            "name", self._temp_dir.name, tool_specification, [], {}, False, None, self._temp_dir.name, logger
         )
         executable._tool_instance = executable._tool_specification.create_tool_instance(
-            self._temp_dir.name, "name", mock.MagicMock()
+            self._temp_dir.name, False, logger, mock.MagicMock()
         )
         executable._tool_instance.exec_mngr = mock.MagicMock()
         executable.stop_execution()

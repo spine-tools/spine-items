@@ -140,6 +140,19 @@ class GAMSToolInstance(ToolInstance):
 class JuliaToolInstance(ToolInstance):
     """Class for Julia Tool instances."""
 
+    def __init__(self, tool_specification, basedir, settings, kill_completed_processes, logger, owner):
+        """
+        Args:
+            tool_specification (ToolSpecification): the tool specification for this instance
+            basedir (str): the path to the directory where this instance should run
+            settings (QSettings): Toolbox settings
+            kill_completed_processes (bool): whether to kill completed persistent processes
+            logger (LoggerInterface): a logger instance
+            owner (ExecutableItemBase): The item that owns the instance
+        """
+        super().__init__(tool_specification, basedir, settings, logger, owner)
+        self._kill_completed_processes = kill_completed_processes
+
     def prepare(self, args):
         """See base class."""
         sysimage = self._owner.options.get("julia_sysimage", "")
@@ -187,7 +200,7 @@ class JuliaToolInstance(ToolInstance):
             self.program.append(f"--sysimage={sysimage}")
         alias = f"julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}"
         self.exec_mngr = JuliaPersistentExecutionManager(
-            self._logger, self.program, self.args, alias, group_id=self.owner.group_id
+            self._logger, self.program, self.args, alias, self._kill_completed_processes, self.owner.group_id
         )
 
     def execute(self):
@@ -206,6 +219,19 @@ class JuliaToolInstance(ToolInstance):
 
 class PythonToolInstance(ToolInstance):
     """Class for Python Tool instances."""
+
+    def __init__(self, tool_specification, basedir, settings, kill_completed_processes, logger, owner):
+        """
+        Args:
+            tool_specification (ToolSpecification): the tool specification for this instance
+            basedir (str): the path to the directory where this instance should run
+            settings (QSettings): Toolbox settings
+            kill_completed_processes (bool): whether to kill completed persistent processes
+            logger (LoggerInterface): a logger instance
+            owner (ExecutableItemBase): The item that owns the instance
+        """
+        super().__init__(tool_specification, basedir, settings, logger, owner)
+        self._kill_completed_processes = kill_completed_processes
 
     def prepare(self, args):
         """See base class."""
@@ -248,7 +274,7 @@ class PythonToolInstance(ToolInstance):
             self.args += self._make_exec_code(fp, full_fp)
             alias = f"python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}"
             self.exec_mngr = PythonPersistentExecutionManager(
-                self._logger, self.program, self.args, alias, group_id=self.owner.group_id
+                self._logger, self.program, self.args, alias, self._kill_completed_processes, self.owner.group_id
             )
 
     @staticmethod
