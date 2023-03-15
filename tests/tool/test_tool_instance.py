@@ -74,7 +74,7 @@ class TestPythonToolInstance(unittest.TestCase):
         source_files = ["main.py"]
         specification = PythonTool("specification name", "python", path, source_files, settings, logger)
         base_directory = "path/"
-        return specification.create_tool_instance(base_directory, logger, mock.Mock())
+        return specification.create_tool_instance(base_directory, False, logger, mock.Mock())
 
 
 if __name__ == '__main__':

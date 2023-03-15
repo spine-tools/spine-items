@@ -60,3 +60,23 @@ class UpdateToolOptionsCommand(SpineToolboxCommand):
 
     def undo(self):
         self.tool.do_set_options(self.old_options)
+
+
+class UpdateKillCompletedProcesses(SpineToolboxCommand):
+    def __init__(self, tool, kill_completed_processes):
+        """Command to update Tool kill_completed_processes flag.
+
+        Args:
+            tool (Tool): the Tool
+            kill_completed_processes (bool): new flag value
+        """
+        super().__init__()
+        self._tool = tool
+        self._kill_completed_processes = kill_completed_processes
+        self.setText(f"change kill consoles setting of {tool.name}")
+
+    def redo(self):
+        self._tool.do_update_kill_completed_processes(self._kill_completed_processes)
+
+    def undo(self):
+        self._tool.do_update_kill_completed_processes(not self._kill_completed_processes)

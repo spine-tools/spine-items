@@ -217,11 +217,12 @@ class ToolSpecification(ProjectItemSpecification):
                     pass
         return kwargs
 
-    def create_tool_instance(self, basedir, logger, owner):
+    def create_tool_instance(self, basedir, kill_completed_processes, logger, owner):
         """Returns an instance of this tool specification that is configured to run in the given directory.
 
         Args:
             basedir (str): Path to the directory where the instance will run
+            kill_completed_processes (bool): whether to kill completed persistent processes
             logger (LoggerInterface): Logger
             owner (ExecutableItemBase): Project item that owns the instance
         """
@@ -382,7 +383,7 @@ class GAMSTool(ToolSpecification):
             return GAMSTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir, logger, owner):
+    def create_tool_instance(self, basedir, kill_completed_processes, logger, owner):
         """See base class."""
         return GAMSToolInstance(self, basedir, self._settings, logger, owner)
 
@@ -455,9 +456,9 @@ class JuliaTool(ToolSpecification):
             return JuliaTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir, logger, owner):
+    def create_tool_instance(self, basedir, kill_completed_processes, logger, owner):
         """See base class."""
-        return JuliaToolInstance(self, basedir, self._settings, logger, owner)
+        return JuliaToolInstance(self, basedir, self._settings, kill_completed_processes, logger, owner)
 
 
 class PythonTool(ToolSpecification):
@@ -571,9 +572,9 @@ class PythonTool(ToolSpecification):
             return PythonTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir, logger, owner):
+    def create_tool_instance(self, basedir, kill_completed_processes, logger, owner):
         """See base class."""
-        return PythonToolInstance(self, basedir, self._settings, logger, owner)
+        return PythonToolInstance(self, basedir, self._settings, kill_completed_processes, logger, owner)
 
 
 class ExecutableTool(ToolSpecification):
@@ -696,6 +697,6 @@ class ExecutableTool(ToolSpecification):
             return ExecutableTool(path=path, settings=settings, logger=logger, **kwargs)
         return None
 
-    def create_tool_instance(self, basedir, logger, owner):
+    def create_tool_instance(self, basedir, kill_completed_processes, logger, owner):
         """See base class."""
         return ExecutableToolInstance(self, basedir, self._settings, logger, owner)

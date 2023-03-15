@@ -25,11 +25,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QFrame,
-    QGridLayout, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QRadioButton, QSizePolicy,
-    QSpacerItem, QSplitter, QToolButton, QTreeView,
-    QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
+    QFrame, QGridLayout, QHBoxLayout, QHeaderView,
+    QLabel, QLineEdit, QPushButton, QRadioButton,
+    QSizePolicy, QSpacerItem, QSplitter, QToolButton,
+    QTreeView, QVBoxLayout, QWidget)
 
 from ...widgets import ArgsTreeView
 from spinetoolbox.widgets.custom_qwidgets import ElidedLabel
@@ -85,7 +85,7 @@ class Ui_Form(object):
 
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Orientation.Vertical)
+        self.splitter.setOrientation(Qt.Vertical)
         self.treeView_cmdline_args = ArgsTreeView(self.splitter)
         self.treeView_cmdline_args.setObjectName(u"treeView_cmdline_args")
         sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -191,6 +191,11 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addWidget(self.label_jupyter)
 
+        self.kill_consoles_check_box = QCheckBox(self.frame)
+        self.kill_consoles_check_box.setObjectName(u"kill_consoles_check_box")
+
+        self.verticalLayout_2.addWidget(self.kill_consoles_check_box)
+
 
         self.verticalLayout.addWidget(self.frame)
 
@@ -247,6 +252,10 @@ class Ui_Form(object):
         self.lineEdit_group_id.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Type execution group identifier, or leave empty to run in isolation.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.label_jupyter.setText(QCoreApplication.translate("Form", u"Console info", None))
+#if QT_CONFIG(tooltip)
+        self.kill_consoles_check_box.setToolTip(QCoreApplication.translate("Form", u"If checked, console processes will be killed automatically after execution finishes freeing memory and other resources.", None))
+#endif // QT_CONFIG(tooltip)
+        self.kill_consoles_check_box.setText(QCoreApplication.translate("Form", u"Kill consoles at the end of execution", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

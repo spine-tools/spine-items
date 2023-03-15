@@ -23,7 +23,7 @@ from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, make_cmd_line_arg, LabelArg
 from spine_engine.utils.helpers import resolve_python_interpreter
-from .commands import UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
+from .commands import UpdateKillCompletedProcesses, UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
 from ..db_writer_item_base import DBWriterItemBase
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand
 from .item_info import ItemInfo
@@ -48,6 +48,7 @@ class Tool(DBWriterItemBase):
         execute_in_work=True,
         cmd_line_args=None,
         options=None,
+        kill_completed_processes=False,
         group_id=None,
     ):
         """Tool class.
@@ -63,6 +64,8 @@ class Tool(DBWriterItemBase):
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
             options (dict, optional): misc tool options. At the moment it just holds the location of the julia sysimage
+            kill_completed_processes (bool): whether to kill completed persistent processes
+            group_id (str, optional): execution group id
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -85,6 +88,7 @@ class Tool(DBWriterItemBase):
         self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
         self._specification_menu = None
         self._options = options if options is not None else {}
+        self._kill_completed_processes = kill_completed_processes
         self._resources_from_upstream = list()
         self._resources_from_downstream = list()
 
@@ -144,6 +148,7 @@ class Tool(DBWriterItemBase):
             self._properties_ui.treeView_cmdline_args.selectionModel().selectionChanged
         ] = self._update_remove_args_button_enabled
         s[self._properties_ui.lineEdit_group_id.editingFinished] = self._set_group_id
+        s[self._properties_ui.kill_consoles_check_box.clicked] = self._set_kill_completed_processes
         return s
 
     @Slot()
@@ -177,6 +182,11 @@ class Tool(DBWriterItemBase):
     def _do_update_remove_args_button_enabled(self):
         enabled = self._properties_ui.treeView_cmdline_args.selectionModel().hasSelection()
         self._properties_ui.toolButton_remove_arg.setEnabled(enabled)
+
+    def _update_kill_consoles_check_box_enabled(self):
+        """Updates the enabled state of 'Kill consoles after execution' check box."""
+        enabled = self._specification is None or self._specification.tooltype in ("python", "julia")
+        self._properties_ui.kill_consoles_check_box.setEnabled(enabled)
 
     def restore_selections(self):
         """Restore selections into shared widgets when this project item is selected."""
@@ -284,7 +294,7 @@ class Tool(DBWriterItemBase):
         return True
 
     def update_options(self, options):
-        """Pushes a new UpdateToolOptionsCommand to the toolbox stack."""
+        """Pushes a new UpdateToolOptionsCommand to the toolbox undo stack."""
         self._toolbox.undo_stack.push(UpdateToolOptionsCommand(self, options))
 
     def do_set_options(self, options):
@@ -296,6 +306,25 @@ class Tool(DBWriterItemBase):
         self._options = options
         if self._active:
             _ = self._get_options_widget()
+
+    @Slot(bool)
+    def _set_kill_completed_processes(self, kill_completed_processes):
+        """Pushes a UpdateKillCompletedProcesses to the undo stack
+
+        Args:
+            kill_completed_processes (bool): whether to kill completed persistent processes after execution
+        """
+        self._toolbox.undo_stack.push(UpdateKillCompletedProcesses(self, kill_completed_processes))
+
+    def do_update_kill_completed_processes(self, kill_completed_processes):
+        """Pushes a UpdateKillCompletedProcesses to the undo stack
+
+        Args:
+            kill_completed_processes (bool): whether to kill completed persistent processes after execution
+        """
+        self._kill_completed_processes = kill_completed_processes
+        if self._active:
+            self._properties_ui.kill_consoles_check_box.setChecked(kill_completed_processes)
 
     def _update_tool_ui(self):
         """Updates Tool properties UI. Used when Tool specification is changed.."""
@@ -327,6 +356,8 @@ class Tool(DBWriterItemBase):
             else:
                 env = "" if not env else f"[{env}]"
                 self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
+        self._properties_ui.kill_consoles_check_box.setChecked(self._kill_completed_processes)
+        self._update_kill_consoles_check_box_enabled()
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
@@ -484,6 +515,7 @@ class Tool(DBWriterItemBase):
         d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
         if self._options:
             d["options"] = self._options
+        d["kill_completed_processes"] = self._kill_completed_processes
         if self._group_id:
             d["group_id"] = self._group_id
         return d
@@ -497,6 +529,7 @@ class Tool(DBWriterItemBase):
         cmd_line_args = item_dict.get("cmd_line_args", [])
         cmd_line_args = [make_cmd_line_arg(arg) for arg in cmd_line_args]
         options = item_dict.get("options", {})
+        kill_completed_processes = item_dict.get("kill_completed_processes", False)
         group_id = item_dict.get("group_id")
         return Tool(
             name,
@@ -509,6 +542,7 @@ class Tool(DBWriterItemBase):
             execute_in_work,
             cmd_line_args,
             options,
+            kill_completed_processes,
             group_id,
         )
 

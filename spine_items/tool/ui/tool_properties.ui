@@ -256,6 +256,16 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="kill_consoles_check_box">
+        <property name="toolTip">
+         <string>If checked, console processes will be killed automatically after execution finishes freeing memory and other resources.</string>
+        </property>
+        <property name="text">
+         <string>Kill consoles at the end of execution</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
