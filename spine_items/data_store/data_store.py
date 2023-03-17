@@ -327,6 +327,7 @@ class DataStore(ProjectItem):
             if not sqlite_file_creation_successful:  # User cancelled
                 return
         elif self._url["dialect"] == "mysql":
+            sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
             if sa_url:
                 self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
         else:
