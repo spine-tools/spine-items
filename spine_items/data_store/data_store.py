@@ -322,13 +322,15 @@ class DataStore(ProjectItem):
     @Slot(bool)
     def create_new_spine_database(self, checked=False):
         """Create new (empty) Spine database."""
-        # Try to make an url from the current status
-        sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
-        if not sa_url:
-            if self._url["dialect"] != "sqlite" or not self._new_sqlite_file():
+        if self._url["dialect"] == "sqlite":
+            sqlite_file_creation_successful = self._new_sqlite_file()
+            if not sqlite_file_creation_successful:  # User cancelled
                 return
+        elif self._url["dialect"] == "mysql":
+            if sa_url:
+                self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
         else:
-            self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
+            self._logger.msg_error.emit(f"Unknown data store dialect: {self._url['dialect']}.")
         self._check_notifications()
 
     def _check_notifications(self):
