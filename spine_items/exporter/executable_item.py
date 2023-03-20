@@ -56,7 +56,7 @@ class ExecutableItem(ExecutableItemBase):
         self._cancel_on_error = cancel_on_error
         self._gams_path = gams_path
         self._forks = dict()
-        self._result_files = None
+        self._result_files = {}
         self._process = None
         self._specification = specification
         self._output_channels = output_channels
