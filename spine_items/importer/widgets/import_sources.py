@@ -283,20 +283,18 @@ class ImportSources(QObject):
         Args:
             tables (dict): updated source tables
         """
-        is_file_less = self.parent().is_file_less()
-        if is_file_less:
+        if self.parent().is_file_less():
             self._mappings_model.add_empty_row()
             return
-        for row in reversed(range(1, self._mappings_model.rowCount())):
-            if self._mappings_model.index(row, 0).data() not in tables:
-                self._mappings_model.removeRow(row)
+        selection_model = self._ui.source_list.selectionModel()
+        current_row = selection_model.currentIndex().row()
+        self._mappings_model.cross_check_source_table_names(set(tables))
+        self._mappings_model.remove_tables_not_in_source_and_specification()
         table_names = set(self._mappings_model.real_table_names())
         for t_name, t_mapping in tables.items():
             if t_name not in table_names:
                 self._mappings_model.append_new_table_with_mapping(t_name, t_mapping)
         # reselect current table if existing otherwise select first table
-        selection_model = self._ui.source_list.selectionModel()
-        current_row = selection_model.currentIndex().row()
         selection_model.setCurrentIndex(QModelIndex(), QItemSelectionModel.ClearAndSelect)
         if current_row >= 0:
             self._select_table_row(min(current_row, self._mappings_model.rowCount() - 1))

@@ -71,6 +71,10 @@ class ImportMappings:
         self._ui.duplicate_button.clicked.connect(self._duplicate_selected_mapping)
         self._ui.mapping_list.customContextMenuRequested.connect(self._show_mapping_list_context_menu)
 
+    def specification_saved(self):
+        """Notifies mappings model items that they have been stored into the specification."""
+        self._mappings_model.set_source_table_items_into_specification()
+
     @Slot(QModelIndex, QModelIndex)
     def _change_list(self, current, previous):
         """Loads current source table's mapping list.

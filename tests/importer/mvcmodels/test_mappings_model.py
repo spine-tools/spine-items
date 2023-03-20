@@ -29,11 +29,10 @@ class TestMappingsModel(unittest.TestCase):
             QApplication()
 
     def setUp(self):
-        self._undo_stack = QUndoStack()
         self._model_parent = QObject()
+        self._undo_stack = QUndoStack(self._model_parent)
 
     def tearDown(self):
-        self._undo_stack.deleteLater()
         self._model_parent.deleteLater()
         QApplication.processEvents()
 
@@ -67,13 +66,17 @@ class TestMappingsModel(unittest.TestCase):
 
 
 class TestTableList(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not QApplication.instance():
+            QApplication()
+
     def setUp(self):
-        self._undo_stack = QUndoStack()
         self._model_parent = QObject()
+        self._undo_stack = QUndoStack(self._model_parent)
         self._model = MappingsModel(self._undo_stack, self._model_parent)
 
     def tearDown(self):
-        self._undo_stack.deleteLater()
         self._model_parent.deleteLater()
         QApplication.processEvents()
 
@@ -92,6 +95,122 @@ class TestTableList(unittest.TestCase):
         self.assertEqual(int((self._model.flags(self._model.index(1, 0)) & Qt.ItemFlag.ItemIsEditable).value), 0)
         self.assertNotEqual(int((self._model.flags(self._model.index(2, 0)) & Qt.ItemFlag.ItemIsEditable).value), 0)
 
+    def test_set_source_table_items_into_specification(self):
+        self._model.append_new_table_with_mapping("my source table", None)
+        self.assertEqual(self._model.rowCount(), 2)
+        for row in range(1, self._model.rowCount()):
+            item = self._model.index(row, 0).data(Role.ITEM)
+            self.assertFalse(item.in_specification)
+        self._model.set_source_table_items_into_specification()
+        for row in range(1, self._model.rowCount()):
+            item = self._model.index(row, 0).data(Role.ITEM)
+            self.assertTrue(item.in_specification)
+
+    def test_remove_tables_not_in_source_and_specification(self):
+        self._model.append_new_table_with_mapping("table that gets removed", None)
+        self._model.append_new_table_with_mapping("table that is only in source", None)
+        root_mapping = import_mapping_from_dict({"map_type": "ObjectClass", "name": None, "object": None})
+        self._model.append_new_table_with_mapping("table that is in source and specification", root_mapping)
+        self.assertEqual(self._model.rowCount(), 4)
+        self._model.cross_check_source_table_names(
+            {"table that is only in source", "table that is in source and specification"}
+        )
+        self._model.remove_tables_not_in_source_and_specification()
+        self.assertEqual(self._model.rowCount(), 3)
+        expected_names = ["Select All", "table that is only in source", "table that is in source and specification"]
+        for row, expected_name in zip(range(self._model.rowCount()), expected_names):
+            item = self._model.index(row, 0).data(Role.ITEM)
+            self.assertEqual(item.name, expected_name)
+
+    def test_cross_check_source_table_names(self):
+        self._model.append_new_table_with_mapping("initially in source", None)
+        self._model.append_new_table_with_mapping("initially not in source", None)
+        not_in_source_item = self._model.index(self._model.rowCount() - 1, 0).data(Role.ITEM)
+        self.assertEqual(not_in_source_item.name, "initially not in source")
+        not_in_source_item.in_source = False
+        self._model.cross_check_source_table_names({"initially not in source"})
+        self.assertEqual(self._model.rowCount(), 3)
+        expected_in_source = {"initially in source": False, "initially not in source": True}
+        expected_real = {"initially in source": False, "initially not in source": True}
+        for row in range(1, self._model.rowCount()):
+            item = self._model.index(row, 0).data(Role.ITEM)
+            self.assertEqual(item.in_source, expected_in_source[item.name])
+            self.assertEqual(item.real, expected_real[item.name])
+
+    def test_empty_model_has_select_all_source_table_item(self):
+        self.assertEqual(self._model.rowCount(), 1)
+        index = self._model.index(0, 0)
+        self.assertEqual(index.data(), "Select All")
+        self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
+        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole))
+        self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
+        self.assertIsNone(index.data(Qt.ItemDataRole.ToolTipRole))
+        flags = self._model.flags(index)
+        self.assertEqual(
+            flags, Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable
+        )
+
+    def test_empty_row(self):
+        self._model.add_empty_row()
+        self.assertEqual(self._model.rowCount(), 2)
+        index = self._model.index(1, 0)
+        self._assert_empty_row(index)
+
+    def test_turn_empty_row_into_non_real_table(self):
+        self._model.add_empty_row()
+        empty_row_index = self._model.index(1, 0)
+        with signal_waiter(self._model.dataChanged, timeout=1.0) as waiter:
+            self._model.setData(empty_row_index, "my shiny table")
+            waiter.wait()
+            self.assertEqual(len(waiter.args), 3)
+            self.assertTrue(self._model.is_table_index(waiter.args[0]))
+            self.assertEqual(waiter.args[0].row(), 1)
+            self.assertEqual(waiter.args[0].column(), 0)
+            self.assertTrue(self._model.is_table_index(waiter.args[1]))
+            self.assertEqual(waiter.args[1].row(), 1)
+            self.assertEqual(waiter.args[1].column(), 0)
+        self.assertEqual(self._model.rowCount(), 3)
+        index = self._model.index(1, 0)
+        self.assertEqual(index.data(), "my shiny table (new)")
+        self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
+        self.assertTrue(index.data(Qt.ItemDataRole.CheckStateRole))
+        self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
+        self.assertEqual(
+            index.data(Qt.ItemDataRole.ToolTipRole), "Table's mappings haven't been saved with the specification yet."
+        )
+        flags = self._model.flags(index)
+        self.assertEqual(
+            flags,
+            Qt.ItemFlag.ItemIsEnabled
+            | Qt.ItemFlag.ItemIsSelectable
+            | Qt.ItemFlag.ItemIsEditable
+            | Qt.ItemFlag.ItemIsUserCheckable,
+        )
+        index = self._model.index(2, 0)
+        self._assert_empty_row(index)
+
+    def _assert_empty_row(self, index):
+        self.assertEqual(index.data(), "<rename this to add table>")
+        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole))
+        self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
+        self.assertTrue(index.data(Qt.ItemDataRole.FontRole).italic())
+        flags = self._model.flags(index)
+        self.assertEqual(flags, Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable)
+
+    def test_undo_create_new_table_restores_empty_row(self):
+        self._model.add_empty_row()
+        empty_row_index = self._model.index(1, 0)
+        with signal_waiter(self._model.dataChanged, timeout=1.0) as waiter:
+            self._model.setData(empty_row_index, "my temporary table")
+            waiter.wait()
+        self.assertEqual(self._model.rowCount(), 3)
+        with signal_waiter(self._model.dataChanged, timeout=1.0) as waiter:
+            self._undo_stack.undo()
+            waiter.wait()
+        self.assertEqual(self._model.rowCount(), 2)
+        index = self._model.index(1, 0)
+        self._assert_empty_row(index)
+
 
 class TestMappingComponentsTable(unittest.TestCase):
     @classmethod
@@ -100,8 +219,8 @@ class TestMappingComponentsTable(unittest.TestCase):
             QApplication()
 
     def setUp(self):
-        self._undo_stack = QUndoStack()
         self._model_parent = QObject()
+        self._undo_stack = QUndoStack(self._model_parent)
         self._model = MappingsModel(self._undo_stack, self._model_parent)
         self._model.add_empty_row()
         self._table_index = self._model.index(1, 0)
@@ -112,7 +231,6 @@ class TestMappingComponentsTable(unittest.TestCase):
         self._list_index = self._model.index(0, 0, self._table_index)
 
     def tearDown(self):
-        self._undo_stack.deleteLater()
         self._model_parent.deleteLater()
         QApplication.processEvents()
 

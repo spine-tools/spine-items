@@ -14,7 +14,7 @@ from unittest import mock
 
 from PySide6.QtCore import QModelIndex
 from PySide6.QtGui import QUndoStack
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QListWidget, QWidget
 
 from spine_items.importer.connection_manager import ConnectionManager
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
@@ -47,6 +47,7 @@ class TestImportSources(unittest.TestCase):
         source_list_index.row.return_value = 0
         source_list_selection_model.currentIndex.return_value = source_list_index
         ui.source_list.selectionModel.return_value = source_list_selection_model
+        ui.mapping_list = QListWidget(self._parent_widget)
         import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
         data = []
         connection_settings = {"data": data}
@@ -86,6 +87,7 @@ class TestImportSources(unittest.TestCase):
         source_list_index.row.return_value = 0
         source_list_selection_model.currentIndex.return_value = source_list_index
         ui.source_list.selectionModel.return_value = source_list_selection_model
+        ui.mapping_list = QListWidget(self._parent_widget)
         import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
         data = [["data 1", "data 2"]]
         connection_settings = {"data": data}
@@ -125,6 +127,7 @@ class TestImportSources(unittest.TestCase):
         source_list_index.row.return_value = 0
         source_list_selection_model.currentIndex.return_value = source_list_index
         ui.source_list.selectionModel.return_value = source_list_selection_model
+        ui.mapping_list = QListWidget(self._parent_widget)
         import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
         data = [["header 1", "header 2"]]
         connection_settings = {"data": data}
@@ -164,6 +167,7 @@ class TestImportSources(unittest.TestCase):
         source_list_index.row.return_value = 0
         source_list_selection_model.currentIndex.return_value = source_list_index
         ui.source_list.selectionModel.return_value = source_list_selection_model
+        ui.mapping_list = QListWidget(self._parent_widget)
         import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
         data = [["header 1", "header 2"], ["data 1", "data 2"]]
         connection_settings = {"data": data}
