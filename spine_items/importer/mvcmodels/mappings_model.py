@@ -15,11 +15,13 @@ Contains a model to handle source tables and import mapping.
 :author: A. Soininen (VTT)
 :date:   7.10.2021
 """
+from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
 import re
 
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
+from PySide6.QtGui import QColor, QFont
 
 from spinetoolbox.helpers import unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
@@ -69,7 +71,10 @@ class SourceTableItem:
     checkable: bool = True
     editable: bool = False
     real: bool = True
-    mapping_list: list = field(init=False, default_factory=list)
+    in_source: bool = False
+    in_specification: bool = False
+    empty: bool = False
+    mapping_list: list[MappingListItem] = field(init=False, default_factory=list)
 
     def append_to_mapping_list(self, list_item):
         """Appends an item to mapping list.
@@ -122,6 +127,8 @@ class MappingsModel(QAbstractItemModel):
     multi_column_type_recommended = Signal(object, object)
     """Emitted when all but given columns should be of given type."""
 
+    _NOT_IN_SOURCE_COLOR = QColor(Qt.GlobalColor.gray)
+
     def __init__(self, undo_stack, parent):
         """
         Args:
@@ -130,6 +137,8 @@ class MappingsModel(QAbstractItemModel):
         super().__init__(parent)
         self._undo_stack = undo_stack
         self._mappings = [self._make_select_all_tables_item()]
+        self._add_table_row_font = QFont()
+        self._add_table_row_font.setItalic(True)
 
     def real_table_names(self):
         """Returns real table names.
@@ -171,7 +180,7 @@ class MappingsModel(QAbstractItemModel):
         if isinstance(index_item, SourceTableItem):
             return self._table_list_data(index, role)
         if isinstance(index_item, MappingListItem):
-            return self._mapping_list_data(index_item, index, role)
+            return self._mapping_list_data(index_item, role)
         if isinstance(index_item, FlattenedMappings):
             return self._mapping_data(index_item, index, role)
         return None
@@ -186,21 +195,43 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             Any: data
         """
-        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
+        if role == Qt.ItemDataRole.DisplayRole:
+            row = index.row()
+            list_item = self._mappings[row]
+            if row == 0 or list_item.in_specification or list_item.empty:
+                return list_item.name
+            return list_item.name + " (new)"
+        if role == Qt.ItemDataRole.EditRole:
             return self._mappings[index.row()].name
         if role == Qt.ItemDataRole.CheckStateRole:
             return Qt.CheckState.Checked if self._mappings[index.row()].checked else Qt.CheckState.Unchecked
+        if role == Qt.ItemDataRole.ForegroundRole:
+            row = index.row()
+            item = self._mappings[row]
+            return self._NOT_IN_SOURCE_COLOR if row > 0 and (not item.in_source and not item.empty) else None
+        if role == Qt.ItemDataRole.ToolTipRole:
+            row = index.row()
+            if row == 0:
+                return None
+            list_item = self._mappings[row]
+            if not list_item.empty:
+                if not list_item.in_source:
+                    return "Table isn't in source data."
+                if not list_item.in_specification:
+                    return "Table's mappings haven't been saved with the specification yet."
+            return None
+        if role == Qt.ItemDataRole.FontRole:
+            return self._add_table_row_font if self._mappings[index.row()].empty else None
         if role == Role.ITEM:
             return self._mappings[index.row()]
         return None
 
     @staticmethod
-    def _mapping_list_data(list_item, index, role):
+    def _mapping_list_data(list_item, role):
         """Returns mapping list data for given role.
 
         Args:
             list_item (MappingListItem): list item
-            index (QModelIndex): list index
             role (int): Qt's data role
 
         Returns:
@@ -290,7 +321,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             int: flags
         """
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         table_item = self._mappings[index.row()]
         if table_item.checkable:
             flags |= Qt.ItemIsUserCheckable
@@ -423,7 +454,7 @@ class MappingsModel(QAbstractItemModel):
         try:
             for table_name, mapping_list_dicts in mappings_dict.get("table_mappings", {}).items():
                 checked = table_name in checked_tables if checked_tables is not None else True
-                table_item = SourceTableItem(table_name, checked)
+                table_item = SourceTableItem(table_name, checked, in_specification=True)
                 for list_dict in mapping_list_dicts:
                     mapping_name, root_mapping = parse_named_mapping_spec(list_dict)
                     flattened_mappings = FlattenedMappings(root_mapping)
@@ -487,7 +518,7 @@ class MappingsModel(QAbstractItemModel):
                 return False
             previous = {"name": table_item.name}
             updates = {"name": value}
-            self._undo_stack.push(UpdateTableItem(self, row, previous, updates, row == len(self._mappings) - 1))
+            self._undo_stack.push(UpdateTableItem(self, row, previous, updates, table_item.empty))
             return True
         return False
 
@@ -520,8 +551,8 @@ class MappingsModel(QAbstractItemModel):
         Args:
             row (int): item row
             data_dict (dict): table item data to update
-            add_empty_row (bool): whether or not to add an empty row
-            remove_empty_row (bool): whether or not to remove the empty row
+            add_empty_row (bool): whether to add an empty row
+            remove_empty_row (bool): whether to remove the empty row
         """
         table_item = self._mappings[row]
         for field_name, value in data_dict.items():
@@ -531,6 +562,8 @@ class MappingsModel(QAbstractItemModel):
             table_item.real = True
             table_item.checkable = True
             table_item.checked = True
+            table_item.empty = False
+            table_item.in_source = True
             default_flattened_mappings = FlattenedMappings(self._create_default_mapping())
             mapping_list_item = MappingListItem(self._unique_mapping_name(table_item))
             mapping_list_item.set_flattened_mappings(default_flattened_mappings)
@@ -542,6 +575,8 @@ class MappingsModel(QAbstractItemModel):
             table_item.real = False
             table_item.checkable = False
             table_item.checked = False
+            table_item.empty = True
+            table_item.in_source = False
             self.beginRemoveRows(index, 0, len(table_item.mapping_list) - 1)
             table_item.mapping_list.clear()
             self.endRemoveRows()
@@ -614,15 +649,15 @@ class MappingsModel(QAbstractItemModel):
 
         Args:
             table_name (str): table name
-            root_mapping (ImportMapping, optional): initial mapping; if None,
-                an object class mapping will be created
+            root_mapping (ImportMapping, optional): initial mapping
         """
-        if root_mapping is None:
+        has_root_mapping = root_mapping is not None
+        if not has_root_mapping:
             root_mapping = self._create_default_mapping()
         flattened_mappings = FlattenedMappings(root_mapping)
         list_item = MappingListItem("Mapping 1")
         list_item.set_flattened_mappings(flattened_mappings)
-        table_item = SourceTableItem(table_name, checked=True)
+        table_item = SourceTableItem(table_name, checked=True, in_source=True, in_specification=has_root_mapping)
         table_item.append_to_mapping_list(list_item)
         self.beginInsertRows(QModelIndex(), len(self._mappings), len(self._mappings))
         self._mappings.append(table_item)
@@ -631,7 +666,7 @@ class MappingsModel(QAbstractItemModel):
     def _remove_last_source_table(self):
         """Removes the last source table."""
         self.beginRemoveRows(QModelIndex(), self.rowCount() - 1, self.rowCount() - 1)
-        self._mappings.pop(-1)
+        del self._mappings[-1]
         self.endRemoveRows()
 
     def rename_mapping(self, table_row, list_row, name):
@@ -1179,14 +1214,16 @@ class MappingsModel(QAbstractItemModel):
             editable (bool): True to enable table name editing, False to disable
         """
         for item in self._mappings[1:]:
-            if item.name == UNNAMED_TABLE_NAME:
+            if item.empty:
                 continue
             item.editable = editable
 
     def add_empty_row(self):
         """Adds the special 'unnamed table' row at the end of table list."""
         last_row = len(self._mappings) - 1
-        empty_item = SourceTableItem(UNNAMED_TABLE_NAME, checked=False, checkable=False, editable=True, real=False)
+        empty_item = SourceTableItem(
+            UNNAMED_TABLE_NAME, checked=False, checkable=False, editable=True, real=False, empty=True
+        )
         self.beginInsertRows(QModelIndex(), last_row, last_row)
         self._mappings.append(empty_item)
         self.endInsertRows()
@@ -1206,12 +1243,12 @@ class MappingsModel(QAbstractItemModel):
         parent_item = parent.internalPointer()
         if parent_item is None:
             self.beginRemoveRows(parent, row, row)
-            self._mappings.pop(row)
+            del self._mappings[row]
             self.endRemoveRows()
             return True
         if isinstance(parent_item, SourceTableItem):
             self.beginRemoveRows(parent, row, row)
-            parent_item.mapping_list.pop(row)
+            del parent_item.mapping_list[row]
             self.endRemoveRows()
             return True
         return False
@@ -1275,3 +1312,45 @@ class MappingsModel(QAbstractItemModel):
             str: name
         """
         return unique_name(prefix, [i.name for i in table_item.mapping_list])
+
+    def set_source_table_items_into_specification(self):
+        """Sets the in_specification flag for all appropriate source table items."""
+        bottom = 0
+        for mapping in self._mappings[1:]:
+            mapping.in_specification = True
+            bottom += 1
+        if bottom > 0:
+            top_left = self.index(1, 0)
+            bottom_right = self.index(bottom, 0)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole])
+
+    def remove_tables_not_in_source_and_specification(self):
+        """Removes source table items that are not in source or saved in specification."""
+        start = 1
+        for row, table_item in reversed(list(enumerate(self._mappings[start:], start))):
+            if not table_item.in_source and not table_item.in_specification:
+                self.removeRow(row)
+
+    def cross_check_source_table_names(self, table_names):
+        """Sets the in_source flag for all appropriate source table items.
+
+        Args:
+            table_names (set of str): existing source table names
+        """
+        changed_rows = []
+        start = 1
+        for row, table_item in enumerate(self._mappings[start:], start):
+            in_source = table_item.name in table_names
+            changed = False
+            if table_item.in_source != in_source:
+                table_item.in_source = in_source
+                changed = True
+            if table_item.real != in_source:
+                table_item.real = in_source
+                changed = True
+            if changed:
+                changed_rows.append(row)
+        if changed_rows:
+            top_left = self.index(changed_rows[0], 0)
+            bottom_right = self.index(changed_rows[-1], 0)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.ForegroundRole])

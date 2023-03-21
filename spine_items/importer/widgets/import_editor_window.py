@@ -124,6 +124,11 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     def settings_group(self):
         return "mappingPreviewWindow"
 
+    def _save(self):
+        """See base class."""
+        if super()._save():
+            self._import_mappings.specification_saved()
+
     @property
     def _duplicate_kwargs(self):
         return dict(filepath=self._filepath)
