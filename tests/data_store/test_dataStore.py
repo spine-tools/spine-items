@@ -15,7 +15,6 @@ Unit tests for DataStore class.
 :author: M. Marin (KTH), P. Savolainen (VTT)
 :date:   6.12.2018
 """
-from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -23,7 +22,7 @@ from unittest import mock
 import os
 import logging
 import sys
-from spinedb_api import create_new_spine_database, DatabaseMapping
+from spinedb_api import create_new_spine_database
 from spine_engine.project_item.project_item_resource import database_resource
 from PySide6.QtWidgets import QApplication
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
@@ -31,6 +30,7 @@ from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.item_info import ItemInfo
 from spine_items.utils import convert_to_sqlalchemy_url, database_label
+from spinetoolbox.helpers import signal_waiter
 from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
@@ -97,8 +97,6 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         temp_db_path = os.path.join(self.ds.data_dir, "temp_db.sqlite")
         sqlite_url = "sqlite:///" + temp_db_path
         create_new_spine_database(sqlite_url)
-        url = dict(dialect="sqlite", database="temp_db.sqlite")
-        self.ds._url = self.ds.parse_url(url)  # Set an URL for the Data Store
         return temp_db_path
 
     def test_item_dict(self):
@@ -129,7 +127,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.toolbox.db_mngr.create_new_spine_database.assert_not_called()
 
     def test_create_new_empty_spine_database2(self):
-        """Test that a new Spine database is created when clicking on 'New Spine db tool button'
+        """Test that a new Spine database is created when clicking on 'New Spine db' tool button
         with a Data Store that already has an .sqlite db.
         """
         temp_path = self.create_temp_db()
@@ -143,11 +141,17 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.assertEqual(url["database"], temp_path)
         self.assertTrue(os.path.exists(url["database"]))
         # Click New Spine db button. Creates the sqlite file.
-        self.ds_properties_ui.pushButton_create_new_spine_db.click()
+        with mock.patch("spine_items.data_store.data_store.QFileDialog") as file_dialog:
+            file_dialog.getSaveFileName.return_value = (temp_path, "*.sqlite")
+            with signal_waiter(self.ds_properties_ui.pushButton_create_new_spine_db.clicked) as waiter:
+                self.ds_properties_ui.pushButton_create_new_spine_db.click()
+                waiter.wait()
+            file_dialog.getSaveFileName.assert_called_once()
         url = self.ds_properties_ui.url_selector_widget.url_dict()
-        self.assertEqual(url["dialect"], "sqlite")
         self.assertEqual(url["database"], temp_path)
+        self.assertEqual(url["dialect"], "sqlite")
         self.assertTrue(os.path.exists(url["database"]))
+        self.toolbox.db_mngr.create_new_spine_database.assert_called_once()
 
     def test_new_database_is_created_before_advertising_resources(self):
         self.ds.activate()
@@ -303,8 +307,6 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         url = dict(dialect="sqlite", database=temp_path)
         self.ds._url = self.ds.parse_url(url)
         self.ds.activate()
-        # Click New Spine db button
-        self.ds_properties_ui.pushButton_create_new_spine_db.click()
         # Check that DS is connected to an existing DS.sqlite file that is in data_dir
         url = self.ds_properties_ui.url_selector_widget.url_dict()
         self.assertEqual(url["dialect"], "sqlite")
@@ -353,12 +355,6 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.project.notify_resource_replacement_to_successors.assert_called_once_with(
             self.ds, expected_old_resources, expected_new_resources
         )
-
-
-class MockEngine:
-    @contextmanager
-    def connect(self):
-        yield None
 
 
 if __name__ == "__main__":
