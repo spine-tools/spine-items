@@ -26,7 +26,7 @@ from PySide6.QtGui import QColor, QFont
 from spinetoolbox.helpers import unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.import_mapping.import_mapping import ImportMapping, ScenarioBeforeAlternativeMapping
+from spinedb_api.import_mapping.import_mapping import ScenarioBeforeAlternativeMapping
 from spinedb_api.import_mapping.import_mapping_compat import (
     parse_named_mapping_spec,
     import_mapping_from_dict,
@@ -724,9 +724,8 @@ class MappingsModel(QAbstractItemModel):
             new_type (str): name of the type
         """
         map_type = {
-            "Object class": "ObjectClass",
-            "Relationship class": "RelationshipClass",
-            "Object group": "ObjectGroup",
+            "Entity class": "EntityClass",
+            "Entity group": "EntityGroup",
             "Alternative": "Alternative",
             "Scenario": "Scenario",
             "Scenario alternative": "ScenarioAlternative",
@@ -1022,16 +1021,16 @@ class MappingsModel(QAbstractItemModel):
         )
         self._recommend_source_table_column_or_row_types(flattened_mappings, row)
 
-    def set_import_objects(self, table_row, list_row, import_objects):
-        """Sets the import object flag.
+    def set_import_entities(self, table_row, list_row, import_entities):
+        """Sets the import entities flag.
 
         Args:
             table_row (int): source table row index
             list_row (int): mapping list row index
-            import_objects (bool): flag value
+            import_entities (bool): flag value
         """
         flattened_mappings = self._mappings[table_row].mapping_list[list_row].flattened_mappings
-        flattened_mappings.set_import_objects(import_objects)
+        flattened_mappings.set_import_entities(import_entities)
         table_index = self.index(table_row, 0)
         list_index = self.index(list_row, 0, table_index)
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])

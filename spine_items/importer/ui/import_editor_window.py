@@ -180,15 +180,14 @@ class Ui_MainWindow(object):
         self.class_type_combo_box.addItem("")
         self.class_type_combo_box.addItem("")
         self.class_type_combo_box.addItem("")
-        self.class_type_combo_box.addItem("")
         self.class_type_combo_box.setObjectName(u"class_type_combo_box")
 
         self.formLayout_2.setWidget(0, QFormLayout.FieldRole, self.class_type_combo_box)
 
-        self.import_objects_check_box = QCheckBox(self.mapping_options_contents)
-        self.import_objects_check_box.setObjectName(u"import_objects_check_box")
+        self.import_entities_check_box = QCheckBox(self.mapping_options_contents)
+        self.import_entities_check_box.setObjectName(u"import_entities_check_box")
 
-        self.formLayout_2.setWidget(2, QFormLayout.LabelRole, self.import_objects_check_box)
+        self.formLayout_2.setWidget(2, QFormLayout.LabelRole, self.import_entities_check_box)
 
         self.parameter_type_label = QLabel(self.mapping_options_contents)
         self.parameter_type_label.setObjectName(u"parameter_type_label")
@@ -251,7 +250,7 @@ class Ui_MainWindow(object):
 
         self.dimension_spin_box = QSpinBox(self.mapping_options_contents)
         self.dimension_spin_box.setObjectName(u"dimension_spin_box")
-        self.dimension_spin_box.setMinimum(1)
+        self.dimension_spin_box.setMinimum(0)
 
         self.formLayout_2.setWidget(8, QFormLayout.FieldRole, self.dimension_spin_box)
 
@@ -375,19 +374,18 @@ class Ui_MainWindow(object):
         self.duplicate_button.setText(QCoreApplication.translate("MainWindow", u"Duplicate", None))
         self.dockWidget_mapping_options.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping options", None))
         self.class_type_label.setText(QCoreApplication.translate("MainWindow", u"Item type:", None))
-        self.class_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Object class", None))
-        self.class_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Relationship class", None))
-        self.class_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Object group", None))
-        self.class_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Alternative", None))
-        self.class_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario", None))
-        self.class_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
-        self.class_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
-        self.class_type_combo_box.setItemText(7, QCoreApplication.translate("MainWindow", u"Feature", None))
-        self.class_type_combo_box.setItemText(8, QCoreApplication.translate("MainWindow", u"Tool", None))
-        self.class_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool feature", None))
-        self.class_type_combo_box.setItemText(10, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
+        self.class_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Entity class", None))
+        self.class_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Entity group", None))
+        self.class_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Alternative", None))
+        self.class_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Scenario", None))
+        self.class_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
+        self.class_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
+        self.class_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Feature", None))
+        self.class_type_combo_box.setItemText(7, QCoreApplication.translate("MainWindow", u"Tool", None))
+        self.class_type_combo_box.setItemText(8, QCoreApplication.translate("MainWindow", u"Tool feature", None))
+        self.class_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
 
-        self.import_objects_check_box.setText(QCoreApplication.translate("MainWindow", u"Import objects", None))
+        self.import_entities_check_box.setText(QCoreApplication.translate("MainWindow", u"Import entities", None))
         self.parameter_type_label.setText(QCoreApplication.translate("MainWindow", u"Parameter type:", None))
         self.parameter_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Value", None))
         self.parameter_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Definition", None))

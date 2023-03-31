@@ -439,30 +439,30 @@ class SetItemMappingType(QUndoCommand):
         )
 
 
-class SetImportObjectsFlag(QUndoCommand):
+class SetImportEntitiesFlag(QUndoCommand):
     """Command to set item mapping's import objects flag."""
 
-    def __init__(self, table_row, list_row, model, import_objects):
+    def __init__(self, table_row, list_row, model, import_entities):
         """
         Args:
             table_row (int): source table row index
             list_row (int): mapping list row index
             model (MappingsModel): model
-            import_objects (bool): new flag value
+            import_entities (bool): new flag value
         """
         super().__init__("import objects flag change")
         self._table_row = table_row
         self._list_row = list_row
         self._model = model
-        self._import_objects = import_objects
+        self._import_entities = import_entities
 
     def redo(self):
         """Changes the import objects flag."""
-        self._model.set_import_objects(self._table_row, self._list_row, self._import_objects)
+        self._model.set_import_entities(self._table_row, self._list_row, self._import_entities)
 
     def undo(self):
         """Restores the import objects flag."""
-        self._model.set_import_objects(self._table_row, self._list_row, not self._import_objects)
+        self._model.set_import_entities(self._table_row, self._list_row, not self._import_entities)
 
 
 class SetParameterType(QUndoCommand):
