@@ -18,8 +18,8 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
-    RelationshipClassObjectClassMapping,
-    RelationshipClassObjectHighlightingMapping,
+    DimensionMapping,
+    DimensionHighlightingMapping,
 )
 from spinetoolbox.helpers import unique_name
 
@@ -42,7 +42,7 @@ class MappingsTableModel(QAbstractTableModel):
     MAPPING_TYPE_ROLE = Qt.ItemDataRole.UserRole + 2
     MAPPING_ROOT_ROLE = Qt.ItemDataRole.UserRole + 3
     ALWAYS_EXPORT_HEADER_ROLE = Qt.ItemDataRole.UserRole + 4
-    RELATIONSHIP_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 5
+    ENTITY_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 5
     USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.ItemDataRole.UserRole + 6
     FIXED_TABLE_NAME_ROLE = Qt.ItemDataRole.UserRole + 7
     PARAMETER_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 8
@@ -118,8 +118,8 @@ class MappingsTableModel(QAbstractTableModel):
                 return spec.root
             if role == self.ALWAYS_EXPORT_HEADER_ROLE:
                 return spec.always_export_header
-            if role == self.RELATIONSHIP_DIMENSIONS_ROLE:
-                return _instance_occurrences(spec.root, RelationshipClassObjectClassMapping)
+            if role == self.ENTITY_DIMENSIONS_ROLE:
+                return _instance_occurrences(spec.root, DimensionMapping)
             if role == self.USE_FIXED_TABLE_NAME_FLAG_ROLE:
                 return spec.use_fixed_table_name_flag
             if role == self.FIXED_TABLE_NAME_ROLE:
@@ -133,7 +133,7 @@ class MappingsTableModel(QAbstractTableModel):
                 return spec.group_fn
             if role == self.HIGHLIGHT_DIMENSION_ROLE:
                 highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, RelationshipClassObjectHighlightingMapping)), None
+                    (m for m in spec.root.flatten() if isinstance(m, DimensionHighlightingMapping)), None
                 )
                 if highlighting_mapping is None:
                     return None
@@ -243,7 +243,7 @@ class MappingsTableModel(QAbstractTableModel):
                 self.dataChanged.emit(index, index, [self.GROUP_FN_ROLE])
             elif role == self.HIGHLIGHT_DIMENSION_ROLE:
                 highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, RelationshipClassObjectHighlightingMapping)), None
+                    (m for m in spec.root.flatten() if isinstance(m, DimensionHighlightingMapping)), None
                 )
                 if highlighting_mapping is None:
                     return False

@@ -23,9 +23,9 @@ from spinedb_api.export_mapping.export_mapping import (
     ExportMapping,
     FixedValueMapping,
     from_dict as mapping_from_dict,
-    ObjectClassMapping,
-    ObjectGroupMapping,
-    ObjectGroupObjectMapping,
+    EntityClassMapping,
+    EntityGroupMapping,
+    EntityGroupEntityMapping,
     ParameterValueIndexMapping,
     ParameterDefaultValueIndexMapping,
     IndexNameMapping,
@@ -39,21 +39,33 @@ from .item_info import ItemInfo
 class MappingType(Enum):
     alternatives = "alternatives"
     features = "features"
-    objects = "objects"
-    object_groups = "object_groups"
-    object_parameter_default_values = "object_default_parameter_values"
-    object_parameter_values = "object_parameter_values"
+    entities = "entities"
+    entity_groups = "entity_groups"
+    entity_parameter_default_values = "entity_parameter_default_values"
+    entity_parameter_values = "entity_parameter_values"
+    entity_dimension_parameter_default_values = "entity_dimension_parameter_default_values"
+    entity_dimension_parameter_values = "entity_dimension_parameter_values"
     parameter_value_lists = "parameter_value_lists"
-    relationships = "relationships"
-    relationship_parameter_default_values = "relationship_default_parameter_values"
-    relationship_parameter_values = "relationship_parameter_values"
-    relationship_object_parameter_default_values = "relationship_object_parameter_default_values"
-    relationship_object_parameter_values = "relationship_object_parameter_values"
     scenario_alternatives = "scenario_alternatives"
     scenarios = "scenarios"
     tool_features = "tool_features"
     tool_feature_methods = "tool_feature_methods"
     tools = "tools"
+
+    @classmethod
+    def from_legacy_type(cls, type_str):
+        type_str = {
+            "objects": "entities",
+            "object_groups": "entity_groups",
+            "object_default_parameter_values": "entity_parameter_default_values",
+            "object_parameter_values": "entity_parameter_values",
+            "relationships": "entities",
+            "relationship_default_parameter_values": "entity_parameter_default_values",
+            "relationship_parameter_values": "entity_parameter_values",
+            "relationship_object_parameter_default_values": "entity_dimension_parameter_default_values",
+            "relationship_object_parameter_values": "entity_dimension_parameter_values",
+        }.get(type_str, type_str)
+        return cls(type_str)
 
 
 @unique
@@ -163,7 +175,7 @@ class MappingSpecification:
             MappingSpecification: deserialized specification
         """
         root = mapping_from_dict(mapping_dict.pop("root"))
-        type_ = MappingType(mapping_dict.pop("type"))
+        type_ = MappingType.from_legacy_type(mapping_dict.pop("type"))
         return MappingSpecification(root=root, type=type_, **mapping_dict)
 
 
@@ -296,17 +308,17 @@ class Specification(ProjectItemSpecification):
             # Legacy: remove parameter value mappings from object group mappings,
             # they're not supported anymore.
             if spec_dict["type"] == "object_group_parameter_values":
-                spec_dict["type"] = MappingType.object_groups.value
+                spec_dict["type"] = MappingType.entity_groups.value
                 keep_map_types = {
                     FixedValueMapping.MAP_TYPE,
-                    ObjectClassMapping.MAP_TYPE,
-                    ObjectGroupMapping.MAP_TYPE,
-                    ObjectGroupObjectMapping.MAP_TYPE,
+                    EntityClassMapping.MAP_TYPE,
+                    EntityGroupMapping.MAP_TYPE,
+                    EntityGroupEntityMapping.MAP_TYPE,
                 }
                 spec_dict["mapping"] = [m for m in spec_dict["mapping"] if m["map_type"] in keep_map_types]
         mapping_specifications = {
             name: MappingSpecification(
-                MappingType(spec_dict["type"]),
+                MappingType.from_legacy_type(spec_dict["type"]),
                 spec_dict.get("enabled", True),
                 spec_dict.get("always_export_header", True),
                 spec_dict.get("group_fn", legacy_group_fn_from_dict(spec_dict["mapping"])),

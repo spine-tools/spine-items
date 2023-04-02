@@ -17,7 +17,7 @@ from PySide6.QtWidgets import QApplication
 
 from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
 from spine_items.exporter.widgets.specification_editor_window import SpecificationEditorWindow
-from spinedb_api.export_mapping.export_mapping import FixedValueMapping, ObjectClassMapping
+from spinedb_api.export_mapping.export_mapping import FixedValueMapping, EntityClassMapping
 from spinedb_api.mapping import Position, unflatten
 from ...mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
@@ -56,9 +56,9 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         self.assertEqual(editor._ui.fix_table_name_line_edit.text(), "")
 
     def test_mapping_with_fixed_table_enables_the_check_box_and_fills_the_table_name_field(self):
-        flattened_mappings = [FixedValueMapping(Position.table_name, "nice table name"), ObjectClassMapping(0)]
+        flattened_mappings = [FixedValueMapping(Position.table_name, "nice table name"), EntityClassMapping(0)]
         mapping_specification = MappingSpecification(
-            MappingType.objects, True, True, "", True, unflatten(flattened_mappings)
+            MappingType.entities, True, True, "", True, unflatten(flattened_mappings)
         )
         specification = Specification("spec name", mapping_specifications={"my mappings": mapping_specification})
         editor = SpecificationEditorWindow(self._toolbox, specification)
@@ -68,9 +68,9 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         self.assertEqual(editor._ui.fix_table_name_line_edit.text(), "nice table name")
 
     def test_duplicate_specification(self):
-        flattened_mappings = [FixedValueMapping(Position.table_name, "nice table name"), ObjectClassMapping(0)]
+        flattened_mappings = [FixedValueMapping(Position.table_name, "nice table name"), EntityClassMapping(0)]
         mapping_specification = MappingSpecification(
-            MappingType.objects, True, True, "", True, unflatten(flattened_mappings)
+            MappingType.entities, True, True, "", True, unflatten(flattened_mappings)
         )
         specification = Specification("spec name", mapping_specifications={"my mappings": mapping_specification})
         editor = SpecificationEditorWindow(self._toolbox, specification)

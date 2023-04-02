@@ -106,7 +106,7 @@ class TestSourceDataTableModel(unittest.TestCase):
         mappings_model = MappingsModel(undo_stack, None)
         list_index = self._add_mapping(mappings_model, {"map_type": "ObjectClass", "name": 0})
         self._model.set_mapping_list_index(list_index)
-        entity_class_color = self._find_color(list_index, "Object class names")
+        entity_class_color = self._find_color(list_index, "Entity class names")
         self.assertEqual(
             self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color
         )
@@ -116,7 +116,7 @@ class TestSourceDataTableModel(unittest.TestCase):
         # row not showing color if the start reading row is specified
         list_index = self._add_mapping(mappings_model, {"map_type": "ObjectClass", "name": 0, "read_start_row": 1})
         self._model.set_mapping_list_index(list_index)
-        entity_class_color = self._find_color(list_index, "Object class names")
+        entity_class_color = self._find_color(list_index, "Entity class names")
         self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
         self.assertEqual(
             self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color
@@ -143,8 +143,8 @@ class TestSourceDataTableModel(unittest.TestCase):
             mappings_model, {"map_type": "ObjectClass", "object": {"map_type": "row", "value_reference": 0}}
         )
         self._model.set_mapping_list_index(list_index)
-        entity_color = self._find_color(list_index, "Object names")
-        metadata_color = self._find_color(list_index, "Object metadata")
+        entity_color = self._find_color(list_index, "Entity names")
+        metadata_color = self._find_color(list_index, "Entity metadata")
         self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), entity_color)
         self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
         self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), metadata_color)
@@ -155,7 +155,7 @@ class TestSourceDataTableModel(unittest.TestCase):
             {"map_type": "ObjectClass", "object": {"map_type": "row", "value_reference": 0}, "skip_columns": [0]},
         )
         self._model.set_mapping_list_index(list_index)
-        entity_color = self._find_color(list_index, "Object names")
+        entity_color = self._find_color(list_index, "Entity names")
         self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
         self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
         self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), None)
@@ -170,9 +170,9 @@ class TestSourceDataTableModel(unittest.TestCase):
             mappings_model, {"map_type": "ObjectClass", "name": 0, "object": {"map_type": "row", "value_reference": 0}}
         )
         self._model.set_mapping_list_index(list_index)
-        entity_class_color = self._find_color(list_index, "Object class names")
-        entity_color = self._find_color(list_index, "Object names")
-        metadata_color = self._find_color(list_index, "Object metadata")
+        entity_class_color = self._find_color(list_index, "Entity class names")
+        entity_color = self._find_color(list_index, "Entity names")
+        metadata_color = self._find_color(list_index, "Entity metadata")
         self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
         self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
         self.assertEqual(
@@ -203,7 +203,7 @@ class TestSourceDataTableModel(unittest.TestCase):
         )
         self._model.set_mapping_list_index(list_index)
         # no color showing where row and column mapping intersect
-        entity_color = self._find_color(list_index, "Object names")
+        entity_color = self._find_color(list_index, "Entity names")
         parameter_definition_color = self._find_color(list_index, "Parameter names")
         alternative_color = self._find_color(list_index, "Alternative names")
         index_color = self._find_color(list_index, "Parameter indexes")
@@ -244,7 +244,7 @@ class TestSourceDataTableModel(unittest.TestCase):
         )
         self._model.set_mapping_list_index(list_index)
         # no color showing where row and column mapping intersect
-        entity_color = self._find_color(list_index, "Object names")
+        entity_color = self._find_color(list_index, "Entity names")
         parameter_definition_color = self._find_color(list_index, "Parameter names")
         alternative_color = self._find_color(list_index, "Alternative names")
         index_color = self._find_color(list_index, "Parameter indexes")

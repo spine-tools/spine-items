@@ -32,9 +32,9 @@ class TestFlattenedMappings(unittest.TestCase):
         ]
         root_mapping = import_mapping_from_dict(mapping_dicts)
         flattened_mappings = FlattenedMappings(root_mapping)
-        self.assertTrue(flattened_mappings.import_objects())
+        self.assertTrue(flattened_mappings.import_entities())
         flattened_mappings.set_dimension_count(2)
-        self.assertTrue(flattened_mappings.import_objects())
+        self.assertTrue(flattened_mappings.import_entities())
 
 
 if __name__ == '__main__':

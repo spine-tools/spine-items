@@ -24,7 +24,7 @@ from unittest.mock import MagicMock
 from spinedb_api import DatabaseMapping, import_object_classes, import_objects
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping
 from spinedb_api.export_mapping.group_functions import NoGroup
-from spinedb_api.export_mapping import object_export
+from spinedb_api.export_mapping import entity_export
 from spine_items.exporter.do_work import do_work
 from spine_items.exporter.specification import OutputFormat, Specification, MappingSpecification, MappingType
 from spinedb_api.mapping import Position
@@ -48,8 +48,10 @@ class TestWithCsvWriter(unittest.TestCase):
             db_map.connection.close()
 
     def test_export_database(self):
-        root_mapping = object_export(class_position=0, object_position=1)
-        mapping_specification = MappingSpecification(MappingType.objects, True, True, NoGroup.NAME, False, root_mapping)
+        root_mapping = entity_export(entity_class_position=0, entity_position=1)
+        mapping_specification = MappingSpecification(
+            MappingType.entities, True, True, NoGroup.NAME, False, root_mapping
+        )
         specification = Specification("name", "description", {"mapping": mapping_specification})
         databases = {self._url: "test_export_database.csv"}
         logger = MagicMock()
@@ -65,12 +67,14 @@ class TestWithCsvWriter(unittest.TestCase):
         self.assertEqual(table, expected)
 
     def test_export_to_output_database(self):
-        object_root = object_export(class_position=0, object_position=1)
+        object_root = entity_export(entity_class_position=0, entity_position=1)
         object_root.header = "object_class"
         object_root.child.header = "object"
         root_mapping = FixedValueMapping(Position.table_name, "data_table")
         root_mapping.child = object_root
-        mapping_specification = MappingSpecification(MappingType.objects, True, True, NoGroup.NAME, False, root_mapping)
+        mapping_specification = MappingSpecification(
+            MappingType.entities, True, True, NoGroup.NAME, False, root_mapping
+        )
         specification = Specification("name", "description", {"mapping": mapping_specification}, OutputFormat.SQL)
         databases = {self._url: "output label"}
         out_path = os.path.join(self._temp_dir.name, "out_database.sqlite")
