@@ -264,6 +264,7 @@ class Importer(DBWriterItemBase):
 
     def _check_notifications(self):
         self.clear_notifications()
+        self._check_write_index()
         if not self.specification():
             self.add_notification(
                 "This Importer does not have a specification. Set it in the Importer Properties Panel."

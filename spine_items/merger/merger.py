@@ -108,6 +108,7 @@ class Merger(DBWriterItemBase):
 
     def _check_notifications(self):
         self.clear_notifications()
+        self._check_write_index()
         if not list(self.predecessor_data_stores()):
             self.add_notification(
                 "This Merger does not have any input Data Stores. "
