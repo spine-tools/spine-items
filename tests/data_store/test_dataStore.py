@@ -334,6 +334,8 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.ds.do_update_url(dialect="sqlite", database=database_1)
         self.project.notify_resource_changes_to_predecessors.assert_called_once_with(self.ds)
         self.project.notify_resource_changes_to_successors.assert_called_once_with(self.ds)
+        while not self.ds.is_url_validated():
+            QApplication.processEvents()
         database_2 = os.path.join(self._temp_dir.name, "db2.sqlite")
         Path(database_2).touch()
         self.ds.do_update_url(dialect="sqlite", database=database_2)

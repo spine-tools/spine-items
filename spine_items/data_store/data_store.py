@@ -17,12 +17,13 @@ Module for data store class.
 """
 
 import os
+from dataclasses import dataclass
 from shutil import copyfile
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QFileDialog, QApplication, QMenu
 from PySide6.QtGui import QAction
 from spinedb_api.helpers import vacuum
-from spine_engine.project_item.project_item_resource import database_resource
+from spine_engine.project_item.project_item_resource import database_resource, ProjectItemResource
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
@@ -33,7 +34,13 @@ from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from ..database_validation import DatabaseConnectionValidator
-from ..utils import database_label, convert_to_sqlalchemy_url, check_database_url
+from ..utils import database_label, convert_to_sqlalchemy_url
+
+
+@dataclass(frozen=True)
+class ReplaceableResource:
+    resource: ProjectItemResource
+    is_valid: bool
 
 
 class DataStore(ProjectItem):
@@ -162,9 +169,7 @@ class DataStore(ProjectItem):
         Args:
             url (dict): URL dict
         """
-        if not self._active:
-            return
-        if not url:
+        if not self._active or not url:
             return
         self._properties_ui.url_selector_widget.set_url(url)
         self._update_actions_enabled()
@@ -176,13 +181,12 @@ class DataStore(ProjectItem):
         self.update_url(**url)
 
     def update_url(self, **kwargs):
-        """Sets new URL.
+        """Pushes a command to update the URL to the undo stack.
 
         Args:
             **kwargs: URL keys and values
         """
         invalidating_url = self._url_validated
-        self._url_validated = False
         kwargs = {k: v for k, v in kwargs.items() if v != self._url[k]}
         if not kwargs:
             return False
@@ -190,6 +194,13 @@ class DataStore(ProjectItem):
         return True
 
     def do_update_url(self, **kwargs):
+        """Updates URL.
+
+        Args:
+            **kwargs: URL keys and values
+        """
+        was_valid = self._url_validated
+        self._url_validated = False
         old_url = convert_to_sqlalchemy_url(self._url, self.name)
         new_dialect = kwargs.get("dialect")
         if new_dialect == "sqlite":
@@ -198,9 +209,8 @@ class DataStore(ProjectItem):
         new_url = convert_to_sqlalchemy_url(self._url, self.name)
         self.load_url_into_selections(self._url)
         if old_url and new_url:
-            self._resource_to_replace = database_resource(
-                self.name, str(old_url), label=database_label(self.name), filterable=True
-            )
+            old_resource = database_resource(self.name, str(old_url), label=database_label(self.name), filterable=True)
+            self._resource_to_replace = ReplaceableResource(old_resource, was_valid)
         else:
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
@@ -366,11 +376,12 @@ class DataStore(ProjectItem):
         """Sets URL as validated and updates advertised resources."""
         self._url_validated = True
         self.clear_notifications()
-        if self._resource_to_replace is not None:
+        if self._resource_to_replace is not None and self._resource_to_replace.is_valid:
+            old = self._resource_to_replace.resource
             sa_url = convert_to_sqlalchemy_url(self._url, self.name)
             new = database_resource(self.name, str(sa_url), label=database_label(self.name), filterable=True)
-            self._resources_to_predecessors_replaced([self._resource_to_replace], [new])
-            self._resources_to_successors_replaced([self._resource_to_replace], [new])
+            self._resources_to_predecessors_replaced([old], [new])
+            self._resources_to_successors_replaced([old], [new])
             self._resource_to_replace = None
         else:
             self._resources_to_predecessors_changed()
