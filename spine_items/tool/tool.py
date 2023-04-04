@@ -412,6 +412,7 @@ class Tool(DBWriterItemBase):
     def _check_notifications(self):
         """See base class."""
         self.clear_notifications()
+        self._check_write_index()
         if not self.specification():
             self.add_notification("This Tool does not have a specification. Set it in the Tool Properties Panel.")
         elif self.specification().includes and not self.specification().path:
