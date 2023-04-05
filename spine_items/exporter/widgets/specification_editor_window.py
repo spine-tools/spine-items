@@ -406,7 +406,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._set_group_fn_silently(group_function_display_from_name(current.data(MappingsTableModel.GROUP_FN_ROLE)))
         mapping_name = self._mappings_table_model.index(current.row(), 0).data()
         self._mapping_editor_model.set_mapping(mapping_name, root_mapping)
-        self._enable_relationship_controls()
+        self._enable_entity_controls()
         self._enable_parameter_controls()
         self._ui.mapping_spec_contents.setEnabled(True)
         self.current_mapping_changed.emit()
@@ -469,7 +469,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE in roles:
             self._set_highlight_dimension_silently(top_left.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE))
         if enable_controls:
-            self._enable_relationship_controls()
+            self._enable_entity_controls()
             self._enable_parameter_controls()
 
     @Slot(QPoint)
@@ -742,7 +742,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.item_type_combo_box.currentTextChanged.disconnect(self._change_mapping_type)
         self._ui.item_type_combo_box.setCurrentText(type_name)
         self._ui.item_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
-        self._enable_relationship_controls()
+        self._enable_entity_controls()
         self._enable_parameter_controls()
 
     def _set_parameter_type_silently(self, type_name):
@@ -1005,7 +1005,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         set_entity_dimensions(modified, dimensions)
         current_mapping_type = self._ui.item_type_combo_box.currentText()
         self._undo_stack.beginMacro("change entity dimensions")
-        if current_mapping_type == "Relationship class with object parameter":
+        if current_mapping_type == "Entity class with dimension parameter":
             highlight_dimension = self._mappings_table_model.data(index, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
             if highlight_dimension >= dimensions:
                 self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, dimensions))
@@ -1014,7 +1014,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _set_entity_dimensions_silently(self, dimensions):
         """
-        Sets relationship dimensions spin box without emitting signals.
+        Sets entity dimensions spin box without emitting signals.
 
         Args:
             dimensions (int): dimensions
@@ -1022,7 +1022,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.entity_dimensions_spin_box.valueChanged.disconnect(self._change_entity_dimensions)
         self._ui.entity_dimensions_spin_box.setValue(dimensions)
         self._ui.entity_dimensions_spin_box.valueChanged.connect(self._change_entity_dimensions)
-        self._ui.highlight_dimension_spin_box.setMaximum(dimensions if dimensions > 0 else 1)
+        self._ui.highlight_dimension_spin_box.setMaximum(dimensions)
 
     def _enable_mapping_specification_editing(self):
         """Enables and disables mapping specification editing controls."""
@@ -1031,18 +1031,18 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.mapping_spec_contents.setEnabled(have_mappings)
         self._ui.remove_mapping_button.setEnabled(have_mappings)
 
-    def _enable_relationship_controls(self):
-        """Enables and disables controls related to relationship export."""
+    def _enable_entity_controls(self):
+        """Enables and disables controls related to entity export."""
         current_mapping_type = self._ui.item_type_combo_box.currentText()
-        self._ui.entity_dimensions_spin_box.setEnabled(current_mapping_type.startswith("Relationship class"))
+        self._ui.entity_dimensions_spin_box.setEnabled(current_mapping_type.startswith("Entity class"))
         self._ui.highlight_dimension_spin_box.setEnabled(
-            current_mapping_type == "Relationship class with object parameter"
+            current_mapping_type == "Entity class with dimension parameter"
         )
 
     def _enable_parameter_controls(self):
-        """Enables and disables controls related to relationship export."""
+        """Enables and disables controls related to entity export."""
         mapping_type = self._ui.item_type_combo_box.currentText()
-        types_with_parameters = {"Object class", "Relationship class", "Relationship class with object parameter"}
+        types_with_parameters = {"Entity class", "Entity class with dimension parameter"}
         if mapping_type in types_with_parameters:
             self._ui.parameter_type_combo_box.setEnabled(True)
             self._ui.parameter_type_combo_box.currentTextChanged.disconnect(self._change_mapping_type)
@@ -1050,7 +1050,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             default_value_item = model.item(1)
             default_value_item.setFlags(default_value_item.flags() | Qt.ItemIsEnabled)
             no_value_item = model.item(2)
-            if mapping_type == "Relationship class with object parameter":
+            if mapping_type == "Entity class with dimension parameter":
                 no_value_item.setFlags(default_value_item.flags() & ~Qt.ItemIsEnabled)
             else:
                 no_value_item.setFlags(default_value_item.flags() | Qt.ItemIsEnabled)
