@@ -12,8 +12,6 @@
 """
 Contains settings classes for filters and manipulators.
 
-:authors: A. Soininen (VTT)
-:date:    28.10.2020
 """
 from spinedb_api.filters.renamer import entity_class_renamer_config, parameter_renamer_config
 from spinedb_api.filters.value_transformer import value_transformer_config

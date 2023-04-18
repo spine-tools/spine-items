@@ -11,8 +11,6 @@
 """
 Contains utilities to scan for Data Connection's output resources.
 
-:authors: A. Soininen (VTT)
-:date:    4.12.2020
 """
 from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource, url_resource

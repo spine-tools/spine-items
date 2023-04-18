@@ -11,8 +11,6 @@
 """
 Contains mapping filter editor delegate.
 
-:author: A. Soininen (VTT)
-:date:   13.4.2021
 """
 from spinedb_api.export_mapping.export_mapping import ParameterValueTypeMapping
 from spine_items.ui import default_filter_editor

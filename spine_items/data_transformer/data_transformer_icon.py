@@ -12,8 +12,6 @@
 """
 Contains :class:`DataTransformerIcon`.
 
-:authors: A. Soininen
-:date:   2.10.2020
 """
 
 from spinetoolbox.project_item_icon import ProjectItemIcon

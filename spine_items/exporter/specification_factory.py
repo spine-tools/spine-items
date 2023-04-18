@@ -12,8 +12,6 @@
 """
 Exporter's specification factory.
 
-:authors: A. Soininen (VTT)
-:date:    11.12.2020
 """
 from spine_engine.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
 from .item_info import ItemInfo

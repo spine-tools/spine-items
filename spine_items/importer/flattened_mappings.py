@@ -12,8 +12,6 @@
 """
 Contains a model to handle source tables and import mapping.
 
-:author: A. Soininen (VTT)
-:date:   11.10.2021
 """
 from distutils.util import strtobool
 from enum import Enum, unique

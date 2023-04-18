@@ -12,8 +12,6 @@
 """
 Contains unit tests for the ImportEditorWindow class.
 
-:author: A. Soininen (VTT)
-:date:   16.3.2020
 """
 
 import unittest

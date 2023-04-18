@@ -12,8 +12,6 @@
 """
 Tool's specification factory.
 
-:authors: A. Soininen (VTT)
-:date:   6.5.2020
 """
 from spine_engine.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
 from .item_info import ItemInfo

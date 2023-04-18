@@ -12,8 +12,6 @@
 """
 Classes and functions that can be shared among unit test modules.
 
-:author: M. Marin (KTH)
-:date:   30.9.2020
 """
 import os.path
 from unittest.mock import MagicMock, patch

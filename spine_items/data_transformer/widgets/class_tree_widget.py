@@ -11,8 +11,6 @@
 """
 Contains :class:`ClassTreeWidget`.
 
-:author: A. Soininen (VTT)
-:date:   31.5.2021
 """
 import pickle
 from PySide6.QtCore import QMimeData

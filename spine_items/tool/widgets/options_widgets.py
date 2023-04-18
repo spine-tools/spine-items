@@ -12,8 +12,6 @@
 """
 Provides OptionsWidget and subclasses for each tool type (julia, python, executable, gams).
 
-:author: M. Marin (KTH)
-:date:   12.2.2021
 """
 import os
 import sys

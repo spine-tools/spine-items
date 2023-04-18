@@ -12,8 +12,6 @@
 """
 Classes for handling models in PySide6's model/view framework.
 
-:author: P. Vennström (VTT)
-:date:   11.5.2020
 """
 from collections import namedtuple
 from collections.abc import Iterable

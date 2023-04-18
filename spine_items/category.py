@@ -12,8 +12,6 @@
 """
 This module defines the available project item categories.
 
-:author: A.Soininen (VTT)
-:date:   6.5.2020
 """
 # The categories will appear in the main window in the same order they are declared here.
 CATEGORIES = ("Data Stores", "Data Connections", "Tools", "Views", "Importers", "Exporters", "Manipulators")

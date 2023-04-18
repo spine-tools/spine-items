@@ -12,8 +12,6 @@
 """
 Widget shown to user when a new Data Store is created.
 
-:author: P. Savolainen (VTT)
-:date:   19.1.2017
 """
 
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget

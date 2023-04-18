@@ -12,8 +12,6 @@
 """
 Unit tests for the ``models`` module.
 
-:author: A. Soininen (VTT)
-:date:   4.11.2021
 """
 from pathlib import Path
 import unittest

@@ -11,8 +11,6 @@
 """
 Contains model for export preview tables.
 
-:author: A. Soininen (VTT)
-:date:   5.1.2021
 """
 from itertools import takewhile
 from operator import methodcaller

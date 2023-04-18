@@ -12,8 +12,6 @@
 """
 Contains ImportSources widget and SourceDataTableMenu.
 
-:author: P. Vennström (VTT)
-:date:   1.6.2019
 """
 import pickle
 from operator import itemgetter

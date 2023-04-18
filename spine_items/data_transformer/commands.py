@@ -11,8 +11,6 @@
 """
 Contains Data transformer's undo commands.
 
-:author: A. Soininen (VTT)
-:date:   25.5.2021
 """
 from PySide6.QtGui import QUndoCommand
 

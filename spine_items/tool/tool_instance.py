@@ -12,8 +12,6 @@
 """
 Contains ToolInstance class.
 
-:authors: P. Savolainen (VTT), E. Rinne (VTT)
-:date:   1.2.2018
 """
 
 import os

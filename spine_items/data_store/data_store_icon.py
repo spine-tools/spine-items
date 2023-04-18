@@ -12,8 +12,6 @@
 """
 Module for data store icon class.
 
-:authors: M. Marin (KTH), P. Savolainen (VTT)
-:date:   4.4.2018
 """
 
 from spinetoolbox.project_item_icon import ProjectItemIcon

@@ -12,8 +12,6 @@
 """
 Contains Data transformer's specification.
 
-:authors: A. Soininen (VTT)
-:date:    2.10.2020
 """
 
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification

@@ -12,8 +12,6 @@
 """
 Widget shown to user when a new Exporter is created.
 
-:author: A. Soininen (VTT)
-:date:   10.12.2020
 """
 
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget

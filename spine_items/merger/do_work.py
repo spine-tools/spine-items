@@ -12,8 +12,6 @@
 """
 Merger's execute kernel (do_work), as target for a multiprocess.Process
 
-:authors: M. Marin (KTH)
-:date:   6.11.2020
 """
 import os
 from spine_engine.utils.helpers import create_log_file_timestamp

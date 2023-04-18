@@ -11,8 +11,6 @@
 """
 Contains the :class:`MappingListModel` model.
 
-:authors: A. Soininen (VTT)
-:date:    30.12.2020
 """
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (

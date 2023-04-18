@@ -12,8 +12,6 @@
 """
 Unit tests for ToolSpecificationEditorWindow class.
 
-:author: M. Marin (KTH), P. Savolainen (VTT)
-:date:   8.1.2019
 """
 
 import unittest

@@ -12,8 +12,6 @@
 """
 Module for tool icon class.
 
-:authors: M. Marin (KTH), P. Savolainen (VTT)
-:date:   4.4.2018
 """
 
 from PySide6.QtCore import QTimeLine, Slot, QPointF

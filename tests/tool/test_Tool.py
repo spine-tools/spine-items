@@ -12,8 +12,6 @@
 """
 Unit tests for Tool project item.
 
-:author: A. Soininen (VTT), P. Savolainen (VTT), M. Marin (KTH)
-:date:   4.10.2019
 """
 
 from tempfile import TemporaryDirectory

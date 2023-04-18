@@ -12,8 +12,6 @@
 """
 Widget shown to user when a new Data transformer is created.
 
-:author: A. Soininen (VTT)
-:date:   2.10.2020
 """
 
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget

@@ -12,8 +12,6 @@
 """
 Unit tests for View's ItemInfo class.
 
-:author: A. Soininen (VTT)
-:date:   5.5.2020
 """
 import unittest
 from spine_items.view.item_info import ItemInfo

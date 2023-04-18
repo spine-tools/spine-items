@@ -11,8 +11,6 @@
 """
 Contains utilities to scan for Data Transformer's output resources.
 
-:authors: A. Soininen (VTT)
-:date:    4.12.2020
 """
 
 from spine_engine.project_item.project_item_resource import database_resource

@@ -12,8 +12,6 @@
 """
 Contains a model for Exporter's output preview.
 
-:authors: A. Soininen (VTT)
-:date:    4.1.2022
 """
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
 from spine_items.utils import Database

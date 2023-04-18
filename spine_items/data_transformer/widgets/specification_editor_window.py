@@ -11,8 +11,6 @@
 """
 Contains :class:`SpecificationEditorWindow`.
 
-:author: A. Soininen (VTT)
-:date:   2.10.2020
 """
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QFileDialog

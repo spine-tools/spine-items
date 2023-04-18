@@ -12,8 +12,6 @@
 """
 Module for data store class.
 
-:authors: P. Savolainen (VTT), M. Marin (KTH)
-:date:   18.12.2017
 """
 
 import os

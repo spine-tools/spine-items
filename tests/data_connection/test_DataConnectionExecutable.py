@@ -12,8 +12,6 @@
 """
 Unit tests for DataConnectionExecutable.
 
-:author: A. Soininen (VTT)
-:date:   6.4.2020
 """
 from multiprocessing import Lock
 import pathlib

@@ -11,8 +11,6 @@
 """
 Contains :class:`ParameterRenamesTableModel`.
 
-:author: A. Soininen (VTT)
-:date:   28.5.2021
 """
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt

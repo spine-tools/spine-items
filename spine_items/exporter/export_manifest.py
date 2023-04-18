@@ -12,8 +12,6 @@
 """
 Contains utilities to manage export manifest files.
 
-:authors: A. Soininen (VTT)
-:date:    5.1.2022
 """
 import json
 from itertools import dropwhile

@@ -12,8 +12,6 @@
 """
 Contains :class:`MultiCheckableListView`.
 
-:author: A. Soininen (VTT)
-:date:   13.8.2020
 """
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListView

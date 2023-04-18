@@ -12,8 +12,6 @@
 """
 Unit tests for Data Store's ItemInfo class.
 
-:author: A. Soininen (VTT)
-:date:   5.5.2020
 """
 import unittest
 from spine_items.data_store.item_info import ItemInfo

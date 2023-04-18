@@ -11,8 +11,6 @@
 """
 Contains controller that manages value transformations editor.
 
-:author: A. Soininen (VTT)
-:date:   26.5.2021
 """
 from PySide6.QtCore import QModelIndex, QObject, Slot
 from PySide6.QtWidgets import QLineEdit, QFormLayout

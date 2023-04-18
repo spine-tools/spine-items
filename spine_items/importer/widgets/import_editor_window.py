@@ -12,8 +12,6 @@
 """
 Contains ImportPreviewWindow class.
 
-:authors: P. Savolainen (VTT), A. Soininen (VTT), P. Vennström (VTT)
-:date:    10.6.2019
 """
 
 import os

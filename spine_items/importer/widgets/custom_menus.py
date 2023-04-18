@@ -12,8 +12,6 @@
 """
 Classes for context menus used alongside the Importer project item.
 
-:author: P. Savolainen (VTT)
-:date:   9.1.2018
 """
 
 from PySide6.QtCore import QPoint, Slot, Signal

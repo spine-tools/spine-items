@@ -11,8 +11,6 @@
 """
 Unit tests for Exporter's :func:`do_work` function.
 
-:authors: A. Soininen (VTT)
-:date:    14.12.2020
 """
 from csv import reader
 import os.path

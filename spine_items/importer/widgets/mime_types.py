@@ -12,8 +12,6 @@
 """
 Contains mime types for Import editor's copy-paste functionality
 
-:authors: A. Soininen
-:date:    7.10.2021
 """
 
 MAPPING_LIST_MIME_TYPE = "application/spine_items-importmappinglist"

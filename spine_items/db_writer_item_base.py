@@ -12,8 +12,6 @@
 """
 Contains base classes for items that write to db.
 
-:authors: M. Marin (ER)
-:date:    23.9.2022
 """
 from PySide6.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem

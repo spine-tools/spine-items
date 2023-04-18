@@ -12,8 +12,6 @@
 """
 Exporter's execute kernel (do_work), as target for a multiprocess.Process
 
-:authors: A. Soininen (VTT)
-:date:    14.12.2020
 """
 import os
 from datetime import datetime

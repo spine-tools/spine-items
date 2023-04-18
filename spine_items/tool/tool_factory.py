@@ -12,8 +12,6 @@
 """
 The ToolFactory class.
 
-:author: M. Marin (KTH)
-:date:   15.4.2020
 """
 
 import os

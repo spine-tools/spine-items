@@ -11,8 +11,6 @@
 """
 Unit tests for :class:`ClassRenamesTableModel`.
 
-:author: A. Soininen (VTT)
-:date:   7.1.2021
 """
 import unittest
 from PySide6.QtCore import Qt

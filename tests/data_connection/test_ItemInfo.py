@@ -12,8 +12,6 @@
 """
 Unit tests for Data Connection's ItemInfo class.
 
-:author: A. Soininen (VTT)
-:date:   5.5.2020
 """
 import unittest
 from spine_items.data_connection.item_info import ItemInfo

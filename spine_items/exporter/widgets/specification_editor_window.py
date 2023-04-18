@@ -11,8 +11,6 @@
 """
 Contains :class:`SpecificationEditorWindow`.
 
-:author: A. Soininen (VTT)
-:date:   11.12.2020
 """
 from copy import deepcopy
 import json

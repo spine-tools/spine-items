@@ -12,8 +12,6 @@
 """
 Contains unit tests for :class:`DataTransformerExecutable`.
 
-:authors: A. Soininen (VTT)
-:date:    7.1.2021
 """
 from multiprocessing import Lock
 from tempfile import TemporaryDirectory

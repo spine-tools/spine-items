@@ -12,8 +12,6 @@
 """
 Contains CustomFileSystemWatcher.
 
-:author: M. Marin (KTH)
-:date:   12.11.2020
 """
 
 import os

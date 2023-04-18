@@ -12,8 +12,6 @@
 """
 Contains Tool's executable item and support functionality.
 
-:authors: A. Soininen (VTT)
-:date:   30.3.2020
 """
 
 import datetime

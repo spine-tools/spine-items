@@ -12,8 +12,6 @@
 """
 Contains colors used in Import editor's tables.
 
-:author: P. Vennström (VTT)
-:date:   1.6.2019
 """
 from PySide6.QtGui import QColor
 

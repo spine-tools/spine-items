@@ -12,8 +12,6 @@
 """
 Contains unit tests for :class:`IntegerSequenceDateTimeConvertSpecDialog`.
 
-:author: A. Soininen (VTT)
-:date:   12.11.2020
 """
 import unittest
 from PySide6.QtCore import Qt

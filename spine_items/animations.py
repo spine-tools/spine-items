@@ -12,8 +12,6 @@
 """
 Animation class for importers and exporters.
 
-:authors: M. Marin (KTH)
-:date:   12.11.2019
 """
 
 from PySide6.QtGui import QPainterPath, QFont, QFontMetrics

@@ -14,8 +14,6 @@ QWidget that is used to create or edit Tool specifications.
 In the former case it is presented empty, but in the latter it
 is filled with all the information from the specification being edited.
 
-:author: M. Marin (KTH), P. Savolainen (VTT)
-:date:   12.4.2018
 """
 import logging
 import os
