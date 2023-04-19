@@ -12,8 +12,6 @@
 """
 Unit tests for View project item.
 
-:author: A. Soininen (VTT), P. Savolainen (VTT)
-:date:   4.10.2019
 """
 
 import os

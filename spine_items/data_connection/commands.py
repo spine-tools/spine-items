@@ -12,8 +12,6 @@
 """
 Undo/redo commands for the DataConnection project item.
 
-:authors: M. Marin (KTH)
-:date:   5.5.2020
 """
 from pathlib import Path
 from spine_items.commands import SpineToolboxCommand

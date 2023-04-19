@@ -12,8 +12,6 @@
 """
 Unit tests for Exporter's :class:`ItemInfo`.
 
-:author: A. Soininen (VTT)
-:date:   1.4.2021
 """
 import unittest
 from spine_items.exporter.item_info import ItemInfo

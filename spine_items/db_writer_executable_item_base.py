@@ -12,8 +12,6 @@
 """
 Contains base classes for items that write to db.
 
-:authors: M. Marin (ER)
-:date:    23.9.2022
 """
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spinedb_api.spine_db_client import SpineDBClient

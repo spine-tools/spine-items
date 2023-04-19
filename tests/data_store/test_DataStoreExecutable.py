@@ -12,8 +12,6 @@
 """
 Unit tests for DataStoreExecutable.
 
-:author: A. Soininen
-:date:   6.4.2020
 """
 from multiprocessing import Lock
 from pathlib import Path

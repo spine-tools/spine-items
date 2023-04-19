@@ -12,8 +12,6 @@
 """
 Contains the :class:`DataTransformer` project item.
 
-:authors: A. Soininen (VTT)
-:date:    2.10.2020
 """
 from json import dump
 from PySide6.QtCore import Slot

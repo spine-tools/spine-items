@@ -11,8 +11,6 @@
 """
 Functions to write export preview tables.
 
-:author: A. Soininen (VTT)
-:date:   5.1.2021
 """
 import numpy
 from spinedb_api.spine_io.exporters.writer import Writer

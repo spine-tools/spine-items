@@ -12,8 +12,6 @@
 """
 Contains common & shared (Q)widgets.
 
-:authors: M. Marin (KTH), P. Savolainen (VTT)
-:date:   10.11.2020
 """
 
 import os

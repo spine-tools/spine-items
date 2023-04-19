@@ -11,6 +11,4 @@
 """
 Unit tests for Data Transformer's MVC models.
 
-:author: A. Soininen (VTT)
-:date:   7.1.2021
 """

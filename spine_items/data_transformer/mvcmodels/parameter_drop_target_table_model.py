@@ -11,8 +11,6 @@
 """
 Contains a table model that can be used as drop target.
 
-:author: A. Soininen (VTT)
-:date:   28.5.2021
 """
 import pickle
 from PySide6.QtCore import QAbstractTableModel

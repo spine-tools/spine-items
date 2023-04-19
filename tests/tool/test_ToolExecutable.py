@@ -12,8 +12,6 @@
 """
 Unit tests for ToolExecutable item.
 
-:author: A. Soininen (VTT)
-:date:   2.4.2020
 """
 from multiprocessing import Lock
 import sys

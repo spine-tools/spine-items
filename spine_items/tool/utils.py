@@ -12,8 +12,6 @@
 """
 Utility functions for the Tool project item.
 
-:author: A. Soininen (VTT)
-:date:   1.4.2020
 """
 from datetime import datetime
 import glob

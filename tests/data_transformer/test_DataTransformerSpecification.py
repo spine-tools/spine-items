@@ -12,8 +12,6 @@
 """
 Unit tests for Data transformer's :class:`DataTransformerSpecification`.
 
-:author: P. Savolainen (VTT)
-:date:   30.12.2022
 """
 import unittest
 from spine_items.data_transformer.data_transformer_specification import DataTransformerSpecification

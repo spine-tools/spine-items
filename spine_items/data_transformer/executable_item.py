@@ -12,8 +12,6 @@
 """
 Contains Data transformer's executable item as well as support utilities.
 
-:authors: A. Soininen (VTT)
-:date:    2.10.2020
 """
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState

@@ -12,8 +12,6 @@
 """
 Unit tests for Data transformer's :class:`ItemInfo`.
 
-:author: A. Soininen (VTT)
-:date:   9.10.2020
 """
 import unittest
 from spine_items.data_transformer.item_info import ItemInfo

@@ -12,8 +12,6 @@
 """
 Contains a model to handle source tables and import mapping.
 
-:author: A. Soininen (VTT)
-:date:   7.10.2021
 """
 from __future__ import annotations
 from dataclasses import dataclass, field

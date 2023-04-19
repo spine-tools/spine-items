@@ -12,8 +12,6 @@
 """
 Module for MergerIcon class.
 
-:authors: M. Marin (KTH), P. Savolainen (VTT)
-:date:   4.4.2018
 """
 
 import random

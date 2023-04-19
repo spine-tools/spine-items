@@ -12,8 +12,6 @@
 """
 Contains Merger's executable item as well as support utilities.
 
-:authors: A. Soininen (VTT)
-:date:   1.4.2020
 """
 
 from contextlib import ExitStack

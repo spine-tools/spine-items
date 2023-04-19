@@ -12,8 +12,6 @@
 """
 Contains unit tests for :class:`DataTransformer`.
 
-:authors: A. Soininen (VTT)
-:date:    9.10.2020
 """
 import os.path
 from tempfile import TemporaryDirectory

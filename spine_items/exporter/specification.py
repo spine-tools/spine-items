@@ -12,8 +12,6 @@
 """
 Contains Exporter's specifications.
 
-:authors: A. Soininen (VTT)
-:date:    11.12.2020
 """
 from dataclasses import dataclass
 from enum import Enum, unique

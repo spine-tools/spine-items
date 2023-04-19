@@ -12,8 +12,6 @@
 """
 Contains :class:`ExporterFactory`.
 
-:author: A. Soininen (VTT)
-:date:   10.12.2020
 """
 
 from PySide6.QtGui import QColor

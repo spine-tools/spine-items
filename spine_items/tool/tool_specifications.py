@@ -12,8 +12,6 @@
 """
 Contains Tool specification classes.
 
-:authors: P. Savolainen (VTT), E. Rinne (VTT), M. Marin (KTH)
-:date:   24.1.2018
 """
 
 from collections import OrderedDict

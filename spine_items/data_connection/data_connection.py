@@ -12,8 +12,6 @@
 """
 Module for data connection class.
 
-:author: P. Savolainen (VTT)
-:date:   19.12.2017
 """
 
 import os

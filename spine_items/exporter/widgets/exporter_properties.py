@@ -12,8 +12,6 @@
 """
 Exporter properties widget.
 
-:author: A. Soininen (VTT)
-:date:   11.12.2020
 """
 
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase

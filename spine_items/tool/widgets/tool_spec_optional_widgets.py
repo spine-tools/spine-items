@@ -12,8 +12,6 @@
 """
 Provides an optional widget for Tool Specification Editor for each Tool Spec type (julia, python, executable, gams).
 
-:author: P. Savolainen (VTT)
-:date:   12.2.2021
 """
 
 from PySide6.QtCore import Signal, Slot

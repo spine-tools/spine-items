@@ -12,8 +12,6 @@
 """
 Unit tests for Tool's ItemInfo class.
 
-:author: A. Soininen (VTT)
-:date:   5.5.2020
 """
 import unittest
 from spine_items.tool.item_info import ItemInfo

@@ -12,8 +12,6 @@
 """
 Undo/redo commands for the View project item.
 
-:authors: M. Marin (ER)
-:date:   14.4.2022
 """
 from spine_items.commands import SpineToolboxCommand
 

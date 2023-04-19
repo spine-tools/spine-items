@@ -11,6 +11,4 @@
 """
 Contains Import editor's MVC models.
 
-:author: A. Soininen (VTT)
-:date:   5.8.2020
 """

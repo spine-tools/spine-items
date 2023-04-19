@@ -12,6 +12,4 @@
 """
 Widgets for the Importer project item.
 
-:author: A.Soininen (VTT)
-:date:   27.9.2019
 """

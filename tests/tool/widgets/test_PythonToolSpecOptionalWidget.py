@@ -12,8 +12,6 @@
 """
 Unit tests for PythonToolSpecOptionalWidget class.
 
-:author: P. Savolainen (VTT)
-:date:   2.7.2021
 """
 
 import unittest

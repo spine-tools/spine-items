@@ -12,8 +12,6 @@
 """
 Contains utilities shared between project items.
 
-:authors: A. Soininen (VTT)
-:date:    1.4.2020
 """
 import os.path
 
