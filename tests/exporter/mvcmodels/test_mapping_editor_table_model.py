@@ -11,8 +11,6 @@
 """
 Unit tests for export mapping setup table.
 
-:author: A. Soininen (VTT)
-:date:   11.12.2020
 """
 import unittest
 from unittest.mock import MagicMock

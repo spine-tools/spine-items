@@ -12,8 +12,6 @@
 """
 Importer properties widget.
 
-:author: M. Marin (KTH)
-:date:   12.9.2019
 """
 
 from PySide6.QtCore import QPoint, Slot

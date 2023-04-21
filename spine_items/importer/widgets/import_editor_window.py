@@ -12,8 +12,6 @@
 """
 Contains ImportPreviewWindow class.
 
-:authors: P. Savolainen (VTT), A. Soininen (VTT), P. Vennström (VTT)
-:date:    10.6.2019
 """
 
 import os
@@ -199,7 +197,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         return selector.url
 
     def _get_source_file_path(self):
-        filter_ = ";;".join([conn.FILE_EXTENSIONS for conn in _CONNECTOR_NAME_TO_CLASS.values()])
+        filter_ = ";;".join([conn.FILE_EXTENSIONS for conn in _CONNECTOR_NAME_TO_CLASS.values()]) + ";;*.*"
         key = f"selectInputDataFileFor{self.specification.name if self.specification else None}"
         filepath, _ = get_open_file_name_in_last_dir(
             self._toolbox.qsettings(),

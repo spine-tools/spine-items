@@ -12,8 +12,6 @@
 """
 Unit tests for :literal:`utils` module.
 
-:author: A. Soininen (VTT)
-:date:   17.11.2021
 """
 from hashlib import sha1
 from pathlib import Path

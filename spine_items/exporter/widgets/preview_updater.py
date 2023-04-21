@@ -11,8 +11,6 @@
 """
 Contains :class:`PreviewUpdater`.
 
-:author: A. Soininen (VTT)
-:date:   5.1.2021
 """
 from copy import deepcopy
 from time import monotonic

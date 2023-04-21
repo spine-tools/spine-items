@@ -12,8 +12,6 @@
 """
 Contains :class:`ExporterIcon`.
 
-:authors: A. Soininen
-:date:    10.12.2020
 """
 
 from spinetoolbox.project_item_icon import ProjectItemIcon

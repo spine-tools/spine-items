@@ -12,8 +12,6 @@
 """
 Unit tests for ViewExecutable.
 
-:author: A. Soininen (VTT)
-:date:   6.4.2020
 """
 from multiprocessing import Lock
 from tempfile import TemporaryDirectory

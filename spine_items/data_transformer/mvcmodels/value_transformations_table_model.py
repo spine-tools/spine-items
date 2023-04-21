@@ -11,8 +11,6 @@
 """
 Contains :class:`ValueTransformTableModel`.
 
-:author: A. Soininen (VTT)
-:date:   25.5.2021
 """
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt

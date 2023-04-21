@@ -12,8 +12,6 @@
 """
 Data transformer properties widget.
 
-:author: A. Soininen
-:date:   2.10.2020
 """
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from ..item_info import ItemInfo

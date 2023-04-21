@@ -15,8 +15,6 @@ Contains a generic File list model and an Item for that model.
 Used by the Importer and Tool project items but this may be handy for other project items
 as well.
 
-:authors: P. Savolainen (VTT), P. Vennström (VTT), A. Soininen (VTT)
-:date:    5.6.2020
 """
 from collections import namedtuple
 from PySide6.QtCore import QModelIndex, Qt, Signal

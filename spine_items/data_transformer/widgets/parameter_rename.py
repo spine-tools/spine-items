@@ -11,8 +11,6 @@
 """
 Contains classes to manage parameter renaming.
 
-:author: A. Soininen (VTT)
-:date:   31.5.2021
 """
 from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 

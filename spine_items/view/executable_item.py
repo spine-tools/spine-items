@@ -12,8 +12,6 @@
 """
 Contains View's executable item as well as support utilities.
 
-:authors: A. Soininen (VTT)
-:date:    2.4.2020
 """
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from .item_info import ItemInfo

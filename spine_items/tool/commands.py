@@ -12,8 +12,6 @@
 """
 Undo/redo commands for the Tool project item.
 
-:authors: M. Marin (KTH)
-:date:   5.5.2020
 """
 import copy
 from spine_items.commands import SpineToolboxCommand

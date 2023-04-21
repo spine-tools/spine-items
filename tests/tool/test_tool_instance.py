@@ -12,8 +12,6 @@
 """
 Contains unit tests for the tool_instance module.
 
-:authors: A. Soininen (VTT)
-:date:   18.3.2020
 """
 import sys
 import unittest

@@ -12,8 +12,6 @@
 """
 The ImporterFactory class.
 
-:author: M. Marin (KTH)
-:date:   15.4.2020
 """
 
 from PySide6.QtGui import QColor

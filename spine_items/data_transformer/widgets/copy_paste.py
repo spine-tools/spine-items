@@ -11,8 +11,6 @@
 """
 Contains shared functions that provide copy-paste functionality.
 
-:author: A. Soininen (VTT)
-:date:   3.6.2021
 """
 import pickle
 from PySide6.QtCore import QMimeData

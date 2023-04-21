@@ -11,8 +11,6 @@
 """
 Contains the :class:`MappingsTableProxy` model.
 
-:authors: A. Soininen (VTT)
-:date:    12.5.2021
 """
 from itertools import takewhile
 from PySide6.QtCore import QSortFilterProxyModel

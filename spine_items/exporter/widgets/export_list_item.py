@@ -12,8 +12,6 @@
 """
 A small widget to set up an output in Exporter properties tab.
 
-:author: A. Soininen (VTT)
-:date:   10.9.2019
 """
 
 from PySide6.QtCore import Signal, Slot

@@ -12,6 +12,4 @@
 """
 View plugin.
 
-:author: M. Marin (KTH)
-:date:   12.9.2019
 """

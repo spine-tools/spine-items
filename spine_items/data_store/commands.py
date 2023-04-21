@@ -12,8 +12,6 @@
 """
 Undo/redo commands for the DataStore project item.
 
-:authors: M. Marin (KTH)
-:date:   5.5.2020
 """
 from enum import IntEnum, unique
 from spine_items.commands import SpineToolboxCommand

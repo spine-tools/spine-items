@@ -11,8 +11,6 @@
 """
 Contains regular expression filter editor delegate.
 
-:author: A. Soininen (VTT)
-:date:   1.11.2021
 """
 from spine_items.ui import default_filter_editor
 from spine_items.widgets import FilterEdit, FilterEditDelegateBase

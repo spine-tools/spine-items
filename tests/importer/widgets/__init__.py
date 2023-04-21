@@ -12,6 +12,4 @@
 """
 Unit tests for Import editor's widgets.
 
-:author: A. Soininen (VTT)
-:date:   13.5.2020
 """

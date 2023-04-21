@@ -12,8 +12,6 @@
 """
 Contains the :class:`DataTransformerFactory` class.
 
-:author: A. Soininen (VTT)
-:date:   2.10.2020
 """
 
 from PySide6.QtGui import QColor

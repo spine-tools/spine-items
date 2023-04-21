@@ -12,8 +12,6 @@
 """
 Unit tests for Exporter project item.
 
-:author: A. Soininen (VTT)
-:date:   1.4.2021
 """
 import os.path
 from tempfile import TemporaryDirectory

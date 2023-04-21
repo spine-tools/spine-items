@@ -11,8 +11,6 @@
 """
 Exporter project item info.
 
-:authors: A. Soininen (VTT)
-:date:   10.12.2020
 """
 from spine_engine.project_item.project_item_info import ProjectItemInfo
 

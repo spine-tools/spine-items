@@ -11,8 +11,6 @@
 """
 Contains Exporter's undo commands.
 
-:authors: A. Soininen (VTT)
-:date:    11.12.2020
 """
 from copy import copy, deepcopy
 from enum import IntEnum, unique

@@ -12,8 +12,6 @@
 """
 Contains the :class:`Exporter` project item.
 
-:authors: A. Soininen (VTT)
-:date:    10.12.2020
 """
 from dataclasses import dataclass
 from itertools import combinations, zip_longest

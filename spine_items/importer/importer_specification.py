@@ -12,8 +12,6 @@
 """
 Contains Importer's specification.
 
-:authors: M. Marin (KTH)
-:date:    32.10.2020
 """
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from .item_info import ItemInfo

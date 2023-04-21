@@ -12,6 +12,4 @@
 """
 Widgets for the Tool project icon.
 
-:author: A.Soininen (VTT)
-:date:   27.9.2019
 """

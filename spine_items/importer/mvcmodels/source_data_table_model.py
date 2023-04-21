@@ -11,8 +11,6 @@
 """
 Contains the source data table model.
 
-:author: P. Vennström (VTT)
-:date:   1.6.2019
 """
 from PySide6.QtCore import Qt, Signal, Slot, QModelIndex
 from spinedb_api import ParameterValueFormatError

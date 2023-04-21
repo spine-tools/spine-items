@@ -11,8 +11,6 @@
 """
 Contains undo and redo commands for Import editor.
 
-:author: A. Soininen (VTT)
-:date:   4.8.2020
 """
 import pickle
 from enum import auto, IntEnum, unique

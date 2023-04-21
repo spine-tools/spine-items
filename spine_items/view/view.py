@@ -12,8 +12,6 @@
 """
 Module for view class.
 
-:authors: P. Savolainen (VTT), M. Marin (KHT), J. Olauson (KTH)
-:date:   14.07.2018
 """
 
 import os

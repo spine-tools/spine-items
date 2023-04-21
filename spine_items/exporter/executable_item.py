@@ -12,8 +12,6 @@
 """
 Contains Exporter's executable item as well as support utilities.
 
-:authors: A. Soininen (VTT)
-:date:    11.12.2020
 """
 import json
 import os

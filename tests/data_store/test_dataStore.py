@@ -12,8 +12,6 @@
 """
 Unit tests for DataStore class.
 
-:author: M. Marin (KTH), P. Savolainen (VTT)
-:date:   6.12.2018
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory

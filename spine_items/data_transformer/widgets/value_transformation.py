@@ -11,8 +11,6 @@
 """
 Contains classes to manage parameter value transformation.
 
-:author: A. Soininen (VTT)
-:date:   1.6.2021
 """
 from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 

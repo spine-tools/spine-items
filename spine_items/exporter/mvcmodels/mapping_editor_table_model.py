@@ -11,8 +11,6 @@
 """
 Contains model for export mapping setup table.
 
-:author: A. Soininen (VTT)
-:date:   11.12.2020
 """
 from enum import IntEnum, unique
 from operator import itemgetter

@@ -12,8 +12,6 @@
 """
 MergerPropertiesWidget widget.
 
-:author: M. Marin (KTH)
-:date:   12.9.2019
 """
 
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase

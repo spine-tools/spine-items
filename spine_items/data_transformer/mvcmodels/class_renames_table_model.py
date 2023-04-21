@@ -12,8 +12,6 @@
 """
 Contains the :class:`ClassRenamesTableModel` class.
 
-:author: A. Soininen (VTT)
-:date:   5.10.2020
 """
 from enum import IntEnum, unique
 import pickle

@@ -11,8 +11,6 @@
 """
 Contains :class:`OutputChannel` class.
 
-:authors: A. Soininen (VTT)
-:date:    4.1.2022
 """
 from contextlib import suppress
 from dataclasses import dataclass, InitVar

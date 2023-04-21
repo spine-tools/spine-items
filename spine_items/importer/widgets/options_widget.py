@@ -12,8 +12,6 @@
 """
 Contains OptionsWidget class.
 
-:author: P. Vennström (VTT)
-:date:   1.6.2019
 """
 import functools
 from PySide6.QtCore import Qt, Signal, Slot
