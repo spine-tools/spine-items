@@ -78,7 +78,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
         self._options = options
         self._kill_completed_processes = kill_completed_processes
         self._tool_instance = None
-        self._retry_count = 0
 
     @property
     def options(self):
@@ -501,15 +500,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
                 return ItemExecutionFinishState.FAILURE
             return_code = self._tool_instance.execute()
-            if return_code != 0 and self._tool_instance is not None and self._tool_instance.killed:
-                # NOTE: return_code will be 0 if the instance was killed by e.g. `exit(0)` in julia
-                # In this case we want to consider the tool successful and not retry it
-                if self._retry_count < self._MAX_RETRIES:
-                    # Try again
-                    self._retry_count += 1
-                    self._logger.msg_warning.emit("The Tool process was found dead. Retrying...")
-                    return self.execute(forward_resources, backward_resources, lock)
-                self._logger.msg_warning.emit("Maximum amount of retries reached.")
         self._handle_output_files(return_code, self._filter_id, forward_resources, execution_dir)
         self._tool_instance = None
         # TODO: Check what return code is 'stopped' and return ItemExecutionFinishState.STOPPED in this case
