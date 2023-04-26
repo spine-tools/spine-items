@@ -80,6 +80,7 @@ class PreviewUpdater:
         self._ui.preview_tree_view.selectionModel().currentChanged.connect(self._change_table)
         self._ui.preview_table_view.setModel(self._preview_table_model)
         self._ui.database_url_combo_box.currentTextChanged.connect(self._reload_preview)
+        self._ui.live_preview_check_box.stateChanged.connect(self._ui.frame_preview.setEnabled)
         self._ui.live_preview_check_box.clicked.connect(self._reload_preview)
         self._ui.max_preview_rows_spin_box.valueChanged.connect(self._reload_preview)
         self._ui.max_preview_tables_spin_box.valueChanged.connect(self._reload_preview)
@@ -323,11 +324,14 @@ class PreviewUpdater:
             bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
-        if not {
-            MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE,
-            MappingsTableModel.FIXED_TABLE_NAME_ROLE,
-            MappingsTableModel.GROUP_FN_ROLE,
-        } & set(roles):
+        if (
+            not {
+                MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE,
+                MappingsTableModel.FIXED_TABLE_NAME_ROLE,
+                MappingsTableModel.GROUP_FN_ROLE,
+            }
+            & set(roles)
+        ):
             return
         row = self._mappings_proxy_model.mapToSource(self._ui.mappings_table.currentIndex()).row()
         index = self._mappings_table_model.index(row, 0)
@@ -389,7 +393,6 @@ class PreviewUpdater:
     def _enable_controls(self):
         """Enables and disables widgets as needed."""
         urls_available = self._url_model.rowCount() > 0
-        self._ui.live_preview_check_box.setEnabled(urls_available)
         self._ui.max_preview_rows_spin_box.setEnabled(urls_available)
         self._ui.max_preview_tables_spin_box.setEnabled(urls_available)
 
