@@ -64,6 +64,7 @@ class ImportMappings:
         self._mappings_model.rowsRemoved.connect(self._show_list_after_mapping_removal)
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_list)
         self._ui.mapping_list.selectionModel().currentChanged.connect(self._change_flattened_mappings)
+        self._ui.mapping_list.selectionModel().selectionChanged.connect(self._update_buttons_enabled)
         self._ui.new_button.clicked.connect(self._new_mapping)
         self._ui.remove_button.clicked.connect(self._delete_selected_mapping)
         self._ui.duplicate_button.clicked.connect(self._duplicate_selected_mapping)
@@ -139,6 +140,12 @@ class ImportMappings:
         self._ui.remove_button.setEnabled(enabled)
         self._ui.duplicate_button.setEnabled(enabled)
 
+    @Slot(QItemSelection, QItemSelection)
+    def _update_buttons_enabled(self, _selected, _deselected):
+        enabled = self._ui.mapping_list.selectionModel().hasSelection()
+        self._ui.remove_button.setEnabled(enabled)
+        self._ui.duplicate_button.setEnabled(enabled)
+
     @Slot(QModelIndex, QModelIndex)
     def _change_flattened_mappings(self, current, previous):
         """Loads current mapping to component editor.
@@ -147,6 +154,7 @@ class ImportMappings:
             current (QModelIndex): currently selected mapping list index
             previous (QModelIndex): previously selected mapping list index
         """
+        self._ui.mapping_list.selectionModel().select(current, QItemSelectionModel.Select)
         if not current.isValid():
             self._ui.mapping_spec_table.setRootIndex(self._mappings_model.dummy_parent())
             return

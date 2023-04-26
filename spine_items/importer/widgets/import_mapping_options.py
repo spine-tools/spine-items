@@ -128,9 +128,10 @@ class ImportMappingOptions:
         """
         has_mapping = self._has_current_mappings()
         self._ui.mapping_options_contents.setEnabled(has_mapping)
+        for i in range(self._ui.mapping_options_contents.count()):
+            self._ui.mapping_options_contents.itemAt(i).widget().setEnabled(has_mapping)
         if not has_mapping:
             return
-
         flattened_mappings = self._list_index.data(Role.FLATTENED_MAPPINGS)
         self._block_signals = True
         try:

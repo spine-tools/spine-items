@@ -79,7 +79,8 @@ class ImportSources(QObject):
         self._ui.source_data_table.set_undo_stack(self._undo_stack, self._select_table_for_undo)
         self._ui_source_data_table_menu = SourceDataTableMenu(self._mappings_model, self._ui)
         self._ui_options_widget = OptionsWidget(self._undo_stack)
-        self._ui.dockWidget_source_options.setWidget(self._ui_options_widget)
+        self._ui_options_widget.setEnabled(False)
+        self._ui.verticalLayout_source_options.addWidget(self._ui_options_widget)
         self._ui.source_data_table.verticalHeader().display_all = False
         self._fill_default_column_type_combo_box_items()
         # connect signals
@@ -173,23 +174,23 @@ class ImportSources(QObject):
         self._connector.request_tables()
 
     @Slot(QModelIndex, QModelIndex)
-    def _change_selected_table(self, selected, _deselected):
+    def _change_selected_table(self, current, _previous):
         """
         Sets selected table and requests data from connector
 
         Args:
             selected (QModelIndex): current index
-            _deselected (QModelIndex): previous index
+            _previous (QModelIndex): previous index
         """
         if self._connector is None:
             self._ui_options_widget.setEnabled(False)
             return
-        if not selected.isValid():
+        if not current.isValid():
             table_name = ""
             self._ui_options_widget.setEnabled(False)
             self._ui.default_column_type_combo_box.setEnabled(False)
         else:
-            table_item = self._mappings_model.data(selected, Role.ITEM)
+            table_item = self._mappings_model.data(current, Role.ITEM)
             table_name = table_item.name if table_item.real else ""
             self._ui_options_widget.setEnabled(bool(table_name))
             self._ui.default_column_type_combo_box.setEnabled(bool(table_name))

@@ -37,6 +37,7 @@ from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
 from ..importer_specification import ImporterSpecification
 from ..mvcmodels.mappings_model import MappingsModel
+from ..mvcmodels.source_list_selection_model import SourceListSelectionModel
 from ...widgets import UrlSelectorDialog
 
 _CONNECTOR_NAME_TO_CLASS = {
@@ -83,11 +84,11 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             filepath (str, optional): Importee path
         """
         super().__init__(toolbox, specification, item)
-        self.takeCentralWidget().deleteLater()
         self._filepath = filepath if filepath else self._FILE_LESS
         self._mappings_model = MappingsModel(self._undo_stack, self)
         self._mappings_model.rowsInserted.connect(self._reselect_source_table)
         self._ui.source_list.setModel(self._mappings_model)
+        self._ui.source_list.setSelectionModel(SourceListSelectionModel(self._mappings_model))
         self._ui.mapping_list.setModel(self._mappings_model)
         self._ui.mapping_list.setRootIndex(self._mappings_model.dummy_parent())
         self._ui.mapping_spec_table.setModel(self._mappings_model)
@@ -135,35 +136,6 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         return Ui_MainWindow()
-
-    def _restore_dock_widgets(self):
-        """Applies the classic UI style."""
-        size = self.size()
-        for dock in self.findChildren(QDockWidget):
-            dock.setVisible(True)
-            dock.setFloating(False)
-            self.addDockWidget(Qt.RightDockWidgetArea, dock)
-        docks = (self._ui.dockWidget_source_files, self._ui.dockWidget_mappings)
-        self.splitDockWidget(*docks, Qt.Orientation.Horizontal)
-        width = sum(d.size().width() for d in docks)
-        self.resizeDocks(docks, [0.9 * width, 0.1 * width], Qt.Orientation.Horizontal)
-        docks = (self._ui.dockWidget_source_files, self._ui.dockWidget_source_tables, self._ui.dockWidget_source_data)
-        self.splitDockWidget(*docks[:-1], Qt.Orientation.Vertical)
-        self.splitDockWidget(*docks[1:], Qt.Orientation.Vertical)
-        height = sum(d.size().height() for d in docks)
-        self.resizeDocks(docks, [0.1 * height, 0.2 * height, 0.7 * height], Qt.Orientation.Vertical)
-        self.splitDockWidget(
-            self._ui.dockWidget_source_tables, self._ui.dockWidget_source_options, Qt.Orientation.Horizontal
-        )
-        self.splitDockWidget(self._ui.dockWidget_mappings, self._ui.dockWidget_mapping_options, Qt.Orientation.Vertical)
-        self.splitDockWidget(
-            self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec, Qt.Orientation.Vertical
-        )
-        docks = (self._ui.dockWidget_mapping_options, self._ui.dockWidget_mapping_spec)
-        height = sum(d.size().height() for d in docks)
-        self.resizeDocks(docks, [0.1 * height, 0.9 * height], Qt.Orientation.Vertical)
-        qApp.processEvents()  # pylint: disable=undefined-variable
-        self.resize(size)
 
     def _make_new_specification(self, spec_name):
         mappings_dict = self._mappings_model.store()
@@ -241,10 +213,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             if not connector:
                 return
         if connector.__name__ == "SqlAlchemyConnector":
-            self._ui.dockWidget_source_files.setWindowTitle("Source URLs")
             self._ui.file_path_label.setText("URL")
         else:
-            self._ui.dockWidget_source_files.setWindowTitle("Source files")
             self._ui.file_path_label.setText("File path")
         if filepath == self._FILE_LESS:
             self._FileLessConnector.__name__ = connector.__name__

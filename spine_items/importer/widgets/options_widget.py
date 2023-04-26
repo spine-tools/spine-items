@@ -22,14 +22,15 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QSpinBox,
     QWidget,
-    QFormLayout,
-    QVBoxLayout,
-    QPushButton,
+    QTableWidget,
+    QToolButton,
+    QHBoxLayout,
+    QStyle,
 )
 from ..commands import SetConnectorOption
 
 
-class OptionsWidget(QWidget):
+class OptionsWidget(QTableWidget):
     """A widget for handling simple options."""
 
     options_changed = Signal(dict)
@@ -50,27 +51,25 @@ class OptionsWidget(QWidget):
         self._undo_stack = undo_stack
         self._undo_enabled = True
         self._current_source_table = None
-
-        # ui
-        self._layout = QVBoxLayout(self)
-        self.form_layout = QFormLayout()
-        self._layout.addLayout(self.form_layout)
         self._ui_choices = {str: QLineEdit, list: QComboBox, int: QSpinBox, bool: QCheckBox}
         self._ui_elements = {}
         self._build_ui()
+        self.horizontalHeader().setVisible(False)
+        self.verticalHeader().setVisible(False)
+        self.setShowGrid(False)
 
     def _clear_ui(self):
         """Clears UI."""
         self._ui_elements.clear()
-        for _ in range(self.form_layout.rowCount()):
-            self.form_layout.removeRow(0)
-        layout = self.layout()
-        if layout.count() == 2:
-            layout.removeItem(layout.itemAt(1))
+        self.clear()
+        self.setRowCount(0)
+        self.setColumnCount(0)
 
     def _build_ui(self):
         """Builds ui from specification in dict"""
-        for key, options in self._options.items():
+        self.insertRow(0)
+        key_options = sorted(self._options.items(), key=lambda x: list(self._ui_choices).index(x[1]["type"]))
+        for column, (key, options) in enumerate(key_options):
             ui_element = self._ui_choices[options["type"]]()
             maximum = options.get('Maximum', None)
             if maximum is not None:
@@ -91,6 +90,7 @@ class OptionsWidget(QWidget):
             elif isinstance(ui_element, QLineEdit):
                 handler = functools.partial(_emit_line_edit_option_changed, **bound_arguments)
                 ui_element.textChanged.connect(handler)
+                ui_element.setMaximumWidth(40)
             elif isinstance(ui_element, QCheckBox):
                 handler = functools.partial(_emit_check_box_option_changed, **bound_arguments)
                 ui_element.stateChanged.connect(handler)
@@ -99,9 +99,28 @@ class OptionsWidget(QWidget):
                 handler = functools.partial(_emit_combo_box_option_changed, **bound_arguments)
                 ui_element.currentTextChanged.connect(handler)
             self._ui_elements[key] = ui_element
-
             # Add to layout:
-            self.form_layout.addRow(QLabel(options['label'] + ':'), ui_element)
+            widget = QWidget()
+            layout = QHBoxLayout(widget)
+            layout.setContentsMargins(3, 3, 3, 3)
+            layout.setSpacing(3)
+            layout.addWidget(QLabel(options['label'] + ':'))
+            layout.addWidget(ui_element)
+            self.insertColumn(self.columnCount())
+            self.setCellWidget(0, column, widget)
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+        self._adjust_height()
+
+    def _adjust_height(self):
+        height = self.verticalHeader().length() + 2
+        if self.horizontalScrollBar().isVisible():
+            height += self.style().pixelMetric(QStyle.PM_ScrollBarExtent)
+        self.setMaximumHeight(height)
+
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        self._adjust_height()
 
     @property
     def connector(self):
@@ -115,7 +134,7 @@ class OptionsWidget(QWidget):
             connector (ConnectionManager): connector
         """
         self._connector = connector
-        self._options = connector.connection.BASE_OPTIONS
+        self._options = connector.connection.BASE_OPTIONS.copy()
         self._options.update(connector.connection.OPTIONS)
         connector.current_table_changed.connect(self._fetch_options_from_connector)
         self.options_changed.connect(connector.update_options)
@@ -123,8 +142,10 @@ class OptionsWidget(QWidget):
         self._build_ui()
         self._set_options(self._connector.current_table)
         if hasattr(self._connector.connection, "create_default_mapping"):
-            button = QPushButton("Load default mapping")
-            self.layout().addWidget(button)
+            button = QToolButton()
+            button.setText("Load default mapping")
+            self.insertColumn(self.columnCount())
+            self.setCellWidget(0, self.columnCount() - 1, button)
             button.clicked.connect(self.load_default_mapping_requested)
 
     @property

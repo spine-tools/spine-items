@@ -72,6 +72,7 @@ class SourceTableItem:
     in_source: bool = False
     in_specification: bool = False
     empty: bool = False
+    select_all: bool = False
     mapping_list: list[MappingListItem] = field(init=False, default_factory=list)
 
     def append_to_mapping_list(self, list_item):
@@ -161,7 +162,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             SourceTableItem: 'select all' item
         """
-        return SourceTableItem("Select All", checked=False, real=False)
+        return SourceTableItem("Select all", checked=False, real=False, select_all=True)
 
     def columnCount(self, parent=QModelIndex()):
         if not parent.isValid():
@@ -319,12 +320,14 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             int: flags
         """
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        flags = Qt.ItemIsEnabled
         table_item = self._mappings[index.row()]
         if table_item.checkable:
             flags |= Qt.ItemIsUserCheckable
         if table_item.editable:
             flags |= Qt.ItemIsEditable
+        if not table_item.select_all:
+            flags |= Qt.ItemIsSelectable
         return flags
 
     @staticmethod
