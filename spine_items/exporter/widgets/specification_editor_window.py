@@ -153,9 +153,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._sort_mappings_table_model = MappingsTableProxy(self)
         self._sort_mappings_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
         self._sort_mappings_table_model.setSourceModel(self._mappings_table_model)
-        self._sort_mappings_table_model.rowsInserted.connect(self._select_inserted_row)
-        self._sort_mappings_table_model.rowsRemoved.connect(self._check_for_empty_mappings_list)
-        self.takeCentralWidget().deleteLater()
+        self._mappings_table_model.rowsInserted.connect(self._select_inserted_row)
+        self._mappings_table_model.rowsRemoved.connect(self._check_for_empty_mappings_list)
         self._ui.export_format_combo_box.addItems([output_format.value for output_format in OutputFormat])
         self._ui.export_format_combo_box.setCurrentText(self._new_spec.output_format.value)
         self._ui.export_format_combo_box.currentTextChanged.connect(self._change_format)
@@ -245,46 +244,6 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
 
         return Ui_MainWindow()
 
-    def _restore_dock_widgets(self):
-        """Applies default layout for dock windows."""
-        size = self.size()
-        docks = {
-            Qt.LeftDockWidgetArea: (
-                self._ui.export_options_dock,
-                self._ui.mappings_dock,
-                self._ui.mapping_options_dock,
-                self._ui.mapping_spec_dock,
-            ),
-            Qt.RightDockWidgetArea: (
-                self._ui.preview_tables_dock,
-                self._ui.preview_contents_dock,
-                self._ui.preview_controls_dock,
-            ),
-        }
-        for area, area_docks in docks.items():
-            for dock in area_docks:
-                dock.setVisible(True)
-                dock.setFloating(False)
-                self.addDockWidget(area, dock)
-        # Left side
-        self.splitDockWidget(self._ui.export_options_dock, self._ui.mappings_dock, Qt.Orientation.Vertical)
-        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_spec_dock, Qt.Orientation.Vertical)
-        some_docks = (self._ui.mappings_dock, self._ui.mapping_options_dock, self._ui.mapping_spec_dock)
-        height = sum(d.height() for d in some_docks)
-        self.resizeDocks(some_docks, [height * x for x in (0.1, 0.3, 0.6)], Qt.Orientation.Vertical)
-        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_options_dock, Qt.Orientation.Horizontal)
-        # Right side
-        some_docks = (self._ui.preview_tables_dock, self._ui.preview_controls_dock)
-        self.splitDockWidget(*some_docks, Qt.Orientation.Vertical)
-        height = sum(d.height() for d in some_docks)
-        self.resizeDocks(some_docks, [height * x for x in (0.9, 0.1)], Qt.Orientation.Vertical)
-        some_docks = (self._ui.preview_tables_dock, self._ui.preview_contents_dock)
-        self.splitDockWidget(*some_docks, Qt.Orientation.Horizontal)
-        width = sum(d.width() for d in some_docks)
-        self.resizeDocks(some_docks, [width * x for x in (0.3, 0.7)], Qt.Orientation.Horizontal)
-        qApp.processEvents()  # pylint: disable=undefined-variable
-        self.resize(size)
-
     def _make_new_specification(self, spec_name):
         """See base class."""
         description = self._spec_toolbar.description()
@@ -358,7 +317,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         if not current.isValid():
             self._mapping_editor_model.set_mapping("", None)
-            self._ui.mapping_spec_contents.setEnabled(False)
+            self._ui.mapping_table_view.setEnabled(False)
             return
         self.current_mapping_about_to_change.emit()
         current = self._sort_mappings_table_model.mapToSource(current)
@@ -406,7 +365,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._mapping_editor_model.set_mapping(mapping_name, root_mapping)
         self._enable_entity_controls()
         self._enable_parameter_controls()
-        self._ui.mapping_spec_contents.setEnabled(True)
+        self._ui.mapping_table_view.setEnabled(True)
         self.current_mapping_changed.emit()
 
     @Slot(bool)
@@ -1026,7 +985,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """Enables and disables mapping specification editing controls."""
         have_mappings = self._mappings_table_model.rowCount() > 0
         self._ui.mapping_options_contents.setEnabled(have_mappings)
-        self._ui.mapping_spec_contents.setEnabled(have_mappings)
+        self._ui.mapping_table_view.setEnabled(have_mappings)
         self._ui.remove_mapping_button.setEnabled(have_mappings)
 
     def _enable_entity_controls(self):
