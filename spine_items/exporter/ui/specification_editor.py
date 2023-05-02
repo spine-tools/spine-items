@@ -39,7 +39,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1078, 780)
+        MainWindow.resize(1086, 780)
         MainWindow.setDockNestingEnabled(True)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
@@ -238,10 +238,6 @@ class Ui_MainWindow(object):
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
         self.item_type_combo_box.setObjectName(u"item_type_combo_box")
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.item_type_combo_box)
@@ -404,10 +400,6 @@ class Ui_MainWindow(object):
         self.item_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario", None))
         self.item_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
         self.item_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
-        self.item_type_combo_box.setItemText(7, QCoreApplication.translate("MainWindow", u"Feature", None))
-        self.item_type_combo_box.setItemText(8, QCoreApplication.translate("MainWindow", u"Tool", None))
-        self.item_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool feature", None))
-        self.item_type_combo_box.setItemText(10, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
 
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Entity dimensions:", None))
 #if QT_CONFIG(tooltip)

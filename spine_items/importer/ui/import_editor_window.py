@@ -262,10 +262,6 @@ class Ui_MainWindow(object):
         self.class_type_combo_box.addItem("")
         self.class_type_combo_box.addItem("")
         self.class_type_combo_box.addItem("")
-        self.class_type_combo_box.addItem("")
-        self.class_type_combo_box.addItem("")
-        self.class_type_combo_box.addItem("")
-        self.class_type_combo_box.addItem("")
         self.class_type_combo_box.setObjectName(u"class_type_combo_box")
 
         self.mapping_options_contents.addWidget(self.class_type_combo_box, 0, 1, 1, 1)
@@ -389,10 +385,6 @@ class Ui_MainWindow(object):
         self.class_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Scenario", None))
         self.class_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
         self.class_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
-        self.class_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Feature", None))
-        self.class_type_combo_box.setItemText(7, QCoreApplication.translate("MainWindow", u"Tool", None))
-        self.class_type_combo_box.setItemText(8, QCoreApplication.translate("MainWindow", u"Tool feature", None))
-        self.class_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
 
         self.parameter_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Value", None))
         self.parameter_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Definition", None))

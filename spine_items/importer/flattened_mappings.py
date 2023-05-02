@@ -30,10 +30,6 @@ from spinedb_api.import_mapping.import_mapping import (
     ScenarioMapping,
     ScenarioAlternativeMapping,
     ParameterValueListMapping,
-    FeatureEntityClassMapping,
-    ToolMapping,
-    ToolFeatureEntityClassMapping,
-    ToolFeatureMethodEntityClassMapping,
     ParameterValueMapping,
     ParameterValueTypeMapping,
     ParameterDefaultValueMapping,
@@ -59,10 +55,6 @@ class MappingType(Enum):
     Scenario = "Scenario"
     ScenarioAlternative = "Scenario alternative"
     ParameterValueList = "Parameter value list"
-    Feature = "Feature"
-    Tool = "Tool"
-    ToolFeature = "Tool feature"
-    ToolFeatureMethod = "Tool feature method"
 
 
 VALUE_TYPES = {
@@ -88,15 +80,6 @@ DISPLAY_MAPPING_NAMES = {
     "ScenarioBeforeAlternative": "Before alternative names",
     "ParameterValueList": "Value list names",
     "ParameterValueListValue": "Parameter values",
-    "FeatureEntityClass": "Entity class names",
-    "FeatureParameterDefinition": "Parameter names",
-    "Tool": "Tool names",
-    "ToolFeatureEntityClass": "Entity class names",
-    "ToolFeatureParameterDefinition": "Parameter names",
-    "ToolFeatureRequiredFlag": "Tool feature required flags",
-    "ToolFeatureMethodEntityClass": "Entity class names",
-    "ToolFeatureMethodParameterDefinition": "Parameter names",
-    "ToolFeatureMethodMethod": "Tool feature methods",
     "ParameterDefinition": "Parameter names",
     "ParameterValue": "Parameter values",
     "ParameterValueType": None,
@@ -495,14 +478,6 @@ class FlattenedMappings:
             return MappingType.Scenario
         if isinstance(head_mapping, ParameterValueListMapping):
             return MappingType.ParameterValueList
-        if any(isinstance(m, FeatureEntityClassMapping) for m in flattened):
-            return MappingType.Feature
-        if isinstance(head_mapping, ToolMapping):
-            if any(isinstance(m, ToolFeatureEntityClassMapping) for m in flattened):
-                return MappingType.ToolFeature
-            return MappingType.Tool
-        if any(isinstance(m, ToolFeatureMethodEntityClassMapping) for m in flattened):
-            return MappingType.ToolFeatureMethod
 
     def _resolve_value_type(self):
         """Computes display name for value type.

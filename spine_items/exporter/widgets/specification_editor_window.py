@@ -21,7 +21,6 @@ from PySide6.QtWidgets import QApplication, QHeaderView, QMenu
 from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
     alternative_export,
-    feature_export,
     entity_export,
     entity_group_export,
     entity_parameter_default_value_export,
@@ -34,9 +33,6 @@ from spinedb_api.export_mapping import (
     entity_parameter_value_export,
     scenario_alternative_export,
     scenario_export,
-    tool_export,
-    tool_feature_export,
-    tool_feature_method_export,
 )
 from spinedb_api.export_mapping.settings import (
     set_parameter_dimensions,
@@ -81,7 +77,6 @@ from .position_edit_delegate import PositionEditDelegate, position_section_width
 
 mapping_type_to_combo_box_label = {
     MappingType.alternatives: "Alternative",
-    MappingType.features: "Feature",
     MappingType.entities: "Entity class",
     MappingType.entity_groups: "Entity group",
     MappingType.entity_parameter_default_values: "Entity class",
@@ -91,14 +86,10 @@ mapping_type_to_combo_box_label = {
     MappingType.entity_dimension_parameter_values: "Entity class with dimension parameter",
     MappingType.scenario_alternatives: "Scenario alternative",
     MappingType.scenarios: "Scenario",
-    MappingType.tool_feature_methods: "Tool feature method",
-    MappingType.tool_features: "Tool feature",
-    MappingType.tools: "Tool",
 }
 
 mapping_type_to_parameter_type_label = {
     MappingType.alternatives: "None",
-    MappingType.features: "None",
     MappingType.entities: "None",
     MappingType.entity_groups: "None",
     MappingType.entity_parameter_default_values: "Default value",
@@ -108,9 +99,6 @@ mapping_type_to_parameter_type_label = {
     MappingType.parameter_value_lists: "None",
     MappingType.scenario_alternatives: "None",
     MappingType.scenarios: "None",
-    MappingType.tool_feature_methods: "None",
-    MappingType.tool_features: "None",
-    MappingType.tools: "None",
 }
 
 
@@ -673,10 +661,6 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 "Scenario": MappingType.scenarios,
                 "Scenario alternative": MappingType.scenario_alternatives,
                 "Parameter value list": MappingType.parameter_value_lists,
-                "Feature": MappingType.features,
-                "Tool": MappingType.tools,
-                "Tool feature": MappingType.tool_features,
-                "Tool feature method": MappingType.tool_feature_methods,
             }[type_label]
         mapping_specification = _new_mapping_specification(mapping_type)
         if self._ui.fix_table_name_check_box.isChecked():
@@ -1095,16 +1079,6 @@ def _new_mapping_specification(mapping_type):
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_alternative_export(0, 1))
     if mapping_type == MappingType.scenarios:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_export(0, 1))
-    if mapping_type == MappingType.features:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, feature_export(0, 1))
-    if mapping_type == MappingType.tools:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, tool_export(0))
-    if mapping_type == MappingType.tool_features:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, tool_feature_export(0, 1, 2, 3))
-    if mapping_type == MappingType.tool_feature_methods:
-        return MappingSpecification(
-            mapping_type, True, True, NoGroup.NAME, False, tool_feature_method_export(0, 1, 2, 3)
-        )
     raise NotImplementedError()
 
 

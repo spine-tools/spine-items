@@ -142,10 +142,6 @@ class ImportMappingOptions:
                 MappingType.Scenario,
                 MappingType.ScenarioAlternative,
                 MappingType.ParameterValueList,
-                MappingType.Feature,
-                MappingType.Tool,
-                MappingType.ToolFeature,
-                MappingType.ToolFeatureMethod,
             ].index(flattened_mappings.map_type)
         except ValueError:
             class_type_index = -1

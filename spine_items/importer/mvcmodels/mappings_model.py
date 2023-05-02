@@ -731,10 +731,6 @@ class MappingsModel(QAbstractItemModel):
             "Scenario": "Scenario",
             "Scenario alternative": "ScenarioAlternative",
             "Parameter value list": "ParameterValueList",
-            "Feature": "Feature",
-            "Tool": "Tool",
-            "Tool feature": "ToolFeature",
-            "Tool feature method": "ToolFeatureMethod",
         }[new_type]
         root_mapping = import_mapping_from_dict({"map_type": map_type})
         self.set_root_mapping(table_row, list_row, root_mapping)

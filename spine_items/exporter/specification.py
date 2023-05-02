@@ -36,7 +36,6 @@ from .item_info import ItemInfo
 @unique
 class MappingType(Enum):
     alternatives = "alternatives"
-    features = "features"
     entities = "entities"
     entity_groups = "entity_groups"
     entity_parameter_default_values = "entity_parameter_default_values"
@@ -46,9 +45,6 @@ class MappingType(Enum):
     parameter_value_lists = "parameter_value_lists"
     scenario_alternatives = "scenario_alternatives"
     scenarios = "scenarios"
-    tool_features = "tool_features"
-    tool_feature_methods = "tool_feature_methods"
-    tools = "tools"
 
     @classmethod
     def from_legacy_type(cls, type_str):

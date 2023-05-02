@@ -400,26 +400,6 @@
                   <string>Parameter value list</string>
                  </property>
                 </item>
-                <item>
-                 <property name="text">
-                  <string>Feature</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Tool</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Tool feature</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Tool feature method</string>
-                 </property>
-                </item>
                </widget>
               </item>
               <item row="8" column="1">
