@@ -115,7 +115,7 @@ class OptionsWidget(QWidget):
             connector (ConnectionManager): connector
         """
         self._connector = connector
-        self._options = connector.connection.BASE_OPTIONS
+        self._options = connector.connection.BASE_OPTIONS.copy()
         self._options.update(connector.connection.OPTIONS)
         connector.current_table_changed.connect(self._fetch_options_from_connector)
         self.options_changed.connect(connector.update_options)
