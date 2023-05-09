@@ -39,7 +39,7 @@ class TestSpecificationEditorWindow(unittest.TestCase):
     def test_empty_editor(self):
         editor = SpecificationEditorWindow(self._toolbox)
         self.assertEqual(editor._ui.mappings_table.model().rowCount(), 1)
-        self.assertEqual(editor._ui.mappings_table.model().index(0, 0).data(), "Mapping 1")
+        self.assertEqual(editor._ui.mappings_table.model().index(0, 0).data(), "Mapping (1)")
 
     def test_mapping_in_table_name_position_disables_fixed_table_name_widgets(self):
         editor = SpecificationEditorWindow(self._toolbox)
