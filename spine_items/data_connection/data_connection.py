@@ -418,9 +418,11 @@ class DataConnection(ProjectItem):
         # Some software saves files by renaming them and then creating
         # a new file with the same name for safety reasons.
         # So, sometimes a file goes "missing" for a moment and then comes back.
-        # We'll try to refresh the file reference once in this case.
-        def refresh():
+        # We'll try to refresh the file reference a couple times in this case.
+        def refresh(retry_count):
             if not os.path.exists(path):
+                if retry_count < 5:
+                    QTimer.singleShot(1000, lambda: refresh(retry_count + 1))
                 return
             fixed_references = []
             for row in range(self._file_ref_root.rowCount()):
@@ -437,7 +439,7 @@ class DataConnection(ProjectItem):
             self._check_notifications()
             self._resources_to_successors_changed()
 
-        QTimer.singleShot(1000, refresh)
+        QTimer.singleShot(1000, lambda: refresh(0))
 
     @Slot(str)
     def _handle_file_added(self, path):
