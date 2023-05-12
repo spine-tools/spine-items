@@ -464,6 +464,7 @@ class MappingsModel(QAbstractItemModel):
                     table_item.append_to_mapping_list(list_item)
                 self._mappings.append(table_item)
         except ValueError as error:
+            # This will be raised by parse_named_mapping_spec() if mapping type is obsolete, like tool, feature, etc.
             self.msg_error.emit(f"{error}")
             return
         self.endResetModel()
