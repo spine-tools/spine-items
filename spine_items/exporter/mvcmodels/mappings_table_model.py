@@ -17,7 +17,7 @@ from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
     RelationshipClassObjectClassMapping,
-    RelationshipClassObjectHighlightingMapping,
+    RelationshipClassMapping,
 )
 from spinetoolbox.helpers import unique_name
 
@@ -131,7 +131,7 @@ class MappingsTableModel(QAbstractTableModel):
                 return spec.group_fn
             if role == self.HIGHLIGHT_DIMENSION_ROLE:
                 highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, RelationshipClassObjectHighlightingMapping)), None
+                    (m for m in spec.root.flatten() if isinstance(m, RelationshipClassMapping)), None
                 )
                 if highlighting_mapping is None:
                     return None
@@ -241,7 +241,7 @@ class MappingsTableModel(QAbstractTableModel):
                 self.dataChanged.emit(index, index, [self.GROUP_FN_ROLE])
             elif role == self.HIGHLIGHT_DIMENSION_ROLE:
                 highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, RelationshipClassObjectHighlightingMapping)), None
+                    (m for m in spec.root.flatten() if isinstance(m, RelationshipClassMapping)), None
                 )
                 if highlighting_mapping is None:
                     return False
