@@ -156,9 +156,12 @@ class ImportMappings:
             enabled (bool): enabled state
             table_index (QModelIndex): table index
         """
-        self._ui.new_button.setEnabled(table_index.row() != 0)
-        self._ui.remove_button.setEnabled(enabled)
-        self._ui.duplicate_button.setEnabled(enabled)
+        is_first_or_last = table_index.row() in [0, len(self._ui.mapping_list.model()) - 1]
+        self._ui.new_button.setEnabled(not is_first_or_last)
+
+        has_entries = self._mappings_model.rowCount(table_index) > 0
+        self._ui.remove_button.setEnabled(has_entries)
+        self._ui.duplicate_button.setEnabled(has_entries)
 
     @Slot(QModelIndex, QModelIndex)
     def _change_flattened_mappings(self, current, previous):

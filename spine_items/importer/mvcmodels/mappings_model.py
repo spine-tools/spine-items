@@ -138,6 +138,9 @@ class MappingsModel(QAbstractItemModel):
         self._add_table_row_font = QFont()
         self._add_table_row_font.setItalic(True)
 
+    def __len__(self):
+        return len(self._mappings)
+
     def real_table_names(self):
         """Returns real table names.
 
