@@ -190,18 +190,24 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if opt_widget:
             opt_widget.init_widget(specification)
 
-    def _make_new_specification(self, spec_name):
+    def _make_new_specification(self, spec_name, exiting=None):
         """See base class."""
         # Check that tool type is selected
         if self._ui.comboBox_tooltype.currentIndex() == -1:
-            self.show_error("Tool spec type not selected")
-            return None
+            if exiting:
+                return None
+            else:
+                self.show_error("Tool spec type not selected")
+                return None
         toolspectype = self._ui.comboBox_tooltype.currentText().lower()
         # Check that Tool Spec has a main program file except for Executable Tool Specs
         main_program_file = self._current_main_program_file()
         if main_program_file is None and toolspectype != "executable":
-            self.show_error("Please add a main program file")
-            return None
+            if exiting:
+                return None
+            else:
+                self.show_error("Please add a main program file")
+                return None
         new_spec_dict = {"name": spec_name, "description": self._spec_toolbar.description(), "tooltype": toolspectype}
         main_prgm_dir, main_prgm_file_name = os.path.split(main_program_file) if main_program_file else ("", "")
         if not main_prgm_dir:
@@ -245,9 +251,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         d["execution_settings"] = opt_widget.add_execution_settings()
         return d
 
-    def _save(self):
+    def _save(self, exiting=None):
         """Saves spec. If successful, also saves all modified program files."""
-        if not super()._save():
+        if not super()._save(exiting):
             return False
         saved = []
         for file_path, doc in self._programfile_documents.items():
