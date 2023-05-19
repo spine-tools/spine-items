@@ -347,6 +347,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             item.setData(file_path, Qt.ItemDataRole.UserRole)
             root_item.appendRow(item)
             QTimer.singleShot(0, self._push_change_main_program_file_command)
+            tool_tip = f'<p>{self._current_main_program_file()}</p>'
+            self.programfiles_model.setData(root_item.child(0).index(), tool_tip, role=Qt.ItemDataRole.ToolTipRole)
 
     def populate_programfile_list(self, names):
         """Adds additional program files into the program files model.
@@ -378,6 +380,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             if not item.rowCount():
                 index = self.programfiles_model.indexFromItem(item)
                 file_path = self._programfile_path_from_index(index)
+                if file_path:
+                    tool_tip = f'<p>{file_path}</p>'
+                    self.programfiles_model.setData(index, tool_tip, role=Qt.ItemDataRole.ToolTipRole)
                 if file_path in visible:
                     self._ui.treeView_programfiles.expand(index.parent())
                 self._programfile_set_dirty_slots[file_path] = index
