@@ -1,4 +1,4 @@
 -e git+https://github.com/spine-tools/Spine-Database-API.git#egg=spinedb_api
 -e git+https://github.com/spine-tools/spine-engine.git#egg=spine_engine
--e git+https://github.com/spine-tools/Spine-Toolbox.git@2123_tool_spec_editor_exit_no_save#egg=spinetoolbox
+-e git+https://github.com/spine-tools/Spine-Toolbox.git#egg=spinetoolbox
 -e .
