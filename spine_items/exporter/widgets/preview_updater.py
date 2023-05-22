@@ -528,10 +528,9 @@ class _Worker(QRunnable):
                 (self._url, self._mapping_name), self._mapping_name, writer.tables, self._stamp
             )
         except SpineDBAPIError as error:
-            print(error)
             tables = {"error": [[str(error)]]}
             self.signals.table_written.emit((self._url, self._mapping_name), self._mapping_name, tables, self._stamp)
             return
         finally:
-            db_map.connection.close()
+            db_map.close()
             self.signals.deleteLater()
