@@ -17,7 +17,7 @@ from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
     DimensionMapping,
-    DimensionHighlightingMapping,
+    EntityClassMapping,
 )
 from spinetoolbox.helpers import unique_name
 
@@ -45,7 +45,7 @@ class MappingsTableModel(QAbstractTableModel):
     FIXED_TABLE_NAME_ROLE = Qt.ItemDataRole.UserRole + 7
     PARAMETER_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 8
     GROUP_FN_ROLE = Qt.ItemDataRole.UserRole + 9
-    HIGHLIGHT_DIMENSION_ROLE = Qt.ItemDataRole.UserRole + 10
+    HIGHLIGHT_POSITION_ROLE = Qt.ItemDataRole.UserRole + 10
 
     def __init__(self, mappings=None, parent=None):
         """
@@ -129,13 +129,13 @@ class MappingsTableModel(QAbstractTableModel):
                 return dimensions
             if role == self.GROUP_FN_ROLE:
                 return spec.group_fn
-            if role == self.HIGHLIGHT_DIMENSION_ROLE:
+            if role == self.HIGHLIGHT_POSITION_ROLE:
                 highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, DimensionHighlightingMapping)), None
+                    (m for m in spec.root.flatten() if isinstance(m, EntityClassMapping)), None
                 )
                 if highlighting_mapping is None:
                     return None
-                return highlighting_mapping.highlight_dimension
+                return highlighting_mapping.highlight_position
         return None
 
     def flags(self, index):
@@ -239,14 +239,14 @@ class MappingsTableModel(QAbstractTableModel):
             elif role == self.GROUP_FN_ROLE:
                 spec.group_fn = value
                 self.dataChanged.emit(index, index, [self.GROUP_FN_ROLE])
-            elif role == self.HIGHLIGHT_DIMENSION_ROLE:
+            elif role == self.HIGHLIGHT_POSITION_ROLE:
                 highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, DimensionHighlightingMapping)), None
+                    (m for m in spec.root.flatten() if isinstance(m, EntityClassMapping)), None
                 )
                 if highlighting_mapping is None:
                     return False
-                highlighting_mapping.highlight_dimension = value
-                self.dataChanged.emit(index, index, [self.HIGHLIGHT_DIMENSION_ROLE])
+                highlighting_mapping.highlight_position = value
+                self.dataChanged.emit(index, index, [self.HIGHLIGHT_POSITION_ROLE])
             return True
         return False
 

@@ -327,7 +327,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             MappingType.entity_dimension_parameter_values,
             MappingType.entity_dimension_parameter_default_values,
         }:
-            self._set_highlight_dimension_silently(current.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE))
+            self._set_highlight_dimension_silently(current.data(MappingsTableModel.HIGHLIGHT_POSITION_ROLE))
             self._ui.highlight_dimension_spin_box.setMaximum(current.data(MappingsTableModel.ENTITY_DIMENSIONS_ROLE))
         else:
             self._set_highlight_dimension_silently(0)
@@ -411,8 +411,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_group_fn_silently(
                 group_function_display_from_name(top_left.data(MappingsTableModel.GROUP_FN_ROLE))
             )
-        if MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE in roles:
-            self._set_highlight_dimension_silently(top_left.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE))
+        if MappingsTableModel.HIGHLIGHT_POSITION_ROLE in roles:
+            self._set_highlight_dimension_silently(top_left.data(MappingsTableModel.HIGHLIGHT_POSITION_ROLE))
         if enable_controls:
             self._enable_entity_controls()
             self._enable_parameter_controls()
@@ -919,7 +919,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         index = self._sort_mappings_table_model.mapToSource(self._ui.mappings_table.currentIndex())
         if not index.isValid():
             return
-        old = index.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+        old = index.data(MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
         self._undo_stack.push(SetHighlightDimension(index, old, dimension - 1))
 
     def _set_highlight_dimension_silently(self, highlight_dimension):
@@ -947,7 +947,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         current_mapping_type = self._ui.item_type_combo_box.currentText()
         self._undo_stack.beginMacro("change entity dimensions")
         if current_mapping_type == "Entity class with dimension parameter":
-            highlight_dimension = self._mappings_table_model.data(index, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+            highlight_dimension = self._mappings_table_model.data(index, MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
             if highlight_dimension >= dimensions:
                 self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, dimensions))
         self._undo_stack.push(SetMapping(self._ui.mappings_table.currentIndex(), modified))

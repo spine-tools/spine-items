@@ -55,5 +55,6 @@ class DBWriterItemBase(ProjectItem):
             )
         for name, dest in conflicting.items():
             self.add_notification(
-                f"This item is a dependency to {name} but it needs to wait for it to write to {dest}."
+                f"This item can't be a dependency to {name}, because {name} is set to write earlier to {dest}.\n"
+                f"Possible fix: increase the write_index in the arrow from {name} to {dest}"
             )

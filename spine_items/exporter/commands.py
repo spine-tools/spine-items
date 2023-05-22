@@ -347,10 +347,10 @@ class SetHighlightDimension(QUndoCommand):
         self._new_dimension = new_dimension
 
     def redo(self):
-        self._index.model().setData(self._index, self._new_dimension, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+        self._index.model().setData(self._index, self._new_dimension, MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
 
     def undo(self):
-        self._index.model().setData(self._index, self._old_dimension, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+        self._index.model().setData(self._index, self._old_dimension, MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
 
 
 class SetMappingPositions(QUndoCommand):

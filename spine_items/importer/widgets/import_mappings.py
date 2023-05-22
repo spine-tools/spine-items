@@ -61,7 +61,9 @@ class ImportMappings:
         self._mappings_model.modelReset.connect(self._dummify_root_indexes)
         self._mappings_model.dataChanged.connect(self._select_changed_mapping)
         self._mappings_model.rowsInserted.connect(self._update_current_after_mapping_insertion)
+        self._mappings_model.rowsInserted.connect(self._update_mapping_list_button_enabled_state_when_adding)
         self._mappings_model.rowsRemoved.connect(self._show_list_after_mapping_removal)
+        self._mappings_model.rowsRemoved.connect(self._update_mapping_list_button_enabled_state_when_removing)
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_list)
         self._ui.mapping_list.selectionModel().currentChanged.connect(self._change_flattened_mappings)
         self._ui.mapping_list.selectionModel().selectionChanged.connect(self._update_buttons_enabled)
@@ -95,7 +97,7 @@ class ImportMappings:
         else:
             self._ui.mapping_list.selectionModel().setCurrentIndex(QModelIndex(), QItemSelectionModel.ClearAndSelect)
             buttons_enabled = False
-        self._set_mapping_list_buttons_enabled(buttons_enabled)
+        self._set_mapping_list_buttons_enabled(buttons_enabled, current)
 
     @Slot(QModelIndex, int, int)
     def _update_current_after_mapping_insertion(self, table_index, first, last):
@@ -130,13 +132,32 @@ class ImportMappings:
         if table_index != self._ui.mapping_list.rootIndex():
             self._ui.source_list.selectionModel().setCurrentIndex(table_index, QItemSelectionModel.ClearAndSelect)
 
-    def _set_mapping_list_buttons_enabled(self, enabled):
-        """Sets New, Duplicate and Remove button enabled state.
+    @Slot(QModelIndex, int, int)
+    def _update_mapping_list_button_enabled_state_when_adding(self, table_index):
+        """Enables the Remove and Duplicate buttons after adding a mapping into an empty mappings list.
+
+        Args:
+            table_index (QModelIndex): table index
+        """
+        self._set_mapping_list_buttons_enabled(True, table_index)
+
+    @Slot(QModelIndex, int, int)
+    def _update_mapping_list_button_enabled_state_when_removing(self, table_index):
+        """Disables the Remove and Duplicate buttons after removing all mappings from a mappings list.
+
+        Args:
+            table_index (QModelIndex): table index
+        """
+        self._set_mapping_list_buttons_enabled(self._mappings_model.rowCount(table_index) != 0, table_index)
+
+    def _set_mapping_list_buttons_enabled(self, enabled, table_index):
+        """Sets New, Duplicate and Remove button enabled state when selecting a source table.
 
         Args:
             enabled (bool): enabled state
+            table_index (QModelIndex): table index
         """
-        self._ui.new_button.setEnabled(enabled)
+        self._ui.new_button.setEnabled(table_index.row() != 0)
         self._ui.remove_button.setEnabled(enabled)
         self._ui.duplicate_button.setEnabled(enabled)
 

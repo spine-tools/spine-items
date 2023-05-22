@@ -99,6 +99,17 @@ class TestOptionsWidget(unittest.TestCase):
                 break
         self.assertTrue(checked)
 
+    def test_set_connector_makes_copy_of_connections_base_options(self):
+        option_template = {"yesno": {"label": "check me", "type": bool, "default": True}}
+        connector = MagicMock()
+        connector.connection.BASE_OPTIONS = {"text": {"label": "text value", "type": str, "default": ""}}
+        connector.connection.OPTIONS = option_template
+        widget = OptionsWidget(self._undo_stack)
+        widget.set_connector(connector)
+        self.assertEqual(
+            connector.connection.BASE_OPTIONS, {"text": {"label": "text value", "type": str, "default": ""}}
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
