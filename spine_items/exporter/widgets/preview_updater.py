@@ -532,5 +532,5 @@ class _Worker(QRunnable):
             self.signals.table_written.emit((self._url, self._mapping_name), self._mapping_name, tables, self._stamp)
             return
         finally:
-            db_map.connection.close()
+            db_map.close()
             self.signals.deleteLater()

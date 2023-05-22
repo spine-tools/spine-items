@@ -50,7 +50,7 @@ class ClassTreeWidget(QTreeWidget):
                 self, "Error while reading database", f"Could not read from database {url}:\n{error}"
             )
         finally:
-            db_map.connection.close()
+            db_map.close()
         self.clear()
         for class_name in classes:
             self.addTopLevelItem(QTreeWidgetItem([class_name]))

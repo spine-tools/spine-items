@@ -98,7 +98,7 @@ def do_work(
             if not successful:
                 return False, written_files
         finally:
-            database_map.connection.close()
+            database_map.close()
     return all(successes), written_files
 
 
