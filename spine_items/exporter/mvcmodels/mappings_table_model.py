@@ -130,9 +130,7 @@ class MappingsTableModel(QAbstractTableModel):
             if role == self.GROUP_FN_ROLE:
                 return spec.group_fn
             if role == self.HIGHLIGHT_POSITION_ROLE:
-                highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, EntityClassMapping)), None
-                )
+                highlighting_mapping = next((m for m in spec.root.flatten() if isinstance(m, EntityClassMapping)), None)
                 if highlighting_mapping is None:
                     return None
                 return highlighting_mapping.highlight_position
@@ -240,9 +238,7 @@ class MappingsTableModel(QAbstractTableModel):
                 spec.group_fn = value
                 self.dataChanged.emit(index, index, [self.GROUP_FN_ROLE])
             elif role == self.HIGHLIGHT_POSITION_ROLE:
-                highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, EntityClassMapping)), None
-                )
+                highlighting_mapping = next((m for m in spec.root.flatten() if isinstance(m, EntityClassMapping)), None)
                 if highlighting_mapping is None:
                     return False
                 highlighting_mapping.highlight_position = value
