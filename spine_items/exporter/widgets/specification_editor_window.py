@@ -291,7 +291,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         qApp.processEvents()  # pylint: disable=undefined-variable
         self.resize(size)
 
-    def _make_new_specification(self, spec_name):
+    def _make_new_specification(self, spec_name, exiting=None):
         """See base class."""
         description = self._spec_toolbar.description()
         mapping_specification = deepcopy(self._new_spec.mapping_specifications())
