@@ -760,8 +760,21 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self, "Select existing main program file", self._project.project_dir, "*.*"
         )
         file_path = answer[0]
+        existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if not file_path:  # Cancel button clicked
             return
+        for i, existing_file in enumerate(existing_file_paths):
+            if not existing_file:
+                continue
+            if os.path.samefile(file_path, existing_file):
+                if i != 0:
+                    msg = QMessageBox(self)
+                    msg.setIcon(QMessageBox.Icon.Critical)
+                    msg.setWindowTitle(self.windowTitle())
+                    msg.setText("Can't choose an existing additional\nprogram file as the main program file")
+                    msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+                    msg.exec()
+                return
         self.populate_main_programfile(file_path)
 
     @Slot(bool)
@@ -770,6 +783,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # noinspection PyCallByClass
         answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._project.project_dir)
         file_path = answer[0]
+        existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if not file_path:  # Cancel button clicked
             return
         # Remove file if it exists. getSaveFileName has asked confirmation for us.
@@ -785,6 +799,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             # noinspection PyTypeChecker, PyArgumentList, PyCallByClass
             QMessageBox.information(self, "Creating file failed", msg)
             return
+        for i in existing_file_paths:
+            if os.path.samefile(file_path, i):
+                msg = "File with same file path already\nin use as an additional program file."
+                QMessageBox.information(self, "Creating file failed", msg)
+                return
         self.populate_main_programfile(file_path)
 
     @Slot()
@@ -794,10 +813,16 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         dir_path = QFileDialog.getSaveFileName(self, "Create program file", path, "*.*")
         file_path = dir_path[0]
+        existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if file_path == "":  # Cancel button clicked
             return
         # create file. NOTE: getSaveFileName does the 'check for existence' for us
         open(file_path, "w").close()
+        for i in existing_file_paths:
+            if os.path.samefile(file_path, i):
+                msg = "File with same file path already in use."
+                QMessageBox.information(self, "Creating file failed", msg)
+                return
         self.add_program_files(file_path)
 
     @Slot(bool)
@@ -809,6 +834,27 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         file_paths = answer[0]
         if not file_paths:  # Cancel button clicked
             return
+        if not self._current_main_program_file():
+            msg = QMessageBox(self)
+            msg.setWindowTitle(self.windowTitle())
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.setText("Please add the main program file first")
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
+            return
+        for file_path in file_paths:
+            if os.path.samefile(self._current_main_program_file(), file_path):
+                file_paths.remove(file_path)
+                msg = QMessageBox(self)
+                msg.setWindowTitle(self.windowTitle())
+                if len(file_paths) == 0:
+                    msg.setIcon(QMessageBox.Icon.Critical)
+                    msg.setText("Can't add main program file\nto additional program files")
+                else:
+                    msg.setIcon(QMessageBox.Icon.Information)
+                    msg.setText("One file not added because\nit is the main program file")
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+                msg.exec()
         self.add_program_files(*file_paths)
 
     @Slot(bool)
@@ -822,7 +868,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         file_paths = list()
         for root, _, files in os.walk(answer):
             for file in files:
-                file_paths.append(os.path.abspath(os.path.join(root, file)))
+                os.path.abspath(os.path.join(root, file))
+                if not os.path.samefile(self._current_main_program_file(), os.path.abspath(os.path.join(root, file))):
+                    file_paths.append(os.path.abspath(os.path.join(root, file)))
         self.add_program_files(*file_paths)
 
     @Slot(list)
