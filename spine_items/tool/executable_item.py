@@ -129,10 +129,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             dst_path = os.path.abspath(os.path.join(execution_dir, dst))
             # Create subdirectories if necessary
             dst_subdir, _ = os.path.split(dst)
-            if not dst_subdir:
-                # No subdirectories to create
-                self._logger.msg.emit(f"\tCopying <b>{file_anchor}</b>")
-            else:
+            if dst_subdir:
                 # Create subdirectory structure to work or source directory
                 work_subdir_path = os.path.abspath(os.path.join(execution_dir, dst_subdir))
                 if not os.path.exists(work_subdir_path):
@@ -141,7 +138,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     except OSError:
                         self._logger.msg_error.emit(f"[OSError] Creating directory <b>{work_subdir_path}</b> failed.")
                         return False
-                self._logger.msg.emit(f"\tCopying <b>{file_anchor}</b> into <b>{dst_subdir}{os.path.sep}</b>")
             try:
                 shutil.copyfile(src_path, dst_path)
                 n_copied_files += 1
@@ -339,9 +335,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
 
         Returns:
             bool: True for success, False otherwise.
-
-        Raises:
-            OSError: If creating an output directory to work fails.
         """
         for out_file_path in self._tool_specification.outputfiles:
             dirname = os.path.split(out_file_path)[0]
@@ -603,15 +596,14 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 # If there are saved files
                 # Split list into filenames and their paths
                 filenames, _ = zip(*saved_files)
-                self._logger.msg.emit("\tThe following output files were saved to results directory")
-                for filename in filenames:
-                    self._logger.msg.emit(f"\t\t<b>{filename}</b>")
+                self._logger.msg.emit(f"\tCopied <b>{len(filenames)}</b> file(s) to results directory")
             if failed_files:
                 # If saving some or all files failed
-                self._logger.msg_warning.emit("\tThe following output files were not found")
-                for failed_file in failed_files:
-                    failed_fname = os.path.split(failed_file)[1]
-                    self._logger.msg_warning.emit(f"\t\t<b>{failed_fname}</b>")
+                f_str = "\n".join(failed_files)
+                failed_files_anchor = (
+                    f"<a style='color:#ff0000;' title='{f_str}' href='#'>Some output files were not found</a>"
+                )
+                self._logger.msg.emit(f"\t<b>{failed_files_anchor}")
         else:
             tip_anchor = (
                 "<a style='color:#99CCFF;' title='When you add output files to the Tool specification,\n "
@@ -644,7 +636,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 dst_subdir, _search_pattern = os.path.split(dst)
                 if not dst_subdir:
                     # No subdirectories to create
-                    self._logger.msg.emit(f"\tCopying optional file <b>{dst_fname}</b>")
                     dst_path = os.path.abspath(os.path.join(execution_dir, dst_fname))
                 else:
                     # Create subdirectory structure to work or source directory
@@ -657,9 +648,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
                                 f"[OSError] Creating directory <b>{work_subdir_path}</b> failed."
                             )
                             continue
-                    self._logger.msg.emit(
-                        f"\tCopying optional file <b>{dst_fname}</b> into subdirectory <b>{os.path.sep}{dst_subdir}</b>"
-                    )
                     dst_path = os.path.abspath(os.path.join(work_subdir_path, dst_fname))
                 destination_paths[src_path] = dst_path
         return destination_paths
