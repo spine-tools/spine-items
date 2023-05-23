@@ -769,7 +769,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             if os.path.samefile(file_path, existing_file):
                 if i != 0:
                     msg = QMessageBox(self)
-                    msg.setIcon(QMessageBox.Icon.Critical)
+                    msg.setIcon(QMessageBox.Icon.Information)
                     msg.setWindowTitle(self.windowTitle())
                     msg.setText("Can't choose an existing additional\nprogram file as the main program file")
                     msg.setStandardButtons(QMessageBox.StandardButton.Ok)
@@ -847,14 +847,15 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 file_paths.remove(file_path)
                 msg = QMessageBox(self)
                 msg.setWindowTitle(self.windowTitle())
-                if len(file_paths) == 0:
-                    msg.setIcon(QMessageBox.Icon.Critical)
-                    msg.setText("Can't add main program file\nto additional program files")
-                else:
-                    msg.setIcon(QMessageBox.Icon.Information)
-                    msg.setText("One file not added because\nit is the main program file")
+                msg.setIcon(QMessageBox.Icon.Information)
                 msg.setStandardButtons(QMessageBox.StandardButton.Ok)
-                msg.exec()
+                if len(file_paths) == 0:
+                    msg.setText("Can't add main program file\nto additional program files")
+                    msg.exec()
+                    return
+                else:
+                    msg.setText("One file not added because\nit is the main program file")
+                    msg.exec()
         self.add_program_files(*file_paths)
 
     @Slot(bool)
