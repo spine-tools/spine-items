@@ -123,10 +123,11 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     def settings_group(self):
         return "mappingPreviewWindow"
 
-    def _save(self):
+    def _save(self, exiting=None):
         """See base class."""
-        if super()._save():
+        if super()._save(exiting):
             self._import_mappings.specification_saved()
+            return True
 
     @property
     def _duplicate_kwargs(self):
@@ -137,7 +138,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
         return Ui_MainWindow()
 
-    def _make_new_specification(self, spec_name):
+    def _make_new_specification(self, spec_name, exiting=None):
         mappings_dict = self._mappings_model.store()
         mappings_dict.update(self._import_sources.store_connectors())
         description = self._spec_toolbar.description()
