@@ -98,6 +98,12 @@ class Merger(DBWriterItemBase):
             if item.item_type() == "Data Store":
                 yield item
 
+    def predecessor_data_transformers(self):
+        for name in self._project.predecessor_names(self.name):
+            item = self._project.get_item(name)
+            if item.item_type() == "Data Transformer":
+                yield item
+
     def upstream_resources_updated(self, resources):
         self._check_notifications()
 
@@ -107,17 +113,16 @@ class Merger(DBWriterItemBase):
     def _check_notifications(self):
         self.clear_notifications()
         self._check_write_index()
-        if not list(self.predecessor_data_stores()):
+        if not (list(self.predecessor_data_stores()) or list(self.predecessor_data_transformers())):
             self.add_notification(
-                "This Merger does not have any input Data Stores. "
-                "Connect Data Stores to this to merge their data into output Data Stores."
+                "This Merger does not have any input Data Stores or Data Transformers. "
+                "Connect Data Stores/Transformers to this to merge their data into output Data Stores/Transformers."
             )
         if not list(self.successor_data_stores()):
             self.add_notification(
                 "This Merger does not have any output Data Stores. "
-                "Connect this to Data Stores to merge input Data Stores data into them."
+                "Connect this to Data Stores to merge input Data Stores/Transformers data into them."
             )
-        # FIXME
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
