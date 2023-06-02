@@ -41,6 +41,11 @@ class ExecutableItem(ExecutableItemBase):
         """Returns the data store executable's type identifier string."""
         return ItemInfo.item_type()
 
+    @staticmethod
+    def is_filter_terminus():
+        """See base class."""
+        return True
+
     def ready_to_execute(self, settings):
         """See base class."""
         if not super().ready_to_execute(settings) or not self._check_sqlite_file_exists():
