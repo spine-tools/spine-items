@@ -11,22 +11,24 @@
 
 """
 Provides an optional widget for Tool Specification Editor for each Tool Spec type (julia, python, executable, gams).
-
 """
 
-from PySide6.QtCore import Signal, Slot
-from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QStandardItemModel, QStandardItem
-from spine_engine.utils.helpers import resolve_conda_executable, resolve_python_interpreter
-from spine_engine.execution_managers.conda_kernel_spec_manager import CondaKernelSpecManager
-from spinetoolbox.helpers import busy_effect, file_is_valid, select_python_interpreter
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QWidget, QApplication
+from PySide6.QtGui import Qt, QStandardItemModel, QStandardItem, QIcon
+from spine_engine.utils.helpers import resolve_python_interpreter
+from spinetoolbox.helpers import file_is_valid, select_python_interpreter
 from spinetoolbox.widgets.notification import Notification
-from spinetoolbox.widgets.kernel_editor import KernelEditor, find_python_kernels
-from spinetoolbox.qthread_pool_executor import QtBasedThreadPoolExecutor
+from spinetoolbox.kernel_fetcher import KernelFetcher
 
 
 class OptionalWidget(QWidget):
     def __init__(self, parent):
+        """Init class.
+
+        Args:
+            parent (ToolSpecificationEditorWindow): Tool spec editor window
+        """
         super().__init__()
         self._parent = parent
 
@@ -54,11 +56,12 @@ class OptionalWidget(QWidget):
 
 
 class PythonToolSpecOptionalWidget(OptionalWidget):
-    _kernel_spec_data_ready = Signal(list, list)
-    _kernel_spec_model_ready = Signal()
-
     def __init__(self, parent):
-        """Init class."""
+        """Init class.
+
+        Args:
+            parent (ToolSpecificationEditorWindow): Tool spec editor window
+        """
         from ..ui.python_kernel_spec_options import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
@@ -68,8 +71,9 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
         self._kernel_spec_editor = None
         self._kernel_spec_model_initialized = False
-        self._saved_kernel_spec_name = None
-        self._executor = QtBasedThreadPoolExecutor(max_workers=1)
+        self._saved_kernel = None
+        self._selected_kernel = None
+        self.kernel_fetcher = None
         # Initialize UI elements with defaults
         use_jupyter_console = bool(
             int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
@@ -77,26 +81,23 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
         if use_jupyter_console:
             self.ui.radioButton_jupyter_console.setChecked(True)
             # Get the default kernel spec from Settings->Tools for new Jupyter Console Tool Specs
-            self._saved_kernel_spec_name = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
+            self._saved_kernel = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
         else:
             self.ui.radioButton_python_console.setChecked(True)
         default_python_path = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
         self.ui.lineEdit_python_path.setPlaceholderText(resolve_python_interpreter(""))
         self.ui.lineEdit_python_path.setText(default_python_path)
-        self.set_ui_for_jupyter_console(not use_jupyter_console)
+        self.set_ui_for_jupyter_console(use_jupyter_console)
         self.connect_signals()
 
     def connect_signals(self):
         """Connects signals."""
-        self.ui.toolButton_refresh_kernel_specs.clicked.connect(self._refresh_kernel_spec_model)
-        self.ui.comboBox_kernel_specs.activated.connect(self._parent._push_change_kernel_spec_command)
-        self.ui.radioButton_jupyter_console.toggled.connect(self._parent._push_set_jupyter_console_mode)
+        self.ui.toolButton_refresh_kernel_specs.clicked.connect(self.start_kernel_fetcher)
+        self.ui.comboBox_kernel_specs.activated.connect(self._parent.push_change_kernel_spec_command)
+        self.ui.radioButton_jupyter_console.toggled.connect(self._parent.push_set_jupyter_console_mode)
         self.ui.toolButton_browse_python.clicked.connect(self.browse_python_button_clicked)
-        self.ui.pushButton_open_kernel_spec_viewer.clicked.connect(self.show_python_kernel_spec_editor)
-        self.ui.lineEdit_python_path.editingFinished.connect(self._parent._push_change_executable)
-        self._kernel_spec_data_ready.connect(self._do_refresh_kernel_spec_model)
-        self._kernel_spec_model_ready.connect(self._set_saved_kernel_spec)
-        qApp.aboutToQuit.connect(self._executor.shutdown)  # pylint: disable=undefined-variable
+        self.ui.lineEdit_python_path.editingFinished.connect(self._parent.push_change_executable)
+        qApp.aboutToQuit.connect(self.stop_fetching_kernels)  # pylint: disable=undefined-variable
 
     def init_widget(self, specification):
         """Initializes UI elements based on specification
@@ -113,28 +114,10 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
             self.ui.radioButton_python_console.setChecked(True)
         self.ui.radioButton_jupyter_console.blockSignals(False)
         self.ui.radioButton_python_console.blockSignals(False)
-        self.set_ui_for_jupyter_console(not use_jupyter_console)
-        # Must wait until model is initialized to set kernel spec name
-        self._saved_kernel_spec_name = specification.execution_settings["kernel_spec_name"]
+        self.set_ui_for_jupyter_console(use_jupyter_console)
+        # Must wait until model is built before setting the saved kernel spec as selected
+        self._saved_kernel = specification.execution_settings["kernel_spec_name"]
         self.set_executable(specification.execution_settings["executable"])
-
-    @Slot()
-    def _set_saved_kernel_spec(self):
-        """Sets index of the kernel spec combobox to show the item that was saved with the Tool Specification.
-        Make sure this is called after available kernel specs have been loaded."""
-        if not self._saved_kernel_spec_name:
-            self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Set 'Select kernel spec...'
-        else:
-            row = self.find_index_by_data(self._saved_kernel_spec_name)
-            if row == -1:
-                notification = Notification(
-                    self._parent,
-                    f"This Tool spec has kernel spec '{self._saved_kernel_spec_name}' "
-                    f"saved but it could not be found.",
-                )
-                notification.show()
-                row += 1  # Set 'Select kernel spec...'
-            self.ui.comboBox_kernel_specs.setCurrentIndex(row)
 
     def add_execution_settings(self):
         """Collects execution settings based on optional widget state into a dictionary, which is returned."""
@@ -154,17 +137,20 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
     def browse_python_button_clicked(self, _=False):
         """Calls static method that shows a file browser for selecting a Python interpreter."""
         select_python_interpreter(self, self.ui.lineEdit_python_path)
-        self._parent._push_change_executable()
+        self._parent.push_change_executable()
 
-    def set_ui_for_jupyter_console(self, use_basic_console):
-        """Enables or disables some UI elements in the optional widget according to checkBox state."""
-        self.ui.lineEdit_python_path.setEnabled(use_basic_console)
-        self.ui.toolButton_browse_python.setEnabled(use_basic_console)
-        self.ui.comboBox_kernel_specs.setDisabled(use_basic_console)
-        self.ui.toolButton_refresh_kernel_specs.setDisabled(use_basic_console)
-        self.ui.pushButton_open_kernel_spec_viewer.setDisabled(use_basic_console)
-        if not use_basic_console and not self._kernel_spec_model_initialized:
-            self._refresh_kernel_spec_model()
+    def set_ui_for_jupyter_console(self, use_jupyter_console):
+        """Enables or disables some UI elements in the optional widget according to a checkBox state.
+
+        Args:
+            use_jupyter_console (bool): True when Jupyter Console checkBox is checked, false otherwise
+        """
+        self.ui.lineEdit_python_path.setEnabled(not use_jupyter_console)  # Disable for jupyter console
+        self.ui.toolButton_browse_python.setEnabled(not use_jupyter_console)  # Disable for jupyter console
+        self.ui.comboBox_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
+        self.ui.toolButton_refresh_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
+        if use_jupyter_console and not self._kernel_spec_model_initialized:
+            self.start_kernel_fetcher(restore_saved_kernel=True)
 
     def validate_executable(self):
         """Check that Python path in the line edit is a file it exists and the file name starts with 'python'.
@@ -182,46 +168,6 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
     def get_executable(self):
         return self.ui.lineEdit_python_path.text().strip()
 
-    @Slot(bool)
-    def show_python_kernel_spec_editor(self, _=False):
-        """Opens kernel editor, where user can make kernel specs for the Jupyter Console."""
-        p = self.ui.lineEdit_python_path.text()  # This may be an empty string
-        j = ""
-        item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
-        if not item.data():
-            selected_kernel_spec = ""
-        else:
-            selected_kernel_spec = item.data()["kernel_spec_name"]
-        self._kernel_spec_editor = KernelEditor(self._parent, p, j, "python", selected_kernel_spec)
-        self._kernel_spec_editor.finished.connect(self.python_kernel_editor_closed)
-        self._kernel_spec_editor.open()
-
-    @Slot(int)
-    def python_kernel_editor_closed(self, ret_code):
-        """Catches the selected Python kernel name when the editor is closed."""
-        item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
-        if not item.data():
-            previous_kernel_spec = ""
-        else:
-            previous_kernel_spec = item.data()["kernel_spec_name"]
-        self._refresh_kernel_spec_model()
-        if ret_code != 1:  # Editor closed with Cancel
-            # Set previous kernel selected in Python kernel combobox if it still exists
-            r = self.find_index_by_data(previous_kernel_spec)
-            if r == -1:
-                self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Previous not found
-            else:
-                self.ui.comboBox_kernel_specs.setCurrentIndex(r)
-            return
-        new_kernel_spec = self._kernel_spec_editor.selected_kernel
-        row = self.find_index_by_data(new_kernel_spec)
-        if row == -1:  # New kernel spec not found, should be quite uncommon
-            notification = Notification(self, f"Python kernel spec {new_kernel_spec} not found")
-            notification.show()
-            self.ui.comboBox_kernel_specs.setCurrentIndex(0)
-        else:
-            self._parent._push_change_kernel_spec_command(row)
-
     def find_index_by_data(self, string):
         """Searches the kernel spec model for the first item whose data matches the given string.
         Returns the items row number or -1 if not found."""
@@ -235,59 +181,122 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
                 return row
         return -1
 
-    @busy_effect
-    def _get_all_kernel_specs(self):
-        kernel_spec_data = []
-        conda_kernel_spec_data = []
-        kernel_specs = find_python_kernels()
-        for n in kernel_specs:
-            spec_data = {"kernel_spec_name": n, "env": ""}
-            kernel_spec_data.append(spec_data)
-        # Add auto-generated conda kernel spec names
-        conda_exe = self._toolbox.qsettings().value("appSettings/condaPath", defaultValue="")
-        conda_exe = resolve_conda_executable(conda_exe)
-        if conda_exe != "":
-            ksm = CondaKernelSpecManager(conda_exe=conda_exe)  # This is expensive
-            conda_specs = ksm._all_specs()
-            for i in conda_specs:
-                spec_data = {"kernel_spec_name": i, "env": "conda"}
-                conda_kernel_spec_data.append(spec_data)
-        self._kernel_spec_data_ready.emit(kernel_spec_data, conda_kernel_spec_data)
+    @Slot()
+    def start_kernel_fetcher(self, restore_saved_kernel=False):
+        """Starts KernelFetcher for Python kernels."""
+        if self.kernel_fetcher is not None and self.kernel_fetcher.isRunning():
+            return
+        QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
+        self.initialize_kernel_spec_model()
+        conda_path = self._toolbox.qsettings().value("appSettings/condaPath", defaultValue="")
+        self.kernel_fetcher = KernelFetcher(conda_path, fetch_mode=2)
+        self.kernel_fetcher.kernel_found.connect(self.add_kernel)
+        if restore_saved_kernel:
+            self.kernel_fetcher.finished.connect(self._restore_saved_kernel)
+        else:
+            self.kernel_fetcher.finished.connect(self._restore_selected_kernel)
+        self.kernel_fetcher.finished.connect(self._toolbox.restore_override_cursor)
+        self.kernel_fetcher.start()
 
-    @Slot(bool)
-    def _refresh_kernel_spec_model(self, _checked=False):
-        self._kernel_spec_model_initialized = True
-        self._executor.submit(self._get_all_kernel_specs)
+    @Slot()
+    def stop_fetching_kernels(self):
+        """Terminates the kernel fetcher thread."""
+        if self.kernel_fetcher is not None:
+            self.kernel_fetcher.stop_fetcher.emit()
 
-    @Slot(list, list)
-    def _do_refresh_kernel_spec_model(self, kernel_spec_data, conda_kernel_spec_data):
+    @Slot(str, str, bool, QIcon, dict)
+    def add_kernel(self, kernel_name, resource_dir, conda, icon, deats):
+        """Adds a kernel entry as an item to kernel spec model."""
+        if not conda:
+            spec_data = {"kernel_spec_name": kernel_name, "env": ""}
+            item = QStandardItem(kernel_name)
+        else:
+            spec_data = {"kernel_spec_name": kernel_name, "env": "conda"}
+            item = QStandardItem(kernel_name + " [Conda]")
+        item.setIcon(icon)
+        item.setData(spec_data)
+        self.kernel_spec_model.appendRow(item)
+
+    def initialize_kernel_spec_model(self):
+        """Initializes kernel spec model for fetching kernels. Memorizes currently
+        selected kernel in order to select it again after the model has been
+        refreshed."""
         item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
         if not item or not item.data():
-            selected_kernel_spec = None
+            self._selected_kernel = None
         else:
-            selected_kernel_spec = item.data()["kernel_spec_name"]  # Remember the selected kernel spec
+            self._selected_kernel = item.data()["kernel_spec_name"]  # Remember the selected kernel spec
         self.kernel_spec_model.clear()
         first_item = QStandardItem("Select kernel spec...")
         self.kernel_spec_model.appendRow(first_item)
-        # Add Python kernel specs
-        for spec_data in kernel_spec_data:
-            item = QStandardItem(spec_data["kernel_spec_name"] + " [Jupyter]")
-            item.setData(spec_data)
-            self.kernel_spec_model.appendRow(item)
-        # Add auto-generated conda kernel spec names
-        for spec_data in conda_kernel_spec_data:
-            item = QStandardItem(spec_data["kernel_spec_name"] + " [Conda]")
-            item.setData(spec_data)
-            self.kernel_spec_model.appendRow(item)
-        # Set the previously selected kernel spec as the current item after the model has been rebuilt
-        if selected_kernel_spec is not None:
-            row = self.find_index_by_data(selected_kernel_spec)
+
+    @Slot()
+    def _restore_selected_kernel(self):
+        """Sets the previously selected kernel spec as the current item after the model has been refreshed."""
+        if self._selected_kernel is not None:
+            row = self.find_index_by_data(self._selected_kernel)
             if row == -1:
                 # The kernel spec may have been removed
-                self._parent._push_change_kernel_spec_command(0)
+                self._parent.push_change_kernel_spec_command(0)
                 return
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
-        self._kernel_spec_model_ready.emit()
+
+    @Slot()
+    def _restore_saved_kernel(self):
+        """Sets index of the kernel spec combobox to show the item that was saved with the Tool Specification.
+        Make sure this is called after kernel spec model has been populated."""
+        if not self._saved_kernel:
+            self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Set 'Select kernel spec...'
+        else:
+            row = self.find_index_by_data(self._saved_kernel)
+            if row == -1:
+                notification = Notification(
+                    self._parent,
+                    f"This Tool spec has kernel spec '{self._saved_kernel}' " f"saved but it could not be found.",
+                )
+                notification.show()
+                row += 1  # Set 'Select kernel spec...'
+            self.ui.comboBox_kernel_specs.setCurrentIndex(row)
+
+    # @Slot(bool)
+    # def show_python_kernel_spec_editor(self, _=False):
+    #     """Opens kernel editor, where user can make kernel specs for the Jupyter Console."""
+    #     p = self.ui.lineEdit_python_path.text()  # This may be an empty string
+    #     j = ""
+    #     item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
+    #     if not item.data():
+    #         selected_kernel_spec = ""
+    #     else:
+    #         selected_kernel_spec = item.data()["kernel_spec_name"]
+    #     self._kernel_spec_editor = KernelEditor(self._parent, p, j, "python", selected_kernel_spec)
+    #     self._kernel_spec_editor.finished.connect(self.python_kernel_editor_closed)
+    #     self._kernel_spec_editor.open()
+    #
+    # @Slot(int)
+    # def python_kernel_editor_closed(self, ret_code):
+    #     """Catches the selected Python kernel name when the editor is closed."""
+    #     item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
+    #     if not item.data():
+    #         previous_kernel_spec = ""
+    #     else:
+    #         previous_kernel_spec = item.data()["kernel_spec_name"]
+    #     self._refresh_kernel_spec_model()
+    #     if ret_code != 1:  # Editor closed with Cancel
+    #         # Set previous kernel selected in Python kernel combobox if it still exists
+    #         r = self.find_index_by_data(previous_kernel_spec)
+    #         if r == -1:
+    #             self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Previous not found
+    #         else:
+    #             self.ui.comboBox_kernel_specs.setCurrentIndex(r)
+    #         return
+    #     new_kernel_spec = self._kernel_spec_editor.selected_kernel
+    #     row = self.find_index_by_data(new_kernel_spec)
+    #     if row == -1:  # New kernel spec not found, should be quite uncommon
+    #         notification = Notification(self, f"Python kernel spec {new_kernel_spec} not found")
+    #         notification.show()
+    #         self.ui.comboBox_kernel_specs.setCurrentIndex(0)
+    #     else:
+    #         self._parent.push_change_kernel_spec_command(row)
 
 
 class ExecutableToolSpecOptionalWidget(OptionalWidget):
@@ -303,8 +312,8 @@ class ExecutableToolSpecOptionalWidget(OptionalWidget):
         self.connect_signals()
 
     def connect_signals(self):
-        self.ui.lineEdit_command.editingFinished.connect(self._parent._push_change_executable_command)
-        self.ui.comboBox_shell.activated.connect(self._parent._push_change_shell_command)
+        self.ui.lineEdit_command.editingFinished.connect(self._parent.push_change_executable_command)
+        self.ui.comboBox_shell.activated.connect(self._parent.push_change_shell_command)
 
     def init_widget(self, specification):
         """Initializes UI elements based on specification."""
