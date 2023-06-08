@@ -258,46 +258,6 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
                 row += 1  # Set 'Select kernel spec...'
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
 
-    # @Slot(bool)
-    # def show_python_kernel_spec_editor(self, _=False):
-    #     """Opens kernel editor, where user can make kernel specs for the Jupyter Console."""
-    #     p = self.ui.lineEdit_python_path.text()  # This may be an empty string
-    #     j = ""
-    #     item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
-    #     if not item.data():
-    #         selected_kernel_spec = ""
-    #     else:
-    #         selected_kernel_spec = item.data()["kernel_spec_name"]
-    #     self._kernel_spec_editor = KernelEditor(self._parent, p, j, "python", selected_kernel_spec)
-    #     self._kernel_spec_editor.finished.connect(self.python_kernel_editor_closed)
-    #     self._kernel_spec_editor.open()
-    #
-    # @Slot(int)
-    # def python_kernel_editor_closed(self, ret_code):
-    #     """Catches the selected Python kernel name when the editor is closed."""
-    #     item = self.kernel_spec_model.item(self.ui.comboBox_kernel_specs.currentIndex())
-    #     if not item.data():
-    #         previous_kernel_spec = ""
-    #     else:
-    #         previous_kernel_spec = item.data()["kernel_spec_name"]
-    #     self._refresh_kernel_spec_model()
-    #     if ret_code != 1:  # Editor closed with Cancel
-    #         # Set previous kernel selected in Python kernel combobox if it still exists
-    #         r = self.find_index_by_data(previous_kernel_spec)
-    #         if r == -1:
-    #             self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Previous not found
-    #         else:
-    #             self.ui.comboBox_kernel_specs.setCurrentIndex(r)
-    #         return
-    #     new_kernel_spec = self._kernel_spec_editor.selected_kernel
-    #     row = self.find_index_by_data(new_kernel_spec)
-    #     if row == -1:  # New kernel spec not found, should be quite uncommon
-    #         notification = Notification(self, f"Python kernel spec {new_kernel_spec} not found")
-    #         notification.show()
-    #         self.ui.comboBox_kernel_specs.setCurrentIndex(0)
-    #     else:
-    #         self._parent.push_change_kernel_spec_command(row)
-
 
 class ExecutableToolSpecOptionalWidget(OptionalWidget):
     def __init__(self, parent):
