@@ -135,10 +135,19 @@ class ImportMappings:
         """Sets New, Duplicate and Remove button enabled state when selecting a source table.
 
         Args:
-            enabled (bool): enabled state
             table_index (QModelIndex): table index
         """
-        is_first_or_last = table_index.row() in [0, len(self._ui.mapping_list.model()) - 1]
+        if not table_index.isValid() or self._mappings_model.is_mapping_list_index(table_index):
+            return
+        number_of_sources = len(self._ui.mapping_list.model())
+        number_of_tables = len(self._mappings_model.real_table_names())
+        selected_source = table_index.row()
+        if table_index.row() == 1 and number_of_tables == 1:
+            is_first_or_last = False
+        elif number_of_sources - number_of_tables == 1 and selected_source == number_of_sources - 1:
+            is_first_or_last = False
+        else:
+            is_first_or_last = selected_source in [0, number_of_sources - 1]
         self._ui.new_button.setEnabled(not is_first_or_last)
 
         has_entries = self._mappings_model.rowCount(table_index) > 0

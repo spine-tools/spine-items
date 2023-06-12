@@ -130,34 +130,52 @@ class TestMergerExecutable(unittest.TestCase):
         # Make two mergers
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
-        merger1 = ExecutableItem("merger1", True, self._temp_dir.name, logger)
-        merger2 = ExecutableItem("merger2", True, self._temp_dir.name, logger)
+        merger1 = {"type": "Merger", "description": "", "cancel_on_error": True}
+        merger2 = {"type": "Merger", "description": "", "cancel_on_error": True}
         # Make two input DS and one output DS
-        input_ds1 = DSExecutableItem(
-            "ds1",
-            convert_to_sqlalchemy_url({"dialect": "sqlite", "database": str(db1_path)}),
-            self._temp_dir.name,
-            logger,
-        )
-        input_ds2 = DSExecutableItem(
-            "ds2",
-            convert_to_sqlalchemy_url({"dialect": "sqlite", "database": str(db2_path)}),
-            self._temp_dir.name,
-            logger,
-        )
-        output_ds = DSExecutableItem(
-            "output_ds",
-            convert_to_sqlalchemy_url({"dialect": "sqlite", "database": str(db3_path)}),
-            self._temp_dir.name,
-            logger,
-        )
+        input_ds_1 = {
+            "type": "Data Store",
+            "description": "",
+            "url": {
+                "dialect": "sqlite",
+                "database": {
+                    "type": "path",
+                    "relative": False,
+                    "path": str(db1_path),
+                },
+            },
+        }
+        input_ds_2 = {
+            "type": "Data Store",
+            "description": "",
+            "url": {
+                "dialect": "sqlite",
+                "database": {
+                    "type": "path",
+                    "relative": False,
+                    "path": str(db2_path),
+                },
+            },
+        }
+        output_ds = {
+            "type": "Data Store",
+            "description": "",
+            "url": {
+                "dialect": "sqlite",
+                "database": {
+                    "type": "path",
+                    "relative": False,
+                    "path": str(db3_path),
+                },
+            },
+        }
         # Make connections
         conn1in = Connection("ds1", "right", "merger1", "left")
         conn2in = Connection("ds2", "right", "merger2", "left")
         conn1out = Connection("merger1", "left", "output_ds", "right", options={"write_index": 2})
         conn2out = Connection("merger2", "left", "output_ds", "right", options={"write_index": 1})
         # Make and run engine
-        items = {x.name: x for x in (merger1, merger2, input_ds1, input_ds2, output_ds)}
+        items = {"ds1": input_ds_1, "ds2": input_ds_2, "output_ds": output_ds, "merger1": merger1, "merger2": merger2}
         execution_permits = {name: True for name in items}
         # We can't easily enforce merger1 to execute before merger2 so the write index matters...
         # So for the moment, let's run 5 times and hope
@@ -166,8 +184,8 @@ class TestMergerExecutable(unittest.TestCase):
                 items=items,
                 connections=[x.to_dict() for x in (conn1in, conn2in, conn1out, conn2out)],
                 execution_permits=execution_permits,
+                project_dir=self._temp_dir.name,
             )
-            engine.make_item = lambda item_name, direction: items[item_name]
             create_new_spine_database(db3_url)
             engine.run()
             self.assertEqual(engine.state(), SpineEngineState.COMPLETED)
