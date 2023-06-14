@@ -52,6 +52,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._project = self._toolbox.project()
         # Customize text edit main program
         self._ui.textEdit_program.setEnabled(False)
+        self._ui.textEdit_program.file_selected(False)
         self._programfile_documents = {}
         self._programfile_set_dirty_slots = {}
         # Setup statusbar
@@ -104,12 +105,14 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
         else:
             self._label_main_path.setText(self.includes_main_path)
+            self._clear_program_text_edit()
         self.connect_signals()
         # Select main program file index
         parent = self.programfiles_model.index(0, 0)
         index = self.programfiles_model.index(0, 0, parent)
         selection_model = self._ui.treeView_programfiles.selectionModel()
         selection_model.setCurrentIndex(index, QItemSelectionModel.Select)
+        self._load_programfile_in_editor(index)
 
     def _make_ui(self):
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
@@ -349,6 +352,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             QTimer.singleShot(0, self._push_change_main_program_file_command)
             tool_tip = f'<p>{self._current_main_program_file()}</p>'
             self.programfiles_model.setData(root_item.child(0).index(), tool_tip, role=Qt.ItemDataRole.ToolTipRole)
+            self._ui.treeView_programfiles.selectionModel().setCurrentIndex(
+                root_item.child(0).index(), QItemSelectionModel.Select
+            )
 
     def populate_programfile_list(self, names):
         """Adds additional program files into the program files model.
@@ -710,7 +716,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             str: file path
         """
         components = _path_components_from_index(index)
-        if not components:
+        if not components or not self.includes_main_path:
             return ""
         return os.path.join(self.includes_main_path, *components)
 
@@ -718,7 +724,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """Clears contents of the text editor."""
         self._ui.textEdit_program.setDocument(QTextDocument())
         self._ui.textEdit_program.setEnabled(False)
-        self._ui.dockWidget_program.setWindowTitle("")
+        self._ui.textEdit_program.file_selected(False)
+        self._ui.dockWidget_program.setWindowTitle("No file selected")
 
     def _load_programfile_in_editor(self, index):
         """Loads contents of a program file into the text editor.
@@ -750,6 +757,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             document = self._programfile_documents[file_path]
         self._ui.textEdit_program.setDocument(document)
         self._ui.textEdit_program.setEnabled(True)
+        self._ui.textEdit_program.file_selected(True)
         self._ui.dockWidget_program.setWindowTitle(os.path.basename(file_path) + "[*]")
 
     @Slot(bool)
@@ -800,6 +808,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             QMessageBox.information(self, "Creating file failed", msg)
             return
         for i in existing_file_paths:
+            if not i:
+                continue
             if os.path.samefile(file_path, i):
                 msg = "File with same file path already\nin use as an additional program file."
                 QMessageBox.information(self, "Creating file failed", msg)
