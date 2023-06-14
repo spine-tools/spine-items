@@ -541,7 +541,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self.spec_dict["execution_settings"] = {"cmd": "", "shell": ""}
 
     @Slot(int)
-    def _push_change_kernel_spec_command(self, index):
+    def push_change_kernel_spec_command(self, index):
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         item = opt_widget.kernel_spec_model.item(index)
@@ -567,7 +567,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(row)
 
     @Slot(bool)
-    def _push_set_jupyter_console_mode(self, new_value):
+    def push_set_jupyter_console_mode(self, new_value):
         old_value = self.spec_dict["execution_settings"]["use_jupyter_console"]
         if new_value == old_value:
             return
@@ -583,10 +583,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             opt_widget.ui.radioButton_jupyter_console.setChecked(True)
         else:
             opt_widget.ui.radioButton_python_console.setChecked(True)
-        opt_widget.set_ui_for_jupyter_console(not value)
+        opt_widget.set_ui_for_jupyter_console(value)
 
     @Slot()
-    def _push_change_executable(self):
+    def push_change_executable(self):
         old_value = self.spec_dict["execution_settings"]["executable"]
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
@@ -605,7 +605,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         opt_widget.set_executable(value)
 
     @Slot(int)
-    def _push_change_shell_command(self, index):
+    def push_change_shell_command(self, index):
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         new_shell = opt_widget.shells[index] if index != 0 else ""
@@ -635,7 +635,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.lineEdit_args.setText(" ".join(value))
 
     @Slot()
-    def _push_change_executable_command(self):
+    def push_change_executable_command(self):
         old_value = self.spec_dict["execution_settings"]["cmd"]
         opt_widget = self._get_optional_widget("executable")
         new_value = opt_widget.ui.lineEdit_command.text().strip()

@@ -187,16 +187,6 @@
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_open_kernel_spec_viewer">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open Python kernel spec editor&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Kernel spec editor</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
       </layout>
