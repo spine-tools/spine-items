@@ -287,7 +287,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def init_programfile_list(self):
         """List program files in QTreeView."""
         for name in ("Main program file", "Additional program files"):
-            item = QStandardItem(name)
+            item = QStandardItem(name + "        ")
             item.setFlags(item.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsSelectable)
             self.programfiles_model.appendRow(item)
         # Setup 'Main' item
@@ -415,24 +415,24 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def init_io_file_list(self):
         for name in ("Input files", "Optional input files", "Output files"):
-            item = QStandardItem(name)
+            item = QStandardItem(name + "         ")
             item.setFlags(item.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsSelectable)
             self.io_files_model.appendRow(item)
         # Setup 'Input' item
         index = self.io_files_model.index(0, 0)
-        widget = ToolBarWidget("Input files", self)
+        widget = ToolBarWidget("Input files", self, True)
         widget.tool_bar.addActions([self._ui.actionAdd_input_files, self._ui.actionRemove_selected_input_files])
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self._ui.treeView_io_files.setIndexWidget(index, widget)
         # Setup 'Optional' item
         index = self.io_files_model.index(1, 0)
-        widget = ToolBarWidget("Optional input files", self)
+        widget = ToolBarWidget("Optional input files", self, True)
         widget.tool_bar.addActions([self._ui.actionAdd_opt_input_files, self._ui.actionRemove_selected_opt_input_files])
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self._ui.treeView_io_files.setIndexWidget(index, widget)
         # Setup 'Output' item
         index = self.io_files_model.index(2, 0)
-        widget = ToolBarWidget("Output files", self)
+        widget = ToolBarWidget("Output files", self, True)
         widget.tool_bar.addActions([self._ui.actionAdd_output_files, self._ui.actionRemove_selected_output_files])
         widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self._ui.treeView_io_files.setIndexWidget(index, widget)
