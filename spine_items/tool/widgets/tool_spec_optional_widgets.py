@@ -233,6 +233,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
     @Slot()
     def _restore_selected_kernel(self):
         """Sets the previously selected kernel spec as the current item after the model has been refreshed."""
+        self._kernel_spec_model_initialized = True
         if self._selected_kernel is not None:
             row = self.find_index_by_data(self._selected_kernel)
             if row == -1:
@@ -245,6 +246,7 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
     def _restore_saved_kernel(self):
         """Sets index of the kernel spec combobox to show the item that was saved with the Tool Specification.
         Make sure this is called after kernel spec model has been populated."""
+        self._kernel_spec_model_initialized = True
         if not self._saved_kernel:
             self.ui.comboBox_kernel_specs.setCurrentIndex(0)  # Set 'Select kernel spec...'
         else:
