@@ -16,10 +16,12 @@ Unit tests for PythonToolSpecOptionalWidget class.
 
 import unittest
 from unittest import mock
+from unittest.mock import MagicMock
 import logging
 import sys
 from PySide6.QtWidgets import QApplication, QWidget
 from spine_items.tool.widgets.tool_spec_optional_widgets import PythonToolSpecOptionalWidget
+from spine_items.tool.tool_specifications import PythonTool
 
 
 class TestPythonToolSpecOptionalWidget(unittest.TestCase):
@@ -37,12 +39,18 @@ class TestPythonToolSpecOptionalWidget(unittest.TestCase):
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-    def test_constructor(self):
+    def test_constructor_and_init(self):
         with mock.patch(
             "spine_items.tool.widgets.tool_spec_optional_widgets.PythonToolSpecOptionalWidget._toolbox"
         ) as mock_toolbox:
             mock_toolbox.qsettings.return_value = MockQSettings()
+            mock_logger = MagicMock()
+            python_tool_spec = PythonTool("a", "python", "", ["fake_main_program.py"], MockQSettings(), mock_logger)
+            python_tool_spec.set_execution_settings()  # Sets defaults
+            python_tool_spec.execution_settings["executable"] = "fake_python.exe"
             opt_widget = PythonToolSpecOptionalWidget(mock_toolbox)
+            opt_widget.init_widget(python_tool_spec)
+            self.assertEqual("fake_python.exe", opt_widget.get_executable())
         self.assertIsInstance(opt_widget, PythonToolSpecOptionalWidget)
 
 
