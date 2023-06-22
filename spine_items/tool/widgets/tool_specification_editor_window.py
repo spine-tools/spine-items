@@ -109,6 +109,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.connect_signals()
         # Select main program file index
         parent = self.programfiles_model.index(0, 0)
+        if self.programfiles_model.rowCount(parent) == 0:
+            return
         index = self.programfiles_model.index(0, 0, parent)
         selection_model = self._ui.treeView_programfiles.selectionModel()
         selection_model.setCurrentIndex(index, QItemSelectionModel.Select)
@@ -349,7 +351,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.ItemDataRole.DecorationRole)
             item.setData(file_path, Qt.ItemDataRole.UserRole)
             root_item.appendRow(item)
-            QTimer.singleShot(0, self._push_change_main_program_file_command)
             tool_tip = f'<p>{self._current_main_program_file()}</p>'
             self.programfiles_model.setData(root_item.child(0).index(), tool_tip, role=Qt.ItemDataRole.ToolTipRole)
             self._ui.treeView_programfiles.selectionModel().setCurrentIndex(
@@ -648,14 +649,17 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         opt_widget = self._get_optional_widget("executable")
         opt_widget.ui.lineEdit_command.setText(value)
 
-    @Slot()
-    def _push_change_main_program_file_command(self):
-        new_value = self._current_main_program_file()
+    def _push_change_main_program_file_command(self, new_value):
+        """Pushes a command that changes the main program file to undo stack.
+
+        Args:
+            new_value (str, optional): absolute path to the main program file; if None, the file will be removed
+        """
         old_program_files = self.spec_dict.get("includes", [])
         if self.includes_main_path is not None:
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
         old_value = old_program_files[0] if old_program_files else ""
-        if new_value is not None:  # Enables removing main program
+        if new_value is not None:
             if same_path(old_value, new_value):
                 return
             new_program_files = old_program_files.copy()
@@ -675,7 +679,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """Sets program files.
 
         Args:
-            program_files (list(str)): List of *absolute* paths
+            program_files (list of str): List of *absolute* paths
         """
         main_program_file = program_files[0] if program_files else ""
         self.includes_main_path = os.path.dirname(next(iter(f for f in program_files if f), ""))
@@ -700,8 +704,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.actionRemove_selected_program_files.setEnabled(bool(indexes))
         # Load selected file code on text edit
         current = self._ui.treeView_programfiles.selectionModel().currentIndex()
-        if self.programfiles_model.rowCount(current):
-            # Not a leaf
+        if not current.parent().isValid() or self.programfiles_model.rowCount(current) != 0:
             self._clear_program_text_edit()
             return
         self._load_programfile_in_editor(current)
@@ -783,7 +786,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                     msg.setStandardButtons(QMessageBox.StandardButton.Ok)
                     msg.exec()
                 return
-        self.populate_main_programfile(file_path)
+        self._push_change_main_program_file_command(file_path)
 
     @Slot(bool)
     def new_main_program_file(self, _=False):
@@ -814,7 +817,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 msg = "File with same file path already\nin use as an additional program file."
                 QMessageBox.information(self, "Creating file failed", msg)
                 return
-        self.populate_main_programfile(file_path)
+        self._push_change_main_program_file_command(file_path)
 
     @Slot()
     def new_program_file(self):
@@ -937,12 +940,12 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _selected_program_file_indexes(self):
         """Returns selected program file indexes in a dict excluding the main program file"""
-        indexes = set(self._ui.treeView_programfiles.selectedIndexes())
+        indexes = {index for index in self._ui.treeView_programfiles.selectedIndexes() if index.parent().isValid()}
         # discard main program file
         parent = self.programfiles_model.index(0, 0)
         indexes.discard(self.programfiles_model.index(0, 0, parent))
         # keep only leaves
-        return {ind for ind in indexes if not self.programfiles_model.rowCount(ind)}
+        return {ind for ind in indexes if self.programfiles_model.rowCount(ind) == 0}
 
     @Slot(bool)
     def remove_all_program_files(self, checked=False):
