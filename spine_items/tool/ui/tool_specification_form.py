@@ -13,7 +13,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_specification_form.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.3
+## Created by: Qt User Interface Compiler version 6.5.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -53,9 +53,11 @@ class Ui_MainWindow(object):
         self.actionSelect_main_program_file.setIcon(icon1)
         self.actionAdd_program_file = QAction(MainWindow)
         self.actionAdd_program_file.setObjectName(u"actionAdd_program_file")
+        self.actionAdd_program_file.setEnabled(False)
         self.actionAdd_program_file.setIcon(icon1)
         self.actionAdd_program_directory = QAction(MainWindow)
         self.actionAdd_program_directory.setObjectName(u"actionAdd_program_directory")
+        self.actionAdd_program_directory.setEnabled(False)
         icon2 = QIcon()
         icon2.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.actionAdd_program_directory.setIcon(icon2)
@@ -90,6 +92,7 @@ class Ui_MainWindow(object):
         self.actionRemove_selected_output_files.setIcon(icon3)
         self.actionNew_program_file = QAction(MainWindow)
         self.actionNew_program_file.setObjectName(u"actionNew_program_file")
+        self.actionNew_program_file.setEnabled(False)
         self.actionNew_program_file.setIcon(icon)
         self.actionSave_program_file = QAction(MainWindow)
         self.actionSave_program_file.setObjectName(u"actionSave_program_file")

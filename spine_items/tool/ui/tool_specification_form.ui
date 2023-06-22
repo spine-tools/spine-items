@@ -320,6 +320,9 @@
    </property>
   </action>
   <action name="actionAdd_program_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
      <normaloff>:/icons/folder-open-regular.svg</normaloff>:/icons/folder-open-regular.svg</iconset>
@@ -332,6 +335,9 @@
    </property>
   </action>
   <action name="actionAdd_program_directory">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
      <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
@@ -440,6 +446,9 @@
    </property>
   </action>
   <action name="actionNew_program_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../../ui/resources/resources_icons.qrc">
      <normaloff>:/icons/file-regular.svg</normaloff>:/icons/file-regular.svg</iconset>

@@ -21,7 +21,7 @@ from copy import deepcopy
 from operator import methodcaller
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
 from PySide6.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
-from PySide6.QtCore import Slot, Qt, QFileInfo, QTimer, QItemSelection, QModelIndex, QItemSelectionModel
+from PySide6.QtCore import Slot, Qt, QFileInfo, QItemSelection, QModelIndex, QItemSelectionModel
 from spinetoolbox.helpers import busy_effect, open_url, same_path
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from spinetoolbox.config import STATUSBAR_SS
@@ -115,6 +115,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         selection_model = self._ui.treeView_programfiles.selectionModel()
         selection_model.setCurrentIndex(index, QItemSelectionModel.Select)
         self._load_programfile_in_editor(index)
+        self._enable_additional_program_files_actions()
 
     def _make_ui(self):
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
@@ -504,6 +505,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._handle_programfile_selection_changed
         )
         self._ui.treeView_io_files.selectionModel().selectionChanged.connect(self._handle_io_file_selection_changed)
+        self.programfiles_model.rowsInserted.connect(self._enable_additional_program_files_actions)
+        self.programfiles_model.rowsRemoved.connect(self._enable_additional_program_files_actions)
 
     @Slot(int)
     def _push_change_tooltype_command(self, index):
@@ -847,14 +850,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         file_paths = answer[0]
         if not file_paths:  # Cancel button clicked
             return
-        if not self._current_main_program_file():
-            msg = QMessageBox(self)
-            msg.setWindowTitle(self.windowTitle())
-            msg.setIcon(QMessageBox.Icon.Information)
-            msg.setText("Please add the main program file first")
-            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
-            msg.exec()
-            return
         for file_path in file_paths:
             if os.path.samefile(self._current_main_program_file(), file_path):
                 file_paths.remove(file_path)
@@ -880,10 +875,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QFileDialog.getExistingDirectory(self, "Select a directory to add to program files", path)
         file_paths = list()
+        main_program_file = self._current_main_program_file()
         for root, _, files in os.walk(answer):
             for file in files:
                 os.path.abspath(os.path.join(root, file))
-                if not os.path.samefile(self._current_main_program_file(), os.path.abspath(os.path.join(root, file))):
+                if not os.path.samefile(main_program_file, os.path.abspath(os.path.join(root, file))):
                     file_paths.append(os.path.abspath(os.path.join(root, file)))
         self.add_program_files(*file_paths)
 
@@ -989,7 +985,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     @Slot(QModelIndex)
     def open_program_file(self, index):
         """Opens a program file in default program."""
-        if not index.isValid() or self.programfiles_model.rowCount(index):
+        if not index.isValid() or self.programfiles_model.rowCount(index) > 0:
             return
         program_file = self._programfile_path_from_index(index)
         _, ext = os.path.splitext(program_file)
@@ -1004,6 +1000,14 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         res = open_url(url)
         if not res:
             self._toolbox.msg_error.emit("Failed to open file: <b>{0}</b>".format(program_file))
+
+    @Slot(bool)
+    def _enable_additional_program_files_actions(self, _=False):
+        """Enables actions depending on whether Main program file exists."""
+        main_program_file_exists = self._current_main_program_file() is not None
+        self._ui.actionNew_program_file.setEnabled(main_program_file_exists)
+        self._ui.actionAdd_program_file.setEnabled(main_program_file_exists)
+        self._ui.actionAdd_program_directory.setEnabled(main_program_file_exists)
 
     @Slot(bool)
     def add_inputfiles(self, checked=False):
