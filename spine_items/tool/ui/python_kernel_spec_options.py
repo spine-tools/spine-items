@@ -13,7 +13,7 @@
 ################################################################################
 ## Form generated from reading UI file 'python_kernel_spec_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.1
+## Created by: Qt User Interface Compiler version 6.5.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -26,8 +26,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QRadioButton,
-    QSizePolicy, QToolButton, QVBoxLayout, QWidget)
+    QLabel, QLineEdit, QRadioButton, QSizePolicy,
+    QToolButton, QVBoxLayout, QWidget)
 from spine_items import resources_icons_rc
 
 class Ui_Form(object):
@@ -133,11 +133,6 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.toolButton_refresh_kernel_specs)
 
-        self.pushButton_open_kernel_spec_viewer = QPushButton(Form)
-        self.pushButton_open_kernel_spec_viewer.setObjectName(u"pushButton_open_kernel_spec_viewer")
-
-        self.horizontalLayout.addWidget(self.pushButton_open_kernel_spec_viewer)
-
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
@@ -172,10 +167,6 @@ class Ui_Form(object):
         self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh the list of Jupyter and Conda kernel specs</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_refresh_kernel_specs.setText("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_open_kernel_spec_viewer.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open Python kernel spec editor</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_open_kernel_spec_viewer.setText(QCoreApplication.translate("Form", u"Kernel spec editor", None))
         pass
     # retranslateUi
 

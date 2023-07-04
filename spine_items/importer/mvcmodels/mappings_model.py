@@ -1166,7 +1166,9 @@ class MappingsModel(QAbstractItemModel):
         if not flattened_mappings.root_mapping.is_pivoted():
             self._recommend_float_type(component)
             return
-        excluded_columns = flattened_mappings.root_mapping.non_pivoted_columns()
+        not_pivoted_columns = set(flattened_mappings.root_mapping.non_pivoted_columns())
+        ignored_columns = set(flattened_mappings.skip_columns())
+        excluded_columns = sorted(list(not_pivoted_columns | ignored_columns))
         self.multi_column_type_recommended.emit(excluded_columns, FloatConvertSpec())
 
     def _recommend_string_type(self, component):
