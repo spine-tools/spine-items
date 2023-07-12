@@ -266,6 +266,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="log_process_output_check_box">
+        <property name="text">
+         <string>Log process output to a file</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

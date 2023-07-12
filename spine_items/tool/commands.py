@@ -78,3 +78,23 @@ class UpdateKillCompletedProcesses(SpineToolboxCommand):
 
     def undo(self):
         self._tool.do_update_kill_completed_processes(not self._kill_completed_processes)
+
+
+class UpdateLogProcessOutput(SpineToolboxCommand):
+    def __init__(self, tool, log_process_output):
+        """Command to update Tool log_process_output flag.
+
+        Args:
+            tool (Tool): the Tool
+            log_process_output (bool): new flag value
+        """
+        super().__init__()
+        self._tool = tool
+        self._log_process_output = log_process_output
+        self.setText(f"change log process output setting of {tool.name}")
+
+    def redo(self):
+        self._tool.do_update_log_process_output(self._log_process_output)
+
+    def undo(self):
+        self._tool.do_update_log_process_output(not self._log_process_output)

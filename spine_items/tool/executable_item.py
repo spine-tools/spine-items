@@ -24,6 +24,7 @@ import pathlib
 import shutil
 import time
 import uuid
+import re
 from contextlib import ExitStack
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.spine_engine import ItemExecutionFinishState
@@ -32,12 +33,21 @@ from spine_engine.project_item.project_item_resource import (
     expand_cmd_line_args,
     labelled_resource_args,
 )
-from spine_engine.utils.helpers import resolve_julia_executable, resolve_gams_executable, write_filter_id_file
+from spine_engine.utils.helpers import (
+    resolve_julia_executable,
+    resolve_gams_executable,
+    write_filter_id_file,
+    create_log_file_timestamp,
+)
+
 from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources
 from ..utils import generate_filter_subdirectory_name
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
+
+
+_ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
 
 class ExecutableItem(DBWriterExecutableItemBase):
@@ -53,6 +63,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         cmd_line_args,
         options,
         kill_completed_processes,
+        log_process_output,
         group_id,
         project_dir,
         logger,
@@ -66,6 +77,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             cmd_line_args (list): a list of command line argument to pass to the tool instance
             options (dict): misc tool options. See ``Tool`` for details.
             kill_completed_processes (bool): whether to kill completed persistent processes after execution
+            log_process_output (bool): whether to log process output to a file
             group_id (str or None): execution group identifier
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
@@ -78,6 +90,33 @@ class ExecutableItem(DBWriterExecutableItemBase):
         self._options = options
         self._kill_completed_processes = kill_completed_processes
         self._tool_instance = None
+        self._log_file_paths = {}
+        self.max_log_file_size = 128 * 1024
+        if log_process_output:
+            self._logger.msg_standard_execution.connect(self._log_execution_msg)
+            self._logger.msg_persistent_execution.connect(self._log_execution_msg)
+            self._logger.msg_kernel_execution.connect(self._log_execution_msg)
+
+    def _make_log_file_path(self, timestamp, part_nb):
+        return os.path.abspath(os.path.join(self._logs_dir, "_".join([timestamp, "execution", str(part_nb)]) + ".log"))
+
+    def _log_execution_msg(self, msg):
+        if msg["type"] not in ("stdin", "stdout", "stderr"):
+            return
+        filter_id = msg["filter_id"]
+        if filter_id not in self._log_file_paths:
+            timestamp = create_log_file_timestamp()
+            part_nb = 1
+            log_file_path = self._make_log_file_path(timestamp, part_nb)
+            self._log_file_paths[filter_id] = (log_file_path, timestamp, part_nb)
+        log_file_path, timestamp, part_nb = self._log_file_paths[filter_id]
+        if os.path.isfile(log_file_path) and os.path.getsize(log_file_path) > self.max_log_file_size:
+            part_nb += 1
+            log_file_path = self._make_log_file_path(timestamp, part_nb)
+            self._log_file_paths[filter_id] = (log_file_path, timestamp, part_nb)
+        with open(log_file_path, "a") as log_file:
+            line = _filter_ansi_escape(msg["data"])
+            log_file.write(line + "\n")
 
     @property
     def options(self):
@@ -674,6 +713,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         cmd_line_args = [make_cmd_line_arg(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
         kill_completed_processes = item_dict.get("kill_completed_processes", False)
+        log_process_output = item_dict.get("log_process_output", False)
         group_id = item_dict.get("group_id")
         return cls(
             name,
@@ -682,6 +722,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             cmd_line_args,
             options,
             kill_completed_processes,
+            log_process_output,
             group_id,
             project_dir,
             logger,
@@ -772,3 +813,7 @@ def _find_files_in_pattern(pattern, available_file_paths):
 def _unique_dir_name(tool_specification):
     """Builds a unique name for Tool's work directory."""
     return tool_specification.short_name + "__" + uuid.uuid4().hex + "__toolbox"
+
+
+def _filter_ansi_escape(s):
+    return _ANSI_ESCAPE.sub('', s)

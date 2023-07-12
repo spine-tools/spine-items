@@ -21,7 +21,12 @@ from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, make_cmd_line_arg, LabelArg
 from spine_engine.utils.helpers import resolve_python_interpreter
-from .commands import UpdateKillCompletedProcesses, UpdateToolExecuteInWorkCommand, UpdateToolOptionsCommand
+from .commands import (
+    UpdateKillCompletedProcesses,
+    UpdateToolExecuteInWorkCommand,
+    UpdateToolOptionsCommand,
+    UpdateLogProcessOutput,
+)
 from ..db_writer_item_base import DBWriterItemBase
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand
 from .item_info import ItemInfo
@@ -47,6 +52,7 @@ class Tool(DBWriterItemBase):
         cmd_line_args=None,
         options=None,
         kill_completed_processes=False,
+        log_process_output=False,
         group_id=None,
     ):
         """Tool class.
@@ -63,6 +69,7 @@ class Tool(DBWriterItemBase):
             cmd_line_args (list, optional): Tool command line arguments
             options (dict, optional): misc tool options. At the moment it just holds the location of the julia sysimage
             kill_completed_processes (bool): whether to kill completed persistent processes
+            log_process_output (bool): whether to log process output to a file
             group_id (str, optional): execution group id
         """
         super().__init__(name, description, x, y, project)
@@ -87,6 +94,7 @@ class Tool(DBWriterItemBase):
         self._specification_menu = None
         self._options = options if options is not None else {}
         self._kill_completed_processes = kill_completed_processes
+        self._log_process_output = log_process_output
         self._resources_from_upstream = list()
         self._resources_from_downstream = list()
 
@@ -147,6 +155,7 @@ class Tool(DBWriterItemBase):
         ] = self._update_remove_args_button_enabled
         s[self._properties_ui.lineEdit_group_id.editingFinished] = self._set_group_id
         s[self._properties_ui.kill_consoles_check_box.clicked] = self._set_kill_completed_processes
+        s[self._properties_ui.log_process_output_check_box.clicked] = self._set_log_process_output
         return s
 
     @Slot()
@@ -315,7 +324,7 @@ class Tool(DBWriterItemBase):
         self._toolbox.undo_stack.push(UpdateKillCompletedProcesses(self, kill_completed_processes))
 
     def do_update_kill_completed_processes(self, kill_completed_processes):
-        """Pushes a UpdateKillCompletedProcesses to the undo stack
+        """Updates the kill_completed_processes flag.
 
         Args:
             kill_completed_processes (bool): whether to kill completed persistent processes after execution
@@ -323,6 +332,25 @@ class Tool(DBWriterItemBase):
         self._kill_completed_processes = kill_completed_processes
         if self._active:
             self._properties_ui.kill_consoles_check_box.setChecked(kill_completed_processes)
+
+    @Slot(bool)
+    def _set_log_process_output(self, log_process_output):
+        """Pushes a UpdateLogProcessOutput to the undo stack
+
+        Args:
+            log_process_output (bool): whether to kill completed persistent processes after execution
+        """
+        self._toolbox.undo_stack.push(UpdateLogProcessOutput(self, log_process_output))
+
+    def do_update_log_process_output(self, log_process_output):
+        """Updates the log_process_output flag.
+
+        Args:
+            log_process_output (bool): whether to kill completed persistent processes after execution
+        """
+        self._log_process_output = log_process_output
+        if self._active:
+            self._properties_ui.log_process_output_check_box.setChecked(log_process_output)
 
     def _update_tool_ui(self):
         """Updates Tool properties UI. Used when Tool specification is changed.."""
@@ -356,6 +384,7 @@ class Tool(DBWriterItemBase):
                 self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
         self._properties_ui.kill_consoles_check_box.setChecked(self._kill_completed_processes)
         self._update_kill_consoles_check_box_enabled()
+        self._properties_ui.log_process_output_check_box.setChecked(self._log_process_output)
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
@@ -515,6 +544,7 @@ class Tool(DBWriterItemBase):
         if self._options:
             d["options"] = self._options
         d["kill_completed_processes"] = self._kill_completed_processes
+        d["log_process_output"] = self._log_process_output
         if self._group_id:
             d["group_id"] = self._group_id
         return d
@@ -529,6 +559,7 @@ class Tool(DBWriterItemBase):
         cmd_line_args = [make_cmd_line_arg(arg) for arg in cmd_line_args]
         options = item_dict.get("options", {})
         kill_completed_processes = item_dict.get("kill_completed_processes", False)
+        log_process_output = item_dict.get("log_process_output", False)
         group_id = item_dict.get("group_id")
         return Tool(
             name,
@@ -542,6 +573,7 @@ class Tool(DBWriterItemBase):
             cmd_line_args,
             options,
             kill_completed_processes,
+            log_process_output,
             group_id,
         )
 
