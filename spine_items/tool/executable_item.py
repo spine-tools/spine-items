@@ -97,8 +97,19 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._logger.msg_persistent_execution.connect(self._log_execution_msg)
             self._logger.msg_kernel_execution.connect(self._log_execution_msg)
 
-    def _make_log_file_path(self, timestamp, part_nb):
-        return os.path.abspath(os.path.join(self._logs_dir, "_".join([timestamp, "execution", str(part_nb)]) + ".log"))
+    def _make_log_file_path(self, filter_id, timestamp, part_nb):
+        log_file_path = os.path.abspath(
+            os.path.join(self._logs_dir, "_".join([timestamp, "execution", str(part_nb)]) + ".log")
+        )
+        with open(log_file_path, "w") as log_file:
+            header = [
+                "### Spine execution log file",
+                f"### Item name: {self._name}",
+                f"### Filter id: {filter_id}",
+                f"### Part: {part_nb}",
+            ]
+            log_file.write("\n".join(header) + "\n\n")
+        return log_file_path
 
     def _log_execution_msg(self, msg):
         if msg["type"] not in ("stdin", "stdout", "stderr"):
@@ -107,16 +118,18 @@ class ExecutableItem(DBWriterExecutableItemBase):
         if filter_id not in self._log_file_paths:
             timestamp = create_log_file_timestamp()
             part_nb = 1
-            log_file_path = self._make_log_file_path(timestamp, part_nb)
+            log_file_path = self._make_log_file_path(filter_id, timestamp, part_nb)
             self._log_file_paths[filter_id] = (log_file_path, timestamp, part_nb)
         log_file_path, timestamp, part_nb = self._log_file_paths[filter_id]
         if os.path.isfile(log_file_path) and os.path.getsize(log_file_path) > self.max_log_file_size:
             part_nb += 1
-            log_file_path = self._make_log_file_path(timestamp, part_nb)
+            log_file_path = self._make_log_file_path(filter_id, timestamp, part_nb)
             self._log_file_paths[filter_id] = (log_file_path, timestamp, part_nb)
         with open(log_file_path, "a") as log_file:
-            line = _filter_ansi_escape(msg["data"])
-            log_file.write(line + "\n")
+            data = _filter_ansi_escape(msg["data"])
+            for line in data.split("\n"):
+                if line:
+                    log_file.write(line + "\n")
 
     @property
     def options(self):

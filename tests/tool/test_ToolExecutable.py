@@ -196,6 +196,11 @@ class TestToolExecutable(unittest.TestCase):
         with open(logs[0], "r") as f:
             lines = f.readlines()
         expected_lines = [
+            '### Spine execution log file\n',
+            '### Item name: Logs stuff\n',
+            '### Filter id: \n',
+            '### Part: 1\n',
+            '\n',
             '# Running python script.py\n',
             'hello\n',
             'Traceback (most recent call last):\n',
