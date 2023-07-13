@@ -196,6 +196,11 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addWidget(self.kill_consoles_check_box)
 
+        self.log_process_output_check_box = QCheckBox(self.frame)
+        self.log_process_output_check_box.setObjectName(u"log_process_output_check_box")
+
+        self.verticalLayout_2.addWidget(self.log_process_output_check_box)
+
 
         self.verticalLayout.addWidget(self.frame)
 
@@ -256,6 +261,7 @@ class Ui_Form(object):
         self.kill_consoles_check_box.setToolTip(QCoreApplication.translate("Form", u"If checked, console processes will be killed automatically after execution finishes freeing memory and other resources.", None))
 #endif // QT_CONFIG(tooltip)
         self.kill_consoles_check_box.setText(QCoreApplication.translate("Form", u"Kill consoles at the end of execution", None))
+        self.log_process_output_check_box.setText(QCoreApplication.translate("Form", u"Log process output to a file", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
