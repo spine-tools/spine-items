@@ -152,7 +152,7 @@ def generate_filter_subdirectory_name(resources, filter_id_hash):
     if subdirectory:
         scenario_name = _single_scenario_name_or_none(resources)
         if scenario_name is not None:
-            subdirectory = scenario_name[:15] + "_" + subdirectory
+            subdirectory = scenario_name[:20] + "_" + subdirectory
     return subdirectory
 
 
