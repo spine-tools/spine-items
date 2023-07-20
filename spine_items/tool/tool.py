@@ -465,7 +465,9 @@ class Tool(DBWriterItemBase):
         if self._input_files_not_found:
             self.add_notification(
                 "File(s) {0} needed to execute this Tool are not provided by any input item. "
-                "Connect items that provide the required files to this Tool.".format(", ".join(self._input_files_not_found))
+                "Connect items that provide the required files to this Tool.".format(
+                    ", ".join(self._input_files_not_found)
+                )
             )
         if resources_changed or req_files_changed:
             # Only check for duplicate files in available resources when the resources have changed
