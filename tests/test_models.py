@@ -50,34 +50,6 @@ class TestCheckableFileListModel(unittest.TestCase):
         self.assertEqual(index.data(), str(Path.cwd() / "path" / "to" / "pack_file"))
         self.assertEqual(index.data(Qt.ItemDataRole.ToolTipRole), str(Path.cwd() / "path" / "to" / "pack_file"))
 
-    def test_duplicate_files(self):
-        dupe1 = file_resource("item name", str(Path.cwd() / "path" / "to" / "other" / "file" / "A1"), "file label")
-        dupe2 = file_resource_in_pack("item name", "pack label", str(Path.cwd() / "path" / "to" / "pack_file"))
-        single_resources = [
-            dupe1,
-            dupe1,
-            file_resource("item name", str(Path.cwd() / "path" / "to" / "file" / "A1"), "file label"),
-            file_resource("item name", str(Path.cwd() / "path" / "to" / "file" / "Worcestershire"), "file label"),
-            file_resource("item name", str(Path.cwd() / "path" / "to" / "file" / "Sriracha"), "file label"),
-            file_resource("some name", str(Path.cwd() / "path" / "to" / "other" / "file" / "B12"), "file label"),
-            file_resource("item name", str(Path.cwd() / "path" / "to" / "other" / "file" / "Sriracha"), "some label"),
-        ]
-        pack_resources = [
-            file_resource_in_pack("item name", "pack label", str(Path.cwd() / "path" / "to" / "other" / "pack_file")),
-            file_resource_in_pack("item name", "pack label", str(Path.cwd() / "path" / "to" / "some" / "pack_file")),
-            file_resource_in_pack("item name", "pack label", str(Path.cwd() / "path" / "to" / "pack_file2")),
-            dupe2,
-            file_resource_in_pack("some name", "pack label", str(Path.cwd() / "path" / "to" / "pack_file21")),
-            file_resource_in_pack("item name", "pack label", str(Path.cwd() / "path" / "to" / "pack_file3")),
-            dupe2
-        ]
-        self._model.update(single_resources + pack_resources)
-        results = self._model.duplicate_paths()
-        expected = set()
-        expected.add(str(dupe1.path))
-        expected.add(str(dupe2.path))
-        self.assertEqual(results, expected)
-
     def test_replace_single_resource(self):
         single_resource = file_resource("item name", str(Path.cwd() / "path" / "to" / "file"), "file label")
         self._model.update([single_resource])

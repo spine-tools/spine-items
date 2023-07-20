@@ -183,7 +183,6 @@ class TestTool(unittest.TestCase):
         separator = os.sep
         item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
         tool = self._add_tool(item_dict)
-        # print(self._temp_dir.name)
         url1 = os.path.join(self._temp_dir.name, "more_files", "input1.csv")
         url2 = os.path.join(self._temp_dir.name, "more_files", "data.csv")
         url3 = os.path.join(self._temp_dir.name, "more filess", "input1.csv")
