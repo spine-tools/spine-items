@@ -436,7 +436,7 @@ class Tool(DBWriterItemBase):
             if not filename:
                 # It's a directory
                 continue
-            file_paths[req_file_path] = find_file(filename, resources)
+            file_paths[req_file_path] = find_file(filename, resources, one_file=True)
         return file_paths
 
     def _check_notifications(self):
