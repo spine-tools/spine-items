@@ -58,13 +58,14 @@ def file_paths_from_resources(resources):
     return file_paths
 
 
-def find_file(filename, resources):
+def find_file(filename, resources, one_file=None):
     """
     Returns all occurrences of full paths to given file name in resources available.
 
     Args:
         filename (str): Searched file name (no path)
         resources (list): list of resources available from upstream items
+        one_file (bool): If True, a list containing only the first found matching file is returned
 
     Returns:
         list: Full paths to file if found, None if not found
@@ -75,6 +76,8 @@ def find_file(filename, resources):
         _, file_candidate = os.path.split(file_path)
         if os.path.normcase(file_candidate) == filename:
             found_file_paths.append(file_path)
+            if one_file:
+                break
     return found_file_paths if found_file_paths else None
 
 
