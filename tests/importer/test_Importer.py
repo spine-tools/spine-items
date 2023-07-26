@@ -154,7 +154,7 @@ class TestImporter(unittest.TestCase):
         model = self.importer._properties_ui.treeView_files.model()
         file_list = [model.index(row, 0).data(Qt.ItemDataRole.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(sorted(file_list), sorted(expected_file_list))
-        checked = [model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) for row in range(model.rowCount())]
+        checked = [model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole).value for row in range(model.rowCount())]
         selected = [check == Qt.CheckState.Checked.value for check in checked]
         self.assertTrue(all(selected))
 
@@ -174,7 +174,7 @@ class TestImporter(unittest.TestCase):
         self.importer.upstream_resources_updated(resources)
         file_list = [model.index(row, 0).data(Qt.ItemDataRole.DisplayRole) for row in range(model.rowCount())]
         self.assertEqual(file_list, ["file2", "file3"])
-        checked = [model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole) for row in range(model.rowCount())]
+        checked = [model.index(row, 0).data(Qt.ItemDataRole.CheckStateRole).value for row in range(model.rowCount())]
         selected = [check == Qt.CheckState.Checked.value for check in checked]
         self.assertEqual(selected, [False, True])
 
