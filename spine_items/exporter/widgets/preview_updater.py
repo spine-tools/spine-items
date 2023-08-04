@@ -99,7 +99,7 @@ class PreviewUpdater:
         self._stamps.clear()
         for row in range(self._mappings_table_model.rowCount()):
             index = self._mappings_table_model.index(row, 0)
-            if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value:
+            if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked:
                 self._load_preview_data(index.data())
 
     @Slot(QModelIndex, QModelIndex)
@@ -424,7 +424,7 @@ class PreviewUpdater:
         worker.signals.table_written.connect(self._add_or_update_data)
         self._thread_pool.start(worker)
 
-    @Slot(tuple, str, dict, float)
+    @Slot(tuple, str, object, float)
     def _add_or_update_data(self, worker_id, mapping_name, data, stamp):
         """
         Sets preview data.
@@ -485,7 +485,7 @@ class PreviewUpdater:
 
 class _Worker(QRunnable):
     class Signals(QObject):
-        table_written = Signal(tuple, str, dict, float)
+        table_written = Signal(tuple, str, object, float)
 
     def __init__(
         self, url, mapping_name, mapping, always_export_header, stamp, max_tables=20, max_rows=20, group_fn=NoGroup.NAME
