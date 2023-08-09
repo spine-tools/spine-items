@@ -629,7 +629,7 @@
           </sizepolicy>
          </property>
          <property name="sizeAdjustPolicy">
-          <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+          <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
          </property>
          <property name="minimumContentsLength">
           <number>0</number>

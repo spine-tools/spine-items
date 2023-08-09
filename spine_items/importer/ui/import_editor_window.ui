@@ -564,10 +564,13 @@
           </sizepolicy>
          </property>
          <property name="sizeAdjustPolicy">
-          <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+          <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
          </property>
          <property name="minimumContentsLength">
           <number>0</number>
+         </property>
+         <property name="duplicatesEnabled">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

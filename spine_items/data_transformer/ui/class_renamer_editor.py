@@ -46,7 +46,7 @@ class Ui_Form(object):
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Orientation.Horizontal)
+        self.splitter.setOrientation(Qt.Horizontal)
         self.available_classes_tree_widget = ClassTreeWidget(self.splitter)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setText(0, u"1");

@@ -320,8 +320,9 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.comboBox_source_file.sizePolicy().hasHeightForWidth())
         self.comboBox_source_file.setSizePolicy(sizePolicy)
-        self.comboBox_source_file.setSizeAdjustPolicy(QComboBox.AdjustToContentsOnFirstShow)
+        self.comboBox_source_file.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.comboBox_source_file.setMinimumContentsLength(0)
+        self.comboBox_source_file.setDuplicatesEnabled(True)
 
         self.horizontalLayout_2.addWidget(self.comboBox_source_file)
 

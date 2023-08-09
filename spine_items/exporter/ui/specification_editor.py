@@ -346,7 +346,7 @@ class Ui_MainWindow(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
         self.database_url_combo_box.setSizePolicy(sizePolicy2)
-        self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.AdjustToContentsOnFirstShow)
+        self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.database_url_combo_box.setMinimumContentsLength(0)
 
         self.horizontalLayout_3.addWidget(self.database_url_combo_box)
