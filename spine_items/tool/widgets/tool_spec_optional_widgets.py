@@ -24,8 +24,7 @@ from spinetoolbox.kernel_fetcher import KernelFetcher
 
 class OptionalWidget(QWidget):
     def __init__(self, parent):
-        """Init class.
-
+        """
         Args:
             parent (ToolSpecificationEditorWindow): Tool spec editor window
         """
@@ -36,18 +35,6 @@ class OptionalWidget(QWidget):
     def _toolbox(self):
         return self._parent._toolbox
 
-    @property
-    def _project(self):
-        return self._toolbox._project
-
-    @property
-    def _settings(self):
-        return self._project._settings
-
-    @property
-    def _logger(self):
-        return self._toolbox._logger
-
     def init_widget(self, specification):
         raise NotImplementedError
 
@@ -57,8 +44,7 @@ class OptionalWidget(QWidget):
 
 class PythonToolSpecOptionalWidget(OptionalWidget):
     def __init__(self, parent):
-        """Init class.
-
+        """
         Args:
             parent (ToolSpecificationEditorWindow): Tool spec editor window
         """
@@ -263,7 +249,10 @@ class PythonToolSpecOptionalWidget(OptionalWidget):
 
 class ExecutableToolSpecOptionalWidget(OptionalWidget):
     def __init__(self, parent):
-        """Init class."""
+        """
+        Args:
+            parent (QWidget): parent widget
+        """
         from ..ui.executable_cmd_exec_options import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
