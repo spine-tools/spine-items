@@ -44,7 +44,7 @@ class OptionsWidget(QWidget):
 
     @property
     def _settings(self):
-        return self._project._settings
+        return self._project.app_settings
 
     @property
     def _logger(self):
