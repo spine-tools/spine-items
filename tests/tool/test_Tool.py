@@ -197,7 +197,7 @@ class TestTool(unittest.TestCase):
             ProjectItemResource("Exporter", "file", "first", url="file:///" + url1, metadata={}, filterable=False),
             ProjectItemResource("Exporter", "url", "second", url="file:///" + url2, metadata={}, filterable=False),
             ProjectItemResource("Exporter", "file", "third", url="file:///" + url3, metadata={}, filterable=False),
-            ProjectItemResource("Exporter", "url", "fourth", url="file:///" + url4, metadata={}, filterable=False)
+            ProjectItemResource("Exporter", "url", "fourth", url="file:///" + url4, metadata={}, filterable=False),
         ]
         result = tool._find_input_files(resources)
         expected = {"input1.csv": [expected_urls["url1"], expected_urls["url3"]], "input2.csv": None}
@@ -205,18 +205,21 @@ class TestTool(unittest.TestCase):
         self.assertEqual(expected["input2.csv"], result["input2.csv"])
         self.assertTrue(expected_urls["url3"] in result["input1.csv"] or expected_urls["url1"] in result["input1.csv"])
         resources.pop(0)
-        resources.append(ProjectItemResource(
-            "Exporter", "file", "fifth", url="file:///" + url5, metadata={}, filterable=False)
+        resources.append(
+            ProjectItemResource("Exporter", "file", "fifth", url="file:///" + url5, metadata={}, filterable=False)
         )
         result = tool._find_input_files(resources)
         expected = {'input2.csv': [expected_urls["url5"]], 'input1.csv': [expected_urls["url3"]]}
         self.assertEqual(expected, result)
-        resources.append(ProjectItemResource(
-            "Exporter", "file", "sixth", url="file:///" + url6, metadata={}, filterable=False)
+        resources.append(
+            ProjectItemResource("Exporter", "file", "sixth", url="file:///" + url6, metadata={}, filterable=False)
         )
         tool.specification().inputfiles = set(["input2.csv", os.path.join(self._temp_dir.name, "input3.csv")])
         result = tool._find_input_files(resources)
-        expected = {os.path.join(self._temp_dir.name, "input3.csv"): [expected_urls["url6"]], 'input2.csv': [expected_urls["url5"]]}
+        expected = {
+            os.path.join(self._temp_dir.name, "input3.csv"): [expected_urls["url6"]],
+            'input2.csv': [expected_urls["url5"]],
+        }
         self.assertEqual(expected, result)
 
     def _add_tool(self, item_dict=None):

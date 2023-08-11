@@ -29,6 +29,7 @@ from spine_engine.execution_managers.persistent_execution_manager import (
     JuliaPersistentExecutionManager,
     PythonPersistentExecutionManager,
 )
+from spine_items.utils import escape_backward_slashes
 
 
 class ToolInstance:
@@ -156,11 +157,11 @@ class JuliaToolInstance(ToolInstance):
         sysimage = self._owner.options.get("julia_sysimage", "")
         use_julia_kernel = self._settings.value("appSettings/useJuliaKernel", defaultValue="2")
         # Prepare args
-        mod_work_dir = repr(self.basedir).strip("'")
+        mod_work_dir = escape_backward_slashes(self.basedir)
         self.args = [f'cd("{mod_work_dir}");']
         cmdline_args = self.tool_specification.cmdline_args + args
         if cmdline_args:
-            fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+            fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(cmdline_args)) + '"]'
             self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
         self.args += [f'include("{self.tool_specification.main_prgm}")']
         if use_julia_kernel == "2":
@@ -185,7 +186,8 @@ class JuliaToolInstance(ToolInstance):
         if use_julia_kernel == "1":
             self.program = julia_exe
             self.args = []
-            self.args.append(f"--project={julia_project_path}")
+            if julia_project_path:
+                self.args.append(f"--project={julia_project_path}")
             if os.path.isfile(sysimage):
                 self.args.append(f"--sysimage={sysimage}")
             if self.tool_specification.main_prgm:
@@ -194,7 +196,8 @@ class JuliaToolInstance(ToolInstance):
             self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
             return
         self.program = [julia_exe]
-        self.program.append(f"--project={julia_project_path}")
+        if julia_project_path:
+            self.program.append(f"--project={julia_project_path}")
         if os.path.isfile(sysimage):
             self.program.append(f"--sysimage={sysimage}")
         alias = f"julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}"
@@ -268,7 +271,7 @@ class PythonToolInstance(ToolInstance):
             fp = self.tool_specification.main_prgm
             full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm).replace(os.sep, "/")
             cmdline_args = [full_fp] + self.tool_specification.cmdline_args + args
-            fmt_cmdline_args = '["' + repr('", "'.join(cmdline_args)).strip("'") + '"]'
+            fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(cmdline_args)) + '"]'
             self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
             self.args += [f"import os; os.chdir({repr(self.basedir)})"]
             self.args += self._make_exec_code(fp, full_fp)
