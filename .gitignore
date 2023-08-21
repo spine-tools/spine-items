@@ -11,3 +11,4 @@ pip-wheel-metadata/
 __pycache__/
 .coverage
 htmlcov/
+spine_items/version.py
