@@ -180,3 +180,15 @@ def _single_scenario_name_or_none(resources):
             elif name != scenario_name:
                 return None
     return scenario_name
+
+
+def escape_backward_slashes(string):
+    """Escapes Windows directory separators.
+
+    Args:
+        string (str): string to escape
+
+    Returns:
+        str: escaped string
+    """
+    return string.replace("\\", "\\\\")
