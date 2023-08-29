@@ -20,6 +20,8 @@ from spine_engine.utils.helpers import get_julia_command
 from PySide6.QtCore import Qt, Slot, QVariantAnimation, QPointF
 from PySide6.QtWidgets import QWidget, QFileDialog
 from PySide6.QtGui import QIcon, QLinearGradient, QPalette, QBrush
+
+from spine_items.utils import escape_backward_slashes
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine, make_settings_dict_for_engine
@@ -44,7 +46,7 @@ class OptionsWidget(QWidget):
 
     @property
     def _settings(self):
-        return self._project._settings
+        return self._project.app_settings
 
     @property
     def _logger(self):
@@ -53,7 +55,6 @@ class OptionsWidget(QWidget):
 
 class JuliaOptionsWidget(OptionsWidget):
     def __init__(self):
-        """Init class."""
         from ..ui.julia_options import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__()
@@ -69,7 +70,7 @@ class JuliaOptionsWidget(OptionsWidget):
         self.ui.toolButton_open_sysimage.clicked.connect(self._open_sysimage)
         self.ui.toolButton_abort_sysimage.clicked.connect(self._abort_sysimage)
         self.ui.toolButton_abort_sysimage.setVisible(False)
-        self.ui.lineEdit_sysimage.editingFinished.connect(self._handle_le_sysimage_editing_finished)
+        self.ui.lineEdit_sysimage.editingFinished.connect(self._handle_sysimage_editing_finished)
 
     def _make_work_animation(self):
         """
@@ -168,7 +169,7 @@ class JuliaOptionsWidget(OptionsWidget):
         self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
 
     @Slot()
-    def _handle_le_sysimage_editing_finished(self):
+    def _handle_sysimage_editing_finished(self):
         sysimage_path = self.ui.lineEdit_sysimage.text()
         self._tool.update_options({"julia_sysimage": sysimage_path})
 
@@ -223,9 +224,6 @@ class JuliaOptionsWidget(OptionsWidget):
         dag = self._project.dag_with_node(self._tool.name)
         if not dag:
             return
-        if dag.nodes():
-            # FIXME?
-            return
         self.sysimage_path = self._get_sysimage_path()
         if self.sysimage_path is None:
             return
@@ -233,7 +231,10 @@ class JuliaOptionsWidget(OptionsWidget):
         settings = make_settings_dict_for_engine(self._settings)
         settings["appSettings/useJuliaKernel"] = "1"  # Use subprocess
         dag_identifier = f"containing {self._tool.name}"
-        self.sysimage_worker = self._project.create_engine_worker(dag, execution_permits, dag_identifier, settings)
+        job_id = self._project.LOCAL_EXECUTION_JOB_ID
+        self.sysimage_worker = self._project.create_engine_worker(
+            dag, execution_permits, dag_identifier, settings, job_id
+        )
         # Use the modified spec
         engine_data = self.sysimage_worker.get_engine_data()
         spec_names = {spec["name"] for type_specs in engine_data["specifications"].values() for spec in type_specs}
@@ -251,7 +252,7 @@ class JuliaOptionsWidget(OptionsWidget):
         self._update_ui()
         self.sysimage_worker.start(silent=True)
         self._logger.msg_success.emit(
-            f"Process to create <b>{self.sysimage_basename}</b> sucessfully started.\n"
+            f"Process to create <b>{self.sysimage_basename}</b> successfully started.\n"
             "This process might take a while, but you can keep using Spine Toolbox as normal in the meantime."
         )
 
@@ -278,26 +279,24 @@ class JuliaOptionsWidget(OptionsWidget):
         precompile_statements_file = self._get_precompile_statements_filepath()
         with open(original_program_file, 'r') as original:
             original_code = original.read()
-        new_code = f"""
-        macro write_loaded_modules(ex)
-            return quote
-                local before = copy(Base.loaded_modules)
-                local val = $(esc(ex))
-                local after = copy(Base.loaded_modules)
-                open("{loaded_modules_file}", "w") do f
-                    print(f, join(setdiff(values(after), values(before)), " "))
-                end
-                val
-            end
+        new_code = f"""macro write_loaded_modules(ex)
+    return quote
+        local before = copy(Base.loaded_modules)
+        local val = $(esc(ex))
+        local after = copy(Base.loaded_modules)
+        open("{escape_backward_slashes(loaded_modules_file)}", "w") do f
+            print(f, join(setdiff(values(after), values(before)), " "))
         end
-        @write_loaded_modules begin 
-            {original_code}
-        end
-        """
+        val
+    end
+end
+@write_loaded_modules begin 
+    {original_code}
+end"""
         spec.includes.insert(0, "")
         spec.cmdline_args += [f"--trace-compile={precompile_statements_file}", "-e", new_code]
         while True:
-            spec.name = str(uuid.uuid4)
+            spec.name = str(uuid.uuid4())
             if spec.name not in spec_names:
                 break
         return spec
@@ -330,33 +329,29 @@ class JuliaOptionsWidget(OptionsWidget):
         precompile_statements_file = self._get_precompile_statements_filepath()
         with open(loaded_modules_file, 'r') as f:
             modules = f.read()
-        code = f"""
-            using Pkg;
-            project_dir = dirname(Base.active_project());
-            cp(joinpath(project_dir, "Project.toml"), joinpath(project_dir, "Project.backup"); force=true);
-            cp(joinpath(project_dir, "Manifest.toml"), joinpath(project_dir, "Manifest.backup"); force=true);
-            try
-                modules = split("{modules}", " ");
-                Pkg.add(modules);
-                Pkg.add("PackageCompiler");
-                @eval import PackageCompiler
-                Base.invokelatest(
-                    PackageCompiler.create_sysimage,
-                    Symbol.(modules);
-                    sysimage_path="{self.sysimage_path}",
-                    precompile_statements_file="{precompile_statements_file}"
-                )
-            finally
-                cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
-                cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
-            end
-        """
+        code = f"""using Pkg;
+project_dir = dirname(Base.active_project());
+cp(joinpath(project_dir, "Project.toml"), joinpath(project_dir, "Project.backup"); force=true);
+cp(joinpath(project_dir, "Manifest.toml"), joinpath(project_dir, "Manifest.backup"); force=true);
+try
+    modules = split("{modules}", " ");
+    Pkg.add(modules);
+    Pkg.add("PackageCompiler");
+    @eval import PackageCompiler
+    Base.invokelatest(
+        PackageCompiler.create_sysimage,
+        Symbol.(modules);
+        sysimage_path="{escape_backward_slashes(self.sysimage_path)}",
+        precompile_statements_file="{escape_backward_slashes(precompile_statements_file)}"
+    )
+finally
+    cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
+    cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
+end"""
         julia, *args = get_julia_command(self._settings)
         args += ["-e", code]
-        self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=True)
-        self.sysimage_worker.execution_finished.connect(
-            lambda ret, tool=tool: self._handle_sysimage_process_finished(ret, tool)
-        )
+        self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=False)
+        self.sysimage_worker.execution_finished.connect(lambda ret: self._handle_sysimage_process_finished(ret, tool))
         self.sysimage_worker.start_execution(workdir=self._tool.specification().path)
         # Restore the current self._tool
         self._tool = current_tool
@@ -368,7 +363,7 @@ class JuliaOptionsWidget(OptionsWidget):
         Args:
             ret (int): The return code of the process, 0 indicates success.
             tool (Tool): The Tool that started the sysimage creation process.
-                It may be different than the Tool currently using the widget.
+                It may be different from the Tool currently using the widget.
         """
         # Replace self._tool while we run this method
         self._tool, current_tool = tool, self._tool
@@ -383,7 +378,7 @@ class JuliaOptionsWidget(OptionsWidget):
         else:
             self._tool.update_options({"julia_sysimage": self.sysimage_path})
             self._logger.msg_success.emit(f"<b>{self.sysimage_basename}</b> created successfully.\n")
-        if tool == current_tool:
+        if tool is current_tool:
             self._update_ui()
         # Restore the current self._tool
         self._tool = current_tool

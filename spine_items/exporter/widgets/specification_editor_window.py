@@ -725,7 +725,6 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         )
         self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
 
-    @Slot(int)
     def _change_parameter_dimensions(self, dimensions):
         """
         Pushes a command to undo stack.
@@ -909,7 +908,6 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._ui.group_fn_combo_box.setCurrentText(group_fn_display_name)
             self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
 
-    @Slot(int)
     def _change_highlight_dimension(self, dimension):
         """Pushes a command to change highlight dimension to undo stack.
 
@@ -932,7 +930,6 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.highlight_dimension_spin_box.setValue(highlight_dimension + 1)
         self._ui.highlight_dimension_spin_box.valueChanged.connect(self._change_highlight_dimension)
 
-    @Slot(int)
     def _change_entity_dimensions(self, dimensions):
         """
         Pushes a command to undo stack.

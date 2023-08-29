@@ -125,7 +125,8 @@ class ExecutableItem(DBWriterExecutableItemBase):
             part_nb += 1
             log_file_path = self._make_log_file_path(filter_id, timestamp, part_nb)
             self._log_file_paths[filter_id] = (log_file_path, timestamp, part_nb)
-        with open(log_file_path, "a") as log_file:
+        with open(log_file_path, "a", encoding="utf-8") as log_file:
+            # TODO: use win_unicode_console instead of encoding="utf-8" above
             data = _filter_ansi_escape(msg["data"])
             for line in data.split("\n"):
                 if line:

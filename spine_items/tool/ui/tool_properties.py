@@ -13,7 +13,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.3
+## Created by: Qt User Interface Compiler version 6.5.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -86,6 +86,7 @@ class Ui_Form(object):
         self.splitter = QSplitter(Form)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Vertical)
+        self.splitter.setChildrenCollapsible(False)
         self.treeView_cmdline_args = ArgsTreeView(self.splitter)
         self.treeView_cmdline_args.setObjectName(u"treeView_cmdline_args")
         sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

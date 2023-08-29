@@ -142,7 +142,7 @@ class TestTableList(unittest.TestCase):
         index = self._model.index(0, 0)
         self.assertEqual(index.data(), "Select All")
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
-        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole))
+        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole).value)
         self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
         self.assertIsNone(index.data(Qt.ItemDataRole.ToolTipRole))
         flags = self._model.flags(index)
@@ -173,7 +173,7 @@ class TestTableList(unittest.TestCase):
         index = self._model.index(1, 0)
         self.assertEqual(index.data(), "my shiny table (new)")
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
-        self.assertTrue(index.data(Qt.ItemDataRole.CheckStateRole))
+        self.assertTrue(index.data(Qt.ItemDataRole.CheckStateRole).value)
         self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
         self.assertEqual(
             index.data(Qt.ItemDataRole.ToolTipRole), "Table's mappings haven't been saved with the specification yet."
@@ -191,7 +191,7 @@ class TestTableList(unittest.TestCase):
 
     def _assert_empty_row(self, index):
         self.assertEqual(index.data(), "<rename this to add table>")
-        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole))
+        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole).value)
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
         self.assertTrue(index.data(Qt.ItemDataRole.FontRole).italic())
         flags = self._model.flags(index)

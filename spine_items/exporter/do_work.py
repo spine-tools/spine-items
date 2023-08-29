@@ -148,7 +148,7 @@ def _export_to_file(
         header_always = (m.always_export_header for m in specifications)
         group_fns = (m.group_fn for m in specifications)
         write(database_map, writer, *mappings, empty_data_header=header_always, group_fns=group_fns)
-    except (PermissionError, WriterException) as e:
+    except (FileNotFoundError, PermissionError, WriterException) as e:
         logger.msg_error.emit(str(e))
         if cancel_on_error:
             return False

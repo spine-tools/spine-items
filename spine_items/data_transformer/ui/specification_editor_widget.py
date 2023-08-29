@@ -13,7 +13,7 @@
 ################################################################################
 ## Form generated from reading UI file 'specification_editor_widget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.1
+## Created by: Qt User Interface Compiler version 6.5.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -137,7 +137,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
         self.database_url_combo_box.setSizePolicy(sizePolicy)
-        self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.AdjustToContentsOnFirstShow)
+        self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.database_url_combo_box.setMinimumContentsLength(0)
 
         self.horizontalLayout_4.addWidget(self.database_url_combo_box)

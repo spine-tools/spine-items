@@ -24,8 +24,9 @@ from spine_items.tool.item_info import ItemInfo
 from spine_items.tool.tool_specifications import ExecutableTool
 from spine_items.tool.tool import Tool
 from spine_items.tool.tool_factory import ToolFactory
+from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.config import TOOL_OUTPUT_DIR
-from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
+from tests.mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
 
 
 class TestTool(unittest.TestCase):
@@ -175,6 +176,51 @@ class TestTool(unittest.TestCase):
             tool.deactivate()
             tool.activate()
             self._assert_is_simple_exec_tool(tool)
+
+    def test_find_input_files(self):
+        """Test that input files are correctly found in resources
+        when required input files and available resources are updated"""
+        separator = os.sep
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        url1 = os.path.join(self._temp_dir.name, "more_files", "input1.csv")
+        url2 = os.path.join(self._temp_dir.name, "more_files", "data.csv")
+        url3 = os.path.join(self._temp_dir.name, "more filess", "input1.csv")
+        url4 = os.path.join(self._temp_dir.name, "other.csv")
+        url5 = os.path.join(self._temp_dir.name, "other", "input2.csv")
+        url6 = os.path.join(self._temp_dir.name, "input3.csv")
+        expected_urls = {"url1": url1, "url2": url2, "url3": url3, "url4": url4, "url5": url5, "url6": url6}
+        for key, url in expected_urls.items():
+            i = url.find(separator)
+            expected_urls[key] = url[:i] + separator + url[i:]
+        resources = [
+            ProjectItemResource("Exporter", "file", "first", url="file:///" + url1, metadata={}, filterable=False),
+            ProjectItemResource("Exporter", "url", "second", url="file:///" + url2, metadata={}, filterable=False),
+            ProjectItemResource("Exporter", "file", "third", url="file:///" + url3, metadata={}, filterable=False),
+            ProjectItemResource("Exporter", "url", "fourth", url="file:///" + url4, metadata={}, filterable=False),
+        ]
+        result = tool._find_input_files(resources)
+        expected = {"input1.csv": [expected_urls["url1"], expected_urls["url3"]], "input2.csv": None}
+        self.assertEqual(2, len(result))
+        self.assertEqual(expected["input2.csv"], result["input2.csv"])
+        self.assertTrue(expected_urls["url3"] in result["input1.csv"] or expected_urls["url1"] in result["input1.csv"])
+        resources.pop(0)
+        resources.append(
+            ProjectItemResource("Exporter", "file", "fifth", url="file:///" + url5, metadata={}, filterable=False)
+        )
+        result = tool._find_input_files(resources)
+        expected = {'input2.csv': [expected_urls["url5"]], 'input1.csv': [expected_urls["url3"]]}
+        self.assertEqual(expected, result)
+        resources.append(
+            ProjectItemResource("Exporter", "file", "sixth", url="file:///" + url6, metadata={}, filterable=False)
+        )
+        tool.specification().inputfiles = set(["input2.csv", os.path.join(self._temp_dir.name, "input3.csv")])
+        result = tool._find_input_files(resources)
+        expected = {
+            os.path.join(self._temp_dir.name, "input3.csv"): [expected_urls["url6"]],
+            'input2.csv': [expected_urls["url5"]],
+        }
+        self.assertEqual(expected, result)
 
     def _add_tool(self, item_dict=None):
         if item_dict is None:

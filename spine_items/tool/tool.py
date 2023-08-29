@@ -97,6 +97,9 @@ class Tool(DBWriterItemBase):
         self._log_process_output = log_process_output
         self._resources_from_upstream = list()
         self._resources_from_downstream = list()
+        self._available_resources = list()
+        self._req_file_paths = set()
+        self._input_files_not_found = None
 
     def set_up(self):
         execute_in_work = self.execute_in_work
@@ -433,7 +436,7 @@ class Tool(DBWriterItemBase):
             if not filename:
                 # It's a directory
                 continue
-            file_paths[req_file_path] = find_file(filename, resources)
+            file_paths[req_file_path] = find_file(filename, resources, one_file=True)
         return file_paths
 
     def _check_notifications(self):
@@ -447,17 +450,34 @@ class Tool(DBWriterItemBase):
             self.add_notification(
                 f"Tool specification <b>{n}</b> path does not exist. Fix this in Tool specification editor."
             )
-        duplicates = self._input_file_model.duplicate_paths()
-        if duplicates:
-            self.add_notification("Duplicate input files:<br>{}".format("<br>".join(duplicates)))
-        file_paths = self._find_input_files(self._resources_from_upstream + self._resources_from_downstream)
-        file_paths = flatten_file_path_duplicates(file_paths, self._logger)
-        not_found = [k for k, v in file_paths.items() if v is None]
-        if not_found:
+        resources = self._resources_from_upstream + self._resources_from_downstream
+        resources_changed = resources != self._available_resources
+        req_files_changed = False
+        if self.specification():
+            required_files = self.specification().inputfiles
+            req_files_changed = required_files != self._req_file_paths
+            # No need to perform slow check for if all the file requirements are/aren't still satisfied
+            # if no changes have been made to the Tool's requirements or available resources
+            if required_files and (req_files_changed or resources_changed):
+                file_paths = self._find_input_files(resources)
+                file_paths = flatten_file_path_duplicates(file_paths, self._logger)
+                self._input_files_not_found = [k for k, v in file_paths.items() if v is None]
+        if self._input_files_not_found:
             self.add_notification(
                 "File(s) {0} needed to execute this Tool are not provided by any input item. "
-                "Connect items that provide the required files to this Tool.".format(", ".join(not_found))
+                "Connect items that provide the required files to this Tool.".format(
+                    ", ".join(self._input_files_not_found)
+                )
             )
+        if resources_changed or req_files_changed:
+            # Only check for duplicate files in available resources when the resources have changed
+            if resources_changed:
+                self._available_resources = resources
+                duplicates = self._input_file_model.duplicate_paths()
+                if duplicates:
+                    self.add_notification("Duplicate input files:<br>{}".format("<br>".join(duplicates)))
+            if req_files_changed:
+                self._req_file_paths = required_files
         missing_args = ", ".join(arg.arg for arg in self.cmd_line_args if isinstance(arg, LabelArg) and arg.missing)
         if missing_args:
             self.add_notification(
