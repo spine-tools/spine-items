@@ -408,8 +408,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
         1. Tool has no specification
         2. Python or Julia Kernel spec not selected (jupyter kernel mode)
         3. Julia executable not set and not found in PATH (subprocess mode)
-        4. Trying to execute an Executable Tool Spec using a shell that is not supported
-        by the user's OS.
 
         Returns True otherwise.
         """
@@ -440,18 +438,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
             if not gams_path:
                 self._logger.msg_error.emit("Gams not found in PATH. Please set a path to Gams in Settings->Tools.")
                 return False
-        elif self._tool_specification.tooltype.lower() == "executable":
-            if not self._tool_specification.main_prgm:
-                shell = self._tool_specification.execution_settings["shell"]
-                if sys.platform == "win32" and shell == "bash":
-                    self._logger.msg_error.emit("Bash shell is not supported on Windows. Please select another shell.")
-                    return False
-                if sys.platform != "win32" and (shell in ("cmd.exe", "powershell.exe")):
-                    self._logger.msg_error.emit(
-                        f"Selected shell is not supported on your platform [{sys.platform}]. "
-                        f"Please select another shell."
-                    )
-                    return False
         return True
 
     def execute(self, forward_resources, backward_resources, lock):

@@ -13,6 +13,7 @@
 Provides an optional widget for Tool Specification Editor for each Tool Spec type (julia, python, executable, gams).
 """
 
+import sys
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QWidget, QApplication
 from PySide6.QtGui import Qt, QStandardItemModel, QStandardItem, QIcon
@@ -260,6 +261,18 @@ class ExecutableToolSpecOptionalWidget(OptionalWidget):
         self.ui.setupUi(self)
         self.shells = ["No shell", "cmd.exe", "powershell.exe", "bash"]
         self.ui.comboBox_shell.addItems(self.shells)
+        # Disable shell selections that are not compatible with the os running toolbox
+        msg = f"<p>Selection not available for platform {sys.platform}</p>"
+        if sys.platform == "win32":
+            # No bash for windows
+            self.ui.comboBox_shell.model().item(3).setEnabled(False)
+            self.ui.comboBox_shell.model().item(3).setToolTip(msg)
+        else:
+            # For other systems no cmd or powershell
+            self.ui.comboBox_shell.model().item(1).setEnabled(False)
+            self.ui.comboBox_shell.model().item(1).setToolTip(msg)
+            self.ui.comboBox_shell.model().item(2).setEnabled(False)
+            self.ui.comboBox_shell.model().item(2).setToolTip(msg)
         self.connect_signals()
 
     def connect_signals(self):
@@ -283,3 +296,8 @@ class ExecutableToolSpecOptionalWidget(OptionalWidget):
         if ind < 1:
             return ""
         return self.ui.comboBox_shell.currentText()
+
+    def set_command_and_shell_edit_enabled_state(self, enabled):
+        """Sets the enabled state for the Command -text editor and the Shell -combobox"""
+        self.ui.comboBox_shell.setDisabled(enabled)
+        self.ui.lineEdit_command.setDisabled(enabled)

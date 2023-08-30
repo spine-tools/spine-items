@@ -82,9 +82,15 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == tooltype), -1)
             self._ui.comboBox_tooltype.setCurrentIndex(index)
             self._ui.textEdit_program.set_lexer_name(tooltype.lower())
-            self._show_optional_widget(index)
             specification.set_execution_settings()  # Set default execution settings
+            # spec dict needs to be set after setting the execution settings but before the
+            # optional widget is shown, in case the tooltype is Executable.
+            self.spec_dict = deepcopy(specification.to_dict())
+            self._show_optional_widget(index)
             self._init_optional_widget(specification)
+        else:
+            # If no specification is given, specification dict needs to be prepared
+            self.spec_dict = dict(item_type=ItemInfo.item_type())
         # Init lists
         programfiles = list(specification.includes) if specification else []
         # Get first item from programfiles list as the main program file
@@ -93,7 +99,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         inputfiles_opt = list(specification.inputfiles_opt) if specification else []
         outputfiles = list(specification.outputfiles) if specification else []
         self.includes_main_path = specification.path if specification else None
-        self.spec_dict = deepcopy(specification.to_dict()) if specification else dict(item_type=ItemInfo.item_type())
         # Populate lists (this will also create headers)
         self.init_programfile_list()
         self.init_io_file_list()
@@ -180,10 +185,12 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if optional_widget:
             optional_widget.widget().close()
         tooltype = self._ui.comboBox_tooltype.itemText(row)
-        optional_widget = self._make_optional_widget(tooltype)
-        if optional_widget:
-            self._ui.horizontalLayout_options_placeholder.addWidget(optional_widget)
-            optional_widget.show()
+        self.optional_widget = self._make_optional_widget(tooltype)
+        if self.optional_widget:
+            self._ui.horizontalLayout_options_placeholder.addWidget(self.optional_widget)
+            self.optional_widget.show()
+        if self.spec_dict.get("tooltype") == "executable" and self._current_main_program_file():
+            self.optional_widget.set_command_and_shell_edit_enabled_state(True)
 
     def _init_optional_widget(self, specification):
         """Initializes optional widget UI based on specification.
@@ -330,6 +337,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """Returns the full path to the current main program file or None if there's no main program."""
         index = self.programfiles_model.index(0, 0)
         root_item = self.programfiles_model.itemFromIndex(index)
+        if not root_item:
+            return None
         if not root_item.hasChildren():
             return None
         return root_item.child(0).data(Qt.ItemDataRole.UserRole)
@@ -357,6 +366,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._ui.treeView_programfiles.selectionModel().setCurrentIndex(
                 root_item.child(0).index(), QItemSelectionModel.Select
             )
+        if self.spec_dict.get("tooltype") == "executable":
+            self.optional_widget.set_command_and_shell_edit_enabled_state(True)
 
     def populate_programfile_list(self, names):
         """Adds additional program files into the program files model.
@@ -961,6 +972,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 self._set_program_files, new_program_files, old_program_files, "remove all program files"
             )
         )
+        if self.spec_dict.get("tooltype") == "executable":
+            self.optional_widget.set_command_and_shell_edit_enabled_state(False)
 
     @Slot(bool)
     def remove_program_files(self, checked=False):
