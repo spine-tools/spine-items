@@ -232,7 +232,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
 
         return Ui_MainWindow()
 
-    def _make_new_specification(self, spec_name, exiting=None):
+    def _make_new_specification(self, spec_name):
         """See base class."""
         description = self._spec_toolbar.description()
         mapping_specification = deepcopy(self._new_spec.mapping_specifications())

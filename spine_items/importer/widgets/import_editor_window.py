@@ -138,7 +138,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
         return Ui_MainWindow()
 
-    def _make_new_specification(self, spec_name, exiting=None):
+    def _make_new_specification(self, spec_name):
         mappings_dict = self._mappings_model.store()
         mappings_dict.update(self._import_sources.store_connectors())
         description = self._spec_toolbar.description()
