@@ -26,7 +26,7 @@ from spine_items.exporter.exporter_factory import ExporterFactory
 from spine_items.exporter.item_info import ItemInfo
 from spine_items.exporter.specification import OutputFormat, Specification
 from spine_items.utils import database_label
-from spinedb_api import DatabaseMapping
+from spinedb_api import create_new_spine_database, DatabaseMapping
 from spinetoolbox.project_item.logging_connection import LoggingConnection
 from ..mock_helpers import (
     clean_up_toolbox,
@@ -173,8 +173,7 @@ class TestExporterWithToolbox(unittest.TestCase):
     def test_notifications_when_output_file_name_extension_mismatches_with_specification_output_format(self):
         project = self._toolbox.project()
         url = "sqlite:///" + os.path.join(self._temp_dir.name, "db.sqlite")
-        db_map = DatabaseMapping(url, create=True)
-        db_map.connection.close()
+        create_new_spine_database(url)
         url_dict = {"dialect": "sqlite", "database": os.path.join(self._temp_dir.name, "db.sqlite")}
         data_store = DataStore("Dummy data store", "", 0.0, 0.0, self._toolbox, project, url_dict)
         project.add_item(data_store)
