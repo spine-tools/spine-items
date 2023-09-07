@@ -9,6 +9,8 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """Unit tests for the ``specification_editor_window`` module."""
+import json
+import pathlib
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -18,6 +20,7 @@ from PySide6.QtWidgets import QApplication
 from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
 from spine_items.exporter.widgets.specification_editor_window import SpecificationEditorWindow
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping, EntityClassMapping
+from spinedb_api.export_mapping.export_mapping import from_dict as mappings_from_dict
 from spinedb_api.mapping import Position, unflatten
 from ...mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
@@ -93,6 +96,53 @@ class TestSpecificationEditorWindow(unittest.TestCase):
                 show_duplicate.call_args.args[1].mapping_specifications()["my mappings"], mapping_specification
             )
             self.assertEqual(show_duplicate.call_args.kwargs, {})
+
+    def test_forced_decrease_of_selected_dimension_by_entity_dimensions_is_stored_properly(self):
+        mapping_dicts = [
+            {"map_type": "EntityClass", "position": 0, "highlight_position": 1},
+            {"map_type": "Dimension", "position": "hidden"},
+            {"map_type": "Dimension", "position": "hidden"},
+            {"map_type": "ParameterDefinition", "position": 3},
+            {"map_type": "ParameterValueList", "position": "hidden", "ignorable": True},
+            {"map_type": "Entity", "position": "hidden"},
+            {"map_type": "Element", "position": "hidden"},
+            {"map_type": "Element", "position": "hidden"},
+            {"map_type": "Alternative", "position": 4},
+            {"map_type": "ParameterValueType", "position": "hidden"},
+            {"map_type": "ParameterValue", "position": 5},
+        ]
+        unflattened_mappings = mappings_from_dict(mapping_dicts)
+        mapping_specification = MappingSpecification(
+            MappingType.entity_dimension_parameter_values, True, True, "", True, unflattened_mappings
+        )
+        specification = Specification("spec name", mapping_specifications={"my mappings": mapping_specification})
+        specification_path = pathlib.Path(self._temp_dir.name) / "my spec.json"
+        specification.definition_file_path = str(specification_path)
+        self._toolbox.project().add_specification(specification, save_to_disk=False)
+        editor = SpecificationEditorWindow(self._toolbox, specification)
+        self.assertEqual(editor._ui.highlight_dimension_spin_box.value(), 2)
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.value(), 2)
+        editor._spec_toolbar._line_edit_name.setText("my spec name")
+        editor._spec_toolbar._line_edit_name.editingFinished.emit()
+        editor._ui.entity_dimensions_spin_box.setValue(1)
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.value(), 1)
+        self.assertEqual(editor._ui.highlight_dimension_spin_box.value(), 1)
+        editor.spec_toolbar().save_action.trigger()
+        with open(specification_path) as specification_file:
+            loaded_specification = Specification.from_dict(json.load(specification_file))
+        self.assertEqual(loaded_specification.name, "my spec name")
+        expected_dicts = [
+            {"map_type": "EntityClass", "position": 0, "highlight_position": 0},
+            {"map_type": "Dimension", "position": "hidden"},
+            {"map_type": "ParameterDefinition", "position": 3},
+            {"map_type": "ParameterValueList", "position": "hidden", "ignorable": True},
+            {"map_type": "Entity", "position": "hidden"},
+            {"map_type": "Element", "position": "hidden"},
+            {"map_type": "Alternative", "position": 4},
+            {"map_type": "ParameterValueType", "position": "hidden"},
+            {"map_type": "ParameterValue", "position": 5},
+        ]
+        self.assertEqual(loaded_specification.mapping_specifications()["my mappings"].to_dict()["root"], expected_dicts)
 
 
 if __name__ == '__main__':

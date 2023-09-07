@@ -36,15 +36,12 @@ class TestOptionsWidget(unittest.TestCase):
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
-        layout = widget.form_layout
-        checked = {"number": False}
-        for item in (layout.itemAt(i).widget() for i in range(layout.count())):
-            if isinstance(item, QSpinBox):
-                item.setValue(23)
-                connector.update_options.assert_called_once_with({"number": 23})
-                checked["number"] = True
-                break
-        self.assertTrue(all(checked.values()))
+        changed_options = {}
+        widget.options_changed.connect(lambda o: changed_options.update(o))
+        spin_box = widget.cellWidget(0, 0).layout().itemAt(1).widget()
+        spin_box.setValue(23)
+        connector.update_options.assert_called_once_with({"number": 23})
+        self.assertEqual(changed_options, {"number": 23})
 
     def test_line_edit_change_signalling(self):
         option_template = {"text": {"label": "text value", "type": str, "default": ""}}
@@ -53,15 +50,12 @@ class TestOptionsWidget(unittest.TestCase):
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
-        layout = widget.form_layout
-        checked = False
-        for item in (layout.itemAt(i).widget() for i in range(layout.count())):
-            if isinstance(item, QLineEdit):
-                item.setText("the text has been set")
-                connector.update_options.assert_called_once_with({"text": "the text has been set"})
-                checked = True
-                break
-        self.assertTrue(checked)
+        changed_options = {}
+        widget.options_changed.connect(lambda o: changed_options.update(o))
+        line_edit = widget.cellWidget(0, 0).layout().itemAt(1).widget()
+        line_edit.setText("the text has been set")
+        connector.update_options.assert_called_once_with({"text": "the text has been set"})
+        self.assertEqual(changed_options, {"text": "the text has been set"})
 
     def test_combo_box_change_signalling(self):
         option_template = {
@@ -72,15 +66,12 @@ class TestOptionsWidget(unittest.TestCase):
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
-        layout = widget.form_layout
-        checked = False
-        for item in (layout.itemAt(i).widget() for i in range(layout.count())):
-            if isinstance(item, QComboBox):
-                item.setCurrentText("choice b")
-                connector.update_options.assert_called_once_with({"choice": "choice b"})
-                checked = True
-                break
-        self.assertTrue(checked)
+        changed_options = {}
+        widget.options_changed.connect(lambda o: changed_options.update(o))
+        combo_box = widget.cellWidget(0, 0).layout().itemAt(1).widget()
+        combo_box.setCurrentText("choice b")
+        connector.update_options.assert_called_once_with({"choice": "choice b"})
+        self.assertEqual(changed_options, {"choice": "choice b"})
 
     def test_check_box_change_signalling(self):
         option_template = {"yesno": {"label": "check me", "type": bool, "default": True}}
@@ -89,15 +80,12 @@ class TestOptionsWidget(unittest.TestCase):
         connector.connection.OPTIONS = option_template
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
-        layout = widget.form_layout
-        checked = False
-        for item in (layout.itemAt(i).widget() for i in range(layout.count())):
-            if isinstance(item, QCheckBox):
-                item.setChecked(False)
-                connector.update_options.assert_called_once_with({"yesno": False})
-                checked = True
-                break
-        self.assertTrue(checked)
+        changed_options = {}
+        widget.options_changed.connect(lambda o: changed_options.update(o))
+        check_box = widget.cellWidget(0, 0).layout().itemAt(1).widget()
+        check_box.setChecked(False)
+        connector.update_options.assert_called_once_with({"yesno": False})
+        self.assertEqual(changed_options, {"yesno": False})
 
     def test_set_connector_makes_copy_of_connections_base_options(self):
         option_template = {"yesno": {"label": "check me", "type": bool, "default": True}}

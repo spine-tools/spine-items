@@ -115,7 +115,7 @@ class OptionsWidget(QTableWidget):
     def _adjust_height(self):
         height = self.verticalHeader().length() + 2
         if self.horizontalScrollBar().isVisible():
-            height += self.style().pixelMetric(QStyle.PM_ScrollBarExtent)
+            height += self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)
         self.setMaximumHeight(height)
 
     def resizeEvent(self, ev):
@@ -230,7 +230,7 @@ def _emit_spin_box_option_changed(i, option_key, options_widget):
     A 'slot' to transform changes in QSpinBox into changes in options.
 
     Args:
-        text (str): text for undo/redo
+        i (int): spin box value
         option_key (str): option's key
         options_widget (OptionsWidget): options widget
     """
@@ -266,7 +266,7 @@ def _emit_check_box_option_changed(state, option_key, options_widget):
     A 'slot' to transform changes in QCheckBox into changes in options.
 
     Args:
-        text (str): text for undo/redo
+        state (int): check box value
         option_key (str): option's key
         options_widget (OptionsWidget): options widget
     """

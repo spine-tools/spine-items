@@ -41,7 +41,7 @@ class TestMappingsModel(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         self.assertEqual(model.columnCount(), 1)
         index = model.index(0, 0)
-        self.assertEqual(index.data(), "Select All")
+        self.assertEqual(index.data(), "Select all")
 
     def test_set_time_series_repeat_flag(self):
         model = MappingsModel(self._undo_stack, self._model_parent)
@@ -117,7 +117,7 @@ class TestTableList(unittest.TestCase):
         )
         self._model.remove_tables_not_in_source_and_specification()
         self.assertEqual(self._model.rowCount(), 3)
-        expected_names = ["Select All", "table that is only in source", "table that is in source and specification"]
+        expected_names = ["Select all", "table that is only in source", "table that is in source and specification"]
         for row, expected_name in zip(range(self._model.rowCount()), expected_names):
             item = self._model.index(row, 0).data(Role.ITEM)
             self.assertEqual(item.name, expected_name)
@@ -140,15 +140,13 @@ class TestTableList(unittest.TestCase):
     def test_empty_model_has_select_all_source_table_item(self):
         self.assertEqual(self._model.rowCount(), 1)
         index = self._model.index(0, 0)
-        self.assertEqual(index.data(), "Select All")
+        self.assertEqual(index.data(), "Select all")
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
         self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole).value)
         self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
         self.assertIsNone(index.data(Qt.ItemDataRole.ToolTipRole))
         flags = self._model.flags(index)
-        self.assertEqual(
-            flags, Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable
-        )
+        self.assertEqual(flags, Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
 
     def test_empty_row(self):
         self._model.add_empty_row()

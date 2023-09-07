@@ -21,10 +21,7 @@ from PySide6.QtWidgets import QApplication, QHeaderView, QMenu
 from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
     alternative_export,
-    entity_export,
     entity_group_export,
-    entity_parameter_default_value_export,
-    entity_parameter_value_export,
     parameter_value_list_export,
     entity_export,
     entity_dimension_parameter_default_value_export,
@@ -358,7 +355,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def _expect_current_mapping_change(self, expect_change):
-        """Connects and disconnects signals depending of if current mapping is expected to change or not
+        """Connects and disconnects signals depending on if current mapping is expected to change.
 
         Args:
             expect_change (bool): True to expect changes
@@ -914,20 +911,30 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         Args:
             dimension (int): highlight dimension
         """
+        if self._ui.item_type_combo_box.currentText() != "Entity class with dimension parameter":
+            return
         index = self._sort_mappings_table_model.mapToSource(self._ui.mappings_table.currentIndex())
         if not index.isValid():
             return
         old = index.data(MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
-        self._undo_stack.push(SetHighlightDimension(index, old, dimension - 1))
+        new = dimension - 1
+        if old == new:
+            return
+        self._undo_stack.push(SetHighlightDimension(index, old, new))
 
     def _set_highlight_dimension_silently(self, highlight_dimension):
         """Sets highlight dimension without emitting signals.
 
         Args:
-            highlight_dimension (int): highlight dimension
+            highlight_dimension (int, optional): highlight dimension
         """
         self._ui.highlight_dimension_spin_box.valueChanged.disconnect(self._change_highlight_dimension)
-        self._ui.highlight_dimension_spin_box.setValue(highlight_dimension + 1)
+        if highlight_dimension is not None:
+            self._ui.highlight_dimension_spin_box.setValue(highlight_dimension + 1)
+            self._ui.highlight_dimension_spin_box.setEnabled(True)
+        else:
+            self._ui.highlight_dimension_spin_box.setValue(1)
+            self._ui.highlight_dimension_spin_box.setEnabled(False)
         self._ui.highlight_dimension_spin_box.valueChanged.connect(self._change_highlight_dimension)
 
     def _change_entity_dimensions(self, dimensions):
@@ -943,11 +950,14 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         set_entity_dimensions(modified, dimensions)
         current_mapping_type = self._ui.item_type_combo_box.currentText()
         self._undo_stack.beginMacro("change entity dimensions")
+        self._undo_stack.push(SetMapping(self._ui.mappings_table.currentIndex(), modified))
         if current_mapping_type == "Entity class with dimension parameter":
             highlight_dimension = self._mappings_table_model.data(index, MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
-            if highlight_dimension >= dimensions:
-                self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, dimensions))
-        self._undo_stack.push(SetMapping(self._ui.mappings_table.currentIndex(), modified))
+            if highlight_dimension is None:
+                self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, 0))
+            elif highlight_dimension >= dimensions:
+                new_highlight_dimension = dimensions - 1 if dimensions > 0 else None
+                self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, new_highlight_dimension))
         self._undo_stack.endMacro()
 
     def _set_entity_dimensions_silently(self, dimensions):
@@ -960,7 +970,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.entity_dimensions_spin_box.valueChanged.disconnect(self._change_entity_dimensions)
         self._ui.entity_dimensions_spin_box.setValue(dimensions)
         self._ui.entity_dimensions_spin_box.valueChanged.connect(self._change_entity_dimensions)
-        self._ui.highlight_dimension_spin_box.setMaximum(dimensions)
+        self._ui.highlight_dimension_spin_box.setMaximum(max(dimensions, 1))
 
     def _enable_mapping_specification_editing(self):
         """Enables and disables mapping specification editing controls."""
