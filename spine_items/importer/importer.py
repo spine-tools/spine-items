@@ -252,7 +252,8 @@ class Importer(DBWriterItemBase):
         self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self.name, self._file_model, index, checked))
 
     def upstream_resources_updated(self, resources):
-        self._file_model.update(resources)
+        if resources:
+            self._file_model.update(resources)
         self._check_notifications()
 
     def replace_resources_from_upstream(self, old, new):
