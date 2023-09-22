@@ -415,22 +415,26 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> not ready for execution. No specification.")
             return False
         if self._tool_specification.tooltype.lower() == "python":
-            use_python_kernel = settings.value("appSettings/usePythonKernel", defaultValue="0")
-            python_kernel = settings.value("appSettings/pythonKernel", defaultValue="")
-            if use_python_kernel == "2" and python_kernel == "":
-                self._logger.msg_error.emit("No Python kernel spec selected. Please select one in Settings->Tools.")
+            use_jupyter_console = self._tool_specification.execution_settings["use_jupyter_console"]
+            k_name = self._tool_specification.execution_settings["kernel_spec_name"]
+            if use_jupyter_console and k_name == "":
+                self._logger.msg_error.emit(
+                    "Python kernel spec missing. Please select it in Tool Specification Editor."
+                )
                 return False
             # Note: no check for python path == "" because this should never happen
         elif self._tool_specification.tooltype.lower() == "julia":
-            use_julia_kernel = settings.value("appSettings/useJuliaKernel", defaultValue="0")
-            julia_kernel = settings.value("appSettings/juliaKernel", defaultValue="")
-            julia_path = resolve_julia_executable(settings.value("appSettings/juliaPath", defaultValue=""))
-            if use_julia_kernel == "2" and julia_kernel == "":
-                self._logger.msg_error.emit("No Julia kernel spec selected. Please select one in Settings->Tools.")
-                return False
-            if use_julia_kernel == "0" and julia_path == "":
+            use_jupyter_console = self._tool_specification.execution_settings["use_jupyter_console"]
+            k_name = self._tool_specification.execution_settings["kernel_spec_name"]
+            julia_path = self._tool_specification.execution_settings["executable"]
+            if use_jupyter_console and k_name == "":
                 self._logger.msg_error.emit(
-                    "Julia not found in PATH. Please select a Julia executable in Settings->Tools."
+                    "Julia kernel spec missing. Please select it in Tool Specification Editor."
+                )
+                return False
+            if not use_jupyter_console and julia_path == "":
+                self._logger.msg_error.emit(
+                    "Julia executable path missing. Please set it in Tool Specification Editor."
                 )
                 return False
         elif self._tool_specification.tooltype.lower() == "gams":

@@ -402,6 +402,7 @@ class JuliaTool(ToolSpecification):
         inputfiles_opt=None,
         outputfiles=None,
         cmdline_args=None,
+        execution_settings=None,
     ):
         """
         Args:
@@ -417,6 +418,7 @@ class JuliaTool(ToolSpecification):
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (str, optional): Julia tool command line arguments (read from tool definition file)
+            execution_settings (dict, optional): Julia tool spec execution settings
         """
         super().__init__(
             name,
@@ -433,7 +435,50 @@ class JuliaTool(ToolSpecification):
         )
         self.main_prgm = includes[0]
         self.julia_options = OrderedDict()
+        self.execution_settings = execution_settings if execution_settings is not None else {}
         self.return_codes = {0: "Normal return", -1: "Failure"}
+
+    def to_dict(self):
+        """Adds execution settings dict to Tool spec dict."""
+        d = super().to_dict()
+        d["execution_settings"] = self.execution_settings
+        return d
+
+    def set_execution_settings(self):
+        """Sets the execution_setting instance attribute to defaults if this
+        Julia Tool spec has not been updated yet.
+
+        Returns:
+            void
+        """
+        if not self.execution_settings:
+            # Use global (default) execution settings from Settings->Tools
+            # This part is for providing support for Julia Tool specs that do not have
+            # the execution_settings dict yet
+            d = dict()
+            d["kernel_spec_name"] = self._settings.value("appSettings/juliaKernel", defaultValue="")
+            d["env"] = ""
+            d["use_jupyter_console"] = bool(int(
+                self._settings.value("appSettings/useJuliaKernel", defaultValue="0"))
+            )  # bool(int(str))
+            d["executable"] = self._settings.value("appSettings/juliaPath", defaultValue="")
+            d["project"] = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
+            self.execution_settings = d
+        else:
+            # Make sure that required keys are included (for debugging)
+            if not isinstance(self.execution_settings, dict):
+                logging.error("self.execution_settings is not a dict")
+                return
+            if "use_jupyter_console" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 1")
+            elif "kernel_spec_name" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 2")
+            elif "env" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 3")
+            elif "executable" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 4")
+            elif "project" not in self.execution_settings.keys():
+                logging.error("self.execution_settings error 5")
 
     @staticmethod
     def load(path, data, settings, logger):
@@ -492,7 +537,7 @@ class PythonTool(ToolSpecification):
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (str, optional): Python tool command line arguments (read from tool definition file)
-            execution_settings (dict, optional): Python kernel spec settings
+            execution_settings (dict, optional): Python tool spec execution settings
         """
         super().__init__(
             name,

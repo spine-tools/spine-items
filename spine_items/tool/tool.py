@@ -20,7 +20,7 @@ from spinetoolbox.helpers import open_url
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, make_cmd_line_arg, LabelArg
-from spine_engine.utils.helpers import resolve_python_interpreter
+from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable
 from .commands import (
     UpdateKillCompletedProcesses,
     UpdateToolExecuteInWorkCommand,
@@ -356,7 +356,7 @@ class Tool(DBWriterItemBase):
             self._properties_ui.log_process_output_check_box.setChecked(log_process_output)
 
     def _update_tool_ui(self):
-        """Updates Tool properties UI. Used when Tool specification is changed.."""
+        """Updates Tool properties UI. Used when Tool specification is changed."""
         options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
         if options_widget:
             options_widget.widget().hide()
@@ -372,7 +372,15 @@ class Tool(DBWriterItemBase):
         if options_widget:
             self._properties_ui.horizontalLayout_options.addWidget(options_widget)
             options_widget.show()
-        if self._specification.tooltype == "python":
+        self._show_execution_settings()
+        self._properties_ui.kill_consoles_check_box.setChecked(self._kill_completed_processes)
+        self._update_kill_consoles_check_box_enabled()
+        self._properties_ui.log_process_output_check_box.setChecked(self._log_process_output)
+
+    def _show_execution_settings(self):
+        """Updates the label in Tool properties to show the selected execution settings for this Tool."""
+        tstype = self._specification.tooltype
+        if tstype == "python" or tstype == "julia":
             self.specification().set_execution_settings()
             k_spec_name = self.specification().execution_settings["kernel_spec_name"]
             env = self.specification().execution_settings["env"]
@@ -380,14 +388,14 @@ class Tool(DBWriterItemBase):
             self._properties_ui.label_jupyter.show()
             if not use_console:
                 exe = self.specification().execution_settings["executable"]
-                p = resolve_python_interpreter(exe)
+                if tstype == "python":
+                    p = resolve_python_interpreter(exe)
+                else:
+                    p = resolve_julia_executable(exe)
                 self._properties_ui.label_jupyter.setText(f"[Basic console] {p}")
             else:
                 env = "" if not env else f"[{env}]"
                 self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
-        self._properties_ui.kill_consoles_check_box.setChecked(self._kill_completed_processes)
-        self._update_kill_consoles_check_box_enabled()
-        self._properties_ui.log_process_output_check_box.setChecked(self._log_process_output)
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)

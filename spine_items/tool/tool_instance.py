@@ -154,8 +154,10 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
+        self.tool_specification.set_execution_settings()  # Set default execution settings if they are missing
         sysimage = self._owner.options.get("julia_sysimage", "")
-        use_julia_kernel = self._settings.value("appSettings/useJuliaKernel", defaultValue="2")
+        make_sysimage = self._settings.value("appSettings/makeSysImage", defaultValue="false")
+        use_jupyter_console = self.tool_specification.execution_settings["use_jupyter_console"]
         # Prepare args
         mod_work_dir = escape_backward_slashes(self.basedir)
         self.args = [f'cd("{mod_work_dir}");']
@@ -164,11 +166,11 @@ class JuliaToolInstance(ToolInstance):
             fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(cmdline_args)) + '"]'
             self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
         self.args += [f'include("{self.tool_specification.main_prgm}")']
-        if use_julia_kernel == "2":
+        if use_jupyter_console:
             server_ip = "127.0.0.1"
             if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
                 server_ip = self._settings.value("engineSettings/remoteHost", "")
-            kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
+            kernel_name = self.tool_specification.execution_settings["kernel_spec_name"]
             extra_switches = [f"--sysimage={sysimage}"] if os.path.isfile(sysimage) else None
             self.exec_mngr = KernelExecutionManager(
                 self._logger,
@@ -180,10 +182,9 @@ class JuliaToolInstance(ToolInstance):
                 server_ip=server_ip,
             )
             return
-        julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
-        julia_exe = resolve_julia_executable(julia_exe)
-        julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
-        if use_julia_kernel == "1":
+        julia_exe = self.tool_specification.execution_settings["executable"]
+        julia_project_path = self.tool_specification.execution_settings["project"]
+        if make_sysimage == "true":  # TODO: This happens in a test and when creating Julia sysimage. TEST!
             self.program = julia_exe
             self.args = []
             if julia_project_path:
@@ -193,6 +194,7 @@ class JuliaToolInstance(ToolInstance):
             if self.tool_specification.main_prgm:
                 self.args.append(self.tool_specification.main_prgm)
             self.append_cmdline_args(args)
+            print(f"Making sysimage for julia:{julia_exe} args:{self.args}")
             self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
             return
         self.program = [julia_exe]

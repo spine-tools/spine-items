@@ -16,12 +16,11 @@ Provides OptionsWidget and subclasses for each tool type (julia, python, executa
 import os
 import sys
 import uuid
-from spine_engine.utils.helpers import get_julia_command
 from PySide6.QtCore import Qt, Slot, QVariantAnimation, QPointF
 from PySide6.QtWidgets import QWidget, QFileDialog
 from PySide6.QtGui import QIcon, QLinearGradient, QPalette, QBrush
-
 from spine_items.utils import escape_backward_slashes
+from spine_items.tool.utils import get_julia_path_and_project
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine, make_settings_dict_for_engine
@@ -229,7 +228,11 @@ class JuliaOptionsWidget(OptionsWidget):
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
         settings = make_settings_dict_for_engine(self._settings)
-        settings["appSettings/useJuliaKernel"] = "1"  # Use subprocess
+        # TODO: What to do about this when it uses subprocess in tool_instance.py prepare()
+        settings["appSettings/makeSysImage"] = "true"  # Use subprocess
+        settings["appSettings/juliaPath"] = self._tool.specification().execution_settings["executable"]
+        settings["appSettings/juliaProjectPath"] = self._tool.specification().execution_settings["project"]
+        settings["appSettings/juliaKernel"] = self._tool.specification().execution_settings["kernel_spec_name"]
         dag_identifier = f"containing {self._tool.name}"
         job_id = self._project.LOCAL_EXECUTION_JOB_ID
         self.sysimage_worker = self._project.create_engine_worker(
@@ -348,7 +351,7 @@ finally
     cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
     cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
 end"""
-        julia, *args = get_julia_command(self._settings)
+        julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings)
         args += ["-e", code]
         self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=False)
         self.sysimage_worker.execution_finished.connect(lambda ret: self._handle_sysimage_process_finished(ret, tool))

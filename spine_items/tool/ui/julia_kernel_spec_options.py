@@ -11,7 +11,7 @@
 ######################################################################################################################
 
 ################################################################################
-## Form generated from reading UI file 'python_kernel_spec_options.ui'
+## Form generated from reading UI file 'julia_kernel_spec_options.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.5.2
 ##
@@ -34,7 +34,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(527, 73)
+        Form.resize(527, 99)
         self.verticalLayout_3 = QVBoxLayout(Form)
         self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
@@ -92,16 +92,39 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.lineEdit_executable)
 
-        self.toolButton_browse_python = QToolButton(Form)
-        self.toolButton_browse_python.setObjectName(u"toolButton_browse_python")
+        self.toolButton_browse_julia = QToolButton(Form)
+        self.toolButton_browse_julia.setObjectName(u"toolButton_browse_julia")
         icon = QIcon()
         icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_browse_python.setIcon(icon)
+        self.toolButton_browse_julia.setIcon(icon)
 
-        self.horizontalLayout_2.addWidget(self.toolButton_browse_python)
+        self.horizontalLayout_2.addWidget(self.toolButton_browse_julia)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(6, -1, -1, -1)
+        self.label_3 = QLabel(Form)
+        self.label_3.setObjectName(u"label_3")
+
+        self.horizontalLayout_4.addWidget(self.label_3)
+
+        self.lineEdit_julia_project = QLineEdit(Form)
+        self.lineEdit_julia_project.setObjectName(u"lineEdit_julia_project")
+        self.lineEdit_julia_project.setClearButtonEnabled(True)
+
+        self.horizontalLayout_4.addWidget(self.lineEdit_julia_project)
+
+        self.toolButton_browse_julia_project = QToolButton(Form)
+        self.toolButton_browse_julia_project.setObjectName(u"toolButton_browse_julia_project")
+        self.toolButton_browse_julia_project.setIcon(icon)
+
+        self.horizontalLayout_4.addWidget(self.toolButton_browse_julia_project)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_4)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setSpacing(6)
@@ -142,6 +165,13 @@ class Ui_Form(object):
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_3)
 
+        QWidget.setTabOrder(self.radioButton_basic_console, self.radioButton_jupyter_console)
+        QWidget.setTabOrder(self.radioButton_jupyter_console, self.lineEdit_executable)
+        QWidget.setTabOrder(self.lineEdit_executable, self.toolButton_browse_julia)
+        QWidget.setTabOrder(self.toolButton_browse_julia, self.lineEdit_julia_project)
+        QWidget.setTabOrder(self.lineEdit_julia_project, self.toolButton_browse_julia_project)
+        QWidget.setTabOrder(self.toolButton_browse_julia_project, self.comboBox_kernel_specs)
+        QWidget.setTabOrder(self.comboBox_kernel_specs, self.toolButton_refresh_kernel_specs)
 
         self.retranslateUi(Form)
 
@@ -151,17 +181,25 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         self.radioButton_basic_console.setText(QCoreApplication.translate("Form", u"Basic Console", None))
         self.radioButton_jupyter_console.setText(QCoreApplication.translate("Form", u"Jupyter Console", None))
-        self.label_2.setText(QCoreApplication.translate("Form", u"Interpreter", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Executable", None))
 #if QT_CONFIG(tooltip)
-        self.lineEdit_executable.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Python interpreter for <span style=\" font-weight:700;\">Basic Console</span> execution. Leave empty to use the Python that was used in launching Spine Toolbox.</p></body></html>", None))
+        self.lineEdit_executable.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Julia executable for <span style=\" font-weight:700;\">Basic Console</span> execution. Leave empty to use the Julia in your PATH environment variable.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.lineEdit_executable.setPlaceholderText(QCoreApplication.translate("Form", u"Using current Python interpreter", None))
+        self.lineEdit_executable.setPlaceholderText(QCoreApplication.translate("Form", u"Using Julia executable in system path", None))
 #if QT_CONFIG(tooltip)
-        self.toolButton_browse_python.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Python interpreter using a file browser</p></body></html>", None))
+        self.toolButton_browse_julia.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Julia executable using a file browser</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_3.setText(QCoreApplication.translate("Form", u"Project", None))
+#if QT_CONFIG(tooltip)
+        self.lineEdit_julia_project.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Julia environment/project directory</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.lineEdit_julia_project.setPlaceholderText(QCoreApplication.translate("Form", u"Using Julia default project", None))
+#if QT_CONFIG(tooltip)
+        self.toolButton_browse_julia_project.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Julia project using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.label.setText(QCoreApplication.translate("Form", u"Kernel", None))
 #if QT_CONFIG(tooltip)
-        self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
+        self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Julia kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh kernel specs list</p></body></html>", None))
