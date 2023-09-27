@@ -13,7 +13,6 @@
 
 import unittest
 from unittest import mock
-from unittest.mock import MagicMock
 import logging
 import sys
 from PySide6.QtWidgets import QApplication
@@ -41,9 +40,7 @@ class TestJuliaToolSpecOptionalWidget(unittest.TestCase):
     def setUp(self):
         """Overridden method. Runs before each test."""
         self.toolbox = create_mock_toolbox_with_mock_qsettings()
-        with mock.patch(
-            "spinetoolbox.project_item.specification_editor_window.restore_ui"
-        ) as mock_restore_ui:
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
             self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
 
     def tearDown(self):
@@ -54,7 +51,7 @@ class TestJuliaToolSpecOptionalWidget(unittest.TestCase):
         self.tool_specification_widget = None
 
     def test_constructor_and_init(self):
-        mock_logger = MagicMock()
+        mock_logger = mock.MagicMock()
         julia_tool_spec = JuliaTool("a", "julia", "", ["fake_main_program.py"], MockQSettings(), mock_logger)
         julia_tool_spec.set_execution_settings()  # Sets defaults
         julia_tool_spec.execution_settings["executable"] = "fake_julia.exe"

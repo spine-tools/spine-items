@@ -458,8 +458,8 @@ class JuliaTool(ToolSpecification):
             d = dict()
             d["kernel_spec_name"] = self._settings.value("appSettings/juliaKernel", defaultValue="")
             d["env"] = ""
-            d["use_jupyter_console"] = bool(int(
-                self._settings.value("appSettings/useJuliaKernel", defaultValue="0"))
+            d["use_jupyter_console"] = bool(
+                int(self._settings.value("appSettings/useJuliaKernel", defaultValue="0"))
             )  # bool(int(str))
             d["executable"] = self._settings.value("appSettings/juliaPath", defaultValue="")
             d["project"] = self._settings.value("appSettings/juliaProjectPath", defaultValue="")

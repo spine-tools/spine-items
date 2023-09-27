@@ -159,7 +159,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             toolspectype (str): Tool spec type
 
         Returns:
-            ToolSpecOptionalWidget
+            Union[ToolSpecOptionalWidget, None]
         """
         if toolspectype.lower() == "python":
             return PythonToolSpecOptionalWidget(self)
@@ -170,7 +170,14 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return None
 
     def _get_optional_widget(self, toolspectype):
-        """Returns the current optional widget for given tool spec type or None if unavailable."""
+        """Returns the current optional widget for given tool spec type or None if unavailable.
+
+        Args:
+            toolspectype (str): Tool spec type
+
+        Returns:
+            Union[ToolSpecOptionalWidget, None]
+        """
         if toolspectype.lower() in ("python", "julia", "executable"):
             optional_widget = self._ui.horizontalLayout_options_placeholder.itemAt(0)
             return optional_widget.widget()
@@ -207,8 +214,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _make_new_specification(self, spec_name):
         """See base class."""
-        # Check that tool type is selected
-        if self._ui.comboBox_tooltype.currentIndex() == -1:
+        if self._ui.comboBox_tooltype.currentIndex() == -1:  # Check that a tool type is selected
             self.show_error("Tool spec type not selected")
             return None
         toolspectype = self._ui.comboBox_tooltype.currentText().lower()
@@ -554,7 +560,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                     int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0"))
                 ),
                 "kernel_spec_name": self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue=""),
-                "project" : self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue=""),
+                "project": self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue=""),
                 "env": "",
                 "executable": self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue=""),
             }

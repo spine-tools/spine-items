@@ -19,9 +19,11 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
-from spine_items.tool.widgets.tool_spec_optional_widgets import JuliaToolSpecOptionalWidget, \
-    PythonToolSpecOptionalWidget, \
-    ExecutableToolSpecOptionalWidget
+from spine_items.tool.widgets.tool_spec_optional_widgets import (
+    JuliaToolSpecOptionalWidget,
+    PythonToolSpecOptionalWidget,
+    ExecutableToolSpecOptionalWidget,
+)
 from tests.mock_helpers import create_mock_toolbox_with_mock_qsettings
 
 
@@ -43,9 +45,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
     def setUp(self):
         """Overridden method. Runs before each test."""
         self.toolbox = create_mock_toolbox_with_mock_qsettings()
-        with mock.patch(
-            "spinetoolbox.project_item.specification_editor_window.restore_ui"
-        ) as mock_restore_ui:
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
             self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
 
     def tearDown(self):

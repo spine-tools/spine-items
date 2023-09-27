@@ -27,6 +27,7 @@ class MockQWidget(QWidget):
     def test_push_vars(self):
         return True
 
+
 class MockQSettings:
     """Class for replacing an argument where e.g. class constructor requires an instance of QSettings.
     For example all ToolSpecification classes require a QSettings instance."""
@@ -36,10 +37,11 @@ class MockQSettings:
         """Returns the default value"""
         return defaultValue
 
-    #noinspection PyPep8Naming
+    # noinspection PyPep8Naming
     def setValue(self, key, value):
         """Returns without modifying anything."""
         return
+
 
 def create_mock_toolbox():
     mock_toolbox = MagicMock()

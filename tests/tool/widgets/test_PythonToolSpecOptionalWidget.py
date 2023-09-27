@@ -40,9 +40,7 @@ class TestPythonToolSpecOptionalWidget(unittest.TestCase):
     def setUp(self):
         """Overridden method. Runs before each test."""
         self.toolbox = create_mock_toolbox_with_mock_qsettings()
-        with mock.patch(
-            "spinetoolbox.project_item.specification_editor_window.restore_ui"
-        ) as mock_restore_ui:
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
             self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
 
     def tearDown(self):

@@ -428,9 +428,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             k_name = self._tool_specification.execution_settings["kernel_spec_name"]
             julia_path = self._tool_specification.execution_settings["executable"]
             if use_jupyter_console and k_name == "":
-                self._logger.msg_error.emit(
-                    "Julia kernel spec missing. Please select it in Tool Specification Editor."
-                )
+                self._logger.msg_error.emit("Julia kernel spec missing. Please select it in Tool Specification Editor.")
                 return False
             if not use_jupyter_console and julia_path == "":
                 self._logger.msg_error.emit(

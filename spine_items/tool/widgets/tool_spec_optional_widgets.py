@@ -50,6 +50,7 @@ class OptionalWidget(QWidget):
 
 class SharedToolSpecOptionalWidget(OptionalWidget):
     """Superclass for Python and Julia Tool Spec optional widgets."""
+
     def __init__(self, parent, Ui_Form, fetch_mode):
         """Constructor.
 
@@ -137,7 +138,9 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
         Raises:
             NameError: If the python path in the line edit is not valid
         """
-        if not file_is_valid(self._parent, p, f"Invalid {tool_spec_type.capitalize()} Interpreter", extra_check=tool_spec_type):
+        if not file_is_valid(
+            self._parent, p, f"Invalid {tool_spec_type.capitalize()} Interpreter", extra_check=tool_spec_type
+        ):
             raise NameError
 
     def set_executable(self, p):
@@ -338,7 +341,7 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
 
     def add_execution_settings(self, tool_spec_type):
         """See base class."""
-        d =  super().add_execution_settings(tool_spec_type)
+        d = super().add_execution_settings(tool_spec_type)
         d["project"] = self.get_julia_project()
         return d
 
