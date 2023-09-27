@@ -464,21 +464,6 @@ class JuliaTool(ToolSpecification):
             d["executable"] = self._settings.value("appSettings/juliaPath", defaultValue="")
             d["project"] = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
             self.execution_settings = d
-        else:
-            # Make sure that required keys are included (for debugging)
-            if not isinstance(self.execution_settings, dict):
-                logging.error("self.execution_settings is not a dict")
-                return
-            if "use_jupyter_console" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 1")
-            elif "kernel_spec_name" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 2")
-            elif "env" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 3")
-            elif "executable" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 4")
-            elif "project" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 5")
 
     @staticmethod
     def load(path, data, settings, logger):
@@ -582,19 +567,6 @@ class PythonTool(ToolSpecification):
             )  # bool(int(str))
             d["executable"] = self._settings.value("appSettings/pythonPath", defaultValue="")
             self.execution_settings = d
-        else:
-            # Make sure that required keys are included (for debugging)
-            if not isinstance(self.execution_settings, dict):
-                logging.error("self.execution_settings is not a dict")
-                return
-            if "use_jupyter_console" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 1")
-            elif "kernel_spec_name" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 2")
-            elif "env" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 3")
-            elif "executable" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 4")
 
     @staticmethod
     def load(path, data, settings, logger):
@@ -708,15 +680,6 @@ class ExecutableTool(ToolSpecification):
             d["cmd"] = ""
             d["shell"] = ""
             self.execution_settings = d
-        else:
-            # Make sure that required keys are included (for debugging)
-            if not isinstance(self.execution_settings, dict):
-                logging.error("self.execution_settings is not a dict")
-                return
-            if "cmd" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 1")
-            elif "shell" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 2")
 
     @staticmethod
     def load(path, data, settings, logger):
