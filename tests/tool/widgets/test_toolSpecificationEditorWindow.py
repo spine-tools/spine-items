@@ -9,10 +9,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for ToolSpecificationEditorWindow class.
-
-"""
+"""Unit tests for ToolSpecificationEditorWindow class."""
 
 import unittest
 import logging
@@ -22,7 +19,10 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
-from tests.mock_helpers import create_mock_toolbox
+from spine_items.tool.widgets.tool_spec_optional_widgets import JuliaToolSpecOptionalWidget, \
+    PythonToolSpecOptionalWidget, \
+    ExecutableToolSpecOptionalWidget
+from tests.mock_helpers import create_mock_toolbox_with_mock_qsettings
 
 
 class TestToolSpecificationEditorWindow(unittest.TestCase):
@@ -42,8 +42,10 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
 
     def setUp(self):
         """Overridden method. Runs before each test."""
-        self.toolbox = create_mock_toolbox()
-        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui"):
+        self.toolbox = create_mock_toolbox_with_mock_qsettings()
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.restore_ui"
+        ) as mock_restore_ui:
             self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
 
     def tearDown(self):
@@ -55,122 +57,44 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
 
     def test_create_minimal_julia_tool_specification(self):
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # 0: Julia
-        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_tool")
+        self.assertIsInstance(self.tool_specification_widget.optional_widget, JuliaToolSpecOptionalWidget)
+        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_julia_tool")
         with NamedTemporaryFile(mode="r") as temp_file:
             self.tool_specification_widget._set_main_program_file(str(Path(temp_file.name)))
-            self.tool_specification_widget._save()
+            self._call_save()
+
+    def test_create_minimal_python_tool_specification(self):
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(1)  # 1: Python
+        self.assertIsInstance(self.tool_specification_widget.optional_widget, PythonToolSpecOptionalWidget)
+        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_python_tool")
+        with NamedTemporaryFile(mode="r") as temp_file:
+            self.tool_specification_widget._set_main_program_file(str(Path(temp_file.name)))
+            self._call_save()
 
     def test_create_minimal_gams_tool_specification(self):
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(2)  # 2: gams
-        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_tool")
+        self.assertIsNone(self.tool_specification_widget.optional_widget)
+        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_gams_tool")
         with NamedTemporaryFile(mode="r") as temp_file:
             self.tool_specification_widget._set_main_program_file(str(Path(temp_file.name)))
-            self.tool_specification_widget._save()
+            self._call_save()
 
     def test_create_minimal_executable_tool_specification(self):
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(3)  # 3: executable
-        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_tool")
+        self.assertIsInstance(self.tool_specification_widget.optional_widget, ExecutableToolSpecOptionalWidget)
+        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_executable_tool")
         with NamedTemporaryFile(mode="r") as temp_file:
             self.tool_specification_widget._set_main_program_file(str(Path(temp_file.name)))
-            self.tool_specification_widget._save()
+            self._call_save()
 
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_url_inputs(self):
-    #     self._test_add_cmdline_tag_on_empty_args_field("@@url_inputs@@")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_url_inputs_middle_of_other_tags(self):
-    #     self._test_add_cmdline_tag_middle_of_other_tags("@@url_inputs@@")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_url_inputs_no_space_before_regular_arg(self):
-    #     self._test_add_cmdline_tag_adds_no_space_before_regular_arg("@@url_inputs@@")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_url_outputs(self):
-    #     self._test_add_cmdline_tag_on_empty_args_field("@@url_outputs@@")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_url_outputs_middle_of_other_tags(self):
-    #     self._test_add_cmdline_tag_middle_of_other_tags("@@url_outputs@@")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_url_outputs_no_space_before_regular_arg(self):
-    #     self._test_add_cmdline_tag_adds_no_space_before_regular_arg("@@url_outputs@@")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_data_store_url(self):
-    #     self._test_add_cmdline_tag_on_empty_args_field("@@url:<data-store-name>@@")
-    #     selection = self.tool_specification_widget.ui.lineEdit_args.selectedText()
-    #     self.assertEqual(selection, "<data-store-name>")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_data_store_url_middle_of_other_tags(self):
-    #     self._test_add_cmdline_tag_middle_of_other_tags("@@url:<data-store-name>@@")
-    #     selection = self.tool_specification_widget.ui.lineEdit_args.selectedText()
-    #     self.assertEqual(selection, "<data-store-name>")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_data_store_url_no_space_before_regular_arg(self):
-    #     self._test_add_cmdline_tag_adds_no_space_before_regular_arg("@@url:<data-store-name>@@")
-    #     selection = self.tool_specification_widget.ui.lineEdit_args.selectedText()
-    #     self.assertEqual(selection, "<data-store-name>")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_optional_inputs(self):
-    #     self._test_add_cmdline_tag_on_empty_args_field("@@optional_inputs@@")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_optional_inputs_middle_of_other_tags(self):
-    #     self._test_add_cmdline_tag_middle_of_other_tags("@@optional_inputs@@")
-    #
-    # @unittest.skip("Obsolete")
-    # def test_add_cmdline_tag_optional_inputs_no_space_before_regular_arg(self):
-    #     self._test_add_cmdline_tag_adds_no_space_before_regular_arg("@@optional_inputs@@")
-    #
-    # def _find_action(self, action_text, actions):
-    #     found_action = None
-    #     for action in actions:
-    #         if action.text() == action_text:
-    #             found_action = action
-    #             break
-    #     self.assertIsNotNone(found_action)
-    #     return found_action
-    #
-    # def _test_add_cmdline_tag_on_empty_args_field(self, tag):
-    #     menu = self.tool_specification_widget.ui.toolButton_add_cmdline_tag.menu()
-    #     url_inputs_action = self._find_action(tag, menu.actions())
-    #     url_inputs_action.trigger()
-    #     args = self.tool_specification_widget.ui.lineEdit_args.text()
-    #     expected = tag + " "
-    #     self.assertEqual(args, expected)
-    #     if not self.tool_specification_widget.ui.lineEdit_args.hasSelectedText():
-    #         cursor_position = self.tool_specification_widget.ui.lineEdit_args.cursorPosition()
-    #         self.assertEqual(cursor_position, len(expected))
-    #
-    # def _test_add_cmdline_tag_middle_of_other_tags(self, tag):
-    #     self.tool_specification_widget.ui.lineEdit_args.setText("@@optional_inputs@@@@url_outputs@@")
-    #     self.tool_specification_widget.ui.lineEdit_args.setCursorPosition(len("@@optional_inputs@@"))
-    #     menu = self.tool_specification_widget.ui.toolButton_add_cmdline_tag.menu()
-    #     url_inputs_action = self._find_action(tag, menu.actions())
-    #     url_inputs_action.trigger()
-    #     args = self.tool_specification_widget.ui.lineEdit_args.text()
-    #     self.assertEqual(args, f"@@optional_inputs@@ {tag} @@url_outputs@@")
-    #     if not self.tool_specification_widget.ui.lineEdit_args.hasSelectedText():
-    #         cursor_position = self.tool_specification_widget.ui.lineEdit_args.cursorPosition()
-    #         self.assertEqual(cursor_position, len(f"@@optional_inputs@@ {tag} "))
-    #
-    # def _test_add_cmdline_tag_adds_no_space_before_regular_arg(self, tag):
-    #     self.tool_specification_widget.ui.lineEdit_args.setText("--tag=")
-    #     self.tool_specification_widget.ui.lineEdit_args.setCursorPosition(len("--tag="))
-    #     menu = self.tool_specification_widget.ui.toolButton_add_cmdline_tag.menu()
-    #     url_inputs_action = self._find_action(tag, menu.actions())
-    #     url_inputs_action.trigger()
-    #     args = self.tool_specification_widget.ui.lineEdit_args.text()
-    #     self.assertEqual(args, f"--tag={tag} ")
-    #     if not self.tool_specification_widget.ui.lineEdit_args.hasSelectedText():
-    #         cursor_position = self.tool_specification_widget.ui.lineEdit_args.cursorPosition()
-    #         self.assertEqual(cursor_position, len(f"--tag={tag} "))
+    def _call_save(self):
+        """Calls tool spec widgets _save() while Toolbox's tool spec widget base _save() is mocked."""
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._save"
+        ) as mock_save:
+            mock_save.return_value = True
+            self.tool_specification_widget._save()
+            mock_save.assert_called()
 
 
 if __name__ == "__main__":

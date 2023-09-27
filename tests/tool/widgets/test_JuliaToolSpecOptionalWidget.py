@@ -13,16 +13,17 @@
 
 import unittest
 from unittest import mock
+from unittest.mock import MagicMock
 import logging
 import sys
 from PySide6.QtWidgets import QApplication
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
-from spine_items.tool.widgets.tool_spec_optional_widgets import PythonToolSpecOptionalWidget
-from spine_items.tool.tool_specifications import PythonTool
+from spine_items.tool.widgets.tool_spec_optional_widgets import JuliaToolSpecOptionalWidget
+from spine_items.tool.tool_specifications import JuliaTool
 from tests.mock_helpers import create_mock_toolbox_with_mock_qsettings, MockQSettings
 
 
-class TestPythonToolSpecOptionalWidget(unittest.TestCase):
+class TestJuliaToolSpecOptionalWidget(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Overridden method. Runs once before all tests in this class."""
@@ -53,11 +54,11 @@ class TestPythonToolSpecOptionalWidget(unittest.TestCase):
         self.tool_specification_widget = None
 
     def test_constructor_and_init(self):
-        mock_logger = mock.MagicMock()
-        python_tool_spec = PythonTool("a", "python", "", ["fake_main_program.py"], MockQSettings(), mock_logger)
-        python_tool_spec.set_execution_settings()  # Sets defaults
-        python_tool_spec.execution_settings["executable"] = "fake_python.exe"
-        opt_widget = PythonToolSpecOptionalWidget(self.tool_specification_widget)
-        opt_widget.init_widget(python_tool_spec)
-        self.assertEqual("fake_python.exe", opt_widget.get_executable())
-        self.assertIsInstance(opt_widget, PythonToolSpecOptionalWidget)
+        mock_logger = MagicMock()
+        julia_tool_spec = JuliaTool("a", "julia", "", ["fake_main_program.py"], MockQSettings(), mock_logger)
+        julia_tool_spec.set_execution_settings()  # Sets defaults
+        julia_tool_spec.execution_settings["executable"] = "fake_julia.exe"
+        opt_widget = JuliaToolSpecOptionalWidget(self.tool_specification_widget)
+        opt_widget.init_widget(julia_tool_spec)
+        self.assertEqual("fake_julia.exe", opt_widget.get_executable())
+        self.assertIsInstance(opt_widget, JuliaToolSpecOptionalWidget)
