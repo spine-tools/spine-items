@@ -64,9 +64,12 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget = None
 
     def make_tool_spec_editor(self, spec=None):
-        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui, mock.patch(
+                    "spine_items.tool.tool_specifications.ToolSpecification._includes_main_path_relative") as mock_mpr:
+            mock_mpr.return_value = ""
             self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox, spec)
             mock_restore_ui.assert_called()
+            mock_mpr.assert_called()
 
     def test_create_minimal_julia_tool_specification(self):
         self.make_tool_spec_editor()
