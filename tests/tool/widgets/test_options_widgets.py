@@ -12,16 +12,10 @@
 """Unit tests for the options_widgets.py module."""
 
 import unittest
-from unittest import mock
 import logging
 import sys
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtGui import QStandardItemModel, QStandardItem
 from spine_items.tool.widgets.options_widgets import JuliaOptionsWidget
-from spine_items.tool.tool_specifications import JuliaTool
-from tests.mock_helpers import create_mock_toolbox_with_mock_qsettings, MockQSettings
 
 
 class TestJuliaOptionsWidget(unittest.TestCase):

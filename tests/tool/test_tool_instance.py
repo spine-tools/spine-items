@@ -9,68 +9,120 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains unit tests for the tool_instance module.
+"""Contains unit tests for the tool_instance module."""
 
-"""
 import sys
 import unittest
 from unittest import mock
+from spine_items.tool.tool_specifications import PythonTool, JuliaTool
+from tests.mock_helpers import MockQSettings
 
-from spine_engine.execution_managers.persistent_execution_manager import kill_persistent_processes
-from spine_items.tool.tool_specifications import PythonTool
 
-
-class TestPythonToolInstance(unittest.TestCase):
-    @classmethod
-    def tearDownClass(cls):
-        kill_persistent_processes()
-
-    def test_prepare_with_cmd_line_arguments_in_jupyter_kernel(self):
-        instance = self._make_tool_instance(True)
+class TestToolInstance(unittest.TestCase):
+    def test_python_prepare_with_cmd_line_arguments_in_jupyter_console(self):
+        instance = self._make_python_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager"):
             instance.prepare(["arg1", "arg2"])
         self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py" "arg1" "arg2"'])
 
-    def test_prepare_with_empty_cmd_line_arguments_in_jupyter_kernel(self):
-        instance = self._make_tool_instance(True)
+    def test_python_prepare_without_cmd_line_arguments_in_jupyter_console(self):
+        instance = self._make_python_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager"):
             instance.prepare([])
         self.assertEqual(instance.args, ['%cd -q path/', '%run "main.py"'])
 
-    def test_prepare_with_cmd_line_arguments_in_persistent_process(self):
-        instance = self._make_tool_instance(False)
-        with mock.patch("spine_engine.execution_managers.persistent_execution_manager.PersistentManagerBase"):
+    def test_python_prepare_with_cmd_line_arguments_in_basic_console(self):
+        instance = self._make_python_tool_instance(False)
+        with mock.patch("spine_items.tool.tool_instance.PythonPersistentExecutionManager") as mock_manager:
+            mock_manager.return_value = True
             instance.prepare(["arg1", "arg2"])
-        self.assertEqual(instance.program, [sys.executable])
-        self.assertEqual(instance.exec_mngr.alias, "python main.py arg1 arg2")
-        instance.terminate_instance()
+            mock_manager.assert_called()
+            alias = mock_manager.call_args[0][3]
+            self.assertEqual("python main.py arg1 arg2", alias)
+            self.assertEqual(instance.program, [sys.executable])
 
-    def test_prepare_without_cmd_line_arguments_in_persistent_process(self):
-        instance = self._make_tool_instance(False)
-        with mock.patch("spine_engine.execution_managers.persistent_execution_manager.PersistentManagerBase"):
+    def test_python_prepare_without_cmd_line_arguments_in_basic_console(self):
+        instance = self._make_python_tool_instance(False)
+        with mock.patch("spine_items.tool.tool_instance.PythonPersistentExecutionManager") as mock_manager:
+            mock_manager.return_value = True
             instance.prepare([])
-        self.assertEqual(instance.program, [sys.executable])
-        self.assertEqual(instance.exec_mngr.alias, "python main.py")
-        instance.terminate_instance()
+            mock_manager.assert_called()
+            alias = mock_manager.call_args[0][3]
+            self.assertEqual("python main.py", alias)
+            self.assertEqual(instance.program, [sys.executable])
+
+    def test_julia_prepare_with_cmd_line_arguments_in_jupyter_console(self):
+        instance = self._make_julia_tool_instance(True)
+        with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
+            "os.path.isfile"
+        ) as mock_isfile:
+            mock_isfile.return_value = False
+            instance.prepare(["arg1", "arg2"])
+            mock_isfile.assert_called()
+            self.assertEqual(
+                ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg1", "arg2"]);', 'include("hello.jl")'], instance.args
+            )
+
+    def test_julia_prepare_without_cmd_line_arguments_in_jupyter_console(self):
+        instance = self._make_julia_tool_instance(True)
+        with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
+            "os.path.isfile"
+        ) as mock_isfile:
+            mock_isfile.return_value = False
+            instance.prepare([])
+            mock_isfile.assert_called()
+            self.assertEqual(['cd("path/");', 'include("hello.jl")'], instance.args)
+
+    def test_julia_prepare_with_cmd_line_arguments_in_basic_console(self):
+        instance = self._make_julia_tool_instance(False)
+        with mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager, mock.patch(
+            "os.path.isfile"
+        ) as mock_isfile:
+            mock_isfile.return_value = False
+            mock_manager.return_value = True
+            instance.prepare(["arg1", "arg2"])
+            mock_isfile.assert_called()
+            mock_manager.assert_called()
+            alias = mock_manager.call_args[0][3]
+            self.assertEqual("julia hello.jl arg1 arg2", alias)
+            self.assertEqual([""], instance.program)  # Default setting for Julia exe
+            self.assertEqual(
+                ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg1", "arg2"]);', 'include("hello.jl")'], instance.args
+            )
+
+    def test_julia_prepare_without_cmd_line_arguments_in_basic_console(self):
+        instance = self._make_julia_tool_instance(False)
+        with mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager, mock.patch(
+            "os.path.isfile"
+        ) as mock_isfile:
+            mock_isfile.return_value = False
+            mock_manager.return_value = True
+            instance.prepare([])
+            mock_isfile.assert_called()
+            mock_manager.assert_called()
+            alias = mock_manager.call_args[0][3]
+            self.assertEqual("julia hello.jl", alias)
+            self.assertEqual([""], instance.program)  # Default setting for Julia exe
+            self.assertEqual(['cd("path/");', 'include("hello.jl")'], instance.args)
 
     @staticmethod
-    def _make_tool_instance(execute_in_embedded_console):
-        settings = mock.NonCallableMagicMock()
-        if execute_in_embedded_console:
-            settings.value = mock.MagicMock(return_value="2")
-        else:
+    def _make_python_tool_instance(use_jupyter_console):
+        logger = mock.MagicMock()
+        specification = PythonTool("specification name", "python", "", ["main.py"], MockQSettings(), mock.MagicMock())
+        specification.set_execution_settings()
+        if use_jupyter_console:
+            specification.execution_settings["use_jupyter_console"] = True
+        base_directory = "path/"
+        return specification.create_tool_instance(base_directory, False, logger, mock.Mock())
 
-            def get_setting(name, defaultValue):
-                return {"appSettings/pythonPath": sys.executable, "appSettings/useEmbeddedPython": "0"}.get(
-                    name, defaultValue
-                )
-
-            settings.value = mock.MagicMock(side_effect=get_setting)
-        logger = mock.Mock()
-        path = ""
-        source_files = ["main.py"]
-        specification = PythonTool("specification name", "python", path, source_files, settings, logger)
+    @staticmethod
+    def _make_julia_tool_instance(use_jupyter_console):
+        logger = mock.MagicMock()
+        source_files = ["hello.jl"]
+        specification = JuliaTool("specification name", "julia", "", source_files, MockQSettings(), mock.MagicMock())
+        specification.set_execution_settings()
+        if use_jupyter_console:
+            specification.execution_settings["use_jupyter_console"] = True
         base_directory = "path/"
         return specification.create_tool_instance(base_directory, False, logger, mock.Mock())
 

@@ -176,8 +176,10 @@ class TestToolSpecificationMenu(unittest.TestCase):
             mock_logger,
         )
 
+
 class CustomQStandardItemModel(QStandardItemModel):
     """Fake specification model."""
+
     def __init__(self):
         super().__init__()
 
@@ -185,8 +187,10 @@ class CustomQStandardItemModel(QStandardItemModel):
         item = self.item(row, 0)
         return item.data()
 
+
 class ParentWidget(QWidget):
     """Fake self._toolbox."""
+
     def __init__(self, spec_model):
         super().__init__()
         self.specification_model = spec_model
@@ -197,7 +201,9 @@ class ParentWidget(QWidget):
         """Fakes self._toolbox.open_anchor()"""
         return True
 
+
 class MiniLogger:
     """Fakes calls to signal emits."""
+
     def emit(self, msg):
         return True
