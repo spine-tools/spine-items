@@ -48,19 +48,28 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         """Overridden method. Runs before each test."""
         self._temp_dir = TemporaryDirectory()
         self.toolbox = create_mock_toolbox_with_mock_qsettings()
-        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
-            self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
-            mock_restore_ui.assert_called()
+        self.tool_specification_widget = None
 
     def tearDown(self):
         """Overridden method. Runs after each test.
         Use this to free resources after a test if needed.
         """
         self._temp_dir.cleanup()
-        self.tool_specification_widget.deleteLater()
-        self.tool_specification_widget = None
+        if self.tool_specification_widget is not None:
+            with mock.patch("spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase.tear_down") as mock_tear_down:
+                mock_tear_down.return_value = True
+                self.tool_specification_widget.close()
+                mock_tear_down.assert_called()
+            self.tool_specification_widget.deleteLater()
+            self.tool_specification_widget = None
+
+    def make_tool_spec_editor(self, spec=None):
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
+            self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox, spec)
+            mock_restore_ui.assert_called()
 
     def test_create_minimal_julia_tool_specification(self):
+        self.make_tool_spec_editor()
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # 0: Julia
         self.assertIsInstance(self.tool_specification_widget.optional_widget, JuliaToolSpecOptionalWidget)
         self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_julia_tool")
@@ -69,6 +78,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self._call_save()
 
     def test_create_minimal_python_tool_specification(self):
+        self.make_tool_spec_editor()
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(1)  # 1: Python
         self.assertIsInstance(self.tool_specification_widget.optional_widget, PythonToolSpecOptionalWidget)
         self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_python_tool")
@@ -77,6 +87,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self._call_save()
 
     def test_create_minimal_gams_tool_specification(self):
+        self.make_tool_spec_editor()
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(2)  # 2: gams
         self.assertIsNone(self.tool_specification_widget.optional_widget)
         self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_gams_tool")
@@ -85,6 +96,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self._call_save()
 
     def test_create_minimal_executable_tool_specification(self):
+        self.make_tool_spec_editor()
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(3)  # 3: executable
         self.assertIsInstance(self.tool_specification_widget.optional_widget, ExecutableToolSpecOptionalWidget)
         self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_executable_tool")
@@ -102,6 +114,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             mock_save.assert_called()
 
     def test_change_tooltype(self):
+        self.make_tool_spec_editor()
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # julia
         self.assertIsInstance(self.tool_specification_widget._get_optional_widget("julia"), JuliaToolSpecOptionalWidget)
         sd = self.tool_specification_widget.spec_dict
@@ -128,6 +141,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         self.assertEqual(len(exec_settings), 2)
 
     def test_make_new_specification(self):
+        self.make_tool_spec_editor()
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # julia
         self.assertIsInstance(self.tool_specification_widget.optional_widget, JuliaToolSpecOptionalWidget)
         self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_julia_tool")
@@ -148,58 +162,54 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         mock_logger = mock.MagicMock()
         julia_tool_spec = JuliaTool("test_julia_spec", "julia", str(script_dir), [script_file_name], MockQSettings(), mock_logger, "Description", inputfiles=["data.csv"], inputfiles_opt=["*.dat"], outputfiles=["results.txt"], cmdline_args=["-A", "-B"])
         julia_tool_spec.set_execution_settings()  # Sets defaults
-        # julia_tool_spec.execution_settings["executable"] = "fake_main_program.bat"
-        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
-            tool_spec_editor = ToolSpecificationEditorWindow(self.toolbox, julia_tool_spec)
-        opt_widget = tool_spec_editor.optional_widget
+        self.make_tool_spec_editor(julia_tool_spec)
+        opt_widget = self.tool_specification_widget.optional_widget
         self.assertIsInstance(opt_widget, JuliaToolSpecOptionalWidget)
-        self.assertTrue(tool_spec_editor._ui.comboBox_tooltype.currentText() == "Julia")
-        self.assertTrue(tool_spec_editor._ui.lineEdit_args.text() == "-A -B")
+        self.assertTrue(self.tool_specification_widget._ui.comboBox_tooltype.currentText() == "Julia")
+        self.assertTrue(self.tool_specification_widget._ui.lineEdit_args.text() == "-A -B")
         # Program files dock widget should have 2 rows :'Main program file' and 'Additional program files'
-        self.assertEqual(2, tool_spec_editor.programfiles_model.rowCount())
+        self.assertEqual(2, self.tool_specification_widget.programfiles_model.rowCount())
         # Get index of 'Main program file' item
-        parent = tool_spec_editor.programfiles_model.index(0, 0)
+        parent = self.tool_specification_widget.programfiles_model.index(0, 0)
         # There should be one row under 'Main program file' -> the main program file
-        self.assertEqual(1, tool_spec_editor.programfiles_model.rowCount(parent))
-        index = tool_spec_editor.programfiles_model.index(0, 0, parent)  # Index of 'hello.jl'
-        item = tool_spec_editor.programfiles_model.itemFromIndex(index)
+        self.assertEqual(1, self.tool_specification_widget.programfiles_model.rowCount(parent))
+        index = self.tool_specification_widget.programfiles_model.index(0, 0, parent)  # Index of 'hello.jl'
+        item = self.tool_specification_widget.programfiles_model.itemFromIndex(index)
         self.assertEqual(script_file_name, item.data(Qt.ItemDataRole.DisplayRole))
         # Check Input & output files dock widget
-        self.assertEqual(3, tool_spec_editor.io_files_model.rowCount())
-        if_index = tool_spec_editor.io_files_model.index(0, 0)  # 'Input files' item index
-        oif_index = tool_spec_editor.io_files_model.index(1, 0)  # 'Optional input files' item index
-        of_index = tool_spec_editor.io_files_model.index(2, 0)  # 'Output files' item index
-        if_child_index = tool_spec_editor.io_files_model.index(0, 0, if_index)
-        oif_child_index = tool_spec_editor.io_files_model.index(0, 0, oif_index)
-        of_child_index = tool_spec_editor.io_files_model.index(0, 0, of_index)
-        self.assertEqual(1, tool_spec_editor.io_files_model.rowCount(if_index))
-        self.assertEqual(1, tool_spec_editor.io_files_model.rowCount(oif_index))
-        self.assertEqual(1, tool_spec_editor.io_files_model.rowCount(of_index))
-        if_item = tool_spec_editor.io_files_model.itemFromIndex(if_child_index)
+        self.assertEqual(3, self.tool_specification_widget.io_files_model.rowCount())
+        if_index = self.tool_specification_widget.io_files_model.index(0, 0)  # 'Input files' item index
+        oif_index = self.tool_specification_widget.io_files_model.index(1, 0)  # 'Optional input files' item index
+        of_index = self.tool_specification_widget.io_files_model.index(2, 0)  # 'Output files' item index
+        if_child_index = self.tool_specification_widget.io_files_model.index(0, 0, if_index)
+        oif_child_index = self.tool_specification_widget.io_files_model.index(0, 0, oif_index)
+        of_child_index = self.tool_specification_widget.io_files_model.index(0, 0, of_index)
+        self.assertEqual(1, self.tool_specification_widget.io_files_model.rowCount(if_index))
+        self.assertEqual(1, self.tool_specification_widget.io_files_model.rowCount(oif_index))
+        self.assertEqual(1, self.tool_specification_widget.io_files_model.rowCount(of_index))
+        if_item = self.tool_specification_widget.io_files_model.itemFromIndex(if_child_index)
         self.assertEqual("data.csv", if_item.data(Qt.ItemDataRole.DisplayRole))
-        oif_item = tool_spec_editor.io_files_model.itemFromIndex(oif_child_index)
+        oif_item = self.tool_specification_widget.io_files_model.itemFromIndex(oif_child_index)
         self.assertEqual("*.dat", oif_item.data(Qt.ItemDataRole.DisplayRole))
-        of_item = tool_spec_editor.io_files_model.itemFromIndex(of_child_index)
+        of_item = self.tool_specification_widget.io_files_model.itemFromIndex(of_child_index)
         self.assertEqual("results.txt", of_item.data(Qt.ItemDataRole.DisplayRole))
 
     def test_open_tool_specification_editor_with_executable_spec(self):
         mock_logger = mock.MagicMock()
         exec_tool_spec = ExecutableTool("a", "executable", "", ["fake_main_program.bat"], MockQSettings(), mock_logger)
         exec_tool_spec.set_execution_settings()  # Sets defaults
-        # exec_tool_spec.execution_settings["executable"] = "fake_main_program.bat"
-        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
-            tool_spec_editor = ToolSpecificationEditorWindow(self.toolbox, exec_tool_spec)
-        opt_widget = tool_spec_editor._get_optional_widget("executable")
+        self.make_tool_spec_editor(exec_tool_spec)
+        opt_widget = self.tool_specification_widget._get_optional_widget("executable")
         self.assertIsInstance(opt_widget, ExecutableToolSpecOptionalWidget)
         self.assertFalse(opt_widget.ui.lineEdit_command.isEnabled())  # Command is disabled when a program file is set
         # Program files dock widet should have 2 rows :'Main program file' and 'Additional program files'
-        self.assertEqual(2, tool_spec_editor.programfiles_model.rowCount())
+        self.assertEqual(2, self.tool_specification_widget.programfiles_model.rowCount())
         # Get index of 'Main program file' item
-        parent = tool_spec_editor.programfiles_model.index(0, 0)
+        parent = self.tool_specification_widget.programfiles_model.index(0, 0)
         # There should be one row under 'Main program file' -> the main program file
-        self.assertEqual(1, tool_spec_editor.programfiles_model.rowCount(parent))
-        index = tool_spec_editor.programfiles_model.index(0, 0, parent)  # Index of 'fake_main_program.bat'
-        item = tool_spec_editor.programfiles_model.itemFromIndex(index)
+        self.assertEqual(1, self.tool_specification_widget.programfiles_model.rowCount(parent))
+        index = self.tool_specification_widget.programfiles_model.index(0, 0, parent)  # Index of 'fake_main_program.bat'
+        item = self.tool_specification_widget.programfiles_model.itemFromIndex(index)
         self.assertEqual("fake_main_program.bat", item.data(Qt.ItemDataRole.DisplayRole))
 
 
