@@ -415,20 +415,20 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> not ready for execution. No specification.")
             return False
         if self._tool_specification.tooltype.lower() == "python":
-            use_jupyter_console = self._tool_specification.execution_settings["use_jupyter_console"]
-            k_name = self._tool_specification.execution_settings["kernel_spec_name"]
+            use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
+            k_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
             if use_jupyter_console and k_name == "":
                 self._logger.msg_error.emit(
-                    "Python kernel spec missing. Please select it in Tool Specification Editor."
+                    "Python kernel missing. Please select it in Tool Specification Editor."
                 )
                 return False
             # Note: no check for python path == "" because this should never happen
         elif self._tool_specification.tooltype.lower() == "julia":
-            use_jupyter_console = self._tool_specification.execution_settings["use_jupyter_console"]
-            k_name = self._tool_specification.execution_settings["kernel_spec_name"]
-            julia_path = self._tool_specification.execution_settings["executable"]
+            use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
+            k_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
+            julia_path = self._tool_specification.execution_settings.get("executable", "")
             if use_jupyter_console and k_name == "":
-                self._logger.msg_error.emit("Julia kernel spec missing. Please select it in Tool Specification Editor.")
+                self._logger.msg_error.emit("Julia kernel missing. Please select it in Tool Specification Editor.")
                 return False
             if not use_jupyter_console and julia_path == "":
                 self._logger.msg_error.emit(
