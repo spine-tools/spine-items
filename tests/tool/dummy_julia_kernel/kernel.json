@@ -1,0 +1,14 @@
+{
+  "display_name": "julia 1.8.5",
+  "argv": [
+    "/path/to/somejulia",
+    "-i",
+    "--color=yes",
+    "--project=/path/to/someotherjuliaproject",
+    "/path/to/IJulia/6TIq1/src/kernel.jl",
+    "{connection_file}"
+  ],
+  "language": "julia",
+  "env": {},
+  "interrupt_mode": "message"
+}

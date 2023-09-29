@@ -17,7 +17,8 @@ from hashlib import sha1
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
-from spine_items.tool.utils import find_last_output_files
+from unittest import mock
+from spine_items.tool.utils import find_last_output_files, get_julia_path_and_project
 
 
 class TestFindLastOutputFiles(unittest.TestCase):
@@ -128,6 +129,34 @@ class TestFindLastOutputFiles(unittest.TestCase):
         data_file_new.touch()
         files = find_last_output_files(["data.dat"], self._temp_dir.name)
         self.assertEqual(files, {"data.dat": [str(data_file_new)]})
+
+    def test_get_julia_path_and_project(self):
+        # Use Jupyter Console: False
+        exec_settings = {"use_jupyter_console": False, "executable": "", "env": "", "kernel_spec_name": "", "project": ""}
+        julia, *args = get_julia_path_and_project(exec_settings)
+        self.assertTrue(julia == "")
+        self.assertTrue(len(args) == 0)
+        # Use Jupyter Console: False
+        exec_settings = {"use_jupyter_console": False, "executable": "/path/to/julia", "env": "", "kernel_spec_name": "", "project": "/path/to/myjuliaproject"}
+        julia, *args = get_julia_path_and_project(exec_settings)
+        self.assertTrue(julia == "/path/to/julia")
+        self.assertTrue(args[0] == "--project=/path/to/myjuliaproject")
+        # Use Jupyter Console: True
+        exec_settings = {"use_jupyter_console": True, "executable": "", "env": "", "kernel_spec_name": "unknown_kernel", "project": ""}
+        with mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
+            # Return a dict containing a path to a dummy kernel resource dir when find_kernel_specs is called
+            mock_find_kernel_specs.return_value = dict()
+            julia, *args = get_julia_path_and_project(exec_settings)
+            self.assertIsNone(julia)
+            self.assertTrue(len(args) == 0)
+        # Use Jupyter Console: True
+        exec_settings = {"use_jupyter_console": True, "executable": "", "env": "", "kernel_spec_name": "test_kernel", "project": ""}
+        with mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
+            # Return a dict containing a path to a dummy kernel resource dir when find_kernel_specs is called
+            mock_find_kernel_specs.return_value = {"test_kernel": Path(__file__).parent / "dummy_julia_kernel"}
+            julia, *args = get_julia_path_and_project(exec_settings)
+            self.assertTrue(julia == "/path/to/somejulia")
+            self.assertTrue(args[0] == "--project=/path/to/someotherjuliaproject")
 
 
 if __name__ == '__main__':
