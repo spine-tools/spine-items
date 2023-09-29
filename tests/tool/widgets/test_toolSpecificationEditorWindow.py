@@ -15,17 +15,18 @@ import unittest
 import logging
 import sys
 from unittest import mock
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
-from spine_items.tool.tool_specifications import JuliaTool
+from PySide6.QtCore import Qt
+from spine_items.tool.tool_specifications import JuliaTool, ExecutableTool
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from spine_items.tool.widgets.tool_spec_optional_widgets import (
     JuliaToolSpecOptionalWidget,
     PythonToolSpecOptionalWidget,
     ExecutableToolSpecOptionalWidget,
 )
-from tests.mock_helpers import create_mock_toolbox_with_mock_qsettings
+from tests.mock_helpers import create_mock_toolbox_with_mock_qsettings, MockQSettings
 
 
 class TestToolSpecificationEditorWindow(unittest.TestCase):
@@ -45,14 +46,17 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
 
     def setUp(self):
         """Overridden method. Runs before each test."""
+        self._temp_dir = TemporaryDirectory()
         self.toolbox = create_mock_toolbox_with_mock_qsettings()
         with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
             self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
+            mock_restore_ui.assert_called()
 
     def tearDown(self):
         """Overridden method. Runs after each test.
         Use this to free resources after a test if needed.
         """
+        self._temp_dir.cleanup()
         self.tool_specification_widget.deleteLater()
         self.tool_specification_widget = None
 
@@ -133,6 +137,70 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget._init_optional_widget(spec)
             self.assertIsInstance(spec, JuliaTool)
             self.assertEqual(len(spec.execution_settings), 5)
+
+    def test_open_tool_specification_editor_with_julia_spec(self):
+        script_dir = Path(self._temp_dir.name, "scripts")
+        script_dir.mkdir()
+        script_file_name = "hello.jl"
+        file_path = Path(script_dir, script_file_name)
+        with open(file_path, "w") as script_file:
+            script_file.writelines(["println('hello')\n"])
+        mock_logger = mock.MagicMock()
+        julia_tool_spec = JuliaTool("test_julia_spec", "julia", str(script_dir), [script_file_name], MockQSettings(), mock_logger, "Description", inputfiles=["data.csv"], inputfiles_opt=["*.dat"], outputfiles=["results.txt"], cmdline_args=["-A", "-B"])
+        julia_tool_spec.set_execution_settings()  # Sets defaults
+        # julia_tool_spec.execution_settings["executable"] = "fake_main_program.bat"
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
+            tool_spec_editor = ToolSpecificationEditorWindow(self.toolbox, julia_tool_spec)
+        opt_widget = tool_spec_editor.optional_widget
+        self.assertIsInstance(opt_widget, JuliaToolSpecOptionalWidget)
+        self.assertTrue(tool_spec_editor._ui.comboBox_tooltype.currentText() == "Julia")
+        self.assertTrue(tool_spec_editor._ui.lineEdit_args.text() == "-A -B")
+        # Program files dock widget should have 2 rows :'Main program file' and 'Additional program files'
+        self.assertEqual(2, tool_spec_editor.programfiles_model.rowCount())
+        # Get index of 'Main program file' item
+        parent = tool_spec_editor.programfiles_model.index(0, 0)
+        # There should be one row under 'Main program file' -> the main program file
+        self.assertEqual(1, tool_spec_editor.programfiles_model.rowCount(parent))
+        index = tool_spec_editor.programfiles_model.index(0, 0, parent)  # Index of 'hello.jl'
+        item = tool_spec_editor.programfiles_model.itemFromIndex(index)
+        self.assertEqual(script_file_name, item.data(Qt.ItemDataRole.DisplayRole))
+        # Check Input & output files dock widget
+        self.assertEqual(3, tool_spec_editor.io_files_model.rowCount())
+        if_index = tool_spec_editor.io_files_model.index(0, 0)  # 'Input files' item index
+        oif_index = tool_spec_editor.io_files_model.index(1, 0)  # 'Optional input files' item index
+        of_index = tool_spec_editor.io_files_model.index(2, 0)  # 'Output files' item index
+        if_child_index = tool_spec_editor.io_files_model.index(0, 0, if_index)
+        oif_child_index = tool_spec_editor.io_files_model.index(0, 0, oif_index)
+        of_child_index = tool_spec_editor.io_files_model.index(0, 0, of_index)
+        self.assertEqual(1, tool_spec_editor.io_files_model.rowCount(if_index))
+        self.assertEqual(1, tool_spec_editor.io_files_model.rowCount(oif_index))
+        self.assertEqual(1, tool_spec_editor.io_files_model.rowCount(of_index))
+        if_item = tool_spec_editor.io_files_model.itemFromIndex(if_child_index)
+        self.assertEqual("data.csv", if_item.data(Qt.ItemDataRole.DisplayRole))
+        oif_item = tool_spec_editor.io_files_model.itemFromIndex(oif_child_index)
+        self.assertEqual("*.dat", oif_item.data(Qt.ItemDataRole.DisplayRole))
+        of_item = tool_spec_editor.io_files_model.itemFromIndex(of_child_index)
+        self.assertEqual("results.txt", of_item.data(Qt.ItemDataRole.DisplayRole))
+
+    def test_open_tool_specification_editor_with_executable_spec(self):
+        mock_logger = mock.MagicMock()
+        exec_tool_spec = ExecutableTool("a", "executable", "", ["fake_main_program.bat"], MockQSettings(), mock_logger)
+        exec_tool_spec.set_execution_settings()  # Sets defaults
+        # exec_tool_spec.execution_settings["executable"] = "fake_main_program.bat"
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
+            tool_spec_editor = ToolSpecificationEditorWindow(self.toolbox, exec_tool_spec)
+        opt_widget = tool_spec_editor._get_optional_widget("executable")
+        self.assertIsInstance(opt_widget, ExecutableToolSpecOptionalWidget)
+        self.assertFalse(opt_widget.ui.lineEdit_command.isEnabled())  # Command is disabled when a program file is set
+        # Program files dock widet should have 2 rows :'Main program file' and 'Additional program files'
+        self.assertEqual(2, tool_spec_editor.programfiles_model.rowCount())
+        # Get index of 'Main program file' item
+        parent = tool_spec_editor.programfiles_model.index(0, 0)
+        # There should be one row under 'Main program file' -> the main program file
+        self.assertEqual(1, tool_spec_editor.programfiles_model.rowCount(parent))
+        index = tool_spec_editor.programfiles_model.index(0, 0, parent)  # Index of 'fake_main_program.bat'
+        item = tool_spec_editor.programfiles_model.itemFromIndex(index)
+        self.assertEqual("fake_main_program.bat", item.data(Qt.ItemDataRole.DisplayRole))
 
 
 if __name__ == "__main__":
