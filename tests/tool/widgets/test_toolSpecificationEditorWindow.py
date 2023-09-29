@@ -18,6 +18,7 @@ from unittest import mock
 from tempfile import NamedTemporaryFile
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
+from spine_items.tool.tool_specifications import JuliaTool
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from spine_items.tool.widgets.tool_spec_optional_widgets import (
     JuliaToolSpecOptionalWidget,
@@ -95,6 +96,43 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             mock_save.return_value = True
             self.tool_specification_widget._save()
             mock_save.assert_called()
+
+    def test_change_tooltype(self):
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # julia
+        self.assertIsInstance(self.tool_specification_widget._get_optional_widget("julia"), JuliaToolSpecOptionalWidget)
+        sd = self.tool_specification_widget.spec_dict
+        exec_settings = sd.get("execution_settings")
+        self.assertEqual(sd["tooltype"], "julia")
+        self.assertEqual(len(exec_settings), 5)
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(1)  # python
+        self.assertIsInstance(self.tool_specification_widget._get_optional_widget("python"), PythonToolSpecOptionalWidget)
+        sd = self.tool_specification_widget.spec_dict
+        exec_settings = sd.get("execution_settings")
+        self.assertEqual(sd["tooltype"], "python")
+        self.assertEqual(len(exec_settings), 4)
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(2)  # gams
+        self.assertIsNone(self.tool_specification_widget._get_optional_widget("gams"))
+        sd = self.tool_specification_widget.spec_dict
+        exec_settings = sd.get("execution_settings")
+        self.assertEqual(sd["tooltype"], "gams")
+        self.assertIsNone(exec_settings)
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(3)  # executable
+        self.assertIsInstance(self.tool_specification_widget._get_optional_widget("executable"), ExecutableToolSpecOptionalWidget)
+        sd = self.tool_specification_widget.spec_dict
+        exec_settings = sd.get("execution_settings")
+        self.assertEqual(sd["tooltype"], "executable")
+        self.assertEqual(len(exec_settings), 2)
+
+    def test_make_new_specification(self):
+        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # julia
+        self.assertIsInstance(self.tool_specification_widget.optional_widget, JuliaToolSpecOptionalWidget)
+        self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_julia_tool")
+        with NamedTemporaryFile(mode="r") as temp_file:
+            self.tool_specification_widget._set_main_program_file(str(Path(temp_file.name)))
+            spec = self.tool_specification_widget._make_new_specification("test_julia_tool")
+            self.tool_specification_widget._init_optional_widget(spec)
+            self.assertIsInstance(spec, JuliaTool)
+            self.assertEqual(len(spec.execution_settings), 5)
 
 
 if __name__ == "__main__":
