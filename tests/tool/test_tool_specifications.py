@@ -13,27 +13,32 @@
 
 import unittest
 from unittest import mock
-from spine_items.tool.tool_specifications import ToolSpecification, make_specification, PythonTool, JuliaTool, GAMSTool, ExecutableTool
+from spine_items.tool.tool_specifications import (
+    ToolSpecification,
+    make_specification,
+    PythonTool,
+    JuliaTool,
+    GAMSTool,
+    ExecutableTool,
+)
 from tests.mock_helpers import MockQSettings
 
 
 class TestToolSpecification(unittest.TestCase):
-
     def setUp(self) -> None:
         self.qsettings = MockQSettings()
         self.logger = mock.MagicMock()
         self.test_dict = {
-                "name": "specification name",
-                "tooltype": "Python",
-                "includes": ["/included_file_1.bat", "/aa/included_file_2.std"],
-                "description": "Test tool specification",
-                "inputfiles": ["a_input.jpg", "b_input.png"],
-                "inputfiles_opt": ["*.dat", "*.xlsx", "a.csv", "z.zip"],
-                "outputfiles": ["*.atk", "*.zip"],
-                "cmdline_args": ["99", "10"],
-                "includes_main_path": "../tool",
-            }
-
+            "name": "specification name",
+            "tooltype": "Python",
+            "includes": ["/included_file_1.bat", "/aa/included_file_2.std"],
+            "description": "Test tool specification",
+            "inputfiles": ["a_input.jpg", "b_input.png"],
+            "inputfiles_opt": ["*.dat", "*.xlsx", "a.csv", "z.zip"],
+            "outputfiles": ["*.atk", "*.zip"],
+            "cmdline_args": ["99", "10"],
+            "includes_main_path": "../tool",
+        }
 
     def test_to_dict_sorts_input_and_output_files(self):
         specification = ToolSpecification(
@@ -88,6 +93,7 @@ class TestToolSpecification(unittest.TestCase):
         spec = make_specification(self.test_dict, self.qsettings, self.logger)
         cloned_spec = spec.clone()
         self.assertFalse(spec.is_equivalent(cloned_spec))  # False because 'path' is different. Bug?
+
 
 if __name__ == '__main__':
     unittest.main()

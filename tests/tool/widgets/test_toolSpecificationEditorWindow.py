@@ -56,7 +56,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         """
         self._temp_dir.cleanup()
         if self.tool_specification_widget is not None:
-            with mock.patch("spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase.tear_down") as mock_tear_down:
+            with mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase.tear_down"
+            ) as mock_tear_down:
                 mock_tear_down.return_value = True
                 self.tool_specification_widget.close()
                 mock_tear_down.assert_called()
@@ -64,12 +66,20 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget = None
 
     def make_tool_spec_editor(self, spec=None):
-        with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui, mock.patch(
-                    "spine_items.tool.tool_specifications.ToolSpecification._includes_main_path_relative") as mock_mpr:
-            mock_mpr.return_value = ""
-            self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox, spec)
-            mock_restore_ui.assert_called()
-            mock_mpr.assert_called()
+        if spec and spec.tooltype == "julia":
+            with mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.restore_ui"
+            ) as mock_restore_ui, mock.patch(
+                "spine_items.tool.tool_specifications.ToolSpecification._includes_main_path_relative"
+            ) as mock_impr:
+                mock_impr.return_value = ""
+                self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox, spec)
+                mock_restore_ui.assert_called()
+                mock_impr.assert_called()
+        else:
+            with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
+                self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox, spec)
+                mock_restore_ui.assert_called()
 
     def test_create_minimal_julia_tool_specification(self):
         self.make_tool_spec_editor()
@@ -125,7 +135,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         self.assertEqual(sd["tooltype"], "julia")
         self.assertEqual(len(exec_settings), 5)
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(1)  # python
-        self.assertIsInstance(self.tool_specification_widget._get_optional_widget("python"), PythonToolSpecOptionalWidget)
+        self.assertIsInstance(
+            self.tool_specification_widget._get_optional_widget("python"), PythonToolSpecOptionalWidget
+        )
         sd = self.tool_specification_widget.spec_dict
         exec_settings = sd.get("execution_settings")
         self.assertEqual(sd["tooltype"], "python")
@@ -137,7 +149,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         self.assertEqual(sd["tooltype"], "gams")
         self.assertIsNone(exec_settings)
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(3)  # executable
-        self.assertIsInstance(self.tool_specification_widget._get_optional_widget("executable"), ExecutableToolSpecOptionalWidget)
+        self.assertIsInstance(
+            self.tool_specification_widget._get_optional_widget("executable"), ExecutableToolSpecOptionalWidget
+        )
         sd = self.tool_specification_widget.spec_dict
         exec_settings = sd.get("execution_settings")
         self.assertEqual(sd["tooltype"], "executable")
@@ -163,7 +177,19 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         with open(file_path, "w") as script_file:
             script_file.writelines(["println('hello')\n"])
         mock_logger = mock.MagicMock()
-        julia_tool_spec = JuliaTool("test_julia_spec", "julia", str(script_dir), [script_file_name], MockQSettings(), mock_logger, "Description", inputfiles=["data.csv"], inputfiles_opt=["*.dat"], outputfiles=["results.txt"], cmdline_args=["-A", "-B"])
+        julia_tool_spec = JuliaTool(
+            "test_julia_spec",
+            "julia",
+            str(script_dir),
+            [script_file_name],
+            MockQSettings(),
+            mock_logger,
+            "Description",
+            inputfiles=["data.csv"],
+            inputfiles_opt=["*.dat"],
+            outputfiles=["results.txt"],
+            cmdline_args=["-A", "-B"],
+        )
         julia_tool_spec.set_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
         opt_widget = self.tool_specification_widget.optional_widget
@@ -211,7 +237,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         parent = self.tool_specification_widget.programfiles_model.index(0, 0)
         # There should be one row under 'Main program file' -> the main program file
         self.assertEqual(1, self.tool_specification_widget.programfiles_model.rowCount(parent))
-        index = self.tool_specification_widget.programfiles_model.index(0, 0, parent)  # Index of 'fake_main_program.bat'
+        index = self.tool_specification_widget.programfiles_model.index(
+            0, 0, parent
+        )  # Index of 'fake_main_program.bat'
         item = self.tool_specification_widget.programfiles_model.itemFromIndex(index)
         self.assertEqual("fake_main_program.bat", item.data(Qt.ItemDataRole.DisplayRole))
 

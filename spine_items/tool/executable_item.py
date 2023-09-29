@@ -418,9 +418,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
             k_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
             if use_jupyter_console and k_name == "":
-                self._logger.msg_error.emit(
-                    "Python kernel missing. Please select it in Tool Specification Editor."
-                )
+                self._logger.msg_error.emit("Python kernel missing. Please select it in Tool Specification Editor.")
                 return False
             # Note: no check for python path == "" because this should never happen
         elif self._tool_specification.tooltype.lower() == "julia":
