@@ -14,7 +14,7 @@
 import sys
 import unittest
 from unittest import mock
-from spine_items.tool.tool_specifications import PythonTool, JuliaTool
+from spine_items.tool.tool_specifications import PythonTool, JuliaTool, GAMSTool, ExecutableTool
 from tests.mock_helpers import MockQSettings
 
 
@@ -105,26 +105,128 @@ class TestToolInstance(unittest.TestCase):
             self.assertEqual([""], instance.program)  # Default setting for Julia exe
             self.assertEqual(['cd("path/");', 'include("hello.jl")'], instance.args)
 
+    def test_gams_prepare_with_cmd_line_arguments(self):
+        instance = self._make_gams_tool_instance()
+        path_to_gams = "path/to/gams"
+        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch("spine_items.tool.tool_instance.resolve_gams_executable") as mock_gams_exe:
+            mock_manager.return_value = True
+            mock_gams_exe.return_value = path_to_gams
+            instance.prepare(["arg1", "arg2"])
+            mock_manager.assert_called()
+            mock_gams_exe.assert_called()
+            self.assertEqual(path_to_gams, instance.program)
+            self.assertEqual(6, len(instance.args))
+            self.assertEqual("model.gms", instance.args[0])
+            self.assertEqual("arg1", instance.args[-2])
+            self.assertEqual("arg2", instance.args[-1])
+
+    def test_gams_prepare_without_cmd_line_arguments(self):
+        instance = self._make_gams_tool_instance()
+        path_to_gams = "path/to/gams"
+        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch("spine_items.tool.tool_instance.resolve_gams_executable") as mock_gams_exe:
+            mock_manager.return_value = True
+            mock_gams_exe.return_value = path_to_gams
+            instance.prepare([])
+            mock_manager.assert_called()
+            mock_gams_exe.assert_called()
+            self.assertEqual(path_to_gams, instance.program)
+            self.assertEqual(4, len(instance.args))
+            self.assertEqual("model.gms", instance.args[0])
+
+    def test_executable_prepare_with_main_program(self):
+        instance = self._make_executable_tool_instance()
+        # when os.path.isfile fails, we throw a RuntimeError
+        self.assertRaises(RuntimeError, instance.prepare, ["arg1", "arg2"])
+        # Test when sys.platform is win32
+        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
+            "os.path.isfile") as mock_isfile, mock.patch("sys.platform", "win32"):
+            mock_isfile.return_value = True
+            mock_manager.return_value = True
+            instance.prepare(["arg1", "arg2"])  # With cmd line args
+            self.assertEqual(1, mock_manager.call_count)
+            self.assertEqual(1, mock_isfile.call_count)
+            self.assertEqual("path/program.exe", instance.program)
+            self.assertEqual(2, len(instance.args))
+            self.assertEqual(["arg1", "arg2"], instance.args)
+            instance = self._make_executable_tool_instance()
+            instance.prepare([])  # Without cmd line args
+            self.assertEqual(2, mock_manager.call_count)
+            self.assertEqual(2, mock_isfile.call_count)
+            self.assertEqual("path/program.exe", instance.program)
+            self.assertEqual(0, len(instance.args))
+        # Test when sys.platform is linux
+        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
+            "os.path.isfile") as mock_isfile, mock.patch("sys.platform", "linux"):
+            instance = self._make_executable_tool_instance()
+            mock_isfile.return_value = True
+            mock_manager.return_value = True
+            instance.prepare(["arg1", "arg2"])  # With cmd line args
+            self.assertEqual(1, mock_manager.call_count)
+            self.assertEqual(1, mock_isfile.call_count)
+            self.assertEqual("sh", instance.program)
+            self.assertEqual(3, len(instance.args))
+            self.assertEqual(["path/program.exe", "arg1", "arg2"], instance.args)
+
+    def test_executable_prepare_with_cmd(self):
+        instance = self._make_executable_tool_instance(shell="cmd.exe", cmd="dir")
+        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager:
+            # Run command with cmd.exe
+            mock_manager.return_value = True
+            instance.prepare(["arg1", "arg2"])
+            self.assertEqual(1, mock_manager.call_count)
+            self.assertEqual("cmd.exe", instance.program)
+            self.assertEqual(4, len(instance.args))
+            self.assertEqual(["/C", "dir", "arg1", "arg2"], instance.args)
+            # Run command with bash shell
+            instance = self._make_executable_tool_instance(shell="bash", cmd="ls")
+            instance.prepare(["-a"])
+            self.assertEqual(2, mock_manager.call_count)
+            self.assertEqual("sh", instance.program)
+            self.assertEqual(2, len(instance.args))
+            self.assertEqual(["ls", "-a"], instance.args)
+            # Run command without shell
+            instance = self._make_executable_tool_instance(cmd="cat")
+            instance.prepare(["file.txt"])
+            self.assertEqual(3, mock_manager.call_count)
+            self.assertEqual("cat", instance.program)
+            self.assertEqual(1, len(instance.args))
+            self.assertEqual(["file.txt"], instance.args)
+
     @staticmethod
     def _make_python_tool_instance(use_jupyter_console):
-        logger = mock.MagicMock()
         specification = PythonTool("specification name", "python", "", ["main.py"], MockQSettings(), mock.MagicMock())
         specification.set_execution_settings()
         if use_jupyter_console:
             specification.execution_settings["use_jupyter_console"] = True
-        base_directory = "path/"
-        return specification.create_tool_instance(base_directory, False, logger, mock.Mock())
+        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
 
     @staticmethod
     def _make_julia_tool_instance(use_jupyter_console):
-        logger = mock.MagicMock()
-        source_files = ["hello.jl"]
-        specification = JuliaTool("specification name", "julia", "", source_files, MockQSettings(), mock.MagicMock())
+        specification = JuliaTool("specification name", "julia", "", ["hello.jl"], MockQSettings(), mock.MagicMock())
         specification.set_execution_settings()
         if use_jupyter_console:
             specification.execution_settings["use_jupyter_console"] = True
-        base_directory = "path/"
-        return specification.create_tool_instance(base_directory, False, logger, mock.Mock())
+        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
+
+    @staticmethod
+    def _make_gams_tool_instance():
+        specification = GAMSTool("specification name", "gams", "", ["model.gms"], MockQSettings(), mock.MagicMock())
+        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
+
+    @staticmethod
+    def _make_executable_tool_instance(shell=None, cmd=None):
+        if cmd:
+            specification = ExecutableTool("name", "executable", "", [], MockQSettings(), mock.MagicMock())
+        else:
+            specification = ExecutableTool("name", "executable", "", ["program.exe"], MockQSettings(), mock.MagicMock())
+        specification.set_execution_settings()
+        if shell == "cmd.exe":
+            specification.execution_settings["shell"] = "cmd.exe"
+        elif shell == "bash":
+            specification.execution_settings["shell"] = "bash"
+        if cmd:
+            specification.execution_settings["cmd"] = cmd
+        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
 
 
 if __name__ == '__main__':
