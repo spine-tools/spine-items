@@ -193,7 +193,7 @@ class View(ProjectItem):
 
         Args:
             fetch_id (Any): id given to database fetcher
-            db_map (DatabaseMappingBase): database map
+            db_map (DatabaseMapping): database map
             parameter_record (dict): parameter value's database data
         """
         if not self._data_fetchers:
