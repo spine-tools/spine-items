@@ -295,21 +295,6 @@ class GAMSTool(ToolSpecification):
             62097: "Simulation interrupted by user",  # Not official
         }
 
-    def update_gams_options(self, key, value):
-        """[OBSOLETE?] Updates GAMS command line options. Only 'cerr' and 'logoption' keywords supported.
-
-        Args:
-            key (str): Option name
-            value (int, float): Option value
-        """
-        # Supported GAMS logoption values
-        # 3 writes LOG output to standard output
-        # 4 writes LOG output to a file and standard output  [Not supported in GAMS v24.0]
-        if key in ["logoption", "cerr"]:
-            self.gams_options[key] = "{0}={1}".format(key, value)
-        else:
-            logging.error("Updating GAMS options failed. Unknown key: %s", key)
-
     def make_debug_project(self, basedir):
         """Make a GAMS project file and return an anchor for the execution item log.
 

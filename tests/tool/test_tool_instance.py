@@ -14,6 +14,8 @@
 import sys
 import unittest
 from unittest import mock
+from tempfile import TemporaryDirectory
+from pathlib import Path
 from spine_items.tool.tool_specifications import PythonTool, JuliaTool, GAMSTool, ExecutableTool
 from tests.mock_helpers import MockQSettings
 
@@ -108,30 +110,38 @@ class TestToolInstance(unittest.TestCase):
     def test_gams_prepare_with_cmd_line_arguments(self):
         instance = self._make_gams_tool_instance()
         path_to_gams = "path/to/gams"
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch("spine_items.tool.tool_instance.resolve_gams_executable") as mock_gams_exe:
+        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
+            "spine_items.tool.tool_instance.resolve_gams_executable"
+        ) as mock_gams_exe:
             mock_manager.return_value = True
             mock_gams_exe.return_value = path_to_gams
             instance.prepare(["arg1", "arg2"])
             mock_manager.assert_called()
             mock_gams_exe.assert_called()
             self.assertEqual(path_to_gams, instance.program)
-            self.assertEqual(6, len(instance.args))
+            self.assertEqual(5, len(instance.args))
             self.assertEqual("model.gms", instance.args[0])
-            self.assertEqual("arg1", instance.args[-2])
-            self.assertEqual("arg2", instance.args[-1])
+            self.assertEqual("curDir=path/", instance.args[1])
+            self.assertEqual("logoption=3", instance.args[2])
+            self.assertEqual("arg1", instance.args[3])
+            self.assertEqual("arg2", instance.args[4])
 
     def test_gams_prepare_without_cmd_line_arguments(self):
         instance = self._make_gams_tool_instance()
         path_to_gams = "path/to/gams"
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch("spine_items.tool.tool_instance.resolve_gams_executable") as mock_gams_exe:
+        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
+            "spine_items.tool.tool_instance.resolve_gams_executable"
+        ) as mock_gams_exe:
             mock_manager.return_value = True
             mock_gams_exe.return_value = path_to_gams
             instance.prepare([])
             mock_manager.assert_called()
             mock_gams_exe.assert_called()
             self.assertEqual(path_to_gams, instance.program)
-            self.assertEqual(4, len(instance.args))
+            self.assertEqual(3, len(instance.args))
             self.assertEqual("model.gms", instance.args[0])
+            self.assertEqual("curDir=path/", instance.args[1])
+            self.assertEqual("logoption=3", instance.args[2])
 
     def test_executable_prepare_with_main_program(self):
         instance = self._make_executable_tool_instance()
@@ -139,7 +149,8 @@ class TestToolInstance(unittest.TestCase):
         self.assertRaises(RuntimeError, instance.prepare, ["arg1", "arg2"])
         # Test when sys.platform is win32
         with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
-            "os.path.isfile") as mock_isfile, mock.patch("sys.platform", "win32"):
+            "os.path.isfile"
+        ) as mock_isfile, mock.patch("sys.platform", "win32"):
             mock_isfile.return_value = True
             mock_manager.return_value = True
             instance.prepare(["arg1", "arg2"])  # With cmd line args
@@ -156,7 +167,8 @@ class TestToolInstance(unittest.TestCase):
             self.assertEqual(0, len(instance.args))
         # Test when sys.platform is linux
         with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
-            "os.path.isfile") as mock_isfile, mock.patch("sys.platform", "linux"):
+            "os.path.isfile"
+        ) as mock_isfile, mock.patch("sys.platform", "linux"):
             instance = self._make_executable_tool_instance()
             mock_isfile.return_value = True
             mock_manager.return_value = True
@@ -194,13 +206,17 @@ class TestToolInstance(unittest.TestCase):
 
     def test_execute_julia_tool_instance(self):
         instance = self._make_julia_tool_instance(False)
-        self.execute_fake_python_and_julia_tool_instances(instance)
+        self.execute_fake_python_julia_and_executable_tool_instances(instance)
 
     def test_execute_python_tool_instance(self):
         instance = self._make_python_tool_instance(False)
-        self.execute_fake_python_and_julia_tool_instances(instance)
+        self.execute_fake_python_julia_and_executable_tool_instances(instance)
 
-    def execute_fake_python_and_julia_tool_instances(self, instance):
+    def test_execute_executable_tool_instance(self):
+        instance = self._make_executable_tool_instance("cmd.exe", cmd="dir")
+        self.execute_fake_python_julia_and_executable_tool_instances(instance)
+
+    def execute_fake_python_julia_and_executable_tool_instances(self, instance):
         """Python and Julia Tool Specification return codes are the same."""
         instance.exec_mngr = FakeExecutionManager(0)  # Valid return code
         self.assertEqual(0, instance.execute())
@@ -208,6 +224,22 @@ class TestToolInstance(unittest.TestCase):
         self.assertEqual(-1, instance.execute())
         instance.exec_mngr = FakeExecutionManager(1)  # Invalid return code
         self.assertEqual(1, instance.execute())
+
+    def test_execute_gams_tool_instance(self):
+        temp_dir = TemporaryDirectory()
+        instance = self._make_gams_tool_instance(temp_dir.name)
+        instance.exec_mngr = FakeExecutionManager(0)  # Valid return code
+        self.assertEqual(0, instance.execute())
+        instance.exec_mngr = FakeExecutionManager(1)  # Valid return code
+        self.assertEqual(1, instance.execute())  # This creates a GAMS project file for debugging
+        debug_gpr_path = Path(temp_dir.name) / "specification_name_autocreated.gpr"
+        self.assertTrue(debug_gpr_path.is_file())
+        debug_gpr_path.unlink()  # Remove file (Path.unlink is equivalent to os.remove)
+        self.assertFalse(debug_gpr_path.is_file())
+        instance.exec_mngr = FakeExecutionManager(-1)  # Invalid return code
+        self.assertEqual(-1, instance.execute())  # This creates a GAMS project file for debugging
+        self.assertTrue(debug_gpr_path.is_file())
+        temp_dir.cleanup()
 
     @staticmethod
     def _make_python_tool_instance(use_jupyter_console):
@@ -226,8 +258,9 @@ class TestToolInstance(unittest.TestCase):
         return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
 
     @staticmethod
-    def _make_gams_tool_instance():
-        specification = GAMSTool("specification name", "gams", "", ["model.gms"], MockQSettings(), mock.MagicMock())
+    def _make_gams_tool_instance(temp_dir=None):
+        path = temp_dir if temp_dir else ""
+        specification = GAMSTool("specification name", "gams", path, ["model.gms"], MockQSettings(), mock.MagicMock())
         return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
 
     @staticmethod
@@ -251,8 +284,8 @@ class FakeExecutionManager:
         self.retval = retval
 
     def run_until_complete(self):
-        print("Running until complete")
         return self.retval
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -112,11 +112,10 @@ class GAMSToolInstance(ToolInstance):
         gams_path = self._settings.value("appSettings/gamsPath", defaultValue="")
         self.program = resolve_gams_executable(gams_path)
         self.args.append(self.tool_specification.main_prgm)
-        self.args.append("curDir=")
-        self.args.append(self.basedir)
-        self.args.append("logoption=3")  # TODO: This should be an option in Settings
+        self.args.append(f"curDir={self.basedir}")  # Set gams current working directory
+        self.args.append("logoption=3")  # This could be an option in Settings
         self.append_cmdline_args(args)
-        # TODO: Check if the below sets the curDir argument. Is the curDir arg now useless?
+        # Note: workdir=self.basedir sets the working directory for the subprocess.Popen process.
         self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
