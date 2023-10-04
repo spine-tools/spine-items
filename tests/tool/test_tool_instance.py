@@ -192,6 +192,23 @@ class TestToolInstance(unittest.TestCase):
             self.assertEqual(1, len(instance.args))
             self.assertEqual(["file.txt"], instance.args)
 
+    def test_execute_julia_tool_instance(self):
+        instance = self._make_julia_tool_instance(False)
+        self.execute_fake_python_and_julia_tool_instances(instance)
+
+    def test_execute_python_tool_instance(self):
+        instance = self._make_python_tool_instance(False)
+        self.execute_fake_python_and_julia_tool_instances(instance)
+
+    def execute_fake_python_and_julia_tool_instances(self, instance):
+        """Python and Julia Tool Specification return codes are the same."""
+        instance.exec_mngr = FakeExecutionManager(0)  # Valid return code
+        self.assertEqual(0, instance.execute())
+        instance.exec_mngr = FakeExecutionManager(-1)  # Valid return code
+        self.assertEqual(-1, instance.execute())
+        instance.exec_mngr = FakeExecutionManager(1)  # Invalid return code
+        self.assertEqual(1, instance.execute())
+
     @staticmethod
     def _make_python_tool_instance(use_jupyter_console):
         specification = PythonTool("specification name", "python", "", ["main.py"], MockQSettings(), mock.MagicMock())
@@ -228,6 +245,14 @@ class TestToolInstance(unittest.TestCase):
             specification.execution_settings["cmd"] = cmd
         return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
 
+
+class FakeExecutionManager:
+    def __init__(self, retval):
+        self.retval = retval
+
+    def run_until_complete(self):
+        print("Running until complete")
+        return self.retval
 
 if __name__ == '__main__':
     unittest.main()
