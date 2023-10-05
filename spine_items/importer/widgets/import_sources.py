@@ -37,6 +37,7 @@ from spinedb_api.import_mapping.type_conversion import (
     IntegerSequenceDateTimeConvertSpec,
     StringConvertSpec,
 )
+from spinedb_api.exception import InvalidMappingComponent
 from .custom_menus import SourceListMenu, SourceDataTableMenu
 from .mime_types import MAPPING_LIST_MIME_TYPE, TABLE_OPTIONS_MIME_TYPE
 from .options_widget import OptionsWidget
@@ -86,7 +87,7 @@ class ImportSources(QObject):
         # connect signals
         self._mappings_model.modelAboutToBeReset.connect(self._store_source_list_current_index)
         self._mappings_model.modelReset.connect(self._restore_source_list_current_index)
-        self._mappings_model.dataChanged.connect(self._update_source_table_colors)
+        self._mappings_model.dataChanged.connect(self._handle_mapping_data_changed)
         self._mappings_model.row_or_column_type_recommended.connect(self._source_data_model.set_type)
         self._mappings_model.multi_column_type_recommended.connect(self._source_data_model.set_all_column_types)
         self._ui_options_widget.options_changed.connect(lambda _: self._clear_source_data_model())
@@ -102,6 +103,20 @@ class ImportSources(QObject):
         self._source_data_model.column_types_updated.connect(self._new_column_types)
         self._source_data_model.row_types_updated.connect(self._new_row_types)
         self._source_data_model.polish_mapping_requested.connect(self._polish_mappings_in_list)
+
+    @Slot(QModelIndex, QModelIndex, list)
+    def _handle_mapping_data_changed(self, top_left, bottom_right, roles):
+        self._update_source_table_colors(top_left, bottom_right, roles)
+        table_index = self._ui.source_list.selectionModel().currentIndex()
+        if not table_index.isValid() or table_index.row() == 0:
+            return
+        header = self._source_data_model.header
+        for list_row in range(self._mappings_model.rowCount(table_index)):
+            list_index = self._mappings_model.index(list_row, 0, table_index)
+            msg = self._mappings_model.check_validity_of_columns(list_index, header)
+            if msg:
+                self.parent().show_error(msg)
+                return
 
     def set_connector(self, connector, mapping):
         """Sets connector.
@@ -141,7 +156,10 @@ class ImportSources(QObject):
         header = self._source_data_model.header
         for list_row in range(self._mappings_model.rowCount(table_index)):
             list_index = self._mappings_model.index(list_row, 0, table_index)
-            self._mappings_model.polish_mapping(list_index, header)
+            try:
+                self._mappings_model.polish_mapping(list_index, header)
+            except InvalidMappingComponent as error:
+                self.parent().show_error(str(error))
 
     @Slot(str)
     def _select_table_for_undo(self, table_name):
@@ -247,7 +265,6 @@ class ImportSources(QObject):
         self._ui.default_column_type_combo_box.setCurrentText(column_type)
         self._ui.default_column_type_combo_box.currentTextChanged.connect(self._set_default_column_type)
 
-    @Slot(QModelIndex, QModelIndex, list)
     def _update_source_table_colors(self, top_left, bottom_right, roles):
         """Notifies source table model that colors have changed.
 

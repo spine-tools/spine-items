@@ -1121,6 +1121,20 @@ class MappingsModel(QAbstractItemModel):
         index = self.index(row, FlattenedColumn.REGEXP, list_index)
         self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
 
+    def check_validity_of_columns(self, list_index, header):
+        """Checks that the mapping doesn't have column refs
+        that are larger than the source table column count
+
+        Args:
+            list_index (QModelIndex): index to mappings list
+            header (Iterable): source table header
+        Returns:
+            bool: True if no source ref. is out of range, False otherwise
+        """
+        mapping_list_item = list_index.internalPointer()
+        table_name = mapping_list_item.source_table_item.name
+        return mapping_list_item.flattened_mappings.root_mapping.check_for_invalid_column_refs(header, table_name)
+
     @staticmethod
     def polish_mapping(list_index, header):
         """Polishes flattened mappings.
