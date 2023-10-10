@@ -19,7 +19,8 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
-from spine_items.tool.tool_specifications import JuliaTool, ExecutableTool
+from PySide6.QtGui import QIcon
+from spine_items.tool.tool_specifications import JuliaTool, ExecutableTool, PythonTool
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from spine_items.tool.widgets.tool_spec_optional_widgets import (
     JuliaToolSpecOptionalWidget,
@@ -66,7 +67,11 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget = None
 
     def make_tool_spec_editor(self, spec=None):
-        if spec and spec.tooltype == "julia":
+        if not spec:
+            with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
+                self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
+                mock_restore_ui.assert_called()
+        elif spec.tooltype == "julia" or spec.tooltype == "python":
             with mock.patch(
                 "spinetoolbox.project_item.specification_editor_window.restore_ui"
             ) as mock_restore_ui, mock.patch(
@@ -243,6 +248,63 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         item = self.tool_specification_widget.programfiles_model.itemFromIndex(index)
         self.assertEqual("fake_main_program.bat", item.data(Qt.ItemDataRole.DisplayRole))
 
+    def test_edit_and_save_program_file(self):
+        mock_logger = mock.MagicMock()
+        script_file_name = "hello.py"
+        file_path = Path(self._temp_dir.name, script_file_name)
+        with open(file_path, "w") as h:
+            h.writelines(["# hello.py"])  # Make hello.py
+        python_tool_spec = PythonTool("a", "python", str(Path(self._temp_dir.name)), [script_file_name], MockQSettings(), mock_logger)
+        python_tool_spec.set_execution_settings()  # Sets defaults
+        self.make_tool_spec_editor(python_tool_spec)
+        parent = self.tool_specification_widget.programfiles_model.index(0, 0)
+        index = self.tool_specification_widget.programfiles_model.index(0, 0, parent)  # Index of 'hello.py'
+        self.tool_specification_widget._ui.textEdit_program.appendPlainText("print('hi')")
+        self.tool_specification_widget._save_program_file(file_path, self.tool_specification_widget._ui.textEdit_program.document())
+        # Open file and check contents
+        with open(file_path, "r") as edited_file:
+            l = edited_file.readlines()
+            self.assertEqual(2, len(l))
+            self.assertTrue(l[0].startswith("# hello"))  # Don't match the whole str to avoid problems with newline
+            self.assertTrue(l[1].startswith("print('hi')"))
+
+    def test_change_kernel_spec(self):
+        mock_logger = mock.MagicMock()
+        script_file_name = "hello.py"
+        file_path = Path(self._temp_dir.name, script_file_name)
+        with open(file_path, "w") as h:
+            h.writelines(["# hello.py"])  # Make hello.py
+        python_tool_spec = PythonTool("a", "python", str(Path(self._temp_dir.name)), [script_file_name], MockQSettings(), mock_logger)
+        python_tool_spec.set_execution_settings()  # Sets defaults
+        python_tool_spec.execution_settings["use_jupyter_console"] = True
+        with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
+            self.make_tool_spec_editor(python_tool_spec)
+            opt_widget = self.tool_specification_widget.optional_widget
+            self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())
+            self.assertEqual(2, opt_widget.kernel_spec_model.rowCount())
+            self.assertEqual(0, opt_widget.ui.comboBox_kernel_specs.currentIndex())
+            self.assertEqual("Select kernel spec...", opt_widget.ui.comboBox_kernel_specs.currentText())
+            self.tool_specification_widget.push_change_kernel_spec_command(1)
+            self.assertEqual("python3", opt_widget.ui.comboBox_kernel_specs.currentText())
+
+
+class FakeSignal:
+    def __init__(self):
+        self.m = None
+
+    def connect(self, method):
+        self.m = method
+
+class FakeKernelFetcher:
+    kernel_found = FakeSignal()
+    finished = FakeSignal()
+
+    def __init__(self, conda_path="", fetch_mode=0):
+        self.conda_path = conda_path
+        self.fetch_mode = fetch_mode
+
+    def start(self):
+        self.kernel_found.m("python3", "", False, QIcon(), dict())
 
 if __name__ == "__main__":
     unittest.main()
