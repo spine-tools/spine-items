@@ -352,7 +352,20 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         else:
             index_of_bash = self.tool_specification_widget.optional_widget.shells.index("bash")
             self.tool_specification_widget.push_change_shell_command(index_of_bash)
-            self.assertEqual("cmd.exe", self.tool_specification_widget.optional_widget.ui.comboBox_shell.currentText())
+            self.assertEqual("bash", self.tool_specification_widget.optional_widget.ui.comboBox_shell.currentText())
+
+    def test_change_julia_project(self):
+        mock_logger = mock.MagicMock()
+        julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, ["hello.jl"],
+                                      MockQSettings(), mock_logger)
+        julia_tool_spec.set_execution_settings()  # Sets defaults
+        julia_tool_spec.execution_settings["use_jupyter_console"] = True
+        with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
+            self.make_tool_spec_editor(julia_tool_spec)
+            self.assertEqual("", self.tool_specification_widget.spec_dict["execution_settings"]["project"])
+            self.tool_specification_widget.optional_widget.ui.lineEdit_julia_project.setText("path/to/julia_project")
+            self.tool_specification_widget.push_change_project()
+            self.assertEqual("path/to/julia_project", self.tool_specification_widget.spec_dict["execution_settings"]["project"])
 
 
 class FakeSignal:
