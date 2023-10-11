@@ -14,6 +14,7 @@
 import unittest
 import logging
 import sys
+import os
 from unittest import mock
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
@@ -366,6 +367,78 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget.optional_widget.ui.lineEdit_julia_project.setText("path/to/julia_project")
             self.tool_specification_widget.push_change_project()
             self.assertEqual("path/to/julia_project", self.tool_specification_widget.spec_dict["execution_settings"]["project"])
+
+    def test_program_file_dialogs(self):
+        mock_logger = mock.MagicMock()
+        script_file_name = "hello.jl"
+        script_file_name2 = "hello2.jl"
+        data_file_name = "data.csv"
+        file_path = Path(self._temp_dir.name, script_file_name)
+        file_path2 = Path(self._temp_dir.name, script_file_name2)
+        file_path3 = Path(self._temp_dir.name, data_file_name)
+        # Make files so os.path.samefile() works
+        with open(file_path, "w") as h:
+            h.writelines(["println('Hello world')"])  # Make hello.jl
+        with open(file_path2, "w") as h:
+            h.writelines(["println('Hello world2')"])  # Make hello2.jl
+        with open(file_path3, "w") as h:
+            h.writelines(["1, 2, 3"])  # Make data.csv
+        julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, [script_file_name, data_file_name], MockQSettings(), mock_logger)
+        julia_tool_spec.set_execution_settings()  # Sets defaults
+        self.make_tool_spec_editor(julia_tool_spec)
+        self.assertEqual("hello.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
+        # Test browse_main_program_file()
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getOpenFileName") as mock_fd_gofn:
+            mock_fd_gofn.return_value = [file_path2]
+            # Change main program file hello.jl -> hello2.jl
+            self.tool_specification_widget.browse_main_program_file()
+            mock_fd_gofn.assert_called()
+            self.assertEqual("hello2.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
+            # Try to change additional program file as the main program, should pop up a QMessageBox
+            mock_fd_gofn.return_value = [file_path3]
+            with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QMessageBox") as mock_mb:
+                self.tool_specification_widget.browse_main_program_file()
+                mock_mb.assert_called()
+            self.assertEqual("hello2.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
+        # Test new_main_program_file()
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getSaveFileName") as mock_fd_gsfn:
+            mock_fd_gsfn.return_value = [file_path]
+            # This should remove existing hello.jl, recreate it, and set it as main program
+            self.tool_specification_widget.new_main_program_file()
+            self.assertEqual(1, mock_fd_gsfn.call_count)
+            self.assertEqual("hello.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
+            # Test new_program_file()
+            parent_addit = self.tool_specification_widget.programfiles_model.index(1, 0)
+            self.assertEqual(1, self.tool_specification_widget.programfiles_model.rowCount(parent_addit))
+            mock_fd_gsfn.return_value = [Path(self._temp_dir.name, "input.txt")]
+            self.tool_specification_widget.new_program_file()
+            self.assertEqual(2, mock_fd_gsfn.call_count)
+            # Check that we now have 2 additional program files
+            parent_addit = self.tool_specification_widget.programfiles_model.index(1, 0)
+            self.assertEqual(2, self.tool_specification_widget.programfiles_model.rowCount(parent_addit))
+            # Try to add file that's already been added
+            mock_fd_gsfn.return_value = [file_path3]
+            with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QMessageBox.information") as mock_mb_info:
+                self.tool_specification_widget.new_program_file()  # QMessageBox should appear
+                mock_mb_info.assert_called()
+            self.assertEqual(3, mock_fd_gsfn.call_count)
+            self.assertEqual(2, self.tool_specification_widget.programfiles_model.rowCount(parent_addit))
+        # Test show_add_program_files_dialog()
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getOpenFileNames") as mock_fd_gofns:
+            with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QMessageBox") as mock_mb:
+                mock_fd_gofns.return_value = [[file_path]]
+                self.tool_specification_widget.show_add_program_files_dialog()  # Shows 'Can't add main...' msg box
+                self.assertEqual(1, mock_mb.call_count)
+                self.assertEqual(1, mock_fd_gofns.call_count)
+                mock_fd_gofns.return_value = [[file_path, file_path2, file_path3]]
+                self.tool_specification_widget.show_add_program_files_dialog()  # Shows 'One file not add...' msg box
+                self.assertEqual(2, mock_mb.call_count)
+                self.assertEqual(2, mock_fd_gofns.call_count)
+        # Test show_add_program_dirs_dialog()
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getExistingDirectory") as mock_fd_ged:
+            mock_fd_ged.return_value = self._temp_dir.name
+            self.tool_specification_widget.show_add_program_dirs_dialog()
+            mock_fd_ged.assert_called()
 
 
 class FakeSignal:
