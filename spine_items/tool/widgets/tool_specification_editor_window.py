@@ -129,10 +129,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return Ui_MainWindow()
 
     @property
-    def qsettings(self):
-        return self._app_settings
-
-    @property
     def settings_group(self):
         return "toolSpecificationEditorWindow"
 
@@ -569,6 +565,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(int)
     def push_change_kernel_spec_command(self, index):
+        """Changes selected kernel name for Julia and Python Tool Specs."""
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         item = opt_widget.kernel_spec_model.item(index)
@@ -595,6 +592,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def push_set_jupyter_console_mode(self, new_value):
+        """Changes between Basic or Jupyter Console execution modes for Julia and Python Tool Specs."""
         old_value = self.spec_dict["execution_settings"]["use_jupyter_console"]
         if new_value == old_value:
             return
@@ -614,6 +612,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot()
     def push_change_executable(self):
+        """Changes Julia or Python executable path for Julia and Python Tool Specs."""
         old_value = self.spec_dict["execution_settings"]["executable"]
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
@@ -632,6 +631,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot()
     def push_change_project(self):
+        """Changes Julia project path for Julia Tool Specs."""
         old_value = self.spec_dict["execution_settings"]["project"]
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
@@ -650,6 +650,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(int)
     def push_change_shell_command(self, index):
+        """Changes shell for Executable Tool Specs."""
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         new_shell = opt_widget.shells[index] if index != 0 else ""
@@ -666,6 +667,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot()
     def _push_change_args_command(self):
+        """Changes cmd line args for all Tool Specs."""
         old_value = self.spec_dict.get("cmdline_args", [])
         new_value = split_cmdline_args(self._ui.lineEdit_args.text())
         if new_value == old_value:
@@ -680,6 +682,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot()
     def push_change_executable_command(self):
+        """Changes command for Executable Tool Specs."""
         old_value = self.spec_dict["execution_settings"]["cmd"]
         opt_widget = self._get_optional_widget("executable")
         new_value = opt_widget.ui.lineEdit_command.text().strip()
