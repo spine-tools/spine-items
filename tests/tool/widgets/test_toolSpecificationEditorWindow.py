@@ -72,7 +72,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
                 self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
                 mock_restore_ui.assert_called()
-        elif spec.tooltype == "julia" or spec.tooltype == "python":
+        else:
             with mock.patch(
                 "spinetoolbox.project_item.specification_editor_window.restore_ui"
             ) as mock_restore_ui, mock.patch(
@@ -82,10 +82,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
                 self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox, spec)
                 mock_restore_ui.assert_called()
                 mock_impr.assert_called()
-        else:
-            with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
-                self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox, spec)
-                mock_restore_ui.assert_called()
 
     def test_create_minimal_julia_tool_specification(self):
         self.make_tool_spec_editor()
@@ -231,7 +227,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
 
     def test_open_tool_specification_editor_with_executable_spec(self):
         mock_logger = mock.MagicMock()
-        exec_tool_spec = ExecutableTool("a", "executable", "", ["fake_main_program.bat"], MockQSettings(), mock_logger)
+        exec_tool_spec = ExecutableTool(
+            "a", "executable", self._temp_dir.name, ["fake_main_program.bat"], MockQSettings(), mock_logger
+        )
         exec_tool_spec.set_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(exec_tool_spec)
         opt_widget = self.tool_specification_widget._get_optional_widget("executable")
@@ -255,13 +253,17 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         file_path = Path(self._temp_dir.name, script_file_name)
         with open(file_path, "w") as h:
             h.writelines(["# hello.py"])  # Make hello.py
-        python_tool_spec = PythonTool("a", "python", str(Path(self._temp_dir.name)), [script_file_name], MockQSettings(), mock_logger)
+        python_tool_spec = PythonTool(
+            "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
+        )
         python_tool_spec.set_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(python_tool_spec)
         parent = self.tool_specification_widget.programfiles_model.index(0, 0)
         index = self.tool_specification_widget.programfiles_model.index(0, 0, parent)  # Index of 'hello.py'
         self.tool_specification_widget._ui.textEdit_program.appendPlainText("print('hi')")
-        self.tool_specification_widget._save_program_file(file_path, self.tool_specification_widget._ui.textEdit_program.document())
+        self.tool_specification_widget._save_program_file(
+            file_path, self.tool_specification_widget._ui.textEdit_program.document()
+        )
         # Open file and check contents
         with open(file_path, "r") as edited_file:
             l = edited_file.readlines()
@@ -275,7 +277,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         file_path = Path(self._temp_dir.name, script_file_name)
         with open(file_path, "w") as h:
             h.writelines(["# hello.py"])  # Make hello.py
-        python_tool_spec = PythonTool("a", "python", str(Path(self._temp_dir.name)), [script_file_name], MockQSettings(), mock_logger)
+        python_tool_spec = PythonTool(
+            "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
+        )
         python_tool_spec.set_execution_settings()  # Sets defaults
         python_tool_spec.execution_settings["use_jupyter_console"] = True
         with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
@@ -286,15 +290,21 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.assertEqual(0, opt_widget.ui.comboBox_kernel_specs.currentIndex())
             self.assertEqual("Select kernel spec...", opt_widget.ui.comboBox_kernel_specs.currentText())
             self.tool_specification_widget.push_change_kernel_spec_command(1)
-            self.assertEqual("python3", self.tool_specification_widget.spec_dict["execution_settings"]["kernel_spec_name"])
+            self.assertEqual(
+                "python3", self.tool_specification_widget.spec_dict["execution_settings"]["kernel_spec_name"]
+            )
             self.assertEqual("python3", opt_widget.ui.comboBox_kernel_specs.currentText())
             self.assertTrue(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
             self.tool_specification_widget.push_set_jupyter_console_mode(False)
             self.assertFalse(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
             opt_widget.set_executable("path/to/executable")
             self.tool_specification_widget.push_change_executable()
-            self.assertEqual("path/to/executable", self.tool_specification_widget.spec_dict["execution_settings"]["executable"])
-            with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.split_cmdline_args") as mock_args:
+            self.assertEqual(
+                "path/to/executable", self.tool_specification_widget.spec_dict["execution_settings"]["executable"]
+            )
+            with mock.patch(
+                "spine_items.tool.widgets.tool_specification_editor_window.split_cmdline_args"
+            ) as mock_args:
                 mock_args.return_value = ["-A", "-B"]
                 self.tool_specification_widget._push_change_args_command()
                 mock_args.assert_called()
@@ -304,7 +314,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         mock_logger = mock.MagicMock()
         batch_file = "hello.bat"
         another_batch_file = "hello.sh"
-        exec_tool_spec = ExecutableTool("a", "executable", str(Path(self._temp_dir.name)), [batch_file, "data.file"], MockQSettings(), mock_logger)
+        exec_tool_spec = ExecutableTool(
+            "a", "executable", self._temp_dir.name, [batch_file, "data.file"], MockQSettings(), mock_logger
+        )
         exec_tool_spec.set_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(exec_tool_spec)
         file_path = Path(self._temp_dir.name, another_batch_file)
@@ -323,7 +335,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget.open_program_file(mp_index)  # Calls open_url()
             mock_open_url.assert_called()
         # Try removing files without selecting anything
-        with mock.patch("spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg") as m_notify:
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg"
+        ) as m_notify:
             self.tool_specification_widget.remove_program_files()
             m_notify.assert_called()
         # Set 'data.file' selected
@@ -339,7 +353,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         self.tool_specification_widget.remove_all_program_files()
         self.assertEqual(0, self.tool_specification_widget.programfiles_model.rowCount(parent_main))
         # Do remove_all without selecting anything
-        with mock.patch("spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg") as m_notify:
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg"
+        ) as m_notify:
             self.tool_specification_widget.remove_all_program_files()
             m_notify.assert_called()
         # Add command for executable tool spec
@@ -357,8 +373,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
 
     def test_change_julia_project(self):
         mock_logger = mock.MagicMock()
-        julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, ["hello.jl"],
-                                      MockQSettings(), mock_logger)
+        julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, ["hello.jl"], MockQSettings(), mock_logger)
         julia_tool_spec.set_execution_settings()  # Sets defaults
         julia_tool_spec.execution_settings["use_jupyter_console"] = True
         with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
@@ -366,7 +381,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.assertEqual("", self.tool_specification_widget.spec_dict["execution_settings"]["project"])
             self.tool_specification_widget.optional_widget.ui.lineEdit_julia_project.setText("path/to/julia_project")
             self.tool_specification_widget.push_change_project()
-            self.assertEqual("path/to/julia_project", self.tool_specification_widget.spec_dict["execution_settings"]["project"])
+            self.assertEqual(
+                "path/to/julia_project", self.tool_specification_widget.spec_dict["execution_settings"]["project"]
+            )
 
     def test_program_file_dialogs(self):
         mock_logger = mock.MagicMock()
@@ -383,12 +400,16 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             h.writelines(["println('Hello world2')"])  # Make hello2.jl
         with open(file_path3, "w") as h:
             h.writelines(["1, 2, 3"])  # Make data.csv
-        julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, [script_file_name, data_file_name], MockQSettings(), mock_logger)
+        julia_tool_spec = JuliaTool(
+            "a", "julia", self._temp_dir.name, [script_file_name, data_file_name], MockQSettings(), mock_logger
+        )
         julia_tool_spec.set_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
         self.assertEqual("hello.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
         # Test browse_main_program_file()
-        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getOpenFileName") as mock_fd_gofn:
+        with mock.patch(
+            "spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getOpenFileName"
+        ) as mock_fd_gofn:
             mock_fd_gofn.return_value = [file_path2]
             # Change main program file hello.jl -> hello2.jl
             self.tool_specification_widget.browse_main_program_file()
@@ -401,7 +422,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
                 mock_mb.assert_called()
             self.assertEqual("hello2.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
         # Test new_main_program_file()
-        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getSaveFileName") as mock_fd_gsfn:
+        with mock.patch(
+            "spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getSaveFileName"
+        ) as mock_fd_gsfn:
             mock_fd_gsfn.return_value = [file_path]
             # This should remove existing hello.jl, recreate it, and set it as main program
             self.tool_specification_widget.new_main_program_file()
@@ -418,13 +441,17 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.assertEqual(2, self.tool_specification_widget.programfiles_model.rowCount(parent_addit))
             # Try to add file that's already been added
             mock_fd_gsfn.return_value = [file_path3]
-            with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QMessageBox.information") as mock_mb_info:
+            with mock.patch(
+                "spine_items.tool.widgets.tool_specification_editor_window.QMessageBox.information"
+            ) as mock_mb_info:
                 self.tool_specification_widget.new_program_file()  # QMessageBox should appear
                 mock_mb_info.assert_called()
             self.assertEqual(3, mock_fd_gsfn.call_count)
             self.assertEqual(2, self.tool_specification_widget.programfiles_model.rowCount(parent_addit))
         # Test show_add_program_files_dialog()
-        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getOpenFileNames") as mock_fd_gofns:
+        with mock.patch(
+            "spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getOpenFileNames"
+        ) as mock_fd_gofns:
             with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QMessageBox") as mock_mb:
                 mock_fd_gofns.return_value = [[file_path]]
                 self.tool_specification_widget.show_add_program_files_dialog()  # Shows 'Can't add main...' msg box
@@ -435,7 +462,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
                 self.assertEqual(2, mock_mb.call_count)
                 self.assertEqual(2, mock_fd_gofns.call_count)
         # Test show_add_program_dirs_dialog()
-        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getExistingDirectory") as mock_fd_ged:
+        with mock.patch(
+            "spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getExistingDirectory"
+        ) as mock_fd_ged:
             mock_fd_ged.return_value = self._temp_dir.name
             self.tool_specification_widget.show_add_program_dirs_dialog()
             mock_fd_ged.assert_called()
@@ -448,6 +477,7 @@ class FakeSignal:
     def connect(self, method):
         self.m = method
 
+
 class FakeKernelFetcher:
     kernel_found = FakeSignal()
     finished = FakeSignal()
@@ -458,6 +488,7 @@ class FakeKernelFetcher:
 
     def start(self):
         self.kernel_found.m("python3", "", False, QIcon(), dict())
+
 
 if __name__ == "__main__":
     unittest.main()
