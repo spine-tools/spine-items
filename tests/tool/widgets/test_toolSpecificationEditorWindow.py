@@ -18,7 +18,7 @@ from unittest import mock
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QItemSelectionModel
 from PySide6.QtGui import QIcon
 from spine_items.tool.tool_specifications import JuliaTool, ExecutableTool, PythonTool
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
@@ -268,7 +268,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.assertTrue(l[0].startswith("# hello"))  # Don't match the whole str to avoid problems with newline
             self.assertTrue(l[1].startswith("print('hi')"))
 
-    def test_change_kernel_spec(self):
+    def test_change_python_spec_options(self):
         mock_logger = mock.MagicMock()
         script_file_name = "hello.py"
         file_path = Path(self._temp_dir.name, script_file_name)
@@ -285,7 +285,74 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.assertEqual(0, opt_widget.ui.comboBox_kernel_specs.currentIndex())
             self.assertEqual("Select kernel spec...", opt_widget.ui.comboBox_kernel_specs.currentText())
             self.tool_specification_widget.push_change_kernel_spec_command(1)
+            self.assertEqual("python3", self.tool_specification_widget.spec_dict["execution_settings"]["kernel_spec_name"])
             self.assertEqual("python3", opt_widget.ui.comboBox_kernel_specs.currentText())
+            self.assertTrue(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
+            self.tool_specification_widget.push_set_jupyter_console_mode(False)
+            self.assertFalse(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
+            opt_widget.set_executable("path/to/executable")
+            self.tool_specification_widget.push_change_executable()
+            self.assertEqual("path/to/executable", self.tool_specification_widget.spec_dict["execution_settings"]["executable"])
+            with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.split_cmdline_args") as mock_args:
+                mock_args.return_value = ["-A", "-B"]
+                self.tool_specification_widget._push_change_args_command()
+                mock_args.assert_called()
+                self.assertEqual(["-A", "-B"], self.tool_specification_widget.spec_dict["cmdline_args"])
+
+    def test_change_executable_spec_options(self):
+        mock_logger = mock.MagicMock()
+        batch_file = "hello.bat"
+        another_batch_file = "hello.sh"
+        exec_tool_spec = ExecutableTool("a", "executable", str(Path(self._temp_dir.name)), [batch_file, "data.file"], MockQSettings(), mock_logger)
+        exec_tool_spec.set_execution_settings()  # Sets defaults
+        self.make_tool_spec_editor(exec_tool_spec)
+        file_path = Path(self._temp_dir.name, another_batch_file)
+        parent_main = self.tool_specification_widget.programfiles_model.index(0, 0)  # Main program file item
+        parent_addit = self.tool_specification_widget.programfiles_model.index(1, 0)  # Additional program files item
+        mp_index = self.tool_specification_widget.programfiles_model.index(0, 0, parent_main)
+        # Try to open main program file
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.open_url") as mock_open_url:
+            self.tool_specification_widget.open_program_file(mp_index)  # Fails because it's a .bat
+            mock_open_url.assert_not_called()
+        # Change main program file
+        self.tool_specification_widget._push_change_main_program_file_command(file_path)
+        mp_index = self.tool_specification_widget.programfiles_model.index(0, 0, parent_main)
+        # Try to open main program file again
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.open_url") as mock_open_url:
+            self.tool_specification_widget.open_program_file(mp_index)  # Calls open_url()
+            mock_open_url.assert_called()
+        # Try removing files without selecting anything
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg") as m_notify:
+            self.tool_specification_widget.remove_program_files()
+            m_notify.assert_called()
+        # Set 'data.file' selected
+        self.assertEqual(1, self.tool_specification_widget.programfiles_model.rowCount(parent_main))
+        self.assertEqual(1, self.tool_specification_widget.programfiles_model.rowCount(parent_addit))
+        index = self.tool_specification_widget.programfiles_model.index(0, 0, parent_addit)  # Index of 'data.file'
+        selection_model = self.tool_specification_widget._ui.treeView_programfiles.selectionModel()
+        selection_model.setCurrentIndex(index, QItemSelectionModel.SelectionFlag.Select)
+        # Remove additional program file 'data.file'
+        self.tool_specification_widget.remove_program_files()
+        self.assertEqual(0, self.tool_specification_widget.programfiles_model.rowCount(parent_addit))
+        # Remove main program file
+        self.tool_specification_widget.remove_all_program_files()
+        self.assertEqual(0, self.tool_specification_widget.programfiles_model.rowCount(parent_main))
+        # Do remove_all without selecting anything
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg") as m_notify:
+            self.tool_specification_widget.remove_all_program_files()
+            m_notify.assert_called()
+        # Add command for executable tool spec
+        self.tool_specification_widget.optional_widget.ui.lineEdit_command.setText("ls -a")
+        self.tool_specification_widget.push_change_executable_command()
+        # Change shell to cmd.exe on win32, bash for others
+        if sys.platform == "win32":
+            index_of_cmd_exe = self.tool_specification_widget.optional_widget.shells.index("cmd.exe")
+            self.tool_specification_widget.push_change_shell_command(index_of_cmd_exe)
+            self.assertEqual("cmd.exe", self.tool_specification_widget.optional_widget.ui.comboBox_shell.currentText())
+        else:
+            index_of_bash = self.tool_specification_widget.optional_widget.shells.index("bash")
+            self.tool_specification_widget.push_change_shell_command(index_of_bash)
+            self.assertEqual("cmd.exe", self.tool_specification_widget.optional_widget.ui.comboBox_shell.currentText())
 
 
 class FakeSignal:
