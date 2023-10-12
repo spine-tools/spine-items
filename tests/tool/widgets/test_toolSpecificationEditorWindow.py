@@ -346,7 +346,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         else:
             index_of_bash = self.tool_specification_widget.optional_widget.shells.index("bash")
             self.tool_specification_widget.push_change_shell_command(index_of_bash)
-            self.assertEqual("bash", self.tool_specification_widget.optional_widget.get_current_shell)
+            self.assertEqual("bash", self.tool_specification_widget.optional_widget.get_current_shell())
 
     def test_change_julia_project(self):
         mock_logger = mock.MagicMock()
@@ -362,7 +362,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
                 "path/to/julia_project", self.tool_specification_widget.spec_dict["execution_settings"]["project"]
             )
 
-    def test_restore_unknwon_saved_kernel_into_optional_widget(self):
+    def test_restore_unknown_saved_kernel_into_optional_widget(self):
         mock_logger = mock.MagicMock()
         script_file_name = "hello.py"
         file_path = Path(self._temp_dir.name, script_file_name)
