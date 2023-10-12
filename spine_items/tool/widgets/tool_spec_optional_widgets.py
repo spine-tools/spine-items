@@ -95,10 +95,9 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
             self.ui.radioButton_basic_console.setChecked(True)
         self.ui.radioButton_jupyter_console.blockSignals(False)
         self.ui.radioButton_basic_console.blockSignals(False)
-        self.set_ui_for_jupyter_console(use_jupyter_console)
-        # Must wait until model is built before setting the saved kernel spec as selected
         self._saved_kernel = specification.execution_settings["kernel_spec_name"]
         self.set_executable(specification.execution_settings["executable"])
+        self.set_ui_for_jupyter_console(use_jupyter_console)
 
     def set_ui_for_jupyter_console(self, use_jupyter_console):
         """Enables or disables some UI elements in the optional widget according to a checkBox state.
@@ -166,10 +165,11 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
 
     @Slot()
     def start_kernel_fetcher(self, restore_saved_kernel=False):
-        """Starts KernelFetcher for given fetch mode.
+        """Initializes kernel spec model and starts KernelFetcher.
 
         Args:
-            restore_saved_kernel (bool): True restores
+            restore_saved_kernel (bool): True restores a saved kernel after the model has been refreshed,
+            False restores the selected kernel after the model has been refreshed.
         """
         if self.kernel_fetcher is not None and self.kernel_fetcher.isRunning():
             return
