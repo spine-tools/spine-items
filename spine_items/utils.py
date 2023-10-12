@@ -54,7 +54,9 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
                 url["database"] = os.path.abspath(database)
             sa_url = URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
         else:
-            db_api = spinedb_api.SUPPORTED_DIALECTS[dialect]
+            db_api = spinedb_api.SUPPORTED_DIALECTS.get(dialect)
+            if db_api is None:
+                db_api = spinedb_api.helpers.UNSUPPORTED_DIALECTS[dialect]
             drivername = f"{dialect}+{db_api}"
             sa_url = URL(drivername, **url)  # pylint: disable=unexpected-keyword-arg
     except Exception as e:  # pylint: disable=broad-except
