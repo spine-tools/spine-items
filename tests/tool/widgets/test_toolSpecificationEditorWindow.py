@@ -9,7 +9,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""Unit tests for ToolSpecificationEditorWindow class."""
+"""Unit tests for ToolSpecificationEditorWindow class and tool_spec_optional_widgets module."""
 
 import unittest
 import logging
@@ -470,6 +470,99 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             mock_fd_ged.return_value = self._temp_dir.name
             self.tool_specification_widget.show_add_program_dirs_dialog()
             mock_fd_ged.assert_called()
+
+    def test_add_rename_select_remove_input_and_output_files(self):
+        mock_logger = mock.MagicMock()
+        main_file = "hello.jl"
+        main_path = Path(self._temp_dir.name, main_file)
+        with open(main_path, "w") as h:
+            h.writelines(["println('Hello world')"])  # Make hello.jl
+        julia_tool_spec = JuliaTool(
+            "a", "julia", self._temp_dir.name, [main_file], MockQSettings(), mock_logger
+        )
+        julia_tool_spec.set_execution_settings()  # Sets defaults
+        self.make_tool_spec_editor(julia_tool_spec)
+        # INPUT FILES
+        # Test add_input_files()
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QInputDialog.getText") as mock_gt:
+            mock_gt.return_value = ["data.csv"]
+            self.tool_specification_widget.add_inputfiles()
+            mock_gt.assert_called()
+        iofm = self.tool_specification_widget.io_files_model
+        selection_model = self.tool_specification_widget._ui.treeView_io_files.selectionModel()
+        self.assertEqual(3, iofm.rowCount())  # row 0: Input files, row 1: Optional input files, row 2: Output files
+        # There should be one item under 'Input files'
+        input_files_root = iofm.index(0, 0)
+        self.assertEqual(1, iofm.rowCount(input_files_root))
+        input_file_item = iofm.itemFromIndex(iofm.index(0,0, input_files_root))
+        self.assertEqual("data.csv", input_file_item.data(Qt.ItemDataRole.DisplayRole))
+        # Test rename input file (tests _push_io_file_renamed_command())
+        input_file_item.setData("renamed_file.csv", Qt.ItemDataRole.DisplayRole)
+        input_file_item = iofm.itemFromIndex(iofm.index(0, 0, input_files_root))
+        self.assertEqual("renamed_file.csv", input_file_item.data(Qt.ItemDataRole.DisplayRole))
+        # Try remove_inputfiles() without selections
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg"
+        ) as m_notify:
+            self.tool_specification_widget.remove_inputfiles()
+            m_notify.assert_called()
+        # Select input file item
+        selection_model.setCurrentIndex(iofm.index(0, 0, input_files_root), QItemSelectionModel.SelectionFlag.Select)
+        # Test remove_inputfiles()
+        self.tool_specification_widget.remove_inputfiles()
+        self.assertEqual(0, iofm.rowCount(input_files_root))
+        # OPTIONAL INPUT FILES
+        # Test add_inputfiles_opt()
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QInputDialog.getText") as mock_gt:
+            mock_gt.return_value = ["*.dat"]
+            self.tool_specification_widget.add_inputfiles_opt()
+            mock_gt.assert_called()
+        # There should be one item under 'Optional input files'
+        opt_input_files_root = iofm.index(1, 0)
+        self.assertEqual(1, iofm.rowCount(opt_input_files_root))
+        opt_input_file_item = iofm.itemFromIndex(iofm.index(0,0, opt_input_files_root))
+        self.assertEqual("*.dat", opt_input_file_item.data(Qt.ItemDataRole.DisplayRole))
+        # Test rename optional input item (tests _push_io_file_renamed_command())
+        opt_input_file_item.setData("???.dat", Qt.ItemDataRole.DisplayRole)
+        opt_input_file_item = iofm.itemFromIndex(iofm.index(0, 0, opt_input_files_root))
+        self.assertEqual("???.dat", opt_input_file_item.data(Qt.ItemDataRole.DisplayRole))
+        # Try remove_inputfiles_opt() without selections
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg"
+        ) as m_notify:
+            self.tool_specification_widget.remove_inputfiles_opt()
+            m_notify.assert_called()
+        # Select optional input file item
+        selection_model.setCurrentIndex(iofm.index(0, 0, opt_input_files_root), QItemSelectionModel.SelectionFlag.Select)
+        # Test remove_inputfiles_opt()
+        self.tool_specification_widget.remove_inputfiles_opt()
+        self.assertEqual(0, iofm.rowCount(opt_input_files_root))
+        # OUTPUT FILES
+        # Test add_outputfiles()
+        with mock.patch("spine_items.tool.widgets.tool_specification_editor_window.QInputDialog.getText") as mock_gt:
+            mock_gt.return_value = ["results.txt"]
+            self.tool_specification_widget.add_outputfiles()
+            mock_gt.assert_called()
+        # There should be one item under 'Output files'
+        output_files_root = iofm.index(2, 0)
+        self.assertEqual(1, iofm.rowCount(output_files_root))
+        output_file_item = iofm.itemFromIndex(iofm.index(0,0, output_files_root))
+        self.assertEqual("results.txt", output_file_item.data(Qt.ItemDataRole.DisplayRole))
+        # Test rename output file
+        output_file_item.setData("output.txt", Qt.ItemDataRole.DisplayRole)
+        output_file_item = iofm.itemFromIndex(iofm.index(0, 0, output_files_root))
+        self.assertEqual("output.txt", output_file_item.data(Qt.ItemDataRole.DisplayRole))
+        # Try remove_outputfiles() without selections
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase._show_status_bar_msg"
+        ) as m_notify:
+            self.tool_specification_widget.remove_outputfiles()
+            m_notify.assert_called()
+        # Select output file item
+        selection_model.setCurrentIndex(iofm.index(0, 0, output_files_root), QItemSelectionModel.SelectionFlag.Select)
+        # Test remove_outputfiles()
+        self.tool_specification_widget.remove_outputfiles()
+        self.assertEqual(0, iofm.rowCount(output_files_root))
 
 
 class FakeSignal:
