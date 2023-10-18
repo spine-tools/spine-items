@@ -233,6 +233,9 @@ class View(ProjectItem):
 
     def _finalize_fetching(self):
         self._fetched_parameter_values.clear()
+        for fetcher in self._data_fetchers:
+            fetcher.set_obsolete(True)
+            fetcher.deleteLater()
         self._data_fetchers.clear()
         self._properties_ui.pushButton_plot_pinned.setEnabled(True)
 
@@ -349,6 +352,12 @@ class View(ProjectItem):
     def from_dict(name, item_dict, toolbox, project):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         pinned_values = item_dict.get("pinned_values", dict())
+        for values in pinned_values.values():
+            for value in values:
+                pks = value[1]
+                for pk_key, pk in pks.items():
+                    if isinstance(pk, list):
+                        pks[pk_key] = tuple(pk)
         return View(name, description, x, y, toolbox, project, pinned_values=pinned_values)
 
 
