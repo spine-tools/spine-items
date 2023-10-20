@@ -228,11 +228,7 @@ class JuliaOptionsWidget(OptionsWidget):
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
         settings = make_settings_dict_for_engine(self._settings)
-        # TODO: What to do about this when it uses subprocess in tool_instance.py prepare()
-        settings["appSettings/makeSysImage"] = "true"  # Use subprocess
-        settings["appSettings/juliaPath"] = self._tool.specification().execution_settings["executable"]
-        settings["appSettings/juliaProjectPath"] = self._tool.specification().execution_settings["project"]
-        settings["appSettings/juliaKernel"] = self._tool.specification().execution_settings["kernel_spec_name"]
+        settings["appSettings/makeSysImage"] = "true"  # See JuliaToolInstance.prepare()
         dag_identifier = f"containing {self._tool.name}"
         job_id = self._project.LOCAL_EXECUTION_JOB_ID
         self.sysimage_worker = self._project.create_engine_worker(
