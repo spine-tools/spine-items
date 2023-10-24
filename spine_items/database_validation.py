@@ -44,13 +44,7 @@ class _ValidationTask(QRunnable):
         try:
             self._signals.moveToThread(QThread.currentThread())
             if self._dialect == "sqlite":
-                if type(self._sa_url) != str:
-                    database_path = Path(self._sa_url.database)
-                else:
-                    if not self._sa_url.startswith("sqlite:///"):
-                        self._signals.validation_failed.emit("Given URL is invalid for selected dialect sqlite.")
-                        return
-                    database_path = Path(self._sa_url[10:])
+                database_path = Path(self._sa_url.database)
                 if not database_path.exists():
                     self._signals.validation_failed.emit("File does not exist. Check the Database field in the URL.")
                     return
