@@ -42,6 +42,21 @@ class TestDatabaseConnectionValidator(unittest.TestCase):
                 validator.deleteLater()
             self.assertTrue(listener.is_success)
 
+    def test_successful_validation_of_sqlite_database_with_str_url(self):
+        with TemporaryDirectory() as temp_dir:
+            url = "sqlite:///" + str(Path(temp_dir, "db.sqlite"))
+            create_new_spine_database(url)
+            listener = _Listener()
+            validator = DatabaseConnectionValidator()
+            try:
+                validator.validate_url("sqlite", url, listener.failure, listener.success)
+                while not listener.is_done:
+                    QApplication.processEvents()
+            finally:
+                validator.wait_for_finish()
+                validator.deleteLater()
+            self.assertTrue(listener.is_success)
+
     def test_validation_failure_due_to_missing_sqlite_file(self):
         with TemporaryDirectory() as temp_dir:
             url = "sqlite:///" + str(Path(temp_dir, "db.sqlite"))
