@@ -375,10 +375,8 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         python_tool_spec.execution_settings["use_jupyter_console"] = True
         python_tool_spec.execution_settings["kernel_spec_name"] = "unknown_kernel"
         with mock.patch(
-                "spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher
-        ), mock.patch(
-            "spine_items.tool.widgets.tool_spec_optional_widgets.Notification"
-        ) as mock_notify:
+            "spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher
+        ), mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.Notification") as mock_notify:
             self.make_tool_spec_editor(python_tool_spec)
             opt_widget = self.tool_specification_widget.optional_widget
             self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())
@@ -477,9 +475,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         main_path = Path(self._temp_dir.name, main_file)
         with open(main_path, "w") as h:
             h.writelines(["println('Hello world')"])  # Make hello.jl
-        julia_tool_spec = JuliaTool(
-            "a", "julia", self._temp_dir.name, [main_file], MockQSettings(), mock_logger
-        )
+        julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, [main_file], MockQSettings(), mock_logger)
         julia_tool_spec.set_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
         # INPUT FILES
@@ -494,7 +490,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         # There should be one item under 'Input files'
         input_files_root = iofm.index(0, 0)
         self.assertEqual(1, iofm.rowCount(input_files_root))
-        input_file_item = iofm.itemFromIndex(iofm.index(0,0, input_files_root))
+        input_file_item = iofm.itemFromIndex(iofm.index(0, 0, input_files_root))
         self.assertEqual("data.csv", input_file_item.data(Qt.ItemDataRole.DisplayRole))
         # Test rename input file (tests _push_io_file_renamed_command())
         input_file_item.setData("renamed_file.csv", Qt.ItemDataRole.DisplayRole)
@@ -520,7 +516,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         # There should be one item under 'Optional input files'
         opt_input_files_root = iofm.index(1, 0)
         self.assertEqual(1, iofm.rowCount(opt_input_files_root))
-        opt_input_file_item = iofm.itemFromIndex(iofm.index(0,0, opt_input_files_root))
+        opt_input_file_item = iofm.itemFromIndex(iofm.index(0, 0, opt_input_files_root))
         self.assertEqual("*.dat", opt_input_file_item.data(Qt.ItemDataRole.DisplayRole))
         # Test rename optional input item (tests _push_io_file_renamed_command())
         opt_input_file_item.setData("???.dat", Qt.ItemDataRole.DisplayRole)
@@ -533,7 +529,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget.remove_inputfiles_opt()
             m_notify.assert_called()
         # Select optional input file item
-        selection_model.setCurrentIndex(iofm.index(0, 0, opt_input_files_root), QItemSelectionModel.SelectionFlag.Select)
+        selection_model.setCurrentIndex(
+            iofm.index(0, 0, opt_input_files_root), QItemSelectionModel.SelectionFlag.Select
+        )
         # Test remove_inputfiles_opt()
         self.tool_specification_widget.remove_inputfiles_opt()
         self.assertEqual(0, iofm.rowCount(opt_input_files_root))
@@ -546,7 +544,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         # There should be one item under 'Output files'
         output_files_root = iofm.index(2, 0)
         self.assertEqual(1, iofm.rowCount(output_files_root))
-        output_file_item = iofm.itemFromIndex(iofm.index(0,0, output_files_root))
+        output_file_item = iofm.itemFromIndex(iofm.index(0, 0, output_files_root))
         self.assertEqual("results.txt", output_file_item.data(Qt.ItemDataRole.DisplayRole))
         # Test rename output file
         output_file_item.setData("output.txt", Qt.ItemDataRole.DisplayRole)
@@ -576,6 +574,7 @@ class FakeSignal:
 
 class FakeKernelFetcher:
     """Class for replacing KernelFetcher in tests."""
+
     kernel_found = FakeSignal()
     finished = FakeSignal()
 
@@ -601,6 +600,7 @@ class FakeKernelFetcher:
         # Clear signal slots, so this can be used again
         self.kernel_found.call_list.clear()
         self.finished.call_list.clear()
+
 
 if __name__ == "__main__":
     unittest.main()
