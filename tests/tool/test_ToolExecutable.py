@@ -397,7 +397,7 @@ class _MockSettings:
     def value(key, defaultValue=None):
         return {
             "appSettings/pythonPath": sys.executable,
-            "appSettings/useEmbeddedPython": "0",  # Don't use embedded Python
+            "appSettings/usePythonKernel": "0",  # Don't use Jupyter Console
             "appSettings/workDir": "some_work_dir",
         }.get(key, defaultValue)
 

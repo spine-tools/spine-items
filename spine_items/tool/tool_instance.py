@@ -19,7 +19,6 @@ import sys
 import shutil
 from spine_engine.utils.helpers import (
     resolve_python_interpreter,
-    resolve_julia_executable,
     resolve_gams_executable,
     resolve_conda_executable,
 )
@@ -30,6 +29,7 @@ from spine_engine.execution_managers.persistent_execution_manager import (
     PythonPersistentExecutionManager,
 )
 from spine_items.utils import escape_backward_slashes
+from spine_items.tool.utils import get_julia_path_and_project
 
 
 class ToolInstance:
@@ -112,11 +112,10 @@ class GAMSToolInstance(ToolInstance):
         gams_path = self._settings.value("appSettings/gamsPath", defaultValue="")
         self.program = resolve_gams_executable(gams_path)
         self.args.append(self.tool_specification.main_prgm)
-        self.args.append("curDir=")
-        self.args.append(self.basedir)
-        self.args.append("logoption=3")  # TODO: This should be an option in Settings
+        self.args.append(f"curDir={self.basedir}")  # Set gams current working directory
+        self.args.append("logoption=3")  # This could be an option in Settings
         self.append_cmdline_args(args)
-        # TODO: Check if the below sets the curDir argument. Is the curDir arg now useless?
+        # Note: workdir=self.basedir sets the working directory for the subprocess.Popen process.
         self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
 
     def execute(self):
@@ -154,8 +153,23 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
+        self.tool_specification.set_execution_settings()  # Set default execution settings if they are missing
         sysimage = self._owner.options.get("julia_sysimage", "")
-        use_julia_kernel = self._settings.value("appSettings/useJuliaKernel", defaultValue="2")
+        make_sysimage = self._settings.value("appSettings/makeSysImage", defaultValue="false")
+        if sysimage != "" and not os.path.isfile(sysimage) and make_sysimage != "true":
+            self._logger.msg_error.emit(f"Ignoring Sysimage <b>{sysimage}</b> because it does not exist")
+        sysimage_arg = f"--sysimage={sysimage}" if os.path.isfile(sysimage) else None
+        use_jupyter_console = self.tool_specification.execution_settings["use_jupyter_console"]
+        if make_sysimage == "true":
+            julia_exe, julia_project_arg = get_julia_path_and_project(self.tool_specification.execution_settings)
+            self.args = [julia_project_arg]
+            if sysimage_arg:
+                self.args.append(sysimage_arg)
+            if self.tool_specification.main_prgm:
+                self.args.append(self.tool_specification.main_prgm)
+            self.append_cmdline_args(args)
+            self.exec_mngr = ProcessExecutionManager(self._logger, julia_exe, *self.args, workdir=self.basedir)
+            return
         # Prepare args
         mod_work_dir = escape_backward_slashes(self.basedir)
         self.args = [f'cd("{mod_work_dir}");']
@@ -164,12 +178,12 @@ class JuliaToolInstance(ToolInstance):
             fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(cmdline_args)) + '"]'
             self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
         self.args += [f'include("{self.tool_specification.main_prgm}")']
-        if use_julia_kernel == "2":
+        if use_jupyter_console:
             server_ip = "127.0.0.1"
             if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
                 server_ip = self._settings.value("engineSettings/remoteHost", "")
-            kernel_name = self._settings.value("appSettings/juliaKernel", defaultValue="")
-            extra_switches = [f"--sysimage={sysimage}"] if os.path.isfile(sysimage) else None
+            kernel_name = self.tool_specification.execution_settings["kernel_spec_name"]
+            extra_switches = [sysimage_arg] if sysimage_arg else None
             self.exec_mngr = KernelExecutionManager(
                 self._logger,
                 kernel_name,
@@ -180,26 +194,13 @@ class JuliaToolInstance(ToolInstance):
                 server_ip=server_ip,
             )
             return
-        julia_exe = self._settings.value("appSettings/juliaPath", defaultValue="")
-        julia_exe = resolve_julia_executable(julia_exe)
-        julia_project_path = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
-        if use_julia_kernel == "1":
-            self.program = julia_exe
-            self.args = []
-            if julia_project_path:
-                self.args.append(f"--project={julia_project_path}")
-            if os.path.isfile(sysimage):
-                self.args.append(f"--sysimage={sysimage}")
-            if self.tool_specification.main_prgm:
-                self.args.append(self.tool_specification.main_prgm)
-            self.append_cmdline_args(args)
-            self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
-            return
+        julia_exe = self.tool_specification.execution_settings["executable"]
+        julia_project_path = self.tool_specification.execution_settings["project"]
         self.program = [julia_exe]
         if julia_project_path:
             self.program.append(f"--project={julia_project_path}")
-        if os.path.isfile(sysimage):
-            self.program.append(f"--sysimage={sysimage}")
+        if sysimage_arg:
+            self.program.append(sysimage_arg)
         alias = f"julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}"
         self.exec_mngr = JuliaPersistentExecutionManager(
             self._logger, self.program, self.args, alias, self._kill_completed_processes, self.owner.group_id

@@ -18,6 +18,44 @@ import glob
 import os.path
 from pathlib import Path
 import re
+import json
+from jupyter_client.kernelspec import find_kernel_specs
+
+
+def get_julia_path_and_project(exec_settings):
+    """Returns path to Julia and --project=path/to/project in a list based on Tool specs execution settings.
+
+    Args:
+        exec_settings (dict): Execution settings
+
+    Returns:
+        list of str: e.g. ["path/to/julia", "--project=path/to/project/"]
+    """
+    use_jupyter_console = exec_settings["use_jupyter_console"]
+    if use_jupyter_console:
+        kernel_name = exec_settings["kernel_spec_name"]
+        resource_dir = find_kernel_specs().get(kernel_name)
+        if resource_dir is None:
+            return [None]
+        filepath = os.path.join(resource_dir, "kernel.json")
+        with open(filepath, "r") as fh:
+            try:
+                kernel_spec = json.load(fh)
+            except json.decoder.JSONDecodeError:
+                return [None]
+        julia = kernel_spec["argv"].pop(0)
+        project_arg = next((arg for arg in kernel_spec["argv"] if arg.startswith("--project=")), None)
+        project = "" if project_arg is None else project_arg.split("--project=")[1]
+        retval = [julia]
+        if project:
+            retval.append(f"--project={project}")
+        return retval
+    julia = exec_settings["executable"]  # This may be an empty str
+    project = exec_settings["project"]
+    retval = [julia]
+    if project:
+        retval.append(f"--project={project}")
+    return retval
 
 
 def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):

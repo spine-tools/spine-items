@@ -32,6 +32,7 @@ from spinetoolbox.project_item.specification_editor_window import (
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_items.tool.widgets.tool_spec_optional_widgets import (
     PythonToolSpecOptionalWidget,
+    JuliaToolSpecOptionalWidget,
     ExecutableToolSpecOptionalWidget,
 )
 from ..item_info import ItemInfo
@@ -128,10 +129,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return Ui_MainWindow()
 
     @property
-    def qsettings(self):
-        return self._app_settings
-
-    @property
     def settings_group(self):
         return "toolSpecificationEditorWindow"
 
@@ -158,25 +155,33 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             toolspectype (str): Tool spec type
 
         Returns:
-            ToolSpecOptionalWidget
+            Union[ToolSpecOptionalWidget, None]
         """
-        # For Python Tool specs, return the jupyter kernel spec selector
         if toolspectype.lower() == "python":
             return PythonToolSpecOptionalWidget(self)
+        if toolspectype.lower() == "julia":
+            return JuliaToolSpecOptionalWidget(self)
         if toolspectype.lower() == "executable":
             return ExecutableToolSpecOptionalWidget(self)
         return None
 
     def _get_optional_widget(self, toolspectype):
-        """Returns the current optional widget for given tool spec type or None if unavailable."""
-        if toolspectype.lower() in ("python", "executable"):
+        """Returns the current optional widget for given tool spec type or None if unavailable.
+
+        Args:
+            toolspectype (str): Tool spec type
+
+        Returns:
+            Union[ToolSpecOptionalWidget, None]
+        """
+        if toolspectype.lower() in ("python", "julia", "executable"):
             optional_widget = self._ui.horizontalLayout_options_placeholder.itemAt(0)
             return optional_widget.widget()
         return None
 
     @Slot(int)
     def _show_optional_widget(self, row):
-        """Adds a ToolSpecOptionalWidget to ui and updates the widget based on specification.
+        """Adds a ToolSpecOptionalWidget to UI and updates the widget based on specification.
 
         Args:
             row (int): Active row in tool type combobox
@@ -205,8 +210,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _make_new_specification(self, spec_name):
         """See base class."""
-        # Check that tool type is selected
-        if self._ui.comboBox_tooltype.currentIndex() == -1:
+        if self._ui.comboBox_tooltype.currentIndex() == -1:  # Check that a tool type is selected
             self.show_error("Tool spec type not selected")
             return None
         toolspectype = self._ui.comboBox_tooltype.currentText().lower()
@@ -255,7 +259,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         opt_widget = self._get_optional_widget(toolspectype)
         if not opt_widget:
             return d
-        d["execution_settings"] = opt_widget.add_execution_settings()
+        d["execution_settings"] = opt_widget.add_execution_settings(toolspectype)
         return d
 
     def _save(self, exiting=None):
@@ -532,9 +536,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def clear_execution_settings(self, spec_type):
         """Updates the execution settings dict based on selected tool spec type.
-        Sets the default execution settings into self.spec_dict when a Python
-        Tool spec type is selected. Removes execution settings from self.spec_dict
-        when any other Tool spec type is selected."""
+        Sets the default execution settings into self.spec_dict when a Python,
+        Julia, or Executable is selected as type. Removes execution settings from
+        self.spec_dict when any other Tool spec type is selected."""
         if "execution_settings" in self.spec_dict:
             self.spec_dict.pop("execution_settings")  # Clear execution settings
         if spec_type == "python":
@@ -546,11 +550,22 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 "env": "",
                 "executable": self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue=""),
             }
+        elif spec_type == "julia":
+            self.spec_dict["execution_settings"] = {
+                "use_jupyter_console": bool(
+                    int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0"))
+                ),
+                "kernel_spec_name": self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue=""),
+                "project": self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue=""),
+                "env": "",
+                "executable": self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue=""),
+            }
         elif spec_type == "executable":
             self.spec_dict["execution_settings"] = {"cmd": "", "shell": ""}
 
     @Slot(int)
     def push_change_kernel_spec_command(self, index):
+        """Changes selected kernel name for Julia and Python Tool Specs."""
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         item = opt_widget.kernel_spec_model.item(index)
@@ -577,6 +592,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot(bool)
     def push_set_jupyter_console_mode(self, new_value):
+        """Changes between Basic or Jupyter Console execution modes for Julia and Python Tool Specs."""
         old_value = self.spec_dict["execution_settings"]["use_jupyter_console"]
         if new_value == old_value:
             return
@@ -591,15 +607,15 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if value:
             opt_widget.ui.radioButton_jupyter_console.setChecked(True)
         else:
-            opt_widget.ui.radioButton_python_console.setChecked(True)
+            opt_widget.ui.radioButton_basic_console.setChecked(True)
         opt_widget.set_ui_for_jupyter_console(value)
 
     @Slot()
     def push_change_executable(self):
+        """Changes Julia or Python executable path for Julia and Python Tool Specs."""
         old_value = self.spec_dict["execution_settings"]["executable"]
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
-        # TODO: Validate executable path?
         new_value = opt_widget.get_executable()
         if new_value == old_value:
             return
@@ -613,8 +629,28 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         opt_widget = self._get_optional_widget(toolspectype)
         opt_widget.set_executable(value)
 
+    @Slot()
+    def push_change_project(self):
+        """Changes Julia project path for Julia Tool Specs."""
+        old_value = self.spec_dict["execution_settings"]["project"]
+        toolspectype = self.spec_dict.get("tooltype", "")
+        opt_widget = self._get_optional_widget(toolspectype)
+        new_value = opt_widget.get_julia_project()
+        if new_value == old_value:
+            return
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(self._set_julia_project, new_value, old_value, "change Julia project")
+        )
+
+    def _set_julia_project(self, value):
+        self.spec_dict["execution_settings"]["project"] = value
+        toolspectype = self.spec_dict.get("tooltype", "")
+        opt_widget = self._get_optional_widget(toolspectype)
+        opt_widget.set_julia_project(value)
+
     @Slot(int)
     def push_change_shell_command(self, index):
+        """Changes shell for Executable Tool Specs."""
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         new_shell = opt_widget.shells[index] if index != 0 else ""
@@ -631,6 +667,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot()
     def _push_change_args_command(self):
+        """Changes cmd line args for all Tool Specs."""
         old_value = self.spec_dict.get("cmdline_args", [])
         new_value = split_cmdline_args(self._ui.lineEdit_args.text())
         if new_value == old_value:
@@ -645,6 +682,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     @Slot()
     def push_change_executable_command(self):
+        """Changes command for Executable Tool Specs."""
         old_value = self.spec_dict["execution_settings"]["cmd"]
         opt_widget = self._get_optional_widget("executable")
         new_value = opt_widget.ui.lineEdit_command.text().strip()

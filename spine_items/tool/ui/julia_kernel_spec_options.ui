@@ -19,7 +19,7 @@
     <x>0</x>
     <y>0</y>
     <width>527</width>
-    <height>73</height>
+    <height>99</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -100,17 +100,17 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Interpreter</string>
+            <string>Executable</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QLineEdit" name="lineEdit_executable">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Python interpreter for &lt;span style=&quot; font-weight:700;&quot;&gt;Basic Console&lt;/span&gt; execution. Leave empty to use the Python that was used in launching Spine Toolbox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Julia executable for &lt;span style=&quot; font-weight:700;&quot;&gt;Basic Console&lt;/span&gt; execution. Leave empty to use the Julia in your PATH environment variable.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="placeholderText">
-            <string>Using current Python interpreter</string>
+            <string>Using Julia executable in system path</string>
            </property>
            <property name="clearButtonEnabled">
             <bool>true</bool>
@@ -118,9 +118,47 @@
           </widget>
          </item>
          <item>
-          <widget class="QToolButton" name="toolButton_browse_python">
+          <widget class="QToolButton" name="toolButton_browse_julia">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pick a Python interpreter using a file browser&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pick a Julia executable using a file browser&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../../ui/resources/resources_icons.qrc">
+             <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <property name="leftMargin">
+          <number>6</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Project</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_julia_project">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Julia environment/project directory&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="placeholderText">
+            <string>Using Julia default project</string>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButton_browse_julia_project">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pick a Julia project using a file browser&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="icon">
             <iconset resource="../../ui/resources/resources_icons.qrc">
@@ -166,7 +204,7 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a Python kernel for &lt;span style=&quot; font-weight:700;&quot;&gt;Jupyter Console&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a Julia kernel for &lt;span style=&quot; font-weight:700;&quot;&gt;Jupyter Console&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>
@@ -195,6 +233,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>radioButton_basic_console</tabstop>
+  <tabstop>radioButton_jupyter_console</tabstop>
+  <tabstop>lineEdit_executable</tabstop>
+  <tabstop>toolButton_browse_julia</tabstop>
+  <tabstop>lineEdit_julia_project</tabstop>
+  <tabstop>toolButton_browse_julia_project</tabstop>
+  <tabstop>comboBox_kernel_specs</tabstop>
+  <tabstop>toolButton_refresh_kernel_specs</tabstop>
+ </tabstops>
  <resources>
   <include location="../../ui/resources/resources_icons.qrc"/>
  </resources>

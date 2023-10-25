@@ -17,7 +17,6 @@ import os.path
 from unittest.mock import MagicMock, patch
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication, QWidget
-
 from spinetoolbox.ui_main import ToolboxUI
 
 
@@ -29,6 +28,21 @@ class MockQWidget(QWidget):
         return True
 
 
+class MockQSettings:
+    """Class for replacing an argument where e.g. class constructor requires an instance of QSettings.
+    For example all ToolSpecification classes require a QSettings instance."""
+
+    # noinspection PyMethodMayBeStatic, PyPep8Naming
+    def value(self, key, defaultValue=""):
+        """Returns the default value"""
+        return defaultValue
+
+    # noinspection PyPep8Naming
+    def setValue(self, key, value):
+        """Returns without modifying anything."""
+        return
+
+
 def create_mock_toolbox():
     mock_toolbox = MagicMock()
     mock_toolbox.msg = MagicMock()
@@ -37,6 +51,12 @@ def create_mock_toolbox():
     mock_toolbox.msg_warning.attach_mock(MagicMock(), "emit")
     mock_toolbox.undo_stack.push.side_effect = lambda cmd: cmd.redo()
     mock_toolbox.filtered_spec_factory_models.__getitem__.return_value = QStandardItemModel()
+    return mock_toolbox
+
+
+def create_mock_toolbox_with_mock_qsettings():
+    mock_toolbox = create_mock_toolbox()
+    mock_toolbox.qsettings().value.side_effect = qsettings_value_side_effect
     return mock_toolbox
 
 
@@ -55,6 +75,21 @@ def mock_finish_project_item_construction(factory, project_item, mock_toolbox):
     project_item.set_properties_ui(properties_widget.ui)
     project_item.set_up()
     return properties_widget
+
+
+# noinspection PyMethodMayBeStatic, PyPep8Naming,SpellCheckingInspection
+def qsettings_value_side_effect(key, defaultValue="0"):
+    """Returns the default value.
+
+    Args:
+        key (str): Key to read
+        defaultValue (Any): Default value if key is missing
+
+    Returns:
+        Any: settings value
+    """
+    # Tip: add return values for specific keys here as needed.
+    return defaultValue
 
 
 def create_toolboxui():
@@ -107,18 +142,3 @@ def clean_up_toolbox(toolbox):
     # Delete undo stack explicitly to prevent emitting certain signals well after ToolboxUI has been destroyed.
     toolbox.undo_stack.deleteLater()
     toolbox.deleteLater()
-
-
-# noinspection PyMethodMayBeStatic, PyPep8Naming,SpellCheckingInspection
-def qsettings_value_side_effect(key, defaultValue="0"):
-    """Returns Toolbox app settings values.
-
-    Args:
-        key (str): Key to read
-        defaultValue (Any): Default value if key is missing
-
-    Returns:
-        Any: settings value
-    """
-    # Tip: add return values for specific keys here as needed.
-    return defaultValue
