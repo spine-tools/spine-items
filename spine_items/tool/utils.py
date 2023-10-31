@@ -29,20 +29,20 @@ def get_julia_path_and_project(exec_settings):
         exec_settings (dict): Execution settings
 
     Returns:
-        list of str: e.g. ["path/to/julia", "--project=path/to/project/"]
+        list of str: e.g. ["path/to/julia", "--project=path/to/project/"] or None if kernel does not exist.
     """
     use_jupyter_console = exec_settings["use_jupyter_console"]
     if use_jupyter_console:
         kernel_name = exec_settings["kernel_spec_name"]
         resource_dir = find_kernel_specs().get(kernel_name)
         if resource_dir is None:
-            return [None]
+            return None
         filepath = os.path.join(resource_dir, "kernel.json")
         with open(filepath, "r") as fh:
             try:
                 kernel_spec = json.load(fh)
             except json.decoder.JSONDecodeError:
-                return [None]
+                return None
         julia = kernel_spec["argv"].pop(0)
         project_arg = next((arg for arg in kernel_spec["argv"] if arg.startswith("--project=")), None)
         project = "" if project_arg is None else project_arg.split("--project=")[1]

@@ -10,13 +10,12 @@
 ######################################################################################################################
 
 """
-Contains ToolInstance class.
+Contains ToolInstance classes.
 
 """
 
 import os
 import sys
-import shutil
 from spine_engine.utils.helpers import (
     resolve_python_interpreter,
     resolve_gams_executable,
@@ -74,10 +73,6 @@ class ToolInstance:
         self.exec_mngr.stop_execution()
         self.exec_mngr = None
 
-    def remove(self):
-        """[Obsolete] Removes Tool instance files from work directory."""
-        shutil.rmtree(self.basedir, ignore_errors=True)
-
     def prepare(self, args):
         """Prepares this instance for execution.
 
@@ -116,7 +111,7 @@ class GAMSToolInstance(ToolInstance):
         self.args.append("logoption=3")  # This could be an option in Settings
         self.append_cmdline_args(args)
         # Note: workdir=self.basedir sets the working directory for the subprocess.Popen process.
-        self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+        self.exec_mngr = ProcessExecutionManager(self._logger, self.program, self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
@@ -151,34 +146,67 @@ class JuliaToolInstance(ToolInstance):
         super().__init__(tool_specification, basedir, settings, logger, owner)
         self._kill_completed_processes = kill_completed_processes
 
+    def prepare_sysimg_maker(self, julia_args, cmdline_args):
+        """Prepare this instance for creating a sysimage.
+
+        Args:
+            julia_args (list): First item is the path to Julia executable, the remaining items
+            are the initial args for Julia (ie. '--project=some/path')
+            cmdline_args (list): Tool and Tool Spec cmd line args for the Julia script
+
+        Returns:
+            bool: True if making a sysimage has been enabled, False otherwise
+        """
+        make_sysimage = self._settings.value("appSettings/makeSysImage", defaultValue="false")
+        if make_sysimage == "true":
+            if self.tool_specification.main_prgm:
+                julia_args.append(self.tool_specification.main_prgm)
+            julia_args += cmdline_args
+            self.exec_mngr = ProcessExecutionManager(self._logger, julia_args[0], julia_args[1:], workdir=self.basedir)
+            return True
+        return False
+
+    def make_julia_commands(self, cmdline_args):
+        """Returns a list of commands to execute in the Jupyter or in the Basic Console.
+        Given cmdline_args (Tool and Tool Spec args) are embedded into the commands.
+
+        Args:
+            cmdline_args (list): Tool and Tool Spec cmd line args for the Julia script
+
+        Returns:
+            list of str: Commands to execute in the Julia Console
+        """
+        mod_work_dir = escape_backward_slashes(self.basedir)
+        cmds = [f'cd("{mod_work_dir}");']
+        if cmdline_args:
+            fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(cmdline_args)) + '"]'
+            cmds += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
+        cmds += [f'include("{self.tool_specification.main_prgm}")']
+        return cmds
+
+    def make_sysimage_arg(self):
+        """Returns a '--sysimage=path/to/sysimage' arg for the Julia
+        process or None if the sysimage path is missing or invalid."""
+        sysimage_path = self._owner.options.get("julia_sysimage", "")
+        if sysimage_path != "" and not os.path.isfile(sysimage_path):
+            self._logger.msg_error.emit(f"Ignoring Sysimage <b>{sysimage_path}</b> because it does not exist")
+            return None
+        return f"--sysimage={sysimage_path}"
+
     def prepare(self, args):
         """See base class."""
         self.tool_specification.set_execution_settings()  # Set default execution settings if they are missing
-        sysimage = self._owner.options.get("julia_sysimage", "")
-        make_sysimage = self._settings.value("appSettings/makeSysImage", defaultValue="false")
-        if sysimage != "" and not os.path.isfile(sysimage) and make_sysimage != "true":
-            self._logger.msg_error.emit(f"Ignoring Sysimage <b>{sysimage}</b> because it does not exist")
-        sysimage_arg = f"--sysimage={sysimage}" if os.path.isfile(sysimage) else None
-        use_jupyter_console = self.tool_specification.execution_settings["use_jupyter_console"]
-        if make_sysimage == "true":
-            julia_exe, julia_project_arg = get_julia_path_and_project(self.tool_specification.execution_settings)
-            self.args = [julia_project_arg]
-            if sysimage_arg:
-                self.args.append(sysimage_arg)
-            if self.tool_specification.main_prgm:
-                self.args.append(self.tool_specification.main_prgm)
-            self.append_cmdline_args(args)
-            self.exec_mngr = ProcessExecutionManager(self._logger, julia_exe, *self.args, workdir=self.basedir)
+        julia_args = get_julia_path_and_project(self.tool_specification.execution_settings)
+        if not julia_args:
+            k_name = self.tool_specification.execution_settings["kernel_spec_name"]
+            self._logger.msg_error(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
             return
-        # Prepare args
-        mod_work_dir = escape_backward_slashes(self.basedir)
-        self.args = [f'cd("{mod_work_dir}");']
         cmdline_args = self.tool_specification.cmdline_args + args
-        if cmdline_args:
-            fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(cmdline_args)) + '"]'
-            self.args += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
-        self.args += [f'include("{self.tool_specification.main_prgm}")']
-        if use_jupyter_console:
+        if self.prepare_sysimg_maker(julia_args, cmdline_args):
+            return
+        sysimage_arg = self.make_sysimage_arg()
+        commands = self.make_julia_commands(cmdline_args)
+        if self.tool_specification.execution_settings["use_jupyter_console"]:
             server_ip = "127.0.0.1"
             if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
                 server_ip = self._settings.value("engineSettings/remoteHost", "")
@@ -187,23 +215,18 @@ class JuliaToolInstance(ToolInstance):
             self.exec_mngr = KernelExecutionManager(
                 self._logger,
                 kernel_name,
-                *self.args,
+                commands,
                 kill_completed=self._kill_completed_processes,
                 group_id=self.owner.group_id,
                 extra_switches=extra_switches,
                 server_ip=server_ip,
             )
             return
-        julia_exe = self.tool_specification.execution_settings["executable"]
-        julia_project_path = self.tool_specification.execution_settings["project"]
-        self.program = [julia_exe]
-        if julia_project_path:
-            self.program.append(f"--project={julia_project_path}")
         if sysimage_arg:
-            self.program.append(sysimage_arg)
+            julia_args.append(sysimage_arg)
         alias = f"julia {' '.join([self.tool_specification.main_prgm, *cmdline_args])}"
         self.exec_mngr = JuliaPersistentExecutionManager(
-            self._logger, self.program, self.args, alias, self._kill_completed_processes, self.owner.group_id
+            self._logger, julia_args, commands, alias, self._kill_completed_processes, self.owner.group_id
         )
 
     def execute(self):
@@ -236,29 +259,56 @@ class PythonToolInstance(ToolInstance):
         super().__init__(tool_specification, basedir, settings, logger, owner)
         self._kill_completed_processes = kill_completed_processes
 
+    def make_python_jupyter_console_commands(self, cmdline_args):
+        """Returns commands to execute in the Python Jupyter Console.
+
+        Args:
+            cmdline_args (list): Tool and Tool Spec cmd line args
+
+        Returns:
+            list: List of commands for the Python Jupyter Console
+        """
+        cd_command = f"%cd -q {self.basedir}"  # -q: quiet
+        main_command = f'%run "{self.tool_specification.main_prgm}"'
+        if cmdline_args:
+            main_command += " " + '"' + '" "'.join(cmdline_args) + '"'
+        return [cd_command, main_command]
+
+    def make_python_basic_console_commands(self, cmdline_args):
+        """Returns commands to execute in the Python Basic Console.
+
+        Args:
+            cmdline_args (list): Tool and Tool Spec cmd line args
+
+        Returns:
+            list: List of commands for the Python Basic Console
+        """
+        commands = list()
+        fp = self.tool_specification.main_prgm
+        full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm).replace(os.sep, "/")
+        commandline_args = [full_fp] + cmdline_args
+        fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(commandline_args)) + '"]'
+        commands.append(f"import sys; sys.argv = {fmt_cmdline_args};")
+        commands.append(f"import os; os.chdir({repr(self.basedir)})")
+        commands += self._make_exec_code(fp, full_fp)
+        return commands
+
     def prepare(self, args):
         """See base class."""
         self.tool_specification.set_execution_settings()  # Set default execution settings
-        use_jupyter_console = self.tool_specification.execution_settings["use_jupyter_console"]
-        if use_jupyter_console:
+        cmdline_args = self.tool_specification.cmdline_args + args
+        if self.tool_specification.execution_settings["use_jupyter_console"]:
             server_ip = "127.0.0.1"
             if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
                 server_ip = self._settings.value("engineSettings/remoteHost", "")
-            # Prepare command
-            cd_command = f"%cd -q {self.basedir}"  # -q: quiet
-            main_command = f'%run "{self.tool_specification.main_prgm}"'
-            cmdline_args = self.tool_specification.cmdline_args + args
-            if cmdline_args:
-                main_command += " " + '"' + '" "'.join(cmdline_args) + '"'
-            self.args = [cd_command, main_command]
-            conda_exe = self._settings.value("appSettings/condaPath", defaultValue="")
-            conda_exe = resolve_conda_executable(conda_exe)
             kernel_name = self.tool_specification.execution_settings["kernel_spec_name"]
+            commands = self.make_python_jupyter_console_commands(cmdline_args)
             env = self.tool_specification.execution_settings["env"]  # Activate environment if "conda"
+            conda_exe = resolve_conda_executable(self._settings.value("appSettings/condaPath", defaultValue=""))
             self.exec_mngr = KernelExecutionManager(
                 self._logger,
                 kernel_name,
-                *self.args,
+                commands,
                 kill_completed=self._kill_completed_processes,
                 group_id=self.owner.group_id,
                 environment=env,
@@ -266,19 +316,11 @@ class PythonToolInstance(ToolInstance):
                 server_ip=server_ip,
             )
         else:
-            python_exe = self.tool_specification.execution_settings["executable"]
-            python_exe = resolve_python_interpreter(python_exe)
-            self.program = [python_exe]
-            fp = self.tool_specification.main_prgm
-            full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm).replace(os.sep, "/")
-            cmdline_args = [full_fp] + self.tool_specification.cmdline_args + args
-            fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(cmdline_args)) + '"]'
-            self.args += [f"import sys; sys.argv = {fmt_cmdline_args};"]
-            self.args += [f"import os; os.chdir({repr(self.basedir)})"]
-            self.args += self._make_exec_code(fp, full_fp)
-            alias = f"python {' '.join([self.tool_specification.main_prgm, *cmdline_args[1:]])}"
+            python_exe = resolve_python_interpreter(self.tool_specification.execution_settings["executable"])
+            commands = self.make_python_basic_console_commands(cmdline_args)
+            alias = f"python {' '.join([self.tool_specification.main_prgm] + cmdline_args)}"
             self.exec_mngr = PythonPersistentExecutionManager(
-                self._logger, self.program, self.args, alias, self._kill_completed_processes, self.owner.group_id
+                self._logger, [python_exe], commands, alias, self._kill_completed_processes, self.owner.group_id
             )
 
     @staticmethod
@@ -353,7 +395,7 @@ class ExecutableToolInstance(ToolInstance):
                 self.append_cmdline_args(args)
             else:
                 raise RuntimeError(f"main program file {main_program_file} does not exist.")
-        self.exec_mngr = ProcessExecutionManager(self._logger, self.program, *self.args, workdir=self.basedir)
+        self.exec_mngr = ProcessExecutionManager(self._logger, self.program, self.args, workdir=self.basedir)
 
     def execute(self):
         """Executes a prepared instance."""
