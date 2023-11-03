@@ -115,7 +115,7 @@ class ToolSpecification(ProjectItemSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): Tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): Tool Specification command line arguments
         """
         super().__init__(name, description, item_type=ItemInfo.item_type(), item_category=ItemInfo.item_category())
         self._settings = settings
@@ -258,7 +258,7 @@ class GAMSTool(ToolSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): GAMS tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): GAMS Tool Specification command line arguments
         """
         super().__init__(
             name,
@@ -402,7 +402,7 @@ class JuliaTool(ToolSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): Julia tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): Julia Tool Specification command line arguments
             execution_settings (dict, optional): Julia tool spec execution settings
         """
         super().__init__(
@@ -506,7 +506,7 @@ class PythonTool(ToolSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): Python tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): Python Tool Specification command line arguments
             execution_settings (dict, optional): Python tool spec execution settings
         """
         super().__init__(
@@ -610,7 +610,7 @@ class ExecutableTool(ToolSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): Tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): Executable Tool Specification command line arguments
             execution_settings (dict): Settings for executing a (shell) command instead of a file
             definition_file_path (str): Absolute path to spec definition file. Only used when running a (shell) command
                 in 'source' execution mode

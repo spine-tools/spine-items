@@ -130,6 +130,8 @@ class TestFindLastOutputFiles(unittest.TestCase):
         files = find_last_output_files(["data.dat"], self._temp_dir.name)
         self.assertEqual(files, {"data.dat": [str(data_file_new)]})
 
+
+class TestGetJuliaPathAndProject(unittest.TestCase):
     def test_get_julia_path_and_project(self):
         # Use Jupyter Console: False
         exec_settings = {
@@ -139,9 +141,9 @@ class TestFindLastOutputFiles(unittest.TestCase):
             "kernel_spec_name": "",
             "project": "",
         }
-        julia, *args = get_julia_path_and_project(exec_settings)
-        self.assertTrue(julia == "")
-        self.assertTrue(len(args) == 0)
+        julia_args = get_julia_path_and_project(exec_settings)
+        self.assertTrue(len(julia_args) == 1)
+        self.assertTrue(julia_args[0] == "")
         # Use Jupyter Console: False
         exec_settings = {
             "use_jupyter_console": False,
@@ -150,9 +152,9 @@ class TestFindLastOutputFiles(unittest.TestCase):
             "kernel_spec_name": "",
             "project": "/path/to/myjuliaproject",
         }
-        julia, *args = get_julia_path_and_project(exec_settings)
-        self.assertTrue(julia == "/path/to/julia")
-        self.assertTrue(args[0] == "--project=/path/to/myjuliaproject")
+        julia_args = get_julia_path_and_project(exec_settings)
+        self.assertTrue(julia_args[0] == "/path/to/julia")
+        self.assertTrue(julia_args[1] == "--project=/path/to/myjuliaproject")
         # Use Jupyter Console: True
         exec_settings = {
             "use_jupyter_console": True,
@@ -161,26 +163,23 @@ class TestFindLastOutputFiles(unittest.TestCase):
             "kernel_spec_name": "unknown_kernel",
             "project": "",
         }
-        with mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
-            # Return a dict containing a path to a dummy kernel resource dir when find_kernel_specs is called
-            mock_find_kernel_specs.return_value = dict()
-            julia, *args = get_julia_path_and_project(exec_settings)
-            self.assertIsNone(julia)
-            self.assertTrue(len(args) == 0)
+        julia_args = get_julia_path_and_project(exec_settings)
+        self.assertIsNone(julia_args)
         # Use Jupyter Console: True
         exec_settings = {
             "use_jupyter_console": True,
-            "executable": "",
-            "env": "",
+            "executable": "/path/to/nowhere",
+            "env": "conda",
             "kernel_spec_name": "test_kernel",
-            "project": "",
+            "project": "/path/to/nonexistingprojectthatshouldnotbereturnedherebecausetheprojectisdefinedinkerneljson",
         }
         with mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
             # Return a dict containing a path to a dummy kernel resource dir when find_kernel_specs is called
             mock_find_kernel_specs.return_value = {"test_kernel": Path(__file__).parent / "dummy_julia_kernel"}
-            julia, *args = get_julia_path_and_project(exec_settings)
-            self.assertTrue(julia == "/path/to/somejulia")
-            self.assertTrue(args[0] == "--project=/path/to/someotherjuliaproject")
+            julia_args = get_julia_path_and_project(exec_settings)
+            self.assertEqual(2, len(julia_args))
+            self.assertTrue(julia_args[0] == "/path/to/somejulia")
+            self.assertTrue(julia_args[1] == "--project=/path/to/someotherjuliaproject")
 
 
 if __name__ == '__main__':
