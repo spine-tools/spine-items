@@ -11,8 +11,10 @@
 
 """Unit tests for ``tool_specifications`` module."""
 
+import os
 import unittest
 from unittest import mock
+from tempfile import TemporaryDirectory
 from spine_items.tool.tool_specifications import (
     ToolSpecification,
     make_specification,
@@ -21,6 +23,8 @@ from spine_items.tool.tool_specifications import (
     GAMSTool,
     ExecutableTool,
 )
+from spine_engine.spine_engine import SpineEngine
+from spine_engine.project_item.connection import Jump
 from tests.mock_helpers import MockQSettings
 
 
@@ -94,6 +98,27 @@ class TestToolSpecification(unittest.TestCase):
         cloned_spec = spec.clone()
         self.assertFalse(spec.is_equivalent(cloned_spec))  # False because 'path' is different. Bug?
 
+    def test_tool_specification_as_jump_condition(self):
+        condition = {"type": "tool-specification", "specification": "loop_twice"}
+        jump = Jump("source", "bottom", "destination", "top", condition)
+        jump.make_logger(mock.Mock())
+        with TemporaryDirectory() as temp_dir:
+            main_file = "script.py"
+            main_file_path = os.path.join(temp_dir, main_file)
+            with open(main_file_path, "w+") as program_file:
+                program_file.writelines(
+                    ['import sys\n', 'counter = int(sys.argv[1])\n', 'exit(0 if counter == 23 else 1)\n']
+                )
+            spec_dict = {
+                "name": "loop_twice",
+                "tooltype": "python",
+                "includes_main_path": temp_dir,
+                "includes": [main_file],
+                "definition_file_path": "path/to/specification_file.json"
+            }
+            engine = SpineEngine(project_dir=temp_dir, specifications={"Tool": [spec_dict]}, connections=list())
+            jump.set_engine(engine)
+            self.assertTrue(jump.is_condition_true(23))
 
 if __name__ == '__main__':
     unittest.main()
