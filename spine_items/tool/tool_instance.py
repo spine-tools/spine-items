@@ -188,6 +188,8 @@ class JuliaToolInstance(ToolInstance):
         """Returns a '--sysimage=path/to/sysimage' arg for the Julia
         process or None if the sysimage path is missing or invalid."""
         sysimage_path = self._owner.options.get("julia_sysimage", "")
+        if sysimage_path == "":
+            return None
         if sysimage_path != "" and not os.path.isfile(sysimage_path):
             self._logger.msg_error.emit(f"Ignoring Sysimage <b>{sysimage_path}</b> because it does not exist")
             return None
