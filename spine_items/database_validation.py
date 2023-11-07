@@ -48,22 +48,27 @@ class _ValidationTask(QRunnable):
                     database_path = Path(self._sa_url.database)
                 else:
                     if not self._sa_url.startswith("sqlite:///"):
-                        self._signals.validation_failed.emit("Given URL is invalid for selected dialect sqlite.")
+                        self._signals.validation_failed.emit(
+                            "Given URL is invalid for selected dialect sqlite.", self._sa_url
+                        )
                         return
                     database_path = Path(self._sa_url[10:])
                 if not database_path.exists():
-                    self._signals.validation_failed.emit("File does not exist. Check the Database field in the URL.")
+                    self._signals.validation_failed.emit(
+                        "File does not exist. Check the Database field in the URL.", str(database_path)
+                    )
                     return
                 elif database_path.is_dir():
                     self._signals.validation_failed.emit(
-                        "Database points to a directory, not a file." " Check the Database field in the URL."
+                        "Database points to a directory, not a file." " Check the Database field in the URL.",
+                        str(database_path),
                     )
                     return
             error = check_database_url(self._sa_url)
             if error is not None:
-                self._signals.validation_failed.emit(error)
+                self._signals.validation_failed.emit(error, self._sa_url)
                 return
-            self._signals.validation_succeeded.emit()
+            self._signals.validation_succeeded.emit(self._sa_url)
         finally:
             self._signals.finished.emit()
             application = QApplication.instance()
@@ -74,8 +79,8 @@ class _ValidationTask(QRunnable):
 class _TaskSignals(QObject):
     """Signals for validation task."""
 
-    validation_failed = Signal(str)
-    validation_succeeded = Signal()
+    validation_failed = Signal(str, str)
+    validation_succeeded = Signal(str)
     finished = Signal()
 
 

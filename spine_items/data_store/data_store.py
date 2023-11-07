@@ -356,21 +356,21 @@ class DataStore(ProjectItem):
             self._url["dialect"], sa_url, self._set_invalid_url_notification, self._accept_url
         )
 
-    @Slot(str)
-    def _set_invalid_url_notification(self, error_message):
+    @Slot(str, str)
+    def _set_invalid_url_notification(self, error_message, url):
         """Sets a single notification that warns about broken URL.
 
         Args:
             error_message (str): URL failure message
         """
         self.clear_notifications()
-        self.add_notification(f"Couldn't connect to the database: {error_message}")
+        self.add_notification(f"Couldn't connect to the database <b>{url}</b>: {error_message}")
         if self._resource_to_replace is None:
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
 
-    @Slot()
-    def _accept_url(self):
+    @Slot(str)
+    def _accept_url(self, url):
         """Sets URL as validated and updates advertised resources."""
         self._url_validated = True
         self.clear_notifications()

@@ -89,6 +89,9 @@ class DataConnection(ProjectItem):
         super().set_up()
         self.file_system_watcher = CustomFileSystemWatcher(self)
         self.file_system_watcher.add_persistent_file_paths(ref for ref in self.file_references if os.path.exists(ref))
+        self.file_system_watcher.add_persistent_file_paths(
+            ref[10:] for ref in self.db_references if os.path.exists(ref[10:])
+        )
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.file_system_watcher.file_removed.connect(self._handle_file_removed)
         self.file_system_watcher.file_renamed.connect(self._handle_file_renamed)
@@ -229,13 +232,18 @@ class DataConnection(ProjectItem):
         self.db_credentials[url] = credentials
         self._toolbox.undo_stack.push(AddDCReferencesCommand(self, [], [url]))
 
-    @Slot(str)
-    def _log_database_reference_error(self, error):
+    @Slot(str, str)
+    def _log_database_reference_error(self, error, url):
         """Logs final database validation error messages.
 
         Args:
             error (str): message
+            url (str): URL of the database
         """
+        for row in range(self._db_ref_root.rowCount()):
+            item = self._db_ref_root.child(row)
+            if url == item.text():
+                self._mark_as_missing(item)
         self._logger.msg_error.emit(f"<b>{self.name}</b>: invalid database URL: {error}")
 
     def do_add_references(self, file_refs, db_refs):
@@ -244,6 +252,7 @@ class DataConnection(ProjectItem):
         self.file_system_watcher.add_persistent_file_paths(ref for ref in file_refs if os.path.exists(ref))
         self._append_file_references_to_model(*file_refs)
         self.db_references += db_refs
+        self.file_system_watcher.add_persistent_file_paths(ref[10:] for ref in db_refs if os.path.exists(ref[10:]))
         self._append_db_references_to_model(*db_refs)
         self._check_notifications()
         self._resources_to_successors_changed()
@@ -365,11 +374,13 @@ class DataConnection(ProjectItem):
         Returns:
             bool: True if references was marked missing successfully, False otherwise
         """
-        for row in range(self._file_ref_root.rowCount()):
-            item = self._file_ref_root.child(row)
-            if same_path(item.text(), path):
-                self._mark_as_missing(item)
-                return True
+        for ref_root in [self._file_ref_root, self._db_ref_root]:
+            for row in range(ref_root.rowCount()):
+                item = ref_root.child(row)
+                text = item.text()[10:] if item.text().startswith("sqlite:///") else item.text()
+                if same_path(text, path):
+                    self._mark_as_missing(item)
+                    return True
         return False
 
     @Slot(str, str)
@@ -477,22 +488,54 @@ class DataConnection(ProjectItem):
     def refresh_references(self):
         """Checks if missing file references have somehow come back to life."""
         selected_indexes = self._properties_ui.treeView_dc_references.selectedIndexes()
-        fixed_references = []
         if not selected_indexes:
             return
         for index in selected_indexes:
-            if self.reference_model.itemFromIndex(index.parent()) is not self._file_ref_root:
-                continue
             item = self.reference_model.itemFromIndex(index)
-            path = item.data(Qt.ItemDataRole.DisplayRole)
-            if item.data(_MISSING_ROLE) and os.path.exists(path):
-                fixed_references.append(path)
-                item.clearData()
-                item.setFlags(~Qt.ItemIsEditable)
-                item.setData(path, Qt.ItemDataRole.DisplayRole)
+            if self.reference_model.itemFromIndex(index.parent()) == self._db_ref_root:
+                path = item.data(Qt.ItemDataRole.DisplayRole)
+                if path.startswith("sqlite:///"):
+                    self.refresh_file_references(item)
+                else:
+                    self.refresh_db_references(item)
+            else:
+                self.refresh_file_references(item)
+
+    def refresh_file_references(self, item):
+        fixed_references = []
+        path = item.data(Qt.ItemDataRole.DisplayRole)
+        file_path = path[10:] if path.startswith("sqlite:///") else path
+        if item.data(_MISSING_ROLE) and os.path.exists(file_path):
+            fixed_references.append(file_path)
+            item.clearData()
+            item.setFlags(~Qt.ItemIsEditable)
+            item.setData(path, Qt.ItemDataRole.DisplayRole)
         if not fixed_references:
             return
         self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
+        self._check_notifications()
+        self._resources_to_successors_changed()
+
+    def refresh_db_references(self, item):
+        """Checks if the db reference is valid"""
+        url = item.text()
+        self._database_validator.validate_url(
+            "not_sqlite", url, self._log_database_reference_error, success_slot=self.revive_db_refrence
+        )
+
+    @Slot(str)
+    def revive_db_refrence(self, url):
+        """Colors the db reference back to black"""
+        fixed_references = []
+        for row in range(self._db_ref_root.rowCount()):
+            item = self._db_ref_root.child(row)
+            if url == item.text():
+                fixed_references.append(url)
+                item.clearData()
+                item.setFlags(~Qt.ItemIsEditable)
+                item.setData(url, Qt.ItemDataRole.DisplayRole)
+        if not fixed_references:
+            return
         self._check_notifications()
         self._resources_to_successors_changed()
 

@@ -37,7 +37,7 @@ class DcRefContextMenu(CustomContextMenu):
         self.add_action("Remove reference(s)", enabled=dc.any_refs_selected)
         self.add_action("Copy file reference(s) to project", enabled=dc.file_refs_selected)
         self.addSeparator()
-        self.add_action("Refresh reference(s)", enabled=dc.file_refs_selected)
+        self.add_action("Refresh reference(s)", enabled=dc.any_refs_selected)
 
 
 class DcDataContextMenu(CustomContextMenu):
