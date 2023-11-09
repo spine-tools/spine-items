@@ -177,13 +177,13 @@ class CheckableFileListModel(FileListModel):
         self.dataChanged.emit(index, index, [Qt.ItemDataRole.CheckStateRole])
 
     def index_with_file_path(self):
-        """Tries to find an item that has a valid file path.
+        """Tries to find an item that has a valid file path or URL.
 
         Returns:
-            QModelIndex: index to a item with usable file path or an invalid index if none found
+            QModelIndex: index to an item with usable file path/URL, or an invalid index if none found
         """
         for row, item in enumerate(self._single_resources):
-            if item.checked and item.resource.hasfilepath:
+            if item.checked and item.resource.url:
                 return self.index(row, 0)
         for pack_row, item in enumerate(self._pack_resources):
             if item.checked:

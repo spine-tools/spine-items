@@ -75,16 +75,16 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         def get_data_iterator(self, table, options, max_rows=-1):
             return iter([]), ()
 
-    def __init__(self, toolbox, specification, item=None, filepath=None):
+    def __init__(self, toolbox, specification, item=None, source=None):
         """
         Args:
             toolbox (QMainWindow): ToolboxUI class
             specification (ImporterSpecification)
-            filepath (str, optional): Importee path
+            source (str, optional): Importee file path or URL
         """
         super().__init__(toolbox, specification, item)
         self.takeCentralWidget().deleteLater()
-        self._filepath = filepath if filepath else self._FILE_LESS
+        self._filepath = source if source else self._FILE_LESS
         self._mappings_model = MappingsModel(self._undo_stack, self)
         self._mappings_model.rowsInserted.connect(self._reselect_source_table)
         self._ui.source_list.setModel(self._mappings_model)
@@ -98,8 +98,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._import_mapping_options = ImportMappingOptions(self._mappings_model, self._ui, self._undo_stack)
         self._import_sources = ImportSources(self._mappings_model, self._ui, self._undo_stack, self)
         self._ui.comboBox_source_file.addItem(self._FILE_LESS)
-        if filepath:
-            self._ui.comboBox_source_file.addItem(filepath)
+        if source:
+            self._ui.comboBox_source_file.addItem(source)
         self._ui.comboBox_source_file.setCurrentIndex(-1)
         self._ui.comboBox_source_file.currentTextChanged.connect(self.start_ui)
         self._ui.toolButton_browse_source_file.clicked.connect(self._show_open_file_dialog)
@@ -130,7 +130,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     @property
     def _duplicate_kwargs(self):
-        return dict(filepath=self._filepath)
+        return dict(source=self._filepath)
 
     def _make_ui(self):
         from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
@@ -184,13 +184,13 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):
         if self._connection_manager.connection.__name__ == "SqlAlchemyConnector":
-            filepath = self._get_source_url()
+            source = self._get_source_url()
         else:
-            filepath = self._get_source_file_path()
-        if not filepath:
+            source = self._get_source_file_path()
+        if not source:
             return
-        self._ui.comboBox_source_file.addItem(filepath)
-        self._ui.comboBox_source_file.setCurrentText(filepath)
+        self._ui.comboBox_source_file.addItem(source)
+        self._ui.comboBox_source_file.setCurrentText(source)
 
     def _get_source_url(self):
         selector = UrlSelectorDialog(self._toolbox.qsettigns(), self._toolbox, parent=self)
