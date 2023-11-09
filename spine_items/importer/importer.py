@@ -214,21 +214,25 @@ class Importer(DBWriterItemBase):
         self.open_import_editor(index)
 
     def open_import_editor(self, index):
-        """Opens Import editor for the given index."""
-        filepath = None
+        """Opens Import editor for the given index.
+
+        Args:
+            index (QModelIndex): resource list index
+        """
+        source = None
         if index.isValid():
             resource = self._file_model.resource(index)
-            if resource.type_ == "database":
-                filepath = resource.url
+            if resource.type_ == "url":
+                source = resource.url
             else:
                 if not resource.hasfilepath:
                     self._logger.msg_error.emit("File does not exist yet.")
                 else:
                     if not os.path.exists(resource.path):
-                        self._logger.msg_error.emit(f"Cannot find file '{filepath}'.")
+                        self._logger.msg_error.emit(f"Cannot find file '{source}'.")
                     else:
-                        filepath = resource.path
-        self._toolbox.show_specification_form(self.item_type(), self.specification(), self, filepath=filepath)
+                        source = resource.path
+        self._toolbox.show_specification_form(self.item_type(), self.specification(), self, source=source)
 
     def select_connector_type(self, index):
         """Opens dialog to select connector type for the given index."""

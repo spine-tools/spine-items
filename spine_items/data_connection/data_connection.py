@@ -213,18 +213,18 @@ class DataConnection(ProjectItem):
 
     @Slot(bool)
     def show_add_db_reference_dialog(self, _=False):
-        """Opens a dialog where user can select a url to be added as reference for this Data Connection."""
+        """Opens a dialog where user can select an url to be added as reference for this Data Connection."""
         selector = UrlSelectorDialog(self._toolbox.qsettings(), self._toolbox, self._toolbox)
         selector.exec()
-        url = selector.url
-        if not url:  # Cancel button clicked
+        full_url = selector.url
+        if not full_url:  # Cancel button clicked
             return
-        url, credentials = split_url_credentials(url)
+        url, credentials = split_url_credentials(full_url)
         if url in self.db_references:
             self._logger.msg_warning.emit(f"Reference to database <b>{url}</b> already exists")
             return
         self._database_validator.validate_url(
-            selector.dialect, url, self._log_database_reference_error, success_slot=None
+            selector.dialect, full_url, self._log_database_reference_error, success_slot=None
         )
         self.db_credentials[url] = credentials
         self._toolbox.undo_stack.push(AddDCReferencesCommand(self, [], [url]))

@@ -10,6 +10,7 @@
 ######################################################################################################################
 """Utilities to validate that a database exists."""
 from pathlib import Path
+from sqlalchemy.engine.url import make_url
 
 from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, QTimer, Signal, Slot
 from PySide6.QtWidgets import QApplication
@@ -31,7 +32,7 @@ class _ValidationTask(QRunnable):
         """
         super().__init__()
         self._dialect = dialect
-        self._sa_url = sa_url
+        self._sa_url = make_url(sa_url)
         self._signals = _TaskSignals()
         self._signals.moveToThread(None)
         self._signals.validation_failed.connect(fail_slot)
@@ -58,6 +59,8 @@ class _ValidationTask(QRunnable):
                 self._signals.validation_failed.emit(error)
                 return
             self._signals.validation_succeeded.emit()
+        except Exception as error:
+            self._signals.validation_failed.emit(str(error))
         finally:
             self._signals.finished.emit()
             application = QApplication.instance()
