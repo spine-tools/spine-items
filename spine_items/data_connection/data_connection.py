@@ -8,11 +8,7 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""
-Module for data connection class.
-
-"""
+"""Module for data connection class."""
 
 import os
 import shutil
@@ -21,6 +17,7 @@ from PySide6.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection, QTi
 from PySide6.QtGui import QStandardItem, QStandardItemModel, QBrush
 from PySide6.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
 from spine_engine.utils.serialization import deserialize_path, serialize_path
+from spinedb_api.helpers import remove_credentials_from_url
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from spinetoolbox.helpers import open_url, same_path
@@ -30,24 +27,29 @@ from .custom_file_system_watcher import CustomFileSystemWatcher
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
+from .utils import restore_database_references
 from ..database_validation import DatabaseConnectionValidator
 from ..widgets import UrlSelectorDialog
-from ..utils import split_url_credentials
+from ..utils import convert_to_sqlalchemy_url, convert_url_to_safe_string
 
 
-_DATA_FILE_PATH_ROLE = Qt.ItemDataRole.UserRole + 1
-_MISSING_ROLE = Qt.ItemDataRole.UserRole + 2
+class _Role:
+    """Extra reference model data roles."""
+
+    DATA_FILE_PATH = Qt.ItemDataRole.UserRole + 1
+    MISSING = Qt.ItemDataRole.UserRole + 2
+    FILE_REFERENCE = Qt.ItemDataRole.UserRole + 3
+    DB_URL_REFERENCE = Qt.ItemDataRole.UserRole + 4
 
 
 _MISSING_ITEM_FOREGROUND = QBrush(Qt.red)
 
 
 class DataConnection(ProjectItem):
-    def __init__(
-        self, name, description, x, y, toolbox, project, file_references=None, db_references=None, db_credentials=None
-    ):
-        """Data Connection class.
+    """Data connection project item."""
 
+    def __init__(self, name, description, x, y, toolbox, project, file_references=None, db_references=None):
+        """
         Args:
             name (str): Object name
             description (str): Object description
@@ -56,23 +58,18 @@ class DataConnection(ProjectItem):
             toolbox (ToolboxUI): QMainWindow instance
             project (SpineToolboxProject): the project this item belongs to
             file_references (list, optional): a list of file paths
-            db_references (list, optional): a list of db urls
-            db_credentials (dict, optional): mapping urls from db_references to tuple (username, password)
+            db_references (list of dict, optional): a list of db urls
         """
         super().__init__(name, description, x, y, project)
         if file_references is None:
             file_references = list()
         if db_references is None:
             db_references = list()
-        if db_credentials is None:
-            db_credentials = dict()
         self._toolbox = toolbox
         self.reference_model = QStandardItemModel()  # References
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
         self.file_system_watcher = None
         self.file_references = list(file_references)
-        self.db_references = list(db_references)
-        self.db_credentials = db_credentials
         self._file_ref_root = QStandardItem("File paths")
         self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
         self._db_ref_root = QStandardItem("URLs")
@@ -81,7 +78,7 @@ class DataConnection(ProjectItem):
         self.any_refs_selected = False
         self.any_data_selected = False
         self.current_is_file_ref = False
-        self.populate_reference_list()
+        self.populate_reference_list(db_references)
         self.populate_data_list()
         self._database_validator = DatabaseConnectionValidator()
 
@@ -89,9 +86,7 @@ class DataConnection(ProjectItem):
         super().set_up()
         self.file_system_watcher = CustomFileSystemWatcher(self)
         self.file_system_watcher.add_persistent_file_paths(ref for ref in self.file_references if os.path.exists(ref))
-        self.file_system_watcher.add_persistent_file_paths(
-            ref[10:] for ref in self.db_references if os.path.exists(ref[10:])
-        )
+        self._watch_sqlite_file(*self.db_reference_iter())
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.file_system_watcher.file_removed.connect(self._handle_file_removed)
         self.file_system_watcher.file_renamed.connect(self._handle_file_renamed)
@@ -111,6 +106,18 @@ class DataConnection(ProjectItem):
     def executable_class(self):
         return ExecutableItem
 
+    def db_reference_iter(self):
+        """Iterates over database references.
+
+        Yields:
+            dict: database URL
+        """
+        for row in range(self._db_ref_root.rowCount()):
+            yield self._db_ref_root.child(row).data(_Role.DB_URL_REFERENCE)
+
+    def has_db_references(self):
+        return self._db_ref_root.rowCount() != 0
+
     @Slot(QItemSelection, QItemSelection)
     def _update_selection_state(self, _selected, _deselected):
         self._do_update_selection_state()
@@ -129,7 +136,6 @@ class DataConnection(ProjectItem):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
         s = super().make_signal_handler_dict()
-        # pylint: disable=unnecessary-lambda
         s[self._properties_ui.toolButton_minus.clicked] = self.remove_references
         s[self._properties_ui.toolButton_add.clicked] = self.copy_to_project
         s[self._properties_ui.treeView_dc_references.doubleClicked] = self.open_reference
@@ -218,41 +224,65 @@ class DataConnection(ProjectItem):
     def show_add_db_reference_dialog(self, _=False):
         """Opens a dialog where user can select a url to be added as reference for this Data Connection."""
         selector = UrlSelectorDialog(self._toolbox.qsettings(), self._toolbox, self._toolbox)
-        selector.exec()
-        url = selector.url
-        if not url:  # Cancel button clicked
+        result = selector.exec()
+        if result == UrlSelectorDialog.DialogCode.Rejected:
             return
-        url, credentials = split_url_credentials(url)
-        if url in self.db_references:
+        url = selector.url_dict()
+        if self._has_db_reference(url):
             self._logger.msg_warning.emit(f"Reference to database <b>{url}</b> already exists")
             return
+        sa_url = convert_to_sqlalchemy_url(url, self.name, self._logger)
         self._database_validator.validate_url(
-            selector.dialect, url, self._log_database_reference_error, success_slot=None
+            url["dialect"], sa_url, self._log_database_reference_error, success_slot=None
         )
-        self.db_credentials[url] = credentials
         self._toolbox.undo_stack.push(AddDCReferencesCommand(self, [], [url]))
 
-    @Slot(str, str)
+    def _has_db_reference(self, url):
+        """Checks if given database URL exists already.
+
+        Ignores usernames and passwords.
+
+        Args:
+            url (dict): URL to check
+
+        Returns:
+            bool: True if db reference exists, False otherwise
+        """
+        significant_keys = ("dialect", "host", "port", "database")
+        for row in range(self._db_ref_root.rowCount()):
+            existing_url = self._db_ref_root.child(row).data(_Role.DB_URL_REFERENCE)
+            if all(url[key] == existing_url[key] for key in significant_keys):
+                return True
+        return False
+
+    @Slot(str, object)
     def _log_database_reference_error(self, error, url):
         """Logs final database validation error messages.
 
         Args:
             error (str): message
-            url (str): URL of the database
+            url (URL): SqlAlchemy URL of the database
         """
+        url_text = remove_credentials_from_url(str(url))
         for row in range(self._db_ref_root.rowCount()):
             item = self._db_ref_root.child(row)
-            if url == item.text():
+            if url_text == item.text():
                 self._mark_as_missing(item)
+                break
         self._logger.msg_error.emit(f"<b>{self.name}</b>: invalid database URL: {error}")
 
     def do_add_references(self, file_refs, db_refs):
+        """Adds file and databases references to DC and starts watching the files.
+
+        Args:
+            file_refs (list of str): file reference paths
+            db_refs (list of dict): database reference URLs
+        """
         file_refs = [os.path.abspath(ref) for ref in file_refs]
         self.file_references += file_refs
         self.file_system_watcher.add_persistent_file_paths(ref for ref in file_refs if os.path.exists(ref))
         self._append_file_references_to_model(*file_refs)
-        self.db_references += db_refs
-        self.file_system_watcher.add_persistent_file_paths(ref[10:] for ref in db_refs if os.path.exists(ref[10:]))
+        self._watch_sqlite_file(*db_refs)
         self._append_db_references_to_model(*db_refs)
         self._check_notifications()
         self._resources_to_successors_changed()
@@ -275,7 +305,7 @@ class DataConnection(ProjectItem):
             if parent == file_ref_root_index:
                 file_references.append(index.data(Qt.ItemDataRole.DisplayRole))
             elif parent == db_ref_root_index:
-                db_references.append(index.data(Qt.ItemDataRole.DisplayRole))
+                db_references.append(index.data(_Role.DB_URL_REFERENCE))
         self._toolbox.undo_stack.push(RemoveDCReferencesCommand(self, file_references, db_references))
         self._logger.msg.emit("Selected references removed")
 
@@ -283,10 +313,11 @@ class DataConnection(ProjectItem):
         """Removes given paths from references.
 
         Args:
-            file_refs (list): List of removed file paths.
-            db_refs (list): List of removed urls.
+            file_refs (list of str): List of removed file paths.
+            db_refs (list of dict): List of removed urls.
         """
         self.file_system_watcher.remove_persistent_file_paths(file_refs)
+        self._unwatch_sqlite_file(*db_refs)
         refs_removed = self._remove_file_references(*file_refs)
         refs_removed |= self._remove_db_references(*db_refs)
         if refs_removed:
@@ -304,17 +335,16 @@ class DataConnection(ProjectItem):
 
     def _remove_db_references(self, *refs):
         result = False
+        matches = {convert_url_to_safe_string(url) for url in refs}
         for k in reversed(range(self._db_ref_root.rowCount())):
-            if self._db_ref_root.child(k).text() in refs:
-                url = self.db_references.pop(k)
-                self.db_credentials.pop(url, None)
+            if self._db_ref_root.child(k).text() in matches:
                 self._db_ref_root.removeRow(k)
                 result = True
         return result
 
     def _remove_data_file(self, path):
         for k in reversed(range(self.data_model.rowCount())):
-            data_filepath = self.data_model.item(k).data(_DATA_FILE_PATH_ROLE)
+            data_filepath = self.data_model.item(k).data(_Role.DATA_FILE_PATH)
             if same_path(data_filepath, path):
                 self.data_model.removeRow(k)
                 return True
@@ -323,9 +353,9 @@ class DataConnection(ProjectItem):
     def _rename_data_file(self, old_path, new_path):
         for k in range(self.data_model.rowCount()):
             item = self.data_model.item(k)
-            if same_path(item.data(_DATA_FILE_PATH_ROLE), old_path):
+            if same_path(item.data(_Role.DATA_FILE_PATH), old_path):
                 item.setText(os.path.basename(new_path))
-                item.setData(new_path, _DATA_FILE_PATH_ROLE)
+                item.setData(new_path, _Role.DATA_FILE_PATH)
                 return True
         return False
 
@@ -374,13 +404,19 @@ class DataConnection(ProjectItem):
         Returns:
             bool: True if references was marked missing successfully, False otherwise
         """
-        for ref_root in [self._file_ref_root, self._db_ref_root]:
-            for row in range(ref_root.rowCount()):
-                item = ref_root.child(row)
-                text = item.text()[10:] if item.text().startswith("sqlite:///") else item.text()
-                if same_path(text, path):
-                    self._mark_as_missing(item)
-                    return True
+        for row in range(self._file_ref_root.rowCount()):
+            item = self._file_ref_root.child(row)
+            if same_path(item.text(), path):
+                self._mark_as_missing(item)
+                return True
+        for row in range(self._db_ref_root.rowCount()):
+            item = self._db_ref_root.child(row)
+            url = item.data(_Role.DB_URL_REFERENCE)
+            if url["dialect"] != "sqlite":
+                continue
+            if same_path(url["database"], path):
+                self._mark_as_missing(item)
+                return True
         return False
 
     @Slot(str, str)
@@ -410,12 +446,12 @@ class DataConnection(ProjectItem):
         file_refs = list(self.file_references)
         data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
         new_resources = scan_for_resources(
-            self, file_refs + data_files, self.db_references, self.db_credentials, self._project.project_dir
+            self, file_refs + data_files, list(self.db_reference_iter()), self._project.project_dir
         )
         if not replace_new_path(file_refs):
             replace_new_path(data_files)
         old_resources = scan_for_resources(
-            self, file_refs + data_files, self.db_references, self.db_credentials, self._project.project_dir
+            self, file_refs + data_files, list(self.db_reference_iter()), self._project.project_dir
         )
         self._resources_to_successors_replaced(old_resources, new_resources)
 
@@ -441,9 +477,7 @@ class DataConnection(ProjectItem):
                 if not same_path(path, item.text()):
                     continue
                 fixed_references.append(path)
-                item.clearData()
-                item.setFlags(~Qt.ItemIsEditable)
-                item.setData(path, Qt.ItemDataRole.DisplayRole)
+                self._mark_as_found(item)
             if not fixed_references:
                 return
             self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
@@ -492,49 +526,48 @@ class DataConnection(ProjectItem):
             return
         for index in selected_indexes:
             item = self.reference_model.itemFromIndex(index)
-            if self.reference_model.itemFromIndex(index.parent()) == self._db_ref_root:
-                path = item.data(Qt.ItemDataRole.DisplayRole)
-                if path.startswith("sqlite:///"):
-                    self.refresh_file_references(item)
-                else:
-                    self.refresh_db_references(item)
+            if self.reference_model.itemFromIndex(index.parent()) is self._db_ref_root:
+                self.refresh_db_references(item)
             else:
                 self.refresh_file_references(item)
 
     def refresh_file_references(self, item):
-        fixed_references = []
-        path = item.data(Qt.ItemDataRole.DisplayRole)
-        file_path = path[10:] if path.startswith("sqlite:///") else path
-        if item.data(_MISSING_ROLE) and os.path.exists(file_path):
-            fixed_references.append(file_path)
-            item.clearData()
-            item.setFlags(~Qt.ItemIsEditable)
-            item.setData(path, Qt.ItemDataRole.DisplayRole)
-        if not fixed_references:
+        file_path = item.data(Qt.ItemDataRole.DisplayRole)
+        if item.data(_Role.MISSING) and os.path.exists(file_path):
+            self._mark_as_found(item)
+        else:
             return
-        self.file_system_watcher.add_persistent_file_paths(ref for ref in fixed_references)
+        self.file_system_watcher.add_persistent_file_path(file_path)
         self._check_notifications()
         self._resources_to_successors_changed()
 
     def refresh_db_references(self, item):
         """Checks if the db reference is valid"""
-        url = item.text()
+        url = item.data(_Role.DB_URL_REFERENCE)
         self._database_validator.validate_url(
-            "not_sqlite", url, self._log_database_reference_error, success_slot=self.revive_db_refrence
+            url["dialect"],
+            convert_to_sqlalchemy_url(url),
+            self._log_database_reference_error,
+            success_slot=self._revive_db_reference,
         )
 
-    @Slot(str)
-    def revive_db_refrence(self, url):
-        """Colors the db reference back to black"""
-        fixed_references = []
+    @Slot(object)
+    def _revive_db_reference(self, url):
+        """Colors the db reference back to black.
+
+        Args:
+            url (URL): SqlAlchemy URL
+        """
+        url_text = remove_credentials_from_url(str(url))
         for row in range(self._db_ref_root.rowCount()):
             item = self._db_ref_root.child(row)
-            if url == item.text():
-                fixed_references.append(url)
-                item.clearData()
-                item.setFlags(~Qt.ItemIsEditable)
-                item.setData(url, Qt.ItemDataRole.DisplayRole)
-        if not fixed_references:
+            if url_text == item.text():
+                self._mark_as_found(item)
+                url_dict = item.data(_Role.DB_URL_REFERENCE)
+                if url_dict["dialect"] == "sqlite":
+                    self.file_system_watcher.add_persistent_file_path(url_dict["database"])
+                break
+        else:
             return
         self._check_notifications()
         self._resources_to_successors_changed()
@@ -564,7 +597,7 @@ class DataConnection(ProjectItem):
         if not index.isValid():
             logging.error("Index not valid")
             return
-        data_file = index.data(_DATA_FILE_PATH_ROLE)
+        data_file = index.data(_Role.DATA_FILE_PATH)
         url = "file:///" + data_file
         # noinspection PyTypeChecker, PyCallByClass, PyArgumentList
         res = open_url(url)
@@ -636,8 +669,12 @@ class DataConnection(ProjectItem):
             except OSError:
                 self._logger.msg_error.emit(f"Removing file {path_to_remove} failed.\nCheck permissions.")
 
-    def populate_reference_list(self):
-        """List file references in QTreeView."""
+    def populate_reference_list(self, db_references):
+        """List references in QTreeView.
+
+        Args:
+            db_references (list of dict): database URLs
+        """
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
         self._file_ref_root.removeRows(0, self._file_ref_root.rowCount())
@@ -645,7 +682,7 @@ class DataConnection(ProjectItem):
         self._db_ref_root.removeRows(0, self._db_ref_root.rowCount())
         self.reference_model.appendRow(self._db_ref_root)
         self._append_file_references_to_model(*self.file_references)
-        self._append_db_references_to_model(*self.db_references)
+        self._append_db_references_to_model(*db_references)
 
     def _append_file_references_to_model(self, *paths):
         non_existent_paths = []
@@ -670,14 +707,60 @@ class DataConnection(ProjectItem):
             item (QStandardItem): item to modify
         """
         item.setData("The file is missing.", Qt.ItemDataRole.ToolTipRole)
-        item.setData(_MISSING_ITEM_FOREGROUND, Qt.ForegroundRole)
-        item.setData(True, _MISSING_ROLE)
+        item.setData(_MISSING_ITEM_FOREGROUND, Qt.ItemDataRole.ForegroundRole)
+        item.setData(True, _Role.MISSING)
+
+    @staticmethod
+    def _mark_as_found(item):
+        """Modifies given model item to appear as existing reference.
+
+        Args:
+            item (QStandardItem): item to modify
+        """
+        item.setData(None, Qt.ItemDataRole.ToolTipRole)
+        item.setData(None, Qt.ItemDataRole.ForegroundRole)
+        item.setData(False, _Role.MISSING)
 
     def _append_db_references_to_model(self, *urls):
+        """Appends given database URLs to the model.
+
+        Args:
+            *urls: dict-style URLs to add
+        """
         for url in urls:
-            item = QStandardItem(url)
+            item = QStandardItem(convert_url_to_safe_string(url))
+            item.setData(url, _Role.DB_URL_REFERENCE)
             item.setFlags(~Qt.ItemIsEditable)
             self._db_ref_root.appendRow(item)
+
+    def _watch_sqlite_file(self, *urls):
+        """Adds sqlite files to file system watcher's watched paths.
+
+        Args:
+            *urls: dict-style URLs to watch
+        """
+        for url in urls:
+            if url["dialect"] == "sqlite":
+                path = url["database"]
+                if os.path.exists(path):
+                    self.file_system_watcher.add_persistent_file_path(path)
+
+    def _unwatch_sqlite_file(self, *urls):
+        """Removes sqlite files from file system watcher's watched paths.
+
+        Args:
+            *urls: dict-style URLs to watch
+
+        Returns:
+            list of str: list of removed paths
+        """
+        paths = []
+        for url in urls:
+            if url["dialect"] == "sqlite":
+                path = url["database"]
+                if os.path.exists(path):
+                    paths.append(path)
+        return self.file_system_watcher.remove_persistent_file_paths(paths)
 
     def populate_data_list(self):
         """List project internal data (files) in QTreeView."""
@@ -691,21 +774,21 @@ class DataConnection(ProjectItem):
             item.setFlags(~Qt.ItemIsEditable)
             icon = QFileIconProvider().icon(QFileInfo(path))
             item.setData(icon, Qt.ItemDataRole.DecorationRole)
-            item.setData(path, _DATA_FILE_PATH_ROLE)
+            item.setData(path, _Role.DATA_FILE_PATH)
             self.data_model.appendRow(item)
 
     def resources_for_direct_successors(self):
         """see base class"""
         data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
         resources = scan_for_resources(
-            self, self.file_references + data_files, self.db_references, self.db_credentials, self._project.project_dir
+            self, self.file_references + data_files, list(self.db_reference_iter()), self._project.project_dir
         )
         return resources
 
     def _check_notifications(self):
         """Sets or clears the exclamation mark icon."""
         self.clear_notifications()
-        if not self.file_references and not self.db_references and not self.data_files():
+        if not self.file_references and not self.has_db_references() and not self.data_files():
             self.add_notification(
                 "This Data Connection does not have any references or data. "
                 "Add some in the Data Connection Properties panel."
@@ -718,8 +801,19 @@ class DataConnection(ProjectItem):
         """Returns a dictionary corresponding to this item."""
         d = super().item_dict()
         d["file_references"] = [serialize_path(ref, self._project.project_dir) for ref in self.file_references]
-        d["db_references"] = self.db_references
-        d["db_credentials"] = self.db_credentials
+        db_references = []
+        db_credentials = {}
+        for url in self.db_reference_iter():
+            serialized_url = dict(url)
+            username = serialized_url.pop("username")
+            password = serialized_url.pop("password")
+            if username:
+                db_credentials[convert_url_to_safe_string(serialized_url)] = username, password
+            if serialized_url["dialect"] == "sqlite":
+                serialized_url["database"] = serialize_path(serialized_url["database"], self._project.project_dir)
+            db_references.append(serialized_url)
+        d["db_references"] = db_references
+        d["db_credentials"] = db_credentials
         return d
 
     @staticmethod
@@ -733,9 +827,10 @@ class DataConnection(ProjectItem):
         # FIXME: Do we want to convert references to file_references via upgrade?
         file_references = item_dict.get("file_references", list()) or item_dict.get("references", list())
         file_references = [deserialize_path(r, project.project_dir) for r in file_references]
-        db_references = item_dict.get("db_references", list())
-        db_credentials = item_dict.get("db_credentials", dict())
-        return DataConnection(name, description, x, y, toolbox, project, file_references, db_references, db_credentials)
+        db_references = restore_database_references(
+            item_dict.get("db_references", []), item_dict.get("db_credentials", {}), project.project_dir
+        )
+        return DataConnection(name, description, x, y, toolbox, project, file_references, db_references)
 
     def rename(self, new_name, rename_data_dir_message):
         """See base class."""

@@ -18,17 +18,18 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
+from .utils import restore_database_references
 
 
 class ExecutableItem(ExecutableItemBase):
     """The executable parts of Data Connection."""
 
-    def __init__(self, name, file_references, db_references, db_credentials, project_dir, logger):
+    def __init__(self, name, file_references, db_references, project_dir, logger):
         """
         Args:
             name (str): item's name
             file_references (list): a list of absolute paths to connected files
-            db_references (list): a list of urls to connected dbs
+            db_references (list): a list of url dicts to connected dbs
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """
@@ -40,7 +41,6 @@ class ExecutableItem(ExecutableItemBase):
                     data_files.append(entry.path)
         self._file_paths = file_references + data_files
         self._urls = db_references
-        self._url_credentials = db_credentials
 
     @staticmethod
     def item_type():
@@ -49,13 +49,14 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        return scan_for_resources(self, self._file_paths, self._urls, self._url_credentials, self._project_dir)
+        return scan_for_resources(self, self._file_paths, self._urls, self._project_dir)
 
     @classmethod
     def from_dict(cls, item_dict, name, project_dir, app_settings, specifications, logger):
         """See base class."""
         file_references = item_dict["file_references"]
         file_references = [deserialize_path(r, project_dir) for r in file_references]
-        db_references = item_dict.get("db_references", [])
-        db_credentials = item_dict.get("db_credentials", {})
-        return cls(name, file_references, db_references, db_credentials, project_dir, logger)
+        db_references = restore_database_references(
+            item_dict.get("db_references", []), item_dict.get("db_credentials", {}), project_dir
+        )
+        return cls(name, file_references, db_references, project_dir, logger)

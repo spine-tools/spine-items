@@ -99,7 +99,10 @@ class TestToolInstance(unittest.TestCase):
             mock_kem.assert_called_once()
             mock_find_kernel_specs.assert_called_once()
             self.assertEqual(mock_kem.call_args[0][1], "some_julia_kernel")
-            self.assertEqual(mock_kem.call_args[0][2], ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg1", "arg2"]);', 'include("hello.jl")'])
+            self.assertEqual(
+                mock_kem.call_args[0][2],
+                ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg1", "arg2"]);', 'include("hello.jl")'],
+            )
         # With tool and tool spec cmd line args
         instance = self._make_julia_tool_instance(True, ["arg3"])
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
@@ -112,7 +115,10 @@ class TestToolInstance(unittest.TestCase):
             mock_kem.assert_called_once()
             mock_find_kernel_specs.assert_called_once()
             self.assertEqual(mock_kem.call_args[0][1], "some_julia_kernel")
-            self.assertEqual(mock_kem.call_args[0][2], ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg3", "arg1", "arg2"]);', 'include("hello.jl")'])
+            self.assertEqual(
+                mock_kem.call_args[0][2],
+                ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg3", "arg1", "arg2"]);', 'include("hello.jl")'],
+            )
 
     def test_julia_prepare_with_basic_console(self):
         # No cmd line args
@@ -126,7 +132,9 @@ class TestToolInstance(unittest.TestCase):
             instance.prepare([])
             mock_isfile.assert_called()
             mock_manager.assert_called_once()
-            self.assertEqual(["", "--sysimage=path/to/sysimage.so"], mock_manager.call_args[0][1])  # args attribute for JuliaPersistentExecutionManger
+            self.assertEqual(
+                ["", "--sysimage=path/to/sysimage.so"], mock_manager.call_args[0][1]
+            )  # args attribute for JuliaPersistentExecutionManger
             self.assertEqual(['cd("path/");', 'include("hello.jl")'], mock_manager.call_args[0][2])  # commands
             self.assertEqual("julia hello.jl", mock_manager.call_args[0][3])  # alias
         # With tool cmd line args
@@ -140,7 +148,10 @@ class TestToolInstance(unittest.TestCase):
             mock_isfile.assert_called()
             mock_manager.assert_called_once()
             self.assertEqual([""], mock_manager.call_args[0][1])
-            self.assertEqual(['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg1", "arg2"]);', 'include("hello.jl")'], mock_manager.call_args[0][2])
+            self.assertEqual(
+                ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg1", "arg2"]);', 'include("hello.jl")'],
+                mock_manager.call_args[0][2],
+            )
             self.assertEqual("julia hello.jl arg1 arg2", mock_manager.call_args[0][3])  # alias
         # With tool and tool spec cmd line args
         instance = self._make_julia_tool_instance(False, ["arg3"])
@@ -153,7 +164,10 @@ class TestToolInstance(unittest.TestCase):
             mock_isfile.assert_called()
             mock_manager.assert_called_once()
             self.assertEqual([""], mock_manager.call_args[0][1])
-            self.assertEqual(['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg3", "arg1", "arg2"]);', 'include("hello.jl")'], mock_manager.call_args[0][2])
+            self.assertEqual(
+                ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg3", "arg1", "arg2"]);', 'include("hello.jl")'],
+                mock_manager.call_args[0][2],
+            )
             self.assertEqual("julia hello.jl arg3 arg1 arg2", mock_manager.call_args[0][3])  # alias
 
     def test_prepare_sysimg_maker(self):
@@ -179,7 +193,7 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_gams_tool_instance()
         path_to_gams = "path/to/gams"
         with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
-                "spine_items.tool.tool_instance.resolve_gams_executable"
+            "spine_items.tool.tool_instance.resolve_gams_executable"
         ) as mock_gams_exe:
             mock_manager.return_value = True
             mock_gams_exe.return_value = path_to_gams
@@ -329,7 +343,15 @@ class TestToolInstance(unittest.TestCase):
 
     @staticmethod
     def _make_python_tool_instance(use_jupyter_console, tool_spec_args=None):
-        specification = PythonTool("specification name", "python", "", ["main.py"], MockQSettings(), mock.MagicMock(), cmdline_args=tool_spec_args)
+        specification = PythonTool(
+            "specification name",
+            "python",
+            "",
+            ["main.py"],
+            MockQSettings(),
+            mock.MagicMock(),
+            cmdline_args=tool_spec_args,
+        )
         specification.set_execution_settings()
         if use_jupyter_console:
             specification.execution_settings["use_jupyter_console"] = True
@@ -338,7 +360,15 @@ class TestToolInstance(unittest.TestCase):
 
     @staticmethod
     def _make_julia_tool_instance(use_jupyter_console, tool_spec_args=None):
-        specification = JuliaTool("specification name", "julia", "", ["hello.jl"], MockQSettings(), mock.MagicMock(), cmdline_args=tool_spec_args)
+        specification = JuliaTool(
+            "specification name",
+            "julia",
+            "",
+            ["hello.jl"],
+            MockQSettings(),
+            mock.MagicMock(),
+            cmdline_args=tool_spec_args,
+        )
         specification.set_execution_settings()
         if use_jupyter_console:
             specification.execution_settings["use_jupyter_console"] = True
@@ -348,15 +378,33 @@ class TestToolInstance(unittest.TestCase):
     @staticmethod
     def _make_gams_tool_instance(temp_dir=None, tool_spec_args=None):
         path = temp_dir if temp_dir else ""
-        specification = GAMSTool("specification name", "gams", path, ["model.gms"], MockQSettings(), mock.MagicMock(), cmdline_args=tool_spec_args)
+        specification = GAMSTool(
+            "specification name",
+            "gams",
+            path,
+            ["model.gms"],
+            MockQSettings(),
+            mock.MagicMock(),
+            cmdline_args=tool_spec_args,
+        )
         return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
 
     @staticmethod
     def _make_executable_tool_instance(shell=None, cmd=None, tool_spec_args=None):
         if cmd:
-            specification = ExecutableTool("name", "executable", "", [], MockQSettings(), mock.MagicMock(), cmdline_args=tool_spec_args)
+            specification = ExecutableTool(
+                "name", "executable", "", [], MockQSettings(), mock.MagicMock(), cmdline_args=tool_spec_args
+            )
         else:
-            specification = ExecutableTool("name", "executable", "", ["program.exe"], MockQSettings(), mock.MagicMock(), cmdline_args=tool_spec_args)
+            specification = ExecutableTool(
+                "name",
+                "executable",
+                "",
+                ["program.exe"],
+                MockQSettings(),
+                mock.MagicMock(),
+                cmdline_args=tool_spec_args,
+            )
         specification.set_execution_settings()
         if shell == "cmd.exe":
             specification.execution_settings["shell"] = "cmd.exe"

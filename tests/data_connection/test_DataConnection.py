@@ -21,10 +21,12 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtCore import QItemSelectionModel
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 from PySide6.QtGui import Qt
+
+from spinedb_api import create_new_spine_database
 from spinetoolbox.helpers import signal_waiter
-from spine_items.data_connection.data_connection import DataConnection
+from spine_items.data_connection.data_connection import _Role, DataConnection
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.data_connection.item_info import ItemInfo
 from ..mock_helpers import (
@@ -94,7 +96,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(0, 0)))
             self.assertEqual(str(a), self._ref_model.index(0, 0, self._ref_model.index(0, 0)).data())
             self._data_connection.file_references = list()
-            self._data_connection.populate_reference_list()
+            self._data_connection.populate_reference_list([])
             # Add two references (the other one is non-existing)
             # Note: non-existing files cannot be added with the toolbox but this tests a situation when
             # project.json file has references to files that do not exist anymore and user tries to add a
@@ -118,25 +120,40 @@ class TestDataConnectionWithProject(unittest.TestCase):
         with mock.patch(
             "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
         ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url", new_callable=mock.PropertyMock
-        ) as url_selector_url:
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+        ) as url_selector_url_dict:
             # Add nothing
-            url_selector_url.return_value = ""
+            url_selector_exec.return_value = QDialog.DialogCode.Rejected
             self._data_connection.show_add_db_reference_dialog()
             self.assertEqual(1, url_selector_exec.call_count)
-            self.assertEqual(0, len(self._data_connection.db_references))
+            self.assertFalse(self._data_connection.has_db_references())
             self.assertEqual(0, self._ref_model.rowCount(self._ref_model.index(1, 0)))
             # Add one url
-            url_selector_url.return_value = "mysql://randy:creamfraiche@host:3306/db"
+            url_selector_exec.return_value = QDialog.DialogCode.Accepted
+            url_selector_url_dict.return_value = {
+                "dialect": "mysql",
+                "host": "host",
+                "port": 3306,
+                "database": "db",
+                "username": "randy",
+                "password": "creamfraiche",
+            }
             self._data_connection.show_add_db_reference_dialog()
             self.assertEqual(2, url_selector_exec.call_count)
-            self.assertEqual(1, len(self._data_connection.db_references))
+            self.assertEqual(1, len(list(self._data_connection.db_reference_iter())))
             self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(1, 0)))
             # Add same url with different username and password (should not be added)
-            url_selector_url.return_value = "mysql://scott:tiger@host:3306/db"
+            url_selector_url_dict.return_value = {
+                "dialect": "mysql",
+                "host": "host",
+                "port": 3306,
+                "database": "db",
+                "username": "scott",
+                "password": "tiger",
+            }
             self._data_connection.show_add_db_reference_dialog()
             self.assertEqual(3, url_selector_exec.call_count)
-            self.assertEqual(1, len(self._data_connection.db_references))
+            self.assertEqual(1, len(list(self._data_connection.db_reference_iter())))
             self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(1, 0)))
 
     def test_remove_references(self):
@@ -149,8 +166,8 @@ class TestDataConnectionWithProject(unittest.TestCase):
         ) as mock_selected_indexes, mock.patch(
             "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
         ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url", new_callable=mock.PropertyMock
-        ) as url_selector_url:
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+        ) as url_selector_url_dict:
             a = Path(temp_dir, "a.txt")
             a.touch()
             b = Path(temp_dir, "b.txt")
@@ -167,12 +184,27 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self.assertEqual(2, len(self._data_connection.file_references))
             self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(0, 0)))
             # Second add a couple of dbs as refs
-            url_selector_url.return_value = "mysql://scott:tiger@host:3306/db"
+            url_selector_exec.return_value = QDialog.DialogCode.Accepted
+            url_selector_url_dict.return_value = {
+                "dialect": "mysql",
+                "username": "scott",
+                "password": "tiger",
+                "host": "host",
+                "port": 3306,
+                "database": "db",
+            }
             self._data_connection.show_add_db_reference_dialog()
-            url_selector_url.return_value = "mysql://randy:creamfraiche@host:3307/db"
+            url_selector_url_dict.return_value = {
+                "dialect": "mysql",
+                "username": "randy",
+                "password": "creamfraiche",
+                "host": "host",
+                "port": 3307,
+                "database": "db",
+            }
             self._data_connection.show_add_db_reference_dialog()
             self.assertEqual(2, url_selector_exec.call_count)
-            self.assertEqual(2, len(self._data_connection.db_references))
+            self.assertEqual(2, len(list(self._data_connection.db_reference_iter())))
             self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(1, 0)))
             # Test with no indexes selected
             mock_selected_indexes.return_value = []
@@ -195,11 +227,25 @@ class TestDataConnectionWithProject(unittest.TestCase):
             mock_selected_indexes.return_value = [db1_index]
             self._data_connection.remove_references()
             self.assertEqual(3, mock_selected_indexes.call_count)
-            self.assertEqual(1, len(self._data_connection.db_references))
+            self.assertEqual(1, len(list(self._data_connection.db_reference_iter())))
             self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(1, 0)))
             # Check that the remaining db is the one that's supposed to be there
-            self.assertEqual(["mysql://host:3307/db"], self._data_connection.db_references)
-            self.assertEqual("mysql://host:3307/db", self._ref_model.item(1).child(0).data(Qt.ItemDataRole.DisplayRole))
+            self.assertEqual(
+                [
+                    {
+                        "dialect": "mysql",
+                        "host": "host",
+                        "port": 3307,
+                        "database": "db",
+                        "username": "randy",
+                        "password": "creamfraiche",
+                    }
+                ],
+                list(self._data_connection.db_reference_iter()),
+            )
+            self.assertEqual(
+                "mysql+pymysql://host:3307/db", self._ref_model.item(1).child(0).data(Qt.ItemDataRole.DisplayRole)
+            )
             # Now remove the remaining file and db
             b_index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
             db2_index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
@@ -208,7 +254,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self.assertEqual(4, mock_selected_indexes.call_count)
             self.assertEqual(0, len(self._data_connection.file_references))
             self.assertEqual(0, self._ref_model.rowCount(self._ref_model.index(0, 0)))
-            self.assertEqual(0, len(self._data_connection.db_references))
+            self.assertEqual(0, len(list(self._data_connection.db_reference_iter())))
             self.assertEqual(0, self._ref_model.rowCount(self._ref_model.index(1, 0)))
             # Add a and b back and the two non-existing files as well
             # Select non-existing file c and remove it
@@ -292,7 +338,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             indexes = self._data_connection._properties_ui.treeView_dc_references.selectedIndexes()
             self._data_connection._properties_ui.treeView_dc_references.del_key_pressed.emit()
             self.assertEqual(0, len(self._data_connection.file_references))
-            self.assertEqual(0, len(self._data_connection.db_references))
+            self.assertEqual(0, len(list(self._data_connection.db_reference_iter())))
 
     def test_renaming_file_marks_its_reference_as_missing(self):
         temp_dir = Path(self._temp_dir.name, "references")
@@ -406,6 +452,210 @@ class TestDataConnectionWithProject(unittest.TestCase):
         a = ["type", "description", "x", "y", "file_references", "db_references", "db_credentials"]
         for k in a:
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
+
+    def test_deserialization_with_remote_db_reference(self):
+        with mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
+        ) as url_selector_exec, mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+        ) as url_selector_url_dict:
+            # Add nothing
+            url_selector_exec.return_value = QDialog.DialogCode.Accepted
+            url_selector_url_dict.return_value = {
+                "dialect": "mysql",
+                "host": "post.com",
+                "port": 3306,
+                "database": "db",
+                "username": "randy",
+                "password": "creamfraiche",
+            }
+            self._data_connection.show_add_db_reference_dialog()
+        item_dict = self._data_connection.item_dict()
+        self.assertEqual(len(item_dict["db_references"]), 1)
+        self.assertNotIn("username", item_dict["db_references"][0])
+        self.assertNotIn("password", item_dict["db_references"][0])
+        deserialized = DataConnection.from_dict("deserialized", item_dict, self._toolbox, self._toolbox.project())
+        self.assertTrue(deserialized.has_db_references())
+        self.assertEqual(
+            list(deserialized.db_reference_iter()),
+            [
+                {
+                    "dialect": "mysql",
+                    "host": "post.com",
+                    "port": 3306,
+                    "database": "db",
+                    "username": "randy",
+                    "password": "creamfraiche",
+                }
+            ],
+        )
+
+    def test_deserialization_with_sqlite_db_reference_in_project_directory(self):
+        db_path = Path(self._temp_dir.name, "db.sqlite")
+        create_new_spine_database("sqlite:///" + str(db_path))
+        with mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
+        ) as url_selector_exec, mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+        ) as url_selector_url_dict:
+            # Add nothing
+            url_selector_exec.return_value = QDialog.DialogCode.Accepted
+            url_selector_url_dict.return_value = {
+                "dialect": "sqlite",
+                "host": None,
+                "port": None,
+                "database": str(db_path),
+                "username": None,
+                "password": None,
+            }
+            self._data_connection.show_add_db_reference_dialog()
+        item_dict = self._data_connection.item_dict()
+        self.assertEqual(len(item_dict["db_references"]), 1)
+        self.assertNotIn("username", item_dict["db_references"][0])
+        self.assertNotIn("password", item_dict["db_references"][0])
+        deserialized = DataConnection.from_dict("deserialized", item_dict, self._toolbox, self._toolbox.project())
+        self.assertTrue(deserialized.has_db_references())
+        self.assertEqual(
+            list(deserialized.db_reference_iter()),
+            [
+                {
+                    "dialect": "sqlite",
+                    "host": None,
+                    "port": None,
+                    "database": str(db_path),
+                    "username": None,
+                    "password": None,
+                }
+            ],
+        )
+
+    def test_sqlite_db_reference_is_marked_missing_when_db_file_is_renamed(self):
+        db_path = Path(self._temp_dir.name, "db.sqlite")
+        create_new_spine_database("sqlite:///" + str(db_path))
+        with mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
+        ) as url_selector_exec, mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+        ) as url_selector_url_dict:
+            # Add nothing
+            url_selector_exec.return_value = QDialog.DialogCode.Accepted
+            url_selector_url_dict.return_value = {
+                "dialect": "sqlite",
+                "host": None,
+                "port": None,
+                "database": str(db_path),
+                "username": None,
+                "password": None,
+            }
+            self._data_connection.show_add_db_reference_dialog()
+        while self._data_connection._database_validator.is_busy():
+            QApplication.processEvents()
+        self.assertEqual(
+            list(self._data_connection.db_reference_iter()),
+            [
+                {
+                    "dialect": "sqlite",
+                    "host": None,
+                    "port": None,
+                    "database": str(db_path),
+                    "username": None,
+                    "password": None,
+                }
+            ],
+        )
+        with signal_waiter(self._data_connection.file_system_watcher.file_renamed) as waiter:
+            db_path.rename(db_path.parent / "renamed.sqlite")
+            waiter.wait()
+        self.assertTrue(self._data_connection._db_ref_root.child(0, 0).data(_Role.MISSING))
+
+    def test_refreshing_missing_sqlite_reference_resurrects_it(self):
+        db_path = Path(self._temp_dir.name, "db.sqlite")
+        create_new_spine_database("sqlite:///" + str(db_path))
+        with mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
+        ) as url_selector_exec, mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+        ) as url_selector_url_dict:
+            # Add nothing
+            url_selector_exec.return_value = QDialog.DialogCode.Accepted
+            url_selector_url_dict.return_value = {
+                "dialect": "sqlite",
+                "host": None,
+                "port": None,
+                "database": str(db_path),
+                "username": None,
+                "password": None,
+            }
+            self._data_connection.show_add_db_reference_dialog()
+        while self._data_connection._database_validator.is_busy():
+            QApplication.processEvents()
+        self.assertEqual(
+            list(self._data_connection.db_reference_iter()),
+            [
+                {
+                    "dialect": "sqlite",
+                    "host": None,
+                    "port": None,
+                    "database": str(db_path),
+                    "username": None,
+                    "password": None,
+                }
+            ],
+        )
+        with signal_waiter(self._data_connection.file_system_watcher.file_renamed) as waiter:
+            renamed_path = db_path.rename(db_path.parent / "renamed.sqlite")
+            waiter.wait()
+        self.assertTrue(self._data_connection._db_ref_root.child(0, 0).data(_Role.MISSING))
+        with signal_waiter(self._data_connection.file_system_watcher.file_renamed) as waiter:
+            renamed_path.rename(db_path)
+            waiter.wait()
+        self.assertTrue(self._data_connection._db_ref_root.child(0, 0).data(_Role.MISSING))
+        self._data_connection.restore_selections()
+        self._data_connection._connect_signals()
+        db_ref_root_index = self._ref_model.index(1, 0)
+        ref_index = self._ref_model.index(0, 0, db_ref_root_index)
+        self._data_connection._properties_ui.treeView_dc_references.selectionModel().select(
+            ref_index, QItemSelectionModel.Select
+        )
+        self._data_connection.refresh_references()
+        while self._data_connection._database_validator.is_busy():
+            QApplication.processEvents()
+        self.assertFalse(self._data_connection._db_ref_root.child(0, 0).data(_Role.MISSING))
+
+    def test_broken_sqlite_url_marks_the_reference_missing(self):
+        db_path = Path(self._temp_dir.name, "db.sqlite")
+        with mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
+        ) as url_selector_exec, mock.patch(
+            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+        ) as url_selector_url_dict:
+            # Add nothing
+            url_selector_exec.return_value = QDialog.DialogCode.Accepted
+            url_selector_url_dict.return_value = {
+                "dialect": "sqlite",
+                "host": None,
+                "port": None,
+                "database": str(db_path),
+                "username": None,
+                "password": None,
+            }
+            self._data_connection.show_add_db_reference_dialog()
+        while self._data_connection._database_validator.is_busy():
+            QApplication.processEvents()
+        self.assertEqual(
+            list(self._data_connection.db_reference_iter()),
+            [
+                {
+                    "dialect": "sqlite",
+                    "host": None,
+                    "port": None,
+                    "database": str(db_path),
+                    "username": None,
+                    "password": None,
+                }
+            ],
+        )
+        self.assertTrue(self._data_connection._db_ref_root.child(0, 0).data(_Role.MISSING))
 
     def test_notify_destination(self):
         self._data_connection.logger.msg = MagicMock()

@@ -114,11 +114,12 @@ class TestToolSpecification(unittest.TestCase):
                 "tooltype": "python",
                 "includes_main_path": temp_dir,
                 "includes": [main_file],
-                "definition_file_path": "path/to/specification_file.json"
+                "definition_file_path": "path/to/specification_file.json",
             }
             engine = SpineEngine(project_dir=temp_dir, specifications={"Tool": [spec_dict]}, connections=list())
             jump.set_engine(engine)
             self.assertTrue(jump.is_condition_true(23))
+
 
 if __name__ == '__main__':
     unittest.main()

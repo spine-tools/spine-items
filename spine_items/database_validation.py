@@ -44,24 +44,16 @@ class _ValidationTask(QRunnable):
         try:
             self._signals.moveToThread(QThread.currentThread())
             if self._dialect == "sqlite":
-                if type(self._sa_url) != str:
-                    database_path = Path(self._sa_url.database)
-                else:
-                    if not self._sa_url.startswith("sqlite:///"):
-                        self._signals.validation_failed.emit(
-                            "Given URL is invalid for selected dialect sqlite.", self._sa_url
-                        )
-                        return
-                    database_path = Path(self._sa_url[10:])
+                database_path = Path(self._sa_url.database)
                 if not database_path.exists():
                     self._signals.validation_failed.emit(
-                        "File does not exist. Check the Database field in the URL.", str(database_path)
+                        "File does not exist. Check the Database field in the URL.", self._sa_url
                     )
                     return
                 elif database_path.is_dir():
                     self._signals.validation_failed.emit(
-                        "Database points to a directory, not a file." " Check the Database field in the URL.",
-                        str(database_path),
+                        "Database points to a directory, not a file. Check the Database field in the URL.",
+                        self._sa_url,
                     )
                     return
             error = check_database_url(self._sa_url)
@@ -79,8 +71,8 @@ class _ValidationTask(QRunnable):
 class _TaskSignals(QObject):
     """Signals for validation task."""
 
-    validation_failed = Signal(str, str)
-    validation_succeeded = Signal(str)
+    validation_failed = Signal(str, object)
+    validation_succeeded = Signal(object)
     finished = Signal()
 
 
@@ -101,6 +93,10 @@ class DatabaseConnectionValidator(QObject):
         self._busy = False
         self._deferred_task = None
         self._closed = False
+
+    def is_busy(self):
+        """Tests if there is a validator task running."""
+        return self._busy
 
     def validate_url(self, dialect, sa_url, fail_slot, success_slot):
         """Connects signals and starts a task to validate the given URL.

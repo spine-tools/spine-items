@@ -53,7 +53,7 @@ class TestDataConnectionExecutable(unittest.TestCase):
         self.assertEqual(2, len(item._file_paths))
 
     def test_stop_execution(self):
-        executable = ExecutableItem("name", [], [], {}, self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", [], [], self._temp_dir.name, mock.MagicMock())
         with mock.patch(
             "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
         ) as mock_stop_execution:
@@ -61,7 +61,7 @@ class TestDataConnectionExecutable(unittest.TestCase):
             mock_stop_execution.assert_called_once()
 
     def test_execute(self):
-        executable = ExecutableItem("name", [], [], {}, self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", [], [], self._temp_dir.name, mock.MagicMock())
         self.assertTrue(executable.execute([], [], Lock()))
 
     def test_output_resources_backward(self):
@@ -69,7 +69,7 @@ class TestDataConnectionExecutable(unittest.TestCase):
         dc_data_dir.mkdir(parents=True)
         temp_file_path = pathlib.Path(dc_data_dir, "file.txt")
         temp_file_path.touch()
-        executable = ExecutableItem("name", ["file_reference"], [], {}, self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", ["file_reference"], [], self._temp_dir.name, mock.MagicMock())
         self.assertEqual(executable.output_resources(ExecutionDirection.BACKWARD), [])
 
     def test_output_resources_forward(self):
@@ -79,7 +79,7 @@ class TestDataConnectionExecutable(unittest.TestCase):
         dc_data_dir.mkdir(parents=True)
         temp_file_path = pathlib.Path(dc_data_dir, "data_file")
         temp_file_path.touch()
-        executable = ExecutableItem("name", [str(file_reference)], [], {}, self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", [str(file_reference)], [], self._temp_dir.name, mock.MagicMock())
         output_resources = executable.output_resources(ExecutionDirection.FORWARD)
         self.assertEqual(len(output_resources), 2)
         resource = output_resources[0]
