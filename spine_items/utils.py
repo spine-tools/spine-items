@@ -20,6 +20,7 @@ from sqlalchemy.engine.url import URL, make_url
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spine_engine.utils.queue_logger import SuppressedMessage
+from spinedb_api.helpers import remove_credentials_from_url
 
 
 def database_label(provider_name):
@@ -34,16 +35,25 @@ def database_label(provider_name):
     return "db_url@" + provider_name
 
 
-def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
-    """Returns a sqlalchemy url from the url or None if not valid."""
+def convert_to_sqlalchemy_url(url, item_name="", logger=None):
+    """Returns a sqlalchemy url from url dict or None if not valid.
+
+    Args:
+        url (dict): URL to convert
+        item_name (str): project item name for logging
+        logger (LoggerInterface, optional): a logger
+
+    Returns:
+        URL: SqlAlchemy URL
+    """
     selections = f"<b>{item_name}</b> selections" if item_name else "selections"
     if logger is None:
         logger = _NoLogger()
-    if not urllib_url:
+    if not url:
         logger.msg_error.emit(f"No URL specified for {selections}. Please specify one and try again")
         return None
     try:
-        url = {key: value for key, value in urllib_url.items() if value}
+        url = {key: value for key, value in url.items() if value}
         dialect = url.pop("dialect")
         if not dialect:
             logger.msg_error.emit(f"Unable to generate URL from {selections}: invalid dialect {dialect}.")
@@ -80,6 +90,18 @@ def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
             logger.msg_error.emit(f"Unable to generate URL from {selections}: missing password.")
             return None
     return sa_url
+
+
+def convert_url_to_safe_string(url):
+    """Converts dict-style database URL to string without credentials.
+
+    Args:
+        url (dict): URL to convert
+
+    Returns:
+        str: URL as string
+    """
+    return remove_credentials_from_url(str(convert_to_sqlalchemy_url(url)))
 
 
 def check_database_url(sa_url):

@@ -49,7 +49,8 @@ class TestDatabaseConnectionValidator(unittest.TestCase):
             listener = _Listener()
             validator = DatabaseConnectionValidator()
             try:
-                validator.validate_url("sqlite", url, listener.failure, listener.success)
+                sa_url = make_url(url)
+                validator.validate_url("sqlite", sa_url, listener.failure, listener.success)
                 while not listener.is_done:
                     QApplication.processEvents()
             finally:
@@ -72,21 +73,6 @@ class TestDatabaseConnectionValidator(unittest.TestCase):
                 validator.deleteLater()
             self.assertFalse(listener.is_success)
             self.assertEqual(listener.fail_message, "File does not exist. Check the Database field in the URL.")
-
-    def test_validation_failure_due_to_incorrect_str_url(self):
-        with TemporaryDirectory() as temp_dir:
-            url = str(Path(temp_dir, "db.sqlite"))
-            listener = _Listener()
-            validator = DatabaseConnectionValidator()
-            try:
-                validator.validate_url("sqlite", url, listener.failure, listener.success)
-                while not listener.is_done:
-                    QApplication.processEvents()
-            finally:
-                validator.wait_for_finish()
-                validator.deleteLater()
-            self.assertFalse(listener.is_success)
-            self.assertEqual(listener.fail_message, "Given URL is invalid for selected dialect sqlite.")
 
 
 class _Listener:

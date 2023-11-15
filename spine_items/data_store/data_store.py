@@ -32,7 +32,7 @@ from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from ..database_validation import DatabaseConnectionValidator
-from ..utils import database_label, convert_to_sqlalchemy_url
+from ..utils import convert_url_to_safe_string, database_label, convert_to_sqlalchemy_url
 
 
 @dataclass(frozen=True)
@@ -356,20 +356,23 @@ class DataStore(ProjectItem):
             self._url["dialect"], sa_url, self._set_invalid_url_notification, self._accept_url
         )
 
-    @Slot(str, str)
+    @Slot(str, object)
     def _set_invalid_url_notification(self, error_message, url):
         """Sets a single notification that warns about broken URL.
 
         Args:
             error_message (str): URL failure message
+            url (URL): SqlAlchemy URL
         """
         self.clear_notifications()
-        self.add_notification(f"Couldn't connect to the database <b>{url}</b>: {error_message}")
+        self.add_notification(
+            f"Couldn't connect to the database <b>{convert_url_to_safe_string(url)}</b>: {error_message}"
+        )
         if self._resource_to_replace is None:
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
 
-    @Slot(str)
+    @Slot(object)
     def _accept_url(self, url):
         """Sets URL as validated and updates advertised resources."""
         self._url_validated = True
