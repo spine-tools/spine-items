@@ -8,11 +8,7 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""
-Contains ConnectionManager class.
-
-"""
+""" Contains ConnectionManager class. """
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
 from PySide6.QtWidgets import QFileDialog
@@ -60,11 +56,10 @@ class ConnectionManager(QObject):
         super().__init__(parent)
         self._thread = None
         self._worker = None
-        self._source = None
         self._current_table = None
         self._table_options = {}
         self._table_types = {}
-        self._defaul_table_column_type = {}
+        self._default_table_column_type = {}
         self._table_row_types = {}
         self._connection = connection
         self._connection_settings = connection_settings
@@ -92,19 +87,11 @@ class ConnectionManager(QObject):
 
     @property
     def table_default_column_type(self):
-        return self._defaul_table_column_type
+        return self._default_table_column_type
 
     @property
     def table_row_types(self):
         return self._table_row_types
-
-    @property
-    def source(self):
-        return self._source
-
-    @source.setter
-    def source(self, source):
-        self._source = source
 
     @property
     def source_type(self):
@@ -143,28 +130,19 @@ class ConnectionManager(QObject):
         if self.is_connected:
             self.default_mapping_requested.emit()
 
-    def connection_ui(self):
-        """
-        Launches a modal ui that prompts the user to select source.
-
-        ex: fileselect if source is a file.
-        """
-        ext = self._connection.FILE_EXTENSIONS
-        source, action = QFileDialog.getOpenFileName(None, "", ext)
-        if not source or not action:
-            return False
-        self._source = source
-        return True
-
-    def init_connection(self):
+    def init_connection(self, source, **source_extras):
         """Creates a Worker and a new thread to read source data.
         If there is an existing thread close that one.
+
+        Args:
+            source (str): source file name or URL
+            **source_extras: source specific additional connection settings
         """
         # close existing thread
         self.close_connection()
         # create new thread and worker
         self._thread = QThread()
-        self._worker = ConnectionWorker(self._source, self._connection, self._connection_settings)
+        self._worker = ConnectionWorker(self._connection, self._connection_settings)
         self._worker.moveToThread(self._thread)
         # connect worker signals
         self._worker.connectionReady.connect(self._handle_connection_ready)
@@ -181,7 +159,7 @@ class ConnectionManager(QObject):
         self.connection_closed.connect(self._worker.disconnect, type=Qt.ConnectionType.BlockingQueuedConnection)
 
         # when thread is started, connect worker to source
-        self._thread.started.connect(self._worker.init_connection)
+        self._thread.started.connect(lambda: self._worker.init_connection(source, dict(source_extras)))
         self._thread.start()
 
     @Slot()
@@ -260,7 +238,7 @@ class ConnectionManager(QObject):
         Args:
             column_type (dict): mapping from table name to column type name
         """
-        self._defaul_table_column_type.update(column_type)
+        self._default_table_column_type.update(column_type)
 
     def clear_table_default_column_type(self, table_name):
         """Clears default column type.
@@ -268,7 +246,7 @@ class ConnectionManager(QObject):
         Args:
             table_name (str): table name
         """
-        self._defaul_table_column_type.pop(table_name, None)
+        self._default_table_column_type.pop(table_name, None)
 
     def set_table_row_types(self, types):
         """Sets connection manager types for current connector
@@ -293,12 +271,7 @@ class ConnectionManager(QObject):
 
 
 class ConnectionWorker(QObject):
-    """A class for delegating SourceConnection operations to another QThread.
-
-    Args:
-        source (str): path of the source file
-        connection (class): A class derived from `SourceConnection` for connecting to the source file
-    """
+    """A class for delegating SourceConnection operations to another QThread."""
 
     connectionFailed = Signal(str)
     """Signal with error message if connection fails"""
@@ -313,19 +286,26 @@ class ConnectionWorker(QObject):
     defaultMappingReady = Signal(dict)
     """Signal when default mapping is ready"""
 
-    def __init__(self, source, connection, connection_settings, parent=None):
+    def __init__(self, connection, connection_settings, parent=None):
+        """
+        Args:
+            connection (class): A class derived from `SourceConnection` for connecting to the source file
+            connection_settings (dict): settings passed to the connection constructor
+            parent (QObject): parent object
+        """
         super().__init__(parent)
-        self._source = source
         self._connection = connection(connection_settings)
 
-    @Slot()
-    def init_connection(self):
+    def init_connection(self, source, source_extras):
+        """Connect to data source.
+
+        Args:
+            source (str): source file path or URL
+            source_extras (dict): source specific additional connection settings
         """
-        Connect to data source
-        """
-        if self._source:
+        if source:
             try:
-                self._connection.connect_to_source(self._source)
+                self._connection.connect_to_source(source, **source_extras)
                 self.connectionReady.emit()
             except Exception as error:
                 self.connectionFailed.emit(f"Could not connect to source: {error}")

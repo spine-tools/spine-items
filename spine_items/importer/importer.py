@@ -220,10 +220,12 @@ class Importer(DBWriterItemBase):
             index (QModelIndex): resource list index
         """
         source = None
+        source_extras = None
         if index.isValid():
             resource = self._file_model.resource(index)
             if resource.type_ == "url":
                 source = resource.url
+                source_extras = resource.metadata
             else:
                 if not resource.hasfilepath:
                     self._logger.msg_error.emit("File does not exist yet.")
@@ -232,7 +234,9 @@ class Importer(DBWriterItemBase):
                         self._logger.msg_error.emit(f"Cannot find file '{source}'.")
                     else:
                         source = resource.path
-        self._toolbox.show_specification_form(self.item_type(), self.specification(), self, source=source)
+        self._toolbox.show_specification_form(
+            self.item_type(), self.specification(), self, source=source, source_extras=source_extras
+        )
 
     def select_connector_type(self, index):
         """Opens dialog to select connector type for the given index."""

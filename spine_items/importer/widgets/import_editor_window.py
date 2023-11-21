@@ -64,7 +64,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         FILE_EXTENSIONS = ""
         OPTIONS = {}
 
-        def connect_to_source(self, _source):
+        def connect_to_source(self, source, **extras):
             pass
 
         def disconnect(self):
@@ -76,16 +76,18 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         def get_data_iterator(self, table, options, max_rows=-1):
             return iter([]), ()
 
-    def __init__(self, toolbox, specification, item=None, source=None):
+    def __init__(self, toolbox, specification, item=None, source=None, source_extras=None):
         """
         Args:
             toolbox (QMainWindow): ToolboxUI class
-            specification (ImporterSpecification, optional)
-            item (Importer, optional)
+            specification (ImporterSpecification, optional): Importer specification
+            item (Importer, optional): Linked Importer item
             source (str, optional): Importee file path or URL
+            source_extras (dict, optional): Additional source settings such as database schema
         """
         super().__init__(toolbox, specification, item)
         self._source = source if source else self._FILE_LESS
+        self._source_extras = source_extras if source_extras is not None else {}
         self._mappings_model = MappingsModel(self._undo_stack, self)
         self._mappings_model.rowsInserted.connect(self._reselect_source_table)
         self._ui.source_list.setModel(self._mappings_model)
@@ -166,7 +168,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.comboBox_source_file.setCurrentText(source)
 
     def _get_source_url(self):
-        selector = UrlSelectorDialog(self._toolbox.qsettings(), self._toolbox, parent=self)
+        selector = UrlSelectorDialog(self._toolbox.qsettings(), False, self._toolbox, parent=self)
         selector.exec()
         return selector.url
 
@@ -240,7 +242,6 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if self._connection_manager:
             self._connection_manager.close_connection()
         self._connection_manager = ConnectionManager(connector, connector_settings, self)
-        self._connection_manager.source = source
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
         self._connection_manager.error.connect(self.show_error)
         for header in (self._ui.source_data_table.horizontalHeader(), self._ui.source_data_table.verticalHeader()):
@@ -248,7 +249,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
         mapping = self.specification.mapping if self.specification else {}
         self._import_sources.set_connector(self._connection_manager, mapping)
-        self._connection_manager.init_connection()
+        self._connection_manager.init_connection(source, **self._source_extras)
 
     @Slot()
     def _handle_connection_ready(self):
