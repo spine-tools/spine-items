@@ -8,21 +8,22 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""
-Importer's execute kernel (do_work), as target for a multiprocess.Process
-
-"""
+""" Importer's execute kernel (do_work), as target for a multiprocess.Process """
 
 import os
-from spinedb_api import InvalidMapping
+
+from spine_engine.project_item.project_item_resource import get_source, get_source_extras
+from spinedb_api import clear_filter_configs, InvalidMapping
+from spinedb_api.helpers import remove_credentials_from_url
 from spinedb_api.spine_db_client import SpineDBClient
 from spinedb_api.parameter_value import to_database
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
 
 
-def do_work(process, mapping, cancel_on_error, on_conflict, logs_dir, sources, connector, to_server_urls, lock, logger):
+def do_work(
+    process, mapping, cancel_on_error, on_conflict, logs_dir, source_resources, connector, to_server_urls, lock, logger
+):
     all_data = []
     all_errors = []
     table_mappings = {
@@ -47,13 +48,19 @@ def do_work(process, mapping, cancel_on_error, on_conflict, logs_dir, sources, c
         for tn, cols in mapping.get("table_row_types", {}).items()
     }
     to_clients = [SpineDBClient.from_server_url(server_url) for server_url in to_server_urls]
-    for src in sources:
-        file_anchor = f"<a style='color:#BB99FF;' title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
-        logger.msg.emit("Importing " + file_anchor)
+    for resource in source_resources:
+        src = get_source(resource)
+        if resource.hasfilepath:
+            source_anchor = f"<a style='color:#BB99FF;' title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
+        else:
+            safe_url = remove_credentials_from_url(src)
+            source_anchor = f"<p style='color:#BB99FF;'>{safe_url}</p>"
+        logger.msg.emit("Importing " + source_anchor)
+        extras = get_source_extras(resource)
         try:
-            connector.connect_to_source(src)
+            connector.connect_to_source(src, **extras)
         except Exception as error:  # pylint: disable=broad-except
-            logger.msg_error.emit(f"Failed to connect to {file_anchor}: {error}")
+            logger.msg_error.emit(f"Failed to connect to {source_anchor}: {error}")
             return (False,)
         for name, mappings in table_mappings.items():
             logger.msg.emit(f"Processing table <b>{name}</b>")
@@ -84,6 +91,7 @@ def do_work(process, mapping, cancel_on_error, on_conflict, logs_dir, sources, c
                     )
                 all_data.append(data)
                 all_errors.extend(errors)
+        connector.disconnect()
         if all_data:
             for client in to_clients:
                 lock.acquire()
@@ -139,8 +147,9 @@ def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client
             logger.msg_warning.emit("Ignoring errors. Set Cancel import on error to bail out instead.")
     if all_import_count > 0:
         client.call_method("commit_session", "Import data by Spine Toolbox Importer")
+        clean_url = clear_filter_configs(remove_credentials_from_url(client.get_db_url()))
         logger.msg_success.emit(
-            f"Inserted {all_import_count} data with {len(all_import_errors)} errors into {client.get_db_url()}"
+            f"Inserted {all_import_count} data with {len(all_import_errors)} errors into {clean_url}"
         )
     else:
         logger.msg_warning.emit("No new data imported")

@@ -61,4 +61,5 @@ class ImporterFactory(ProjectItemFactory):
     def make_specification_editor(toolbox, specification=None, item=None, **kwargs):
         """See base class."""
         source = kwargs.get("source")
-        return ImportEditorWindow(toolbox, specification, item, source)
+        source_extras = kwargs.get("source_extras")
+        return ImportEditorWindow(toolbox, specification, item, source, source_extras)

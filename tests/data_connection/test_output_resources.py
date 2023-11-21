@@ -18,29 +18,32 @@ from spine_items.data_connection.output_resources import scan_for_resources
 
 
 class TestScanForResources(unittest.TestCase):
-    def test_url_reference_gets_added_as_url_resource(self):
-        data_connection = MagicMock()
-        data_connection.name = "test dc"
-        project_dir_path = PurePath(__file__).parent
-        data_connection.data_dir = str(project_dir_path / ".spinetoolbox" / "test_dc")
-        file_paths = []
-        urls = ["gopher://long.gone.url"]
-        url_credentials = {}
-        resources = scan_for_resources(data_connection, file_paths, urls, url_credentials, str(project_dir_path))
-        self.assertEqual(resources, [url_resource("test dc", "gopher://long.gone.url", "gopher://long.gone.url")])
-
     def test_credentials_do_not_show_in_url_resource_label(self):
         data_connection = MagicMock()
         data_connection.name = "test dc"
         project_dir_path = PurePath(__file__).parent
         data_connection.data_dir = str(project_dir_path / ".spinetoolbox" / "test_dc")
         file_paths = []
-        urls = ["ssh://long.gone.url"]
-        url_credentials = {"ssh://long.gone.url": ("superman", "t0p s3cr3t")}
-        resources = scan_for_resources(data_connection, file_paths, urls, url_credentials, str(project_dir_path))
+        urls = [
+            {
+                "dialect": "postgresql",
+                "host": "long.gone.url",
+                "port": 5432,
+                "database": "warehouse",
+                "username": "superman",
+                "password": "t0p s3cr3t",
+            }
+        ]
+        resources = scan_for_resources(data_connection, file_paths, urls, str(project_dir_path))
         self.assertEqual(
             resources,
-            [url_resource("test dc", "ssh://superman:t0p s3cr3t@long.gone.url", "<test dc>ssh://long.gone.url")],
+            [
+                url_resource(
+                    "test dc",
+                    "postgresql+psycopg2://superman:t0p s3cr3t@long.gone.url:5432/warehouse",
+                    "<test dc>postgresql+psycopg2://long.gone.url:5432/warehous",
+                )
+            ],
         )
 
 
