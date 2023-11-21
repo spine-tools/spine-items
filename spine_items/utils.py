@@ -14,6 +14,7 @@ Contains utilities shared between project items.
 
 """
 import os.path
+from contextlib import suppress
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL, make_url
@@ -55,6 +56,8 @@ def convert_to_sqlalchemy_url(url, item_name="", logger=None):
     try:
         url = {key: value for key, value in url.items() if value}
         dialect = url.pop("dialect")
+        with suppress(KeyError):
+            del url["schema"]
         if not dialect:
             logger.msg_error.emit(f"Unable to generate URL from {selections}: invalid dialect {dialect}.")
             return None

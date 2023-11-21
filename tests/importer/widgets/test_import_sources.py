@@ -52,7 +52,6 @@ class TestImportSources(unittest.TestCase):
         data = []
         connection_settings = {"data": data}
         connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
-        connector.source = "no file test source"
         mapping = {"table_options": {"test data table": {"has_header": False}}}
         import_sources.set_connector(connector, mapping)
         self._mappings_model.append_new_table_with_mapping("test data table", None)
@@ -60,7 +59,7 @@ class TestImportSources(unittest.TestCase):
         import_sources._change_selected_table(table_index, QModelIndex())
         source_table_model = import_sources._source_data_model
         with signal_waiter(connector.connection_ready) as waiter:
-            connector.init_connection()
+            connector.init_connection("no file test source")
             waiter.wait()
         with signal_waiter(connector.data_ready) as waiter:
             source_table_model.fetchMore(QModelIndex())
@@ -92,7 +91,6 @@ class TestImportSources(unittest.TestCase):
         data = [["data 1", "data 2"]]
         connection_settings = {"data": data}
         connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
-        connector.source = "no file test source"
         mapping = {"table_options": {"test data table": {"has_header": False}}}
         import_sources.set_connector(connector, mapping)
         self._mappings_model.append_new_table_with_mapping("test data table", None)
@@ -100,7 +98,7 @@ class TestImportSources(unittest.TestCase):
         import_sources._change_selected_table(table_index, QModelIndex())
         source_table_model = import_sources._source_data_model
         with signal_waiter(connector.connection_ready) as waiter:
-            connector.init_connection()
+            connector.init_connection("no file test source")
             waiter.wait()
         with signal_waiter(connector.data_ready) as waiter:
             source_table_model.fetchMore(QModelIndex())
@@ -132,7 +130,6 @@ class TestImportSources(unittest.TestCase):
         data = [["header 1", "header 2"]]
         connection_settings = {"data": data}
         connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
-        connector.source = "no file test source"
         mapping = {"table_options": {"test data table": {"has_header": True}}}
         import_sources.set_connector(connector, mapping)
         self._mappings_model.append_new_table_with_mapping("test data table", None)
@@ -140,7 +137,7 @@ class TestImportSources(unittest.TestCase):
         import_sources._change_selected_table(table_index, QModelIndex())
         source_table_model = import_sources._source_data_model
         with signal_waiter(connector.connection_ready) as waiter:
-            connector.init_connection()
+            connector.init_connection("no file test source")
             waiter.wait()
         with signal_waiter(connector.data_ready) as waiter:
             source_table_model.fetchMore(QModelIndex())
@@ -172,7 +169,6 @@ class TestImportSources(unittest.TestCase):
         data = [["header 1", "header 2"], ["data 1", "data 2"]]
         connection_settings = {"data": data}
         connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
-        connector.source = "no file test source"
         mapping = {"table_options": {"test data table": {"has_header": True}}}
         import_sources.set_connector(connector, mapping)
         self._mappings_model.append_new_table_with_mapping("test data table", None)
@@ -180,7 +176,7 @@ class TestImportSources(unittest.TestCase):
         import_sources._change_selected_table(table_index, QModelIndex())
         source_table_model = import_sources._source_data_model
         with signal_waiter(connector.connection_ready) as waiter:
-            connector.init_connection()
+            connector.init_connection("no file test source")
             waiter.wait()
         with signal_waiter(connector.data_ready) as waiter:
             source_table_model.fetchMore(QModelIndex())
@@ -213,7 +209,7 @@ class _FixedTableReader(SourceConnection):
         super().__init__(None)
         self._data = settings["data"]
 
-    def connect_to_source(self, source):
+    def connect_to_source(self, source, **extras):
         pass
 
     def disconnect(self):

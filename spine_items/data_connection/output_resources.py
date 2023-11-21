@@ -56,6 +56,9 @@ def scan_for_resources(provider, file_paths, urls, project_dir):
         resources.append(resource)
     for url in urls:
         str_url = str(convert_to_sqlalchemy_url(url))
-        resource = url_resource(provider.name, str_url, f"<{provider.name}>" + remove_credentials_from_url(str_url))
+        schema = url.get("schema")
+        resource = url_resource(
+            provider.name, str_url, f"<{provider.name}>" + remove_credentials_from_url(str_url), schema=schema
+        )
         resources.append(resource)
     return resources

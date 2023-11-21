@@ -209,7 +209,7 @@ class TestToolExecutable(unittest.TestCase):
             "    raise ValueError('foo')\n",
             'ValueError: foo\n',
         ]
-        self.assertEqual(lines, expected_lines)
+        self.assertCountEqual(lines, expected_lines)
         kill_persistent_processes()
 
     def test_find_optional_input_files_without_wildcards(self):

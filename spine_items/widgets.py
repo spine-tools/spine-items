@@ -381,17 +381,21 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_username.textChanged.connect(lambda: self.url_changed.emit())
         self._ui.lineEdit_password.textChanged.connect(lambda: self.url_changed.emit())
 
-    def setup(self, dialects, select_sqlite_file_callback, logger):
+    def setup(self, dialects, select_sqlite_file_callback, hide_schema, logger):
         """Sets the widget up for usage.
 
         Args:
             dialects (Sequence of str): available SQL dialects
             select_sqlite_file_callback (Callable): function that returns a path to SQLite file or None
+            hide_schema (bool): True to hide the Schema field
             logger (LoggerInterface): logger
         """
         self._get_sqlite_file_path = select_sqlite_file_callback
         self._logger = logger
         self._ui.comboBox_dialect.addItems(dialects)
+        if hide_schema:
+            self._ui.schema_line_edit.setVisible(False)
+            self._ui.schema_label.setVisible(False)
 
     def set_url(self, url):
         """Sets the URL for the widget.
@@ -403,6 +407,7 @@ class UrlSelectorWidget(QWidget):
         host = url.get("host", "")
         port = url.get("port", "")
         database = url.get("database", "")
+        schema = url.get("schema", "")
         username = url.get("username", "")
         password = url.get("password", "")
         self.blockSignals(True)
@@ -413,6 +418,7 @@ class UrlSelectorWidget(QWidget):
         _set_line_edit_text(self._ui.lineEdit_host, host)
         _set_line_edit_text(self._ui.lineEdit_port, port)
         _set_line_edit_text(self._ui.lineEdit_database, database)
+        _set_line_edit_text(self._ui.schema_line_edit, schema)
         _set_line_edit_text(self._ui.lineEdit_username, username)
         _set_line_edit_text(self._ui.lineEdit_password, password)
         self.blockSignals(False)
@@ -428,6 +434,7 @@ class UrlSelectorWidget(QWidget):
             "host": self._ui.lineEdit_host.text(),
             "port": self._ui.lineEdit_port.text(),
             "database": self._ui.lineEdit_database.text(),
+            "schema": self._ui.schema_line_edit.text(),
             "username": self._ui.lineEdit_username.text(),
             "password": self._ui.lineEdit_password.text(),
         }
@@ -480,6 +487,7 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_database.setEnabled(False)
         self._ui.lineEdit_username.setEnabled(False)
         self._ui.lineEdit_password.setEnabled(False)
+        self._ui.schema_line_edit.setEnabled(False)
 
     def enable_mssql(self):
         """Adjusts controls to mssql connection specification."""
@@ -490,6 +498,7 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_database.setEnabled(False)
         self._ui.lineEdit_username.setEnabled(True)
         self._ui.lineEdit_password.setEnabled(True)
+        self._ui.schema_line_edit.setEnabled(True)
         self._ui.lineEdit_host.clear()
         self._ui.lineEdit_port.clear()
         self._ui.lineEdit_database.clear()
@@ -504,6 +513,7 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_database.setEnabled(True)
         self._ui.lineEdit_username.setEnabled(False)
         self._ui.lineEdit_password.setEnabled(False)
+        self._ui.schema_line_edit.setEnabled(False)
         self._ui.lineEdit_host.clear()
         self._ui.lineEdit_port.clear()
         self._ui.lineEdit_username.clear()
@@ -519,15 +529,17 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_database.setEnabled(True)
         self._ui.lineEdit_username.setEnabled(True)
         self._ui.lineEdit_password.setEnabled(True)
+        self._ui.schema_line_edit.setEnabled(True)
 
 
 class UrlSelectorDialog(QDialog):
     msg_error = Signal(str)
 
-    def __init__(self, app_settings, logger, parent=None):
+    def __init__(self, app_settings, hide_schema, logger, parent=None):
         """
         Args:
             app_settings (QSettings): Toolbox settings
+            hide_schema (bool): if True, hide the Schema field
             logger (LoggerInterface): logger
             parent (QWidget, optional): parent widget
         """
@@ -539,7 +551,7 @@ class UrlSelectorDialog(QDialog):
         self._logger = logger
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
-        self.ui.url_selector_widget.setup(KNOWN_SQL_DIALECTS, self._browse_sqlite_file, self._logger)
+        self.ui.url_selector_widget.setup(KNOWN_SQL_DIALECTS, self._browse_sqlite_file, hide_schema, self._logger)
         self.ui.url_selector_widget.url_changed.connect(self._refresh_url)
         # Add status bar to form
         self.statusbar = QStatusBar(self)

@@ -121,7 +121,7 @@ class ExportListItem(QWidget):
     @Slot(bool)
     def _show_url_dialog(self, _=False):
         """Opens the URL selector dialog."""
-        dialog = UrlSelectorDialog(self._app_settings, self._logger, self)
+        dialog = UrlSelectorDialog(self._app_settings, True, self._logger, self)
         if self._out_url is not None:
             dialog.set_url_dict(self._out_url)
         dialog.exec_()
