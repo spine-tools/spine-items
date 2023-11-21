@@ -24,7 +24,7 @@ from spinedb_api.spine_io.importers.json_reader import JSONConnector
 from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
 from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import get_labelled_sources
+from spine_engine.project_item.project_item_resource import get_source
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
@@ -72,10 +72,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
         if not self._mapping:
             self._logger.msg_warning.emit(f"<b>{self.name}</b>: No mappings configured. Skipping.")
             return ItemExecutionFinishState.SKIPPED
-        labelled_sources = get_labelled_sources(forward_resources)
         sources = list()
-        for label in self._selected_files:
-            sources += labelled_sources.get(label, [])
+        for resource in forward_resources:
+            sources.append(get_source(resource))
         to_resources = [r for r in backward_resources if r.type_ == "database"]
         if not sources or not to_resources:
             return ItemExecutionFinishState.SUCCESS
