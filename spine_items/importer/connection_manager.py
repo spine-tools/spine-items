@@ -142,7 +142,7 @@ class ConnectionManager(QObject):
         self.close_connection()
         # create new thread and worker
         self._thread = QThread()
-        self._worker = ConnectionWorker(self._connection, self._connection_settings)
+        self._worker = ConnectionWorker(self._connection, self._connection_settings, source, source_extras)
         self._worker.moveToThread(self._thread)
         # connect worker signals
         self._worker.connectionReady.connect(self._handle_connection_ready)
@@ -158,14 +158,7 @@ class ConnectionManager(QObject):
         self.default_mapping_requested.connect(self._worker.default_mapping)
         self.connection_closed.connect(self._worker.close_connection, type=Qt.ConnectionType.BlockingQueuedConnection)
         # when thread is started, connect worker to source
-
-        @Slot()
-        def init_worker_connection():
-            if self._worker is None:
-                return
-            self._worker.init_connection(source, dict(source_extras))
-
-        self._thread.started.connect(init_worker_connection)
+        self._thread.started.connect(self._worker.init_connection)
         self._thread.start()
 
     @Slot()
@@ -292,26 +285,26 @@ class ConnectionWorker(QObject):
     defaultMappingReady = Signal(dict)
     """Signal when default mapping is ready"""
 
-    def __init__(self, connection, connection_settings, parent=None):
+    def __init__(self, connection, connection_settings, source, source_extras, parent=None):
         """
         Args:
             connection (class): A class derived from `SourceConnection` for connecting to the source file
             connection_settings (dict): settings passed to the connection constructor
-            parent (QObject): parent object
+            source (str): source file path or URL
+            source_extras (dict): source specific additional connection settings
+            parent (QObject, optional): parent object
         """
         super().__init__(parent)
         self._connection = connection(connection_settings)
+        self._source = source
+        self._source_extras = source_extras
 
-    def init_connection(self, source, source_extras):
-        """Connect to data source.
-
-        Args:
-            source (str): source file path or URL
-            source_extras (dict): source specific additional connection settings
-        """
-        if source:
+    @Slot()
+    def init_connection(self):
+        """Connects to data source."""
+        if self._source:
             try:
-                self._connection.connect_to_source(source, **source_extras)
+                self._connection.connect_to_source(self._source, **self._source_extras)
                 self.connectionReady.emit()
             except Exception as error:
                 self.connectionFailed.emit(f"Could not connect to source: {error}")
