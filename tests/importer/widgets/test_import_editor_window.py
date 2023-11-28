@@ -45,11 +45,14 @@ class TestImportEditorWindow(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_get_connector_selects_sql_alchemy_connector_when_source_is_url(self):
-        editor = ImportEditorWindow(self._toolbox, None)
         with mock.patch("spine_items.importer.widgets.import_editor_window.QDialog.exec") as exec_dialog:
             exec_dialog.return_value = QDialog.DialogCode.Accepted
+            editor = ImportEditorWindow(self._toolbox, None)
+            exec_dialog.assert_called_once()
+            exec_dialog.reset_mock()
             connector = editor._get_connector("mysql://server.com/db")
             exec_dialog.assert_called_once()
+            editor.close()
         self.assertIs(connector, SqlAlchemyConnector)
 
 

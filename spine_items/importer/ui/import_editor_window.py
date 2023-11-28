@@ -28,13 +28,13 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
     QFrame, QGridLayout, QHBoxLayout, QHeaderView,
-    QLabel, QListView, QMainWindow, QPushButton,
-    QSizePolicy, QSpacerItem, QSpinBox, QSplitter,
-    QTableView, QToolButton, QVBoxLayout, QWidget)
+    QLabel, QLineEdit, QListView, QMainWindow,
+    QPushButton, QSizePolicy, QSpacerItem, QSpinBox,
+    QSplitter, QTableView, QToolButton, QVBoxLayout,
+    QWidget)
 
 from spine_items.importer.widgets.multi_checkable_list_view import MultiCheckableListView
 from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
-from spinetoolbox.widgets.custom_combobox import ElidedCombobox
 from spine_items import resources_icons_rc
 
 class Ui_MainWindow(object):
@@ -58,31 +58,40 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.file_path_label = QLabel(self.centralwidget)
-        self.file_path_label.setObjectName(u"file_path_label")
+        self.source_label = QLabel(self.centralwidget)
+        self.source_label.setObjectName(u"source_label")
 
-        self.horizontalLayout_2.addWidget(self.file_path_label)
+        self.horizontalLayout_2.addWidget(self.source_label)
 
-        self.comboBox_source_file = ElidedCombobox(self.centralwidget)
-        self.comboBox_source_file.setObjectName(u"comboBox_source_file")
-        self.comboBox_source_file.setEnabled(False)
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.comboBox_source_file.sizePolicy().hasHeightForWidth())
-        self.comboBox_source_file.setSizePolicy(sizePolicy)
-        self.comboBox_source_file.setSizeAdjustPolicy(QComboBox.AdjustToContentsOnFirstShow)
-        self.comboBox_source_file.setMinimumContentsLength(0)
+        self.source_line_edit = QLineEdit(self.centralwidget)
+        self.source_line_edit.setObjectName(u"source_line_edit")
+        self.source_line_edit.setClearButtonEnabled(True)
 
-        self.horizontalLayout_2.addWidget(self.comboBox_source_file)
+        self.horizontalLayout_2.addWidget(self.source_line_edit)
 
-        self.toolButton_browse_source_file = QToolButton(self.centralwidget)
-        self.toolButton_browse_source_file.setObjectName(u"toolButton_browse_source_file")
+        self.browse_source_button = QToolButton(self.centralwidget)
+        self.browse_source_button.setObjectName(u"browse_source_button")
         icon = QIcon()
         icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_browse_source_file.setIcon(icon)
+        self.browse_source_button.setIcon(icon)
 
-        self.horizontalLayout_2.addWidget(self.toolButton_browse_source_file)
+        self.horizontalLayout_2.addWidget(self.browse_source_button)
+
+        self.connector_label = QLabel(self.centralwidget)
+        self.connector_label.setObjectName(u"connector_label")
+
+        self.horizontalLayout_2.addWidget(self.connector_label)
+
+        self.connector_line_edit = QLineEdit(self.centralwidget)
+        self.connector_line_edit.setObjectName(u"connector_line_edit")
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.connector_line_edit.sizePolicy().hasHeightForWidth())
+        self.connector_line_edit.setSizePolicy(sizePolicy)
+        self.connector_line_edit.setReadOnly(True)
+
+        self.horizontalLayout_2.addWidget(self.connector_line_edit)
 
 
         self.verticalLayout_6.addLayout(self.horizontalLayout_2)
@@ -359,8 +368,13 @@ class Ui_MainWindow(object):
         self.export_mappings_action.setText(QCoreApplication.translate("MainWindow", u"Export mappings...", None))
         self.import_mappings_action.setText(QCoreApplication.translate("MainWindow", u"Import mappings...", None))
         self.actionSwitch_connector.setText(QCoreApplication.translate("MainWindow", u"Switch connector...", None))
-        self.file_path_label.setText(QCoreApplication.translate("MainWindow", u"File path:", None))
-        self.toolButton_browse_source_file.setText(QCoreApplication.translate("MainWindow", u"...", None))
+        self.source_label.setText(QCoreApplication.translate("MainWindow", u"File path:", None))
+        self.source_line_edit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Select source from the browse button...", None))
+#if QT_CONFIG(tooltip)
+        self.browse_source_button.setToolTip(QCoreApplication.translate("MainWindow", u"Browse source files or specify database URL.", None))
+#endif // QT_CONFIG(tooltip)
+        self.browse_source_button.setText(QCoreApplication.translate("MainWindow", u"...", None))
+        self.connector_label.setText(QCoreApplication.translate("MainWindow", u"Connector:", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Surplus column data type:", None))
 #if QT_CONFIG(tooltip)
         self.default_column_type_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Select data type for additional columns in variable-length pivoted source data.", None))

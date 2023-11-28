@@ -33,39 +33,53 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLabel" name="file_path_label">
+       <widget class="QLabel" name="source_label">
         <property name="text">
          <string>File path:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="ElidedCombobox" name="comboBox_source_file">
-        <property name="enabled">
-         <bool>false</bool>
+       <widget class="QLineEdit" name="source_line_edit">
+        <property name="placeholderText">
+         <string>Select source from the browse button...</string>
         </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="sizeAdjustPolicy">
-         <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
-        </property>
-        <property name="minimumContentsLength">
-         <number>0</number>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton_browse_source_file">
+       <widget class="QToolButton" name="browse_source_button">
+        <property name="toolTip">
+         <string>Browse source files or specify database URL.</string>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
         <property name="icon">
          <iconset resource="../../ui/resources/resources_icons.qrc">
           <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="connector_label">
+        <property name="text">
+         <string>Connector:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="connector_line_edit">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -557,11 +571,6 @@
   </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>ElidedCombobox</class>
-   <extends>QComboBox</extends>
-   <header>spinetoolbox/widgets/custom_combobox.h</header>
-  </customwidget>
   <customwidget>
    <class>TableViewWithButtonHeader</class>
    <extends>QTableView</extends>
