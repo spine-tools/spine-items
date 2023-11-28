@@ -8,17 +8,14 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""
-Contains unit tests for the ImportEditorWindow class.
-
-"""
+""" Contains unit tests for the ImportEditorWindow class. """
 
 import unittest
 from unittest import mock
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication, QWidget
 from spine_items.importer.widgets.import_editor_window import ImportEditorWindow
+from spinedb_api.spine_io.importers.csv_reader import CSVConnector
 
 
 class TestImportEditorWindow(unittest.TestCase):
@@ -31,6 +28,7 @@ class TestImportEditorWindow(unittest.TestCase):
         spec = mock.NonCallableMagicMock()
         spec.name = "spec_name"
         spec.description = "spec_desc"
+        spec.mapping = {"source_type": CSVConnector.__name__}
         toolbox = QWidget()
         toolbox.qsettings = mock.MagicMock(return_value=QSettings(toolbox))
         toolbox.restore_and_activate = mock.MagicMock()

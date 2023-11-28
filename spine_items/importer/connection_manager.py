@@ -156,10 +156,16 @@ class ConnectionManager(QObject):
         self.tables_requested.connect(self._worker.tables)
         self.data_requested.connect(self._worker.data)
         self.default_mapping_requested.connect(self._worker.default_mapping)
-        self.connection_closed.connect(self._worker.disconnect, type=Qt.ConnectionType.BlockingQueuedConnection)
-
+        self.connection_closed.connect(self._worker.close_connection, type=Qt.ConnectionType.BlockingQueuedConnection)
         # when thread is started, connect worker to source
-        self._thread.started.connect(lambda: self._worker.init_connection(source, dict(source_extras)))
+
+        @Slot()
+        def init_worker_connection():
+            if self._worker is None:
+                return
+            self._worker.init_connection(source, dict(source_extras))
+
+        self._thread.started.connect(init_worker_connection)
         self._thread.start()
 
     @Slot()
@@ -261,7 +267,7 @@ class ConnectionManager(QObject):
         self._is_connected = False
         self.connection_closed.emit()
         if self._worker:
-            self.connection_closed.disconnect(self._worker.disconnect)
+            self.connection_closed.disconnect(self._worker.close_connection)
             self._worker.deleteLater()
             self._worker = None
         if self._thread:
@@ -336,7 +342,7 @@ class ConnectionWorker(QObject):
             self.error.emit(f"Could not get data from source: {error}")
 
     @Slot()
-    def disconnect(self):
+    def close_connection(self):
         try:
             self._connection.disconnect()
         except Exception as error:

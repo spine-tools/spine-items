@@ -125,6 +125,7 @@ class ImportSources(QObject):
             connector (ConnectionManager): connector
             mapping (dict)
         """
+        self._ui.source_list.selectionModel().clearCurrentIndex()
         self._connector = connector
         self._connector.connection_ready.connect(self.request_new_tables_from_connector)
         self._connector.data_ready.connect(self._update_source_data)
@@ -197,7 +198,7 @@ class ImportSources(QObject):
         Sets selected table and requests data from connector
 
         Args:
-            selected (QModelIndex): current index
+            current (QModelIndex): current index
             _previous (QModelIndex): previous index
         """
         if self._connector is None:
