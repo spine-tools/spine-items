@@ -63,7 +63,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         FILE_EXTENSIONS = ""
         OPTIONS = {}
 
-        def connect_to_source(self, _source):
+        def connect_to_source(self, source, **extras):
             pass
 
         def disconnect(self):
@@ -75,16 +75,18 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         def get_data_iterator(self, table, options, max_rows=-1):
             return iter([]), ()
 
-    def __init__(self, toolbox, specification, item=None, source=None):
+    def __init__(self, toolbox, specification, item=None, source=None, source_extras=None):
         """
         Args:
             toolbox (QMainWindow): ToolboxUI class
-            specification (ImporterSpecification)
+            specification (ImporterSpecification, optional): Importer specification
+            item (Importer, optional): Linked Importer item
             source (str, optional): Importee file path or URL
+            source_extras (dict, optional): Additional source settings such as database schema
         """
         super().__init__(toolbox, specification, item)
-        self.takeCentralWidget().deleteLater()
-        self._filepath = source if source else self._FILE_LESS
+        self._source = source if source else self._FILE_LESS
+        self._source_extras = source_extras if source_extras is not None else {}
         self._mappings_model = MappingsModel(self._undo_stack, self)
         self._mappings_model.rowsInserted.connect(self._reselect_source_table)
         self._ui.source_list.setModel(self._mappings_model)
@@ -113,7 +115,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     def showEvent(self, ev):
         """Select file path in the combobox, which calls the ``start_ui`` slot."""
         super().showEvent(ev)
-        self._ui.comboBox_source_file.setCurrentText(self._filepath)
+        self._ui.comboBox_source_file.setCurrentText(self._source)
 
     def is_file_less(self):
         return self._ui.comboBox_source_file.currentText() == self._FILE_LESS
@@ -130,7 +132,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     @property
     def _duplicate_kwargs(self):
-        return dict(source=self._filepath)
+        return dict(source=self._source)
 
     def _make_ui(self):
         from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
@@ -193,7 +195,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.comboBox_source_file.setCurrentText(source)
 
     def _get_source_url(self):
-        selector = UrlSelectorDialog(self._toolbox.qsettigns(), self._toolbox, parent=self)
+        selector = UrlSelectorDialog(self._toolbox.qsettings(), False, self._toolbox, parent=self)
         selector.exec()
         return selector.url
 
@@ -217,7 +219,15 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._memoized_connector = None
         self.start_ui(self._FILE_LESS)
 
-    def _get_connector_from_mapping(self, filepath):
+    def _get_connector_from_mapping(self, source):
+        """Guesses connector for given source.
+
+        Args:
+            source (str): importee file path or URL
+
+        Returns:
+            type: connector class, or None if no suitable connector was found
+        """
         if not self.specification:
             return None
         mapping = self.specification.mapping
@@ -226,28 +236,28 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             return None
         connector = _CONNECTOR_NAME_TO_CLASS[source_type]
         file_extensions = connector.FILE_EXTENSIONS.split(";;")
-        if filepath != self._FILE_LESS and not any(fnmatch.fnmatch(filepath, ext) for ext in file_extensions):
+        if source != self._FILE_LESS and not any(fnmatch.fnmatch(source, ext) for ext in file_extensions):
+            if isinstance(connector, SqlAlchemyConnector) and self._is_url(source):
+                return connector
             return None
         return connector
 
-    def start_ui(self, filepath):
+    def start_ui(self, source):
         """
         Args:
-            filepath (str): Importee path
+            source (str): Importee path/URL
         """
-        connector = self._get_connector_from_mapping(filepath)
+        connector = self._get_connector_from_mapping(source)
         if connector is None:
             # Ask user
-            connector = self._get_connector(filepath)
+            connector = self._get_connector(source)
             if not connector:
                 return
         if connector.__name__ == "SqlAlchemyConnector":
-            self._ui.dockWidget_source_files.setWindowTitle("Source URLs")
             self._ui.file_path_label.setText("URL")
         else:
-            self._ui.dockWidget_source_files.setWindowTitle("Source files")
             self._ui.file_path_label.setText("File path")
-        if filepath == self._FILE_LESS:
+        if source == self._FILE_LESS:
             self._FileLessConnector.__name__ = connector.__name__
             self._FileLessConnector.OPTIONS = connector.OPTIONS
             connector = self._FileLessConnector
@@ -259,7 +269,6 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if self._connection_manager:
             self._connection_manager.close_connection()
         self._connection_manager = ConnectionManager(connector, connector_settings, self)
-        self._connection_manager.source = filepath
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
         self._connection_manager.error.connect(self.show_error)
         for header in (self._ui.source_data_table.horizontalHeader(), self._ui.source_data_table.verticalHeader()):
@@ -267,18 +276,18 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
         mapping = self.specification.mapping if self.specification else {}
         self._import_sources.set_connector(self._connection_manager, mapping)
-        self._connection_manager.init_connection()
+        self._connection_manager.init_connection(source, **self._source_extras)
 
     @Slot()
     def _handle_connection_ready(self):
         self._ui.export_mappings_action.setEnabled(True)
         self._ui.import_mappings_action.setEnabled(True)
 
-    def _get_connector(self, filepath):
+    def _get_connector(self, source):
         """Shows a QDialog to select a connector for the given source file.
 
         Args:
-            filepath (str): Path of the file acting as an importee
+            source (str): Path of the file acting as an importee
 
         Returns:
             Asynchronous data reader class for the given importee
@@ -295,8 +304,12 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         row = None
         for k, conn in enumerate(connector_list):
             file_extensions = conn.FILE_EXTENSIONS.split(";;")
-            if any(fnmatch.fnmatch(filepath, ext) for ext in file_extensions):
+            if any(fnmatch.fnmatch(source, ext) for ext in file_extensions):
                 row = k
+                break
+        else:
+            if self._is_url(source):
+                row = connector_names.index(SqlAlchemyConnector.DISPLAY_NAME)
         if row is not None:
             connector_list_wg.setCurrentRow(row)
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -370,6 +383,18 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             return
         index = self._mappings_model.index(last, 0)
         self._ui.source_list.selectionModel().setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+
+    @staticmethod
+    def _is_url(string):
+        """Tests if given string looks like a URL.
+
+        Args:
+            string (str): string to test
+
+        Returns:
+            bool: True if string looks like a URL, False otherwise
+        """
+        return "://" in string
 
     def tear_down(self):
         if not super().tear_down():

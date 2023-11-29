@@ -97,7 +97,7 @@ class DataStore(ProjectItem):
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
-        base_url = dict(dialect="", username="", password="", host="", port="", database="")
+        base_url = dict(dialect="", username="", password="", host="", port="", database="", schema="")
         if isinstance(url, dict):
             if url.get("dialect") == "sqlite" and "database" in url and url["database"] is not None:
                 # Convert relative database path back to absolute
@@ -202,7 +202,7 @@ class DataStore(ProjectItem):
         old_url = convert_to_sqlalchemy_url(self._url, self.name)
         new_dialect = kwargs.get("dialect")
         if new_dialect == "sqlite":
-            kwargs.update({"username": "", "password": "", "host": "", "port": ""})
+            kwargs.update({"username": "", "password": "", "host": "", "port": "", "schema": ""})
         self._url.update(kwargs)
         new_url = convert_to_sqlalchemy_url(self._url, self.name)
         self.load_url_into_selections(self._url)

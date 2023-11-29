@@ -15,18 +15,18 @@ Contains utilities to scan for Data Connection's output resources.
 from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource, url_resource
 from spine_engine.utils.serialization import path_in_dir
-from ..utils import unsplit_url_credentials
+from spinedb_api.helpers import remove_credentials_from_url
+from ..utils import convert_to_sqlalchemy_url, unsplit_url_credentials
 
 
-def scan_for_resources(provider, file_paths, urls, url_credentials, project_dir):
+def scan_for_resources(provider, file_paths, urls, project_dir):
     """
     Creates file and URL resources based on DC's references and data.
 
     Args:
         provider (ProjectItem or ExecutableItem): resource provider item
         file_paths (list of str): file paths
-        urls (list of str): urls
-        url_credentials (dict): mapping url from urls to tuple (username, password)
+        urls (list of dict): urls
         project_dir (str): absolute path to project directory
 
     Returns:
@@ -55,8 +55,10 @@ def scan_for_resources(provider, file_paths, urls, url_credentials, project_dir)
             continue
         resources.append(resource)
     for url in urls:
-        credentials = url_credentials.get(url)
-        full_url = unsplit_url_credentials(url, credentials) if credentials is not None else url
-        resource = url_resource(provider.name, full_url, f"<{provider.name}>" + url)
+        str_url = str(convert_to_sqlalchemy_url(url))
+        schema = url.get("schema")
+        resource = url_resource(
+            provider.name, str_url, f"<{provider.name}>" + remove_credentials_from_url(str_url), schema=schema
+        )
         resources.append(resource)
     return resources

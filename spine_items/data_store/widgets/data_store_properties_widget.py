@@ -33,7 +33,9 @@ class DataStorePropertiesWidget(UrlSelectorMixin, PropertiesWidgetBase):
         self._active_item = None
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.url_selector_widget.setup(list(SUPPORTED_DIALECTS.keys()), self._select_sqlite_file, self._toolbox)
+        self.ui.url_selector_widget.setup(
+            list(SUPPORTED_DIALECTS.keys()), self._select_sqlite_file, True, self._toolbox
+        )
 
     def set_item(self, data_store):
         """Sets the active project item for the properties widget.
