@@ -8,11 +8,7 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""
-Module for data store class.
-
-"""
+""" Module for data store class. """
 
 import os
 from dataclasses import dataclass
@@ -20,7 +16,7 @@ from shutil import copyfile
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QFileDialog, QApplication, QMenu
 from PySide6.QtGui import QAction
-from spinedb_api.helpers import vacuum
+from spinedb_api.helpers import remove_credentials_from_url, vacuum
 from spine_engine.project_item.project_item_resource import database_resource, ProjectItemResource
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
@@ -32,7 +28,7 @@ from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from ..database_validation import DatabaseConnectionValidator
-from ..utils import convert_url_to_safe_string, database_label, convert_to_sqlalchemy_url
+from ..utils import database_label, convert_to_sqlalchemy_url
 
 
 @dataclass(frozen=True)
@@ -366,7 +362,7 @@ class DataStore(ProjectItem):
         """
         self.clear_notifications()
         self.add_notification(
-            f"Couldn't connect to the database <b>{convert_url_to_safe_string(url)}</b>: {error_message}"
+            f"Couldn't connect to the database <b>{remove_credentials_from_url(str(url))}</b>: {error_message}"
         )
         if self._resource_to_replace is None:
             self._resources_to_predecessors_changed()

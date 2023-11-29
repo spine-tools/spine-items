@@ -8,11 +8,7 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""
-Contains utilities shared between project items.
-
-"""
+""" Contains utilities shared between project items. """
 import os.path
 from contextlib import suppress
 
@@ -21,7 +17,11 @@ from sqlalchemy.engine.url import URL, make_url
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spine_engine.utils.queue_logger import SuppressedMessage
-from spinedb_api.helpers import remove_credentials_from_url
+from spinedb_api.helpers import remove_credentials_from_url, SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS
+
+
+class URLError(Exception):
+    """Exception for errors in URL dicts."""
 
 
 def database_label(provider_name):
@@ -51,48 +51,70 @@ def convert_to_sqlalchemy_url(url, item_name="", logger=None):
     if logger is None:
         logger = _NoLogger()
     if not url:
-        logger.msg_error.emit(f"No URL specified for {selections}. Please specify one and try again")
+        logger.msg_error.emit(f"No URL specified for {selections}. Please specify one and try again.")
         return None
     try:
+        sa_url = _convert_url(url)
+        _validate_sa_url(sa_url, url["dialect"])
+        return sa_url
+    except URLError as error:
+        logger.msg_error.emit(f"Unable to generate URL from {selections}: {error}")
+        return None
+
+
+def _convert_url(url):
+    """Converts URL dict to SqlAlchemy URL.
+
+    Args:
+        url (dict): URL dictionary
+
+    Returns:
+        URL: SqlAlchemy URL
+    """
+    try:
         url = {key: value for key, value in url.items() if value}
-        dialect = url.pop("dialect")
+        dialect = url.pop("dialect", None)
         with suppress(KeyError):
             del url["schema"]
         if not dialect:
-            logger.msg_error.emit(f"Unable to generate URL from {selections}: invalid dialect {dialect}.")
-            return None
+            raise URLError(f"missing dialect")
+        if dialect not in set(SUPPORTED_DIALECTS) | set(UNSUPPORTED_DIALECTS):
+            raise URLError(f"invalid dialect '{dialect}'")
         if dialect == "sqlite":
             database = url.get("database", "")
             if database:
                 url["database"] = os.path.abspath(database)
-            sa_url = URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
-        else:
-            db_api = spinedb_api.SUPPORTED_DIALECTS.get(dialect)
-            if db_api is None:
-                db_api = spinedb_api.helpers.UNSUPPORTED_DIALECTS[dialect]
-            drivername = f"{dialect}+{db_api}"
-            sa_url = URL(drivername, **url)  # pylint: disable=unexpected-keyword-arg
-    except Exception as e:  # pylint: disable=broad-except
-        # This is in case one of the keys has invalid format
-        logger.msg_error.emit(f"Unable to generate URL from {selections}: {e}")
-        return None
+            return URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
+        db_api = spinedb_api.SUPPORTED_DIALECTS.get(dialect)
+        if db_api is None:
+            db_api = spinedb_api.helpers.UNSUPPORTED_DIALECTS[dialect]
+        driver_name = f"{dialect}+{db_api}"
+        return URL(driver_name, **url)  # pylint: disable=unexpected-keyword-arg
+    except Exception as error:
+        raise URLError(str(error)) from error
+
+
+def _validate_sa_url(sa_url, dialect):
+    """Validates SqlAlchemy URL.
+
+    Args:
+        sa_url (URL): SqlAlchemy URL to validate
+        dialect (str): dialect
+
+    Raises:
+        URLError: raised if given URL is invalid
+    """
     if not sa_url.database:
-        logger.msg_error.emit(f"Unable to generate URL from {selections}: database missing.")
-        return None
+        raise URLError(f"database missing")
     if dialect != "sqlite":
         if sa_url.host is None:
-            logger.msg_error.emit(f"Unable to generate URL from {selections}: missing host.")
-            return None
+            raise URLError(f"missing host")
         if sa_url.port is None:
-            logger.msg_error.emit(f"Unable to generate URL from {selections}: missing port.")
-            return None
+            raise URLError(f"missing port")
         if sa_url.username is None:
-            logger.msg_error.emit(f"Unable to generate URL from {selections}: missing username.")
-            return None
+            raise URLError(f"missing username")
         if sa_url.password is None:
-            logger.msg_error.emit(f"Unable to generate URL from {selections}: missing password.")
-            return None
-    return sa_url
+            raise URLError(f"missing password")
 
 
 def convert_url_to_safe_string(url):
@@ -104,7 +126,7 @@ def convert_url_to_safe_string(url):
     Returns:
         str: URL as string
     """
-    return remove_credentials_from_url(str(convert_to_sqlalchemy_url(url)))
+    return remove_credentials_from_url(str(_convert_url(url)))
 
 
 def check_database_url(sa_url):
