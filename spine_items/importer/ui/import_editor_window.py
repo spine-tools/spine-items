@@ -332,7 +332,7 @@ class Ui_MainWindow(object):
 
         self.dimension_spin_box = QSpinBox(self.frame_2)
         self.dimension_spin_box.setObjectName(u"dimension_spin_box")
-        self.dimension_spin_box.setMinimum(1)
+        self.dimension_spin_box.setValue(0)
 
         self.mapping_options_contents.addWidget(self.dimension_spin_box, 5, 1, 1, 1)
 
@@ -400,6 +400,9 @@ class Ui_MainWindow(object):
         self.class_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
         self.class_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
 
+#if QT_CONFIG(tooltip)
+        self.map_dimension_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of dimensions when value type is Map.", None))
+#endif // QT_CONFIG(tooltip)
         self.parameter_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Value", None))
         self.parameter_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Definition", None))
         self.parameter_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"None", None))
@@ -418,5 +421,8 @@ class Ui_MainWindow(object):
         self.time_series_repeat_check_box.setText(QCoreApplication.translate("MainWindow", u"Repeat time series", None))
         self.parameter_type_label.setText(QCoreApplication.translate("MainWindow", u"Parameter type:", None))
         self.dimension_label.setText(QCoreApplication.translate("MainWindow", u"Number of dimensions:", None))
+#if QT_CONFIG(tooltip)
+        self.dimension_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of entity dimensions.", None))
+#endif // QT_CONFIG(tooltip)
     # retranslateUi
 

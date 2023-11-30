@@ -425,6 +425,9 @@
               </item>
               <item row="6" column="1">
                <widget class="QSpinBox" name="map_dimension_spin_box">
+                <property name="toolTip">
+                 <string>Number of dimensions when value type is Map.</string>
+                </property>
                 <property name="minimum">
                  <number>1</number>
                 </property>
@@ -518,8 +521,11 @@
               </item>
               <item row="5" column="1">
                <widget class="QSpinBox" name="dimension_spin_box">
-                <property name="minimum">
-                 <number>1</number>
+                <property name="toolTip">
+                 <string>Number of entity dimensions.</string>
+                </property>
+                <property name="value">
+                 <number>0</number>
                 </property>
                </widget>
               </item>
