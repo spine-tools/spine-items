@@ -9,6 +9,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 """ Unit tests for the ``utils`` module. """
+import sys
 import unittest
 from unittest import mock
 
@@ -22,13 +23,19 @@ class TestDatabaseLabel(unittest.TestCase):
 
 class TestConvertToSqlAlchemyUrl(unittest.TestCase):
     def test_sqlite_url_conversion_succeeds(self):
+        database_path = r"h:\files\database.sqlite" if sys.platform == "win32" else "/home/data/database.sqlite"
         url = {
             "dialect": "sqlite",
-            "database": r"h:\files\database.sqlite",
+            "database": database_path,
         }
         sa_url = convert_to_sqlalchemy_url(url)
-        self.assertEqual(sa_url.database, r"h:\files\database.sqlite")
+        self.assertEqual(sa_url.database, database_path)
+        self.assertIsNone(sa_url.username)
+        self.assertIsNone(sa_url.password)
+        self.assertIsNone(sa_url.port)
+        self.assertIsNone(sa_url.host)
         self.assertEqual(sa_url.drivername, r"sqlite")
+        self.assertEqual(str(sa_url), r"sqlite:///" + database_path)
 
     def test_remote_url_conversion_succeeds(self):
         url = {
@@ -167,11 +174,12 @@ class TestConvertUrlToSafeString(unittest.TestCase):
         self.assertEqual(convert_url_to_safe_string(url), "mysql+pymysql://example.com:5432/trade_nuc")
 
     def test_works_with_sqlite_url(self):
+        database_path = r"c:\files\database.sqlite" if sys.platform == "win32" else "/dir/data/database.sqlite"
         url = {
             "dialect": "sqlite",
-            "database": r"c:\files\database.sqlite",
+            "database": database_path,
         }
-        self.assertEqual(convert_url_to_safe_string(url), r"sqlite:///c:\files\database.sqlite")
+        self.assertEqual(convert_url_to_safe_string(url), r"sqlite:///" + database_path)
 
 
 if __name__ == '__main__':
