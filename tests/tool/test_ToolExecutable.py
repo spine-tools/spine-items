@@ -152,7 +152,7 @@ class TestToolExecutable(unittest.TestCase):
         app_settings = _MockSettings()
         logger = mock.MagicMock()
         tool_specification = PythonTool(
-            "Python tool", "Python", str(script_dir), script_files, app_settings, None, logger, outputfiles=output_files
+            "Python tool", "Python", str(script_dir), script_files, app_settings, logger, outputfiles=output_files
         )
         work_dir = pathlib.Path(self._temp_dir.name, "work")
         work_dir.mkdir()
@@ -180,9 +180,7 @@ class TestToolExecutable(unittest.TestCase):
         app_settings = _MockSettings()
         item_name = "Logs stuff"
         logger = QueueLogger(Queue(), item_name, None, [])
-        tool_specification = PythonTool(
-            "Python tool", "Python", str(script_dir), script_files, app_settings, None, logger
-        )
+        tool_specification = PythonTool("Python tool", "Python", str(script_dir), script_files, app_settings, logger)
         work_dir = pathlib.Path(self._temp_dir.name, "work")
         work_dir.mkdir()
         executable = ExecutableItem(
