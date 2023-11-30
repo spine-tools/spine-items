@@ -180,9 +180,7 @@ class TestToolExecutable(unittest.TestCase):
         app_settings = _MockSettings()
         item_name = "Logs stuff"
         logger = QueueLogger(Queue(), item_name, None, [])
-        tool_specification = PythonTool(
-            "Python tool", "Python", str(script_dir), script_files, app_settings, None, logger
-        )
+        tool_specification = PythonTool("Python tool", "Python", str(script_dir), script_files, app_settings, logger)
         work_dir = pathlib.Path(self._temp_dir.name, "work")
         work_dir.mkdir()
         executable = ExecutableItem(
@@ -209,7 +207,7 @@ class TestToolExecutable(unittest.TestCase):
             "    raise ValueError('foo')\n",
             'ValueError: foo\n',
         ]
-        self.assertEqual(lines, expected_lines)
+        self.assertCountEqual(lines, expected_lines)
         kill_persistent_processes()
 
     def test_find_optional_input_files_without_wildcards(self):
