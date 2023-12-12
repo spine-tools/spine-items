@@ -349,6 +349,7 @@ class DataStore(ProjectItem):
 
     def _check_notifications(self):
         """Updates the SqlAlchemy format URL and checks for notifications"""
+        self.clear_notifications()
         self._update_actions_enabled()
         sa_url = convert_to_sqlalchemy_url(self._url, self.name)
         if sa_url is None:
@@ -359,6 +360,9 @@ class DataStore(ProjectItem):
             return
         self._database_validator.validate_url(
             self._url["dialect"], sa_url, self._set_invalid_url_notification, self._accept_url
+        )
+        self.notify_about_dirtiness(
+            not self._toolbox.db_mngr.is_dirty(self.get_db_map_for_ds())
         )
 
     @Slot(bool)
