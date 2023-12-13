@@ -425,6 +425,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
             k_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
             julia_path = self._tool_specification.execution_settings.get("executable", "")
+            julia_path = resolve_julia_executable(julia_path)
             if use_jupyter_console and k_name == "":
                 self._logger.msg_error.emit("Julia kernel missing. Please select it in Tool Specification Editor.")
                 return False
