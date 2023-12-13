@@ -126,14 +126,16 @@ class TestToolInstance(unittest.TestCase):
         instance._owner.options = {"julia_sysimage": "path/to/sysimage.so"}
         with mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager, mock.patch(
             "os.path.isfile"
-        ) as mock_isfile:
+        ) as mock_isfile, mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia:
             mock_isfile.return_value = True  # Make isfile() accept fake julia_sysimage path
             mock_manager.return_value = True
+            mock_resolve_julia.return_value = "path/to/julia"
             instance.prepare([])
             mock_isfile.assert_called()
             mock_manager.assert_called_once()
+            mock_resolve_julia.assert_called()
             self.assertEqual(
-                ["", "--sysimage=path/to/sysimage.so"], mock_manager.call_args[0][1]
+                ["path/to/julia", "--sysimage=path/to/sysimage.so"], mock_manager.call_args[0][1]
             )  # args attribute for JuliaPersistentExecutionManger
             self.assertEqual(['cd("path/");', 'include("hello.jl")'], mock_manager.call_args[0][2])  # commands
             self.assertEqual("julia hello.jl", mock_manager.call_args[0][3])  # alias
@@ -141,13 +143,15 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(False)
         with mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager, mock.patch(
             "os.path.isfile"
-        ) as mock_isfile:
+        ) as mock_isfile, mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia:
             mock_isfile.return_value = False
             mock_manager.return_value = True
+            mock_resolve_julia.return_value = "path/to/julia"
             instance.prepare(["arg1", "arg2"])
             mock_isfile.assert_called()
             mock_manager.assert_called_once()
-            self.assertEqual([""], mock_manager.call_args[0][1])
+            mock_resolve_julia.assert_called()
+            self.assertEqual(["path/to/julia"], mock_manager.call_args[0][1])
             self.assertEqual(
                 ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg1", "arg2"]);', 'include("hello.jl")'],
                 mock_manager.call_args[0][2],
@@ -157,13 +161,15 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(False, ["arg3"])
         with mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager, mock.patch(
             "os.path.isfile"
-        ) as mock_isfile:
+        ) as mock_isfile, mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia:
             mock_isfile.return_value = False
             mock_manager.return_value = True
+            mock_resolve_julia.return_value = "path/to/julia"
             instance.prepare(["arg1", "arg2"])
             mock_isfile.assert_called()
             mock_manager.assert_called_once()
-            self.assertEqual([""], mock_manager.call_args[0][1])
+            mock_resolve_julia.assert_called()
+            self.assertEqual(["path/to/julia"], mock_manager.call_args[0][1])
             self.assertEqual(
                 ['cd("path/");', 'empty!(ARGS); append!(ARGS, ["arg3", "arg1", "arg2"]);', 'include("hello.jl")'],
                 mock_manager.call_args[0][2],
@@ -173,10 +179,14 @@ class TestToolInstance(unittest.TestCase):
     def test_prepare_sysimg_maker(self):
         instance = self._make_julia_tool_instance(False)
         instance._settings = FakeQSettings()
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_pem:
+        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_pem, mock.patch(
+            "spine_items.tool.utils.resolve_julia_executable"
+        ) as mock_resolve_julia:
+            mock_resolve_julia.return_value = "path/to/julia"
             instance.prepare([])
             mock_pem.assert_called_once()
-            self.assertEqual("", mock_pem.call_args[0][1])  # Julia exe
+            mock_resolve_julia.assert_called()
+            self.assertEqual("path/to/julia", mock_pem.call_args[0][1])  # Julia exe
             self.assertEqual(["hello.jl"], mock_pem.call_args[0][2])  # script
             self.assertEqual("path/", mock_pem.call_args[1]["workdir"])  # workdir
         instance.terminate_instance()  # Increase coverage

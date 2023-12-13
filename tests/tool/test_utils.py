@@ -141,9 +141,12 @@ class TestGetJuliaPathAndProject(unittest.TestCase):
             "kernel_spec_name": "",
             "project": "",
         }
-        julia_args = get_julia_path_and_project(exec_settings)
+        with mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia:
+            mock_resolve_julia.return_value = "path/to/julia"
+            julia_args = get_julia_path_and_project(exec_settings)
+            mock_resolve_julia.assert_called()
         self.assertTrue(len(julia_args) == 1)
-        self.assertTrue(julia_args[0] == "")
+        self.assertTrue(julia_args[0] == "path/to/julia")
         # Use Jupyter Console: False
         exec_settings = {
             "use_jupyter_console": False,
