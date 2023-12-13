@@ -83,7 +83,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == tooltype), -1)
             self._ui.comboBox_tooltype.setCurrentIndex(index)
             self._ui.textEdit_program.set_lexer_name(tooltype.lower())
-            specification.set_execution_settings()  # Set default execution settings
+            specification.init_execution_settings()  # Initialize execution settings
             # spec dict needs to be set after setting the execution settings but before the
             # optional widget is shown, in case the tooltype is Executable.
             self.spec_dict = deepcopy(specification.to_dict())

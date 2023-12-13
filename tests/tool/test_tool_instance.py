@@ -362,7 +362,7 @@ class TestToolInstance(unittest.TestCase):
             mock.MagicMock(),
             cmdline_args=tool_spec_args,
         )
-        specification.set_execution_settings()
+        specification.init_execution_settings()
         if use_jupyter_console:
             specification.execution_settings["use_jupyter_console"] = True
             specification.execution_settings["kernel_spec_name"] = "some_kernel"
@@ -379,7 +379,7 @@ class TestToolInstance(unittest.TestCase):
             mock.MagicMock(),
             cmdline_args=tool_spec_args,
         )
-        specification.set_execution_settings()
+        specification.init_execution_settings()
         if use_jupyter_console:
             specification.execution_settings["use_jupyter_console"] = True
             specification.execution_settings["kernel_spec_name"] = "some_julia_kernel"
@@ -415,7 +415,7 @@ class TestToolInstance(unittest.TestCase):
                 mock.MagicMock(),
                 cmdline_args=tool_spec_args,
             )
-        specification.set_execution_settings()
+        specification.init_execution_settings()
         if shell == "cmd.exe":
             specification.execution_settings["shell"] = "cmd.exe"
         elif shell == "bash":

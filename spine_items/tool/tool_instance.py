@@ -197,7 +197,7 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        self.tool_specification.set_execution_settings()  # Set default execution settings if they are missing
+        self.tool_specification.init_execution_settings()  # Set default execution settings if they are missing
         julia_args = get_julia_path_and_project(self.tool_specification.execution_settings)
         if not julia_args:
             k_name = self.tool_specification.execution_settings["kernel_spec_name"]
@@ -297,7 +297,7 @@ class PythonToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        self.tool_specification.set_execution_settings()  # Set default execution settings
+        self.tool_specification.init_execution_settings()  # Initialize execution settings
         cmdline_args = self.tool_specification.cmdline_args + args
         if self.tool_specification.execution_settings["use_jupyter_console"]:
             server_ip = "127.0.0.1"
