@@ -361,9 +361,10 @@ class DataStore(ProjectItem):
         self._database_validator.validate_url(
             self._url["dialect"], sa_url, self._set_invalid_url_notification, self._accept_url
         )
-        self.notify_about_dirtiness(
-            not self._toolbox.db_mngr.is_dirty(self.get_db_map_for_ds())
-        )
+        db_map = self.get_db_map_for_ds()
+        if db_map:
+            clean = not self._toolbox.db_mngr.is_dirty(db_map)
+            self.notify_about_dirtiness(clean)
 
     @Slot(bool)
     def notify_about_dirtiness(self, clean):
