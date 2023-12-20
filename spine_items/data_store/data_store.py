@@ -210,6 +210,20 @@ class DataStore(ProjectItem):
             self._resources_to_successors_changed()
         self._check_notifications()
 
+    def has_listeners(self):
+        """Checks whether the Data Store has listeners or not
+
+        Returns:
+             (bool): True if there are listeners for the Data Store, False otherwise
+        """
+        if self._multi_db_editors_open:
+            return bool(
+                self._toolbox.db_mngr.db_map_listeners(
+                    self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, self.name)
+                )
+            )
+        return False
+
     def _update_actions_enabled(self):
         url_exists = convert_to_sqlalchemy_url(self._url, self.name) is not None
         url_valid = url_exists and self._url_validated
