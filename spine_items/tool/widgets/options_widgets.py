@@ -326,21 +326,43 @@ end"""
             return
         loaded_modules_file = self._get_loaded_modules_filepath()
         precompile_statements_file = self._get_precompile_statements_filepath()
+        _string_in_brackets = "{String}"
         with open(loaded_modules_file, 'r') as f:
             modules = f.read()
         code = f"""using Pkg;
 project_dir = dirname(Base.active_project());
 cp(joinpath(project_dir, "Project.toml"), joinpath(project_dir, "Project.backup"); force=true);
 cp(joinpath(project_dir, "Manifest.toml"), joinpath(project_dir, "Manifest.backup"); force=true);
+packages = Vector{_string_in_brackets}()
 try
     modules = split("{modules}", " ");
-    Pkg.add(modules);
+    for m in modules
+        if strip(m) == ""
+            continue
+        end
+        if any(x -> x.name == m && x.is_direct_dep, values(Pkg.dependencies())) == true
+            println("Package " * m * " already installed")
+        else
+            try
+                Pkg.add(m)
+            catch e
+                if isa(e, Pkg.Types.PkgError)
+                    println(m * " is not a package")
+                    continue
+                end
+            end
+        end
+        println("Package " * m * " installed")
+        push!(packages, m)
+    end
+    println("Packages to add to sysimage: " * string(packages))
     Pkg.add("PackageCompiler");
     @eval import PackageCompiler
     Base.invokelatest(
         PackageCompiler.create_sysimage,
-        Symbol.(modules);
+        Symbol.(packages);
         sysimage_path="{escape_backward_slashes(self.sysimage_path)}",
+        project=project_dir,
         precompile_statements_file="{escape_backward_slashes(precompile_statements_file)}"
     )
 finally
