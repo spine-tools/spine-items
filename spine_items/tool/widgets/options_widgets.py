@@ -63,7 +63,6 @@ class JuliaOptionsWidget(OptionsWidget):
         self._sysimage_paths = {}
         self._sysimage_workers = {}
         self._work_animation = self._make_work_animation()
-        self._julia_version = None
         icon_abort = QIcon(CharIconEngine("\uf057", Qt.red))
         self.ui.toolButton_abort_sysimage.setIcon(icon_abort)
         self.ui.toolButton_new_sysimage.clicked.connect(self._create_sysimage)
@@ -207,27 +206,6 @@ class JuliaOptionsWidget(OptionsWidget):
             return None
         return file_path
 
-    def _get_julia_version(self, julia_exe):
-        """Retrieves Julia version and returns it."""
-        manager = QProcessExecutionManager(self, julia_exe, args=["--version"], silent=True)
-        manager.start_execution()
-        manager.wait_for_process_finished()
-        out = manager.process_output  # e.g. 'julia version 1.9.0'
-        if not out:
-            self._logger.msg_error.emit("Julia version check failed. Sysimage creation aborted.")
-            return None
-        ver_str = out.lower().strip("julia version").strip()
-        ver = ver_str.split(".")
-        ver = [int(i) for i in ver]
-        # Do error checking because we don't want to waste possibly hours in creating a sysimage if this method fails.
-        if len(ver) != 3:
-            self._logger.msg_error.emit(f"Julia Version check failed. Unrecognized version: {ver}")
-            return None
-        if not (isinstance(ver[0], int) and isinstance(ver[1], int) and isinstance(ver[2], int)):
-            self._logger.msg_error.emit(f"Julia version check failed. Version list items are not integers: {ver}")
-            return None
-        return ver
-
     @Slot(bool)
     def _create_sysimage(self, _checked=False):
         """Creates a Julia sysimage for the specification associated with this tool.
@@ -247,10 +225,6 @@ class JuliaOptionsWidget(OptionsWidget):
             return
         self.sysimage_path = self._get_sysimage_path()
         if self.sysimage_path is None:
-            return
-        julia, *args = get_julia_path_and_project(self._tool.specification().execution_settings)
-        self._julia_version = self._get_julia_version(julia)
-        if not self._julia_version:
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
         settings = make_settings_dict_for_engine(self._settings)
@@ -277,9 +251,8 @@ class JuliaOptionsWidget(OptionsWidget):
         self._update_ui()
         self.sysimage_worker.start(silent=True)
         self._logger.msg_success.emit(
-            f"Process to create <b>{self.sysimage_basename}</b> successfully started on Julia "
-            f"{'.'.join([str(i) for i in self._julia_version])}.\nThis process might take a while, "
-            f"but you can keep using Spine Toolbox as normal in the meantime."
+            f"Process to create <b>{self.sysimage_basename}</b> successfully started.\n"
+            "This process might take a while, but you can keep using Spine Toolbox as normal in the meantime."
         )
 
     def _get_precompile_statements_filepath(self):
@@ -292,12 +265,9 @@ class JuliaOptionsWidget(OptionsWidget):
         """Returns a modified version of this tool specification that collects necessary information
         for creating the sysimage.
 
-        On Julia <1.9 this information is written into two files in the item's data dir:
+        This information is written into two files in the item's data dir:
             - one containing a single line with the Julia modules that are loaded by the tool
             - the other containing precompile statements collected by the option `--trace-compile`
-        On Julia >= 1.9 we only collect the precompile statements into a file in the item's data
-        dir because Julia 1.9 introduced Extensions and Pkg.add() later on will fail if given
-        a module name that is actually an extension
 
         Returns:
             ToolSpecification
@@ -308,23 +278,20 @@ class JuliaOptionsWidget(OptionsWidget):
         precompile_statements_file = self._get_precompile_statements_filepath()
         with open(original_program_file, 'r') as original:
             original_code = original.read()
-        if self._julia_version[0] == 1 and self._julia_version[1] >= 9:
-            new_code = original_code
-        else:
-            new_code = f"""macro write_loaded_modules(ex)
-        return quote
-            local before = copy(Base.loaded_modules)
-            local val = $(esc(ex))
-            local after = copy(Base.loaded_modules)
-            open("{escape_backward_slashes(loaded_modules_file)}", "w") do f
-                print(f, join(setdiff(values(after), values(before)), " "))
-            end
-            val
+        new_code = f"""macro write_loaded_modules(ex)
+    return quote
+        local before = copy(Base.loaded_modules)
+        local val = $(esc(ex))
+        local after = copy(Base.loaded_modules)
+        open("{escape_backward_slashes(loaded_modules_file)}", "w") do f
+            print(f, join(setdiff(values(after), values(before)), " "))
         end
+        val
     end
-    @write_loaded_modules begin 
-        {original_code}
-    end"""
+end
+@write_loaded_modules begin 
+    {original_code}
+end"""
         spec.includes.insert(0, "")
         spec.cmdline_args += [f"--trace-compile={precompile_statements_file}", "-e", new_code]
         while True:
@@ -332,60 +299,6 @@ class JuliaOptionsWidget(OptionsWidget):
             if spec.name not in spec_names:
                 break
         return spec
-
-    def _make_create_sysimage_code(self):
-        """Returns the Julia code for creating a sysimage based on Julia version.
-        loaded_modules.txt cannot be used for Julia >= 1.9, so we simply add all
-        packages in the current Julia environment into the system image. On Julia < 1.9 we
-        first add all packages used by the Tool into the environment and then compile those
-        packages into the sysimage."""
-        precompile_statements_file = self._get_precompile_statements_filepath()
-        if self._julia_version[0] == 1 and self._julia_version[1] >= 9:
-            code = f"""
-            using Pkg;
-            project_dir = dirname(Base.active_project());
-            cp(joinpath(project_dir, "Project.toml"), joinpath(project_dir, "Project.backup"); force=true);
-            cp(joinpath(project_dir, "Manifest.toml"), joinpath(project_dir, "Manifest.backup"); force=true);
-            try
-                Pkg.add("PackageCompiler");
-                @eval import PackageCompiler
-                Base.invokelatest(
-                    PackageCompiler.create_sysimage,
-                    ;
-                    sysimage_path="{escape_backward_slashes(self.sysimage_path)}",
-                    project=project_dir,
-                    precompile_statements_file="{escape_backward_slashes(precompile_statements_file)}"
-                )
-            finally
-                cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
-                cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
-            end"""
-        else:
-            loaded_modules_file = self._get_loaded_modules_filepath()
-            with open(loaded_modules_file, 'r') as f:
-                modules = f.read()
-            code = f"""
-            using Pkg;
-            project_dir = dirname(Base.active_project());
-            cp(joinpath(project_dir, "Project.toml"), joinpath(project_dir, "Project.backup"); force=true);
-            cp(joinpath(project_dir, "Manifest.toml"), joinpath(project_dir, "Manifest.backup"); force=true);
-            try
-                modules = split("{modules}", " ");
-                Pkg.add(modules);
-                Pkg.add("PackageCompiler");
-                @eval import PackageCompiler
-                Base.invokelatest(
-                    PackageCompiler.create_sysimage,
-                    Symbol.(modules);
-                    sysimage_path="{escape_backward_slashes(self.sysimage_path)}",
-                    project=project_dir,
-                    precompile_statements_file="{escape_backward_slashes(precompile_statements_file)}"
-                )
-            finally
-                cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
-                cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
-            end"""
-        return code
 
     def _do_create_sysimage(self, tool):
         """Runs when the workflow started by ``self._create_sysimage()`` has completed.
@@ -411,7 +324,46 @@ class JuliaOptionsWidget(OptionsWidget):
             if tool == current_tool:
                 self._update_ui()
             return
-        code = self._make_create_sysimage_code()
+        loaded_modules_file = self._get_loaded_modules_filepath()
+        precompile_statements_file = self._get_precompile_statements_filepath()
+        with open(loaded_modules_file, 'r') as f:
+            modules = f.read()
+        code = f"""using Pkg;
+project_dir = dirname(Base.active_project());
+cp(joinpath(project_dir, "Project.toml"), joinpath(project_dir, "Project.backup"); force=true);
+cp(joinpath(project_dir, "Manifest.toml"), joinpath(project_dir, "Manifest.backup"); force=true);
+try
+    modules = split("{modules}", " ");
+    packages = Vector()
+    for m in modules
+        if strip(m) == ""
+            continue
+        end
+        try
+            Pkg.add(m)
+        catch e
+            if isa(e, Pkg.Types.PkgError)
+                println(m * " is not a package")
+                continue
+            end
+        end
+        println("Package " * m * " installed")
+        push!(packages, m)
+    end
+    println("Packages to add to sysimage: " * string(packages))
+    Pkg.add("PackageCompiler");
+    @eval import PackageCompiler
+    Base.invokelatest(
+        PackageCompiler.create_sysimage,
+        Symbol.(packages);
+        sysimage_path="{escape_backward_slashes(self.sysimage_path)}",
+        project=project_dir,
+        precompile_statements_file="{escape_backward_slashes(precompile_statements_file)}"
+    )
+finally
+    cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
+    cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
+end"""
         julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings)
         args += ["-e", code]
         self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=False)
