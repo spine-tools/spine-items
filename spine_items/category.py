@@ -14,7 +14,7 @@ This module defines the available project item categories.
 
 """
 # The categories will appear in the main window in the same order they are declared here.
-CATEGORIES = ("Data Stores", "Data Connections", "Tools", "Views", "Importers", "Exporters", "Manipulators")
+CATEGORIES = ("Data Stores", "Data Connections", "Tools", "Notebooks", "Views", "Importers", "Exporters", "Manipulators")
 
 
 CATEGORY_DESCRIPTIONS = {
@@ -23,6 +23,7 @@ CATEGORY_DESCRIPTIONS = {
     "Exporters": "Data conversion from Spine to an external format",
     "Importers": "Data conversion from an external format to Spine",
     "Tools": "Custom data processing",
+    "Notebooks": "Custom data processing with Jupyter notebooks",
     "Views": "Data visualization",
     "Manipulators": "Data conversion from Spine to Spine",
 }
