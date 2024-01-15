@@ -47,6 +47,10 @@ class OptionalWidget(QWidget):
         """
         raise NotImplementedError
 
+    def default_execution_settings(self):
+        """Returns default execution settings dictionary."""
+        raise NotImplementedError
+
 
 class SharedToolSpecOptionalWidget(OptionalWidget):
     """Superclass for Python and Julia Tool Spec optional widgets."""
@@ -78,6 +82,7 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
         self.ui.comboBox_kernel_specs.activated.connect(self._parent.push_change_kernel_spec_command)
         self.ui.radioButton_jupyter_console.toggled.connect(self._parent.push_set_jupyter_console_mode)
         self.ui.lineEdit_executable.editingFinished.connect(self._parent.push_change_executable)
+        self.ui.toolButton_set_defaults.clicked.connect(self._parent.push_set_default_execution_settings)
         qApp.aboutToQuit.connect(self.stop_fetching_kernels)  # pylint: disable=undefined-variable
 
     def init_widget(self, specification):
@@ -281,6 +286,30 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         """See base class."""
         return super().add_execution_settings(tool_spec_type)
 
+    def default_execution_settings(self):
+        """See base class."""
+        use_jupyter_console = bool(
+            int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
+        )
+        k_name = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
+        env = ""
+        if use_jupyter_console:
+            # Check if the kernel is a Conda kernel by matching the name with the one that is in kernel_spec_model
+            # Find k_name in kernel_spec_model and check it's data
+            row = self.find_index_by_data(k_name)
+            if row == -1:
+                pass  # kernel not found
+            else:
+                index = self.kernel_spec_model.index(row, 0)
+                item_data = self.kernel_spec_model.itemFromIndex(index).data()
+                env = item_data["env"]
+        d = dict()
+        d["kernel_spec_name"] = k_name
+        d["env"] = env
+        d["use_jupyter_console"] = use_jupyter_console
+        d["executable"] = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
+        return d
+
     @Slot(bool)
     def browse_python_button_clicked(self, _=False):
         """Calls static method that shows a file browser for selecting a Python interpreter."""
@@ -343,6 +372,19 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         """See base class."""
         d = super().add_execution_settings(tool_spec_type)
         d["project"] = self.get_julia_project()
+        return d
+
+    def default_execution_settings(self):
+        """See base class."""
+        d = dict()
+        use_jupyter_console = bool(
+            int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0"))
+        )
+        d["kernel_spec_name"] = self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue="")
+        d["env"] = ""
+        d["use_jupyter_console"] = use_jupyter_console
+        d["executable"] = self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue="")
+        d["project"] = self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue="")
         return d
 
     @Slot(bool)

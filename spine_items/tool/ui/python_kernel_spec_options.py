@@ -49,6 +49,7 @@ class Ui_Form(object):
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setSpacing(6)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(-1, -1, 6, -1)
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -76,7 +77,7 @@ class Ui_Form(object):
 
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(-1, -1, 6, -1)
+        self.verticalLayout_2.setContentsMargins(-1, -1, 0, -1)
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setSpacing(6)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -139,6 +140,14 @@ class Ui_Form(object):
 
         self.horizontalLayout_3.addLayout(self.verticalLayout_2)
 
+        self.toolButton_set_defaults = QToolButton(Form)
+        self.toolButton_set_defaults.setObjectName(u"toolButton_set_defaults")
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/share.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.toolButton_set_defaults.setIcon(icon2)
+
+        self.horizontalLayout_3.addWidget(self.toolButton_set_defaults)
+
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_3)
 
@@ -167,6 +176,9 @@ class Ui_Form(object):
         self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh kernel specs list</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_refresh_kernel_specs.setText("")
+#if QT_CONFIG(tooltip)
+        self.toolButton_set_defaults.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Set default execution settings (from Settings-&gt;Tools)</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         pass
     # retranslateUi
 
