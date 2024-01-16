@@ -589,6 +589,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if row == -1:
             logging.error(f"Item '{value}' not found in any combobox item's data")
         opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(row)
+        opt_widget.set_restore_defaults_button_state()
 
     @Slot(bool)
     def push_set_jupyter_console_mode(self, new_value):
@@ -609,6 +610,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         else:
             opt_widget.ui.radioButton_basic_console.setChecked(True)
         opt_widget.set_ui_for_jupyter_console(value)
+        opt_widget.set_restore_defaults_button_state()
 
     @Slot()
     def push_change_executable(self):
@@ -628,6 +630,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         opt_widget.set_executable(value)
+        opt_widget.set_restore_defaults_button_state()
 
     @Slot()
     def push_change_project(self):
@@ -647,6 +650,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         opt_widget.set_julia_project(value)
+        opt_widget.set_restore_defaults_button_state()
 
     @Slot()
     def push_set_default_execution_settings(self):
@@ -692,6 +696,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             if toolspectype == "julia":
                 # Apply julia project line edit
                 opt_widget.set_julia_project(value["project"])
+        opt_widget.ui.toolButton_set_defaults.setEnabled(False)
 
     @Slot(int)
     def push_change_shell_command(self, index):

@@ -113,6 +113,7 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
         self.ui.lineEdit_executable.setEnabled(not use_jupyter_console)  # Disable for jupyter console
         self.ui.comboBox_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
         self.ui.toolButton_refresh_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
+        self.set_restore_defaults_button_state()
         if use_jupyter_console and not self._kernel_spec_model_initialized:
             self.start_kernel_fetcher(restore_saved_kernel=True)
 
@@ -167,6 +168,14 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
             if d["kernel_spec_name"] == string:
                 return row
         return -1
+
+    def default_exec_settings_are_enabled(self):
+        """Returns True if the default execution settings are enabled, False otherwise."""
+        raise NotImplementedError
+
+    def set_restore_defaults_button_state(self):
+        """Disables restore defaults button if execution settings are set to defaults. Enables it otherwise."""
+        raise NotImplementedError
 
     @Slot()
     def start_kernel_fetcher(self, restore_saved_kernel=False):
@@ -250,6 +259,7 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
                 notification.show()
                 row += 1  # Set 'Select kernel spec...'
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
+        self.set_restore_defaults_button_state()
 
 
 class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
@@ -288,12 +298,10 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
 
     def default_execution_settings(self):
         """See base class."""
-        use_jupyter_console = bool(
-            int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
-        )
+        use_jupyter_cons = bool(int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0")))
         k_name = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
         env = ""
-        if use_jupyter_console:
+        if use_jupyter_cons:
             # Check if the kernel is a Conda kernel by matching the name with the one that is in kernel_spec_model
             # Find k_name in kernel_spec_model and check it's data
             row = self.find_index_by_data(k_name)
@@ -306,9 +314,35 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         d = dict()
         d["kernel_spec_name"] = k_name
         d["env"] = env
-        d["use_jupyter_console"] = use_jupyter_console
+        d["use_jupyter_console"] = use_jupyter_cons
         d["executable"] = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
         return d
+
+    def default_exec_settings_are_enabled(self):
+        """See base class."""
+        use_jupyter_cons = bool(int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0")))
+        k_name = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
+        executable = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
+        if self.ui.radioButton_jupyter_console.isChecked() and use_jupyter_cons:
+            row = self.ui.comboBox_kernel_specs.currentIndex()
+            if row == -1:
+                return False
+            item_data = self.kernel_spec_model.item(row).data()
+            if not item_data:
+                return False
+            if item_data["kernel_spec_name"] == k_name:
+                return True
+        elif self.ui.radioButton_basic_console.isChecked() and not use_jupyter_cons:
+            if self.get_executable() == executable:
+                return True
+        return False
+
+    def set_restore_defaults_button_state(self):
+        """See base class."""
+        if self.default_exec_settings_are_enabled():
+            self.ui.toolButton_set_defaults.setEnabled(False)
+        else:
+            self.ui.toolButton_set_defaults.setEnabled(True)
 
     @Slot(bool)
     def browse_python_button_clicked(self, _=False):
@@ -386,6 +420,33 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         d["executable"] = self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue="")
         d["project"] = self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue="")
         return d
+
+    def default_exec_settings_are_enabled(self):
+        """See base class."""
+        use_jupyter_cons = bool(int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0")))
+        k_name = self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue="")
+        executable = self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue="")
+        julia_project = self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue="")
+        if self.ui.radioButton_jupyter_console.isChecked() and use_jupyter_cons:
+            row = self.ui.comboBox_kernel_specs.currentIndex()
+            if row == -1:
+                return False
+            item_data = self.kernel_spec_model.item(row).data()
+            if not item_data:
+                return False
+            if item_data["kernel_spec_name"] == k_name:
+                return True
+        elif self.ui.radioButton_basic_console.isChecked() and not use_jupyter_cons:
+            if self.get_executable() == executable and self.get_julia_project() == julia_project:
+                return True
+        return False
+
+    def set_restore_defaults_button_state(self):
+        """See base class."""
+        if self.default_exec_settings_are_enabled():
+            self.ui.toolButton_set_defaults.setEnabled(False)
+        else:
+            self.ui.toolButton_set_defaults.setEnabled(True)
 
     @Slot(bool)
     def browse_julia_button_clicked(self, _=False):
