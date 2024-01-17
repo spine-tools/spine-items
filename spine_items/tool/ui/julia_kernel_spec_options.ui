@@ -50,6 +50,9 @@
      <property name="spacing">
       <number>6</number>
      </property>
+     <property name="rightMargin">
+      <number>6</number>
+     </property>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
@@ -87,7 +90,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <property name="rightMargin">
-        <number>6</number>
+        <number>0</number>
        </property>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -228,6 +231,30 @@
         </layout>
        </item>
       </layout>
+     </item>
+     <item>
+      <widget class="Line" name="line_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="toolButton_set_defaults">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Apply default execution settings (from Settings-&amp;gt;Tools).&lt;/p&gt;&lt;p&gt;Disabled when default settings are already applied.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Restore defaults</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../../ui/resources/resources_icons.qrc">
+         <normaloff>:/icons/share.svg</normaloff>:/icons/share.svg</iconset>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

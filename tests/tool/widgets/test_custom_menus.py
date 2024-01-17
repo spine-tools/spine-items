@@ -156,7 +156,7 @@ class TestToolSpecificationMenu(unittest.TestCase):
             MockQSettings(),
             mock_logger,
         )
-        julia_tool_spec.set_execution_settings()  # Sets defaults
+        julia_tool_spec.init_execution_settings()  # Sets defaults
         return julia_tool_spec
 
     def make_exec_tool_spec(self):

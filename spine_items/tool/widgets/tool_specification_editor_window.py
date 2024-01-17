@@ -83,7 +83,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == tooltype), -1)
             self._ui.comboBox_tooltype.setCurrentIndex(index)
             self._ui.textEdit_program.set_lexer_name(tooltype.lower())
-            specification.set_execution_settings()  # Set default execution settings
+            specification.init_execution_settings()  # Initialize execution settings
             # spec dict needs to be set after setting the execution settings but before the
             # optional widget is shown, in case the tooltype is Executable.
             self.spec_dict = deepcopy(specification.to_dict())
@@ -584,11 +584,12 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _set_kernel_spec(self, value):
         self.spec_dict["execution_settings"]["kernel_spec_name"] = value
-        opt_widget = self._get_optional_widget("python")
+        opt_widget = self._get_optional_widget("python")  # TODO: BUG? "python" should be toolspectype?
         row = opt_widget.find_index_by_data(value)  # Find row of item in combobox
         if row == -1:
             logging.error(f"Item '{value}' not found in any combobox item's data")
         opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(row)
+        opt_widget.set_restore_defaults_button_state()
 
     @Slot(bool)
     def push_set_jupyter_console_mode(self, new_value):
@@ -609,6 +610,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         else:
             opt_widget.ui.radioButton_basic_console.setChecked(True)
         opt_widget.set_ui_for_jupyter_console(value)
+        opt_widget.set_restore_defaults_button_state()
 
     @Slot()
     def push_change_executable(self):
@@ -628,6 +630,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         opt_widget.set_executable(value)
+        opt_widget.set_restore_defaults_button_state()
 
     @Slot()
     def push_change_project(self):
@@ -647,6 +650,59 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         toolspectype = self.spec_dict.get("tooltype", "")
         opt_widget = self._get_optional_widget(toolspectype)
         opt_widget.set_julia_project(value)
+        opt_widget.set_restore_defaults_button_state()
+
+    @Slot()
+    def push_set_default_execution_settings(self):
+        """Sets default Python or Julia execution settings to current Tool spec."""
+        old_value = self.spec_dict["execution_settings"]
+        toolspectype = self.spec_dict.get("tooltype", "")
+        opt_widget = self._get_optional_widget(toolspectype)
+        new_value = opt_widget.default_execution_settings()
+        if new_value["use_jupyter_console"] != old_value["use_jupyter_console"]:
+            pass
+        else:
+            if opt_widget.ui.radioButton_jupyter_console.isChecked():
+                if new_value["use_jupyter_console"]:
+                    if opt_widget.ui.comboBox_kernel_specs.currentText() == new_value["kernel_spec_name"]:
+                        return  # Same kernel, no change
+            else:
+                if toolspectype == "python" and new_value["executable"] == opt_widget.get_executable():
+                    return  # Same executable, no change
+                elif (
+                    toolspectype == "julia"
+                    and new_value["executable"] == opt_widget.get_executable()
+                    and new_value["project"] == opt_widget.get_julia_project()
+                ):
+                    return  # Same executable and project, no change
+        self._undo_stack.push(
+            ChangeSpecPropertyCommand(
+                self._set_default_execution_settings, new_value, old_value, "set execution settings to defaults"
+            )
+        )
+
+    def _set_default_execution_settings(self, value):
+        self.spec_dict["execution_settings"] = value
+        toolspectype = self.spec_dict.get("tooltype", "")
+        opt_widget = self._get_optional_widget(toolspectype)
+        # Apply use jupyter console radio button
+        if value["use_jupyter_console"]:
+            opt_widget.ui.radioButton_jupyter_console.setChecked(True)
+            opt_widget.set_ui_for_jupyter_console(value["use_jupyter_console"])
+            # Apply kernel name combo box
+            row = opt_widget.find_index_by_data(value["kernel_spec_name"])  # Find row of kernel in combobox
+            if row == -1:
+                logging.error(f"Item '{value['kernel_spec_name']}' not found in any combobox item's data")
+            opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(row)
+        else:
+            opt_widget.ui.radioButton_basic_console.setChecked(True)
+            opt_widget.set_ui_for_jupyter_console(value["use_jupyter_console"])
+            # Apply executable line edit
+            opt_widget.set_executable(value["executable"])
+            if toolspectype == "julia":
+                # Apply julia project line edit
+                opt_widget.set_julia_project(value["project"])
+        opt_widget.ui.toolButton_set_defaults.setEnabled(False)
 
     @Slot(int)
     def push_change_shell_command(self, index):

@@ -66,7 +66,7 @@ class TestToolSpecification(unittest.TestCase):
         self.test_dict["definition_file_path"] = "/path/to/specification/file.json"
         spec = make_specification(self.test_dict, self.qsettings, self.logger)  # Make PythonTool
         self.assertIsInstance(spec, PythonTool)
-        spec.set_execution_settings()
+        spec.init_execution_settings()
         self.assertIsNotNone(spec.execution_settings)
         self.assertTrue(len(spec.execution_settings.keys()), 4)
         spec.to_dict()
@@ -74,7 +74,7 @@ class TestToolSpecification(unittest.TestCase):
         self.test_dict["tooltype"] = "Julia"
         spec = make_specification(self.test_dict, self.qsettings, self.logger)  # Make JuliaTool
         self.assertIsInstance(spec, JuliaTool)
-        spec.set_execution_settings()
+        spec.init_execution_settings()
         self.assertIsNotNone(spec.execution_settings)
         self.assertTrue(len(spec.execution_settings.keys()), 5)
         spec.to_dict()
@@ -87,7 +87,7 @@ class TestToolSpecification(unittest.TestCase):
         self.test_dict["tooltype"] = "Executable"
         spec = make_specification(self.test_dict, self.qsettings, self.logger)  # Make ExecutableTool
         self.assertIsInstance(spec, ExecutableTool)
-        spec.set_execution_settings()
+        spec.init_execution_settings()
         self.assertIsNotNone(spec.execution_settings)
         self.assertTrue(len(spec.execution_settings.keys()), 2)
         spec.to_dict()

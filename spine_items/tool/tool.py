@@ -381,7 +381,7 @@ class Tool(DBWriterItemBase):
         """Updates the label in Tool properties to show the selected execution settings for this Tool."""
         tstype = self._specification.tooltype
         if tstype == "python" or tstype == "julia":
-            self.specification().set_execution_settings()
+            self.specification().init_execution_settings()
             k_spec_name = self.specification().execution_settings["kernel_spec_name"]
             env = self.specification().execution_settings["env"]
             use_console = self.specification().execution_settings["use_jupyter_console"]

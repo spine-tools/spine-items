@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/icons">
+    <file>share.svg</file>
     <file>bolt-lightning.svg</file>
     <file>item_icons/satellite.svg</file>
     <file>broom.svg</file>
