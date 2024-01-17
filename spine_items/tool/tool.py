@@ -106,6 +106,21 @@ class Tool(DBWriterItemBase):
         super().set_up()
         self.do_update_execution_mode(execute_in_work)
 
+    def setup_specification_icon(self, spec_icon_path):
+        """Adds a specification icon as the child of this item's icon."""
+        if not self._specification:
+            return
+        icon = self.get_icon()
+        icon.setup_spec_icon(spec_icon_path)
+
+    def update_specification_icon(self):
+        """Updates the spec icon when a Tool is selected or when the specification is changed."""
+        icon = self.get_icon()
+        if icon.spec_item is not None:
+            icon.remove_specification_icon()
+        spec_icon = ItemInfo.specification_icon(self.specification())
+        self.setup_specification_icon(spec_icon)
+
     @property
     def group_id(self):
         return self._group_id
@@ -376,6 +391,7 @@ class Tool(DBWriterItemBase):
         self._properties_ui.kill_consoles_check_box.setChecked(self._kill_completed_processes)
         self._update_kill_consoles_check_box_enabled()
         self._properties_ui.log_process_output_check_box.setChecked(self._log_process_output)
+        self.update_specification_icon()
 
     def _show_execution_settings(self):
         """Updates the label in Tool properties to show the selected execution settings for this Tool."""
