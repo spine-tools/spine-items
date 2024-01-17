@@ -669,10 +669,16 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             else:
                 if toolspectype == "python" and new_value["executable"] == opt_widget.get_executable():
                     return  # Same executable, no change
-                elif toolspectype == "julia" and new_value["executable"] == opt_widget.get_executable() and new_value["project"] == opt_widget.get_julia_project():
+                elif (
+                    toolspectype == "julia"
+                    and new_value["executable"] == opt_widget.get_executable()
+                    and new_value["project"] == opt_widget.get_julia_project()
+                ):
                     return  # Same executable and project, no change
         self._undo_stack.push(
-            ChangeSpecPropertyCommand(self._set_default_execution_settings, new_value, old_value, "set execution settings to defaults")
+            ChangeSpecPropertyCommand(
+                self._set_default_execution_settings, new_value, old_value, "set execution settings to defaults"
+            )
         )
 
     def _set_default_execution_settings(self, value):

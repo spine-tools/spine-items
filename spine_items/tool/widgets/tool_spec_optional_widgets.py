@@ -411,9 +411,7 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
     def default_execution_settings(self):
         """See base class."""
         d = dict()
-        use_jupyter_console = bool(
-            int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0"))
-        )
+        use_jupyter_console = bool(int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0")))
         d["kernel_spec_name"] = self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue="")
         d["env"] = ""
         d["use_jupyter_console"] = use_jupyter_console
