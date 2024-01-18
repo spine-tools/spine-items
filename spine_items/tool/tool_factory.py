@@ -41,20 +41,6 @@ class ToolFactory(ProjectItemFactory):
         return QColor("red")
 
     @staticmethod
-    def specification_icon(specification):
-        if not specification:
-            return None
-        if specification.tooltype == "python":
-            return ":icons/item_icons/python-logo.svg"
-        elif specification.tooltype == "julia":
-            return ":icons/item_icons/julia-logo.svg"
-        elif specification.tooltype == "executable":
-            return ":icons/item_icons/terminal-logo.svg"
-        elif specification.tooltype == "gams":
-            return ":icons/item_icons/gams-logo.svg"
-        return None
-
-    @staticmethod
     def make_add_item_widget(toolbox, x, y, specification):
         return AddToolWidget(toolbox, x, y, specification)
 
