@@ -1035,7 +1035,7 @@ def _new_mapping_specification(mapping_type):
         MappingSpecification: an export mapping specification
     """
     if mapping_type == MappingType.entities:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, 1, [1], [2]))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, 1))
     if mapping_type == MappingType.entity_groups:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_group_export(0, 1, 2))
     if mapping_type == MappingType.entity_parameter_default_values:
@@ -1055,7 +1055,7 @@ def _new_mapping_specification(mapping_type):
             NoGroup.NAME,
             False,
             entity_parameter_value_export(
-                0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None, None
+                0, 1, Position.hidden, Position.hidden, None, None, 2, Position.hidden, 3, None, None
             ),
         )
     if mapping_type == MappingType.parameter_value_lists:
@@ -1067,7 +1067,7 @@ def _new_mapping_specification(mapping_type):
             True,
             NoGroup.NAME,
             False,
-            entity_dimension_parameter_default_value_export(0, 2, [1], Position.hidden, 3, None, None, 0),
+            entity_dimension_parameter_default_value_export(0, 1, None, Position.hidden, 2, None, None, 0),
         )
     if mapping_type == MappingType.entity_dimension_parameter_values:
         return MappingSpecification(
