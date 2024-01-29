@@ -8,10 +8,7 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`SpecificationEditorWindow`.
-
-"""
+""" Contains :class:`SpecificationEditorWindow`. """
 from copy import deepcopy
 import json
 from PySide6.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
@@ -1054,9 +1051,7 @@ def _new_mapping_specification(mapping_type):
             True,
             NoGroup.NAME,
             False,
-            entity_parameter_value_export(
-                0, 1, Position.hidden, Position.hidden, None, None, 2, Position.hidden, 3, None, None
-            ),
+            entity_parameter_value_export(0, 2, Position.hidden, 1, None, None, 3, Position.hidden, 4, None, None),
         )
     if mapping_type == MappingType.parameter_value_lists:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, parameter_value_list_export(0, 1))
