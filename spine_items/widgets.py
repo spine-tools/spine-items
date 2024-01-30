@@ -252,7 +252,7 @@ class FileDropTargetLineEdit(QLineEdit):
         self.setText(url.toLocalFile())
 
 
-KNOWN_SQL_DIALECTS = ("mysql", "sqlite", "mssql", "postgresql", "oracle")
+KNOWN_SQL_DIALECTS = ("mysql", "sqlite", "mssql", "postgresql")
 
 
 class UrlSelectorMixin:
