@@ -52,8 +52,7 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
             pos (QPoint): Mouse position
         """
         index = self.ui.treeView_dc_references.indexAt(pos)
-        dc_index = self._toolbox.ui.treeView_project.currentIndex()
-        dc = self._toolbox.project_item_model.item(dc_index).project_item
+        dc = self._active_item
         global_pos = self.ui.treeView_dc_references.viewport().mapToGlobal(pos)
         dc_ref_context_menu = DcRefContextMenu(self, global_pos, index, dc)
         option = dc_ref_context_menu.get_action()
@@ -87,8 +86,7 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
             pos (QPoint): Mouse position
         """
         index = self.ui.treeView_dc_data.indexAt(pos)
-        dc_index = self._toolbox.ui.treeView_project.currentIndex()
-        dc = self._toolbox.project_item_model.item(dc_index).project_item
+        dc = self._active_item
         global_pos = self.ui.treeView_dc_data.viewport().mapToGlobal(pos)
         dc_data_context_menu = DcDataContextMenu(self, global_pos, index, dc)
         option = dc_data_context_menu.get_action()
