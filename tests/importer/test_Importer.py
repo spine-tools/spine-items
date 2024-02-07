@@ -139,7 +139,7 @@ class TestImporter(unittest.TestCase):
         self.importer.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.importer.name)  # item name
-        self.assertEqual(expected_name, self.importer.get_icon().name_item.text())  # name item on Design View
+        self.assertEqual(expected_name, self.importer.get_icon().name())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.importer.data_dir)  # Check data dir

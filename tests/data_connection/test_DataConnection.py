@@ -691,7 +691,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self._data_connection.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self._data_connection.name)  # item name
-        self.assertEqual(expected_name, self._data_connection.get_icon().name_item.text())  # name item on Design View
+        self.assertEqual(expected_name, self._data_connection.get_icon().name())
         # Check data_dir
         self.assertEqual(expected_data_dir, self._data_connection.data_dir)  # Check data dir
         # Check that file_system_watcher has one path (new data_dir)

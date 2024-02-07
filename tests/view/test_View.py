@@ -95,7 +95,7 @@ class TestView(unittest.TestCase):
         self.view.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.view.name)  # item name
-        self.assertEqual(expected_name, self.view.get_icon().name_item.text())  # name item on Design View
+        self.assertEqual(expected_name, self.view.get_icon().name())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.view.data_dir)  # Check data dir

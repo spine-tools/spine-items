@@ -110,7 +110,7 @@ class TestDataTransformer(unittest.TestCase):
         expected_short_name = "abc"
         self.transformer.rename(expected_name, "")
         self.assertEqual(expected_name, self.transformer.name)
-        self.assertEqual(expected_name, self.transformer.get_icon().name_item.text())
+        self.assertEqual(expected_name, self.transformer.get_icon().name())
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.transformer.data_dir)
 
