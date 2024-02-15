@@ -12,3 +12,56 @@
 """ Spine items. """
 
 from .version import __version__
+
+
+def _categories_and_factories():
+    from . import data_connection
+    from .data_connection.data_connection_factory import DataConnectionFactory
+    from . import data_store
+    from .data_store.data_store_factory import DataStoreFactory
+    from . import data_transformer
+    from .data_transformer.data_transformer_factory import DataTransformerFactory
+    from . import exporter
+    from .exporter.exporter_factory import ExporterFactory
+    from .exporter import specification_factory
+    from . import importer
+    from .importer.importer_factory import ImporterFactory
+    from .importer import specification_factory
+    from . import merger
+    from .merger.merger_factory import MergerFactory
+    from . import tool
+    from .tool.tool_factory import ToolFactory
+    from .tool import specification_factory
+    from . import view
+    from .view.view_factory import ViewFactory
+
+    modules = (data_connection, data_store, data_transformer, exporter, importer, merger, tool, view)
+    item_infos = tuple(module.item_info.ItemInfo for module in modules)
+    categories = {info.item_type(): info.item_category() for info in item_infos}
+    factories = (
+        DataConnectionFactory,
+        DataStoreFactory,
+        DataTransformerFactory,
+        ExporterFactory,
+        ImporterFactory,
+        MergerFactory,
+        ToolFactory,
+        ViewFactory,
+    )
+    factories = {info.item_type(): factory for info, factory in zip(item_infos, factories)}
+    executables = {module.item_info.ItemInfo.item_type(): module.executable_item.ExecutableItem for module in modules}
+    specification_item_submodules = (exporter, importer, tool)
+    specification_factories = {
+        module.item_info.ItemInfo.item_type(): module.specification_factory.SpecificationFactory
+        for module in specification_item_submodules
+    }
+    return (
+        categories.copy,
+        factories.copy,
+        executables.copy,
+        specification_factories.copy,
+    )
+
+
+item_categories, item_factories, executable_items, item_specification_factories = _categories_and_factories()
+del _categories_and_factories
