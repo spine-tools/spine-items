@@ -41,5 +41,5 @@ class ImporterIcon(ProjectItemIcon):
             e (QGraphicsSceneMouseEvent): Event
         """
         super().mouseDoubleClickEvent(e)
-        item = self._toolbox.project_item_model.get_item(self._name)
-        item.project_item.edit_specification()
+        item = self._toolbox.project().get_item(self._name)
+        item.edit_specification()
