@@ -141,22 +141,6 @@ class Ui_Form(object):
 
         self.horizontalLayout_3.addLayout(self.verticalLayout_2)
 
-        self.line_2 = QFrame(Form)
-        self.line_2.setObjectName(u"line_2")
-        self.line_2.setFrameShape(QFrame.VLine)
-        self.line_2.setFrameShadow(QFrame.Sunken)
-
-        self.horizontalLayout_3.addWidget(self.line_2)
-
-        self.toolButton_set_defaults = QToolButton(Form)
-        self.toolButton_set_defaults.setObjectName(u"toolButton_set_defaults")
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/share.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.toolButton_set_defaults.setIcon(icon2)
-        self.toolButton_set_defaults.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-
-        self.horizontalLayout_3.addWidget(self.toolButton_set_defaults)
-
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_3)
 
@@ -185,10 +169,6 @@ class Ui_Form(object):
         self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh kernel specs list</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_refresh_kernel_specs.setText("")
-#if QT_CONFIG(tooltip)
-        self.toolButton_set_defaults.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Apply default execution settings (from Settings-&gt;Tools).</p><p>Disabled when default settings are already applied.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolButton_set_defaults.setText(QCoreApplication.translate("Form", u"Restore defaults", None))
         pass
     # retranslateUi
 

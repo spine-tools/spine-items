@@ -101,7 +101,7 @@ class View(ProjectItem):
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
-        self._toolbox.db_mngr.open_db_editor(db_url_codenames)
+        self._toolbox.db_mngr.open_db_editor(db_url_codenames, reuse_existing_editor=True)
 
     @Slot(bool)
     def pin_values(self, checked=False):

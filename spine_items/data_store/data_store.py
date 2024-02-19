@@ -21,7 +21,6 @@ from spinedb_api.helpers import remove_credentials_from_url, vacuum
 from spine_engine.project_item.project_item_resource import database_resource, ProjectItemResource
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
-from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
 from spine_engine.utils.serialization import serialize_path, deserialize_path
 from spinetoolbox.widgets.custom_qwidgets import SelectDatabaseItemsDialog
 from .commands import UpdateDSURLCommand
@@ -291,6 +290,17 @@ class DataStore(ProjectItem):
     @Slot(bool)
     def open_url_in_spine_db_editor(self, checked=False):
         """Opens current url in the Spine database editor."""
+        self._open_spine_db_editor(reuse_existing=True)
+
+    def _open_url_in_new_db_editor(self, checked=False):
+        self._open_spine_db_editor(reuse_existing=False)
+
+    def _open_spine_db_editor(self, reuse_existing):
+        """Opens Data Store's URL in Spine Database editor.
+
+        Args:
+            reuse_existing (bool): if True and the URL is already open, just raise the window
+        """
         if not self._url_validated:
             self._logger.msg_error.emit(
                 f"<b>{self.name}</b> is still validating the database URL or the URL is invalid."
@@ -299,18 +309,8 @@ class DataStore(ProjectItem):
         sa_url = self.sql_alchemy_url()
         if sa_url is not None:
             db_url_codenames = {sa_url: self.name}
-            self._toolbox.db_mngr.open_db_editor(db_url_codenames)
+            self._toolbox.db_mngr.open_db_editor(db_url_codenames, reuse_existing)
         self._check_notifications()
-
-    def _open_url_in_new_db_editor(self, checked=False):
-        if not self._url_validated:
-            self._logger.msg_error.emit(
-                f"<b>{self.name}</b> is still validating the database URL or the URL is invalid."
-            )
-            return
-        sa_url = self.sql_alchemy_url()
-        if sa_url is not None:
-            MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name}).show()
 
     def _open_url_in_existing_db_editor(self, db_editor):
         if not self._url_validated:
