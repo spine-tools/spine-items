@@ -199,7 +199,7 @@ class JuliaToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         self.tool_specification.init_execution_settings()  # Set default execution settings if they are missing
-        julia_args = get_julia_path_and_project(self.tool_specification.execution_settings)
+        julia_args = get_julia_path_and_project(self.tool_specification.execution_settings, self._settings)
         if not julia_args:
             k_name = self.tool_specification.execution_settings["kernel_spec_name"]
             self._logger.msg_error(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
@@ -319,7 +319,8 @@ class PythonToolInstance(ToolInstance):
                 server_ip=server_ip,
             )
         else:
-            python_exe = resolve_python_interpreter(self.tool_specification.execution_settings["executable"])
+            interpreter = self.tool_specification.execution_settings["executable"]
+            python_exe = interpreter if interpreter else resolve_python_interpreter(self._settings)
             commands = self.make_python_basic_console_commands(cmdline_args)
             alias = f"python {' '.join([self.tool_specification.main_prgm] + cmdline_args)}"
             self.exec_mngr = PythonPersistentExecutionManager(

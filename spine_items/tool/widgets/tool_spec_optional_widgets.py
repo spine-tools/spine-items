@@ -18,7 +18,7 @@ import sys
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QWidget, QApplication
 from PySide6.QtGui import Qt, QStandardItemModel, QStandardItem, QIcon
-from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable
+from spine_engine.utils.helpers import resolve_default_julia_executable, resolve_python_interpreter
 from spinetoolbox.helpers import file_is_valid, select_python_interpreter, select_julia_executable, select_julia_project
 from spinetoolbox.widgets.notification import Notification
 from spinetoolbox.kernel_fetcher import KernelFetcher
@@ -57,8 +57,7 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
     """Superclass for Python and Julia Tool Spec optional widgets."""
 
     def __init__(self, parent, Ui_Form, fetch_mode):
-        """Constructor.
-
+        """
         Args:
             parent (ToolSpecificationEditorWindow): Tool spec editor window
             Ui_Form (Form): Optional widget UI form
@@ -83,7 +82,6 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
         self.ui.comboBox_kernel_specs.activated.connect(self._parent.push_change_kernel_spec_command)
         self.ui.radioButton_jupyter_console.toggled.connect(self._parent.push_set_jupyter_console_mode)
         self.ui.lineEdit_executable.editingFinished.connect(self._parent.push_change_executable)
-        self.ui.toolButton_set_defaults.clicked.connect(self._parent.push_set_default_execution_settings)
         qApp.aboutToQuit.connect(self.stop_fetching_kernels)  # pylint: disable=undefined-variable
 
     def init_widget(self, specification):
@@ -114,7 +112,6 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
         self.ui.lineEdit_executable.setEnabled(not use_jupyter_console)  # Disable for jupyter console
         self.ui.comboBox_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
         self.ui.toolButton_refresh_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
-        self.set_restore_defaults_button_state()
         if use_jupyter_console and not self._kernel_spec_model_initialized:
             self.start_kernel_fetcher(restore_saved_kernel=True)
 
@@ -169,14 +166,6 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
             if d["kernel_spec_name"] == string:
                 return row
         return -1
-
-    def default_exec_settings_are_enabled(self):
-        """Returns True if the default execution settings are enabled, False otherwise."""
-        raise NotImplementedError
-
-    def set_restore_defaults_button_state(self):
-        """Disables restore defaults button if execution settings are set to defaults. Enables it otherwise."""
-        raise NotImplementedError
 
     @Slot()
     def start_kernel_fetcher(self, restore_saved_kernel=False):
@@ -260,7 +249,6 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
                 notification.show()
                 row += 1  # Set 'Select kernel spec...'
             self.ui.comboBox_kernel_specs.setCurrentIndex(row)
-        self.set_restore_defaults_button_state()
 
 
 class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
@@ -282,9 +270,8 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
             self._saved_kernel = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
         else:
             self.ui.radioButton_basic_console.setChecked(True)
-        default_python_path = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
-        self.ui.lineEdit_executable.setPlaceholderText(resolve_python_interpreter(""))
-        self.ui.lineEdit_executable.setText(default_python_path)
+        default_python_path = resolve_python_interpreter(self._toolbox.qsettings())
+        self.ui.lineEdit_executable.setPlaceholderText(default_python_path)
         self.set_ui_for_jupyter_console(use_jupyter_console)
         self.connect_signals()
 
@@ -318,32 +305,6 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         d["use_jupyter_console"] = use_jupyter_cons
         d["executable"] = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
         return d
-
-    def default_exec_settings_are_enabled(self):
-        """See base class."""
-        use_jupyter_cons = bool(int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0")))
-        k_name = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
-        executable = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
-        if self.ui.radioButton_jupyter_console.isChecked() and use_jupyter_cons:
-            row = self.ui.comboBox_kernel_specs.currentIndex()
-            if row == -1:
-                return False
-            item_data = self.kernel_spec_model.item(row).data()
-            if not item_data:
-                return False
-            if item_data["kernel_spec_name"] == k_name:
-                return True
-        elif self.ui.radioButton_basic_console.isChecked() and not use_jupyter_cons:
-            if self.get_executable() == executable:
-                return True
-        return False
-
-    def set_restore_defaults_button_state(self):
-        """See base class."""
-        if self.default_exec_settings_are_enabled():
-            self.ui.toolButton_set_defaults.setEnabled(False)
-        else:
-            self.ui.toolButton_set_defaults.setEnabled(True)
 
     @Slot(bool)
     def browse_python_button_clicked(self, _=False):
@@ -380,8 +341,9 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
             self.ui.radioButton_basic_console.setChecked(True)
         default_julia_path = self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue="")
         default_julia_project = self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue="")
-        self.ui.lineEdit_executable.setPlaceholderText(resolve_julia_executable(""))
-        self.ui.lineEdit_executable.setText(default_julia_path)
+        if not default_julia_path:
+            default_julia_path = resolve_default_julia_executable()
+        self.ui.lineEdit_executable.setPlaceholderText(default_julia_path)
         self.ui.lineEdit_julia_project.setText(default_julia_project)
         self.set_ui_for_jupyter_console(use_jupyter_console)
         self.connect_signals()
@@ -419,33 +381,6 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         d["executable"] = self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue="")
         d["project"] = self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue="")
         return d
-
-    def default_exec_settings_are_enabled(self):
-        """See base class."""
-        use_jupyter_cons = bool(int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0")))
-        k_name = self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue="")
-        executable = self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue="")
-        julia_project = self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue="")
-        if self.ui.radioButton_jupyter_console.isChecked() and use_jupyter_cons:
-            row = self.ui.comboBox_kernel_specs.currentIndex()
-            if row == -1:
-                return False
-            item_data = self.kernel_spec_model.item(row).data()
-            if not item_data:
-                return False
-            if item_data["kernel_spec_name"] == k_name:
-                return True
-        elif self.ui.radioButton_basic_console.isChecked() and not use_jupyter_cons:
-            if self.get_executable() == executable and self.get_julia_project() == julia_project:
-                return True
-        return False
-
-    def set_restore_defaults_button_state(self):
-        """See base class."""
-        if self.default_exec_settings_are_enabled():
-            self.ui.toolButton_set_defaults.setEnabled(False)
-        else:
-            self.ui.toolButton_set_defaults.setEnabled(True)
 
     @Slot(bool)
     def browse_julia_button_clicked(self, _=False):

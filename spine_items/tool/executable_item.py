@@ -417,20 +417,21 @@ class ExecutableItem(DBWriterExecutableItemBase):
             return False
         if self._tool_specification.tooltype.lower() == "python":
             use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
-            k_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
-            if use_jupyter_console and k_name == "":
+            kernel_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
+            if use_jupyter_console and not kernel_name:
                 self._logger.msg_error.emit("Python kernel missing. Please select it in Tool Specification Editor.")
                 return False
             # Note: no check for python path == "" because this should never happen
         elif self._tool_specification.tooltype.lower() == "julia":
             use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
-            k_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
+            kernel_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
             julia_path = self._tool_specification.execution_settings.get("executable", "")
-            julia_path = resolve_julia_executable(julia_path)
-            if use_jupyter_console and k_name == "":
+            if not julia_path:
+                julia_path = resolve_julia_executable(settings)
+            if use_jupyter_console and not kernel_name:
                 self._logger.msg_error.emit("Julia kernel missing. Please select it in Tool Specification Editor.")
                 return False
-            if not use_jupyter_console and julia_path == "":
+            if not use_jupyter_console and not julia_path:
                 self._logger.msg_error.emit(
                     "Julia executable path missing. Please set it in Tool Specification Editor."
                 )

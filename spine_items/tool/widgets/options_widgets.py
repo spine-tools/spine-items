@@ -42,7 +42,7 @@ class OptionsWidget(QWidget):
 
     @property
     def _project(self):
-        return self._tool._project
+        return self._tool.project
 
     @property
     def _settings(self):
@@ -50,7 +50,7 @@ class OptionsWidget(QWidget):
 
     @property
     def _logger(self):
-        return self._tool._logger
+        return self._tool.logger
 
 
 class JuliaOptionsWidget(OptionsWidget):
@@ -228,7 +228,7 @@ class JuliaOptionsWidget(OptionsWidget):
         if self.sysimage_path is None:
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
-        settings = make_settings_dict_for_engine(self._settings)
+        settings = make_settings_dict_for_engine(self._settings, self._project.settings)
         settings["appSettings/makeSysImage"] = "true"  # See JuliaToolInstance.prepare()
         dag_identifier = f"containing {self._tool.name}"
         job_id = self._project.LOCAL_EXECUTION_JOB_ID
@@ -309,10 +309,11 @@ end"""
 
         Args:
             tool (Tool): The Tool that started the sysimage creation process.
-                It may be different than the Tool currently using the widget.
+                It may be different from the Tool currently using the widget.
         """
         # Replace self._tool while we run this method
-        self._tool, current_tool = tool, self._tool
+        current_tool = self._tool
+        self._tool = tool
         self.sysimage_worker.clean_up()
         state = self.sysimage_worker.engine_final_state()
         if state != "COMPLETED":
@@ -322,7 +323,7 @@ end"""
             self._logger.msg_error.emit(msg)
             self.sysimage_worker = None
             self.sysimage_path = None
-            if tool == current_tool:
+            if tool is current_tool:
                 self._update_ui()
             return
         loaded_modules_file = self._get_loaded_modules_filepath()
@@ -370,7 +371,7 @@ finally
     cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
     cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
 end"""
-        julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings)
+        julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings, self._settings)
         args += ["-e", code]
         self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=False)
         self.sysimage_worker.execution_finished.connect(lambda ret: self._handle_sysimage_process_finished(ret, tool))
