@@ -59,14 +59,15 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_error.emit("SQLite file does not exist.")
             return None
         if not self._validated:
-            try:
-                DatabaseMapping.create_engine(self._url, create=True)
-                return self._url
-            except SpineDBVersionError as v_err:
-                prompt = {"type": "upgrade_db", "url": self._url, "current": v_err.current, "expected": v_err.expected}
-                if not self._logger.prompt.emit(prompt):
+            prompt_data = DatabaseMapping.get_upgrade_db_prompt_data(self._url, create=True)
+            if prompt_data is not None:
+                kwargs = self._logger.prompt.emit(prompt_data)
+                if kwargs is None:
                     return None
-                DatabaseMapping.create_engine(self._url, upgrade=True)
+            else:
+                kwargs = {}
+            try:
+                DatabaseMapping.create_engine(self._url, create=True, **kwargs)
                 return self._url
             except SpineDBAPIError as err:
                 self._logger.msg_error.emit(str(err))

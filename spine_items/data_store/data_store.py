@@ -153,7 +153,7 @@ class DataStore(ProjectItem):
         url = dict(self._url)
         url["database"] = abs_path
         sa_url = convert_to_sqlalchemy_url(url, self.name)
-        self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
+        self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger, overwrite=True)
         self.update_url(dialect="sqlite", database=abs_path)
         return True
 
@@ -219,7 +219,7 @@ class DataStore(ProjectItem):
         if self._multi_db_editors_open:
             return bool(
                 self._toolbox.db_mngr.db_map_listeners(
-                    self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, self.name)
+                    self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, codename=self.name)
                 )
             )
         return False
@@ -254,7 +254,7 @@ class DataStore(ProjectItem):
     def _purge(self):
         """Purges the database."""
         self._purge_settings = self._purge_dialog.get_checked_states()
-        db_map = self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, self.name)
+        db_map = self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, codename=self.name)
         if db_map is None:
             return
         db_map_purge_data = {db_map: {item_type for item_type, checked in self._purge_settings.items() if checked}}
