@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Utility functions for the Tool project item.
-
-"""
+""" Utility functions for the Tool project item. """
 from datetime import datetime
 import glob
 import os.path
@@ -24,11 +21,12 @@ from jupyter_client.kernelspec import find_kernel_specs
 from spine_engine.utils.helpers import resolve_julia_executable
 
 
-def get_julia_path_and_project(exec_settings):
+def get_julia_path_and_project(exec_settings, settings):
     """Returns path to Julia and --project=path/to/project in a list based on Tool specs execution settings.
 
     Args:
         exec_settings (dict): Execution settings
+        settings (AppSettings): application settings
 
     Returns:
         list of str: e.g. ["path/to/julia", "--project=path/to/project/"] or None if kernel does not exist.
@@ -52,8 +50,9 @@ def get_julia_path_and_project(exec_settings):
         if project:
             retval.append(f"--project={project}")
         return retval
-    julia = exec_settings["executable"]  # This may be an empty str
-    julia = resolve_julia_executable(julia)
+    julia = exec_settings["executable"]
+    if not julia:
+        julia = resolve_julia_executable(settings)
     project = exec_settings["project"]
     retval = [julia]
     if project:

@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Tool class.
-
-"""
+""" Tool class. """
 import os
 from PySide6.QtCore import Slot, QItemSelection, Qt
 from PySide6.QtGui import QAction
@@ -56,8 +53,7 @@ class Tool(DBWriterItemBase):
         log_process_output=False,
         group_id=None,
     ):
-        """Tool class.
-
+        """
         Args:
             name (str): Object name
             description (str): Object description
@@ -68,7 +64,7 @@ class Tool(DBWriterItemBase):
             specification_name (str): Name of this Tool's Tool specification
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
-            options (dict, optional): misc tool options. At the moment it just holds the location of the julia sysimage
+            options (dict, optional): misc tool options. At the moment it just holds the location of the Julia sysimage
             kill_completed_processes (bool): whether to kill completed persistent processes
             log_process_output (bool): whether to log process output to a file
             group_id (str, optional): execution group id
@@ -406,10 +402,10 @@ class Tool(DBWriterItemBase):
             if not use_console:
                 exe = self.specification().execution_settings["executable"]
                 if tstype == "python":
-                    p = resolve_python_interpreter(exe)
+                    path = exe if exe else resolve_python_interpreter(self._project.app_settings)
                 else:
-                    p = resolve_julia_executable(exe)
-                self._properties_ui.label_jupyter.setText(f"[Basic console] {p}")
+                    path = exe if exe else resolve_julia_executable(self._project.app_settings)
+                self._properties_ui.label_jupyter.setText(f"[Basic console] {path}")
             else:
                 env = "" if not env else f"[{env}]"
                 self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
