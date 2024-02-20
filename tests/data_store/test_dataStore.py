@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for DataStore class.
-
-"""
+"""Unit tests for DataStore class."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -37,10 +34,6 @@ class TestDataStore(unittest.TestCase):
     def test_item_type(self):
         """Tests that the item type is correct."""
         self.assertEqual(DataStore.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        """Tests that the item category is correct."""
-        self.assertEqual(DataStore.item_category(), ItemInfo.item_category())
 
 
 # noinspection PyUnusedLocal

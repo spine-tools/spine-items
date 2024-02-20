@@ -51,11 +51,6 @@ class Merger(DBWriterItemBase):
         """See base class."""
         return ItemInfo.item_type()
 
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
-
     @property
     def executable_class(self):
         return ExecutableItem

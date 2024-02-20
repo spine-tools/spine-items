@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Exporter project item.
-
-"""
+"""Unit tests for Exporter project item."""
 import os.path
 from tempfile import TemporaryDirectory
 import unittest
@@ -27,7 +24,7 @@ from spine_items.exporter.exporter_factory import ExporterFactory
 from spine_items.exporter.item_info import ItemInfo
 from spine_items.exporter.specification import OutputFormat, Specification
 from spine_items.utils import database_label
-from spinedb_api import create_new_spine_database, DatabaseMapping
+from spinedb_api import create_new_spine_database
 from spinetoolbox.project_item.logging_connection import LoggingConnection
 from ..mock_helpers import (
     clean_up_toolbox,
@@ -69,9 +66,6 @@ class TestExporter(unittest.TestCase):
 
     def test_item_type(self):
         self.assertEqual(Exporter.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        self.assertEqual(Exporter.item_category(), ItemInfo.item_category())
 
     def test_serialization(self):
         item_dict = self._exporter.item_dict()

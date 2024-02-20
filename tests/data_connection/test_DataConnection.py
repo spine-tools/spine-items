@@ -43,9 +43,6 @@ class TestDataConnection(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(DataConnection.item_type(), ItemInfo.item_type())
 
-    def test_item_category(self):
-        self.assertEqual(DataConnection.item_category(), ItemInfo.item_category())
-
 
 class TestDataConnectionWithProject(unittest.TestCase):
     def setUp(self):

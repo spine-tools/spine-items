@@ -28,7 +28,7 @@ class ImporterSpecification(ProjectItemSpecification):
             mapping (dict): mapping dict
             description (str): specification's description
         """
-        super().__init__(name, description, ItemInfo.item_type(), ItemInfo.item_category())
+        super().__init__(name, description, ItemInfo.item_type())
         self._mapping = mapping
 
     @property

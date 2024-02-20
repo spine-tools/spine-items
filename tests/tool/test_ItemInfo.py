@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Tool's ItemInfo class.
-
-"""
+"""Unit tests for Tool's ItemInfo class."""
 import unittest
 from spine_items.tool.item_info import ItemInfo
 
@@ -21,9 +18,6 @@ from spine_items.tool.item_info import ItemInfo
 class TestItemInfo(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(ItemInfo.item_type(), "Tool")
-
-    def test_item_category(self):
-        self.assertEqual(ItemInfo.item_category(), "Tools")
 
 
 if __name__ == "__main__":

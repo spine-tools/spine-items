@@ -118,7 +118,7 @@ class ToolSpecification(ProjectItemSpecification):
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (list, optional): Tool Specification command line arguments
         """
-        super().__init__(name, description, item_type=ItemInfo.item_type(), item_category=ItemInfo.item_category())
+        super().__init__(name, description, item_type=ItemInfo.item_type())
         self._settings = settings
         self._logger = logger
         self.tooltype = tooltype

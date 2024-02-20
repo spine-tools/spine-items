@@ -185,7 +185,7 @@ class Specification(ProjectItemSpecification):
             mapping_specifications (dict, optional): mapping from export mapping name to ``MappingSpecification``
             output_format (OutputFormat): output format
         """
-        super().__init__(name, description, ItemInfo.item_type(), ItemInfo.item_category())
+        super().__init__(name, description, ItemInfo.item_type())
         if mapping_specifications is None:
             mapping_specifications = dict()
         self._mapping_specifications = mapping_specifications

@@ -35,7 +35,7 @@ class DataTransformerSpecification(ProjectItemSpecification):
             settings (FilterSettings, optional): filter settings
             description (str, optional): specification's description
         """
-        super().__init__(name, description, ItemInfo.item_type(), ItemInfo.item_category())
+        super().__init__(name, description, ItemInfo.item_type())
         self.settings = settings
 
     def is_equivalent(self, other):

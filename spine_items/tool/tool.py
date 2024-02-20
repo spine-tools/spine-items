@@ -147,11 +147,6 @@ class Tool(DBWriterItemBase):
         """See base class."""
         return ItemInfo.item_type()
 
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
-
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""

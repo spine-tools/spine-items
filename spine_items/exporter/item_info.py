@@ -9,19 +9,12 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Exporter project item info.
 
-"""
+"""Exporter project item info."""
 from spine_engine.project_item.project_item_info import ProjectItemInfo
 
 
 class ItemInfo(ProjectItemInfo):
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return "Exporters"
-
     @staticmethod
     def item_type():
         """See base class."""

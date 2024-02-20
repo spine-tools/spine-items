@@ -50,9 +50,6 @@ class TestView(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(View.item_type(), ItemInfo.item_type())
 
-    def test_item_category(self):
-        self.assertEqual(View.item_category(), ItemInfo.item_category())
-
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         d = self.view.item_dict()

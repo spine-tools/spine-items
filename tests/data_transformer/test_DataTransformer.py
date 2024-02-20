@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains unit tests for :class:`DataTransformer`.
-
-"""
+"""Contains unit tests for :class:`DataTransformer`."""
 import os.path
 from tempfile import TemporaryDirectory
 import unittest
@@ -24,7 +21,6 @@ from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.data_transformer.data_transformer import DataTransformer
 from spine_items.data_transformer.data_transformer_factory import DataTransformerFactory
 from spine_items.data_transformer.data_transformer_specification import DataTransformerSpecification
-from spine_items.data_transformer.executable_item import ExecutableItem
 from spine_items.data_transformer.filter_config_path import filter_config_path
 from spine_items.data_transformer.item_info import ItemInfo
 from spine_items.data_transformer.settings import EntityClassRenamingSettings
@@ -53,9 +49,6 @@ class TestDataTransformer(unittest.TestCase):
 
     def test_item_type(self):
         self.assertEqual(DataTransformer.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        self.assertEqual(DataTransformer.item_category(), ItemInfo.item_category())
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
