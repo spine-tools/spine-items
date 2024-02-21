@@ -10,12 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains a model for Exporter's output preview.
-
-"""
+"""Contains a model for Exporter's output preview."""
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
-from spine_items.utils import Database
+from spine_items.exporter.utils import Database
 
 
 class DatabaseListModel(QAbstractListModel):
