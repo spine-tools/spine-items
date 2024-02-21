@@ -10,17 +10,15 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""Unit tests for ToolIcon class."""
+"""Unit tests for DataConnectionIcon class."""
 import unittest
-from unittest import mock
 from tempfile import TemporaryDirectory
-from PySide6.QtCore import QEvent
-from PySide6.QtWidgets import QApplication, QGraphicsSceneMouseEvent
+from PySide6.QtWidgets import QApplication
 from tests.mock_helpers import create_toolboxui_with_project, clean_up_toolbox
-from spine_items.tool.tool_factory import ToolFactory
+from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 
 
-class TestToolIcon(unittest.TestCase):
+class TestDataConnectionIcon(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not QApplication.instance():
@@ -30,26 +28,17 @@ class TestToolIcon(unittest.TestCase):
         super().setUp()
         self._temp_dir = TemporaryDirectory()
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
-        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": None}
-        t = ToolFactory.make_item("T", item_dict, self._toolbox, self._toolbox.project())
-        self._toolbox.project().add_item(t)
+        item_dict = {"type": "Data Connection", "description": "", "x": 0, "y": 0}
+        dc = DataConnectionFactory.make_item("DC", item_dict, self._toolbox, self._toolbox.project())
+        self._toolbox.project().add_item(dc)
 
     def tearDown(self):
         super().tearDown()
         clean_up_toolbox(self._toolbox)
         self._temp_dir.cleanup()
 
-    def test_mouse_double_click_event(self):
-        icon = self._toolbox.project()._project_items["T"].get_icon()
-        with mock.patch("spine_items.tool.tool.Tool.show_specification_window") as mock_show_spec_window:
-            mock_show_spec_window.return_value = True
-            icon.mouseDoubleClickEvent(QGraphicsSceneMouseEvent(QEvent.Type.GraphicsSceneMouseDoubleClick))
-            mock_show_spec_window.assert_called()
-
-    def test_animation(self):
-        icon = self._toolbox.project()._project_items["T"].get_icon()
-        icon.start_animation()
-        icon.stop_animation()
+    def test_make_data_connection_icon(self):
+        icon = self._toolbox.project()._project_items["DC"].get_icon()
 
 
 if __name__ == "__main__":
