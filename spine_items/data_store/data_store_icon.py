@@ -11,7 +11,6 @@
 ######################################################################################################################
 
 """Module for data store icon class."""
-
 from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
