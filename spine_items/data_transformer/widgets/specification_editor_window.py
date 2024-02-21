@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`SpecificationEditorWindow`.
 
-"""
+"""Contains :class:`SpecificationEditorWindow`."""
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QFileDialog
 from spinetoolbox.project_item.specification_editor_window import (

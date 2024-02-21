@@ -10,7 +10,4 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Widgets for the Tool project icon.
-
-"""
+"""Widgets for the Tool project icon."""

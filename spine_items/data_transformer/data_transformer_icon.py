@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains :class:`DataTransformerIcon`.
-
-"""
-
+"""Contains :class:`DataTransformerIcon`."""
 from spinetoolbox.project_item_icon import ProjectItemIcon
 
 

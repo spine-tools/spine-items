@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Merger's execute kernel (do_work), as target for a multiprocess.Process
-
-"""
+"""Merger's execute kernel (do_work), as target for a multiprocess.Process"""
 import os
 from spine_engine.utils.helpers import create_log_file_timestamp
 from spinedb_api.helpers import remove_credentials_from_url

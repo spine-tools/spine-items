@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains regular expression filter editor delegate.
 
-"""
+"""Contains regular expression filter editor delegate."""
 from spine_items.ui import default_filter_editor
 from spine_items.widgets import FilterEdit, FilterEditDelegateBase
 

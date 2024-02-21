@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Undo/redo commands for the DataConnection project item.
-
-"""
+"""Undo/redo commands for the DataConnection project item."""
 from pathlib import Path
 from spine_items.commands import SpineToolboxCommand
 

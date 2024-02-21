@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains utilities to manage export manifest files.
-
-"""
+"""Contains utilities to manage export manifest files."""
 import json
 from itertools import dropwhile
 from pathlib import Path

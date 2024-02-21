@@ -9,12 +9,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Utilities to validate that a database exists."""
 from pathlib import Path
-
 from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, QTimer, Signal, Slot
 from PySide6.QtWidgets import QApplication
-
 from spine_items.utils import check_database_url
 
 

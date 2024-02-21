@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains the :class:`MappingListModel` model.
 
-"""
+"""Contains the :class:`MappingListModel` model."""
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,

@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Data transformer's specification.
-
-"""
-
+"""Contains Data transformer's specification."""
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from .item_info import ItemInfo
 from .settings import EntityClassRenamingSettings, settings_from_dict

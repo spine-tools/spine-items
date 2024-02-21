@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-The DataStoreFactory class.
-
-"""
-
+"""The DataStoreFactory class."""
 from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .data_store import DataStore

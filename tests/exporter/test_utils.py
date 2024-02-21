@@ -8,10 +8,10 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Contains unit tests for Exporter's ``utils`` module."""
 import os.path
 import unittest
-
 from spine_engine.project_item.project_item_resource import url_resource
 from spine_items.exporter.output_channel import OutputChannel
 from spine_items.exporter.utils import output_database_resources

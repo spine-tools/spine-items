@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains :class:`MultiCheckableListView`.
-
-"""
+"""Contains :class:`MultiCheckableListView`."""
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListView
 

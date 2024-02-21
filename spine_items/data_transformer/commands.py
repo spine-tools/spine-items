@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains Data transformer's undo commands.
 
-"""
+"""Contains Data transformer's undo commands."""
 from PySide6.QtGui import QUndoCommand
 
 

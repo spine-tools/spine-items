@@ -10,14 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Tool specification classes.
-
-"""
-
+"""Contains Tool specification classes."""
 from collections import OrderedDict
 import copy
-import logging
 import os.path
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spine_engine.utils.command_line_arguments import split_cmdline_args

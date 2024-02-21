@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Tool class. """
+"""Contains the Tool project item class."""
 import os
 from PySide6.QtCore import Slot, QItemSelection, Qt
 from PySide6.QtGui import QAction

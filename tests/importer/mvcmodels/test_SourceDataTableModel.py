@@ -9,13 +9,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains unit tests for Import editor's SourceDataTableModel.
-"""
+
+"""Contains unit tests for Import editor's SourceDataTableModel."""
 import unittest
 from unittest.mock import MagicMock
 from PySide6.QtCore import Qt
-
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
 from spine_items.importer.mvcmodels.mappings_model_roles import Role

@@ -10,13 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains the :class:`ClassRenamesTableModel` class.
-
-"""
+"""Contains the :class:`ClassRenamesTableModel` class."""
 from enum import IntEnum, unique
 import pickle
-
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from ..commands import InsertRow, SetData
 from ..widgets.drop_target_table import DROP_MIME_TYPE

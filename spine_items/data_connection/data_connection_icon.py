@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for data connection icon class.
-
-"""
-
+"""Module for data connection icon class."""
 import os
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtWidgets import QGraphicsItem

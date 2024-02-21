@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains unit tests for :class:`DataTransformerExecutable`.
-
-"""
+"""Contains unit tests for :class:`DataTransformerExecutable`."""
 from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest

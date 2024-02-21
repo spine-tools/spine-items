@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Animation class for importers and exporters.
-
-"""
-
+"""Animation class for importers and exporters."""
 from PySide6.QtGui import QPainterPath, QFont, QFontMetrics
 from PySide6.QtCore import Qt, Signal, Slot, QObject, QTimeLine, QRectF, QPointF, QLineF
 from PySide6.QtWidgets import QGraphicsPathItem

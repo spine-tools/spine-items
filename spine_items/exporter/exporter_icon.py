@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains :class:`ExporterIcon`.
-
-"""
-
+"""Contains :class:`ExporterIcon`."""
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import ExporterAnimation, AnimationSignaller
 

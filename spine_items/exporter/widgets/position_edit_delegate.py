@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains mapping position editor delegate.
 
-"""
+"""Contains mapping position editor delegate."""
 from PySide6.QtCore import Property, Slot
 from PySide6.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
 from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT

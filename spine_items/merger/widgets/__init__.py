@@ -10,7 +10,4 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Widgets for the Data Store project item.
-
-"""
+"""Widgets for the Merger project item."""

@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-MergerPropertiesWidget widget.
-
-"""
-
+"""MergerPropertiesWidget widget."""
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 
 

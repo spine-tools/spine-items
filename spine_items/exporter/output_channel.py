@@ -9,13 +9,10 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`OutputChannel` class.
 
-"""
+"""Contains :class:`OutputChannel` class."""
 from contextlib import suppress
 from dataclasses import dataclass, InitVar
-
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 
 

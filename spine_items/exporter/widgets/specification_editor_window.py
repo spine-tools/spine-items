@@ -9,13 +9,13 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """ Contains :class:`SpecificationEditorWindow`. """
 from copy import deepcopy
 import json
 from PySide6.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
 from PySide6.QtGui import QKeySequence, QAction
 from PySide6.QtWidgets import QApplication, QHeaderView, QMenu
-
 from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
     alternative_export,

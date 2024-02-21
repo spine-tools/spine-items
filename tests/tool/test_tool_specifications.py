@@ -11,7 +11,6 @@
 ######################################################################################################################
 
 """Unit tests for ``tool_specifications`` module."""
-
 import os
 import unittest
 from unittest import mock

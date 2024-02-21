@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Tool's specification factory.
-
-"""
+"""Tool's specification factory."""
 from spine_engine.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
 from .item_info import ItemInfo
 from .tool_specifications import make_specification

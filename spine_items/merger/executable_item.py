@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Merger's executable item as well as support utilities.
-
-"""
-
+"""Contains Merger's executable item as well as support utilities."""
 from contextlib import ExitStack
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState

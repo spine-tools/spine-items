@@ -9,12 +9,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains classes to manage parameter renaming.
 
-"""
+"""Contains classes to manage parameter renaming."""
 from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
-
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.parameter_renames_table_model import ParameterRenamesTableModel, RenamesTableColumn
 from ..settings import ParameterRenamingSettings

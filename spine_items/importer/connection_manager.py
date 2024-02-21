@@ -9,10 +9,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Contains ConnectionManager class. """
 
+"""Contains ConnectionManager class."""
 from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
-from PySide6.QtWidgets import QFileDialog
 from spinetoolbox.helpers import busy_effect
 
 

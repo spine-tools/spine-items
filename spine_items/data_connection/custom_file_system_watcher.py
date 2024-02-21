@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains CustomFileSystemWatcher.
-
-"""
-
+"""Contains CustomFileSystemWatcher."""
 import os
 from PySide6.QtCore import QFileSystemWatcher, Signal, Slot
 

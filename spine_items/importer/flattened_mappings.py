@@ -10,13 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains a model to handle source tables and import mapping.
-
-"""
+"""Contains a model to handle source tables and import mapping."""
 from distutils.util import strtobool
 from enum import Enum, unique
-
 from spinedb_api.mapping import Position
 from spinedb_api.parameter_value import split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError

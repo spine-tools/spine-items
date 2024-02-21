@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains user data roles for :class:`MappingsModel`.
 
-"""
+"""Contains user data roles for :class:`MappingsModel`."""
 from PySide6.QtCore import Qt
 from enum import IntEnum, unique
 

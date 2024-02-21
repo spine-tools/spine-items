@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Exporter properties widget.
-
-"""
-
+"""Exporter properties widget."""
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from ..item_info import ItemInfo
 

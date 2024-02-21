@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Data transformer properties widget.
-
-"""
+"""Data transformer properties widget."""
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from ..item_info import ItemInfo
 

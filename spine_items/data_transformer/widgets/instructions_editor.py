@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains controller that manages value transformations editor.
 
-"""
+"""Contains controller that manages value transformations editor."""
 from PySide6.QtCore import QModelIndex, QObject, Slot
 from PySide6.QtWidgets import QLineEdit, QFormLayout
 from ..commands import AppendInstruction, ChangeInstructionParameter, ChangeOperation, RemoveInstruction

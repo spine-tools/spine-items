@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Importer project item class.
-
-"""
-
+"""Contains Importer project item class."""
 import os
 from operator import itemgetter
 from PySide6.QtCore import QModelIndex, Qt, Slot

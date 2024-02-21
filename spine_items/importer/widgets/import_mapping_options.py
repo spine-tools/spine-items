@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-ImportMappingOptions widget.
-
-"""
+"""ImportMappingOptions widget."""
 from PySide6.QtCore import Qt, Slot, QModelIndex
 from .custom_menus import SimpleFilterMenu
 from ..commands import (

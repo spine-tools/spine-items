@@ -9,17 +9,14 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Unit tests for Exporter's :func:`do_work` function.
 
-"""
+"""Unit tests for Exporter's :func:`do_work` function."""
 from csv import reader
 import os.path
 import sqlite3
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock
-
 from spinedb_api import DatabaseMapping, import_object_classes, import_objects
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping
 from spinedb_api.export_mapping.group_functions import NoGroup

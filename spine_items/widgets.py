@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains common & shared (Q)widgets.
-
-"""
-
+"""Contains common & shared (Q)widgets."""
 import os
 from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property, Slot
 from PySide6.QtWidgets import (

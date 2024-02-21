@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Importer's executable item as well as support utilities.
-
-"""
-
+"""Contains Importer's executable item as well as support utilities."""
 import os
 from contextlib import ExitStack
 from spinedb_api.spine_io.gdx_utils import find_gams_directory

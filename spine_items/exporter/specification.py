@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Exporter's specifications.
-
-"""
+"""Contains Exporter's specifications."""
 from dataclasses import dataclass
 from enum import Enum, unique
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification

@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for view icon class.
-
-"""
-
+"""Module for view icon class."""
 from spinetoolbox.project_item_icon import ProjectItemIcon
 
 

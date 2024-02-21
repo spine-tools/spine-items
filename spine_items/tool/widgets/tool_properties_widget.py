@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Tool properties widget.
-
-"""
-
+"""Tool properties widget."""
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 
 

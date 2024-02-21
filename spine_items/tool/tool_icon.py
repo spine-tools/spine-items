@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for tool icon class.
-
-"""
-
+"""Module for tool icon class."""
 from PySide6.QtCore import QTimeLine, Slot, QPointF
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import AnimationSignaller

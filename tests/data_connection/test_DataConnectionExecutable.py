@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for DataConnectionExecutable.
-
-"""
+"""Unit tests for DataConnectionExecutable."""
 from multiprocessing import Lock
 import pathlib
 import tempfile

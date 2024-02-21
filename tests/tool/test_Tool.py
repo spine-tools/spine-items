@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Tool project item.
-
-"""
-
+"""Unit tests for Tool project item."""
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock

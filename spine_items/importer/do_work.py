@@ -9,10 +9,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Importer's execute kernel (do_work), as target for a multiprocess.Process """
 
+"""Importer's execute kernel (do_work), as target for a multiprocess.Process"""
 import os
-
 from spine_engine.project_item.project_item_resource import get_source, get_source_extras
 from spinedb_api import clear_filter_configs, InvalidMapping
 from spinedb_api.helpers import remove_credentials_from_url

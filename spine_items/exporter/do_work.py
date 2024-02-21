@@ -10,15 +10,11 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Exporter's execute kernel (do_work), as target for a multiprocess.Process
-
-"""
+"""Exporter's execute kernel (do_work), as target for a multiprocess.Process"""
 import os
 from datetime import datetime
 from pathlib import Path
 from time import time
-
 from spinedb_api.spine_io.exporters.writer import write, WriterException
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
 from spinedb_api.spine_io.exporters.excel_writer import ExcelWriter

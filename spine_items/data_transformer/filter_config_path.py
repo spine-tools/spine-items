@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains utilities for filter config paths.
-
-"""
+"""Contains utilities for filter config paths."""
 from pathlib import Path
 
 

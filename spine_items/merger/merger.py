@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for Merger class.
-
-"""
-
+"""Module for Merger class."""
 import os
 from PySide6.QtCore import Qt, Slot
 from spinetoolbox.helpers import create_dir

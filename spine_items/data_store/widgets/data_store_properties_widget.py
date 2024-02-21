@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Data store properties widget.
-
-"""
-
+"""Data store properties widget."""
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from spinedb_api import SUPPORTED_DIALECTS
 from ...widgets import UrlSelectorMixin

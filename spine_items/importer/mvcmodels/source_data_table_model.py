@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains the source data table model.
 
-"""
+"""Contains the source data table model."""
 from PySide6.QtCore import Qt, Signal, Slot, QModelIndex
 from spinedb_api import ParameterValueFormatError
 from spinedb_api.mapping import Position

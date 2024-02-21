@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for View project item.
-
-"""
-
+"""Unit tests for View project item."""
 import os
 from tempfile import TemporaryDirectory
 import unittest

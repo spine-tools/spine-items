@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Data connection properties widget.
-
-"""
-
+"""Data connection properties widget."""
 import os
 from PySide6.QtCore import QPoint, Qt, Slot, QUrl
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase

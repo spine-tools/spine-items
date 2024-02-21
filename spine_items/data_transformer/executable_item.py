@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Data transformer's executable item as well as support utilities.
-
-"""
+"""Contains Data transformer's executable item as well as support utilities."""
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
 from .filter_config_path import filter_config_path

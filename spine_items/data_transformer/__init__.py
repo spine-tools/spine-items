@@ -10,7 +10,4 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Data transformer plugin.
-
-"""
+"""Data transformer plugin."""
