@@ -9,12 +9,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains classes to manage parameter value transformation.
 
-"""
+"""Contains classes to manage parameter value transformation."""
 from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
-
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.value_transformations_table_model import (
     ValueTransformationsTableModel,

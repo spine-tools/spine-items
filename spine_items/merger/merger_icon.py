@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for MergerIcon class.
-
-"""
-
+"""Module for MergerIcon class."""
 import random
 from PySide6.QtCore import QTimeLine, QPointF, Slot
 from spinetoolbox.project_item_icon import ProjectItemIcon

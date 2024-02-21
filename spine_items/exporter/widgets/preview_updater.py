@@ -9,15 +9,12 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`PreviewUpdater`.
 
-"""
+"""Contains :class:`PreviewUpdater`."""
 from copy import deepcopy
 from time import monotonic
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide6.QtWidgets import QFileDialog
-
 from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping, SpineDBVersionError, SpineDBAPIError

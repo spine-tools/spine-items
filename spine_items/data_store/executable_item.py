@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Data Store's executable item as well as support utilities.
-
-"""
+"""Contains Data Store's executable item as well as support utilities."""
 from pathlib import Path
 from spinedb_api import DatabaseMapping
 from spinedb_api.exception import SpineDBAPIError

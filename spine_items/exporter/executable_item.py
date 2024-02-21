@@ -10,15 +10,11 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Exporter's executable item as well as support utilities.
-
-"""
+"""Contains Exporter's executable item as well as support utilities."""
 import json
 import os
 from json import dump
 from pathlib import Path
-
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import file_resource_in_pack
 from spine_engine.utils.returning_process import ReturningProcess

@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Data transformer's :class:`DataTransformerSpecification`.
-
-"""
+"""Unit tests for Data transformer's :class:`DataTransformerSpecification`."""
 import unittest
 from spine_items.data_transformer.data_transformer_specification import DataTransformerSpecification
 from spine_items.data_transformer.settings import EntityClassRenamingSettings

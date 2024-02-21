@@ -10,10 +10,6 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains mime types for Import editor's copy-paste functionality
-
-"""
-
+"""Contains mime types for Import editor's copy-paste functionality"""
 MAPPING_LIST_MIME_TYPE = "application/spine_items-importmappinglist"
 TABLE_OPTIONS_MIME_TYPE = "application/spine_items-importtableoptions"

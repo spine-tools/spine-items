@@ -9,12 +9,12 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Spine items. """
 
+""" Spine items. """
 from .version import __version__
 
 
-def _categories_and_factories():
+def _factories_and_executable_items():
     from . import data_connection
     from .data_connection.data_connection_factory import DataConnectionFactory
     from . import data_store
@@ -37,7 +37,6 @@ def _categories_and_factories():
 
     modules = (data_connection, data_store, data_transformer, exporter, importer, merger, tool, view)
     item_infos = tuple(module.item_info.ItemInfo for module in modules)
-    categories = {info.item_type(): info.item_category() for info in item_infos}
     factories = (
         DataConnectionFactory,
         DataStoreFactory,
@@ -56,12 +55,11 @@ def _categories_and_factories():
         for module in specification_item_submodules
     }
     return (
-        categories.copy,
         factories.copy,
         executables.copy,
         specification_factories.copy,
     )
 
 
-item_categories, item_factories, executable_items, item_specification_factories = _categories_and_factories()
-del _categories_and_factories
+item_factories, executable_items, item_specification_factories = _factories_and_executable_items()
+del _factories_and_executable_items

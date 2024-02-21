@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Tool's executable item and support functionality.
-
-"""
-
+"""Contains Tool's executable item and support functionality."""
 import datetime
 import fnmatch
 import glob
@@ -40,7 +36,6 @@ from spine_engine.utils.helpers import (
     write_filter_id_file,
     create_log_file_timestamp,
 )
-
 from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources

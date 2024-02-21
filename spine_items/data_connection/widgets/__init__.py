@@ -10,7 +10,4 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Widgets for the Data Connection project item.
-
-"""
+"""Widgets for the Data Connection project item."""

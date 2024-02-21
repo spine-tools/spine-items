@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Undo/redo commands for the View project item.
-
-"""
+"""Undo/redo commands for the View project item."""
 from spine_items.commands import SpineToolboxCommand
 
 

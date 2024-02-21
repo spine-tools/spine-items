@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains base classes for items that write to db.
-
-"""
+"""Contains base classes for items that write to db."""
 from PySide6.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 

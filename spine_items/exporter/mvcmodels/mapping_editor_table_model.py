@@ -9,13 +9,10 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains model for export mapping setup table.
 
-"""
+"""Contains model for export mapping setup table."""
 from enum import IntEnum, unique
 from operator import itemgetter
-
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QFont, QColor
 from spinedb_api.mapping import is_pivoted, is_regular, Position, value_index

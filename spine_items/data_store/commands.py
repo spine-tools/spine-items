@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Undo/redo commands for the DataStore project item.
-
-"""
+"""Undo/redo commands for the DataStore project item."""
 from enum import IntEnum, unique
 from spine_items.commands import SpineToolboxCommand
 

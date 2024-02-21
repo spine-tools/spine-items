@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`ValueTransformTableModel`.
 
-"""
+"""Contains :class:`ValueTransformTableModel`."""
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt
 from .parameter_drop_target_table_model import ParameterDropTargetTableModel

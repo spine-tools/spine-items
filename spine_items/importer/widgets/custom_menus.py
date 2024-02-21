@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Classes for context menus used alongside the Importer project item.
-
-"""
-
+"""Classes for context menus used alongside the Importer project item."""
 from PySide6.QtCore import QPoint, Slot, Signal
 from PySide6.QtWidgets import QMenu
 from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu, FilterMenuBase

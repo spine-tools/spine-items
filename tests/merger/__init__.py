@@ -10,7 +10,4 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Init file for tests.project_items.merger package. Intentionally empty.
-
-"""
+"""Init file for tests.project_items.merger package. Intentionally empty."""

@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Undo/redo commands for the Tool project item.
-
-"""
+"""Undo/redo commands for the Tool project item."""
 import copy
 from spine_items.commands import SpineToolboxCommand
 

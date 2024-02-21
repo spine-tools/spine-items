@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Importer properties widget.
-
-"""
-
+"""Importer properties widget."""
 from PySide6.QtCore import QPoint, Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from .custom_menus import FilesContextMenu

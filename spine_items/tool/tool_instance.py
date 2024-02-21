@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains ToolInstance classes.
-
-"""
-
+"""Contains ToolInstance classes."""
 import os
 import sys
 from spine_engine.utils.helpers import (

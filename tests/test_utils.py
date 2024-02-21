@@ -9,11 +9,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """ Unit tests for the ``utils`` module. """
 import sys
 import unittest
 from unittest import mock
-
 from spine_items.utils import convert_to_sqlalchemy_url, convert_url_to_safe_string, database_label
 
 

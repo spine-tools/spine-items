@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for View project item.
-
-"""
-
+"""Unit tests for View project item."""
 import os
 from tempfile import TemporaryDirectory
 import unittest
@@ -49,9 +45,6 @@ class TestView(unittest.TestCase):
 
     def test_item_type(self):
         self.assertEqual(View.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        self.assertEqual(View.item_category(), ItemInfo.item_category())
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""

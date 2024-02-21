@@ -10,14 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Tool specification classes.
-
-"""
-
+"""Contains Tool specification classes."""
 from collections import OrderedDict
 import copy
-import logging
 import os.path
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spine_engine.utils.command_line_arguments import split_cmdline_args
@@ -118,7 +113,7 @@ class ToolSpecification(ProjectItemSpecification):
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (list, optional): Tool Specification command line arguments
         """
-        super().__init__(name, description, item_type=ItemInfo.item_type(), item_category=ItemInfo.item_category())
+        super().__init__(name, description, item_type=ItemInfo.item_type())
         self._settings = settings
         self._logger = logger
         self.tooltype = tooltype

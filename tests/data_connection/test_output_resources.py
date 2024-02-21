@@ -9,11 +9,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Contains unit tests for ``output_resources`` module."""
 from pathlib import PurePath
 import unittest
 from unittest.mock import MagicMock
-
 from spine_engine.project_item.project_item_resource import url_resource
 from spine_items.data_connection.output_resources import scan_for_resources
 

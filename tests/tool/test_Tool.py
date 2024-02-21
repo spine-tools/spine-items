@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Tool project item.
-
-"""
-
+"""Unit tests for Tool project item."""
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -79,9 +75,6 @@ class TestTool(unittest.TestCase):
 
     def test_item_type(self):
         self.assertEqual(Tool.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        self.assertEqual(Tool.item_category(), ItemInfo.item_category())
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""

@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains :class:`ExporterIcon`.
-
-"""
-
+"""Contains :class:`ExporterIcon`."""
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import ExporterAnimation, AnimationSignaller
 
@@ -42,5 +38,5 @@ class ExporterIcon(ProjectItemIcon):
             e (QGraphicsSceneMouseEvent): Event
         """
         super().mouseDoubleClickEvent(e)
-        item = self._toolbox.project_item_model.get_item(self._name)
-        item.project_item.show_specification_window()
+        item = self._toolbox.project().get_item(self._name)
+        item.show_specification_window()

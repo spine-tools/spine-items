@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Provides OptionsWidget and subclasses for each tool type (julia, python, executable, gams).
-
-"""
+"""Provides OptionsWidget and subclasses for each tool type (julia, python, executable, gams)."""
 import os
 import sys
 import uuid

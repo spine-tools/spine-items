@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains model for a single export preview table.
 
-"""
+"""Contains model for a single export preview table."""
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 

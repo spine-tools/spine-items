@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Classes and functions that can be shared among unit test modules.
-
-"""
+"""Classes and functions that can be shared among unit test modules."""
 import os.path
 from unittest.mock import MagicMock, patch
 from PySide6.QtGui import QStandardItemModel

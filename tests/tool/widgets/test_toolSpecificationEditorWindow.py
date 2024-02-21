@@ -11,7 +11,6 @@
 ######################################################################################################################
 
 """Unit tests for ToolSpecificationEditorWindow class and tool_spec_optional_widgets module."""
-
 import unittest
 import logging
 import sys

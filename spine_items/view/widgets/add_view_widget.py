@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Widget shown to user when a new View is created.
-
-"""
-
+"""Widget shown to user when a new View is created."""
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..item_info import ItemInfo
 from ..view import View

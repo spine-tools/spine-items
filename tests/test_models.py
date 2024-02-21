@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for the ``models`` module.
-
-"""
+"""Unit tests for the ``models`` module."""
 from pathlib import Path
 import unittest
 from PySide6.QtCore import Qt

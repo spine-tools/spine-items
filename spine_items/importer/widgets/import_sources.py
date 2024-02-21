@@ -10,13 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains ImportSources widget and SourceDataTableMenu.
-
-"""
+"""Contains ImportSources widget and SourceDataTableMenu."""
 import pickle
 from operator import itemgetter
-
 from PySide6.QtCore import (
     QItemSelectionModel,
     QModelIndex,
@@ -30,7 +26,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
-
 from spinetoolbox.helpers import CharIconEngine
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinedb_api.import_mapping.type_conversion import (

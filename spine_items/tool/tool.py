@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Tool class. """
+"""Contains the Tool project item class."""
 import os
 from PySide6.QtCore import Slot, QItemSelection, Qt
 from PySide6.QtGui import QAction
@@ -146,11 +146,6 @@ class Tool(DBWriterItemBase):
     def item_type():
         """See base class."""
         return ItemInfo.item_type()
-
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.

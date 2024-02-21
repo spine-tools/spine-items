@@ -11,7 +11,6 @@
 ######################################################################################################################
 
 """Contains unit tests for the tool_instance module."""
-
 import sys
 import unittest
 from unittest import mock

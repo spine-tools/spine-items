@@ -10,19 +10,11 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Importer project item info.
-
-"""
+"""Importer project item info."""
 from spine_engine.project_item.project_item_info import ProjectItemInfo
 
 
 class ItemInfo(ProjectItemInfo):
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return "Importers"
-
     @staticmethod
     def item_type():
         """See base class."""

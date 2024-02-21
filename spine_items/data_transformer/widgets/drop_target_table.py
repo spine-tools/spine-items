@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains a table view that can accept drops.
 
-"""
+"""Contains a table view that can accept drops."""
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTableView
 

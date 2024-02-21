@@ -10,14 +10,11 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Classes for custom context menus and pop-up menus.
-
-"""
+"""Classes for custom context menus and pop-up menus."""
 import os
 from PySide6.QtCore import QUrl, Slot
 from spinetoolbox.helpers import open_url
-from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu, CustomPopupMenu
+from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 
 
 class ToolSpecificationMenu(ItemSpecificationMenu):

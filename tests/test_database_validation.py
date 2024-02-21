@@ -9,11 +9,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Unit tests for the ``database_validation`` module."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
-
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QApplication
 from sqlalchemy.engine.url import make_url

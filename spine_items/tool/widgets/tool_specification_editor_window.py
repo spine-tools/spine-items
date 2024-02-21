@@ -10,12 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-QWidget that is used to create or edit Tool specifications.
+"""QWidget that is used to create or edit Tool specifications.
 In the former case it is presented empty, but in the latter it
-is filled with all the information from the specification being edited.
-
-"""
+is filled with all the information from the specification being edited."""
 import logging
 import os
 from copy import deepcopy

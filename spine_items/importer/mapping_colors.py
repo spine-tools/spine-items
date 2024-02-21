@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains colors used in Import editor's tables.
-
-"""
+"""Contains colors used in Import editor's tables."""
 from PySide6.QtGui import QColor
 
 

@@ -10,18 +10,13 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains a model to handle source tables and import mapping.
-
-"""
+"""Contains a model to handle source tables and import mapping."""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
 import re
-
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor, QFont
-
 from spinetoolbox.helpers import unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError

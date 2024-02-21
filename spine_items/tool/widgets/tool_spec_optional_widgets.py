@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Provides an optional widget for Tool Specification Editor for each Tool Spec type (julia, python, executable, gams).
-"""
-
+"""Provides an optional widget for Tool Specification Editor when editing Julia, Python, or Executable Tool Specs."""
 import sys
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QWidget, QApplication

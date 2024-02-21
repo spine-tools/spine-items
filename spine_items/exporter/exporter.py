@@ -10,17 +10,12 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains the :class:`Exporter` project item.
-
-"""
+"""Contains the :class:`Exporter` project item."""
 from dataclasses import dataclass
 from itertools import combinations, zip_longest
 from operator import itemgetter
 from pathlib import Path
-
 from PySide6.QtCore import Slot, Qt
-
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
@@ -100,11 +95,6 @@ class Exporter(ProjectItem):
     def item_type():
         """See base class."""
         return ItemInfo.item_type()
-
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
 
     @property
     def executable_class(self):

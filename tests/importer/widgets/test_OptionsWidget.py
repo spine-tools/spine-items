@@ -10,13 +10,10 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains unit tests for the OptionsWidget class.
-
-"""
+"""Contains unit tests for the OptionsWidget class."""
 import unittest
 from unittest.mock import MagicMock
-from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit, QSpinBox
+from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QUndoStack
 from spine_items.importer.widgets.options_widget import OptionsWidget
 

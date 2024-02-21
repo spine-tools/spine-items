@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Exporter's specification factory.
-
-"""
+"""Exporter's specification factory."""
 from spine_engine.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
 from .item_info import ItemInfo
 from .specification import Specification

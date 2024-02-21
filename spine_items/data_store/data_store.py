@@ -9,8 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Module for data store class. """
 
+""" Module for data store class. """
 import os
 from dataclasses import dataclass
 from shutil import copyfile
@@ -75,11 +75,6 @@ class DataStore(ProjectItem):
     def item_type():
         """See base class."""
         return ItemInfo.item_type()
-
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
 
     @property
     def executable_class(self):

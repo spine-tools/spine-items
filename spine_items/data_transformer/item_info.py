@@ -10,19 +10,11 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Data transformer project item info.
-
-"""
+"""Data transformer project item info."""
 from spine_engine.project_item.project_item_info import ProjectItemInfo
 
 
 class ItemInfo(ProjectItemInfo):
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return "Manipulators"
-
     @staticmethod
     def item_type():
         """See base class."""

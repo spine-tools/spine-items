@@ -10,19 +10,11 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Data Store project item info.
-
-"""
+"""Data Store project item info."""
 from spine_engine.project_item.project_item_info import ProjectItemInfo
 
 
 class ItemInfo(ProjectItemInfo):
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return "Data Stores"
-
     @staticmethod
     def item_type():
         """See base class."""

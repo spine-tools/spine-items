@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-The ToolFactory class.
-
-"""
-
+"""The ToolFactory class."""
 import os
 import uuid
 from PySide6.QtGui import QColor

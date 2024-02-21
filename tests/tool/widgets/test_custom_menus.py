@@ -11,7 +11,6 @@
 ######################################################################################################################
 
 """Unit tests for the custom_menus.py module."""
-
 import unittest
 from unittest import mock
 import logging

@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains settings classes for filters and manipulators.
-
-"""
+"""Contains settings classes for filters and manipulators."""
 from spinedb_api.filters.renamer import entity_class_renamer_config, parameter_renamer_config
 from spinedb_api.filters.value_transformer import value_transformer_config
 

@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for MergerExecutable.
-
-"""
+"""Unit tests for MergerExecutable."""
 from multiprocessing import Lock
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -25,8 +22,6 @@ from spine_engine.project_item.project_item_resource import database_resource
 from spine_engine.project_item.connection import Connection
 from spine_engine.spine_engine import SpineEngine, SpineEngineState
 from spine_items.merger.executable_item import ExecutableItem
-from spine_items.data_store.executable_item import ExecutableItem as DSExecutableItem
-from spine_items.utils import convert_to_sqlalchemy_url
 
 
 class TestMergerExecutable(unittest.TestCase):

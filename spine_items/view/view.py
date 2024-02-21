@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for view class.
-
-"""
-
+"""Module for view class."""
 import os
 from PySide6.QtCore import Qt, Slot, Signal, QObject, QTimer
 from PySide6.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
@@ -60,11 +56,6 @@ class View(ProjectItem):
     def item_type():
         """See base class."""
         return ItemInfo.item_type()
-
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
 
     @property
     def executable_class(self):

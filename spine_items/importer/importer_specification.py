@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Importer's specification.
-
-"""
+"""Contains Importer's specification."""
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from .item_info import ItemInfo
 
@@ -28,7 +25,7 @@ class ImporterSpecification(ProjectItemSpecification):
             mapping (dict): mapping dict
             description (str): specification's description
         """
-        super().__init__(name, description, ItemInfo.item_type(), ItemInfo.item_category())
+        super().__init__(name, description, ItemInfo.item_type())
         self._mapping = mapping
 
     @property

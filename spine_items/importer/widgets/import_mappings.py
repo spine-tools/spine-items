@@ -10,14 +10,10 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-ImportMappings widget.
-
-"""
+"""ImportMappings widget."""
 import pickle
 from PySide6.QtCore import QPoint, QItemSelectionModel, Slot, QModelIndex, QMimeData, QItemSelection
 from PySide6.QtWidgets import QStyledItemDelegate, QApplication
-
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
 from spinetoolbox.widgets.parameter_value_editor import ParameterValueEditor

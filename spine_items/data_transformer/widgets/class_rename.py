@@ -9,12 +9,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains classes to manage entity class renaming.
 
-"""
+"""Contains classes to manage entity class renaming."""
 from PySide6.QtCore import QObject, Qt, Slot, QSortFilterProxyModel
-
 from ..commands import RemoveRow, InsertRow
 from ..mvcmodels.class_renames_table_model import ClassRenamesTableModel
 from ..settings import EntityClassRenamingSettings

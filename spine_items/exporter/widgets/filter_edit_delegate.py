@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains mapping filter editor delegate.
 
-"""
+"""Contains mapping filter editor delegate."""
 from spinedb_api.export_mapping.export_mapping import ParameterValueTypeMapping
 from spine_items.ui import default_filter_editor
 from spine_items.widgets import FilterEdit, FilterEditDelegateBase

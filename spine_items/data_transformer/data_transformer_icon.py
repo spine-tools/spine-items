@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains :class:`DataTransformerIcon`.
-
-"""
-
+"""Contains :class:`DataTransformerIcon`."""
 from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
@@ -37,5 +33,5 @@ class DataTransformerIcon(ProjectItemIcon):
             e (QGraphicsSceneMouseEvent): Event
         """
         super().mouseDoubleClickEvent(e)
-        item = self._toolbox.project_item_model.get_item(self._name)
-        item.project_item.show_specification_window()
+        item = self._toolbox.project().get_item(self._name)
+        item.show_specification_window()

@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for ImporterExecutable.
-
-"""
+"""Unit tests for ImporterExecutable."""
 from multiprocessing import Lock
 from pathlib import Path
 from tempfile import TemporaryDirectory

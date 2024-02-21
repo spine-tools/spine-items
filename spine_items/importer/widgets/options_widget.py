@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains OptionsWidget class.
-
-"""
+"""Contains OptionsWidget class."""
 import functools
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import (

@@ -9,10 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains utilities to scan for Data Store's output resources.
 
-"""
+"""Contains utilities to scan for Data Store's output resources."""
 from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.utils import database_label
 

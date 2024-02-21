@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Undo/redo commands that can be used by multiple project items.
-
-"""
+"""Undo/redo commands that can be used by multiple project items."""
 from spinetoolbox.project_commands import SpineToolboxCommand
 
 

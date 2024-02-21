@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-View properties widget.
-
-"""
-
+"""View properties widget."""
 from PySide6.QtCore import Slot, QPoint
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from .custom_menus import ViewRefsContextMenu, ViewSelectionsContextMenu

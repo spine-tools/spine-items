@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for ViewExecutable.
-
-"""
+"""Unit tests for ViewExecutable."""
 from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest

@@ -9,15 +9,12 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains undo and redo commands for Import editor.
 
-"""
+"""Contains undo and redo commands for Import editor."""
 import pickle
 from enum import auto, IntEnum, unique
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QUndoCommand
-
 from spinedb_api import import_mapping_from_dict
 from spinedb_api.import_mapping.import_mapping_compat import parse_named_mapping_spec
 from spine_items.importer.mvcmodels.mappings_model_roles import Role

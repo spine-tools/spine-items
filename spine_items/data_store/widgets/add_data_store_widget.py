@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Widget shown to user when a new Data Store is created.
-
-"""
-
+"""Widget shown to user when a new Data Store is created."""
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..data_store import DataStore
 from ..item_info import ItemInfo

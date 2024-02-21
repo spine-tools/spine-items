@@ -9,14 +9,12 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains unit tests for Import editor's :class:`MappingsModel`.
-"""
+
+"""Contains unit tests for Import editor's :class:`MappingsModel`."""
 import unittest
 from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QUndoStack
-
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spinetoolbox.helpers import signal_waiter

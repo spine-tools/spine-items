@@ -10,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Classes for handling models in PySide6's model/view framework.
-
-"""
+"""Classes for handling models in PySide6's model/view framework."""
 from collections import namedtuple
 from collections.abc import Iterable
 from PySide6.QtCore import QPoint, Qt, Signal, Slot, QModelIndex

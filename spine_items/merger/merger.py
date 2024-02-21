@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for Merger class.
-
-"""
-
+"""Module for Merger class."""
 import os
 from PySide6.QtCore import Qt, Slot
 from spinetoolbox.helpers import create_dir
@@ -50,11 +46,6 @@ class Merger(DBWriterItemBase):
     def item_type():
         """See base class."""
         return ItemInfo.item_type()
-
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
 
     @property
     def executable_class(self):

@@ -10,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for data store icon class.
-
-"""
-
+"""Module for data store icon class."""
 from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
@@ -36,5 +32,5 @@ class DataStoreIcon(ProjectItemIcon):
             e (QGraphicsSceneMouseEvent): Event
         """
         super().mouseDoubleClickEvent(e)
-        item = self._toolbox.project_item_model.get_item(self._name)
-        item.project_item.open_url_in_spine_db_editor()
+        item = self._toolbox.project().get_item(self._name)
+        item.open_url_in_spine_db_editor()

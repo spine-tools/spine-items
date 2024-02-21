@@ -9,14 +9,13 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Contains ImportPreviewWindow class. """
 
+""" Contains ImportPreviewWindow class. """
 import os
 import json
 import fnmatch
 from PySide6.QtCore import Qt, Signal, Slot, QModelIndex, QItemSelectionModel
 from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
-
 from spinedb_api.helpers import remove_credentials_from_url
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
