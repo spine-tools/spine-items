@@ -41,7 +41,9 @@ class TestDataTransformerIcon(unittest.TestCase):
 
     def test_mouse_double_click_event(self):
         icon = self._toolbox.project()._project_items["DT"].get_icon()
-        with mock.patch("spine_items.data_transformer.data_transformer.DataTransformer.show_specification_window") as mock_show_spec_window:
+        with mock.patch(
+            "spine_items.data_transformer.data_transformer.DataTransformer.show_specification_window"
+        ) as mock_show_spec_window:
             mock_show_spec_window.return_value = True
             icon.mouseDoubleClickEvent(QGraphicsSceneMouseEvent(QEvent.Type.GraphicsSceneMouseDoubleClick))
             mock_show_spec_window.assert_called()
