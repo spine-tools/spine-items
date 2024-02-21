@@ -13,7 +13,7 @@
 """Contains Data Store's executable item as well as support utilities."""
 from pathlib import Path
 from spinedb_api import DatabaseMapping
-from spinedb_api.exception import SpineDBAPIError, SpineDBVersionError
+from spinedb_api.exception import SpineDBAPIError
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
