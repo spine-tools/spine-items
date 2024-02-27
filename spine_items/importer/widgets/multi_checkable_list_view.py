@@ -30,11 +30,8 @@ class MultiCheckableListView(QListView):
         selected = selection_model.selectedIndexes()
         model = self.model()
         if len(selected) == 1:
-            check_state = (
-                Qt.CheckState.Checked
-                if selected[0].data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value
-                else Qt.CheckState.Unchecked
-            )
-            model.setData(selected[0], check_state, Qt.ItemDataRole.CheckStateRole)
+            state = selected[0].data(Qt.ItemDataRole.CheckStateRole)
+            check_state = Qt.CheckState.Checked if state == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+            model.setData(selected[0], check_state.value, Qt.ItemDataRole.CheckStateRole)
         else:
             model.toggle_checked_tables(selected)
