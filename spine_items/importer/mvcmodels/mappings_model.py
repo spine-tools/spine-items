@@ -161,7 +161,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             SourceTableItem: 'select all' item
         """
-        return SourceTableItem("Select all", checked=False, real=False, select_all=True)
+        return SourceTableItem("Select all", checked=True, real=False, select_all=True)
 
     def columnCount(self, parent=QModelIndex()):
         if not parent.isValid():
@@ -507,7 +507,7 @@ class MappingsModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.CheckStateRole and table_item.checkable:
             checked = value == Qt.CheckState.Checked.value
             if row == 0:
-                self._set_multiple_checked_undoable(checked, *range(1, len(self._mappings)))
+                self._set_multiple_checked_undoable(checked, *range(len(self._mappings)))
             else:
                 self._undo_stack.push(SetTableChecked(table_item.name, self, checked, row))
             return True
@@ -562,7 +562,7 @@ class MappingsModel(QAbstractItemModel):
         if add_empty_row:
             table_item.real = True
             table_item.checkable = True
-            table_item.checked = True
+            table_item.checked = self._mappings[0].checked
             table_item.empty = False
             table_item.in_source = True
             default_flattened_mappings = FlattenedMappings(self._create_default_mapping())
@@ -628,16 +628,17 @@ class MappingsModel(QAbstractItemModel):
                 min_row = min(row, min_row)
                 max_row = max(row, max_row)
             self._mappings[row].checked = checked
-        if min_row is None:
-            return
-        top_left = self.index(min_row, 0)
-        bottom_right = self.index(max_row, 0)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
+        if min_row is not None:
+            top_left = self.index(min_row, 0)
+            bottom_right = self.index(max_row, 0)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
         self._update_all_checked()
 
     def _update_all_checked(self):
         """Updates the checked state of 'Select All' table item if needed."""
-        checkables = (m for m in self._mappings[1:] if m.checkable)
+        checkables = tuple(m for m in self._mappings[1:] if m.checkable)
+        if not checkables:
+            return
         all_checked = all(m.checked for m in checkables)
         all_checked_item = self._mappings[0]
         if all_checked_item.checked != all_checked:
@@ -658,7 +659,9 @@ class MappingsModel(QAbstractItemModel):
         flattened_mappings = FlattenedMappings(root_mapping)
         list_item = MappingListItem("Mapping 1")
         list_item.set_flattened_mappings(flattened_mappings)
-        table_item = SourceTableItem(table_name, checked=True, in_source=True, in_specification=has_root_mapping)
+        table_item = SourceTableItem(
+            table_name, checked=self._mappings[0].checked, in_source=True, in_specification=has_root_mapping
+        )
         table_item.append_to_mapping_list(list_item)
         self.beginInsertRows(QModelIndex(), len(self._mappings), len(self._mappings))
         self._mappings.append(table_item)
