@@ -2,6 +2,7 @@
 <!--
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and\/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -65,7 +66,7 @@
       <item>
        <widget class="QLabel" name="label_tooltype">
         <property name="text">
-         <string>Tool type</string>
+         <string>Tool type:</string>
         </property>
        </widget>
       </item>
@@ -100,7 +101,7 @@
       <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Command line arguments</string>
+         <string>Command line arguments:</string>
         </property>
        </widget>
       </item>

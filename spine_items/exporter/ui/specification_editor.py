@@ -151,13 +151,12 @@ class Ui_MainWindow(object):
         self.splitter_2 = QSplitter(self.splitter_3)
         self.splitter_2.setObjectName(u"splitter_2")
         self.splitter_2.setOrientation(Qt.Vertical)
-        self.layoutWidget = QWidget(self.splitter_2)
-        self.layoutWidget.setObjectName(u"layoutWidget")
-        self.verticalLayout_9 = QVBoxLayout(self.layoutWidget)
+        self.mapping_list_layout_widget = QWidget(self.splitter_2)
+        self.mapping_list_layout_widget.setObjectName(u"mapping_list_layout_widget")
+        self.verticalLayout_9 = QVBoxLayout(self.mapping_list_layout_widget)
         self.verticalLayout_9.setSpacing(0)
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
-        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
-        self.frame = QFrame(self.layoutWidget)
+        self.frame = QFrame(self.mapping_list_layout_widget)
         self.frame.setObjectName(u"frame")
         self.frame.setFrameShape(QFrame.StyledPanel)
         self.frame.setFrameShadow(QFrame.Raised)
@@ -173,7 +172,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_9.addWidget(self.frame)
 
-        self.mappings_table = QTableView(self.layoutWidget)
+        self.mappings_table = QTableView(self.mapping_list_layout_widget)
         self.mappings_table.setObjectName(u"mappings_table")
         self.mappings_table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -182,25 +181,24 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_9.addWidget(self.mappings_table)
 
-        self.splitter_2.addWidget(self.layoutWidget)
-        self.layoutWidget1 = QWidget(self.splitter_2)
-        self.layoutWidget1.setObjectName(u"layoutWidget1")
-        self.verticalLayout_8 = QVBoxLayout(self.layoutWidget1)
+        self.splitter_2.addWidget(self.mapping_list_layout_widget)
+        self.mapping_controls_layout_widget = QWidget(self.splitter_2)
+        self.mapping_controls_layout_widget.setObjectName(u"mapping_controls_layout_widget")
+        self.verticalLayout_8 = QVBoxLayout(self.mapping_controls_layout_widget)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
-        self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.add_mapping_button = QPushButton(self.layoutWidget1)
+        self.add_mapping_button = QPushButton(self.mapping_controls_layout_widget)
         self.add_mapping_button.setObjectName(u"add_mapping_button")
 
         self.horizontalLayout_2.addWidget(self.add_mapping_button)
 
-        self.remove_mapping_button = QPushButton(self.layoutWidget1)
+        self.remove_mapping_button = QPushButton(self.mapping_controls_layout_widget)
         self.remove_mapping_button.setObjectName(u"remove_mapping_button")
 
         self.horizontalLayout_2.addWidget(self.remove_mapping_button)
 
-        self.toggle_enabled_button = QPushButton(self.layoutWidget1)
+        self.toggle_enabled_button = QPushButton(self.mapping_controls_layout_widget)
         self.toggle_enabled_button.setObjectName(u"toggle_enabled_button")
 
         self.horizontalLayout_2.addWidget(self.toggle_enabled_button)
@@ -209,12 +207,12 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
-        self.write_earlier_button = QPushButton(self.layoutWidget1)
+        self.write_earlier_button = QPushButton(self.mapping_controls_layout_widget)
         self.write_earlier_button.setObjectName(u"write_earlier_button")
 
         self.horizontalLayout_2.addWidget(self.write_earlier_button)
 
-        self.write_later_button = QPushButton(self.layoutWidget1)
+        self.write_later_button = QPushButton(self.mapping_controls_layout_widget)
         self.write_later_button.setObjectName(u"write_later_button")
 
         self.horizontalLayout_2.addWidget(self.write_later_button)
@@ -222,7 +220,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_8.addLayout(self.horizontalLayout_2)
 
-        self.mapping_options_contents = QFrame(self.layoutWidget1)
+        self.mapping_options_contents = QFrame(self.mapping_controls_layout_widget)
         self.mapping_options_contents.setObjectName(u"mapping_options_contents")
         self.formLayout = QFormLayout(self.mapping_options_contents)
         self.formLayout.setObjectName(u"formLayout")
@@ -321,7 +319,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_8.addWidget(self.mapping_options_contents)
 
-        self.mapping_table_view = QTableView(self.layoutWidget1)
+        self.mapping_table_view = QTableView(self.mapping_controls_layout_widget)
         self.mapping_table_view.setObjectName(u"mapping_table_view")
         self.mapping_table_view.setSelectionMode(QAbstractItemView.SingleSelection)
         self.mapping_table_view.horizontalHeader().setStretchLastSection(True)
@@ -329,12 +327,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_8.addWidget(self.mapping_table_view)
 
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-
-        self.verticalLayout_8.addLayout(self.horizontalLayout_5)
-
-        self.splitter_2.addWidget(self.layoutWidget1)
+        self.splitter_2.addWidget(self.mapping_controls_layout_widget)
         self.splitter_3.addWidget(self.splitter_2)
         self.splitter = QSplitter(self.splitter_3)
         self.splitter.setObjectName(u"splitter")
@@ -361,6 +354,30 @@ class Ui_MainWindow(object):
         self.verticalLayout_10.addWidget(self.splitter_3)
 
         MainWindow.setCentralWidget(self.centralwidget)
+        QWidget.setTabOrder(self.export_format_combo_box, self.live_preview_check_box)
+        QWidget.setTabOrder(self.live_preview_check_box, self.database_url_combo_box)
+        QWidget.setTabOrder(self.database_url_combo_box, self.load_url_from_fs_button)
+        QWidget.setTabOrder(self.load_url_from_fs_button, self.max_preview_tables_spin_box)
+        QWidget.setTabOrder(self.max_preview_tables_spin_box, self.max_preview_rows_spin_box)
+        QWidget.setTabOrder(self.max_preview_rows_spin_box, self.mappings_table)
+        QWidget.setTabOrder(self.mappings_table, self.add_mapping_button)
+        QWidget.setTabOrder(self.add_mapping_button, self.remove_mapping_button)
+        QWidget.setTabOrder(self.remove_mapping_button, self.toggle_enabled_button)
+        QWidget.setTabOrder(self.toggle_enabled_button, self.write_earlier_button)
+        QWidget.setTabOrder(self.write_earlier_button, self.write_later_button)
+        QWidget.setTabOrder(self.write_later_button, self.item_type_combo_box)
+        QWidget.setTabOrder(self.item_type_combo_box, self.entity_dimensions_spin_box)
+        QWidget.setTabOrder(self.entity_dimensions_spin_box, self.highlight_dimension_spin_box)
+        QWidget.setTabOrder(self.highlight_dimension_spin_box, self.parameter_type_combo_box)
+        QWidget.setTabOrder(self.parameter_type_combo_box, self.parameter_dimensions_spin_box)
+        QWidget.setTabOrder(self.parameter_dimensions_spin_box, self.group_fn_combo_box)
+        QWidget.setTabOrder(self.group_fn_combo_box, self.fix_table_name_check_box)
+        QWidget.setTabOrder(self.fix_table_name_check_box, self.fix_table_name_line_edit)
+        QWidget.setTabOrder(self.fix_table_name_line_edit, self.always_export_header_check_box)
+        QWidget.setTabOrder(self.always_export_header_check_box, self.compact_button)
+        QWidget.setTabOrder(self.compact_button, self.mapping_table_view)
+        QWidget.setTabOrder(self.mapping_table_view, self.preview_tree_view)
+        QWidget.setTabOrder(self.preview_tree_view, self.preview_table_view)
 
         self.retranslateUi(MainWindow)
 

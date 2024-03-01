@@ -272,17 +272,12 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget.push_set_jupyter_console_mode(False)
             self.assertFalse(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
             opt_widget.set_executable("path/to/executable")
-            self.tool_specification_widget.push_change_executable()
+            self.tool_specification_widget.push_change_executable(opt_widget.get_executable())
             self.assertEqual(
                 "path/to/executable", self.tool_specification_widget.spec_dict["execution_settings"]["executable"]
             )
-            with mock.patch(
-                "spine_items.tool.widgets.tool_specification_editor_window.split_cmdline_args"
-            ) as mock_args:
-                mock_args.return_value = ["-A", "-B"]
-                self.tool_specification_widget._push_change_args_command()
-                mock_args.assert_called()
-                self.assertEqual(["-A", "-B"], self.tool_specification_widget.spec_dict["cmdline_args"])
+            self.tool_specification_widget._push_change_args_command("-A -B")
+            self.assertEqual(["-A", "-B"], self.tool_specification_widget.spec_dict["cmdline_args"])
 
     def test_change_executable_spec_options(self):
         mock_logger = mock.MagicMock()
@@ -334,7 +329,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             m_notify.assert_called()
         # Add command for executable tool spec
         self.tool_specification_widget.optional_widget.ui.lineEdit_command.setText("ls -a")
-        self.tool_specification_widget.push_change_executable_command()
+        self.tool_specification_widget.push_change_executable_command(
+            self.tool_specification_widget.optional_widget.ui.lineEdit_command.text()
+        )
         # Check that no shell is selected
         self.assertEqual("", self.tool_specification_widget.optional_widget.get_current_shell())
         self.assertEqual("No shell", self.tool_specification_widget.optional_widget.ui.comboBox_shell.currentText())

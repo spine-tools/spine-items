@@ -153,7 +153,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         self.radioButton_basic_console.setText(QCoreApplication.translate("Form", u"Basic Console", None))
         self.radioButton_jupyter_console.setText(QCoreApplication.translate("Form", u"Jupyter Console", None))
-        self.label_2.setText(QCoreApplication.translate("Form", u"Interpreter", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Interpreter:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_executable.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Python interpreter for <span style=\" font-weight:700;\">Basic Console</span> execution. Leave empty to use the Python that was used in launching Spine Toolbox.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -161,7 +161,7 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_python.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Python interpreter using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label.setText(QCoreApplication.translate("Form", u"Kernel", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Kernel:", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

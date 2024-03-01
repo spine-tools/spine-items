@@ -86,7 +86,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.specification_label.setText(QCoreApplication.translate("Form", u"Specification", None))
+        self.specification_label.setText(QCoreApplication.translate("Form", u"Specification:", None))
 #if QT_CONFIG(tooltip)
         self.specification_combo_box.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification for this Tool</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

@@ -42,6 +42,7 @@ from spinedb_api.export_mapping.group_functions import (
     NoGroup,
 )
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
+from spinetoolbox.helpers import SealCommand
 from .preview_updater import PreviewUpdater
 from ..commands import (
     ChangeWriteOrder,
@@ -187,7 +188,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.entity_dimensions_spin_box.valueChanged.connect(self._change_entity_dimensions)
         self._ui.highlight_dimension_spin_box.valueChanged.connect(self._change_highlight_dimension)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
-        self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.textEdited.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.connect(self._finish_editing_fix_table_name)
         self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
         self._compact_mapping_action = QAction("Compact mapping", self)
         self._compact_mapping_action.triggered.connect(self._compact_mapping)
@@ -772,18 +774,24 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._undo_stack.push(SetMapping(index, mapping))
         self._undo_stack.endMacro()
 
-    @Slot()
-    def _change_fix_table_name(self):
+    @Slot(str)
+    def _change_fix_table_name(self, name):
         """
         Pushes commands to undo stack to change fixed table name to text in corresponding line edit.
+
+        Args:
+            name (str): fixed table name
         """
         index = self._ui.mappings_table.currentIndex()
         if not index.isValid():
             return
-        new_name = self._ui.fix_table_name_line_edit.text()
         old_name = index.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE)
-        if new_name != old_name:
-            self._undo_stack.push(SetFixedTableName(index, old_name, new_name))
+        self._undo_stack.push(SetFixedTableName(index, old_name, name))
+
+    @Slot()
+    def _finish_editing_fix_table_name(self):
+        """Seals the latest undo command if it changed the fixed table name."""
+        self._undo_stack.push(SealCommand(SetFixedTableName.ID))
 
     def _set_use_fixed_table_name_flag_silently(self, flag):
         """
@@ -808,9 +816,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         if name == self._ui.fix_table_name_line_edit.text():
             return
-        self._ui.fix_table_name_line_edit.editingFinished.disconnect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.disconnect(self._finish_editing_fix_table_name)
         self._ui.fix_table_name_line_edit.setText(name)
-        self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.connect(self._finish_editing_fix_table_name)
 
     @Slot(QModelIndex, QModelIndex, list)
     def _validate_fixed_table_name(self, top_left, bottom_right, roles):

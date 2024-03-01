@@ -224,6 +224,7 @@ class TestTool(unittest.TestCase):
         self._properties_widget = mock_finish_project_item_construction(factory, tool, self.toolbox)
         # Set model for tool combo box
         tool._properties_ui.comboBox_tool.setModel(self.model)
+        self.project.get_item.return_value = tool
         return tool
 
     def _assert_is_simple_exec_tool(self, tool):
