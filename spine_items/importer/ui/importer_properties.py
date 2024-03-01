@@ -124,6 +124,12 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.frame)
 
+        QWidget.setTabOrder(self.comboBox_specification, self.toolButton_edit_specification)
+        QWidget.setTabOrder(self.toolButton_edit_specification, self.treeView_files)
+        QWidget.setTabOrder(self.treeView_files, self.cancel_on_error_checkBox)
+        QWidget.setTabOrder(self.cancel_on_error_checkBox, self.radioButton_on_conflict_keep)
+        QWidget.setTabOrder(self.radioButton_on_conflict_keep, self.radioButton_on_conflict_replace)
+        QWidget.setTabOrder(self.radioButton_on_conflict_replace, self.radioButton_on_conflict_merge)
 
         self.retranslateUi(Form)
 
@@ -132,7 +138,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.label_specification.setText(QCoreApplication.translate("Form", u"Specification", None))
+        self.label_specification.setText(QCoreApplication.translate("Form", u"Specification:", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_specification.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Specification for this Importer</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

@@ -2,6 +2,7 @@
 <!--
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and\/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -189,7 +190,7 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <widget class="QWidget" name="layoutWidget">
+       <widget class="QWidget" name="mapping_list_layout_widget" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_9">
          <property name="spacing">
           <number>0</number>
@@ -246,7 +247,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="layoutWidget">
+       <widget class="QWidget" name="mapping_controls_layout_widget" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_8">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -492,9 +493,6 @@
            </attribute>
           </widget>
          </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_5"/>
-         </item>
         </layout>
        </widget>
       </widget>
@@ -534,6 +532,33 @@
    <header>spinetoolbox/widgets/custom_combobox.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>export_format_combo_box</tabstop>
+  <tabstop>live_preview_check_box</tabstop>
+  <tabstop>database_url_combo_box</tabstop>
+  <tabstop>load_url_from_fs_button</tabstop>
+  <tabstop>max_preview_tables_spin_box</tabstop>
+  <tabstop>max_preview_rows_spin_box</tabstop>
+  <tabstop>mappings_table</tabstop>
+  <tabstop>add_mapping_button</tabstop>
+  <tabstop>remove_mapping_button</tabstop>
+  <tabstop>toggle_enabled_button</tabstop>
+  <tabstop>write_earlier_button</tabstop>
+  <tabstop>write_later_button</tabstop>
+  <tabstop>item_type_combo_box</tabstop>
+  <tabstop>entity_dimensions_spin_box</tabstop>
+  <tabstop>highlight_dimension_spin_box</tabstop>
+  <tabstop>parameter_type_combo_box</tabstop>
+  <tabstop>parameter_dimensions_spin_box</tabstop>
+  <tabstop>group_fn_combo_box</tabstop>
+  <tabstop>fix_table_name_check_box</tabstop>
+  <tabstop>fix_table_name_line_edit</tabstop>
+  <tabstop>always_export_header_check_box</tabstop>
+  <tabstop>compact_button</tabstop>
+  <tabstop>mapping_table_view</tabstop>
+  <tabstop>preview_tree_view</tabstop>
+  <tabstop>preview_table_view</tabstop>
+ </tabstops>
  <resources>
   <include location="../../ui/resources/resources_icons.qrc"/>
  </resources>

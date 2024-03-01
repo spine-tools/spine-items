@@ -73,7 +73,7 @@ class Merger(DBWriterItemBase):
         cancel_on_error = self._properties_ui.cancel_on_error_checkBox.isChecked()
         if self.cancel_on_error == cancel_on_error:
             return
-        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel_on_error))
+        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self.name, cancel_on_error, self._project))
 
     def set_cancel_on_error(self, cancel_on_error):
         self.cancel_on_error = cancel_on_error

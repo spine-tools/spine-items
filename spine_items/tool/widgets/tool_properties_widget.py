@@ -18,8 +18,7 @@ class ToolPropertiesWidget(PropertiesWidgetBase):
     """Widget for the Tool Item Properties."""
 
     def __init__(self, toolbox):
-        """Init class.
-
+        """
         Args:
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """

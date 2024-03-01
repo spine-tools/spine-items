@@ -176,7 +176,7 @@ class Tool(DBWriterItemBase):
             group_id = None
         if self._group_id == group_id:
             return
-        self._toolbox.undo_stack.push(UpdateGroupIdCommand(self, group_id))
+        self._toolbox.undo_stack.push(UpdateGroupIdCommand(self.name, group_id, self._project))
 
     def do_set_group_id(self, group_id):
         """Sets group id."""
@@ -226,7 +226,7 @@ class Tool(DBWriterItemBase):
     @Slot(bool)
     def update_execution_mode(self, checked):
         """Pushes a new UpdateToolExecuteInWorkCommand to the toolbox stack."""
-        self._toolbox.undo_stack.push(UpdateToolExecuteInWorkCommand(self, checked))
+        self._toolbox.undo_stack.push(UpdateToolExecuteInWorkCommand(self.name, checked, self._project))
 
     def do_update_execution_mode(self, execute_in_work):
         """Updates execute_in_work setting."""
@@ -274,7 +274,7 @@ class Tool(DBWriterItemBase):
     def _push_update_cmd_line_args_command(self, cmd_line_args):
         if self.cmd_line_args == cmd_line_args:
             return
-        self._toolbox.undo_stack.push(UpdateCmdLineArgsCommand(self, cmd_line_args))
+        self._toolbox.undo_stack.push(UpdateCmdLineArgsCommand(self.name, cmd_line_args, self._project))
 
     def update_cmd_line_args(self, cmd_line_args):
         """Updates instance cmd line args list and sets the list as text to the line edit widget.
@@ -313,7 +313,7 @@ class Tool(DBWriterItemBase):
 
     def update_options(self, options):
         """Pushes a new UpdateToolOptionsCommand to the toolbox undo stack."""
-        self._toolbox.undo_stack.push(UpdateToolOptionsCommand(self, options))
+        self._toolbox.undo_stack.push(UpdateToolOptionsCommand(self.name, options, self._options, self._project))
 
     def do_set_options(self, options):
         """Sets options for this tool.
@@ -332,7 +332,7 @@ class Tool(DBWriterItemBase):
         Args:
             kill_completed_processes (bool): whether to kill completed persistent processes after execution
         """
-        self._toolbox.undo_stack.push(UpdateKillCompletedProcesses(self, kill_completed_processes))
+        self._toolbox.undo_stack.push(UpdateKillCompletedProcesses(self.name, kill_completed_processes, self._project))
 
     def do_update_kill_completed_processes(self, kill_completed_processes):
         """Updates the kill_completed_processes flag.
@@ -351,7 +351,7 @@ class Tool(DBWriterItemBase):
         Args:
             log_process_output (bool): whether to kill completed persistent processes after execution
         """
-        self._toolbox.undo_stack.push(UpdateLogProcessOutput(self, log_process_output))
+        self._toolbox.undo_stack.push(UpdateLogProcessOutput(self.name, log_process_output, self._project))
 
     def do_update_log_process_output(self, log_process_output):
         """Updates the log_process_output flag.

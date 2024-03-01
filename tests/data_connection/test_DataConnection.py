@@ -25,7 +25,7 @@ from spinetoolbox.helpers import signal_waiter
 from spine_items.data_connection.data_connection import _Role, DataConnection
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.data_connection.item_info import ItemInfo
-from ..mock_helpers import (
+from tests.mock_helpers import (
     clean_up_toolbox,
     create_toolboxui_with_project,
     mock_finish_project_item_construction,
@@ -764,6 +764,7 @@ class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
+        self.project.get_item.return_value = self.data_connection
         self._properties_tab = mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
         self.ref_model = self.data_connection.reference_model
 

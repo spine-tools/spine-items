@@ -62,6 +62,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.toolbox.project.return_value = self.project
         with mock.patch("spine_items.data_store.data_store.QMenu"):
             self.ds = factory.make_item("DS", item_dict, self.toolbox, self.project)
+        self.project.get_item.return_value = self.ds
         self._properties_widget = mock_finish_project_item_construction(factory, self.ds, self.toolbox)
         self.ds_properties_ui = self.ds._properties_ui
 

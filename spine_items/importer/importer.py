@@ -109,7 +109,7 @@ class Importer(DBWriterItemBase):
         cancel_on_error = self._properties_ui.cancel_on_error_checkBox.isChecked()
         if self.cancel_on_error == cancel_on_error:
             return
-        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel_on_error))
+        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self.name, cancel_on_error, self._project))
 
     def set_cancel_on_error(self, cancel_on_error):
         """Sets cancel on error setting.
@@ -147,7 +147,7 @@ class Importer(DBWriterItemBase):
         on_conflict = self._on_conflict()
         if self.on_conflict == on_conflict:
             return
-        self._toolbox.undo_stack.push(UpdateOnConflictCommand(self, on_conflict))
+        self._toolbox.undo_stack.push(UpdateOnConflictCommand(self.name, on_conflict, self._project))
 
     def set_on_conflict(self, on_conflict):
         """Sets on_conflict setting.

@@ -104,7 +104,7 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Interpreter</string>
+            <string>Interpreter:</string>
            </property>
           </widget>
          </item>
@@ -145,7 +145,7 @@
          <item>
           <widget class="QLabel" name="label">
            <property name="text">
-            <string>Kernel</string>
+            <string>Kernel:</string>
            </property>
           </widget>
          </item>
