@@ -141,7 +141,7 @@ class TestTableList(unittest.TestCase):
         index = self._model.index(0, 0)
         self.assertEqual(index.data(), "Select all")
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
-        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole).value)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Checked)
         self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
         self.assertIsNone(index.data(Qt.ItemDataRole.ToolTipRole))
         flags = self._model.flags(index)
@@ -170,7 +170,7 @@ class TestTableList(unittest.TestCase):
         index = self._model.index(1, 0)
         self.assertEqual(index.data(), "my shiny table (new)")
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
-        self.assertTrue(index.data(Qt.ItemDataRole.CheckStateRole).value)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Checked)
         self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
         self.assertEqual(
             index.data(Qt.ItemDataRole.ToolTipRole), "Table's mappings haven't been saved with the specification yet."
@@ -186,9 +186,24 @@ class TestTableList(unittest.TestCase):
         index = self._model.index(2, 0)
         self._assert_empty_row(index)
 
+    def test_when_empty_row_turns_into_non_real_table_its_check_status_equals_select_all(self):
+        self._model.add_empty_row()
+        index = self._model.index(0, 0)
+        self.assertTrue(self._model.setData(index, Qt.CheckState.Unchecked.value, Qt.ItemDataRole.CheckStateRole))
+        empty_row_index = self._model.index(1, 0)
+        with signal_waiter(self._model.dataChanged, timeout=1.0) as waiter:
+            self._model.setData(empty_row_index, "my shiny table")
+            waiter.wait()
+        self.assertEqual(self._model.rowCount(), 3)
+        index = self._model.index(1, 0)
+        self.assertEqual(index.data(), "my shiny table (new)")
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
+        index = self._model.index(2, 0)
+        self._assert_empty_row(index)
+
     def _assert_empty_row(self, index):
         self.assertEqual(index.data(), "<rename this to add table>")
-        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole).value)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
         self.assertTrue(index.data(Qt.ItemDataRole.FontRole).italic())
         flags = self._model.flags(index)
