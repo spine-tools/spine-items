@@ -21,6 +21,7 @@ def _factories_and_executable_items():
     from .data_store.data_store_factory import DataStoreFactory
     from . import data_transformer
     from .data_transformer.data_transformer_factory import DataTransformerFactory
+    from .data_transformer import specification_factory
     from . import exporter
     from .exporter.exporter_factory import ExporterFactory
     from .exporter import specification_factory
@@ -49,7 +50,7 @@ def _factories_and_executable_items():
     )
     factories = {info.item_type(): factory for info, factory in zip(item_infos, factories)}
     executables = {module.item_info.ItemInfo.item_type(): module.executable_item.ExecutableItem for module in modules}
-    specification_item_submodules = (exporter, importer, tool)
+    specification_item_submodules = (data_transformer, exporter, importer, tool)
     specification_factories = {
         module.item_info.ItemInfo.item_type(): module.specification_factory.SpecificationFactory
         for module in specification_item_submodules
