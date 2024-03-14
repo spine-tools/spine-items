@@ -17,7 +17,7 @@ from enum import IntEnum, unique
 import re
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor, QFont
-from spinetoolbox.helpers import unique_name
+from spinetoolbox.helpers import plain_to_rich, list_to_rich_text, unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
 from spinedb_api.import_mapping.import_mapping import ScenarioBeforeAlternativeMapping
@@ -214,9 +214,9 @@ class MappingsModel(QAbstractItemModel):
             list_item = self._mappings[row]
             if not list_item.empty:
                 if not list_item.in_source:
-                    return "Table isn't in source data."
+                    return plain_to_rich("Table isn't in source data.")
                 if not list_item.in_specification:
-                    return "Table's mappings haven't been saved with the specification yet."
+                    return plain_to_rich("Table's mappings haven't been saved with the specification yet.")
             return None
         if role == Qt.ItemDataRole.FontRole:
             return self._add_table_row_font if self._mappings[index.row()].empty else None
@@ -288,11 +288,9 @@ class MappingsModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.ToolTipRole:
             if column == FlattenedColumn.POSITION:
                 issues = flattened_mappings.display_row_issues(index.row())
-                if issues:
-                    return issues
-                return None
+                return list_to_rich_text(issues) if issues else None
             if column == FlattenedColumn.REGEXP:
-                return "Enter regular expression to filter importer data."
+                return plain_to_rich("Enter regular expression to filter importer data.")
         return None
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
