@@ -173,7 +173,8 @@ class TestTableList(unittest.TestCase):
         self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Checked)
         self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
         self.assertEqual(
-            index.data(Qt.ItemDataRole.ToolTipRole), "Table's mappings haven't been saved with the specification yet."
+            index.data(Qt.ItemDataRole.ToolTipRole),
+            "<qt>Table's mappings haven't been saved with the specification yet.</qt>",
         )
         flags = self._model.flags(index)
         self.assertEqual(

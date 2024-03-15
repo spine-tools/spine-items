@@ -45,7 +45,7 @@ from spinedb_api.export_mapping.export_mapping import (
     DefaultValueIndexNameMapping,
     ParameterDefaultValueTypeMapping,
 )
-from spinetoolbox.helpers import color_from_index
+from spinetoolbox.helpers import color_from_index, plain_to_rich
 from ..commands import SetMappingNullable, SetMappingPositions, SetMappingProperty
 
 
@@ -152,9 +152,9 @@ class MappingEditorTableModel(QAbstractTableModel):
             return self._mapping_colors.get(m.position, QColor(Qt.GlobalColor.gray).lighter())
         elif role == Qt.ItemDataRole.ToolTipRole:
             if column == EditorColumn.FILTER:
-                return "Regular expression to filter database items."
+                return plain_to_rich("Regular expression to filter database items.")
             elif column == EditorColumn.NULLABLE:
-                return "When checked, ignore this row if it yields nothing to export."
+                return plain_to_rich("When checked, ignore this row if it yields nothing to export.")
         if role == self.MAPPING_ITEM_ROLE:
             return self._mappings[index.row()]
         return None
