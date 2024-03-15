@@ -85,6 +85,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             source_extras (dict, optional): Additional source settings such as database schema
         """
         super().__init__(toolbox, specification, item)
+        self.takeCentralWidget().deleteLater()
         self._source = source if source else self._FILE_LESS
         self._source_extras = source_extras if source_extras is not None else {}
         self._mappings_model = MappingsModel(self._undo_stack, self)
