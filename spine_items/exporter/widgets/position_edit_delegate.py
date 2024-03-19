@@ -12,24 +12,11 @@
 
 """Contains mapping position editor delegate."""
 from PySide6.QtCore import Property, Slot
-from PySide6.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
+from PySide6.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate
 from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT
 
 
 _positions = list(POSITION_DISPLAY_TEXT.values())
-
-
-def position_section_width(w):
-    """Returns section width.
-
-    Args:
-        w (QWidget): Widget whose font metrics are used
-    """
-    fm = w.fontMetrics()
-    style = qApp.style()  # pylint: disable=undefined-variable
-    option = QStyleOptionComboBox()
-    rect = style.subControlRect(QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow)
-    return max(fm.horizontalAdvance(pos) for pos in _positions) + rect.width()
 
 
 class PositionEditDelegate(QStyledItemDelegate):

@@ -16,6 +16,8 @@ from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QLineEdit,
+    QStyle,
+    QStyleOptionComboBox,
     QTreeView,
     QStyledItemDelegate,
     QWidget,
@@ -601,3 +603,20 @@ class UrlSelectorDialog(QDialog):
             self._app_settings, key, self, "Select an SQLite file", APPLICATION_PATH, filter_=filter_
         )
         return filepath if filepath else None
+
+
+def combo_box_width(font_metric_widget, items):
+    """Returns section width.
+
+    Args:
+        font_metric_widget (QWidget): Widget whose font metrics are used
+        items (Iterable of str): combo box items
+
+    Returns:
+        int: width of a combo box containing the given items
+    """
+    fm = font_metric_widget.fontMetrics()
+    style = QApplication.instance().style()
+    option = QStyleOptionComboBox()
+    rect = style.subControlRect(QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow)
+    return max(fm.horizontalAdvance(item) for item in items) + rect.width()
