@@ -12,7 +12,9 @@
 
 """Contains :class:`SpecificationEditorWindow`."""
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QHeaderView
+
+from spinetoolbox.helpers import disconnect
 from spinetoolbox.project_item.specification_editor_window import (
     SpecificationEditorWindowBase,
     ChangeSpecPropertyCommand,
@@ -76,6 +78,17 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.database_url_combo_box.addItems(urls if urls is not None else [])
         self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
         self._set_current_filter_name(filter_name)
+        for view in (
+            self._ui.available_parameters_tree_view,
+            self._ui.available_classes_tree_widget,
+        ):
+            view.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        for view in (
+            self._ui.parameter_rename_table_view,
+            self._ui.transformations_table_view,
+            self._ui.class_rename_table_view,
+        ):
+            view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     @property
     def settings_group(self):
@@ -123,9 +136,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if previous_interface is not None:
             previous_interface.tear_down()
         self._current_filter_name = filter_name
-        self._ui.filter_combo_box.currentTextChanged.disconnect(self._change_filter_widget)
-        self._ui.filter_combo_box.setCurrentText(filter_name)
-        self._ui.filter_combo_box.currentTextChanged.connect(self._change_filter_widget)
+        with disconnect(self._ui.filter_combo_box.currentTextChanged, self._change_filter_widget):
+            self._ui.filter_combo_box.setCurrentText(filter_name)
         interface = self._filter_sub_interfaces.get(filter_name)
         if interface is None:
             interface = dict(zip(_FILTER_NAMES, (ClassRename, ParameterRename, ValueTransformation)))[filter_name](

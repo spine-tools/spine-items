@@ -64,12 +64,12 @@ from ..commands import (
     SetHighlightDimension,
 )
 from ..mvcmodels.mappings_table_model import MappingsTableModel
-from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel
+from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel, POSITION_DISPLAY_TEXT
 from ..mvcmodels.mappings_table_proxy import MappingsTableProxy
 from ..specification import MappingSpecification, MappingType, OutputFormat, Specification
 from .filter_edit_delegate import FilterEditDelegate
-from .position_edit_delegate import PositionEditDelegate, position_section_width
-
+from .position_edit_delegate import PositionEditDelegate
+from ...widgets import combo_box_width
 
 mapping_type_to_combo_box_label = {
     MappingType.alternatives: "Alternative",
@@ -200,12 +200,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._filter_edit_delegate = FilterEditDelegate(self)
         self._ui.mapping_table_view.setItemDelegateForColumn(EditorColumn.FILTER, self._filter_edit_delegate)
         table_header = self._ui.mapping_table_view.horizontalHeader()
-        table_header.setSectionResizeMode(EditorColumn.ROW_LABEL, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.PIVOTED, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.NULLABLE, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.HEADER, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setMinimumSectionSize(position_section_width(self))
+        table_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeMode.Fixed)
+        table_header.resizeSection(EditorColumn.POSITION, combo_box_width(self, POSITION_DISPLAY_TEXT.values()))
         self._enable_mapping_specification_editing()
         if specification is None:
             self._mappings_table_model.extend(_new_mapping_specification(MappingType.entities))
