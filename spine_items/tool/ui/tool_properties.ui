@@ -240,14 +240,14 @@
         <item>
          <widget class="QLabel" name="label_group_id">
           <property name="text">
-           <string>Group id:</string>
+           <string>Reuse console id:</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLineEdit" name="lineEdit_group_id">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type execution group identifier, or leave empty to run in isolation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an id for sharing a console with other Tools in this project. Leave empty to run this Tool in isolation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
