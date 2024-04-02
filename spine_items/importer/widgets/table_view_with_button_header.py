@@ -48,12 +48,12 @@ _ALLOWED_TYPES = list(sorted(TYPE_STRING_TO_CLASS.keys()))
 _ALLOWED_TYPES.append("integer sequence datetime")
 
 TYPE_TO_FONT_AWESOME_ICON = {
-    IntegerSequenceDateTimeConvertSpec.DISPLAY_NAME: chr(int('f073', 16)),
-    BooleanConvertSpec.DISPLAY_NAME: chr(int('f6ad', 16)),
-    StringConvertSpec.DISPLAY_NAME: chr(int('f031', 16)),
-    DateTimeConvertSpec.DISPLAY_NAME: chr(int('f073', 16)),
-    DurationConvertSpec.DISPLAY_NAME: chr(int('f017', 16)),
-    FloatConvertSpec.DISPLAY_NAME: chr(int('f534', 16)),
+    IntegerSequenceDateTimeConvertSpec.DISPLAY_NAME: chr(int("f073", 16)),
+    BooleanConvertSpec.DISPLAY_NAME: chr(int("f6ad", 16)),
+    StringConvertSpec.DISPLAY_NAME: chr(int("f031", 16)),
+    DateTimeConvertSpec.DISPLAY_NAME: chr(int("f073", 16)),
+    DurationConvertSpec.DISPLAY_NAME: chr(int("f017", 16)),
+    FloatConvertSpec.DISPLAY_NAME: chr(int("f534", 16)),
 }
 
 Margin = namedtuple("Margin", ("left", "right", "top", "bottom"))
@@ -229,7 +229,7 @@ class HeaderWithButton(QHeaderView):
         self.setDefaultAlignment(Qt.AlignLeft)
         self.sectionResized.connect(self._section_resize)
         self.sectionMoved.connect(self._section_move)
-        self._font = QFont('Font Awesome 5 Free Solid')
+        self._font = QFont("Font Awesome 5 Free Solid")
 
         self._display_all = True
         self._display_sections = []

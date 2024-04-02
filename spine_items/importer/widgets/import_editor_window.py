@@ -397,7 +397,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         )
         if not filename[0]:
             return
-        with open(filename[0], 'w') as file_p:
+        with open(filename[0], "w") as file_p:
             mappings_dict = self._mappings_model.store()
             mappings_dict.update(self._import_sources.store_connectors())
             json.dump(mappings_dict, file_p)

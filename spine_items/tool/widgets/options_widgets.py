@@ -274,7 +274,7 @@ class JuliaOptionsWidget(OptionsWidget):
         original_program_file = os.path.join(spec.path, spec.includes.pop(0))
         loaded_modules_file = self._get_loaded_modules_filepath()
         precompile_statements_file = self._get_precompile_statements_filepath()
-        with open(original_program_file, 'r') as original:
+        with open(original_program_file, "r") as original:
             original_code = original.read()
         new_code = f"""macro write_loaded_modules(ex)
     return quote
@@ -326,7 +326,7 @@ end"""
         loaded_modules_file = self._get_loaded_modules_filepath()
         precompile_statements_file = self._get_precompile_statements_filepath()
         _string_in_brackets = "{String}"
-        with open(loaded_modules_file, 'r') as f:
+        with open(loaded_modules_file, "r") as f:
             modules = f.read()
         code = f"""using Pkg;
 project_dir = dirname(Base.active_project());

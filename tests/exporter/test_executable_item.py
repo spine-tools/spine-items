@@ -73,5 +73,5 @@ class TestExecutableItemWithToolbox(unittest.TestCase):
         self.assertEqual(executable.name, exporter.name)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -74,5 +74,5 @@ class TestDataTransformerExecutable(unittest.TestCase):
         self.assertEqual(transformer.output_resources(ExecutionDirection.FORWARD), [expected_resource])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

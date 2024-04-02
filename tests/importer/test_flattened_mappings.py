@@ -39,5 +39,5 @@ class TestFlattenedMappings(unittest.TestCase):
         self.assertTrue(flattened_mappings.import_entities())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

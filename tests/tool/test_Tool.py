@@ -203,7 +203,7 @@ class TestTool(unittest.TestCase):
             ProjectItemResource("Exporter", "file", "fifth", url="file:///" + url5, metadata={}, filterable=False)
         )
         result = tool._find_input_files(resources)
-        expected = {'input2.csv': [expected_urls["url5"]], 'input1.csv': [expected_urls["url3"]]}
+        expected = {"input2.csv": [expected_urls["url5"]], "input1.csv": [expected_urls["url3"]]}
         self.assertEqual(expected, result)
         resources.append(
             ProjectItemResource("Exporter", "file", "sixth", url="file:///" + url6, metadata={}, filterable=False)
@@ -212,7 +212,7 @@ class TestTool(unittest.TestCase):
         result = tool._find_input_files(resources)
         expected = {
             os.path.join(self._temp_dir.name, "input3.csv"): [expected_urls["url6"]],
-            'input2.csv': [expected_urls["url5"]],
+            "input2.csv": [expected_urls["url5"]],
         }
         self.assertEqual(expected, result)
 

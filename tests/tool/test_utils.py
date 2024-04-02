@@ -182,5 +182,5 @@ class TestGetJuliaPathAndProject(unittest.TestCase):
             self.assertTrue(julia_args[1] == "--project=/path/to/someotherjuliaproject")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

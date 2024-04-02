@@ -229,5 +229,5 @@ class _FixedTableReader(SourceConnection):
         return self._data[slice(begin, end)], header
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

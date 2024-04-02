@@ -145,5 +145,5 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         self.assertEqual(loaded_specification.mapping_specifications()["my mappings"].to_dict()["root"], expected_dicts)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

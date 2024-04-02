@@ -334,7 +334,7 @@ class PythonToolInstance(ToolInstance):
         Returns:
             list of str: lines of code
         """
-        globals_dict = 'globals_dict = globals()'
+        globals_dict = "globals_dict = globals()"
         update_globals_dict = f'globals_dict.update({{"__file__": "{full_fp}", "__name__": "__main__"}})'
         compile_and_exec = (
             f"with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), globals_dict, globals_dict)"

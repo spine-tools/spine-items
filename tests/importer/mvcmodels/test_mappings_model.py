@@ -353,7 +353,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_mapping_invalid_object_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': None},
+            "name": {"map_type": None},
             "parameter_type": "map",
             "value": {"map_type": None},
             "extra_dimensions": [{"map_type": None}],
@@ -479,7 +479,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_mapping_valid_object_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': 'column', 'reference': 99},
+            "name": {"map_type": "column", "reference": 99},
             "parameter_type": "map",
             "value": {"reference": 23, "map_type": "column"},
             "extra_dimensions": [{"reference": "fifth column", "map_type": "column"}],
@@ -575,7 +575,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_valid_object_class_with_nested_map(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': 'column', 'reference': 99},
+            "name": {"map_type": "column", "reference": 99},
             "parameter_type": "map",
             "value": {"reference": 23, "map_type": "column"},
             "extra_dimensions": [
@@ -714,7 +714,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_mapping_invalid_relationship_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': None},
+            "name": {"map_type": None},
             "parameter_type": "map",
             "value": {"map_type": None},
             "extra_dimensions": [{"map_type": None}],
@@ -763,7 +763,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_mapping_multidimensional_relationship_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': 'column', 'reference': 99},
+            "name": {"map_type": "column", "reference": 99},
             "parameter_type": "map",
             "value": {"reference": 23, "map_type": "column"},
             "extra_dimensions": [{"reference": "fifth column", "map_type": "column"}],
@@ -896,5 +896,5 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.index(2, 3, self._list_index).data(), "choose_me")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

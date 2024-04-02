@@ -33,5 +33,5 @@ class TestIntegerSequenceDateTimeConvertSpecDialog(unittest.TestCase):
         self.assertEqual(widget.duration.text(), "5h")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
