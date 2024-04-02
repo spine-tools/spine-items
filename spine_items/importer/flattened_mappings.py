@@ -11,12 +11,11 @@
 ######################################################################################################################
 
 """Contains a model to handle source tables and import mapping."""
-from distutils.util import strtobool
 from enum import Enum, unique
 from spinedb_api.mapping import Position
 from spinedb_api.parameter_value import split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.helpers import fix_name_ambiguity
+from spinedb_api.helpers import fix_name_ambiguity, string_to_bool
 from spinedb_api.import_mapping.import_mapping import (
     EntityClassMapping,
     EntityMapping,
@@ -368,7 +367,7 @@ class FlattenedMappings:
         # B) Handle all other cases cases
         if component.position == Position.hidden:
             if self._display_names[row].endswith("flags") and not isinstance(component.value, bool):
-                return bool(strtobool(component.value))
+                return string_to_bool(str(component.value))
             return component.value
         if component.position == Position.header:
             if component.value is None:
