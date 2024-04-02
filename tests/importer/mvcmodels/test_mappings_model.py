@@ -63,6 +63,76 @@ class TestMappingsModel(unittest.TestCase):
             waiter.wait()
         self.assertTrue(flattened_mappings.value_mapping().options["repeat"])
 
+    def test_change_mappings_type(self):
+        model = MappingsModel(self._undo_stack, self._model_parent)
+        model.restore(
+            {
+                "table_mappings": {
+                    "Sheet1": [
+                        {
+                            "Mapping 1": {
+                                "mapping": [
+                                    {"map_type": "EntityClass", "position": "hidden", "value": "Object"},
+                                    {"map_type": "Entity", "position": 0},
+                                    {"map_type": "EntityMetadata", "position": "hidden"},
+                                    {"map_type": "ParameterDefinition", "position": "hidden", "value": "size"},
+                                    {"map_type": "Alternative", "position": "hidden", "value": "Base"},
+                                    {"map_type": "ParameterValueMetadata", "position": "hidden"},
+                                    {"map_type": "ParameterValue", "position": 1},
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "selected_tables": ["Sheet1"],
+                "table_options": {"Sheet1": {}},
+                "table_types": {"Sheet1": {"0": "string", "1": "float"}},
+                "table_default_column_type": {},
+                "table_row_types": {},
+                "source_type": "ExcelConnector",
+            }
+        )
+        self.assertEqual(model.index(0, 0).data(), "Select all")
+        table_index = model.index(1, 0)
+        self.assertEqual(table_index.data(), "Sheet1")
+        list_index = model.index(0, 0, table_index)
+        self.assertEqual(list_index.data(), "Mapping 1")
+        expected = [
+            ["Entity class names", "Constant", "Object", ""],
+            ["Entity names", "Column", 1, ""],
+            ["Entity metadata", "None", None, ""],
+            ["Parameter names", "Constant", "size", ""],
+            ["Alternative names", "Constant", "Base", ""],
+            ["Parameter value metadata", "None", None, ""],
+            ["Parameter values", "Column", 2, ""],
+        ]
+        rows = model.rowCount(list_index)
+        self.assertEqual(rows, len(expected))
+        for row in range(model.rowCount(list_index)):
+            expected_row = expected[row]
+            columns = model.columnCount(list_index)
+            self.assertEqual(columns, len(expected_row))
+            for column in range(columns):
+                with self.subTest(row=row, column=column):
+                    index = model.index(row, column, list_index)
+                    self.assertEqual(index.data(), expected_row[column])
+        model.set_mappings_type(1, 0, "Entity group")
+        expected = [
+            ["Entity class names", "None", None, ""],
+            ["Group names", "None", None, ""],
+            ["Member names", "None", None, ""],
+        ]
+        rows = model.rowCount(list_index)
+        self.assertEqual(rows, len(expected))
+        for row in range(model.rowCount(list_index)):
+            expected_row = expected[row]
+            columns = model.columnCount(list_index)
+            self.assertEqual(columns, len(expected_row))
+            for column in range(columns):
+                with self.subTest(row=row, column=column):
+                    index = model.index(row, column, list_index)
+                    self.assertEqual(index.data(), expected_row[column])
+
 
 class TestTableList(unittest.TestCase):
     @classmethod

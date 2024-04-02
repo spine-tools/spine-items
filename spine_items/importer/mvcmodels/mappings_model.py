@@ -20,7 +20,7 @@ from PySide6.QtGui import QColor, QFont
 from spinetoolbox.helpers import plain_to_rich, list_to_rich_text, unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.import_mapping.import_mapping import ScenarioBeforeAlternativeMapping
+from spinedb_api.import_mapping.import_mapping import default_import_mapping, ScenarioBeforeAlternativeMapping
 from spinedb_api.import_mapping.import_mapping_compat import (
     parse_named_mapping_spec,
     import_mapping_from_dict,
@@ -733,7 +733,7 @@ class MappingsModel(QAbstractItemModel):
             "Scenario alternative": "ScenarioAlternative",
             "Parameter value list": "ParameterValueList",
         }[new_type]
-        root_mapping = import_mapping_from_dict({"map_type": map_type})
+        root_mapping = default_import_mapping(map_type)
         self.set_root_mapping(table_row, list_row, root_mapping)
 
     def _set_mapping_data(self, flattened_mappings, index, value, role):
