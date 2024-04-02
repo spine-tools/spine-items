@@ -183,5 +183,5 @@ class TestConvertUrlToSafeString(unittest.TestCase):
         self.assertEqual(convert_url_to_safe_string(url), r"sqlite:///" + database_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

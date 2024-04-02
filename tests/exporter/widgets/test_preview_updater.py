@@ -48,5 +48,5 @@ class TestPreviewUpdater(unittest.TestCase):
         preview_updater.tear_down()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

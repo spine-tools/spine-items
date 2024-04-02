@@ -107,7 +107,7 @@ class TestToolSpecification(unittest.TestCase):
             main_file_path = os.path.join(temp_dir, main_file)
             with open(main_file_path, "w+") as program_file:
                 program_file.writelines(
-                    ['import sys\n', 'counter = int(sys.argv[1])\n', 'exit(0 if counter == 23 else 1)\n']
+                    ["import sys\n", "counter = int(sys.argv[1])\n", "exit(0 if counter == 23 else 1)\n"]
                 )
             spec_dict = {
                 "name": "loop_twice",
@@ -121,5 +121,5 @@ class TestToolSpecification(unittest.TestCase):
             self.assertTrue(jump.is_condition_true(23))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

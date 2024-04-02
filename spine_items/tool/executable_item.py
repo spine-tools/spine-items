@@ -43,7 +43,7 @@ from ..utils import generate_filter_subdirectory_name
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 
 
-_ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+_ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
 class ExecutableItem(DBWriterExecutableItemBase):
@@ -814,4 +814,4 @@ def _unique_dir_name(tool_specification):
 
 
 def _filter_ansi_escape(s):
-    return _ANSI_ESCAPE.sub('', s)
+    return _ANSI_ESCAPE.sub("", s)

@@ -81,7 +81,7 @@ class TestExporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="Data Connection")
         self._exporter.notify_destination(source_item)
         self._exporter.logger.msg_warning.emit.assert_called_with(
-            'Link established. Interaction between a <b>Data Connection</b> and a <b>Exporter</b> has not been implemented yet.'
+            "Link established. Interaction between a <b>Data Connection</b> and a <b>Exporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Data Store")
         self._exporter.notify_destination(source_item)
@@ -96,12 +96,12 @@ class TestExporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="Exporter")
         self._exporter.notify_destination(source_item)
         self._exporter.logger.msg_warning.emit.assert_called_with(
-            'Link established. Interaction between a <b>Exporter</b> and a <b>Exporter</b> has not been implemented yet.'
+            "Link established. Interaction between a <b>Exporter</b> and a <b>Exporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Importer")
         self._exporter.notify_destination(source_item)
         self._exporter.logger.msg_warning.emit.assert_called_with(
-            'Link established. Interaction between a <b>Importer</b> and a <b>Exporter</b> has not been implemented yet.'
+            "Link established. Interaction between a <b>Importer</b> and a <b>Exporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Tool")
         self._exporter.notify_destination(source_item)

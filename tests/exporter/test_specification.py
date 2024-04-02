@@ -65,5 +65,5 @@ class TestOutputFormat(unittest.TestCase):
         self.assertEqual(OutputFormat.default(), OutputFormat.CSV)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -347,9 +347,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.treeView_programfiles.setIndexWidget(index, widget)
         self._ui.treeView_programfiles.expandAll()
         tool_tip = (
-            '<p>Other program files and/or directories (in addition to the main program file) required by the tool.</p>'
+            "<p>Other program files and/or directories (in addition to the main program file) required by the tool.</p>"
             '<p><span style=" font-weight:600;">Tip</span>: '
-            'You can Drag &amp; Drop files and/or directories here from your computer.</p>'
+            "You can Drag &amp; Drop files and/or directories here from your computer.</p>"
         )
         self.programfiles_model.setData(index, tool_tip, role=Qt.ItemDataRole.ToolTipRole)
 
@@ -381,7 +381,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.ItemDataRole.DecorationRole)
             item.setData(file_path, Qt.ItemDataRole.UserRole)
             root_item.appendRow(item)
-            tool_tip = f'<p>{self._current_main_program_file()}</p>'
+            tool_tip = f"<p>{self._current_main_program_file()}</p>"
             self.programfiles_model.setData(root_item.child(0).index(), tool_tip, role=Qt.ItemDataRole.ToolTipRole)
             self._ui.treeView_programfiles.selectionModel().setCurrentIndex(
                 root_item.child(0).index(), QItemSelectionModel.Select
@@ -420,7 +420,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 index = self.programfiles_model.indexFromItem(item)
                 file_path = self._programfile_path_from_index(index)
                 if file_path:
-                    tool_tip = f'<p>{file_path}</p>'
+                    tool_tip = f"<p>{file_path}</p>"
                     self.programfiles_model.setData(index, tool_tip, role=Qt.ItemDataRole.ToolTipRole)
                 if file_path in visible:
                     self._ui.treeView_programfiles.expand(index.parent())
@@ -848,7 +848,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         if file_path not in self._programfile_documents:
             try:
-                with open(file_path, 'r') as file:
+                with open(file_path, "r") as file:
                     text = file.read()
             except (IOError, UnicodeDecodeError) as e:
                 self._show_status_bar_msg(str(e))

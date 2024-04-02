@@ -30,13 +30,13 @@ class TestSourceDataTableModel(unittest.TestCase):
 
     def test_column_type_checking(self):
         self._model.reset_model([["1", "0h", "2018-01-01 00:00"], ["2", "1h", "2018-01-01 00:00"]])
-        self._model.set_type(0, value_to_convert_spec('float'))
+        self._model.set_type(0, value_to_convert_spec("float"))
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
-        self._model.set_type(1, value_to_convert_spec('duration'))
+        self._model.set_type(1, value_to_convert_spec("duration"))
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
-        self._model.set_type(2, value_to_convert_spec('datetime'))
+        self._model.set_type(2, value_to_convert_spec("datetime"))
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
 
@@ -44,19 +44,19 @@ class TestSourceDataTableModel(unittest.TestCase):
         self._model.reset_model(
             [["1", "1", "1.1"], ["2h", "1h", "2h"], ["2018-01-01 00:00", "2018-01-01 00:00", "2018-01-01 00:00"]]
         )
-        self._model.set_type(0, value_to_convert_spec('float'), orientation=Qt.Orientation.Vertical)
+        self._model.set_type(0, value_to_convert_spec("float"), orientation=Qt.Orientation.Vertical)
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
-        self._model.set_type(1, value_to_convert_spec('duration'), orientation=Qt.Orientation.Vertical)
+        self._model.set_type(1, value_to_convert_spec("duration"), orientation=Qt.Orientation.Vertical)
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
-        self._model.set_type(2, value_to_convert_spec('datetime'), orientation=Qt.Orientation.Vertical)
+        self._model.set_type(2, value_to_convert_spec("datetime"), orientation=Qt.Orientation.Vertical)
         self.assertEqual(self._model._column_type_errors, {})
         self.assertEqual(self._model._row_type_errors, {})
 
     def test_column_type_checking_produces_error(self):
         self._model.reset_model([["Not a valid number", "2.4"], ["1", "3"]])
-        self._model.set_type(0, value_to_convert_spec('float'))
+        self._model.set_type(0, value_to_convert_spec("float"))
         error_index = (0, 0)
         self.assertEqual(len(self._model._column_type_errors), 1)
         self.assertEqual(self._model._row_type_errors, {})
@@ -80,7 +80,7 @@ class TestSourceDataTableModel(unittest.TestCase):
 
     def test_row_type_checking_produces_error(self):
         self._model.reset_model([["1", "2.4"], ["Not a valid number", "3"]])
-        self._model.set_type(1, value_to_convert_spec('float'), orientation=Qt.Orientation.Vertical)
+        self._model.set_type(1, value_to_convert_spec("float"), orientation=Qt.Orientation.Vertical)
         error_index = (1, 0)
         self.assertEqual(len(self._model._row_type_errors), 1)
         self.assertEqual(self._model._column_type_errors, {})
@@ -276,5 +276,5 @@ class TestSourceDataTableModel(unittest.TestCase):
         return mappings_model.index(0, 0, table_index)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

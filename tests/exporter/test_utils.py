@@ -31,5 +31,5 @@ class TestOutputDatabaseResources(unittest.TestCase):
         self.assertEqual(resources, [url_resource(item_name, expected_url, "out database")])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

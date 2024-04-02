@@ -247,7 +247,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.ds_properties_ui.pushButton_ds_open_editor.click()
         sa_url = convert_to_sqlalchemy_url(self.ds.url(), "DS", logger=None)
         self.assertIsNotNone(sa_url)
-        self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: 'DS'}, True)
+        self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: "DS"}, True)
 
     def test_open_db_editor2(self):
         """Test that selecting the 'sqlite' dialect, typing the path to an existing db file,
@@ -265,7 +265,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         self.ds_properties_ui.pushButton_ds_open_editor.click()
         sa_url = convert_to_sqlalchemy_url(self.ds.url(), "DS", logger=None)
         self.assertIsNotNone(sa_url)
-        self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: 'DS'}, True)
+        self.toolbox.db_mngr.open_db_editor.assert_called_with({sa_url: "DS"}, True)
 
     def test_notify_destination(self):
         self.ds.logger.msg = mock.MagicMock()

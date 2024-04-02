@@ -62,5 +62,5 @@ class TestClassRenamesTableModel(unittest.TestCase):
         self.assertEqual(model.renaming_settings(), {"a": "B"})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

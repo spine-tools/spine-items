@@ -28,21 +28,21 @@ class TestToolInstance(unittest.TestCase):
             instance.prepare([])
             mock_manager.assert_called_once()
             self.assertEqual(mock_manager.call_args[0][1], "some_kernel")  # kernel_name
-            self.assertEqual(mock_manager.call_args[0][2], ['%cd -q path/', '%run "main.py"'])  # commands
+            self.assertEqual(mock_manager.call_args[0][2], ["%cd -q path/", '%run "main.py"'])  # commands
         # With tool cmd line args
         instance = self._make_python_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_manager:
             instance.prepare(["arg1", "arg2"])
             mock_manager.assert_called_once()
             self.assertEqual(mock_manager.call_args[0][1], "some_kernel")
-            self.assertEqual(mock_manager.call_args[0][2], ['%cd -q path/', '%run "main.py" "arg1" "arg2"'])
+            self.assertEqual(mock_manager.call_args[0][2], ["%cd -q path/", '%run "main.py" "arg1" "arg2"'])
         # With tool and tool spec cmd line args
         instance = self._make_python_tool_instance(True, ["arg3"])
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_manager:
             instance.prepare(["arg1", "arg2"])
             mock_manager.assert_called_once()
             self.assertEqual(mock_manager.call_args[0][1], "some_kernel")
-            self.assertEqual(mock_manager.call_args[0][2], ['%cd -q path/', '%run "main.py" "arg3" "arg1" "arg2"'])
+            self.assertEqual(mock_manager.call_args[0][2], ["%cd -q path/", '%run "main.py" "arg3" "arg1" "arg2"'])
 
     def test_python_prepare_with_basic_console(self):
         # No cmd line args
@@ -439,5 +439,5 @@ class FakeQSettings:
             return "true"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
