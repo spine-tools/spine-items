@@ -111,7 +111,7 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         self.ds.rename(expected_name, "")  # Do rename
         # Check name
         self.assertEqual(expected_name, self.ds.name)  # item name
-        self.assertEqual(expected_name, self.ds.get_icon().name_item.text())  # name item on Design View
+        self.assertEqual(expected_name, self.ds.get_icon().name())  # name item on Design View
         # Check data_dir and logs_dir
         self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
         # Check that the database path in properties has been updated
@@ -402,33 +402,6 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
             "Link established. Interaction between a "
             "<b>View</b> and a <b>Data Store</b> has not been implemented yet."
         )
-
-    def test_rename(self):
-        """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
-        temp_path = self.create_temp_db()
-        url = dict(dialect="sqlite", database=temp_path)
-        self.ds._url = self.ds.parse_url(url)
-        self.ds.activate()
-        # Check that DS is connected to an existing DS.sqlite file that is in data_dir
-        url = self.ds_properties_ui.url_selector_widget.url_dict()
-        self.assertEqual(url["dialect"], "sqlite")
-        self.assertEqual(url["database"], os.path.join(self.ds.data_dir, "temp_db.sqlite"))  # data_dir before rename
-        self.assertTrue(os.path.exists(url["database"]))
-        expected_name = "ABC"
-        expected_short_name = "abc"
-        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
-        self.ds.rename(expected_name, "")  # Do rename
-        # Check name
-        self.assertEqual(expected_name, self.ds.name)  # item name
-        self.assertEqual(expected_name, self.ds.get_icon().name())  # name item on Design View
-        # Check data_dir and logs_dir
-        self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
-        # Check that the database path in properties has been updated
-        expected_db_path = os.path.join(expected_data_dir, "temp_db.sqlite")
-        url = self.ds_properties_ui.url_selector_widget.url_dict()
-        self.assertEqual(url["database"], expected_db_path)
-        # Check that the db file has actually been moved
-        self.assertTrue(os.path.exists(url["database"]))
 
     def test_do_update_url_uses_filterable_resources_when_replacing_them(self):
         database_1 = os.path.join(self._temp_dir.name, "db1.sqlite")
