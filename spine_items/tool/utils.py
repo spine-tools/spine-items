@@ -18,7 +18,7 @@ from pathlib import Path
 import re
 import json
 from jupyter_client.kernelspec import find_kernel_specs
-from spine_engine.utils.helpers import resolve_julia_executable
+from spine_engine.utils.helpers import resolve_julia_executable, resolve_julia_project
 
 
 def get_julia_path_and_project(exec_settings, settings):
@@ -54,6 +54,8 @@ def get_julia_path_and_project(exec_settings, settings):
     if not julia:
         julia = resolve_julia_executable(settings)
     project = exec_settings["project"]
+    if not project:
+        project = resolve_julia_project(settings)
     retval = [julia]
     if project:
         retval.append(f"--project={project}")

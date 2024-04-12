@@ -368,7 +368,7 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         if not default_julia_path:
             default_julia_path = resolve_default_julia_executable()
         self.ui.lineEdit_executable.setPlaceholderText(default_julia_path)
-        self.ui.lineEdit_julia_project.setText(default_julia_project)
+        self.ui.lineEdit_julia_project.setPlaceholderText(default_julia_project)
         self.set_ui_for_jupyter_console(use_jupyter_console)
         self.connect_signals()
 
