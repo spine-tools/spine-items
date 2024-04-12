@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,13 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Common models.
-Contains a generic File list model and an Item for that model.
-Used by the Importer and Tool project items but this may be handy for other project items
-as well.
-
-"""
+"""Contains a generic File list model and an Item for that model."""
 from collections import namedtuple
 from PySide6.QtCore import QModelIndex, Qt, Signal
 from spinetoolbox.mvcmodels.file_list_models import (

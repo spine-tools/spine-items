@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,8 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Module for data store class. """
 
+""" Module for data store class. """
 import os
 from dataclasses import dataclass
 from shutil import copyfile
@@ -85,11 +86,6 @@ class DataStore(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
-
     @property
     def executable_class(self):
         return ExecutableItem
@@ -162,7 +158,7 @@ class DataStore(ProjectItem):
         url = dict(self._url)
         url["database"] = abs_path
         sa_url = convert_to_sqlalchemy_url(url, self.name)
-        self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger)
+        self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger, overwrite=True)
         self.update_url(dialect="sqlite", database=abs_path)
         return True
 
@@ -193,7 +189,7 @@ class DataStore(ProjectItem):
         kwargs = {k: v for k, v in kwargs.items() if v != self._url[k]}
         if not kwargs:
             return False
-        self._toolbox.undo_stack.push(UpdateDSURLCommand(self, invalidating_url, **kwargs))
+        self._toolbox.undo_stack.push(UpdateDSURLCommand(self.name, invalidating_url, self._project, **kwargs))
         return True
 
     def do_update_url(self, **kwargs):
@@ -218,6 +214,20 @@ class DataStore(ProjectItem):
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
         self._check_notifications()
+
+    def has_listeners(self):
+        """Checks whether the Data Store has listeners or not
+
+        Returns:
+             (bool): True if there are listeners for the Data Store, False otherwise
+        """
+        if self._multi_db_editors_open:
+            return bool(
+                self._toolbox.db_mngr.db_map_listeners(
+                    self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, codename=self.name)
+                )
+            )
+        return False
 
     def _update_actions_enabled(self):
         url_exists = convert_to_sqlalchemy_url(self._url, self.name) is not None
@@ -249,7 +259,7 @@ class DataStore(ProjectItem):
     def _purge(self):
         """Purges the database."""
         self._purge_settings = self._purge_dialog.get_checked_states()
-        db_map = self.get_db_map_for_ds()
+        db_map = self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, codename=self.name)
         if db_map is None:
             return
         db_map_purge_data = {db_map: {item_type for item_type, checked in self._purge_settings.items() if checked}}
@@ -285,6 +295,17 @@ class DataStore(ProjectItem):
     @Slot(bool)
     def open_url_in_spine_db_editor(self, checked=False):
         """Opens current url in the Spine database editor."""
+        self._open_spine_db_editor(reuse_existing=True)
+
+    def _open_url_in_new_db_editor(self, checked=False):
+        self._open_spine_db_editor(reuse_existing=False)
+
+    def _open_spine_db_editor(self, reuse_existing):
+        """Opens Data Store's URL in Spine Database editor.
+
+        Args:
+            reuse_existing (bool): if True and the URL is already open, just raise the window
+        """
         if not self._url_validated:
             self._logger.msg_error.emit(
                 f"<b>{self.name}</b> is still validating the database URL or the URL is invalid."
@@ -293,18 +314,8 @@ class DataStore(ProjectItem):
         sa_url = self.sql_alchemy_url()
         if sa_url is not None:
             db_url_codenames = {sa_url: self.name}
-            self._toolbox.db_mngr.open_db_editor(db_url_codenames)
+            self._toolbox.db_mngr.open_db_editor(db_url_codenames, reuse_existing)
         self._check_notifications()
-
-    def _open_url_in_new_db_editor(self, checked=False):
-        if not self._url_validated:
-            self._logger.msg_error.emit(
-                f"<b>{self.name}</b> is still validating the database URL or the URL is invalid."
-            )
-            return
-        sa_url = self.sql_alchemy_url()
-        if sa_url is not None:
-            MultiSpineDBEditor(self._toolbox.db_mngr, {sa_url: self.name}).show()
 
     def _open_url_in_existing_db_editor(self, db_editor):
         if not self._url_validated:

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Tool project item.
-
-"""
-
+"""Unit tests for Tool project item."""
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -79,9 +76,6 @@ class TestTool(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(Tool.item_type(), ItemInfo.item_type())
 
-    def test_item_category(self):
-        self.assertEqual(Tool.item_category(), ItemInfo.item_category())
-
     def test_item_dict(self):
         """Tests Item dictionary creation."""
         tool = self._add_tool()
@@ -135,7 +129,7 @@ class TestTool(unittest.TestCase):
         tool.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, tool.name)  # item name
-        self.assertEqual(expected_name, tool.get_icon().name_item.text())  # name item on Design View
+        self.assertEqual(expected_name, tool.get_icon().name())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, tool.data_dir)  # Check data dir
@@ -209,7 +203,7 @@ class TestTool(unittest.TestCase):
             ProjectItemResource("Exporter", "file", "fifth", url="file:///" + url5, metadata={}, filterable=False)
         )
         result = tool._find_input_files(resources)
-        expected = {'input2.csv': [expected_urls["url5"]], 'input1.csv': [expected_urls["url3"]]}
+        expected = {"input2.csv": [expected_urls["url5"]], "input1.csv": [expected_urls["url3"]]}
         self.assertEqual(expected, result)
         resources.append(
             ProjectItemResource("Exporter", "file", "sixth", url="file:///" + url6, metadata={}, filterable=False)
@@ -218,7 +212,7 @@ class TestTool(unittest.TestCase):
         result = tool._find_input_files(resources)
         expected = {
             os.path.join(self._temp_dir.name, "input3.csv"): [expected_urls["url6"]],
-            'input2.csv': [expected_urls["url5"]],
+            "input2.csv": [expected_urls["url5"]],
         }
         self.assertEqual(expected, result)
 
@@ -230,6 +224,7 @@ class TestTool(unittest.TestCase):
         self._properties_widget = mock_finish_project_item_construction(factory, tool, self.toolbox)
         # Set model for tool combo box
         tool._properties_ui.comboBox_tool.setModel(self.model)
+        self.project.get_item.return_value = tool
         return tool
 
     def _assert_is_simple_exec_tool(self, tool):

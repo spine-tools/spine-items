@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,16 +9,13 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`SpecificationEditorWindow`.
 
-"""
+""" Contains :class:`SpecificationEditorWindow`. """
 from copy import deepcopy
 import json
 from PySide6.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
 from PySide6.QtGui import QKeySequence, QAction
 from PySide6.QtWidgets import QApplication, QHeaderView, QMenu
-
 from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
     alternative_export,
@@ -44,6 +42,7 @@ from spinedb_api.export_mapping.group_functions import (
     NoGroup,
 )
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
+from spinetoolbox.helpers import SealCommand
 from .preview_updater import PreviewUpdater
 from ..commands import (
     ChangeWriteOrder,
@@ -65,12 +64,12 @@ from ..commands import (
     SetHighlightDimension,
 )
 from ..mvcmodels.mappings_table_model import MappingsTableModel
-from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel
+from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel, POSITION_DISPLAY_TEXT
 from ..mvcmodels.mappings_table_proxy import MappingsTableProxy
 from ..specification import MappingSpecification, MappingType, OutputFormat, Specification
 from .filter_edit_delegate import FilterEditDelegate
-from .position_edit_delegate import PositionEditDelegate, position_section_width
-
+from .position_edit_delegate import PositionEditDelegate
+from ...widgets import combo_box_width
 
 mapping_type_to_combo_box_label = {
     MappingType.alternatives: "Alternative",
@@ -189,7 +188,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.entity_dimensions_spin_box.valueChanged.connect(self._change_entity_dimensions)
         self._ui.highlight_dimension_spin_box.valueChanged.connect(self._change_highlight_dimension)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
-        self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.textEdited.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.connect(self._finish_editing_fix_table_name)
         self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
         self._compact_mapping_action = QAction("Compact mapping", self)
         self._compact_mapping_action.triggered.connect(self._compact_mapping)
@@ -200,12 +200,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._filter_edit_delegate = FilterEditDelegate(self)
         self._ui.mapping_table_view.setItemDelegateForColumn(EditorColumn.FILTER, self._filter_edit_delegate)
         table_header = self._ui.mapping_table_view.horizontalHeader()
-        table_header.setSectionResizeMode(EditorColumn.ROW_LABEL, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.PIVOTED, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.NULLABLE, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.HEADER, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setMinimumSectionSize(position_section_width(self))
+        table_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeMode.Fixed)
+        table_header.resizeSection(EditorColumn.POSITION, combo_box_width(self, POSITION_DISPLAY_TEXT.values()))
         self._enable_mapping_specification_editing()
         if specification is None:
             self._mappings_table_model.extend(_new_mapping_specification(MappingType.entities))
@@ -774,18 +771,24 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._undo_stack.push(SetMapping(index, mapping))
         self._undo_stack.endMacro()
 
-    @Slot()
-    def _change_fix_table_name(self):
+    @Slot(str)
+    def _change_fix_table_name(self, name):
         """
         Pushes commands to undo stack to change fixed table name to text in corresponding line edit.
+
+        Args:
+            name (str): fixed table name
         """
         index = self._ui.mappings_table.currentIndex()
         if not index.isValid():
             return
-        new_name = self._ui.fix_table_name_line_edit.text()
         old_name = index.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE)
-        if new_name != old_name:
-            self._undo_stack.push(SetFixedTableName(index, old_name, new_name))
+        self._undo_stack.push(SetFixedTableName(index, old_name, name))
+
+    @Slot()
+    def _finish_editing_fix_table_name(self):
+        """Seals the latest undo command if it changed the fixed table name."""
+        self._undo_stack.push(SealCommand(SetFixedTableName.ID))
 
     def _set_use_fixed_table_name_flag_silently(self, flag):
         """
@@ -810,9 +813,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         if name == self._ui.fix_table_name_line_edit.text():
             return
-        self._ui.fix_table_name_line_edit.editingFinished.disconnect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.disconnect(self._finish_editing_fix_table_name)
         self._ui.fix_table_name_line_edit.setText(name)
-        self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.connect(self._finish_editing_fix_table_name)
 
     @Slot(QModelIndex, QModelIndex, list)
     def _validate_fixed_table_name(self, top_left, bottom_right, roles):
@@ -1035,7 +1038,7 @@ def _new_mapping_specification(mapping_type):
         MappingSpecification: an export mapping specification
     """
     if mapping_type == MappingType.entities:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, 1, [1], [2]))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, 1))
     if mapping_type == MappingType.entity_groups:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_group_export(0, 1, 2))
     if mapping_type == MappingType.entity_parameter_default_values:
@@ -1054,9 +1057,7 @@ def _new_mapping_specification(mapping_type):
             True,
             NoGroup.NAME,
             False,
-            entity_parameter_value_export(
-                0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None, None
-            ),
+            entity_parameter_value_export(0, 2, Position.hidden, 1, None, None, 3, Position.hidden, 4, None, None),
         )
     if mapping_type == MappingType.parameter_value_lists:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, parameter_value_list_export(0, 1))
@@ -1067,7 +1068,7 @@ def _new_mapping_specification(mapping_type):
             True,
             NoGroup.NAME,
             False,
-            entity_dimension_parameter_default_value_export(0, 2, [1], Position.hidden, 3, None, None, 0),
+            entity_dimension_parameter_default_value_export(0, 1, None, Position.hidden, 2, None, None, 0),
         )
     if mapping_type == MappingType.entity_dimension_parameter_values:
         return MappingSpecification(

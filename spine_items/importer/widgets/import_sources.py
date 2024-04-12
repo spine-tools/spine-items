@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,13 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains ImportSources widget and SourceDataTableMenu.
-
-"""
+"""Contains ImportSources widget and SourceDataTableMenu."""
 import pickle
 from operator import itemgetter
-
 from PySide6.QtCore import (
     QItemSelectionModel,
     QModelIndex,
@@ -29,7 +26,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
-
 from spinetoolbox.helpers import CharIconEngine
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinedb_api.import_mapping.type_conversion import (

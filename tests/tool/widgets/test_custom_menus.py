@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -10,7 +11,6 @@
 ######################################################################################################################
 
 """Unit tests for the custom_menus.py module."""
-
 import unittest
 from unittest import mock
 import logging
@@ -156,7 +156,7 @@ class TestToolSpecificationMenu(unittest.TestCase):
             MockQSettings(),
             mock_logger,
         )
-        julia_tool_spec.set_execution_settings()  # Sets defaults
+        julia_tool_spec.init_execution_settings()  # Sets defaults
         return julia_tool_spec
 
     def make_exec_tool_spec(self):

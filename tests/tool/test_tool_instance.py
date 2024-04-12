@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -10,7 +11,6 @@
 ######################################################################################################################
 
 """Contains unit tests for the tool_instance module."""
-
 import sys
 import unittest
 from unittest import mock
@@ -28,21 +28,21 @@ class TestToolInstance(unittest.TestCase):
             instance.prepare([])
             mock_manager.assert_called_once()
             self.assertEqual(mock_manager.call_args[0][1], "some_kernel")  # kernel_name
-            self.assertEqual(mock_manager.call_args[0][2], ['%cd -q path/', '%run "main.py"'])  # commands
+            self.assertEqual(mock_manager.call_args[0][2], ["%cd -q path/", '%run "main.py"'])  # commands
         # With tool cmd line args
         instance = self._make_python_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_manager:
             instance.prepare(["arg1", "arg2"])
             mock_manager.assert_called_once()
             self.assertEqual(mock_manager.call_args[0][1], "some_kernel")
-            self.assertEqual(mock_manager.call_args[0][2], ['%cd -q path/', '%run "main.py" "arg1" "arg2"'])
+            self.assertEqual(mock_manager.call_args[0][2], ["%cd -q path/", '%run "main.py" "arg1" "arg2"'])
         # With tool and tool spec cmd line args
         instance = self._make_python_tool_instance(True, ["arg3"])
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_manager:
             instance.prepare(["arg1", "arg2"])
             mock_manager.assert_called_once()
             self.assertEqual(mock_manager.call_args[0][1], "some_kernel")
-            self.assertEqual(mock_manager.call_args[0][2], ['%cd -q path/', '%run "main.py" "arg3" "arg1" "arg2"'])
+            self.assertEqual(mock_manager.call_args[0][2], ["%cd -q path/", '%run "main.py" "arg3" "arg1" "arg2"'])
 
     def test_python_prepare_with_basic_console(self):
         # No cmd line args
@@ -362,7 +362,7 @@ class TestToolInstance(unittest.TestCase):
             mock.MagicMock(),
             cmdline_args=tool_spec_args,
         )
-        specification.set_execution_settings()
+        specification.init_execution_settings()
         if use_jupyter_console:
             specification.execution_settings["use_jupyter_console"] = True
             specification.execution_settings["kernel_spec_name"] = "some_kernel"
@@ -379,7 +379,7 @@ class TestToolInstance(unittest.TestCase):
             mock.MagicMock(),
             cmdline_args=tool_spec_args,
         )
-        specification.set_execution_settings()
+        specification.init_execution_settings()
         if use_jupyter_console:
             specification.execution_settings["use_jupyter_console"] = True
             specification.execution_settings["kernel_spec_name"] = "some_julia_kernel"
@@ -415,7 +415,7 @@ class TestToolInstance(unittest.TestCase):
                 mock.MagicMock(),
                 cmdline_args=tool_spec_args,
             )
-        specification.set_execution_settings()
+        specification.init_execution_settings()
         if shell == "cmd.exe":
             specification.execution_settings["shell"] = "cmd.exe"
         elif shell == "bash":
@@ -439,5 +439,5 @@ class FakeQSettings:
             return "true"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

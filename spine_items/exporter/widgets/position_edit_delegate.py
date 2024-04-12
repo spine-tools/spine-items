@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,29 +9,14 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains mapping position editor delegate.
 
-"""
+"""Contains mapping position editor delegate."""
 from PySide6.QtCore import Property, Slot
-from PySide6.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate, QStyle, QStyleOptionComboBox
+from PySide6.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate
 from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT
 
 
 _positions = list(POSITION_DISPLAY_TEXT.values())
-
-
-def position_section_width(w):
-    """Returns section width.
-
-    Args:
-        w (QWidget): Widget whose font metrics are used
-    """
-    fm = w.fontMetrics()
-    style = qApp.style()  # pylint: disable=undefined-variable
-    option = QStyleOptionComboBox()
-    rect = style.subControlRect(QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow)
-    return max(fm.horizontalAdvance(pos) for pos in _positions) + rect.width()
 
 
 class PositionEditDelegate(QStyledItemDelegate):

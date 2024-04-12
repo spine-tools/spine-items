@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,14 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Tool specification classes.
-
-"""
-
+"""Contains Tool specification classes."""
 from collections import OrderedDict
 import copy
-import logging
 import os.path
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spine_engine.utils.command_line_arguments import split_cmdline_args
@@ -117,7 +113,7 @@ class ToolSpecification(ProjectItemSpecification):
             outputfiles (list, optional): List of output files (wildcards may be used)
             cmdline_args (list, optional): Tool Specification command line arguments
         """
-        super().__init__(name, description, item_type=ItemInfo.item_type(), item_category=ItemInfo.item_category())
+        super().__init__(name, description, item_type=ItemInfo.item_type())
         self._settings = settings
         self._logger = logger
         self.tooltype = tooltype
@@ -162,7 +158,7 @@ class ToolSpecification(ProjectItemSpecification):
         """See base class"""
         return [("execution_settings",)]
 
-    def set_execution_settings(self):
+    def init_execution_settings(self):
         """Updates Tool specifications by adding the default execution settings dict for this specification."""
 
     def is_equivalent(self, other):
@@ -429,13 +425,25 @@ class JuliaTool(ToolSpecification):
         d["execution_settings"] = self.execution_settings
         return d
 
-    def set_execution_settings(self):
-        """Sets the execution_setting instance attribute to defaults if this
-        Julia Tool spec has not been updated yet.
+    def set_execution_settings(self, use_julia_jupyter_console, julia_exe, julia_project, julia_kernel):
+        """Sets execution settings.
 
-        Returns:
-            void
+        Args:
+            use_julia_jupyter_console (bool): True for Jupyter Console, False for Basic Console
+            julia_exe (str): Abs. path to Julia executable
+            julia_project (str): Julia project
+            julia_kernel (str): Julia kernel for Jupyter Console
         """
+        d = dict()
+        d["kernel_spec_name"] = julia_kernel
+        d["env"] = ""
+        d["use_jupyter_console"] = use_julia_jupyter_console
+        d["executable"] = julia_exe
+        d["project"] = julia_project
+        self.execution_settings = d
+
+    def init_execution_settings(self):
+        """Initializes execution_setting instance attribute to default settings."""
         if not self.execution_settings:
             # Use global (default) execution settings from Settings->Tools
             # This part is for providing support for Julia Tool specs that do not have
@@ -533,7 +541,23 @@ class PythonTool(ToolSpecification):
         d["execution_settings"] = self.execution_settings
         return d
 
-    def set_execution_settings(self):
+    def set_execution_settings(self, use_python_jupyter_console, python_exe, python_kernel, env):
+        """Sets execution settings.
+
+        Args:
+            use_python_jupyter_console (bool): True for Jupyter Console, False for Basic Console
+            python_exe (str): Abs. path to Python executable
+            python_kernel (str): Julia kernel for Jupyter Console
+            env (str): empty string for regular kernels, 'conda' for Conda kernels
+        """
+        d = dict()
+        d["kernel_spec_name"] = python_kernel
+        d["env"] = env
+        d["use_jupyter_console"] = use_python_jupyter_console
+        d["executable"] = python_exe
+        self.execution_settings = d
+
+    def init_execution_settings(self):
         """Sets the execution_setting instance attribute to defaults if this
         Python Tool spec has not been updated yet.
 
@@ -653,7 +677,7 @@ class ExecutableTool(ToolSpecification):
             return None
         return super()._includes_main_path_relative()
 
-    def set_execution_settings(self):
+    def init_execution_settings(self):
         """Updates old Executable Tool specifications by adding the
         default execution settings dict for this specification.
 

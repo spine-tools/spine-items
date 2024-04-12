@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Exporter's specifications.
-
-"""
+"""Contains Exporter's specifications."""
 from dataclasses import dataclass
 from enum import Enum, unique
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
@@ -184,7 +182,7 @@ class Specification(ProjectItemSpecification):
             mapping_specifications (dict, optional): mapping from export mapping name to ``MappingSpecification``
             output_format (OutputFormat): output format
         """
-        super().__init__(name, description, ItemInfo.item_type(), ItemInfo.item_category())
+        super().__init__(name, description, ItemInfo.item_type())
         if mapping_specifications is None:
             mapping_specifications = dict()
         self._mapping_specifications = mapping_specifications

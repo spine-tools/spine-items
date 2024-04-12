@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -226,7 +227,16 @@ class Ui_Form(object):
         self.verticalLayout.addLayout(self.horizontalLayout_11)
 
         QWidget.setTabOrder(self.comboBox_tool, self.toolButton_tool_specification)
-        QWidget.setTabOrder(self.toolButton_tool_specification, self.pushButton_tool_results)
+        QWidget.setTabOrder(self.toolButton_tool_specification, self.treeView_cmdline_args)
+        QWidget.setTabOrder(self.treeView_cmdline_args, self.toolButton_add_file_path_arg)
+        QWidget.setTabOrder(self.toolButton_add_file_path_arg, self.toolButton_remove_arg)
+        QWidget.setTabOrder(self.toolButton_remove_arg, self.treeView_input_files)
+        QWidget.setTabOrder(self.treeView_input_files, self.radioButton_execute_in_source)
+        QWidget.setTabOrder(self.radioButton_execute_in_source, self.radioButton_execute_in_work)
+        QWidget.setTabOrder(self.radioButton_execute_in_work, self.lineEdit_group_id)
+        QWidget.setTabOrder(self.lineEdit_group_id, self.kill_consoles_check_box)
+        QWidget.setTabOrder(self.kill_consoles_check_box, self.log_process_output_check_box)
+        QWidget.setTabOrder(self.log_process_output_check_box, self.pushButton_tool_results)
 
         self.retranslateUi(Form)
 
@@ -235,7 +245,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.label_tool_specification.setText(QCoreApplication.translate("Form", u"Specification", None))
+        self.label_tool_specification.setText(QCoreApplication.translate("Form", u"Specification:", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_tool.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification for this Tool</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -253,9 +263,9 @@ class Ui_Form(object):
         self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
         self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))
         self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
-        self.label_group_id.setText(QCoreApplication.translate("Form", u"Group id", None))
+        self.label_group_id.setText(QCoreApplication.translate("Form", u"Reuse console id:", None))
 #if QT_CONFIG(tooltip)
-        self.lineEdit_group_id.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Type execution group identifier, or leave empty to run in isolation.</p></body></html>", None))
+        self.lineEdit_group_id.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Enter an id for sharing a console with other Tools in this project. Leave empty to run this Tool in isolation.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.label_jupyter.setText(QCoreApplication.translate("Form", u"Console info", None))
 #if QT_CONFIG(tooltip)

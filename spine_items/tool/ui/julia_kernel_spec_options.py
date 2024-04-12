@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -49,6 +50,7 @@ class Ui_Form(object):
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setSpacing(6)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(-1, -1, 6, -1)
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -76,7 +78,7 @@ class Ui_Form(object):
 
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(-1, -1, 6, -1)
+        self.verticalLayout_2.setContentsMargins(-1, -1, 0, -1)
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setSpacing(6)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -181,7 +183,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         self.radioButton_basic_console.setText(QCoreApplication.translate("Form", u"Basic Console", None))
         self.radioButton_jupyter_console.setText(QCoreApplication.translate("Form", u"Jupyter Console", None))
-        self.label_2.setText(QCoreApplication.translate("Form", u"Executable", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Executable:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_executable.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Julia executable for <span style=\" font-weight:700;\">Basic Console</span> execution. Leave empty to use the Julia in your PATH environment variable.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -189,7 +191,7 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_julia.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Julia executable using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label_3.setText(QCoreApplication.translate("Form", u"Project", None))
+        self.label_3.setText(QCoreApplication.translate("Form", u"Project:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_julia_project.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Julia environment/project directory</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -197,7 +199,7 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_julia_project.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Julia project using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label.setText(QCoreApplication.translate("Form", u"Kernel", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Kernel:", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Julia kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

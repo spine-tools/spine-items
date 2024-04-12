@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains OptionsWidget class.
-
-"""
+"""Contains OptionsWidget class."""
 import functools
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import (
@@ -71,16 +69,16 @@ class OptionsWidget(QTableWidget):
         key_options = sorted(self._options.items(), key=lambda x: list(self._ui_choices).index(x[1]["type"]))
         for column, (key, options) in enumerate(key_options):
             ui_element = self._ui_choices[options["type"]]()
-            maximum = options.get('Maximum', None)
+            maximum = options.get("Maximum", None)
             if maximum is not None:
                 ui_element.setMaximum(maximum)
-            minimum = options.get('Minimum', None)
+            minimum = options.get("Minimum", None)
             if minimum is not None:
                 ui_element.setMinimum(minimum)
-            special_value_text = options.get('SpecialValueText', None)
+            special_value_text = options.get("SpecialValueText", None)
             if special_value_text is not None:
                 ui_element.setSpecialValueText(special_value_text)
-            max_length = options.get('MaxLength', None)
+            max_length = options.get("MaxLength", None)
             if max_length is not None:
                 ui_element.setMaxLength(max_length)
             bound_arguments = dict(option_key=key, options_widget=self)
@@ -104,7 +102,7 @@ class OptionsWidget(QTableWidget):
             layout = QHBoxLayout(widget)
             layout.setContentsMargins(3, 3, 3, 3)
             layout.setSpacing(3)
-            layout.addWidget(QLabel(options['label'] + ':'))
+            layout.addWidget(QLabel(options["label"] + ":"))
             layout.addWidget(ui_element)
             self.insertColumn(self.columnCount())
             self.setCellWidget(0, column, widget)
@@ -171,7 +169,7 @@ class OptionsWidget(QTableWidget):
         if options is None:
             options = {}
         for key, ui_element in self._ui_elements.items():
-            default = self._options[key]['default']
+            default = self._options[key]["default"]
             value = options.get(key, default)
             if value is None:
                 continue

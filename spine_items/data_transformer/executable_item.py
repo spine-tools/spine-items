@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Data transformer's executable item as well as support utilities.
-
-"""
+"""Contains Data transformer's executable item as well as support utilities."""
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.spine_engine import ItemExecutionFinishState
 from .filter_config_path import filter_config_path

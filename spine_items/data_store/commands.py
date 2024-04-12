@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Undo/redo commands for the DataStore project item.
-
-"""
+"""Undo/redo commands for the DataStore project item."""
 from enum import IntEnum, unique
 from spine_items.commands import SpineToolboxCommand
 
@@ -23,33 +21,41 @@ class CommandId(IntEnum):
 
 
 class UpdateDSURLCommand(SpineToolboxCommand):
-    def __init__(self, ds, was_url_valid, **kwargs):
-        """Command to update DS url.
+    """Command to update DS url."""
 
+    def __init__(self, ds_name, was_url_valid, project, **kwargs):
+        """
         Args:
-            ds (DataStore): the DS
+            ds_name (str): DS name
             was_url_valid (bool): True if previous URL was valid, False otherwise
-            kwargs: url keys and their values
+            project (SpineToolboxProject): project
+            **kwargs: url keys and their values
         """
         super().__init__()
-        self.ds = ds
+        self._ds_name = ds_name
         self._undo_url_is_valid = was_url_valid
-        self.redo_kwargs = kwargs
-        self.undo_kwargs = {k: self.ds.url()[k] for k in kwargs}
+        self._redo_kwargs = kwargs
+        ds = project.get_item(ds_name)
+        self._undo_kwargs = {k: ds.url()[k] for k in kwargs}
+        self._project = project
         if len(kwargs) == 1:
-            self.setText(f"change {list(kwargs.keys())[0]} of {ds.name}")
+            self.setText(f"change {list(kwargs.keys())[0]} of {ds_name}")
         else:
-            self.setText(f"change url of {ds.name}")
+            self.setText(f"change url of {ds_name}")
 
     def id(self):
         return CommandId.UPDATE_URL.value
 
     def mergeWith(self, command):
-        if not isinstance(command, UpdateDSURLCommand) or self.ds is not command.ds or command._undo_url_is_valid:
+        if (
+            not isinstance(command, UpdateDSURLCommand)
+            or self._ds_name != command._ds_name
+            or command._undo_url_is_valid
+        ):
             return False
         diff_key = None
-        for key, value in self.redo_kwargs.items():
-            old_value = self.undo_kwargs[key]
+        for key, value in self._redo_kwargs.items():
+            old_value = self._undo_kwargs[key]
             if value != old_value:
                 if diff_key is not None:
                     return False
@@ -59,16 +65,18 @@ class UpdateDSURLCommand(SpineToolboxCommand):
             raise RuntimeError("Logic error: nothing changes between undo and redo URLs.")
         if diff_key == "dialect":
             return False
-        changed_value = command.redo_kwargs[diff_key]
-        if self.redo_kwargs[diff_key] == changed_value:
+        changed_value = command._redo_kwargs[diff_key]
+        if self._redo_kwargs[diff_key] == changed_value:
             return False
-        self.redo_kwargs[diff_key] = changed_value
-        if self.redo_kwargs[diff_key] == self.undo_kwargs[diff_key]:
+        self._redo_kwargs[diff_key] = changed_value
+        if self._redo_kwargs[diff_key] == self._undo_kwargs[diff_key]:
             self.setObsolete(True)
         return True
 
     def redo(self):
-        self.ds.do_update_url(**self.redo_kwargs)
+        ds = self._project.get_item(self._ds_name)
+        ds.do_update_url(**self._redo_kwargs)
 
     def undo(self):
-        self.ds.do_update_url(**self.undo_kwargs)
+        ds = self._project.get_item(self._ds_name)
+        ds.do_update_url(**self._undo_kwargs)

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -10,7 +11,6 @@
 ######################################################################################################################
 
 """Unit tests for ``tool_specifications`` module."""
-
 import os
 import unittest
 from unittest import mock
@@ -66,7 +66,7 @@ class TestToolSpecification(unittest.TestCase):
         self.test_dict["definition_file_path"] = "/path/to/specification/file.json"
         spec = make_specification(self.test_dict, self.qsettings, self.logger)  # Make PythonTool
         self.assertIsInstance(spec, PythonTool)
-        spec.set_execution_settings()
+        spec.init_execution_settings()
         self.assertIsNotNone(spec.execution_settings)
         self.assertTrue(len(spec.execution_settings.keys()), 4)
         spec.to_dict()
@@ -74,7 +74,7 @@ class TestToolSpecification(unittest.TestCase):
         self.test_dict["tooltype"] = "Julia"
         spec = make_specification(self.test_dict, self.qsettings, self.logger)  # Make JuliaTool
         self.assertIsInstance(spec, JuliaTool)
-        spec.set_execution_settings()
+        spec.init_execution_settings()
         self.assertIsNotNone(spec.execution_settings)
         self.assertTrue(len(spec.execution_settings.keys()), 5)
         spec.to_dict()
@@ -87,7 +87,7 @@ class TestToolSpecification(unittest.TestCase):
         self.test_dict["tooltype"] = "Executable"
         spec = make_specification(self.test_dict, self.qsettings, self.logger)  # Make ExecutableTool
         self.assertIsInstance(spec, ExecutableTool)
-        spec.set_execution_settings()
+        spec.init_execution_settings()
         self.assertIsNotNone(spec.execution_settings)
         self.assertTrue(len(spec.execution_settings.keys()), 2)
         spec.to_dict()
@@ -107,7 +107,7 @@ class TestToolSpecification(unittest.TestCase):
             main_file_path = os.path.join(temp_dir, main_file)
             with open(main_file_path, "w+") as program_file:
                 program_file.writelines(
-                    ['import sys\n', 'counter = int(sys.argv[1])\n', 'exit(0 if counter == 23 else 1)\n']
+                    ["import sys\n", "counter = int(sys.argv[1])\n", "exit(0 if counter == 23 else 1)\n"]
                 )
             spec_dict = {
                 "name": "loop_twice",
@@ -121,5 +121,5 @@ class TestToolSpecification(unittest.TestCase):
             self.assertTrue(jump.is_condition_true(23))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

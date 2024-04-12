@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -10,7 +11,6 @@
 ######################################################################################################################
 
 """Unit tests for ToolSpecificationEditorWindow class and tool_spec_optional_widgets module."""
-
 import unittest
 import logging
 import sys
@@ -157,7 +157,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             outputfiles=["results.txt"],
             cmdline_args=["-A", "-B"],
         )
-        julia_tool_spec.set_execution_settings()  # Sets defaults
+        julia_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
         opt_widget = self.tool_specification_widget.optional_widget
         self.assertIsInstance(opt_widget, JuliaToolSpecOptionalWidget)
@@ -195,7 +195,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         exec_tool_spec = ExecutableTool(
             "a", "executable", self._temp_dir.name, ["fake_main_program.bat"], MockQSettings(), mock_logger
         )
-        exec_tool_spec.set_execution_settings()  # Sets defaults
+        exec_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(exec_tool_spec)
         opt_widget = self.tool_specification_widget._get_optional_widget("executable")
         self.assertIsInstance(opt_widget, ExecutableToolSpecOptionalWidget)
@@ -221,7 +221,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         python_tool_spec = PythonTool(
             "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
         )
-        python_tool_spec.set_execution_settings()  # Sets defaults
+        python_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(python_tool_spec)
         parent = self.tool_specification_widget.programfiles_model.index(0, 0)
         index = self.tool_specification_widget.programfiles_model.index(0, 0, parent)  # Index of 'hello.py'
@@ -245,7 +245,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         python_tool_spec = PythonTool(
             "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
         )
-        python_tool_spec.set_execution_settings()  # Sets defaults
+        python_tool_spec.init_execution_settings()  # Sets defaults
         python_tool_spec.execution_settings["use_jupyter_console"] = True
         python_tool_spec.execution_settings["kernel_spec_name"] = "python310"
         with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
@@ -272,17 +272,12 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget.push_set_jupyter_console_mode(False)
             self.assertFalse(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
             opt_widget.set_executable("path/to/executable")
-            self.tool_specification_widget.push_change_executable()
+            self.tool_specification_widget.push_change_executable(opt_widget.get_executable())
             self.assertEqual(
                 "path/to/executable", self.tool_specification_widget.spec_dict["execution_settings"]["executable"]
             )
-            with mock.patch(
-                "spine_items.tool.widgets.tool_specification_editor_window.split_cmdline_args"
-            ) as mock_args:
-                mock_args.return_value = ["-A", "-B"]
-                self.tool_specification_widget._push_change_args_command()
-                mock_args.assert_called()
-                self.assertEqual(["-A", "-B"], self.tool_specification_widget.spec_dict["cmdline_args"])
+            self.tool_specification_widget._push_change_args_command("-A -B")
+            self.assertEqual(["-A", "-B"], self.tool_specification_widget.spec_dict["cmdline_args"])
 
     def test_change_executable_spec_options(self):
         mock_logger = mock.MagicMock()
@@ -291,7 +286,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         exec_tool_spec = ExecutableTool(
             "a", "executable", self._temp_dir.name, [batch_file, "data.file"], MockQSettings(), mock_logger
         )
-        exec_tool_spec.set_execution_settings()  # Sets defaults
+        exec_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(exec_tool_spec)
         file_path = Path(self._temp_dir.name, another_batch_file)
         parent_main = self.tool_specification_widget.programfiles_model.index(0, 0)  # Main program file item
@@ -334,7 +329,9 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             m_notify.assert_called()
         # Add command for executable tool spec
         self.tool_specification_widget.optional_widget.ui.lineEdit_command.setText("ls -a")
-        self.tool_specification_widget.push_change_executable_command()
+        self.tool_specification_widget.push_change_executable_command(
+            self.tool_specification_widget.optional_widget.ui.lineEdit_command.text()
+        )
         # Check that no shell is selected
         self.assertEqual("", self.tool_specification_widget.optional_widget.get_current_shell())
         self.assertEqual("No shell", self.tool_specification_widget.optional_widget.ui.comboBox_shell.currentText())
@@ -351,7 +348,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
     def test_change_julia_project(self):
         mock_logger = mock.MagicMock()
         julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, ["hello.jl"], MockQSettings(), mock_logger)
-        julia_tool_spec.set_execution_settings()  # Sets defaults
+        julia_tool_spec.init_execution_settings()  # Sets defaults
         julia_tool_spec.execution_settings["use_jupyter_console"] = True
         with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
             self.make_tool_spec_editor(julia_tool_spec)
@@ -371,7 +368,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         python_tool_spec = PythonTool(
             "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
         )
-        python_tool_spec.set_execution_settings()  # Sets defaults
+        python_tool_spec.init_execution_settings()  # Sets defaults
         python_tool_spec.execution_settings["use_jupyter_console"] = True
         python_tool_spec.execution_settings["kernel_spec_name"] = "unknown_kernel"
         with mock.patch(
@@ -403,7 +400,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         julia_tool_spec = JuliaTool(
             "a", "julia", self._temp_dir.name, [script_file_name, data_file_name], MockQSettings(), mock_logger
         )
-        julia_tool_spec.set_execution_settings()  # Sets defaults
+        julia_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
         self.assertEqual("hello.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
         # Test browse_main_program_file()
@@ -476,7 +473,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         with open(main_path, "w") as h:
             h.writelines(["println('Hello world')"])  # Make hello.jl
         julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, [main_file], MockQSettings(), mock_logger)
-        julia_tool_spec.set_execution_settings()  # Sets defaults
+        julia_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
         # INPUT FILES
         # Test add_input_files()

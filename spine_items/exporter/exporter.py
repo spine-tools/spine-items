@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,17 +10,14 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains the :class:`Exporter` project item.
-
-"""
+"""Contains the :class:`Exporter` project item."""
 from dataclasses import dataclass
 from itertools import combinations, zip_longest
 from operator import itemgetter
 from pathlib import Path
-
 from PySide6.QtCore import Slot, Qt
 
+from spinetoolbox.helpers import SealCommand
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
@@ -30,7 +28,7 @@ from .mvcmodels.full_url_list_model import FullUrlListModel
 from .widgets.export_list_item import ExportListItem
 from .item_info import ItemInfo
 from .executable_item import ExecutableItem
-from .commands import UpdateOutLabel, UpdateOutputTimeStampsFlag, UpdateOutUrl
+from .commands import CommandId, UpdateOutLabel, UpdateOutputTimeStampsFlag, UpdateOutUrl
 from .output_channel import OutputChannel
 from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX, output_database_resources
 
@@ -100,11 +98,6 @@ class Exporter(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
-
     @property
     def executable_class(self):
         return ExecutableItem
@@ -138,7 +131,7 @@ class Exporter(ProjectItem):
         cancel = checkbox_state == Qt.CheckState.Checked.value
         if self._cancel_on_error == cancel:
             return
-        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel))
+        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self.name, cancel, self._project))
 
     def set_cancel_on_error(self, cancel):
         """Sets the Cancel export on error option."""
@@ -166,6 +159,7 @@ class Exporter(ProjectItem):
             output_format = self._specification.output_format if self._specification is not None else None
             item.set_out_url_enabled(output_format is None or output_format == OutputFormat.SQL)
             item.out_label_changed.connect(self._update_out_label)
+            item.out_label_editing_finished.connect(self._seal_out_label_update)
             item.out_url_changed.connect(self._update_out_url)
         self._properties_ui.output_time_stamps_check_box.setCheckState(
             Qt.CheckState.Checked if self._append_output_time_stamps else Qt.CheckState.Unchecked
@@ -300,7 +294,16 @@ class Exporter(ProjectItem):
             in_label (str): associated in label
         """
         previous = next(c for c in self._output_channels if c.in_label == in_label)
-        self._toolbox.undo_stack.push(UpdateOutLabel(self, out_label, in_label, previous.out_label))
+        self._toolbox.undo_stack.push(UpdateOutLabel(self.name, out_label, in_label, previous.out_label, self._project))
+
+    @Slot(str)
+    def _seal_out_label_update(self, in_label):
+        """Pushes a sealing command to undo stack.
+
+        Args:
+            in_label (str): associated in label
+        """
+        self._toolbox.undo_stack.push(SealCommand(CommandId.CHANGE_OUT_LABEL.value))
 
     @Slot(str, dict)
     def _update_out_url(self, in_label, url_dict):
@@ -313,7 +316,9 @@ class Exporter(ProjectItem):
         for channel in self._output_channels:
             if channel.in_label == in_label:
                 if channel.out_url != url_dict:
-                    self._toolbox.undo_stack.push(UpdateOutUrl(self, in_label, url_dict, channel.out_url))
+                    self._toolbox.undo_stack.push(
+                        UpdateOutUrl(self.name, in_label, url_dict, channel.out_url, self._project)
+                    )
                 break
         else:
             raise RuntimeError(f"Logic error: cannot find channel for input label {in_label}")
@@ -484,7 +489,7 @@ class Exporter(ProjectItem):
         flag = checkbox_state == Qt.CheckState.Checked.value
         if flag == self._append_output_time_stamps:
             return
-        self._toolbox.undo_stack.push(UpdateOutputTimeStampsFlag(self, flag))
+        self._toolbox.undo_stack.push(UpdateOutputTimeStampsFlag(self.name, flag, self._project))
 
     def set_output_time_stamps_flag(self, flag):
         """

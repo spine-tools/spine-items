@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains ToolInstance classes.
-
-"""
-
+"""Contains ToolInstance classes."""
 import os
 import sys
 from spine_engine.utils.helpers import (
@@ -197,8 +194,8 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        self.tool_specification.set_execution_settings()  # Set default execution settings if they are missing
-        julia_args = get_julia_path_and_project(self.tool_specification.execution_settings)
+        self.tool_specification.init_execution_settings()  # Set default execution settings if they are missing
+        julia_args = get_julia_path_and_project(self.tool_specification.execution_settings, self._settings)
         if not julia_args:
             k_name = self.tool_specification.execution_settings["kernel_spec_name"]
             self._logger.msg_error(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
@@ -297,7 +294,7 @@ class PythonToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        self.tool_specification.set_execution_settings()  # Set default execution settings
+        self.tool_specification.init_execution_settings()  # Initialize execution settings
         cmdline_args = self.tool_specification.cmdline_args + args
         if self.tool_specification.execution_settings["use_jupyter_console"]:
             server_ip = "127.0.0.1"
@@ -318,7 +315,8 @@ class PythonToolInstance(ToolInstance):
                 server_ip=server_ip,
             )
         else:
-            python_exe = resolve_python_interpreter(self.tool_specification.execution_settings["executable"])
+            interpreter = self.tool_specification.execution_settings["executable"]
+            python_exe = interpreter if interpreter else resolve_python_interpreter(self._settings)
             commands = self.make_python_basic_console_commands(cmdline_args)
             alias = f"python {' '.join([self.tool_specification.main_prgm] + cmdline_args)}"
             self.exec_mngr = PythonPersistentExecutionManager(
@@ -336,7 +334,7 @@ class PythonToolInstance(ToolInstance):
         Returns:
             list of str: lines of code
         """
-        globals_dict = 'globals_dict = globals()'
+        globals_dict = "globals_dict = globals()"
         update_globals_dict = f'globals_dict.update({{"__file__": "{full_fp}", "__name__": "__main__"}})'
         compile_and_exec = (
             f"with open('{fp}', 'rb') as f: exec(compile(f.read(), '{fp}', 'exec'), globals_dict, globals_dict)"

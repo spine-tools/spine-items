@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,20 +10,26 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Tool project item info.
-
-"""
+"""Tool project item info."""
 from spine_engine.project_item.project_item_info import ProjectItemInfo
 
 
 class ItemInfo(ProjectItemInfo):
     @staticmethod
-    def item_category():
-        """See base class."""
-        return "Tools"
-
-    @staticmethod
     def item_type():
         """See base class."""
         return "Tool"
+
+    @staticmethod
+    def specification_icon(specification):
+        if not specification:
+            return None
+        if specification.tooltype == "python":
+            return ":icons/item_icons/python-logo.svg"
+        elif specification.tooltype == "julia":
+            return ":icons/item_icons/julia-logo.svg"
+        elif specification.tooltype == "executable":
+            return ":icons/item_icons/terminal-logo.svg"
+        elif specification.tooltype == "gams":
+            return ":icons/item_icons/gams-logo.svg"
+        return None

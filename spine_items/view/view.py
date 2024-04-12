@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Module for view class.
-
-"""
-
+"""Module for view class."""
 import os
 from PySide6.QtCore import Qt, Slot, Signal, QObject, QTimer
 from PySide6.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
@@ -60,11 +57,6 @@ class View(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
-
     @property
     def executable_class(self):
         return ExecutableItem
@@ -100,7 +92,7 @@ class View(ProjectItem):
         db_url_codenames = self._db_url_codenames(indexes)
         if not db_url_codenames:
             return
-        self._toolbox.db_mngr.open_db_editor(db_url_codenames)
+        self._toolbox.db_mngr.open_db_editor(db_url_codenames, reuse_existing_editor=True)
 
     @Slot(bool)
     def pin_values(self, checked=False):
@@ -131,7 +123,7 @@ class View(ProjectItem):
     @Slot(str, list)
     def _pin_db_values(self, name, values):
         self._toolbox.undo_stack.push(
-            PinOrUnpinDBValuesCommand(self, {name: values}, {name: self._pinned_values.get(name)})
+            PinOrUnpinDBValuesCommand(self.name, {name: values}, {name: self._pinned_values.get(name)}, self._project)
         )
         self._logger.msg.emit(f"<b>{self.name}</b>: Successfully added pin '{name}'")
 
@@ -139,7 +131,10 @@ class View(ProjectItem):
         names = [index.data() for index in self._properties_ui.treeView_pinned_values.selectedIndexes()]
         self._toolbox.undo_stack.push(
             PinOrUnpinDBValuesCommand(
-                self, {name: None for name in names}, {name: self._pinned_values.get(name) for name in names}
+                self.name,
+                {name: None for name in names},
+                {name: self._pinned_values.get(name) for name in names},
+                self._project,
             )
         )
 
@@ -151,7 +146,9 @@ class View(ProjectItem):
             return
         values = self._pinned_values.get(old_name)
         self._toolbox.undo_stack.push(
-            PinOrUnpinDBValuesCommand(self, {old_name: None, new_name: values}, {old_name: values, new_name: None})
+            PinOrUnpinDBValuesCommand(
+                self.name, {old_name: None, new_name: values}, {old_name: values, new_name: None}, self._project
+            )
         )
 
     def do_pin_db_values(self, values_by_name):

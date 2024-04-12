@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Data Connection project item.
-
-"""
-
+"""Unit tests for Data Connection project item."""
 import os
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -23,13 +20,12 @@ from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtCore import QItemSelectionModel
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 from PySide6.QtGui import Qt
-
 from spinedb_api import create_new_spine_database
 from spinetoolbox.helpers import signal_waiter
 from spine_items.data_connection.data_connection import _Role, DataConnection
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.data_connection.item_info import ItemInfo
-from ..mock_helpers import (
+from tests.mock_helpers import (
     clean_up_toolbox,
     create_toolboxui_with_project,
     mock_finish_project_item_construction,
@@ -41,9 +37,6 @@ from ..mock_helpers import (
 class TestDataConnection(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(DataConnection.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        self.assertEqual(DataConnection.item_category(), ItemInfo.item_category())
 
 
 class TestDataConnectionWithProject(unittest.TestCase):
@@ -690,7 +683,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self._data_connection.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self._data_connection.name)  # item name
-        self.assertEqual(expected_name, self._data_connection.get_icon().name_item.text())  # name item on Design View
+        self.assertEqual(expected_name, self._data_connection.get_icon().name())
         # Check data_dir
         self.assertEqual(expected_data_dir, self._data_connection.data_dir)  # Check data dir
         # Check that file_system_watcher has one path (new data_dir)
@@ -771,6 +764,7 @@ class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
         self.project = create_mock_project(self._temp_dir.name)
         self.toolbox.project.return_value = self.project
         self.data_connection = factory.make_item("DC", item_dict, self.toolbox, self.project)
+        self.project.get_item.return_value = self.data_connection
         self._properties_tab = mock_finish_project_item_construction(factory, self.data_connection, self.toolbox)
         self.ref_model = self.data_connection.reference_model
 

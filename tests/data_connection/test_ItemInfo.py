@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Data Connection's ItemInfo class.
-
-"""
+"""Unit tests for Data Connection's ItemInfo class."""
 import unittest
 from spine_items.data_connection.item_info import ItemInfo
 
@@ -20,9 +18,6 @@ from spine_items.data_connection.item_info import ItemInfo
 class TestItemInfo(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(ItemInfo.item_type(), "Data Connection")
-
-    def test_item_category(self):
-        self.assertEqual(ItemInfo.item_category(), "Data Connections")
 
 
 if __name__ == "__main__":

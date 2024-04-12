@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Tool's executable item and support functionality.
-
-"""
-
+"""Contains Tool's executable item and support functionality."""
 import datetime
 import fnmatch
 import glob
@@ -39,7 +36,6 @@ from spine_engine.utils.helpers import (
     write_filter_id_file,
     create_log_file_timestamp,
 )
-
 from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources
@@ -47,7 +43,7 @@ from ..utils import generate_filter_subdirectory_name
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 
 
-_ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+_ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
 class ExecutableItem(DBWriterExecutableItemBase):
@@ -416,20 +412,21 @@ class ExecutableItem(DBWriterExecutableItemBase):
             return False
         if self._tool_specification.tooltype.lower() == "python":
             use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
-            k_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
-            if use_jupyter_console and k_name == "":
+            kernel_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
+            if use_jupyter_console and not kernel_name:
                 self._logger.msg_error.emit("Python kernel missing. Please select it in Tool Specification Editor.")
                 return False
             # Note: no check for python path == "" because this should never happen
         elif self._tool_specification.tooltype.lower() == "julia":
             use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
-            k_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
+            kernel_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
             julia_path = self._tool_specification.execution_settings.get("executable", "")
-            julia_path = resolve_julia_executable(julia_path)
-            if use_jupyter_console and k_name == "":
+            if not julia_path:
+                julia_path = resolve_julia_executable(settings)
+            if use_jupyter_console and not kernel_name:
                 self._logger.msg_error.emit("Julia kernel missing. Please select it in Tool Specification Editor.")
                 return False
-            if not use_jupyter_console and julia_path == "":
+            if not use_jupyter_console and not julia_path:
                 self._logger.msg_error.emit(
                     "Julia executable path missing. Please set it in Tool Specification Editor."
                 )
@@ -817,4 +814,4 @@ def _unique_dir_name(tool_specification):
 
 
 def _filter_ansi_escape(s):
-    return _ANSI_ESCAPE.sub('', s)
+    return _ANSI_ESCAPE.sub("", s)

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,11 +9,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """ Unit tests for the ``utils`` module. """
 import sys
 import unittest
 from unittest import mock
-
 from spine_items.utils import convert_to_sqlalchemy_url, convert_url_to_safe_string, database_label
 
 
@@ -182,5 +183,5 @@ class TestConvertUrlToSafeString(unittest.TestCase):
         self.assertEqual(convert_url_to_safe_string(url), r"sqlite:///" + database_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

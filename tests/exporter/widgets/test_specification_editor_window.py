@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,15 +9,14 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Unit tests for the ``specification_editor_window`` module."""
 import json
 import pathlib
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-
 from PySide6.QtWidgets import QApplication
-
 from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
 from spine_items.exporter.widgets.specification_editor_window import SpecificationEditorWindow
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping, EntityClassMapping
@@ -145,5 +145,5 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         self.assertEqual(loaded_specification.mapping_specifications()["my mappings"].to_dict()["root"], expected_dicts)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

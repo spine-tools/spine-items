@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,14 +9,13 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Contains ImportPreviewWindow class. """
 
+""" Contains ImportPreviewWindow class. """
 import os
 import json
 import fnmatch
 from PySide6.QtCore import Qt, Signal, Slot, QModelIndex, QItemSelectionModel
 from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
-
 from spinedb_api.helpers import remove_credentials_from_url
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
@@ -397,7 +397,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         )
         if not filename[0]:
             return
-        with open(filename[0], 'w') as file_p:
+        with open(filename[0], "w") as file_p:
             mappings_dict = self._mappings_model.store()
             mappings_dict.update(self._import_sources.store_connectors())
             json.dump(mappings_dict, file_p)
