@@ -27,13 +27,122 @@ from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.item_info import ItemInfo
 from spine_items.utils import convert_to_sqlalchemy_url, database_label
 from spinetoolbox.helpers import signal_waiter
-from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
-
+from ..mock_helpers import (
+    mock_finish_project_item_construction,
+    create_mock_project,
+    create_mock_toolbox,
+    create_toolboxui_with_project,
+)
 
 class TestDataStore(unittest.TestCase):
     def test_item_type(self):
         """Tests that the item type is correct."""
         self.assertEqual(DataStore.item_type(), ItemInfo.item_type())
+
+
+class TestDataStoreWithToolbox(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Overridden method. Runs once before all tests in this class."""
+        try:
+            cls.app = QApplication().processEvents()
+        except RuntimeError:
+            pass
+        logging.basicConfig(
+            stream=sys.stderr,
+            level=logging.DEBUG,
+            format="%(asctime)s %(levelname)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+
+    def setUp(self):
+        """Set up."""
+        self._temp_dir = TemporaryDirectory()
+        self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
+        factory = DataStoreFactory()
+        item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
+        self._project = self._toolbox.project()
+        with mock.patch("spine_items.data_store.data_store.QMenu"):
+            self.ds = factory.make_item("DS", item_dict, self._toolbox, self._project)
+        self._project.add_item(self.ds)
+        self._properties_widget = mock_finish_project_item_construction(factory, self.ds, self._toolbox)
+        self.ds_properties_ui = self.ds._properties_ui
+
+    def tearDown(self):
+        """Overridden method. Runs after each test.
+        Use this to free resources after a test if needed.
+        """
+        ds_db_path = os.path.join(self.ds.data_dir, "DS.sqlite")
+        temp_db_path = os.path.join(self.ds.data_dir, "temp_db.sqlite")
+        self.ds.tear_down()
+        if os.path.exists(ds_db_path):
+            try:
+                os.remove(ds_db_path)
+            except OSError as os_e:
+                logging.error("Failed to remove %s. Error: %s", ds_db_path, os_e)
+        if os.path.exists(temp_db_path):
+            try:
+                os.remove(temp_db_path)
+            except OSError as os_e:
+                logging.error("Failed to remove %s. Error: %s", temp_db_path, os_e)
+        self._temp_dir.cleanup()
+
+    def create_temp_db(self):
+        """Let's create a real db to more easily test complicated stuff (such as opening a tree view)."""
+        temp_db_path = os.path.join(self.ds.data_dir, "temp_db.sqlite")
+        sqlite_url = "sqlite:///" + temp_db_path
+        create_new_spine_database(sqlite_url)
+        return temp_db_path
+
+    def test_rename(self):
+        """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
+        temp_path = self.create_temp_db()
+        url = dict(dialect="sqlite", database=temp_path)
+        self.ds._url = self.ds.parse_url(url)
+        self.ds.activate()
+        # Check that DS is connected to an existing DS.sqlite file that is in data_dir
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["dialect"], "sqlite")
+        self.assertEqual(url["database"], os.path.join(self.ds.data_dir, "temp_db.sqlite"))  # data_dir before rename
+        self.assertTrue(os.path.exists(url["database"]))
+        expected_name = "ABC"
+        expected_short_name = "abc"
+        expected_data_dir = os.path.join(self._project.items_dir, expected_short_name)
+        self.ds.rename(expected_name, "")  # Do rename
+        # Check name
+        self.assertEqual(expected_name, self.ds.name)  # item name
+        self.assertEqual(expected_name, self.ds.get_icon().name())  # name item on Design View
+        # Check data_dir and logs_dir
+        self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
+        # Check that the database path in properties has been updated
+        expected_db_path = os.path.join(expected_data_dir, "temp_db.sqlite")
+        url = self.ds_properties_ui.url_selector_widget.url_dict()
+        self.assertEqual(url["database"], expected_db_path)
+        # Check that the db file has actually been moved
+        self.assertTrue(os.path.exists(url["database"]))
+
+    def test_dirty_db_notification(self):
+        """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
+        temp_path = self.create_temp_db()
+        url = dict(dialect="sqlite", database=temp_path)
+        self.ds._url = self.ds.parse_url(url)
+        self.ds.activate()
+        # Test that there are no notifications
+        self.ds._check_notifications()
+        self.assertEqual([], self.ds.get_icon().exclamation_icon._notifications)
+        # Check that there is a warning about uncommitted changes
+        db_map = self.ds.get_db_map_for_ds()
+        self._toolbox.db_mngr.add_entity_classes({db_map: [{"name": "my_object_class"}]})
+        self.ds._check_notifications()
+        self.assertEqual(
+            [f"{self.ds.name} has uncommitted changes"], self.ds.get_icon().exclamation_icon._notifications
+        )
+        # Check that the warning disappears after committing the changes
+        self._toolbox.db_mngr.commit_session("Added entity classes", db_map)
+        self.ds._check_notifications()
+        self.assertEqual(
+            [], self.ds.get_icon().exclamation_icon._notifications
+        )
 
 
 # noinspection PyUnusedLocal
@@ -293,33 +402,6 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
             "Link established. Interaction between a "
             "<b>View</b> and a <b>Data Store</b> has not been implemented yet."
         )
-
-    def test_rename(self):
-        """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
-        temp_path = self.create_temp_db()
-        url = dict(dialect="sqlite", database=temp_path)
-        self.ds._url = self.ds.parse_url(url)
-        self.ds.activate()
-        # Check that DS is connected to an existing DS.sqlite file that is in data_dir
-        url = self.ds_properties_ui.url_selector_widget.url_dict()
-        self.assertEqual(url["dialect"], "sqlite")
-        self.assertEqual(url["database"], os.path.join(self.ds.data_dir, "temp_db.sqlite"))  # data_dir before rename
-        self.assertTrue(os.path.exists(url["database"]))
-        expected_name = "ABC"
-        expected_short_name = "abc"
-        expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
-        self.ds.rename(expected_name, "")  # Do rename
-        # Check name
-        self.assertEqual(expected_name, self.ds.name)  # item name
-        self.assertEqual(expected_name, self.ds.get_icon().name())  # name item on Design View
-        # Check data_dir and logs_dir
-        self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
-        # Check that the database path in properties has been updated
-        expected_db_path = os.path.join(expected_data_dir, "temp_db.sqlite")
-        url = self.ds_properties_ui.url_selector_widget.url_dict()
-        self.assertEqual(url["database"], expected_db_path)
-        # Check that the db file has actually been moved
-        self.assertTrue(os.path.exists(url["database"]))
 
     def test_do_update_url_uses_filterable_resources_when_replacing_them(self):
         database_1 = os.path.join(self._temp_dir.name, "db1.sqlite")
