@@ -78,7 +78,7 @@ class DataStore(ProjectItem):
     def get_db_map_for_ds(self):
         """Returns the db map for the Data Store"""
         if self._url.get("dialect"):
-            return self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, self.name)
+            return self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, codename=self.name)
         return None
 
     @staticmethod
