@@ -16,10 +16,10 @@ from itertools import combinations, zip_longest
 from operator import itemgetter
 from pathlib import Path
 from PySide6.QtCore import Slot, Qt
-
 from spinetoolbox.helpers import SealCommand
 from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
+from spine_engine.utils.helpers import ExecutionDirection
 from spinedb_api import clear_filter_configs
 from .export_manifest import exported_files_as_resources
 from .specification import OutputFormat
@@ -112,7 +112,7 @@ class Exporter(ProjectItem):
 
     def handle_execution_successful(self, execution_direction, engine_state):
         """See base class."""
-        if execution_direction != "FORWARD":
+        if execution_direction != ExecutionDirection.FORWARD:
             return
         self._resources_to_successors_changed()
 

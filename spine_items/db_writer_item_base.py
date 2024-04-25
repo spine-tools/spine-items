@@ -12,6 +12,7 @@
 
 """Contains base classes for items that write to db."""
 from PySide6.QtCore import Slot
+from spine_engine.utils.helpers import ExecutionDirection
 from spinetoolbox.project_item.project_item import ProjectItem
 
 
@@ -27,7 +28,7 @@ class DBWriterItemBase(ProjectItem):
     @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
-        if execution_direction != "FORWARD":
+        if execution_direction != ExecutionDirection.FORWARD:
             return
         committed_db_maps = set()
         for successor in self.successor_data_stores():

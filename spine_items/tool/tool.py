@@ -18,7 +18,7 @@ from spinetoolbox.helpers import open_url
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, make_cmd_line_arg, LabelArg
-from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable
+from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, ExecutionDirection
 from .commands import (
     UpdateKillCompletedProcesses,
     UpdateToolExecuteInWorkCommand,
@@ -503,7 +503,7 @@ class Tool(DBWriterItemBase):
     def handle_execution_successful(self, execution_direction, engine_state):
         """See base class."""
         super().handle_execution_successful(execution_direction, engine_state)
-        if execution_direction != "FORWARD":
+        if execution_direction != ExecutionDirection.FORWARD:
             return
         self._resources_to_successors_changed()
 

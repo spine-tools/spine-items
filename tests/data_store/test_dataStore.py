@@ -34,6 +34,7 @@ from ..mock_helpers import (
     create_toolboxui_with_project,
 )
 
+
 class TestDataStore(unittest.TestCase):
     def test_item_type(self):
         """Tests that the item type is correct."""
@@ -140,9 +141,7 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         # Check that the warning disappears after committing the changes
         self._toolbox.db_mngr.commit_session("Added entity classes", db_map)
         self.ds._check_notifications()
-        self.assertEqual(
-            [], self.ds.get_icon().exclamation_icon._notifications
-        )
+        self.assertEqual([], self.ds.get_icon().exclamation_icon._notifications)
 
 
 # noinspection PyUnusedLocal
