@@ -8,9 +8,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Contains utilities for Exporter."""
 from dataclasses import dataclass
-
 from spine_engine.project_item.project_item_resource import url_resource
 from spine_items.utils import convert_to_sqlalchemy_url
 

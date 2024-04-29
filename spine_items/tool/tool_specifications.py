@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,14 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Tool specification classes.
-
-"""
-
+"""Contains Tool specification classes."""
 from collections import OrderedDict
 import copy
-import logging
 import os.path
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spine_engine.utils.command_line_arguments import split_cmdline_args
@@ -115,9 +111,9 @@ class ToolSpecification(ProjectItemSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): Tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): Tool Specification command line arguments
         """
-        super().__init__(name, description, item_type=ItemInfo.item_type(), item_category=ItemInfo.item_category())
+        super().__init__(name, description, item_type=ItemInfo.item_type())
         self._settings = settings
         self._logger = logger
         self.tooltype = tooltype
@@ -162,7 +158,7 @@ class ToolSpecification(ProjectItemSpecification):
         """See base class"""
         return [("execution_settings",)]
 
-    def set_execution_settings(self):
+    def init_execution_settings(self):
         """Updates Tool specifications by adding the default execution settings dict for this specification."""
 
     def is_equivalent(self, other):
@@ -258,7 +254,7 @@ class GAMSTool(ToolSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): GAMS tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): GAMS Tool Specification command line arguments
         """
         super().__init__(
             name,
@@ -294,21 +290,6 @@ class GAMSTool(ToolSpecification):
             11: "Out of disk",
             62097: "Simulation interrupted by user",  # Not official
         }
-
-    def update_gams_options(self, key, value):
-        """[OBSOLETE?] Updates GAMS command line options. Only 'cerr' and 'logoption' keywords supported.
-
-        Args:
-            key (str): Option name
-            value (int, float): Option value
-        """
-        # Supported GAMS logoption values
-        # 3 writes LOG output to standard output
-        # 4 writes LOG output to a file and standard output  [Not supported in GAMS v24.0]
-        if key in ["logoption", "cerr"]:
-            self.gams_options[key] = "{0}={1}".format(key, value)
-        else:
-            logging.error("Updating GAMS options failed. Unknown key: %s", key)
 
     def make_debug_project(self, basedir):
         """Make a GAMS project file and return an anchor for the execution item log.
@@ -402,6 +383,7 @@ class JuliaTool(ToolSpecification):
         inputfiles_opt=None,
         outputfiles=None,
         cmdline_args=None,
+        execution_settings=None,
     ):
         """
         Args:
@@ -416,7 +398,8 @@ class JuliaTool(ToolSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): Julia tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): Julia Tool Specification command line arguments
+            execution_settings (dict, optional): Julia tool spec execution settings
         """
         super().__init__(
             name,
@@ -433,7 +416,47 @@ class JuliaTool(ToolSpecification):
         )
         self.main_prgm = includes[0]
         self.julia_options = OrderedDict()
+        self.execution_settings = execution_settings if execution_settings is not None else {}
         self.return_codes = {0: "Normal return", -1: "Failure"}
+
+    def to_dict(self):
+        """Adds execution settings dict to Tool spec dict."""
+        d = super().to_dict()
+        d["execution_settings"] = self.execution_settings
+        return d
+
+    def set_execution_settings(self, use_julia_jupyter_console, julia_exe, julia_project, julia_kernel):
+        """Sets execution settings.
+
+        Args:
+            use_julia_jupyter_console (bool): True for Jupyter Console, False for Basic Console
+            julia_exe (str): Abs. path to Julia executable
+            julia_project (str): Julia project
+            julia_kernel (str): Julia kernel for Jupyter Console
+        """
+        d = dict()
+        d["kernel_spec_name"] = julia_kernel
+        d["env"] = ""
+        d["use_jupyter_console"] = use_julia_jupyter_console
+        d["executable"] = julia_exe
+        d["project"] = julia_project
+        self.execution_settings = d
+
+    def init_execution_settings(self):
+        """Initializes execution_setting instance attribute to default settings."""
+        if not self.execution_settings:
+            # Use global (default) execution settings from Settings->Tools
+            # This part is for providing support for Julia Tool specs that do not have
+            # the execution_settings dict yet
+            d = dict()
+            d["kernel_spec_name"] = self._settings.value("appSettings/juliaKernel", defaultValue="")
+            d["env"] = ""
+            d["use_jupyter_console"] = bool(
+                int(self._settings.value("appSettings/useJuliaKernel", defaultValue="0"))
+            )  # bool(int(str))
+            d["executable"] = self._settings.value("appSettings/juliaPath", defaultValue="")
+            d["project"] = self._settings.value("appSettings/juliaProjectPath", defaultValue="")
+            self.execution_settings = d
 
     @staticmethod
     def load(path, data, settings, logger):
@@ -491,8 +514,8 @@ class PythonTool(ToolSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): Python tool command line arguments (read from tool definition file)
-            execution_settings (dict, optional): Python kernel spec settings
+            cmdline_args (list, optional): Python Tool Specification command line arguments
+            execution_settings (dict, optional): Python tool spec execution settings
         """
         super().__init__(
             name,
@@ -518,7 +541,23 @@ class PythonTool(ToolSpecification):
         d["execution_settings"] = self.execution_settings
         return d
 
-    def set_execution_settings(self):
+    def set_execution_settings(self, use_python_jupyter_console, python_exe, python_kernel, env):
+        """Sets execution settings.
+
+        Args:
+            use_python_jupyter_console (bool): True for Jupyter Console, False for Basic Console
+            python_exe (str): Abs. path to Python executable
+            python_kernel (str): Julia kernel for Jupyter Console
+            env (str): empty string for regular kernels, 'conda' for Conda kernels
+        """
+        d = dict()
+        d["kernel_spec_name"] = python_kernel
+        d["env"] = env
+        d["use_jupyter_console"] = use_python_jupyter_console
+        d["executable"] = python_exe
+        self.execution_settings = d
+
+    def init_execution_settings(self):
         """Sets the execution_setting instance attribute to defaults if this
         Python Tool spec has not been updated yet.
 
@@ -537,19 +576,6 @@ class PythonTool(ToolSpecification):
             )  # bool(int(str))
             d["executable"] = self._settings.value("appSettings/pythonPath", defaultValue="")
             self.execution_settings = d
-        else:
-            # Make sure that required keys are included (for debugging)
-            if not isinstance(self.execution_settings, dict):
-                logging.error("self.execution_settings is not a dict")
-                return
-            if "use_jupyter_console" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 1")
-            elif "kernel_spec_name" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 2")
-            elif "env" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 3")
-            elif "executable" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 4")
 
     @staticmethod
     def load(path, data, settings, logger):
@@ -608,7 +634,7 @@ class ExecutableTool(ToolSpecification):
             inputfiles (list): List of required data files
             inputfiles_opt (list, optional): List of optional data files (wildcards may be used)
             outputfiles (list, optional): List of output files (wildcards may be used)
-            cmdline_args (str, optional): Tool command line arguments (read from tool definition file)
+            cmdline_args (list, optional): Executable Tool Specification command line arguments
             execution_settings (dict): Settings for executing a (shell) command instead of a file
             definition_file_path (str): Absolute path to spec definition file. Only used when running a (shell) command
                 in 'source' execution mode
@@ -651,7 +677,7 @@ class ExecutableTool(ToolSpecification):
             return None
         return super()._includes_main_path_relative()
 
-    def set_execution_settings(self):
+    def init_execution_settings(self):
         """Updates old Executable Tool specifications by adding the
         default execution settings dict for this specification.
 
@@ -663,15 +689,6 @@ class ExecutableTool(ToolSpecification):
             d["cmd"] = ""
             d["shell"] = ""
             self.execution_settings = d
-        else:
-            # Make sure that required keys are included (for debugging)
-            if not isinstance(self.execution_settings, dict):
-                logging.error("self.execution_settings is not a dict")
-                return
-            if "cmd" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 1")
-            elif "shell" not in self.execution_settings.keys():
-                logging.error("self.execution_settings error 2")
 
     @staticmethod
     def load(path, data, settings, logger):

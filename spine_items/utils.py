@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,19 +10,15 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains utilities shared between project items.
-
-"""
+""" Contains utilities shared between project items. """
 import os.path
 from contextlib import suppress
-
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL, make_url
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spine_engine.utils.queue_logger import SuppressedMessage
-from spinedb_api.helpers import remove_credentials_from_url
+from spinedb_api.helpers import remove_credentials_from_url, SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS
 
 
 class URLError(Exception):
@@ -40,39 +37,50 @@ def database_label(provider_name):
     return "db_url@" + provider_name
 
 
-def convert_to_sqlalchemy_url(urllib_url, item_name="", logger=None):
-    """Returns a sqlalchemy url from the url or None if not valid."""
+def convert_to_sqlalchemy_url(url, item_name="", logger=None):
+    """Returns a sqlalchemy url from url dict or None if not valid.
+
+    Args:
+        url (dict): URL to convert
+        item_name (str): project item name for logging
+        logger (LoggerInterface, optional): a logger
+
+    Returns:
+        URL: SqlAlchemy URL
+    """
     selections = f"<b>{item_name}</b> selections" if item_name else "selections"
     if logger is None:
         logger = _NoLogger()
-    if not urllib_url:
-        logger.msg_error.emit(f"No URL specified for {selections}. Please specify one and try again")
+    if not url:
+        logger.msg_error.emit(f"No URL specified for {selections}. Please specify one and try again.")
         return None
     try:
-        sa_url = _convert_url(urllib_url)
-        _validate_sa_url(sa_url, urllib_url["dialect"])
+        sa_url = _convert_url(url)
+        _validate_sa_url(sa_url, url["dialect"])
         return sa_url
     except URLError as error:
         logger.msg_error.emit(f"Unable to generate URL from {selections}: {error}")
         return None
 
 
-def _convert_url(url_dict):
+def _convert_url(url):
     """Converts URL dict to SqlAlchemy URL.
 
     Args:
-        url_dict (dict): URL dictionary
+        url (dict): URL dictionary
 
     Returns:
         URL: SqlAlchemy URL
     """
     try:
-        url = {key: value for key, value in url_dict.items() if value}
-        dialect = url.pop("dialect")
+        url = {key: value for key, value in url.items() if value}
+        dialect = url.pop("dialect", None)
         with suppress(KeyError):
             del url["schema"]
         if not dialect:
-            raise URLError(f"invalid dialect {dialect}.")
+            raise URLError(f"missing dialect")
+        if dialect not in set(SUPPORTED_DIALECTS) | set(UNSUPPORTED_DIALECTS):
+            raise URLError(f"invalid dialect '{dialect}'")
         if dialect == "sqlite":
             database = url.get("database", "")
             if database:

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,10 +9,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Importer's execute kernel (do_work), as target for a multiprocess.Process """
 
+"""Importer's execute kernel (do_work), as target for a multiprocess.Process"""
 import os
-
 from spine_engine.project_item.project_item_resource import get_source, get_source_extras
 from spinedb_api import clear_filter_configs, InvalidMapping
 from spinedb_api.helpers import remove_credentials_from_url

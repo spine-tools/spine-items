@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -26,10 +27,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
-    QDockWidget, QFormLayout, QHBoxLayout, QHeaderView,
-    QLabel, QLineEdit, QMainWindow, QPushButton,
-    QSizePolicy, QSpacerItem, QSpinBox, QTableView,
-    QToolButton, QTreeView, QVBoxLayout, QWidget)
+    QFormLayout, QFrame, QHBoxLayout, QHeaderView,
+    QLabel, QLayout, QLineEdit, QMainWindow,
+    QPushButton, QSizePolicy, QSpacerItem, QSpinBox,
+    QSplitter, QTableView, QToolButton, QTreeView,
+    QVBoxLayout, QWidget)
 
 from spinetoolbox.widgets.custom_combobox import ElidedCombobox
 from spine_items import resources_icons_rc
@@ -38,32 +40,165 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1146, 801)
+        MainWindow.resize(1086, 780)
         MainWindow.setDockNestingEnabled(True)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.mappings_dock = QDockWidget(MainWindow)
-        self.mappings_dock.setObjectName(u"mappings_dock")
-        self.dockWidgetContents = QWidget()
-        self.dockWidgetContents.setObjectName(u"dockWidgetContents")
-        self.verticalLayout = QVBoxLayout(self.dockWidgetContents)
-        self.verticalLayout.setSpacing(3)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(3, 3, 3, 3)
+        self.verticalLayout_10 = QVBoxLayout(self.centralwidget)
+        self.verticalLayout_10.setObjectName(u"verticalLayout_10")
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setSizeConstraint(QLayout.SetDefaultConstraint)
+        self.label = QLabel(self.centralwidget)
+        self.label.setObjectName(u"label")
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+
+        self.horizontalLayout_3.addWidget(self.label)
+
+        self.export_format_combo_box = QComboBox(self.centralwidget)
+        self.export_format_combo_box.setObjectName(u"export_format_combo_box")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(1)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.export_format_combo_box.sizePolicy().hasHeightForWidth())
+        self.export_format_combo_box.setSizePolicy(sizePolicy1)
+
+        self.horizontalLayout_3.addWidget(self.export_format_combo_box)
+
+        self.live_preview_check_box = QCheckBox(self.centralwidget)
+        self.live_preview_check_box.setObjectName(u"live_preview_check_box")
+        self.live_preview_check_box.setChecked(False)
+
+        self.horizontalLayout_3.addWidget(self.live_preview_check_box)
+
+        self.frame_preview = QFrame(self.centralwidget)
+        self.frame_preview.setObjectName(u"frame_preview")
+        self.frame_preview.setEnabled(False)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.frame_preview.sizePolicy().hasHeightForWidth())
+        self.frame_preview.setSizePolicy(sizePolicy2)
+        self.frame_preview.setFrameShape(QFrame.StyledPanel)
+        self.frame_preview.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout = QHBoxLayout(self.frame_preview)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(3, 0, 3, 0)
+        self.label_9 = QLabel(self.frame_preview)
+        self.label_9.setObjectName(u"label_9")
+
+        self.horizontalLayout.addWidget(self.label_9)
+
+        self.database_url_combo_box = ElidedCombobox(self.frame_preview)
+        self.database_url_combo_box.setObjectName(u"database_url_combo_box")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
+        self.database_url_combo_box.setSizePolicy(sizePolicy3)
+        self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.database_url_combo_box.setMinimumContentsLength(16)
+
+        self.horizontalLayout.addWidget(self.database_url_combo_box)
+
+        self.load_url_from_fs_button = QToolButton(self.frame_preview)
+        self.load_url_from_fs_button.setObjectName(u"load_url_from_fs_button")
+        icon = QIcon()
+        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.load_url_from_fs_button.setIcon(icon)
+
+        self.horizontalLayout.addWidget(self.load_url_from_fs_button)
+
+        self.label_3 = QLabel(self.frame_preview)
+        self.label_3.setObjectName(u"label_3")
+
+        self.horizontalLayout.addWidget(self.label_3)
+
+        self.max_preview_tables_spin_box = QSpinBox(self.frame_preview)
+        self.max_preview_tables_spin_box.setObjectName(u"max_preview_tables_spin_box")
+        self.max_preview_tables_spin_box.setMaximum(16777215)
+        self.max_preview_tables_spin_box.setSingleStep(10)
+        self.max_preview_tables_spin_box.setValue(20)
+
+        self.horizontalLayout.addWidget(self.max_preview_tables_spin_box)
+
+        self.label_2 = QLabel(self.frame_preview)
+        self.label_2.setObjectName(u"label_2")
+
+        self.horizontalLayout.addWidget(self.label_2)
+
+        self.max_preview_rows_spin_box = QSpinBox(self.frame_preview)
+        self.max_preview_rows_spin_box.setObjectName(u"max_preview_rows_spin_box")
+        self.max_preview_rows_spin_box.setMaximum(16777215)
+        self.max_preview_rows_spin_box.setSingleStep(10)
+        self.max_preview_rows_spin_box.setValue(20)
+
+        self.horizontalLayout.addWidget(self.max_preview_rows_spin_box)
+
+
+        self.horizontalLayout_3.addWidget(self.frame_preview)
+
+
+        self.verticalLayout_10.addLayout(self.horizontalLayout_3)
+
+        self.splitter_3 = QSplitter(self.centralwidget)
+        self.splitter_3.setObjectName(u"splitter_3")
+        self.splitter_3.setOrientation(Qt.Horizontal)
+        self.splitter_2 = QSplitter(self.splitter_3)
+        self.splitter_2.setObjectName(u"splitter_2")
+        self.splitter_2.setOrientation(Qt.Vertical)
+        self.mapping_list_layout_widget = QWidget(self.splitter_2)
+        self.mapping_list_layout_widget.setObjectName(u"mapping_list_layout_widget")
+        self.verticalLayout_9 = QVBoxLayout(self.mapping_list_layout_widget)
+        self.verticalLayout_9.setSpacing(0)
+        self.verticalLayout_9.setObjectName(u"verticalLayout_9")
+        self.frame = QFrame(self.mapping_list_layout_widget)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_11 = QVBoxLayout(self.frame)
+        self.verticalLayout_11.setSpacing(0)
+        self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.verticalLayout_11.setContentsMargins(3, 3, 3, 3)
+        self.label_11 = QLabel(self.frame)
+        self.label_11.setObjectName(u"label_11")
+
+        self.verticalLayout_11.addWidget(self.label_11)
+
+
+        self.verticalLayout_9.addWidget(self.frame)
+
+        self.mappings_table = QTableView(self.mapping_list_layout_widget)
+        self.mappings_table.setObjectName(u"mappings_table")
+        self.mappings_table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.mappings_table.setShowGrid(False)
+        self.mappings_table.verticalHeader().setVisible(False)
+
+        self.verticalLayout_9.addWidget(self.mappings_table)
+
+        self.splitter_2.addWidget(self.mapping_list_layout_widget)
+        self.mapping_controls_layout_widget = QWidget(self.splitter_2)
+        self.mapping_controls_layout_widget.setObjectName(u"mapping_controls_layout_widget")
+        self.verticalLayout_8 = QVBoxLayout(self.mapping_controls_layout_widget)
+        self.verticalLayout_8.setObjectName(u"verticalLayout_8")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.add_mapping_button = QPushButton(self.dockWidgetContents)
+        self.add_mapping_button = QPushButton(self.mapping_controls_layout_widget)
         self.add_mapping_button.setObjectName(u"add_mapping_button")
 
         self.horizontalLayout_2.addWidget(self.add_mapping_button)
 
-        self.remove_mapping_button = QPushButton(self.dockWidgetContents)
+        self.remove_mapping_button = QPushButton(self.mapping_controls_layout_widget)
         self.remove_mapping_button.setObjectName(u"remove_mapping_button")
 
         self.horizontalLayout_2.addWidget(self.remove_mapping_button)
 
-        self.toggle_enabled_button = QPushButton(self.dockWidgetContents)
+        self.toggle_enabled_button = QPushButton(self.mapping_controls_layout_widget)
         self.toggle_enabled_button.setObjectName(u"toggle_enabled_button")
 
         self.horizontalLayout_2.addWidget(self.toggle_enabled_button)
@@ -72,48 +207,22 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
-
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
-
-        self.mappings_table = QTableView(self.dockWidgetContents)
-        self.mappings_table.setObjectName(u"mappings_table")
-        self.mappings_table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.mappings_table.setShowGrid(False)
-        self.mappings_table.verticalHeader().setVisible(False)
-
-        self.verticalLayout.addWidget(self.mappings_table)
-
-        self.horizontalLayout_6 = QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_6.addItem(self.horizontalSpacer_4)
-
-        self.write_earlier_button = QPushButton(self.dockWidgetContents)
+        self.write_earlier_button = QPushButton(self.mapping_controls_layout_widget)
         self.write_earlier_button.setObjectName(u"write_earlier_button")
 
-        self.horizontalLayout_6.addWidget(self.write_earlier_button)
+        self.horizontalLayout_2.addWidget(self.write_earlier_button)
 
-        self.write_later_button = QPushButton(self.dockWidgetContents)
+        self.write_later_button = QPushButton(self.mapping_controls_layout_widget)
         self.write_later_button.setObjectName(u"write_later_button")
 
-        self.horizontalLayout_6.addWidget(self.write_later_button)
+        self.horizontalLayout_2.addWidget(self.write_later_button)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout_6)
+        self.verticalLayout_8.addLayout(self.horizontalLayout_2)
 
-        self.mappings_dock.setWidget(self.dockWidgetContents)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mappings_dock)
-        self.mapping_options_dock = QDockWidget(MainWindow)
-        self.mapping_options_dock.setObjectName(u"mapping_options_dock")
-        self.mapping_options_contents = QWidget()
+        self.mapping_options_contents = QFrame(self.mapping_controls_layout_widget)
         self.mapping_options_contents.setObjectName(u"mapping_options_contents")
-        self.verticalLayout_7 = QVBoxLayout(self.mapping_options_contents)
-        self.verticalLayout_7.setSpacing(3)
-        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.verticalLayout_7.setContentsMargins(3, 3, 3, 3)
-        self.formLayout = QFormLayout()
+        self.formLayout = QFormLayout(self.mapping_options_contents)
         self.formLayout.setObjectName(u"formLayout")
         self.label_4 = QLabel(self.mapping_options_contents)
         self.label_4.setObjectName(u"label_4")
@@ -128,30 +237,20 @@ class Ui_MainWindow(object):
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
-        self.item_type_combo_box.addItem("")
         self.item_type_combo_box.setObjectName(u"item_type_combo_box")
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.item_type_combo_box)
-
-        self.always_export_header_check_box = QCheckBox(self.mapping_options_contents)
-        self.always_export_header_check_box.setObjectName(u"always_export_header_check_box")
-
-        self.formLayout.setWidget(1, QFormLayout.SpanningRole, self.always_export_header_check_box)
 
         self.label_8 = QLabel(self.mapping_options_contents)
         self.label_8.setObjectName(u"label_8")
 
         self.formLayout.setWidget(2, QFormLayout.LabelRole, self.label_8)
 
-        self.relationship_dimensions_spin_box = QSpinBox(self.mapping_options_contents)
-        self.relationship_dimensions_spin_box.setObjectName(u"relationship_dimensions_spin_box")
-        self.relationship_dimensions_spin_box.setMinimum(1)
+        self.entity_dimensions_spin_box = QSpinBox(self.mapping_options_contents)
+        self.entity_dimensions_spin_box.setObjectName(u"entity_dimensions_spin_box")
+        self.entity_dimensions_spin_box.setMinimum(0)
 
-        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.relationship_dimensions_spin_box)
+        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.entity_dimensions_spin_box)
 
         self.label_7 = QLabel(self.mapping_options_contents)
         self.label_7.setObjectName(u"label_7")
@@ -190,225 +289,95 @@ class Ui_MainWindow(object):
         self.fix_table_name_check_box = QCheckBox(self.mapping_options_contents)
         self.fix_table_name_check_box.setObjectName(u"fix_table_name_check_box")
 
-        self.formLayout.setWidget(6, QFormLayout.LabelRole, self.fix_table_name_check_box)
+        self.formLayout.setWidget(7, QFormLayout.LabelRole, self.fix_table_name_check_box)
 
         self.fix_table_name_line_edit = QLineEdit(self.mapping_options_contents)
         self.fix_table_name_line_edit.setObjectName(u"fix_table_name_line_edit")
 
-        self.formLayout.setWidget(6, QFormLayout.FieldRole, self.fix_table_name_line_edit)
+        self.formLayout.setWidget(7, QFormLayout.FieldRole, self.fix_table_name_line_edit)
+
+        self.always_export_header_check_box = QCheckBox(self.mapping_options_contents)
+        self.always_export_header_check_box.setObjectName(u"always_export_header_check_box")
+
+        self.formLayout.setWidget(10, QFormLayout.LabelRole, self.always_export_header_check_box)
+
+        self.compact_button = QPushButton(self.mapping_options_contents)
+        self.compact_button.setObjectName(u"compact_button")
+
+        self.formLayout.setWidget(10, QFormLayout.FieldRole, self.compact_button)
 
         self.label_6 = QLabel(self.mapping_options_contents)
         self.label_6.setObjectName(u"label_6")
 
-        self.formLayout.setWidget(7, QFormLayout.LabelRole, self.label_6)
+        self.formLayout.setWidget(6, QFormLayout.LabelRole, self.label_6)
 
         self.group_fn_combo_box = QComboBox(self.mapping_options_contents)
         self.group_fn_combo_box.setObjectName(u"group_fn_combo_box")
 
-        self.formLayout.setWidget(7, QFormLayout.FieldRole, self.group_fn_combo_box)
+        self.formLayout.setWidget(6, QFormLayout.FieldRole, self.group_fn_combo_box)
 
 
-        self.verticalLayout_7.addLayout(self.formLayout)
+        self.verticalLayout_8.addWidget(self.mapping_options_contents)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 12, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.verticalLayout_7.addItem(self.verticalSpacer_3)
-
-        self.mapping_options_dock.setWidget(self.mapping_options_contents)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mapping_options_dock)
-        self.mapping_spec_dock = QDockWidget(MainWindow)
-        self.mapping_spec_dock.setObjectName(u"mapping_spec_dock")
-        self.mapping_spec_contents = QWidget()
-        self.mapping_spec_contents.setObjectName(u"mapping_spec_contents")
-        self.mapping_spec_contents.setEnabled(False)
-        self.verticalLayout_2 = QVBoxLayout(self.mapping_spec_contents)
-        self.verticalLayout_2.setSpacing(3)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(3, 3, 3, 3)
-        self.mapping_table_view = QTableView(self.mapping_spec_contents)
+        self.mapping_table_view = QTableView(self.mapping_controls_layout_widget)
         self.mapping_table_view.setObjectName(u"mapping_table_view")
         self.mapping_table_view.setSelectionMode(QAbstractItemView.SingleSelection)
         self.mapping_table_view.horizontalHeader().setStretchLastSection(True)
         self.mapping_table_view.verticalHeader().setVisible(False)
 
-        self.verticalLayout_2.addWidget(self.mapping_table_view)
+        self.verticalLayout_8.addWidget(self.mapping_table_view)
 
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_5.addItem(self.horizontalSpacer)
-
-        self.compact_button = QPushButton(self.mapping_spec_contents)
-        self.compact_button.setObjectName(u"compact_button")
-
-        self.horizontalLayout_5.addWidget(self.compact_button)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout_5)
-
-        self.mapping_spec_dock.setWidget(self.mapping_spec_contents)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.mapping_spec_dock)
-        self.preview_tables_dock = QDockWidget(MainWindow)
-        self.preview_tables_dock.setObjectName(u"preview_tables_dock")
-        self.dockWidgetContents_5 = QWidget()
-        self.dockWidgetContents_5.setObjectName(u"dockWidgetContents_5")
-        self.verticalLayout_3 = QVBoxLayout(self.dockWidgetContents_5)
-        self.verticalLayout_3.setSpacing(3)
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(3, 3, 3, 3)
-        self.preview_tree_view = QTreeView(self.dockWidgetContents_5)
+        self.splitter_2.addWidget(self.mapping_controls_layout_widget)
+        self.splitter_3.addWidget(self.splitter_2)
+        self.splitter = QSplitter(self.splitter_3)
+        self.splitter.setObjectName(u"splitter")
+        self.splitter.setOrientation(Qt.Horizontal)
+        self.preview_tree_view = QTreeView(self.splitter)
         self.preview_tree_view.setObjectName(u"preview_tree_view")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy4.setHorizontalStretch(1)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.preview_tree_view.sizePolicy().hasHeightForWidth())
+        self.preview_tree_view.setSizePolicy(sizePolicy4)
+        self.splitter.addWidget(self.preview_tree_view)
         self.preview_tree_view.header().setVisible(False)
-
-        self.verticalLayout_3.addWidget(self.preview_tree_view)
-
-        self.preview_tables_dock.setWidget(self.dockWidgetContents_5)
-        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.preview_tables_dock)
-        self.preview_contents_dock = QDockWidget(MainWindow)
-        self.preview_contents_dock.setObjectName(u"preview_contents_dock")
-        self.dockWidgetContents_6 = QWidget()
-        self.dockWidgetContents_6.setObjectName(u"dockWidgetContents_6")
-        self.verticalLayout_4 = QVBoxLayout(self.dockWidgetContents_6)
-        self.verticalLayout_4.setSpacing(3)
-        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
-        self.verticalLayout_4.setContentsMargins(3, 3, 3, 3)
-        self.preview_table_view = QTableView(self.dockWidgetContents_6)
+        self.preview_table_view = QTableView(self.splitter)
         self.preview_table_view.setObjectName(u"preview_table_view")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy5.setHorizontalStretch(5)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.preview_table_view.sizePolicy().hasHeightForWidth())
+        self.preview_table_view.setSizePolicy(sizePolicy5)
+        self.splitter.addWidget(self.preview_table_view)
+        self.splitter_3.addWidget(self.splitter)
 
-        self.verticalLayout_4.addWidget(self.preview_table_view)
+        self.verticalLayout_10.addWidget(self.splitter_3)
 
-        self.preview_contents_dock.setWidget(self.dockWidgetContents_6)
-        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.preview_contents_dock)
-        self.export_options_dock = QDockWidget(MainWindow)
-        self.export_options_dock.setObjectName(u"export_options_dock")
-        self.export_options_dock.setAllowedAreas(Qt.AllDockWidgetAreas)
-        self.dockWidgetContents_7 = QWidget()
-        self.dockWidgetContents_7.setObjectName(u"dockWidgetContents_7")
-        self.verticalLayout_5 = QVBoxLayout(self.dockWidgetContents_7)
-        self.verticalLayout_5.setSpacing(3)
-        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
-        self.verticalLayout_5.setContentsMargins(3, 3, 3, 3)
-        self.horizontalLayout_4 = QHBoxLayout()
-        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.label = QLabel(self.dockWidgetContents_7)
-        self.label.setObjectName(u"label")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy)
-        font = QFont()
-        font.setPointSize(10)
-        self.label.setFont(font)
-
-        self.horizontalLayout_4.addWidget(self.label)
-
-        self.export_format_combo_box = QComboBox(self.dockWidgetContents_7)
-        self.export_format_combo_box.setObjectName(u"export_format_combo_box")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy1.setHorizontalStretch(1)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.export_format_combo_box.sizePolicy().hasHeightForWidth())
-        self.export_format_combo_box.setSizePolicy(sizePolicy1)
-
-        self.horizontalLayout_4.addWidget(self.export_format_combo_box)
-
-
-        self.verticalLayout_5.addLayout(self.horizontalLayout_4)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.verticalLayout_5.addItem(self.verticalSpacer)
-
-        self.export_options_dock.setWidget(self.dockWidgetContents_7)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.export_options_dock)
-        self.preview_controls_dock = QDockWidget(MainWindow)
-        self.preview_controls_dock.setObjectName(u"preview_controls_dock")
-        self.dockWidgetContents_4 = QWidget()
-        self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
-        self.verticalLayout_6 = QVBoxLayout(self.dockWidgetContents_4)
-        self.verticalLayout_6.setSpacing(3)
-        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.verticalLayout_6.setContentsMargins(3, 3, 3, 3)
-        self.horizontalLayout_3 = QHBoxLayout()
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.label_9 = QLabel(self.dockWidgetContents_4)
-        self.label_9.setObjectName(u"label_9")
-        self.label_9.setFont(font)
-
-        self.horizontalLayout_3.addWidget(self.label_9)
-
-        self.database_url_combo_box = ElidedCombobox(self.dockWidgetContents_4)
-        self.database_url_combo_box.setObjectName(u"database_url_combo_box")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
-        self.database_url_combo_box.setSizePolicy(sizePolicy2)
-        self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        self.database_url_combo_box.setMinimumContentsLength(0)
-
-        self.horizontalLayout_3.addWidget(self.database_url_combo_box)
-
-        self.load_url_from_fs_button = QToolButton(self.dockWidgetContents_4)
-        self.load_url_from_fs_button.setObjectName(u"load_url_from_fs_button")
-        icon = QIcon()
-        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.load_url_from_fs_button.setIcon(icon)
-
-        self.horizontalLayout_3.addWidget(self.load_url_from_fs_button)
-
-
-        self.verticalLayout_6.addLayout(self.horizontalLayout_3)
-
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.live_preview_check_box = QCheckBox(self.dockWidgetContents_4)
-        self.live_preview_check_box.setObjectName(u"live_preview_check_box")
-        self.live_preview_check_box.setChecked(False)
-
-        self.horizontalLayout.addWidget(self.live_preview_check_box)
-
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout.addItem(self.horizontalSpacer_3)
-
-        self.label_3 = QLabel(self.dockWidgetContents_4)
-        self.label_3.setObjectName(u"label_3")
-
-        self.horizontalLayout.addWidget(self.label_3)
-
-        self.max_preview_tables_spin_box = QSpinBox(self.dockWidgetContents_4)
-        self.max_preview_tables_spin_box.setObjectName(u"max_preview_tables_spin_box")
-        self.max_preview_tables_spin_box.setMaximum(16777215)
-        self.max_preview_tables_spin_box.setSingleStep(10)
-        self.max_preview_tables_spin_box.setValue(20)
-
-        self.horizontalLayout.addWidget(self.max_preview_tables_spin_box)
-
-        self.label_2 = QLabel(self.dockWidgetContents_4)
-        self.label_2.setObjectName(u"label_2")
-
-        self.horizontalLayout.addWidget(self.label_2)
-
-        self.max_preview_rows_spin_box = QSpinBox(self.dockWidgetContents_4)
-        self.max_preview_rows_spin_box.setObjectName(u"max_preview_rows_spin_box")
-        self.max_preview_rows_spin_box.setMaximum(16777215)
-        self.max_preview_rows_spin_box.setSingleStep(10)
-        self.max_preview_rows_spin_box.setValue(20)
-
-        self.horizontalLayout.addWidget(self.max_preview_rows_spin_box)
-
-
-        self.verticalLayout_6.addLayout(self.horizontalLayout)
-
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.verticalLayout_6.addItem(self.verticalSpacer_2)
-
-        self.preview_controls_dock.setWidget(self.dockWidgetContents_4)
-        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.preview_controls_dock)
+        MainWindow.setCentralWidget(self.centralwidget)
+        QWidget.setTabOrder(self.export_format_combo_box, self.live_preview_check_box)
+        QWidget.setTabOrder(self.live_preview_check_box, self.database_url_combo_box)
+        QWidget.setTabOrder(self.database_url_combo_box, self.load_url_from_fs_button)
+        QWidget.setTabOrder(self.load_url_from_fs_button, self.max_preview_tables_spin_box)
+        QWidget.setTabOrder(self.max_preview_tables_spin_box, self.max_preview_rows_spin_box)
+        QWidget.setTabOrder(self.max_preview_rows_spin_box, self.mappings_table)
+        QWidget.setTabOrder(self.mappings_table, self.add_mapping_button)
+        QWidget.setTabOrder(self.add_mapping_button, self.remove_mapping_button)
+        QWidget.setTabOrder(self.remove_mapping_button, self.toggle_enabled_button)
+        QWidget.setTabOrder(self.toggle_enabled_button, self.write_earlier_button)
+        QWidget.setTabOrder(self.write_earlier_button, self.write_later_button)
+        QWidget.setTabOrder(self.write_later_button, self.item_type_combo_box)
+        QWidget.setTabOrder(self.item_type_combo_box, self.entity_dimensions_spin_box)
+        QWidget.setTabOrder(self.entity_dimensions_spin_box, self.highlight_dimension_spin_box)
+        QWidget.setTabOrder(self.highlight_dimension_spin_box, self.parameter_type_combo_box)
+        QWidget.setTabOrder(self.parameter_type_combo_box, self.parameter_dimensions_spin_box)
+        QWidget.setTabOrder(self.parameter_dimensions_spin_box, self.group_fn_combo_box)
+        QWidget.setTabOrder(self.group_fn_combo_box, self.fix_table_name_check_box)
+        QWidget.setTabOrder(self.fix_table_name_check_box, self.fix_table_name_line_edit)
+        QWidget.setTabOrder(self.fix_table_name_line_edit, self.always_export_header_check_box)
+        QWidget.setTabOrder(self.always_export_header_check_box, self.compact_button)
+        QWidget.setTabOrder(self.compact_button, self.mapping_table_view)
+        QWidget.setTabOrder(self.mapping_table_view, self.preview_tree_view)
+        QWidget.setTabOrder(self.preview_tree_view, self.preview_table_view)
 
         self.retranslateUi(MainWindow)
 
@@ -417,7 +386,16 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.mappings_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mappings", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Export format:", None))
+        self.live_preview_check_box.setText(QCoreApplication.translate("MainWindow", u"Live preview", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Database url:", None))
+#if QT_CONFIG(tooltip)
+        self.load_url_from_fs_button.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Browse file system</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.load_url_from_fs_button.setText(QCoreApplication.translate("MainWindow", u"...", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Max. tables", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Max. content rows:", None))
+        self.label_11.setText(QCoreApplication.translate("MainWindow", u"Mappings", None))
         self.add_mapping_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.remove_mapping_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
 #if QT_CONFIG(tooltip)
@@ -432,28 +410,18 @@ class Ui_MainWindow(object):
         self.write_later_button.setToolTip(QCoreApplication.translate("MainWindow", u"Deprioratize mapping.", None))
 #endif // QT_CONFIG(tooltip)
         self.write_later_button.setText(QCoreApplication.translate("MainWindow", u"Write later", None))
-        self.mapping_options_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping options", None))
-        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Item type:", None))
-        self.item_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Object class", None))
-        self.item_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Relationship class", None))
-        self.item_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Relationship class with object parameter", None))
-        self.item_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Object group", None))
-        self.item_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Alternative", None))
-        self.item_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Scenario", None))
-        self.item_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
-        self.item_type_combo_box.setItemText(7, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
-        self.item_type_combo_box.setItemText(8, QCoreApplication.translate("MainWindow", u"Feature", None))
-        self.item_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Tool", None))
-        self.item_type_combo_box.setItemText(10, QCoreApplication.translate("MainWindow", u"Tool feature", None))
-        self.item_type_combo_box.setItemText(11, QCoreApplication.translate("MainWindow", u"Tool feature method", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Type:", None))
+        self.item_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Entity class", None))
+        self.item_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Entity class with dimension parameter", None))
+        self.item_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Entity group", None))
+        self.item_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Alternative", None))
+        self.item_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario", None))
+        self.item_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
+        self.item_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
 
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Entity dimensions:", None))
 #if QT_CONFIG(tooltip)
-        self.always_export_header_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Export header even when a table is otherwise empty.", None))
-#endif // QT_CONFIG(tooltip)
-        self.always_export_header_check_box.setText(QCoreApplication.translate("MainWindow", u"Always export header", None))
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Relationship dimensions:", None))
-#if QT_CONFIG(tooltip)
-        self.relationship_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of expected relationship dimensions.", None))
+        self.entity_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of expected relationship dimensions.", None))
 #endif // QT_CONFIG(tooltip)
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"Selected dimension:", None))
 #if QT_CONFIG(tooltip)
@@ -469,27 +437,17 @@ class Ui_MainWindow(object):
         self.parameter_dimensions_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of expected parameter value dimensions.", None))
 #endif // QT_CONFIG(tooltip)
         self.fix_table_name_check_box.setText(QCoreApplication.translate("MainWindow", u"Fixed table name:", None))
-        self.label_6.setText(QCoreApplication.translate("MainWindow", u"Group function:", None))
 #if QT_CONFIG(tooltip)
-        self.group_fn_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Group/aggregate data that ends up in the same cell in pivot tables.", None))
+        self.always_export_header_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Export header even when a table is otherwise empty.", None))
 #endif // QT_CONFIG(tooltip)
-        self.mapping_spec_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Mapping specification", None))
+        self.always_export_header_check_box.setText(QCoreApplication.translate("MainWindow", u"Always export header", None))
 #if QT_CONFIG(tooltip)
         self.compact_button.setToolTip(QCoreApplication.translate("MainWindow", u"Compact mapping by removing empty columns and rows.", None))
 #endif // QT_CONFIG(tooltip)
         self.compact_button.setText(QCoreApplication.translate("MainWindow", u"Compact", None))
-        self.preview_tables_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Preview tables", None))
-        self.preview_contents_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Preview contents", None))
-        self.export_options_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Export options", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"Format:", None))
-        self.preview_controls_dock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Preview controls", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Database url:", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindow", u"Group function:", None))
 #if QT_CONFIG(tooltip)
-        self.load_url_from_fs_button.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Browse file system</p></body></html>", None))
+        self.group_fn_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Group/aggregate data that ends up in the same cell in pivot tables.", None))
 #endif // QT_CONFIG(tooltip)
-        self.load_url_from_fs_button.setText(QCoreApplication.translate("MainWindow", u"...", None))
-        self.live_preview_check_box.setText(QCoreApplication.translate("MainWindow", u"Live preview", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Max. tables", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Max. content rows:", None))
     # retranslateUi
 

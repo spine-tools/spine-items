@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,16 +9,14 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains the :class:`MappingListModel` model.
 
-"""
+"""Contains the :class:`MappingListModel` model."""
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
-    RelationshipClassObjectClassMapping,
-    RelationshipClassMapping,
+    DimensionMapping,
+    EntityClassMapping,
 )
 from spinetoolbox.helpers import unique_name
 
@@ -40,12 +39,12 @@ class MappingsTableModel(QAbstractTableModel):
     MAPPING_TYPE_ROLE = Qt.ItemDataRole.UserRole + 2
     MAPPING_ROOT_ROLE = Qt.ItemDataRole.UserRole + 3
     ALWAYS_EXPORT_HEADER_ROLE = Qt.ItemDataRole.UserRole + 4
-    RELATIONSHIP_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 5
+    ENTITY_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 5
     USE_FIXED_TABLE_NAME_FLAG_ROLE = Qt.ItemDataRole.UserRole + 6
     FIXED_TABLE_NAME_ROLE = Qt.ItemDataRole.UserRole + 7
     PARAMETER_DIMENSIONS_ROLE = Qt.ItemDataRole.UserRole + 8
     GROUP_FN_ROLE = Qt.ItemDataRole.UserRole + 9
-    HIGHLIGHT_DIMENSION_ROLE = Qt.ItemDataRole.UserRole + 10
+    HIGHLIGHT_POSITION_ROLE = Qt.ItemDataRole.UserRole + 10
 
     def __init__(self, mappings=None, parent=None):
         """
@@ -116,8 +115,8 @@ class MappingsTableModel(QAbstractTableModel):
                 return spec.root
             if role == self.ALWAYS_EXPORT_HEADER_ROLE:
                 return spec.always_export_header
-            if role == self.RELATIONSHIP_DIMENSIONS_ROLE:
-                return _instance_occurrences(spec.root, RelationshipClassObjectClassMapping)
+            if role == self.ENTITY_DIMENSIONS_ROLE:
+                return _instance_occurrences(spec.root, DimensionMapping)
             if role == self.USE_FIXED_TABLE_NAME_FLAG_ROLE:
                 return spec.use_fixed_table_name_flag
             if role == self.FIXED_TABLE_NAME_ROLE:
@@ -129,13 +128,11 @@ class MappingsTableModel(QAbstractTableModel):
                 return dimensions
             if role == self.GROUP_FN_ROLE:
                 return spec.group_fn
-            if role == self.HIGHLIGHT_DIMENSION_ROLE:
-                highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, RelationshipClassMapping)), None
-                )
+            if role == self.HIGHLIGHT_POSITION_ROLE:
+                highlighting_mapping = next((m for m in spec.root.flatten() if isinstance(m, EntityClassMapping)), None)
                 if highlighting_mapping is None:
                     return None
-                return highlighting_mapping.highlight_dimension
+                return highlighting_mapping.highlight_position
         return None
 
     def flags(self, index):
@@ -239,14 +236,12 @@ class MappingsTableModel(QAbstractTableModel):
             elif role == self.GROUP_FN_ROLE:
                 spec.group_fn = value
                 self.dataChanged.emit(index, index, [self.GROUP_FN_ROLE])
-            elif role == self.HIGHLIGHT_DIMENSION_ROLE:
-                highlighting_mapping = next(
-                    (m for m in spec.root.flatten() if isinstance(m, RelationshipClassMapping)), None
-                )
+            elif role == self.HIGHLIGHT_POSITION_ROLE:
+                highlighting_mapping = next((m for m in spec.root.flatten() if isinstance(m, EntityClassMapping)), None)
                 if highlighting_mapping is None:
                     return False
-                highlighting_mapping.highlight_dimension = value
-                self.dataChanged.emit(index, index, [self.HIGHLIGHT_DIMENSION_ROLE])
+                highlighting_mapping.highlight_position = value
+                self.dataChanged.emit(index, index, [self.HIGHLIGHT_POSITION_ROLE])
             return True
         return False
 

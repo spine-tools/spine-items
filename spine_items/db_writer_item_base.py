@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains base classes for items that write to db.
-
-"""
+"""Contains base classes for items that write to db."""
 from PySide6.QtCore import Slot
+from spine_engine.utils.helpers import ExecutionDirection
 from spinetoolbox.project_item.project_item import ProjectItem
 
 
@@ -29,7 +28,7 @@ class DBWriterItemBase(ProjectItem):
     @Slot(object, object)
     def handle_execution_successful(self, execution_direction, engine_state):
         """Notifies Toolbox of successful database import."""
-        if execution_direction != "FORWARD":
+        if execution_direction != ExecutionDirection.FORWARD:
             return
         committed_db_maps = set()
         for successor in self.successor_data_stores():

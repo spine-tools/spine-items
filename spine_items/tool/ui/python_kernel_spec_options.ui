@@ -2,6 +2,7 @@
 <!--
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and\/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -50,6 +51,9 @@
      <property name="spacing">
       <number>6</number>
      </property>
+     <property name="rightMargin">
+      <number>6</number>
+     </property>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
@@ -59,7 +63,7 @@
         <number>6</number>
        </property>
        <item>
-        <widget class="QRadioButton" name="radioButton_python_console">
+        <widget class="QRadioButton" name="radioButton_basic_console">
          <property name="text">
           <string>Basic Console</string>
          </property>
@@ -87,7 +91,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <property name="rightMargin">
-        <number>6</number>
+        <number>0</number>
        </property>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -100,14 +104,14 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Interpreter</string>
+            <string>Interpreter:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit_python_path">
+          <widget class="QLineEdit" name="lineEdit_executable">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Python interpreter for executing this Tool specification. Leave empty to select the Python that was used in launching Spine Toolbox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Python interpreter for &lt;span style=&quot; font-weight:700;&quot;&gt;Basic Console&lt;/span&gt; execution. Leave empty to use the Python that was used in launching Spine Toolbox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="placeholderText">
             <string>Using current Python interpreter</string>
@@ -141,7 +145,7 @@
          <item>
           <widget class="QLabel" name="label">
            <property name="text">
-            <string>Kernel spec</string>
+            <string>Kernel:</string>
            </property>
           </widget>
          </item>
@@ -166,14 +170,14 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a Python Jupyter kernel spec for Jupyter Console.&lt;/p&gt;&lt;p&gt;Both Conda and Jupyter kernel specs are shown.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a Python kernel for &lt;span style=&quot; font-weight:700;&quot;&gt;Jupyter Console&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="toolButton_refresh_kernel_specs">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Refresh the list of Jupyter and Conda kernel specs&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Refresh kernel specs list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
             <string/>

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -300,12 +301,12 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(tooltip)
         self.actionRemove_all_program_files.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Remove ALL program files. Useful with Executable Tool Specs.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label_tooltype.setText(QCoreApplication.translate("MainWindow", u"Tool type", None))
+        self.label_tooltype.setText(QCoreApplication.translate("MainWindow", u"Tool type:", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_tooltype.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Tool specification type</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.comboBox_tooltype.setCurrentText("")
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Command line arguments", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Command line arguments:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_args.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Command line arguments (space-delimited) for the main program (optional). Use '@@' tags to refer to input files or URLs, see the User Guide for details.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

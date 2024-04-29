@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,15 +10,56 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Utility functions for the Tool project item.
-
-"""
+""" Utility functions for the Tool project item. """
 from datetime import datetime
 import glob
 import os.path
 from pathlib import Path
 import re
+import json
+from jupyter_client.kernelspec import find_kernel_specs
+from spine_engine.utils.helpers import resolve_julia_executable, resolve_julia_project
+
+
+def get_julia_path_and_project(exec_settings, settings):
+    """Returns path to Julia and --project=path/to/project in a list based on Tool specs execution settings.
+
+    Args:
+        exec_settings (dict): Execution settings
+        settings (AppSettings): application settings
+
+    Returns:
+        list of str: e.g. ["path/to/julia", "--project=path/to/project/"] or None if kernel does not exist.
+    """
+    use_jupyter_console = exec_settings["use_jupyter_console"]
+    if use_jupyter_console:
+        kernel_name = exec_settings["kernel_spec_name"]
+        resource_dir = find_kernel_specs().get(kernel_name)
+        if resource_dir is None:
+            return None
+        filepath = os.path.join(resource_dir, "kernel.json")
+        with open(filepath, "r") as fh:
+            try:
+                kernel_spec = json.load(fh)
+            except json.decoder.JSONDecodeError:
+                return None
+        julia = kernel_spec["argv"].pop(0)
+        project_arg = next((arg for arg in kernel_spec["argv"] if arg.startswith("--project=")), None)
+        project = "" if project_arg is None else project_arg.split("--project=")[1]
+        retval = [julia]
+        if project:
+            retval.append(f"--project={project}")
+        return retval
+    julia = exec_settings["executable"]
+    if not julia:
+        julia = resolve_julia_executable(settings)
+    project = exec_settings["project"]
+    if not project:
+        project = resolve_julia_project(settings)
+    retval = [julia]
+    if project:
+        retval.append(f"--project={project}")
+    return retval
 
 
 def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):

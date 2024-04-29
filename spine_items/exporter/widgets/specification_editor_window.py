@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,40 +9,30 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`SpecificationEditorWindow`.
 
-"""
+""" Contains :class:`SpecificationEditorWindow`. """
 from copy import deepcopy
 import json
 from PySide6.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
 from PySide6.QtGui import QKeySequence, QAction
 from PySide6.QtWidgets import QApplication, QHeaderView, QMenu
-
 from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
     alternative_export,
-    feature_export,
-    object_export,
-    object_group_export,
-    object_parameter_default_value_export,
-    object_parameter_export,
+    entity_group_export,
     parameter_value_list_export,
-    relationship_export,
-    relationship_object_parameter_default_value_export,
-    relationship_object_parameter_export,
-    relationship_parameter_default_value_export,
-    relationship_parameter_export,
+    entity_export,
+    entity_dimension_parameter_default_value_export,
+    entity_dimension_parameter_value_export,
+    entity_parameter_default_value_export,
+    entity_parameter_value_export,
     scenario_alternative_export,
     scenario_export,
-    tool_export,
-    tool_feature_export,
-    tool_feature_method_export,
 )
 from spinedb_api.export_mapping.settings import (
     set_parameter_dimensions,
     set_parameter_default_value_dimensions,
-    set_relationship_dimensions,
+    set_entity_dimensions,
 )
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping, Position
 from spinedb_api.export_mapping.group_functions import (
@@ -51,6 +42,7 @@ from spinedb_api.export_mapping.group_functions import (
     NoGroup,
 )
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
+from spinetoolbox.helpers import SealCommand
 from .preview_updater import PreviewUpdater
 from ..commands import (
     ChangeWriteOrder,
@@ -72,51 +64,37 @@ from ..commands import (
     SetHighlightDimension,
 )
 from ..mvcmodels.mappings_table_model import MappingsTableModel
-from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel
+from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel, POSITION_DISPLAY_TEXT
 from ..mvcmodels.mappings_table_proxy import MappingsTableProxy
 from ..specification import MappingSpecification, MappingType, OutputFormat, Specification
 from .filter_edit_delegate import FilterEditDelegate
-from .position_edit_delegate import PositionEditDelegate, position_section_width
-
+from .position_edit_delegate import PositionEditDelegate
+from ...widgets import combo_box_width
 
 mapping_type_to_combo_box_label = {
     MappingType.alternatives: "Alternative",
-    MappingType.features: "Feature",
-    MappingType.objects: "Object class",
-    MappingType.object_groups: "Object group",
-    MappingType.object_parameter_default_values: "Object class",
-    MappingType.object_parameter_values: "Object class",
+    MappingType.entities: "Entity class",
+    MappingType.entity_groups: "Entity group",
+    MappingType.entity_parameter_default_values: "Entity class",
+    MappingType.entity_parameter_values: "Entity class",
     MappingType.parameter_value_lists: "Parameter value list",
-    MappingType.relationships: "Relationship class",
-    MappingType.relationship_object_parameter_default_values: "Relationship class with object parameter",
-    MappingType.relationship_object_parameter_values: "Relationship class with object parameter",
-    MappingType.relationship_parameter_default_values: "Relationship class",
-    MappingType.relationship_parameter_values: "Relationship class",
+    MappingType.entity_dimension_parameter_default_values: "Entity class with dimension parameter",
+    MappingType.entity_dimension_parameter_values: "Entity class with dimension parameter",
     MappingType.scenario_alternatives: "Scenario alternative",
     MappingType.scenarios: "Scenario",
-    MappingType.tool_feature_methods: "Tool feature method",
-    MappingType.tool_features: "Tool feature",
-    MappingType.tools: "Tool",
 }
 
 mapping_type_to_parameter_type_label = {
     MappingType.alternatives: "None",
-    MappingType.features: "None",
-    MappingType.objects: "None",
-    MappingType.object_groups: "None",
-    MappingType.object_parameter_default_values: "Default value",
-    MappingType.object_parameter_values: "Value",
+    MappingType.entities: "None",
+    MappingType.entity_groups: "None",
+    MappingType.entity_parameter_default_values: "Default value",
+    MappingType.entity_parameter_values: "Value",
+    MappingType.entity_dimension_parameter_default_values: "Default value",
+    MappingType.entity_dimension_parameter_values: "Value",
     MappingType.parameter_value_lists: "None",
-    MappingType.relationships: "None",
-    MappingType.relationship_object_parameter_default_values: "Default value",
-    MappingType.relationship_object_parameter_values: "Value",
-    MappingType.relationship_parameter_default_values: "Default value",
-    MappingType.relationship_parameter_values: "Value",
     MappingType.scenario_alternatives: "None",
     MappingType.scenarios: "None",
-    MappingType.tool_feature_methods: "None",
-    MappingType.tool_features: "None",
-    MappingType.tools: "None",
 }
 
 
@@ -159,9 +137,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._sort_mappings_table_model = MappingsTableProxy(self)
         self._sort_mappings_table_model.setSortCaseSensitivity(Qt.CaseInsensitive)
         self._sort_mappings_table_model.setSourceModel(self._mappings_table_model)
-        self._sort_mappings_table_model.rowsInserted.connect(self._select_inserted_row)
-        self._sort_mappings_table_model.rowsRemoved.connect(self._check_for_empty_mappings_list)
-        self.takeCentralWidget().deleteLater()
+        self._mappings_table_model.rowsInserted.connect(self._select_inserted_row)
+        self._mappings_table_model.rowsRemoved.connect(self._check_for_empty_mappings_list)
         self._ui.export_format_combo_box.addItems([output_format.value for output_format in OutputFormat])
         self._ui.export_format_combo_box.setCurrentText(self._new_spec.output_format.value)
         self._ui.export_format_combo_box.currentTextChanged.connect(self._change_format)
@@ -208,10 +185,11 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
         self._ui.parameter_dimensions_spin_box.valueChanged.connect(self._change_parameter_dimensions)
         self._ui.always_export_header_check_box.stateChanged.connect(self._change_always_export_header)
-        self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
+        self._ui.entity_dimensions_spin_box.valueChanged.connect(self._change_entity_dimensions)
         self._ui.highlight_dimension_spin_box.valueChanged.connect(self._change_highlight_dimension)
         self._ui.fix_table_name_check_box.stateChanged.connect(self._change_fix_table_name_flag)
-        self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.textEdited.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.connect(self._finish_editing_fix_table_name)
         self._ui.group_fn_combo_box.currentTextChanged.connect(self._change_root_mapping_group_fn)
         self._compact_mapping_action = QAction("Compact mapping", self)
         self._compact_mapping_action.triggered.connect(self._compact_mapping)
@@ -222,15 +200,12 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._filter_edit_delegate = FilterEditDelegate(self)
         self._ui.mapping_table_view.setItemDelegateForColumn(EditorColumn.FILTER, self._filter_edit_delegate)
         table_header = self._ui.mapping_table_view.horizontalHeader()
-        table_header.setSectionResizeMode(EditorColumn.ROW_LABEL, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.PIVOTED, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.NULLABLE, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setSectionResizeMode(EditorColumn.HEADER, QHeaderView.ResizeMode.ResizeToContents)
-        table_header.setMinimumSectionSize(position_section_width(self))
+        table_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        table_header.setSectionResizeMode(EditorColumn.POSITION, QHeaderView.ResizeMode.Fixed)
+        table_header.resizeSection(EditorColumn.POSITION, combo_box_width(self, POSITION_DISPLAY_TEXT.values()))
         self._enable_mapping_specification_editing()
         if specification is None:
-            self._mappings_table_model.extend(_new_mapping_specification(MappingType.objects))
+            self._mappings_table_model.extend(_new_mapping_specification(MappingType.entities))
         self._preview_updater = PreviewUpdater(
             self,
             self._ui,
@@ -251,47 +226,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
 
         return Ui_MainWindow()
 
-    def _restore_dock_widgets(self):
-        """Applies default layout for dock windows."""
-        size = self.size()
-        docks = {
-            Qt.LeftDockWidgetArea: (
-                self._ui.export_options_dock,
-                self._ui.mappings_dock,
-                self._ui.mapping_options_dock,
-                self._ui.mapping_spec_dock,
-            ),
-            Qt.RightDockWidgetArea: (
-                self._ui.preview_tables_dock,
-                self._ui.preview_contents_dock,
-                self._ui.preview_controls_dock,
-            ),
-        }
-        for area, area_docks in docks.items():
-            for dock in area_docks:
-                dock.setVisible(True)
-                dock.setFloating(False)
-                self.addDockWidget(area, dock)
-        # Left side
-        self.splitDockWidget(self._ui.export_options_dock, self._ui.mappings_dock, Qt.Orientation.Vertical)
-        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_spec_dock, Qt.Orientation.Vertical)
-        some_docks = (self._ui.mappings_dock, self._ui.mapping_options_dock, self._ui.mapping_spec_dock)
-        height = sum(d.height() for d in some_docks)
-        self.resizeDocks(some_docks, [height * x for x in (0.1, 0.3, 0.6)], Qt.Orientation.Vertical)
-        self.splitDockWidget(self._ui.mappings_dock, self._ui.mapping_options_dock, Qt.Orientation.Horizontal)
-        # Right side
-        some_docks = (self._ui.preview_tables_dock, self._ui.preview_controls_dock)
-        self.splitDockWidget(*some_docks, Qt.Orientation.Vertical)
-        height = sum(d.height() for d in some_docks)
-        self.resizeDocks(some_docks, [height * x for x in (0.9, 0.1)], Qt.Orientation.Vertical)
-        some_docks = (self._ui.preview_tables_dock, self._ui.preview_contents_dock)
-        self.splitDockWidget(*some_docks, Qt.Orientation.Horizontal)
-        width = sum(d.width() for d in some_docks)
-        self.resizeDocks(some_docks, [width * x for x in (0.3, 0.7)], Qt.Orientation.Horizontal)
-        qApp.processEvents()  # pylint: disable=undefined-variable
-        self.resize(size)
-
-    def _make_new_specification(self, spec_name, exiting=None):
+    def _make_new_specification(self, spec_name):
         """See base class."""
         description = self._spec_toolbar.description()
         mapping_specification = deepcopy(self._new_spec.mapping_specifications())
@@ -364,7 +299,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         if not current.isValid():
             self._mapping_editor_model.set_mapping("", None)
-            self._ui.mapping_spec_contents.setEnabled(False)
+            self._ui.mapping_table_view.setEnabled(False)
             return
         self.current_mapping_about_to_change.emit()
         current = self._sort_mappings_table_model.mapToSource(current)
@@ -373,32 +308,28 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
         self._set_always_export_header_silently(current.data(MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE))
         if mapping_type in {
-            MappingType.relationships,
-            MappingType.relationship_parameter_values,
-            MappingType.relationship_parameter_default_values,
-            MappingType.relationship_object_parameter_values,
-            MappingType.relationship_object_parameter_default_values,
+            MappingType.entities,
+            MappingType.entity_parameter_values,
+            MappingType.entity_parameter_default_values,
+            MappingType.entity_dimension_parameter_values,
+            MappingType.entity_dimension_parameter_default_values,
         }:
-            self._set_relationship_dimensions_silently(current.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE))
+            self._set_entity_dimensions_silently(current.data(MappingsTableModel.ENTITY_DIMENSIONS_ROLE))
         else:
-            self._set_relationship_dimensions_silently(1)
+            self._set_entity_dimensions_silently(0)
         if mapping_type in {
-            MappingType.relationship_object_parameter_values,
-            MappingType.relationship_object_parameter_default_values,
+            MappingType.entity_dimension_parameter_values,
+            MappingType.entity_dimension_parameter_default_values,
         }:
-            self._set_highlight_dimension_silently(current.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE))
-            self._ui.highlight_dimension_spin_box.setMaximum(
-                current.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE)
-            )
+            self._set_highlight_dimension_silently(current.data(MappingsTableModel.HIGHLIGHT_POSITION_ROLE))
+            self._ui.highlight_dimension_spin_box.setMaximum(current.data(MappingsTableModel.ENTITY_DIMENSIONS_ROLE))
         else:
             self._set_highlight_dimension_silently(0)
         if mapping_type in {
-            MappingType.object_parameter_values,
-            MappingType.object_parameter_default_values,
-            MappingType.relationship_parameter_values,
-            MappingType.relationship_parameter_default_values,
-            MappingType.relationship_object_parameter_values,
-            MappingType.relationship_object_parameter_default_values,
+            MappingType.entity_parameter_values,
+            MappingType.entity_parameter_default_values,
+            MappingType.entity_dimension_parameter_values,
+            MappingType.entity_dimension_parameter_default_values,
         }:
             self._set_parameter_dimensions_silently(current.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
         else:
@@ -414,14 +345,14 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._set_group_fn_silently(group_function_display_from_name(current.data(MappingsTableModel.GROUP_FN_ROLE)))
         mapping_name = self._mappings_table_model.index(current.row(), 0).data()
         self._mapping_editor_model.set_mapping(mapping_name, root_mapping)
-        self._enable_relationship_controls()
+        self._enable_entity_controls()
         self._enable_parameter_controls()
-        self._ui.mapping_spec_contents.setEnabled(True)
+        self._ui.mapping_table_view.setEnabled(True)
         self.current_mapping_changed.emit()
 
     @Slot(bool)
     def _expect_current_mapping_change(self, expect_change):
-        """Connects and disconnects signals depending of if current mapping is expected to change or not
+        """Connects and disconnects signals depending on if current mapping is expected to change.
 
         Args:
             expect_change (bool): True to expect changes
@@ -454,7 +385,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         if MappingsTableModel.MAPPING_ROOT_ROLE in roles:
             root_mapping = top_left.data(MappingsTableModel.MAPPING_ROOT_ROLE)
             self._mapping_editor_model.set_mapping(top_left.data(Qt.ItemDataRole.DisplayRole), root_mapping)
-            self._set_relationship_dimensions_silently(top_left.data(MappingsTableModel.RELATIONSHIP_DIMENSIONS_ROLE))
+            self._set_entity_dimensions_silently(top_left.data(MappingsTableModel.ENTITY_DIMENSIONS_ROLE))
             self._set_parameter_dimensions_silently(top_left.data(MappingsTableModel.PARAMETER_DIMENSIONS_ROLE))
             enable_controls = True
         if MappingsTableModel.MAPPING_TYPE_ROLE in roles:
@@ -474,10 +405,10 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_group_fn_silently(
                 group_function_display_from_name(top_left.data(MappingsTableModel.GROUP_FN_ROLE))
             )
-        if MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE in roles:
-            self._set_highlight_dimension_silently(top_left.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE))
+        if MappingsTableModel.HIGHLIGHT_POSITION_ROLE in roles:
+            self._set_highlight_dimension_silently(top_left.data(MappingsTableModel.HIGHLIGHT_POSITION_ROLE))
         if enable_controls:
-            self._enable_relationship_controls()
+            self._enable_entity_controls()
             self._enable_parameter_controls()
 
     @Slot(QPoint)
@@ -506,7 +437,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     @Slot(bool)
     def _new_mapping(self, _=True):
         """Pushes an add mapping command to the undo stack."""
-        type_ = MappingType.objects
+        type_ = MappingType.entities
         mapping_specification = _new_mapping_specification(type_)
         self._undo_stack.push(NewMapping(self._mappings_table_model, mapping_specification))
         self._sort_mappings_table_model.invalidate()
@@ -704,37 +635,26 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         type_label = self._ui.item_type_combo_box.currentText()
         parameter_type_label = self._ui.parameter_type_combo_box.currentText()
-        if type_label == "Object class":
+        if type_label == "Entity class":
             if parameter_type_label == "None":
-                mapping_type = MappingType.objects
+                mapping_type = MappingType.entities
             elif parameter_type_label == "Value":
-                mapping_type = MappingType.object_parameter_values
+                mapping_type = MappingType.entity_parameter_values
             else:
-                mapping_type = MappingType.object_parameter_default_values
-        elif type_label == "Relationship class":
-            if parameter_type_label == "None":
-                mapping_type = MappingType.relationships
-            elif parameter_type_label == "Value":
-                mapping_type = MappingType.relationship_parameter_values
-            else:
-                mapping_type = MappingType.relationship_parameter_default_values
-        elif type_label == "Relationship class with object parameter":
+                mapping_type = MappingType.entity_parameter_default_values
+        elif type_label == "Entity class with dimension parameter":
             if parameter_type_label == "Default value":
-                mapping_type = MappingType.relationship_object_parameter_default_values
+                mapping_type = MappingType.entity_dimension_parameter_default_values
             else:
-                mapping_type = MappingType.relationship_object_parameter_values
-        elif type_label == "Object group":
-            mapping_type = MappingType.object_groups
+                mapping_type = MappingType.entity_dimension_parameter_values
+        elif type_label == "Entity group":
+            mapping_type = MappingType.entity_groups
         else:
             mapping_type = {
                 "Alternative": MappingType.alternatives,
                 "Scenario": MappingType.scenarios,
                 "Scenario alternative": MappingType.scenario_alternatives,
                 "Parameter value list": MappingType.parameter_value_lists,
-                "Feature": MappingType.features,
-                "Tool": MappingType.tools,
-                "Tool feature": MappingType.tool_features,
-                "Tool feature method": MappingType.tool_feature_methods,
             }[type_label]
         mapping_specification = _new_mapping_specification(mapping_type)
         if self._ui.fix_table_name_check_box.isChecked():
@@ -757,7 +677,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.item_type_combo_box.currentTextChanged.disconnect(self._change_mapping_type)
         self._ui.item_type_combo_box.setCurrentText(type_name)
         self._ui.item_type_combo_box.currentTextChanged.connect(self._change_mapping_type)
-        self._enable_relationship_controls()
+        self._enable_entity_controls()
         self._enable_parameter_controls()
 
     def _set_parameter_type_silently(self, type_name):
@@ -810,9 +730,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         mapping = self._mappings_table_model.data(index, MappingsTableModel.MAPPING_ROOT_ROLE)
         modified = deepcopy(mapping)
         if self._mappings_table_model.data(index, MappingsTableModel.MAPPING_TYPE_ROLE) in (
-            MappingType.object_parameter_values.value,
-            MappingType.relationship_parameter_values.value,
-            MappingType.relationship_object_parameter_values.value,
+            MappingType.entity_parameter_values.value,
+            MappingType.entity_dimension_parameter_values.value,
         ):
             set_parameter_dimensions(modified, dimensions)
         else:
@@ -852,18 +771,24 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._undo_stack.push(SetMapping(index, mapping))
         self._undo_stack.endMacro()
 
-    @Slot()
-    def _change_fix_table_name(self):
+    @Slot(str)
+    def _change_fix_table_name(self, name):
         """
         Pushes commands to undo stack to change fixed table name to text in corresponding line edit.
+
+        Args:
+            name (str): fixed table name
         """
         index = self._ui.mappings_table.currentIndex()
         if not index.isValid():
             return
-        new_name = self._ui.fix_table_name_line_edit.text()
         old_name = index.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE)
-        if new_name != old_name:
-            self._undo_stack.push(SetFixedTableName(index, old_name, new_name))
+        self._undo_stack.push(SetFixedTableName(index, old_name, name))
+
+    @Slot()
+    def _finish_editing_fix_table_name(self):
+        """Seals the latest undo command if it changed the fixed table name."""
+        self._undo_stack.push(SealCommand(SetFixedTableName.ID))
 
     def _set_use_fixed_table_name_flag_silently(self, flag):
         """
@@ -888,9 +813,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         if name == self._ui.fix_table_name_line_edit.text():
             return
-        self._ui.fix_table_name_line_edit.editingFinished.disconnect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.disconnect(self._finish_editing_fix_table_name)
         self._ui.fix_table_name_line_edit.setText(name)
-        self._ui.fix_table_name_line_edit.editingFinished.connect(self._change_fix_table_name)
+        self._ui.fix_table_name_line_edit.editingFinished.connect(self._finish_editing_fix_table_name)
 
     @Slot(QModelIndex, QModelIndex, list)
     def _validate_fixed_table_name(self, top_left, bottom_right, roles):
@@ -989,23 +914,33 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         Args:
             dimension (int): highlight dimension
         """
+        if self._ui.item_type_combo_box.currentText() != "Entity class with dimension parameter":
+            return
         index = self._sort_mappings_table_model.mapToSource(self._ui.mappings_table.currentIndex())
         if not index.isValid():
             return
-        old = index.data(MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
-        self._undo_stack.push(SetHighlightDimension(index, old, dimension - 1))
+        old = index.data(MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
+        new = dimension - 1
+        if old == new:
+            return
+        self._undo_stack.push(SetHighlightDimension(index, old, new))
 
     def _set_highlight_dimension_silently(self, highlight_dimension):
         """Sets highlight dimension without emitting signals.
 
         Args:
-            highlight_dimension (int): highlight dimension
+            highlight_dimension (int, optional): highlight dimension
         """
         self._ui.highlight_dimension_spin_box.valueChanged.disconnect(self._change_highlight_dimension)
-        self._ui.highlight_dimension_spin_box.setValue(highlight_dimension + 1)
+        if highlight_dimension is not None:
+            self._ui.highlight_dimension_spin_box.setValue(highlight_dimension + 1)
+            self._ui.highlight_dimension_spin_box.setEnabled(True)
+        else:
+            self._ui.highlight_dimension_spin_box.setValue(1)
+            self._ui.highlight_dimension_spin_box.setEnabled(False)
         self._ui.highlight_dimension_spin_box.valueChanged.connect(self._change_highlight_dimension)
 
-    def _change_relationship_dimensions(self, dimensions):
+    def _change_entity_dimensions(self, dimensions):
         """
         Pushes a command to undo stack.
 
@@ -1015,47 +950,50 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         index = self._sort_mappings_table_model.mapToSource(self._ui.mappings_table.currentIndex())
         mapping = self._mappings_table_model.data(index, MappingsTableModel.MAPPING_ROOT_ROLE)
         modified = deepcopy(mapping)
-        set_relationship_dimensions(modified, dimensions)
+        set_entity_dimensions(modified, dimensions)
         current_mapping_type = self._ui.item_type_combo_box.currentText()
-        self._undo_stack.beginMacro("change relationship dimensions")
-        if current_mapping_type == "Relationship class with object parameter":
-            highlight_dimension = self._mappings_table_model.data(index, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
-            if highlight_dimension >= dimensions:
-                self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, dimensions))
+        self._undo_stack.beginMacro("change entity dimensions")
         self._undo_stack.push(SetMapping(self._ui.mappings_table.currentIndex(), modified))
+        if current_mapping_type == "Entity class with dimension parameter":
+            highlight_dimension = self._mappings_table_model.data(index, MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
+            if highlight_dimension is None:
+                self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, 0))
+            elif highlight_dimension >= dimensions:
+                new_highlight_dimension = dimensions - 1 if dimensions > 0 else None
+                self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, new_highlight_dimension))
         self._undo_stack.endMacro()
 
-    def _set_relationship_dimensions_silently(self, dimensions):
+    def _set_entity_dimensions_silently(self, dimensions):
         """
-        Sets relationship dimensions spin box without emitting signals.
+        Sets entity dimensions spin box without emitting signals.
 
         Args:
             dimensions (int): dimensions
         """
-        self._ui.relationship_dimensions_spin_box.valueChanged.disconnect(self._change_relationship_dimensions)
-        self._ui.relationship_dimensions_spin_box.setValue(dimensions)
-        self._ui.relationship_dimensions_spin_box.valueChanged.connect(self._change_relationship_dimensions)
-        self._ui.highlight_dimension_spin_box.setMaximum(dimensions if dimensions > 0 else 1)
+        self._ui.entity_dimensions_spin_box.valueChanged.disconnect(self._change_entity_dimensions)
+        self._ui.entity_dimensions_spin_box.setValue(dimensions)
+        self._ui.entity_dimensions_spin_box.valueChanged.connect(self._change_entity_dimensions)
+        self._ui.highlight_dimension_spin_box.setMaximum(max(dimensions, 1))
 
     def _enable_mapping_specification_editing(self):
         """Enables and disables mapping specification editing controls."""
         have_mappings = self._mappings_table_model.rowCount() > 0
         self._ui.mapping_options_contents.setEnabled(have_mappings)
-        self._ui.mapping_spec_contents.setEnabled(have_mappings)
+        self._ui.mapping_table_view.setEnabled(have_mappings)
         self._ui.remove_mapping_button.setEnabled(have_mappings)
 
-    def _enable_relationship_controls(self):
-        """Enables and disables controls related to relationship export."""
+    def _enable_entity_controls(self):
+        """Enables and disables controls related to entity export."""
         current_mapping_type = self._ui.item_type_combo_box.currentText()
-        self._ui.relationship_dimensions_spin_box.setEnabled(current_mapping_type.startswith("Relationship class"))
+        self._ui.entity_dimensions_spin_box.setEnabled(current_mapping_type.startswith("Entity class"))
         self._ui.highlight_dimension_spin_box.setEnabled(
-            current_mapping_type == "Relationship class with object parameter"
+            current_mapping_type == "Entity class with dimension parameter"
         )
 
     def _enable_parameter_controls(self):
-        """Enables and disables controls related to relationship export."""
+        """Enables and disables controls related to entity export."""
         mapping_type = self._ui.item_type_combo_box.currentText()
-        types_with_parameters = {"Object class", "Relationship class", "Relationship class with object parameter"}
+        types_with_parameters = {"Entity class", "Entity class with dimension parameter"}
         if mapping_type in types_with_parameters:
             self._ui.parameter_type_combo_box.setEnabled(True)
             self._ui.parameter_type_combo_box.currentTextChanged.disconnect(self._change_mapping_type)
@@ -1063,7 +1001,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             default_value_item = model.item(1)
             default_value_item.setFlags(default_value_item.flags() | Qt.ItemIsEnabled)
             no_value_item = model.item(2)
-            if mapping_type == "Relationship class with object parameter":
+            if mapping_type == "Entity class with dimension parameter":
                 no_value_item.setFlags(default_value_item.flags() & ~Qt.ItemIsEnabled)
             else:
                 no_value_item.setFlags(default_value_item.flags() | Qt.ItemIsEnabled)
@@ -1099,71 +1037,47 @@ def _new_mapping_specification(mapping_type):
     Returns:
         MappingSpecification: an export mapping specification
     """
-    if mapping_type == MappingType.objects:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, object_export(0, 1))
-    if mapping_type == MappingType.object_groups:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, object_group_export(0, 1, 2))
-    if mapping_type == MappingType.object_parameter_default_values:
+    if mapping_type == MappingType.entities:
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, 1))
+    if mapping_type == MappingType.entity_groups:
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_group_export(0, 1, 2))
+    if mapping_type == MappingType.entity_parameter_default_values:
         return MappingSpecification(
             mapping_type,
             True,
             True,
             NoGroup.NAME,
             False,
-            object_parameter_default_value_export(0, 1, Position.hidden, 2, None, None),
+            entity_parameter_default_value_export(0, 1, Position.hidden, 2, None, None),
         )
-    if mapping_type == MappingType.object_parameter_values:
+    if mapping_type == MappingType.entity_parameter_values:
         return MappingSpecification(
             mapping_type,
             True,
             True,
             NoGroup.NAME,
             False,
-            object_parameter_export(0, 2, Position.hidden, 1, 3, Position.hidden, 4, None, None),
+            entity_parameter_value_export(0, 2, Position.hidden, 1, None, None, 3, Position.hidden, 4, None, None),
         )
     if mapping_type == MappingType.parameter_value_lists:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, parameter_value_list_export(0, 1))
-    if mapping_type == MappingType.relationships:
-        return MappingSpecification(
-            mapping_type, True, True, NoGroup.NAME, False, relationship_export(0, Position.hidden, [1], [2])
-        )
-    if mapping_type == MappingType.relationship_parameter_default_values:
+    if mapping_type == MappingType.entity_dimension_parameter_default_values:
         return MappingSpecification(
             mapping_type,
             True,
             True,
             NoGroup.NAME,
             False,
-            relationship_parameter_default_value_export(0, 1, Position.hidden, 2, None, None),
+            entity_dimension_parameter_default_value_export(0, 1, None, Position.hidden, 2, None, None, 0),
         )
-    if mapping_type == MappingType.relationship_parameter_values:
+    if mapping_type == MappingType.entity_dimension_parameter_values:
         return MappingSpecification(
             mapping_type,
             True,
             True,
             NoGroup.NAME,
             False,
-            relationship_parameter_export(
-                0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None, None
-            ),
-        )
-    if mapping_type == MappingType.relationship_object_parameter_default_values:
-        return MappingSpecification(
-            mapping_type,
-            True,
-            True,
-            NoGroup.NAME,
-            False,
-            relationship_object_parameter_default_value_export(0, 2, [1], Position.hidden, 3, None, None, 0),
-        )
-    if mapping_type == MappingType.relationship_object_parameter_values:
-        return MappingSpecification(
-            mapping_type,
-            True,
-            True,
-            NoGroup.NAME,
-            False,
-            relationship_object_parameter_export(
+            entity_dimension_parameter_value_export(
                 0, 3, Position.hidden, Position.hidden, [1], [2], 4, Position.hidden, 5, None, None, 0
             ),
         )
@@ -1173,16 +1087,6 @@ def _new_mapping_specification(mapping_type):
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_alternative_export(0, 1))
     if mapping_type == MappingType.scenarios:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_export(0, 1))
-    if mapping_type == MappingType.features:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, feature_export(0, 1))
-    if mapping_type == MappingType.tools:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, tool_export(0))
-    if mapping_type == MappingType.tool_features:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, tool_feature_export(0, 1, 2, 3))
-    if mapping_type == MappingType.tool_feature_methods:
-        return MappingSpecification(
-            mapping_type, True, True, NoGroup.NAME, False, tool_feature_method_export(0, 1, 2, 3)
-        )
     raise NotImplementedError()
 
 

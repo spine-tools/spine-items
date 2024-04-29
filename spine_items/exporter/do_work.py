@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,15 +10,11 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Exporter's execute kernel (do_work), as target for a multiprocess.Process
-
-"""
+"""Exporter's execute kernel (do_work), as target for a multiprocess.Process"""
 import os
 from datetime import datetime
 from pathlib import Path
 from time import time
-
 from spinedb_api.spine_io.exporters.writer import write, WriterException
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
 from spinedb_api.spine_io.exporters.excel_writer import ExcelWriter
@@ -98,7 +95,7 @@ def do_work(
             if not successful:
                 return False, written_files
         finally:
-            database_map.connection.close()
+            database_map.close()
     return all(successes), written_files
 
 

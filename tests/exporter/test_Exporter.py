@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Exporter project item.
-
-"""
+"""Unit tests for Exporter project item."""
 import os.path
 from tempfile import TemporaryDirectory
 import unittest
@@ -26,7 +24,7 @@ from spine_items.exporter.exporter_factory import ExporterFactory
 from spine_items.exporter.item_info import ItemInfo
 from spine_items.exporter.specification import OutputFormat, Specification
 from spine_items.utils import database_label
-from spinedb_api import DatabaseMapping
+from spinedb_api import create_new_spine_database
 from spinetoolbox.project_item.logging_connection import LoggingConnection
 from ..mock_helpers import (
     clean_up_toolbox,
@@ -69,9 +67,6 @@ class TestExporter(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(Exporter.item_type(), ItemInfo.item_type())
 
-    def test_item_category(self):
-        self.assertEqual(Exporter.item_category(), ItemInfo.item_category())
-
     def test_serialization(self):
         item_dict = self._exporter.item_dict()
         deserialized = Exporter.from_dict("new exporter", item_dict, self._toolbox, self._project)
@@ -86,7 +81,7 @@ class TestExporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="Data Connection")
         self._exporter.notify_destination(source_item)
         self._exporter.logger.msg_warning.emit.assert_called_with(
-            'Link established. Interaction between a <b>Data Connection</b> and a <b>Exporter</b> has not been implemented yet.'
+            "Link established. Interaction between a <b>Data Connection</b> and a <b>Exporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Data Store")
         self._exporter.notify_destination(source_item)
@@ -101,12 +96,12 @@ class TestExporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="Exporter")
         self._exporter.notify_destination(source_item)
         self._exporter.logger.msg_warning.emit.assert_called_with(
-            'Link established. Interaction between a <b>Exporter</b> and a <b>Exporter</b> has not been implemented yet.'
+            "Link established. Interaction between a <b>Exporter</b> and a <b>Exporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Importer")
         self._exporter.notify_destination(source_item)
         self._exporter.logger.msg_warning.emit.assert_called_with(
-            'Link established. Interaction between a <b>Importer</b> and a <b>Exporter</b> has not been implemented yet.'
+            "Link established. Interaction between a <b>Importer</b> and a <b>Exporter</b> has not been implemented yet."
         )
         source_item.item_type = MagicMock(return_value="Tool")
         self._exporter.notify_destination(source_item)
@@ -126,7 +121,7 @@ class TestExporter(unittest.TestCase):
         expected_short_name = shorten(expected_name)
         self.assertTrue(self._exporter.rename(expected_name, ""))
         self.assertEqual(expected_name, self._exporter.name)
-        self.assertEqual(expected_name, self._exporter.get_icon().name_item.text())
+        self.assertEqual(expected_name, self._exporter.get_icon().name())
         expected_data_dir = os.path.join(self._project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self._exporter.data_dir)
 
@@ -173,8 +168,7 @@ class TestExporterWithToolbox(unittest.TestCase):
     def test_notifications_when_output_file_name_extension_mismatches_with_specification_output_format(self):
         project = self._toolbox.project()
         url = "sqlite:///" + os.path.join(self._temp_dir.name, "db.sqlite")
-        db_map = DatabaseMapping(url, create=True)
-        db_map.connection.close()
+        create_new_spine_database(url)
         url_dict = {"dialect": "sqlite", "database": os.path.join(self._temp_dir.name, "db.sqlite")}
         data_store = DataStore("Dummy data store", "", 0.0, 0.0, self._toolbox, project, url_dict)
         project.add_item(data_store)

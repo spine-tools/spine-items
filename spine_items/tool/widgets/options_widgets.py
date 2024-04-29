@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,19 +10,15 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Provides OptionsWidget and subclasses for each tool type (julia, python, executable, gams).
-
-"""
+"""Provides OptionsWidget and subclasses for each tool type (julia, python, executable, gams)."""
 import os
 import sys
 import uuid
-from spine_engine.utils.helpers import get_julia_command
 from PySide6.QtCore import Qt, Slot, QVariantAnimation, QPointF
 from PySide6.QtWidgets import QWidget, QFileDialog
 from PySide6.QtGui import QIcon, QLinearGradient, QPalette, QBrush
-
 from spine_items.utils import escape_backward_slashes
+from spine_items.tool.utils import get_julia_path_and_project
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine, make_settings_dict_for_engine
@@ -42,7 +39,7 @@ class OptionsWidget(QWidget):
 
     @property
     def _project(self):
-        return self._tool._project
+        return self._tool.project
 
     @property
     def _settings(self):
@@ -50,7 +47,7 @@ class OptionsWidget(QWidget):
 
     @property
     def _logger(self):
-        return self._tool._logger
+        return self._tool.logger
 
 
 class JuliaOptionsWidget(OptionsWidget):
@@ -228,8 +225,8 @@ class JuliaOptionsWidget(OptionsWidget):
         if self.sysimage_path is None:
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
-        settings = make_settings_dict_for_engine(self._settings)
-        settings["appSettings/useJuliaKernel"] = "1"  # Use subprocess
+        settings = make_settings_dict_for_engine(self._settings, self._project.settings)
+        settings["appSettings/makeSysImage"] = "true"  # See JuliaToolInstance.prepare()
         dag_identifier = f"containing {self._tool.name}"
         job_id = self._project.LOCAL_EXECUTION_JOB_ID
         self.sysimage_worker = self._project.create_engine_worker(
@@ -277,7 +274,7 @@ class JuliaOptionsWidget(OptionsWidget):
         original_program_file = os.path.join(spec.path, spec.includes.pop(0))
         loaded_modules_file = self._get_loaded_modules_filepath()
         precompile_statements_file = self._get_precompile_statements_filepath()
-        with open(original_program_file, 'r') as original:
+        with open(original_program_file, "r") as original:
             original_code = original.read()
         new_code = f"""macro write_loaded_modules(ex)
     return quote
@@ -309,10 +306,11 @@ end"""
 
         Args:
             tool (Tool): The Tool that started the sysimage creation process.
-                It may be different than the Tool currently using the widget.
+                It may be different from the Tool currently using the widget.
         """
         # Replace self._tool while we run this method
-        self._tool, current_tool = tool, self._tool
+        current_tool = self._tool
+        self._tool = tool
         self.sysimage_worker.clean_up()
         state = self.sysimage_worker.engine_final_state()
         if state != "COMPLETED":
@@ -322,13 +320,13 @@ end"""
             self._logger.msg_error.emit(msg)
             self.sysimage_worker = None
             self.sysimage_path = None
-            if tool == current_tool:
+            if tool is current_tool:
                 self._update_ui()
             return
         loaded_modules_file = self._get_loaded_modules_filepath()
         precompile_statements_file = self._get_precompile_statements_filepath()
         _string_in_brackets = "{String}"
-        with open(loaded_modules_file, 'r') as f:
+        with open(loaded_modules_file, "r") as f:
             modules = f.read()
         code = f"""using Pkg;
 project_dir = dirname(Base.active_project());
@@ -370,7 +368,7 @@ finally
     cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
     cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
 end"""
-        julia, *args = get_julia_command(self._settings)
+        julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings, self._settings)
         args += ["-e", code]
         self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=False)
         self.sysimage_worker.execution_finished.connect(lambda ret: self._handle_sysimage_process_finished(ret, tool))

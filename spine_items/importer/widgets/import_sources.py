@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,13 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains ImportSources widget and SourceDataTableMenu.
-
-"""
+"""Contains ImportSources widget and SourceDataTableMenu."""
 import pickle
 from operator import itemgetter
-
 from PySide6.QtCore import (
     QItemSelectionModel,
     QModelIndex,
@@ -29,7 +26,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
-
 from spinetoolbox.helpers import CharIconEngine
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinedb_api.import_mapping.type_conversion import (
@@ -37,6 +33,7 @@ from spinedb_api.import_mapping.type_conversion import (
     IntegerSequenceDateTimeConvertSpec,
     StringConvertSpec,
 )
+from spinedb_api.exception import InvalidMappingComponent
 from .custom_menus import SourceListMenu, SourceDataTableMenu
 from .mime_types import MAPPING_LIST_MIME_TYPE, TABLE_OPTIONS_MIME_TYPE
 from .options_widget import OptionsWidget
@@ -79,13 +76,14 @@ class ImportSources(QObject):
         self._ui.source_data_table.set_undo_stack(self._undo_stack, self._select_table_for_undo)
         self._ui_source_data_table_menu = SourceDataTableMenu(self._mappings_model, self._ui)
         self._ui_options_widget = OptionsWidget(self._undo_stack)
-        self._ui.dockWidget_source_options.setWidget(self._ui_options_widget)
+        self._ui_options_widget.setEnabled(False)
+        self._ui.verticalLayout_source_options.addWidget(self._ui_options_widget)
         self._ui.source_data_table.verticalHeader().display_all = False
         self._fill_default_column_type_combo_box_items()
         # connect signals
         self._mappings_model.modelAboutToBeReset.connect(self._store_source_list_current_index)
         self._mappings_model.modelReset.connect(self._restore_source_list_current_index)
-        self._mappings_model.dataChanged.connect(self._update_source_table_colors)
+        self._mappings_model.dataChanged.connect(self._handle_mapping_data_changed)
         self._mappings_model.row_or_column_type_recommended.connect(self._source_data_model.set_type)
         self._mappings_model.multi_column_type_recommended.connect(self._source_data_model.set_all_column_types)
         self._ui_options_widget.options_changed.connect(lambda _: self._clear_source_data_model())
@@ -102,6 +100,20 @@ class ImportSources(QObject):
         self._source_data_model.row_types_updated.connect(self._new_row_types)
         self._source_data_model.polish_mapping_requested.connect(self._polish_mappings_in_list)
 
+    @Slot(QModelIndex, QModelIndex, list)
+    def _handle_mapping_data_changed(self, top_left, bottom_right, roles):
+        self._update_source_table_colors(top_left, bottom_right, roles)
+        table_index = self._ui.source_list.selectionModel().currentIndex()
+        if not table_index.isValid() or table_index.row() == 0:
+            return
+        header = self._source_data_model.header
+        for list_row in range(self._mappings_model.rowCount(table_index)):
+            list_index = self._mappings_model.index(list_row, 0, table_index)
+            msg = self._mappings_model.check_validity_of_columns(list_index, header)
+            if msg:
+                self.parent().show_error(msg)
+                return
+
     def set_connector(self, connector, mapping):
         """Sets connector.
 
@@ -109,6 +121,7 @@ class ImportSources(QObject):
             connector (ConnectionManager): connector
             mapping (dict)
         """
+        self._ui.source_list.selectionModel().clearCurrentIndex()
         self._connector = connector
         self._connector.connection_ready.connect(self.request_new_tables_from_connector)
         self._connector.data_ready.connect(self._update_source_data)
@@ -140,7 +153,10 @@ class ImportSources(QObject):
         header = self._source_data_model.header
         for list_row in range(self._mappings_model.rowCount(table_index)):
             list_index = self._mappings_model.index(list_row, 0, table_index)
-            self._mappings_model.polish_mapping(list_index, header)
+            try:
+                self._mappings_model.polish_mapping(list_index, header)
+            except InvalidMappingComponent as error:
+                self.parent().show_error(str(error))
 
     @Slot(str)
     def _select_table_for_undo(self, table_name):
@@ -173,23 +189,23 @@ class ImportSources(QObject):
         self._connector.request_tables()
 
     @Slot(QModelIndex, QModelIndex)
-    def _change_selected_table(self, selected, _deselected):
+    def _change_selected_table(self, current, _previous):
         """
         Sets selected table and requests data from connector
 
         Args:
-            selected (QModelIndex): current index
-            _deselected (QModelIndex): previous index
+            current (QModelIndex): current index
+            _previous (QModelIndex): previous index
         """
         if self._connector is None:
             self._ui_options_widget.setEnabled(False)
             return
-        if not selected.isValid():
+        if not current.isValid():
             table_name = ""
             self._ui_options_widget.setEnabled(False)
             self._ui.default_column_type_combo_box.setEnabled(False)
         else:
-            table_item = self._mappings_model.data(selected, Role.ITEM)
+            table_item = self._mappings_model.data(current, Role.ITEM)
             table_name = table_item.name if table_item.real else ""
             self._ui_options_widget.setEnabled(bool(table_name))
             self._ui.default_column_type_combo_box.setEnabled(bool(table_name))
@@ -246,7 +262,6 @@ class ImportSources(QObject):
         self._ui.default_column_type_combo_box.setCurrentText(column_type)
         self._ui.default_column_type_combo_box.currentTextChanged.connect(self._set_default_column_type)
 
-    @Slot(QModelIndex, QModelIndex, list)
     def _update_source_table_colors(self, top_left, bottom_right, roles):
         """Notifies source table model that colors have changed.
 

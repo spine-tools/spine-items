@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,22 +10,17 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains a model to handle source tables and import mapping.
-
-"""
+"""Contains a model to handle source tables and import mapping."""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
 import re
-
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor, QFont
-
-from spinetoolbox.helpers import unique_name
+from spinetoolbox.helpers import plain_to_rich, list_to_rich_text, unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.import_mapping.import_mapping import ImportMapping, ScenarioBeforeAlternativeMapping
+from spinedb_api.import_mapping.import_mapping import default_import_mapping, ScenarioBeforeAlternativeMapping
 from spinedb_api.import_mapping.import_mapping_compat import (
     parse_named_mapping_spec,
     import_mapping_from_dict,
@@ -72,6 +68,7 @@ class SourceTableItem:
     in_source: bool = False
     in_specification: bool = False
     empty: bool = False
+    select_all: bool = False
     mapping_list: list[MappingListItem] = field(init=False, default_factory=list)
 
     def append_to_mapping_list(self, list_item):
@@ -164,7 +161,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             SourceTableItem: 'select all' item
         """
-        return SourceTableItem("Select All", checked=False, real=False)
+        return SourceTableItem("Select all", checked=True, real=False, select_all=True)
 
     def columnCount(self, parent=QModelIndex()):
         if not parent.isValid():
@@ -217,9 +214,9 @@ class MappingsModel(QAbstractItemModel):
             list_item = self._mappings[row]
             if not list_item.empty:
                 if not list_item.in_source:
-                    return "Table isn't in source data."
+                    return plain_to_rich("Table isn't in source data.")
                 if not list_item.in_specification:
-                    return "Table's mappings haven't been saved with the specification yet."
+                    return plain_to_rich("Table's mappings haven't been saved with the specification yet.")
             return None
         if role == Qt.ItemDataRole.FontRole:
             return self._add_table_row_font if self._mappings[index.row()].empty else None
@@ -291,11 +288,9 @@ class MappingsModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.ToolTipRole:
             if column == FlattenedColumn.POSITION:
                 issues = flattened_mappings.display_row_issues(index.row())
-                if issues:
-                    return issues
-                return None
+                return list_to_rich_text(issues) if issues else None
             if column == FlattenedColumn.REGEXP:
-                return "Enter regular expression to filter importer data."
+                return plain_to_rich("Enter regular expression to filter importer data.")
         return None
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
@@ -322,12 +317,14 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             int: flags
         """
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        flags = Qt.ItemIsEnabled
         table_item = self._mappings[index.row()]
         if table_item.checkable:
             flags |= Qt.ItemIsUserCheckable
         if table_item.editable:
             flags |= Qt.ItemIsEditable
+        if not table_item.select_all:
+            flags |= Qt.ItemIsSelectable
         return flags
 
     @staticmethod
@@ -464,6 +461,7 @@ class MappingsModel(QAbstractItemModel):
                     table_item.append_to_mapping_list(list_item)
                 self._mappings.append(table_item)
         except ValueError as error:
+            # This will be raised by parse_named_mapping_spec() if mapping type is obsolete, like tool, feature, etc.
             self.msg_error.emit(f"{error}")
             return
         self.endResetModel()
@@ -507,7 +505,7 @@ class MappingsModel(QAbstractItemModel):
         if role == Qt.ItemDataRole.CheckStateRole and table_item.checkable:
             checked = value == Qt.CheckState.Checked.value
             if row == 0:
-                self._set_multiple_checked_undoable(checked, *range(1, len(self._mappings)))
+                self._set_multiple_checked_undoable(checked, *range(len(self._mappings)))
             else:
                 self._undo_stack.push(SetTableChecked(table_item.name, self, checked, row))
             return True
@@ -562,7 +560,7 @@ class MappingsModel(QAbstractItemModel):
         if add_empty_row:
             table_item.real = True
             table_item.checkable = True
-            table_item.checked = True
+            table_item.checked = self._mappings[0].checked
             table_item.empty = False
             table_item.in_source = True
             default_flattened_mappings = FlattenedMappings(self._create_default_mapping())
@@ -628,16 +626,17 @@ class MappingsModel(QAbstractItemModel):
                 min_row = min(row, min_row)
                 max_row = max(row, max_row)
             self._mappings[row].checked = checked
-        if min_row is None:
-            return
-        top_left = self.index(min_row, 0)
-        bottom_right = self.index(max_row, 0)
-        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
+        if min_row is not None:
+            top_left = self.index(min_row, 0)
+            bottom_right = self.index(max_row, 0)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
         self._update_all_checked()
 
     def _update_all_checked(self):
         """Updates the checked state of 'Select All' table item if needed."""
-        checkables = (m for m in self._mappings[1:] if m.checkable)
+        checkables = tuple(m for m in self._mappings[1:] if m.checkable)
+        if not checkables:
+            return
         all_checked = all(m.checked for m in checkables)
         all_checked_item = self._mappings[0]
         if all_checked_item.checked != all_checked:
@@ -658,7 +657,9 @@ class MappingsModel(QAbstractItemModel):
         flattened_mappings = FlattenedMappings(root_mapping)
         list_item = MappingListItem("Mapping 1")
         list_item.set_flattened_mappings(flattened_mappings)
-        table_item = SourceTableItem(table_name, checked=True, in_source=True, in_specification=has_root_mapping)
+        table_item = SourceTableItem(
+            table_name, checked=self._mappings[0].checked, in_source=True, in_specification=has_root_mapping
+        )
         table_item.append_to_mapping_list(list_item)
         self.beginInsertRows(QModelIndex(), len(self._mappings), len(self._mappings))
         self._mappings.append(table_item)
@@ -725,19 +726,14 @@ class MappingsModel(QAbstractItemModel):
             new_type (str): name of the type
         """
         map_type = {
-            "Object class": "ObjectClass",
-            "Relationship class": "RelationshipClass",
-            "Object group": "ObjectGroup",
+            "Entity class": "EntityClass",
+            "Entity group": "EntityGroup",
             "Alternative": "Alternative",
             "Scenario": "Scenario",
             "Scenario alternative": "ScenarioAlternative",
             "Parameter value list": "ParameterValueList",
-            "Feature": "Feature",
-            "Tool": "Tool",
-            "Tool feature": "ToolFeature",
-            "Tool feature method": "ToolFeatureMethod",
         }[new_type]
-        root_mapping = import_mapping_from_dict({"map_type": map_type})
+        root_mapping = default_import_mapping(map_type)
         self.set_root_mapping(table_row, list_row, root_mapping)
 
     def _set_mapping_data(self, flattened_mappings, index, value, role):
@@ -1023,16 +1019,16 @@ class MappingsModel(QAbstractItemModel):
         )
         self._recommend_source_table_column_or_row_types(flattened_mappings, row)
 
-    def set_import_objects(self, table_row, list_row, import_objects):
-        """Sets the import object flag.
+    def set_import_entities(self, table_row, list_row, import_entities):
+        """Sets the import entities flag.
 
         Args:
             table_row (int): source table row index
             list_row (int): mapping list row index
-            import_objects (bool): flag value
+            import_entities (bool): flag value
         """
         flattened_mappings = self._mappings[table_row].mapping_list[list_row].flattened_mappings
-        flattened_mappings.set_import_objects(import_objects)
+        flattened_mappings.set_import_entities(import_entities)
         table_index = self.index(table_row, 0)
         list_index = self.index(list_row, 0, table_index)
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
@@ -1121,6 +1117,20 @@ class MappingsModel(QAbstractItemModel):
         list_index = self.index(list_row, 0, table_index)
         index = self.index(row, FlattenedColumn.REGEXP, list_index)
         self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
+
+    def check_validity_of_columns(self, list_index, header):
+        """Checks that the mapping doesn't have column refs
+        that are larger than the source table column count
+
+        Args:
+            list_index (QModelIndex): index to mappings list
+            header (Iterable): source table header
+        Returns:
+            bool: True if no source ref. is out of range, False otherwise
+        """
+        mapping_list_item = list_index.internalPointer()
+        table_name = mapping_list_item.source_table_item.name
+        return mapping_list_item.flattened_mappings.root_mapping.check_for_invalid_column_refs(header, table_name)
 
     @staticmethod
     def polish_mapping(list_index, header):

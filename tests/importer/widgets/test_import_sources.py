@@ -8,14 +8,13 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Contains unit tests for the ``import_sources`` module."""
 import unittest
 from unittest import mock
-
 from PySide6.QtCore import QModelIndex
 from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import QApplication, QListWidget, QWidget
-
 from spine_items.importer.connection_manager import ConnectionManager
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spine_items.importer.widgets.import_sources import ImportSources
@@ -230,5 +229,5 @@ class _FixedTableReader(SourceConnection):
         return self._data[slice(begin, end)], header
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,12 +9,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains classes to manage entity class renaming.
 
-"""
+"""Contains classes to manage entity class renaming."""
 from PySide6.QtCore import QObject, Qt, Slot, QSortFilterProxyModel
-
 from ..commands import RemoveRow, InsertRow
 from ..mvcmodels.class_renames_table_model import ClassRenamesTableModel
 from ..settings import EntityClassRenamingSettings

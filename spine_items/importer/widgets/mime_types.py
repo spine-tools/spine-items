@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,6 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains mime types for Import editor's copy-paste functionality
-
-"""
-
+"""Contains mime types for Import editor's copy-paste functionality"""
 MAPPING_LIST_MIME_TYPE = "application/spine_items-importmappinglist"
 TABLE_OPTIONS_MIME_TYPE = "application/spine_items-importtableoptions"

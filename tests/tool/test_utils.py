@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,15 +10,14 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for :literal:`utils` module.
-
-"""
+""" Unit tests for :literal:`utils` module. """
 from hashlib import sha1
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
-from spine_items.tool.utils import find_last_output_files
+from unittest import mock
+from spine_items.tool.utils import find_last_output_files, get_julia_path_and_project
+from spine_engine.utils.helpers import AppSettings
 
 
 class TestFindLastOutputFiles(unittest.TestCase):
@@ -130,5 +130,57 @@ class TestFindLastOutputFiles(unittest.TestCase):
         self.assertEqual(files, {"data.dat": [str(data_file_new)]})
 
 
-if __name__ == '__main__':
+class TestGetJuliaPathAndProject(unittest.TestCase):
+    def test_get_julia_path_and_project(self):
+        # Use Jupyter Console: False
+        exec_settings = {
+            "use_jupyter_console": False,
+            "executable": "",
+            "env": "",
+            "kernel_spec_name": "",
+            "project": "",
+        }
+        app_settings = AppSettings({"appSettings/juliaPath": "path/to/julia"})
+        julia_args = get_julia_path_and_project(exec_settings, app_settings)
+        self.assertTrue(len(julia_args) == 1)
+        self.assertTrue(julia_args[0] == "path/to/julia")
+        # Use Jupyter Console: False
+        exec_settings = {
+            "use_jupyter_console": False,
+            "executable": "/path/to/julia",
+            "env": "",
+            "kernel_spec_name": "",
+            "project": "/path/to/myjuliaproject",
+        }
+        julia_args = get_julia_path_and_project(exec_settings, app_settings)
+        self.assertTrue(julia_args[0] == "/path/to/julia")
+        self.assertTrue(julia_args[1] == "--project=/path/to/myjuliaproject")
+        # Use Jupyter Console: True
+        exec_settings = {
+            "use_jupyter_console": True,
+            "executable": "",
+            "env": "",
+            "kernel_spec_name": "unknown_kernel",
+            "project": "",
+        }
+        julia_args = get_julia_path_and_project(exec_settings, app_settings)
+        self.assertIsNone(julia_args)
+        # Use Jupyter Console: True
+        exec_settings = {
+            "use_jupyter_console": True,
+            "executable": "/path/to/nowhere",
+            "env": "conda",
+            "kernel_spec_name": "test_kernel",
+            "project": "/path/to/nonexistingprojectthatshouldnotbereturnedherebecausetheprojectisdefinedinkerneljson",
+        }
+        with mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
+            # Return a dict containing a path to a dummy kernel resource dir when find_kernel_specs is called
+            mock_find_kernel_specs.return_value = {"test_kernel": Path(__file__).parent / "dummy_julia_kernel"}
+            julia_args = get_julia_path_and_project(exec_settings, app_settings)
+            self.assertEqual(2, len(julia_args))
+            self.assertTrue(julia_args[0] == "/path/to/somejulia")
+            self.assertTrue(julia_args[1] == "--project=/path/to/someotherjuliaproject")
+
+
+if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains OptionsWidget class.
-
-"""
+"""Contains OptionsWidget class."""
 import functools
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import (
@@ -22,14 +20,15 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QSpinBox,
     QWidget,
-    QFormLayout,
-    QVBoxLayout,
-    QPushButton,
+    QTableWidget,
+    QToolButton,
+    QHBoxLayout,
+    QStyle,
 )
 from ..commands import SetConnectorOption
 
 
-class OptionsWidget(QWidget):
+class OptionsWidget(QTableWidget):
     """A widget for handling simple options."""
 
     options_changed = Signal(dict)
@@ -50,38 +49,36 @@ class OptionsWidget(QWidget):
         self._undo_stack = undo_stack
         self._undo_enabled = True
         self._current_source_table = None
-
-        # ui
-        self._layout = QVBoxLayout(self)
-        self.form_layout = QFormLayout()
-        self._layout.addLayout(self.form_layout)
         self._ui_choices = {str: QLineEdit, list: QComboBox, int: QSpinBox, bool: QCheckBox}
         self._ui_elements = {}
         self._build_ui()
+        self.horizontalHeader().setVisible(False)
+        self.verticalHeader().setVisible(False)
+        self.setShowGrid(False)
 
     def _clear_ui(self):
         """Clears UI."""
         self._ui_elements.clear()
-        for _ in range(self.form_layout.rowCount()):
-            self.form_layout.removeRow(0)
-        layout = self.layout()
-        if layout.count() == 2:
-            layout.removeItem(layout.itemAt(1))
+        self.clear()
+        self.setRowCount(0)
+        self.setColumnCount(0)
 
     def _build_ui(self):
         """Builds ui from specification in dict"""
-        for key, options in self._options.items():
+        self.insertRow(0)
+        key_options = sorted(self._options.items(), key=lambda x: list(self._ui_choices).index(x[1]["type"]))
+        for column, (key, options) in enumerate(key_options):
             ui_element = self._ui_choices[options["type"]]()
-            maximum = options.get('Maximum', None)
+            maximum = options.get("Maximum", None)
             if maximum is not None:
                 ui_element.setMaximum(maximum)
-            minimum = options.get('Minimum', None)
+            minimum = options.get("Minimum", None)
             if minimum is not None:
                 ui_element.setMinimum(minimum)
-            special_value_text = options.get('SpecialValueText', None)
+            special_value_text = options.get("SpecialValueText", None)
             if special_value_text is not None:
                 ui_element.setSpecialValueText(special_value_text)
-            max_length = options.get('MaxLength', None)
+            max_length = options.get("MaxLength", None)
             if max_length is not None:
                 ui_element.setMaxLength(max_length)
             bound_arguments = dict(option_key=key, options_widget=self)
@@ -91,6 +88,7 @@ class OptionsWidget(QWidget):
             elif isinstance(ui_element, QLineEdit):
                 handler = functools.partial(_emit_line_edit_option_changed, **bound_arguments)
                 ui_element.textChanged.connect(handler)
+                ui_element.setMaximumWidth(40)
             elif isinstance(ui_element, QCheckBox):
                 handler = functools.partial(_emit_check_box_option_changed, **bound_arguments)
                 ui_element.stateChanged.connect(handler)
@@ -99,9 +97,28 @@ class OptionsWidget(QWidget):
                 handler = functools.partial(_emit_combo_box_option_changed, **bound_arguments)
                 ui_element.currentTextChanged.connect(handler)
             self._ui_elements[key] = ui_element
-
             # Add to layout:
-            self.form_layout.addRow(QLabel(options['label'] + ':'), ui_element)
+            widget = QWidget()
+            layout = QHBoxLayout(widget)
+            layout.setContentsMargins(3, 3, 3, 3)
+            layout.setSpacing(3)
+            layout.addWidget(QLabel(options["label"] + ":"))
+            layout.addWidget(ui_element)
+            self.insertColumn(self.columnCount())
+            self.setCellWidget(0, column, widget)
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+        self._adjust_height()
+
+    def _adjust_height(self):
+        height = self.verticalHeader().length() + 2
+        if self.horizontalScrollBar().isVisible():
+            height += self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)
+        self.setMaximumHeight(height)
+
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        self._adjust_height()
 
     @property
     def connector(self):
@@ -123,8 +140,10 @@ class OptionsWidget(QWidget):
         self._build_ui()
         self._set_options(self._connector.current_table)
         if hasattr(self._connector.connection, "create_default_mapping"):
-            button = QPushButton("Load default mapping")
-            self.layout().addWidget(button)
+            button = QToolButton()
+            button.setText("Load default mapping")
+            self.insertColumn(self.columnCount())
+            self.setCellWidget(0, self.columnCount() - 1, button)
             button.clicked.connect(self.load_default_mapping_requested)
 
     @property
@@ -150,7 +169,7 @@ class OptionsWidget(QWidget):
         if options is None:
             options = {}
         for key, ui_element in self._ui_elements.items():
-            default = self._options[key]['default']
+            default = self._options[key]["default"]
             value = options.get(key, default)
             if value is None:
                 continue
@@ -209,7 +228,7 @@ def _emit_spin_box_option_changed(i, option_key, options_widget):
     A 'slot' to transform changes in QSpinBox into changes in options.
 
     Args:
-        text (str): text for undo/redo
+        i (int): spin box value
         option_key (str): option's key
         options_widget (OptionsWidget): options widget
     """
@@ -245,7 +264,7 @@ def _emit_check_box_option_changed(state, option_key, options_widget):
     A 'slot' to transform changes in QCheckBox into changes in options.
 
     Args:
-        text (str): text for undo/redo
+        state (int): check box value
         option_key (str): option's key
         options_widget (OptionsWidget): options widget
     """

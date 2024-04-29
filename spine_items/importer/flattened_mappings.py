@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,39 +10,28 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains a model to handle source tables and import mapping.
-
-"""
-from distutils.util import strtobool
+"""Contains a model to handle source tables and import mapping."""
 from enum import Enum, unique
-from itertools import takewhile
-
-from spinedb_api.mapping import Position, unflatten
+from spinedb_api.mapping import Position
 from spinedb_api.parameter_value import split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.helpers import fix_name_ambiguity
+from spinedb_api.helpers import fix_name_ambiguity, string_to_bool
 from spinedb_api.import_mapping.import_mapping import (
-    ImportMapping,
-    ObjectClassMapping,
-    ObjectGroupMapping,
-    RelationshipClassMapping,
+    EntityClassMapping,
+    EntityMapping,
+    DimensionMapping,
+    ElementMapping,
+    EntityGroupMapping,
     AlternativeMapping,
     ScenarioMapping,
     ScenarioAlternativeMapping,
     ParameterValueListMapping,
-    FeatureEntityClassMapping,
-    ToolMapping,
-    ToolFeatureEntityClassMapping,
-    ToolFeatureMethodEntityClassMapping,
     ParameterValueMapping,
     ParameterValueTypeMapping,
     ParameterDefaultValueMapping,
     ParameterDefaultValueTypeMapping,
     check_validity,
-    RelationshipClassObjectClassMapping,
     ParameterDefinitionMapping,
-    RelationshipObjectMapping,
     ParameterValueIndexMapping,
     ParameterDefaultValueIndexMapping,
     DefaultValueIndexNameMapping,
@@ -54,17 +44,13 @@ from spinetoolbox.spine_db_manager import SpineDBManager
 
 @unique
 class MappingType(Enum):
-    ObjectClass = "Object class"
-    RelationshipClass = "Relationship class"
-    ObjectGroup = "Object group"
+    EntityClass = "Entity class"
+    Entity = "Entity"
+    EntityGroup = "Entity group"
     Alternative = "Alternative"
     Scenario = "Scenario"
     ScenarioAlternative = "Scenario alternative"
     ParameterValueList = "Parameter value list"
-    Feature = "Feature"
-    Tool = "Tool"
-    ToolFeature = "Tool feature"
-    ToolFeatureMethod = "Tool feature method"
 
 
 VALUE_TYPES = {
@@ -77,15 +63,12 @@ VALUE_TYPES = {
 DISPLAY_VALUE_TYPES = {v: k for k, v in VALUE_TYPES.items()}
 
 DISPLAY_MAPPING_NAMES = {
-    "ObjectClass": "Object class names",
-    "Object": "Object names",
-    "ObjectMetadata": "Object metadata",
-    "ObjectGroup": "Member names",
-    "RelationshipClass": "Relationship class names",
-    "RelationshipClassObjectClass": "Object class names",
-    "Relationship": None,
-    "RelationshipObject": "Object names",
-    "RelationshipMetadata": "Relationship metadata",
+    "EntityClass": "Entity class names",
+    "Entity": "Entity names",
+    "EntityMetadata": "Entity metadata",
+    "EntityGroup": "Member names",
+    "Dimension": "Dimension names",
+    "Element": "Element names",
     "Alternative": "Alternative names",
     "Scenario": "Scenario names",
     "ScenarioActiveFlag": "Scenario active flags",
@@ -93,15 +76,6 @@ DISPLAY_MAPPING_NAMES = {
     "ScenarioBeforeAlternative": "Before alternative names",
     "ParameterValueList": "Value list names",
     "ParameterValueListValue": "Parameter values",
-    "FeatureEntityClass": "Entity class names",
-    "FeatureParameterDefinition": "Parameter names",
-    "Tool": "Tool names",
-    "ToolFeatureEntityClass": "Entity class names",
-    "ToolFeatureParameterDefinition": "Parameter names",
-    "ToolFeatureRequiredFlag": "Tool feature required flags",
-    "ToolFeatureMethodEntityClass": "Entity class names",
-    "ToolFeatureMethodParameterDefinition": "Parameter names",
-    "ToolFeatureMethodMethod": "Tool feature methods",
     "ParameterDefinition": "Parameter names",
     "ParameterValue": "Parameter values",
     "ParameterValueType": None,
@@ -393,7 +367,7 @@ class FlattenedMappings:
         # B) Handle all other cases cases
         if component.position == Position.hidden:
             if self._display_names[row].endswith("flags") and not isinstance(component.value, bool):
-                return bool(strtobool(component.value))
+                return string_to_bool(str(component.value))
             return component.value
         if component.position == Position.header:
             if component.value is None:
@@ -448,9 +422,11 @@ class FlattenedMappings:
         Returns:
             str: display name or None if component is invisible
         """
-        if self._map_type == MappingType.ObjectGroup and component_type == "Object":
+        if self._map_type == MappingType.EntityGroup and component_type == "Entity":
             return "Group names"
         if self._value_type == "Array" and component_type in ("ParameterValueIndex", "ParameterDefaultValueIndex"):
+            return None
+        if self._map_type == MappingType.EntityClass and component_type == "Entity" and self.has_dimensions():
             return None
         return DISPLAY_MAPPING_NAMES[component_type]
 
@@ -486,12 +462,10 @@ class FlattenedMappings:
         if not flattened:
             return None
         head_mapping = flattened[0]
-        if isinstance(head_mapping, ObjectClassMapping):
-            if any(isinstance(m, ObjectGroupMapping) for m in flattened):
-                return MappingType.ObjectGroup
-            return MappingType.ObjectClass
-        if isinstance(head_mapping, RelationshipClassMapping):
-            return MappingType.RelationshipClass
+        if isinstance(head_mapping, EntityClassMapping):
+            if any(isinstance(m, EntityGroupMapping) for m in flattened):
+                return MappingType.EntityGroup
+            return MappingType.EntityClass
         if isinstance(head_mapping, AlternativeMapping):
             return MappingType.Alternative
         if isinstance(head_mapping, ScenarioMapping):
@@ -500,14 +474,6 @@ class FlattenedMappings:
             return MappingType.Scenario
         if isinstance(head_mapping, ParameterValueListMapping):
             return MappingType.ParameterValueList
-        if any(isinstance(m, FeatureEntityClassMapping) for m in flattened):
-            return MappingType.Feature
-        if isinstance(head_mapping, ToolMapping):
-            if any(isinstance(m, ToolFeatureEntityClassMapping) for m in flattened):
-                return MappingType.ToolFeature
-            return MappingType.Tool
-        if any(isinstance(m, ToolFeatureMethodEntityClassMapping) for m in flattened):
-            return MappingType.ToolFeatureMethod
 
     def _resolve_value_type(self):
         """Computes display name for value type.
@@ -522,91 +488,99 @@ class FlattenedMappings:
             return DISPLAY_VALUE_TYPES.get(m.value, "Single value")
         return "Single value"
 
-    def has_dimensions(self):
-        """Returns True if the mappings have relationship class dimensions.
+    def can_have_dimensions(self):
+        """Returns True if the mappings can have dimensions.
 
         Returns:
             bool: True if mappings have dimensions, False otherwise
         """
-        return isinstance(self._components[0], RelationshipClassMapping)
+        return self._map_type == MappingType.EntityClass
 
-    def dimension_count(self):
-        """Counts relationship dimensions.
+    def has_dimensions(self):
+        """Returns True if the mappings have dimensions.
 
         Returns:
-            int: relationship dimensions
+            bool: True if mappings have dimensions, False otherwise
         """
-        return len([m for m in self._components if isinstance(m, RelationshipClassObjectClassMapping)])
+        return self.dimension_count() > 0
+
+    def dimension_count(self):
+        """Counts entity dimensions.
+
+        Returns:
+            int: entity dimensions
+        """
+        return len([m for m in self._components if isinstance(m, DimensionMapping)])
 
     def set_dimension_count(self, dimension_count):
-        """Sets the numbers of relationship dimensions.
+        """Sets the numbers of entity dimensions.
 
         Args:
             dimension_count (int): new dimension count
         """
-        if not self.has_dimensions():
+        if not self.can_have_dimensions():
             return None, None
         current_dimension_count = self.dimension_count()
-        last_cls_mapping = next(
-            m for m in reversed(self._components) if isinstance(m, RelationshipClassObjectClassMapping)
+        last_dim_mapping = next(
+            m for m in reversed(self._components) if isinstance(m, (DimensionMapping, EntityClassMapping))
         )
-        last_obj_mapping = next(m for m in reversed(self._components) if isinstance(m, RelationshipObjectMapping))
-        last_cls_mapping_child = last_cls_mapping.child
-        last_obj_mapping_child = last_obj_mapping.child
+        last_el_mapping = next(m for m in reversed(self._components) if isinstance(m, (ElementMapping, EntityMapping)))
+        last_dim_mapping_child = last_dim_mapping.child
+        last_el_mapping_child = last_el_mapping.child
         if dimension_count > current_dimension_count:
             for _ in range(current_dimension_count, dimension_count):
-                last_cls_mapping.child = RelationshipClassObjectClassMapping(Position.hidden)
-                last_cls_mapping = last_cls_mapping.child
-                last_obj_mapping.child = RelationshipObjectMapping(Position.hidden)
-                last_obj_mapping = last_obj_mapping.child
+                last_dim_mapping.child = DimensionMapping(Position.hidden)
+                last_dim_mapping = last_dim_mapping.child
+                last_el_mapping.child = ElementMapping(Position.hidden)
+                last_el_mapping = last_el_mapping.child
         else:
             for _ in range(dimension_count, current_dimension_count):
-                last_cls_mapping = last_cls_mapping.parent
-                last_obj_mapping = last_obj_mapping.parent
-        last_cls_mapping.child = last_cls_mapping_child
-        last_obj_mapping.child = last_obj_mapping_child
+                last_dim_mapping = last_dim_mapping.parent
+                last_el_mapping = last_el_mapping.parent
+        last_dim_mapping.child = last_dim_mapping_child
+        last_el_mapping.child = last_el_mapping_child
         self.set_root_mapping(self._components[0])
-        self._ensure_consistent_import_objects()
+        self._ensure_consistent_import_entities()
 
-    def may_import_objects(self):
-        """Checks if the mappings can optionally import objects.
-
-        Returns:
-            bool: True if mappings can import objects, False otherwise
-        """
-        return self._map_type == MappingType.RelationshipClass or self._map_type == MappingType.ObjectGroup
-
-    def _import_objects_mappings(self):
-        """Collects a list of mapping components that have an import_objects attribute.
+    def may_import_entities(self):
+        """Checks if the mappings can optionally import entities.
 
         Returns:
-            list of ImportMapping: list of components with import_objects
+            bool: True if mappings can import entities, False otherwise
         """
-        return [m for m in self._components if hasattr(m, "import_objects")]
+        return self._map_type in (MappingType.EntityClass, MappingType.EntityGroup)
 
-    def import_objects(self):
-        """Returns the import objects flag.
+    def _import_entities_mappings(self):
+        """Collects a list of mapping components that have an import_entities attribute.
 
         Returns:
-            bool: True if imports objects is set, False otherwise
+            list of ImportMapping: list of components with import_entities
         """
-        return all(m.import_objects for m in self._import_objects_mappings())
+        return [m for m in self._components if hasattr(m, "import_entities")]
 
-    def set_import_objects(self, import_objects):
-        """Sets the import objects flag for components that support it.
+    def import_entities(self):
+        """Returns the import entities flag.
+
+        Returns:
+            bool: True if imports entities is set, False otherwise
+        """
+        return all(m.import_entities for m in self._import_entities_mappings())
+
+    def set_import_entities(self, import_entities):
+        """Sets the import entities flag for components that support it.
 
         Args:
-            import_objects (bool): flag value
+            import_entities (bool): flag value
         """
-        for m in self._import_objects_mappings():
-            m.import_objects = import_objects
+        for m in self._import_entities_mappings():
+            m.import_entities = import_entities
 
-    def _ensure_consistent_import_objects(self):
-        """If any mapping has the import objects flag set, sets the flag also for all other mappings."""
-        mappings = self._import_objects_mappings()
-        if any(mapping.import_objects for mapping in mappings):
+    def _ensure_consistent_import_entities(self):
+        """If any mapping has the import entities flag set, sets the flag also for all other mappings."""
+        mappings = self._import_entities_mappings()
+        if any(mapping.import_entities for mapping in mappings):
             for m in mappings:
-                m.import_objects = True
+                m.import_entities = True
 
     def has_parameters(self):
         """Returns True if the mappings have parameters.
@@ -614,7 +588,7 @@ class FlattenedMappings:
         Returns:
             bool: True if mapping has parameter, False otherwise
         """
-        return self._map_type in (MappingType.ObjectClass, MappingType.RelationshipClass)
+        return self._map_type == MappingType.EntityClass
 
     def _parameter_definition_component(self):
         """Searches for ParameterDefinitionMapping within the components.

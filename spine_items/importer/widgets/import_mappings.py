@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,14 +10,10 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-ImportMappings widget.
-
-"""
+"""ImportMappings widget."""
 import pickle
 from PySide6.QtCore import QPoint, QItemSelectionModel, Slot, QModelIndex, QMimeData, QItemSelection
-from PySide6.QtWidgets import QStyledItemDelegate, QApplication
-
+from PySide6.QtWidgets import QHeaderView, QStyledItemDelegate, QApplication
 from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
 from spinetoolbox.widgets.parameter_value_editor import ParameterValueEditor
@@ -26,6 +23,7 @@ from .mime_types import MAPPING_LIST_MIME_TYPE
 from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
 from ..mvcmodels.mappings_model_roles import Role
 from ..mvcmodels.mappings_model import FlattenedColumn
+from ...widgets import combo_box_width
 
 SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "None")
 
@@ -38,11 +36,11 @@ class ImportMappings:
     def __init__(self, mappings_model, ui, undo_stack, editor_window):
         """
         Args:
+            mappings_model (MappingsModel): mappings model
             ui (Any): import editor window's UI
             undo_stack (QUndoStack): undo stack
             editor_window (ImportEditorWindow): import editor window
         """
-        super().__init__()
         self._editor_window = editor_window
         self._ui = ui
         self._mappings_model = mappings_model
@@ -57,6 +55,7 @@ class ImportMappings:
             FlattenedColumn.POSITION, self._parameter_constant_value_delegate
         )
         self._ui.mapping_spec_table.setItemDelegateForColumn(FlattenedColumn.REGEXP, self._filter_edit_delegate)
+        self._ui.mapping_spec_table.horizontalHeader().sectionCountChanged.connect(self._resize_spec_table_columns)
         # connect signals
         self._mappings_model.modelReset.connect(self._dummify_root_indexes)
         self._mappings_model.dataChanged.connect(self._select_changed_mapping)
@@ -66,6 +65,7 @@ class ImportMappings:
         self._mappings_model.rowsRemoved.connect(self._set_mapping_list_buttons_enabled)
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_list)
         self._ui.mapping_list.selectionModel().currentChanged.connect(self._change_flattened_mappings)
+        self._ui.mapping_list.selectionModel().selectionChanged.connect(self._update_buttons_enabled)
         self._ui.new_button.clicked.connect(self._new_mapping)
         self._ui.remove_button.clicked.connect(self._delete_selected_mapping)
         self._ui.duplicate_button.clicked.connect(self._duplicate_selected_mapping)
@@ -153,6 +153,12 @@ class ImportMappings:
         self._ui.remove_button.setEnabled(has_entries)
         self._ui.duplicate_button.setEnabled(has_entries)
 
+    @Slot(QItemSelection, QItemSelection)
+    def _update_buttons_enabled(self, _selected, _deselected):
+        enabled = self._ui.mapping_list.selectionModel().hasSelection()
+        self._ui.remove_button.setEnabled(enabled)
+        self._ui.duplicate_button.setEnabled(enabled)
+
     @Slot(QModelIndex, QModelIndex)
     def _change_flattened_mappings(self, current, previous):
         """Loads current mapping to component editor.
@@ -161,12 +167,11 @@ class ImportMappings:
             current (QModelIndex): currently selected mapping list index
             previous (QModelIndex): previously selected mapping list index
         """
+        self._ui.mapping_list.selectionModel().select(current, QItemSelectionModel.Select)
         if not current.isValid():
             self._ui.mapping_spec_table.setRootIndex(self._mappings_model.dummy_parent())
             return
         self._ui.mapping_spec_table.setRootIndex(current)
-        for column in range(0, self._mappings_model.columnCount(current) - 1):
-            self._ui.mapping_spec_table.resizeColumnToContents(column)
 
     @Slot()
     def _dummify_root_indexes(self):
@@ -190,9 +195,6 @@ class ImportMappings:
             list_index = list_selection_model.currentIndex()
             list_selection = QItemSelection(top_left, bottom_right)
             if list_selection.contains(list_index):
-                if Role.FLATTENED_MAPPINGS in roles:
-                    for column in range(0, self._mappings_model.columnCount(list_index) - 1):
-                        self._ui.mapping_spec_table.resizeColumnToContents(column)
                 return
             table_index = top_left.parent()
             table_selection_model = self._ui.source_list.selectionModel()
@@ -301,6 +303,23 @@ class ImportMappings:
         clipboard = QApplication.clipboard()
         mime_data = clipboard.mimeData()
         return mime_data.hasFormat(MAPPING_LIST_MIME_TYPE) and has_table and has_target
+
+    @Slot(int, int)
+    def _resize_spec_table_columns(self, old_column_count, new_column_count):
+        """Configures mapping specification table's column widths.
+
+        Args:
+            old_column_count (int): previous column count
+            new_column_count (int): current column count
+        """
+        if new_column_count != len(FlattenedColumn):
+            return
+        spec_table_header = self._ui.mapping_spec_table.horizontalHeader()
+        spec_table_header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        spec_table_header.setSectionResizeMode(FlattenedColumn.POSITION_TYPE, QHeaderView.ResizeMode.Fixed)
+        spec_table_header.resizeSection(
+            FlattenedColumn.POSITION_TYPE, combo_box_width(self._editor_window, SOURCE_TYPES)
+        )
 
 
 class ParameterConstantValueDelegate(QStyledItemDelegate):

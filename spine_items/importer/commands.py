@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,15 +9,12 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains undo and redo commands for Import editor.
 
-"""
+"""Contains undo and redo commands for Import editor."""
 import pickle
 from enum import auto, IntEnum, unique
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QUndoCommand
-
 from spinedb_api import import_mapping_from_dict
 from spinedb_api.import_mapping.import_mapping_compat import parse_named_mapping_spec
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
@@ -437,30 +435,30 @@ class SetItemMappingType(QUndoCommand):
         )
 
 
-class SetImportObjectsFlag(QUndoCommand):
+class SetImportEntitiesFlag(QUndoCommand):
     """Command to set item mapping's import objects flag."""
 
-    def __init__(self, table_row, list_row, model, import_objects):
+    def __init__(self, table_row, list_row, model, import_entities):
         """
         Args:
             table_row (int): source table row index
             list_row (int): mapping list row index
             model (MappingsModel): model
-            import_objects (bool): new flag value
+            import_entities (bool): new flag value
         """
         super().__init__("import objects flag change")
         self._table_row = table_row
         self._list_row = list_row
         self._model = model
-        self._import_objects = import_objects
+        self._import_entities = import_entities
 
     def redo(self):
         """Changes the import objects flag."""
-        self._model.set_import_objects(self._table_row, self._list_row, self._import_objects)
+        self._model.set_import_entities(self._table_row, self._list_row, self._import_entities)
 
     def undo(self):
         """Restores the import objects flag."""
-        self._model.set_import_objects(self._table_row, self._list_row, not self._import_objects)
+        self._model.set_import_entities(self._table_row, self._list_row, not self._import_entities)
 
 
 class SetParameterType(QUndoCommand):

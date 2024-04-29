@@ -8,12 +8,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Unit tests for the ``preview_updater`` module."""
 import unittest
 from unittest import mock
-
 from PySide6.QtWidgets import QApplication, QComboBox, QWidget
-
 from spine_items.exporter.mvcmodels.full_url_list_model import FullUrlListModel
 from spine_items.exporter.widgets.preview_updater import PreviewUpdater
 
@@ -49,5 +48,5 @@ class TestPreviewUpdater(unittest.TestCase):
         preview_updater.tear_down()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

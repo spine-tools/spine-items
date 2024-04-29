@@ -2,6 +2,7 @@
 <!--
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and\/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -46,7 +47,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Specification</string>
+        <string>Specification:</string>
        </property>
       </widget>
      </item>
@@ -239,14 +240,14 @@
         <item>
          <widget class="QLabel" name="label_group_id">
           <property name="text">
-           <string>Group id</string>
+           <string>Reuse console id:</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLineEdit" name="lineEdit_group_id">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type execution group identifier, or leave empty to run in isolation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an id for sharing a console with other Tools in this project. Leave empty to run this Tool in isolation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -332,6 +333,15 @@
  <tabstops>
   <tabstop>comboBox_tool</tabstop>
   <tabstop>toolButton_tool_specification</tabstop>
+  <tabstop>treeView_cmdline_args</tabstop>
+  <tabstop>toolButton_add_file_path_arg</tabstop>
+  <tabstop>toolButton_remove_arg</tabstop>
+  <tabstop>treeView_input_files</tabstop>
+  <tabstop>radioButton_execute_in_source</tabstop>
+  <tabstop>radioButton_execute_in_work</tabstop>
+  <tabstop>lineEdit_group_id</tabstop>
+  <tabstop>kill_consoles_check_box</tabstop>
+  <tabstop>log_process_output_check_box</tabstop>
   <tabstop>pushButton_tool_results</tabstop>
  </tabstops>
  <resources>

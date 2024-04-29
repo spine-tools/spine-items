@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -49,15 +50,16 @@ class Ui_Form(object):
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setSpacing(6)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(-1, -1, 6, -1)
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(6, -1, -1, -1)
-        self.radioButton_python_console = QRadioButton(Form)
-        self.radioButton_python_console.setObjectName(u"radioButton_python_console")
-        self.radioButton_python_console.setChecked(True)
+        self.radioButton_basic_console = QRadioButton(Form)
+        self.radioButton_basic_console.setObjectName(u"radioButton_basic_console")
+        self.radioButton_basic_console.setChecked(True)
 
-        self.verticalLayout.addWidget(self.radioButton_python_console)
+        self.verticalLayout.addWidget(self.radioButton_basic_console)
 
         self.radioButton_jupyter_console = QRadioButton(Form)
         self.radioButton_jupyter_console.setObjectName(u"radioButton_jupyter_console")
@@ -76,7 +78,7 @@ class Ui_Form(object):
 
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(-1, -1, 6, -1)
+        self.verticalLayout_2.setContentsMargins(-1, -1, 0, -1)
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setSpacing(6)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -86,11 +88,11 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.label_2)
 
-        self.lineEdit_python_path = QLineEdit(Form)
-        self.lineEdit_python_path.setObjectName(u"lineEdit_python_path")
-        self.lineEdit_python_path.setClearButtonEnabled(True)
+        self.lineEdit_executable = QLineEdit(Form)
+        self.lineEdit_executable.setObjectName(u"lineEdit_executable")
+        self.lineEdit_executable.setClearButtonEnabled(True)
 
-        self.horizontalLayout_2.addWidget(self.lineEdit_python_path)
+        self.horizontalLayout_2.addWidget(self.lineEdit_executable)
 
         self.toolButton_browse_python = QToolButton(Form)
         self.toolButton_browse_python.setObjectName(u"toolButton_browse_python")
@@ -149,22 +151,22 @@ class Ui_Form(object):
     # setupUi
 
     def retranslateUi(self, Form):
-        self.radioButton_python_console.setText(QCoreApplication.translate("Form", u"Basic Console", None))
+        self.radioButton_basic_console.setText(QCoreApplication.translate("Form", u"Basic Console", None))
         self.radioButton_jupyter_console.setText(QCoreApplication.translate("Form", u"Jupyter Console", None))
-        self.label_2.setText(QCoreApplication.translate("Form", u"Interpreter", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Interpreter:", None))
 #if QT_CONFIG(tooltip)
-        self.lineEdit_python_path.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Python interpreter for executing this Tool specification. Leave empty to select the Python that was used in launching Spine Toolbox.</p></body></html>", None))
+        self.lineEdit_executable.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Python interpreter for <span style=\" font-weight:700;\">Basic Console</span> execution. Leave empty to use the Python that was used in launching Spine Toolbox.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.lineEdit_python_path.setPlaceholderText(QCoreApplication.translate("Form", u"Using current Python interpreter", None))
+        self.lineEdit_executable.setPlaceholderText(QCoreApplication.translate("Form", u"Using current Python interpreter", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_python.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Python interpreter using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label.setText(QCoreApplication.translate("Form", u"Kernel spec", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Kernel:", None))
 #if QT_CONFIG(tooltip)
-        self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python Jupyter kernel spec for Jupyter Console.</p><p>Both Conda and Jupyter kernel specs are shown.</p></body></html>", None))
+        self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
-        self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh the list of Jupyter and Conda kernel specs</p></body></html>", None))
+        self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh kernel specs list</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_refresh_kernel_specs.setText("")
         pass

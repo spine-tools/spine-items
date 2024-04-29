@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains unit tests for :class:`DataTransformerExecutable`.
-
-"""
+"""Contains unit tests for :class:`DataTransformerExecutable`."""
 from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest
@@ -76,5 +74,5 @@ class TestDataTransformerExecutable(unittest.TestCase):
         self.assertEqual(transformer.output_resources(ExecutionDirection.FORWARD), [expected_resource])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

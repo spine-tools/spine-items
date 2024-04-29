@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,15 +9,13 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains utilities to scan for Data Connection's output resources.
 
-"""
+"""Contains utilities to scan for Data Connection's output resources."""
 from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource, url_resource
 from spine_engine.utils.serialization import path_in_dir
 from spinedb_api.helpers import remove_credentials_from_url
-from ..utils import convert_to_sqlalchemy_url, unsplit_url_credentials
+from ..utils import convert_to_sqlalchemy_url
 
 
 def scan_for_resources(provider, file_paths, urls, project_dir):

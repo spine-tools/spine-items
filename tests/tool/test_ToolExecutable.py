@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for ToolExecutable item.
-
-"""
+"""Unit tests for ToolExecutable item."""
 from multiprocessing import Lock
 import sys
 import pathlib
@@ -152,7 +150,7 @@ class TestToolExecutable(unittest.TestCase):
         app_settings = _MockSettings()
         logger = mock.MagicMock()
         tool_specification = PythonTool(
-            "Python tool", "Python", str(script_dir), script_files, app_settings, None, logger, outputfiles=output_files
+            "Python tool", "Python", str(script_dir), script_files, app_settings, logger, outputfiles=output_files
         )
         work_dir = pathlib.Path(self._temp_dir.name, "work")
         work_dir.mkdir()
@@ -194,18 +192,18 @@ class TestToolExecutable(unittest.TestCase):
         with open(logs[0], "r") as f:
             lines = f.readlines()
         expected_lines = [
-            '### Spine execution log file\n',
-            '### Item name: Logs stuff\n',
-            '### Filter id: \n',
-            '### Part: 1\n',
-            '\n',
-            '# Running python script.py\n',
-            'hello\n',
-            'Traceback (most recent call last):\n',
+            "### Spine execution log file\n",
+            "### Item name: Logs stuff\n",
+            "### Filter id: \n",
+            "### Part: 1\n",
+            "\n",
+            "# Running python script.py\n",
+            "hello\n",
+            "Traceback (most recent call last):\n",
             '  File "<stdin>", line 3, in <module>\n',
             '  File "script.py", line 2, in <module>\n',
             "    raise ValueError('foo')\n",
-            'ValueError: foo\n',
+            "ValueError: foo\n",
         ]
         self.assertCountEqual(lines, expected_lines)
         kill_persistent_processes()
@@ -395,7 +393,7 @@ class _MockSettings:
     def value(key, defaultValue=None):
         return {
             "appSettings/pythonPath": sys.executable,
-            "appSettings/useEmbeddedPython": "0",  # Don't use embedded Python
+            "appSettings/usePythonKernel": "0",  # Don't use Jupyter Console
             "appSettings/workDir": "some_work_dir",
         }.get(key, defaultValue)
 

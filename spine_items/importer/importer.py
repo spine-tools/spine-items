@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Importer project item class.
-
-"""
-
+"""Contains Importer project item class."""
 import os
 from operator import itemgetter
 from PySide6.QtCore import QModelIndex, Qt, Slot
@@ -79,11 +76,6 @@ class Importer(DBWriterItemBase):
         """See base class."""
         return ItemInfo.item_type()
 
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
-
     @property
     def executable_class(self):
         return ExecutableItem
@@ -117,7 +109,7 @@ class Importer(DBWriterItemBase):
         cancel_on_error = self._properties_ui.cancel_on_error_checkBox.isChecked()
         if self.cancel_on_error == cancel_on_error:
             return
-        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self, cancel_on_error))
+        self._toolbox.undo_stack.push(UpdateCancelOnErrorCommand(self.name, cancel_on_error, self._project))
 
     def set_cancel_on_error(self, cancel_on_error):
         """Sets cancel on error setting.
@@ -155,7 +147,7 @@ class Importer(DBWriterItemBase):
         on_conflict = self._on_conflict()
         if self.on_conflict == on_conflict:
             return
-        self._toolbox.undo_stack.push(UpdateOnConflictCommand(self, on_conflict))
+        self._toolbox.undo_stack.push(UpdateOnConflictCommand(self.name, on_conflict, self._project))
 
     def set_on_conflict(self, on_conflict):
         """Sets on_conflict setting.
