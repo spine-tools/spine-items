@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for Importer project item.
-
-"""
+"""Unit tests for Importer project item."""
 import collections
 import os
 from tempfile import TemporaryDirectory
@@ -33,7 +31,7 @@ class TestImporter(unittest.TestCase):
         """Set up."""
         self.toolbox = create_mock_toolbox()
         mock_spec_model = self.toolbox.specification_model = MagicMock()
-        Specification = collections.namedtuple('Specification', 'name mapping item_type')
+        Specification = collections.namedtuple("Specification", "name mapping item_type")
         mock_spec_model.find_specification.side_effect = lambda x: Specification(
             name=x, mapping={}, item_type="Importer"
         )
@@ -63,9 +61,6 @@ class TestImporter(unittest.TestCase):
 
     def test_item_type(self):
         self.assertEqual(Importer.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        self.assertEqual(Importer.item_category(), ItemInfo.item_category())
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -138,7 +133,7 @@ class TestImporter(unittest.TestCase):
         self.importer.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.importer.name)  # item name
-        self.assertEqual(expected_name, self.importer.get_icon().name_item.text())  # name item on Design View
+        self.assertEqual(expected_name, self.importer.get_icon().name())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.importer.data_dir)  # Check data dir

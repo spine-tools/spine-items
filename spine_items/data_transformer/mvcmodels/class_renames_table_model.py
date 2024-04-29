@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,13 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains the :class:`ClassRenamesTableModel` class.
-
-"""
+"""Contains the :class:`ClassRenamesTableModel` class."""
 from enum import IntEnum, unique
 import pickle
-
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from ..commands import InsertRow, SetData
 from ..widgets.drop_target_table import DROP_MIME_TYPE

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -85,7 +86,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.specification_label.setText(QCoreApplication.translate("Form", u"Specification", None))
+        self.specification_label.setText(QCoreApplication.translate("Form", u"Specification:", None))
 #if QT_CONFIG(tooltip)
         self.specification_combo_box.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Tool specification for this Tool</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -98,9 +99,9 @@ class Ui_Form(object):
     # setupUi
 
     def retranslateUi(self, Form):
-        self.label_2.setText(QCoreApplication.translate("Form", u"Command", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Command:", None))
         self.lineEdit_command.setPlaceholderText(QCoreApplication.translate("Form", u"Type command here...", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Shell", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Shell:", None))
         pass
     # retranslateUi
 

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,16 +10,14 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains common & shared (Q)widgets.
-
-"""
-
+"""Contains common & shared (Q)widgets."""
 import os
 from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QLineEdit,
+    QStyle,
+    QStyleOptionComboBox,
     QTreeView,
     QStyledItemDelegate,
     QWidget,
@@ -604,3 +603,20 @@ class UrlSelectorDialog(QDialog):
             self._app_settings, key, self, "Select an SQLite file", APPLICATION_PATH, filter_=filter_
         )
         return filepath if filepath else None
+
+
+def combo_box_width(font_metric_widget, items):
+    """Returns section width.
+
+    Args:
+        font_metric_widget (QWidget): Widget whose font metrics are used
+        items (Iterable of str): combo box items
+
+    Returns:
+        int: width of a combo box containing the given items
+    """
+    fm = font_metric_widget.fontMetrics()
+    style = QApplication.instance().style()
+    option = QStyleOptionComboBox()
+    rect = style.subControlRect(QStyle.ComplexControl.CC_ComboBox, option, QStyle.SubControl.SC_ComboBoxArrow)
+    return max(fm.horizontalAdvance(item) for item in items) + rect.width()

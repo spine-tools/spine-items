@@ -1,12 +1,17 @@
 <RCC>
   <qresource prefix="/icons">
+    <file>Spine_symbol.png</file>
+    <file>item_icons/gams-logo.svg</file>
+    <file>item_icons/terminal-logo.svg</file>
+    <file>item_icons/julia-logo.svg</file>
+    <file>item_icons/python-logo.svg</file>
+    <file>share.svg</file>
     <file>bolt-lightning.svg</file>
     <file>item_icons/satellite.svg</file>
     <file>broom.svg</file>
     <file>sync.svg</file>
     <file>file-regular.svg</file>
     <file>save.svg</file>
-    <file>Spine_symbol.png</file>
     <file>copy.svg</file>
     <file>datapkg.png</file>
     <file>double-at.svg</file>

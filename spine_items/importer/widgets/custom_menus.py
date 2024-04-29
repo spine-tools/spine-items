@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Classes for context menus used alongside the Importer project item.
-
-"""
-
+"""Classes for context menus used alongside the Importer project item."""
 from PySide6.QtCore import QPoint, Slot, Signal
 from PySide6.QtWidgets import QMenu
 from spinetoolbox.widgets.custom_menus import CustomContextMenu, ItemSpecificationMenu, FilterMenuBase

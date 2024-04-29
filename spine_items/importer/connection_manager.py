@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,10 +9,9 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-""" Contains ConnectionManager class. """
 
+"""Contains ConnectionManager class."""
 from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
-from PySide6.QtWidgets import QFileDialog
 from spinetoolbox.helpers import busy_effect
 
 
@@ -142,7 +142,7 @@ class ConnectionManager(QObject):
         self.close_connection()
         # create new thread and worker
         self._thread = QThread()
-        self._worker = ConnectionWorker(self._connection, self._connection_settings)
+        self._worker = ConnectionWorker(self._connection, self._connection_settings, source, source_extras)
         self._worker.moveToThread(self._thread)
         # connect worker signals
         self._worker.connectionReady.connect(self._handle_connection_ready)
@@ -156,10 +156,9 @@ class ConnectionManager(QObject):
         self.tables_requested.connect(self._worker.tables)
         self.data_requested.connect(self._worker.data)
         self.default_mapping_requested.connect(self._worker.default_mapping)
-        self.connection_closed.connect(self._worker.disconnect, type=Qt.ConnectionType.BlockingQueuedConnection)
-
+        self.connection_closed.connect(self._worker.close_connection, type=Qt.ConnectionType.BlockingQueuedConnection)
         # when thread is started, connect worker to source
-        self._thread.started.connect(lambda: self._worker.init_connection(source, dict(source_extras)))
+        self._thread.started.connect(self._worker.init_connection)
         self._thread.start()
 
     @Slot()
@@ -261,7 +260,7 @@ class ConnectionManager(QObject):
         self._is_connected = False
         self.connection_closed.emit()
         if self._worker:
-            self.connection_closed.disconnect(self._worker.disconnect)
+            self.connection_closed.disconnect(self._worker.close_connection)
             self._worker.deleteLater()
             self._worker = None
         if self._thread:
@@ -286,26 +285,26 @@ class ConnectionWorker(QObject):
     defaultMappingReady = Signal(dict)
     """Signal when default mapping is ready"""
 
-    def __init__(self, connection, connection_settings, parent=None):
+    def __init__(self, connection, connection_settings, source, source_extras, parent=None):
         """
         Args:
             connection (class): A class derived from `SourceConnection` for connecting to the source file
             connection_settings (dict): settings passed to the connection constructor
-            parent (QObject): parent object
+            source (str): source file path or URL
+            source_extras (dict): source specific additional connection settings
+            parent (QObject, optional): parent object
         """
         super().__init__(parent)
         self._connection = connection(connection_settings)
+        self._source = source
+        self._source_extras = source_extras
 
-    def init_connection(self, source, source_extras):
-        """Connect to data source.
-
-        Args:
-            source (str): source file path or URL
-            source_extras (dict): source specific additional connection settings
-        """
-        if source:
+    @Slot()
+    def init_connection(self):
+        """Connects to data source."""
+        if self._source:
             try:
-                self._connection.connect_to_source(source, **source_extras)
+                self._connection.connect_to_source(self._source, **self._source_extras)
                 self.connectionReady.emit()
             except Exception as error:
                 self.connectionFailed.emit(f"Could not connect to source: {error}")
@@ -336,7 +335,7 @@ class ConnectionWorker(QObject):
             self.error.emit(f"Could not get data from source: {error}")
 
     @Slot()
-    def disconnect(self):
+    def close_connection(self):
         try:
             self._connection.disconnect()
         except Exception as error:

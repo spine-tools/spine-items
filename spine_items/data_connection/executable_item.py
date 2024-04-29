@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Data Connection's executable item as well as support utilities.
-
-"""
+"""Contains Data Connection's executable item as well as support utilities."""
 import os
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
@@ -29,7 +27,7 @@ class ExecutableItem(ExecutableItemBase):
         Args:
             name (str): item's name
             file_references (list): a list of absolute paths to connected files
-            db_references (list): a list of urls to connected dbs
+            db_references (list): a list of url dicts to connected dbs
             project_dir (str): absolute path to project directory
             logger (LoggerInterface): a logger
         """

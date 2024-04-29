@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains settings classes for filters and manipulators.
-
-"""
+"""Contains settings classes for filters and manipulators."""
 from spinedb_api.filters.renamer import entity_class_renamer_config, parameter_renamer_config
 from spinedb_api.filters.value_transformer import value_transformer_config
 

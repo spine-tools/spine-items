@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,13 +10,10 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Data Store's executable item as well as support utilities.
-
-"""
+"""Contains Data Store's executable item as well as support utilities."""
 from pathlib import Path
 from spinedb_api import DatabaseMapping
-from spinedb_api.exception import SpineDBAPIError, SpineDBVersionError
+from spinedb_api.exception import SpineDBAPIError
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from .item_info import ItemInfo
@@ -58,14 +56,15 @@ class ExecutableItem(ExecutableItemBase):
             self._logger.msg_error.emit("SQLite file does not exist.")
             return None
         if not self._validated:
-            try:
-                DatabaseMapping.create_engine(self._url, create=True)
-                return self._url
-            except SpineDBVersionError as v_err:
-                prompt = {"type": "upgrade_db", "url": self._url, "current": v_err.current, "expected": v_err.expected}
-                if not self._logger.prompt.emit(prompt):
+            prompt_data = DatabaseMapping.get_upgrade_db_prompt_data(self._url, create=True)
+            if prompt_data is not None:
+                kwargs = self._logger.prompt.emit(prompt_data)
+                if kwargs is None:
                     return None
-                DatabaseMapping.create_engine(self._url, upgrade=True)
+            else:
+                kwargs = {}
+            try:
+                DatabaseMapping.create_engine(self._url, create=True, **kwargs)
                 return self._url
             except SpineDBAPIError as err:
                 self._logger.msg_error.emit(str(err))

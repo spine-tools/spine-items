@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Contains Tool's executable item and support functionality.
-
-"""
-
+"""Contains Tool's executable item and support functionality."""
 import datetime
 import fnmatch
 import glob
@@ -39,7 +36,6 @@ from spine_engine.utils.helpers import (
     write_filter_id_file,
     create_log_file_timestamp,
 )
-
 from .item_info import ItemInfo
 from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 from .output_resources import scan_for_resources
@@ -47,7 +43,7 @@ from ..utils import generate_filter_subdirectory_name
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 
 
-_ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+_ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
 class ExecutableItem(DBWriterExecutableItemBase):
@@ -408,8 +404,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
         1. Tool has no specification
         2. Python or Julia Kernel spec not selected (jupyter kernel mode)
         3. Julia executable not set and not found in PATH (subprocess mode)
-        4. Trying to execute an Executable Tool Spec using a shell that is not supported
-        by the user's OS.
 
         Returns True otherwise.
         """
@@ -417,22 +411,24 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> not ready for execution. No specification.")
             return False
         if self._tool_specification.tooltype.lower() == "python":
-            use_python_kernel = settings.value("appSettings/usePythonKernel", defaultValue="0")
-            python_kernel = settings.value("appSettings/pythonKernel", defaultValue="")
-            if use_python_kernel == "2" and python_kernel == "":
-                self._logger.msg_error.emit("No Python kernel spec selected. Please select one in Settings->Tools.")
+            use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
+            kernel_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
+            if use_jupyter_console and not kernel_name:
+                self._logger.msg_error.emit("Python kernel missing. Please select it in Tool Specification Editor.")
                 return False
             # Note: no check for python path == "" because this should never happen
         elif self._tool_specification.tooltype.lower() == "julia":
-            use_julia_kernel = settings.value("appSettings/useJuliaKernel", defaultValue="0")
-            julia_kernel = settings.value("appSettings/juliaKernel", defaultValue="")
-            julia_path = resolve_julia_executable(settings.value("appSettings/juliaPath", defaultValue=""))
-            if use_julia_kernel == "2" and julia_kernel == "":
-                self._logger.msg_error.emit("No Julia kernel spec selected. Please select one in Settings->Tools.")
+            use_jupyter_console = self._tool_specification.execution_settings.get("use_jupyter_console", False)
+            kernel_name = self._tool_specification.execution_settings.get("kernel_spec_name", "")
+            julia_path = self._tool_specification.execution_settings.get("executable", "")
+            if not julia_path:
+                julia_path = resolve_julia_executable(settings)
+            if use_jupyter_console and not kernel_name:
+                self._logger.msg_error.emit("Julia kernel missing. Please select it in Tool Specification Editor.")
                 return False
-            if use_julia_kernel == "0" and julia_path == "":
+            if not use_jupyter_console and not julia_path:
                 self._logger.msg_error.emit(
-                    "Julia not found in PATH. Please select a Julia executable in Settings->Tools."
+                    "Julia executable path missing. Please set it in Tool Specification Editor."
                 )
                 return False
         elif self._tool_specification.tooltype.lower() == "gams":
@@ -440,18 +436,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
             if not gams_path:
                 self._logger.msg_error.emit("Gams not found in PATH. Please set a path to Gams in Settings->Tools.")
                 return False
-        elif self._tool_specification.tooltype.lower() == "executable":
-            if not self._tool_specification.main_prgm:
-                shell = self._tool_specification.execution_settings["shell"]
-                if sys.platform == "win32" and shell == "bash":
-                    self._logger.msg_error.emit("Bash shell is not supported on Windows. Please select another shell.")
-                    return False
-                if sys.platform != "win32" and (shell in ("cmd.exe", "powershell.exe")):
-                    self._logger.msg_error.emit(
-                        f"Selected shell is not supported on your platform [{sys.platform}]. "
-                        f"Please select another shell."
-                    )
-                    return False
         return True
 
     def execute(self, forward_resources, backward_resources, lock):
@@ -830,4 +814,4 @@ def _unique_dir_name(tool_specification):
 
 
 def _filter_ansi_escape(s):
-    return _ANSI_ESCAPE.sub('', s)
+    return _ANSI_ESCAPE.sub("", s)

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Classes for handling models in PySide6's model/view framework.
-
-"""
+"""Classes for handling models in PySide6's model/view framework."""
 from collections import namedtuple
 from collections.abc import Iterable
 from PySide6.QtCore import QPoint, Qt, Signal, Slot, QModelIndex
@@ -50,12 +48,12 @@ _ALLOWED_TYPES = list(sorted(TYPE_STRING_TO_CLASS.keys()))
 _ALLOWED_TYPES.append("integer sequence datetime")
 
 TYPE_TO_FONT_AWESOME_ICON = {
-    IntegerSequenceDateTimeConvertSpec.DISPLAY_NAME: chr(int('f073', 16)),
-    BooleanConvertSpec.DISPLAY_NAME: chr(int('f6ad', 16)),
-    StringConvertSpec.DISPLAY_NAME: chr(int('f031', 16)),
-    DateTimeConvertSpec.DISPLAY_NAME: chr(int('f073', 16)),
-    DurationConvertSpec.DISPLAY_NAME: chr(int('f017', 16)),
-    FloatConvertSpec.DISPLAY_NAME: chr(int('f534', 16)),
+    IntegerSequenceDateTimeConvertSpec.DISPLAY_NAME: chr(int("f073", 16)),
+    BooleanConvertSpec.DISPLAY_NAME: chr(int("f6ad", 16)),
+    StringConvertSpec.DISPLAY_NAME: chr(int("f031", 16)),
+    DateTimeConvertSpec.DISPLAY_NAME: chr(int("f073", 16)),
+    DurationConvertSpec.DISPLAY_NAME: chr(int("f017", 16)),
+    FloatConvertSpec.DISPLAY_NAME: chr(int("f534", 16)),
 }
 
 Margin = namedtuple("Margin", ("left", "right", "top", "bottom"))
@@ -231,7 +229,7 @@ class HeaderWithButton(QHeaderView):
         self.setDefaultAlignment(Qt.AlignLeft)
         self.sectionResized.connect(self._section_resize)
         self.sectionMoved.connect(self._section_move)
-        self._font = QFont('Font Awesome 5 Free Solid')
+        self._font = QFont("Font Awesome 5 Free Solid")
 
         self._display_all = True
         self._display_sections = []

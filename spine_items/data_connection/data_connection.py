@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,8 +9,8 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""Module for data connection class."""
 
+"""Module for data connection class."""
 import os
 import shutil
 import logging
@@ -96,11 +97,6 @@ class DataConnection(ProjectItem):
     def item_type():
         """See base class."""
         return ItemInfo.item_type()
-
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
 
     @property
     def executable_class(self):
@@ -218,7 +214,7 @@ class DataConnection(ProjectItem):
         if repeated_paths:
             self._logger.msg_warning.emit(f"Reference to file(s) <b>{repeated_paths}</b> already exists")
         if new_paths:
-            self._toolbox.undo_stack.push(AddDCReferencesCommand(self, new_paths, []))
+            self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, new_paths, [], self._project))
 
     @Slot(bool)
     def show_add_db_reference_dialog(self, _=False):
@@ -235,7 +231,7 @@ class DataConnection(ProjectItem):
         self._database_validator.validate_url(
             url["dialect"], sa_url, self._log_database_reference_error, success_slot=None
         )
-        self._toolbox.undo_stack.push(AddDCReferencesCommand(self, [], [url]))
+        self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, [], [url], self._project))
 
     def _has_db_reference(self, url):
         """Checks if given database URL exists already.
@@ -255,13 +251,20 @@ class DataConnection(ProjectItem):
                 return True
         return False
 
-    @Slot(str)
-    def _log_database_reference_error(self, error):
+    @Slot(str, object)
+    def _log_database_reference_error(self, error, url):
         """Logs final database validation error messages.
 
         Args:
             error (str): message
+            url (URL): SqlAlchemy URL of the database
         """
+        url_text = remove_credentials_from_url(str(url))
+        for row in range(self._db_ref_root.rowCount()):
+            item = self._db_ref_root.child(row)
+            if url_text == item.text():
+                self._mark_as_missing(item)
+                break
         self._logger.msg_error.emit(f"<b>{self.name}</b>: invalid database URL: {error}")
 
     def do_add_references(self, file_refs, db_refs):
@@ -299,7 +302,9 @@ class DataConnection(ProjectItem):
                 file_references.append(index.data(Qt.ItemDataRole.DisplayRole))
             elif parent == db_ref_root_index:
                 db_references.append(index.data(_Role.DB_URL_REFERENCE))
-        self._toolbox.undo_stack.push(RemoveDCReferencesCommand(self, file_references, db_references))
+        self._toolbox.undo_stack.push(
+            RemoveDCReferencesCommand(self.name, file_references, db_references, self._project)
+        )
         self._logger.msg.emit("Selected references removed")
 
     def do_remove_references(self, file_refs, db_refs):
@@ -493,7 +498,9 @@ class DataConnection(ProjectItem):
         if not selected_indexes:
             self._logger.msg_warning.emit("No files to copy")
             return
-        self._toolbox.undo_stack.push(MoveReferenceToData(self, [index.data() for index in selected_indexes]))
+        self._toolbox.undo_stack.push(
+            MoveReferenceToData(self.name, [index.data() for index in selected_indexes], self._project)
+        )
 
     def do_copy_to_project(self, paths):
         """Copies given files to item's data directory.

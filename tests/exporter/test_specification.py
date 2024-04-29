@@ -12,21 +12,21 @@
 """Unit tests for the ''specification'' module"""
 import unittest
 from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
-from spinedb_api.export_mapping import object_export
+from spinedb_api.export_mapping import entity_export
 from spinedb_api.mapping import Position
 
 
 class TestSpecification(unittest.TestCase):
     def test_is_exporting_multiple_files_is_false_when_exporting_single_file(self):
-        mapping_root = object_export(0, 1)
-        mapping_specification = MappingSpecification(MappingType.objects, True, False, "", False, mapping_root)
+        mapping_root = entity_export(0, 1)
+        mapping_specification = MappingSpecification(MappingType.entities, True, False, "", False, mapping_root)
         mapping_specifications = {"Only mapping": mapping_specification}
         specification = Specification(mapping_specifications=mapping_specifications, output_format=OutputFormat.CSV)
         self.assertFalse(specification.is_exporting_multiple_files())
 
     def test_is_exporting_multiple_files_is_false_when_exporting_csv_with_named_tables(self):
-        mapping_root = object_export(Position.table_name, 0)
-        mapping_specification = MappingSpecification(MappingType.objects, True, False, "", False, mapping_root)
+        mapping_root = entity_export(Position.table_name, 0)
+        mapping_specification = MappingSpecification(MappingType.entities, True, False, "", False, mapping_root)
         mapping_specifications = {"Only mapping": mapping_specification}
         specification = Specification(mapping_specifications=mapping_specifications, output_format=OutputFormat.CSV)
         self.assertTrue(specification.is_exporting_multiple_files())
@@ -65,5 +65,5 @@ class TestOutputFormat(unittest.TestCase):
         self.assertEqual(OutputFormat.default(), OutputFormat.CSV)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

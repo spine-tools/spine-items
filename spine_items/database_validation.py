@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,13 +9,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+
 """Utilities to validate that a database exists."""
 from pathlib import Path
-from sqlalchemy.engine.url import make_url
-
 from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, QTimer, Signal, Slot
 from PySide6.QtWidgets import QApplication
-
 from spine_items.utils import check_database_url
 
 
@@ -32,7 +31,7 @@ class _ValidationTask(QRunnable):
         """
         super().__init__()
         self._dialect = dialect
-        self._sa_url = make_url(sa_url)
+        self._sa_url = sa_url
         self._signals = _TaskSignals()
         self._signals.moveToThread(None)
         self._signals.validation_failed.connect(fail_slot)
@@ -47,20 +46,21 @@ class _ValidationTask(QRunnable):
             if self._dialect == "sqlite":
                 database_path = Path(self._sa_url.database)
                 if not database_path.exists():
-                    self._signals.validation_failed.emit("File does not exist. Check the Database field in the URL.")
+                    self._signals.validation_failed.emit(
+                        "File does not exist. Check the Database field in the URL.", self._sa_url
+                    )
                     return
                 elif database_path.is_dir():
                     self._signals.validation_failed.emit(
-                        "Database points to a directory, not a file." " Check the Database field in the URL."
+                        "Database points to a directory, not a file. Check the Database field in the URL.",
+                        self._sa_url,
                     )
                     return
             error = check_database_url(self._sa_url)
             if error is not None:
-                self._signals.validation_failed.emit(error)
+                self._signals.validation_failed.emit(error, self._sa_url)
                 return
-            self._signals.validation_succeeded.emit()
-        except Exception as error:
-            self._signals.validation_failed.emit(str(error))
+            self._signals.validation_succeeded.emit(self._sa_url)
         finally:
             self._signals.finished.emit()
             application = QApplication.instance()
@@ -71,8 +71,8 @@ class _ValidationTask(QRunnable):
 class _TaskSignals(QObject):
     """Signals for validation task."""
 
-    validation_failed = Signal(str)
-    validation_succeeded = Signal()
+    validation_failed = Signal(str, object)
+    validation_succeeded = Signal(object)
     finished = Signal()
 
 
@@ -93,6 +93,10 @@ class DatabaseConnectionValidator(QObject):
         self._busy = False
         self._deferred_task = None
         self._closed = False
+
+    def is_busy(self):
+        """Tests if there is a validator task running."""
+        return self._busy
 
     def validate_url(self, dialect, sa_url, fail_slot, success_slot):
         """Connects signals and starts a task to validate the given URL.

@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Toolbox.
 # Spine Toolbox is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,17 +9,15 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains unit tests for Import editor's :class:`MappingsModel`.
-"""
+
+"""Contains unit tests for Import editor's :class:`MappingsModel`."""
 import unittest
 from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QUndoStack
-
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
-from spinetoolbox.helpers import signal_waiter
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
+from spinetoolbox.helpers import signal_waiter
 from spinedb_api import import_mapping_from_dict
 
 
@@ -41,7 +40,7 @@ class TestMappingsModel(unittest.TestCase):
         self.assertEqual(model.rowCount(), 1)
         self.assertEqual(model.columnCount(), 1)
         index = model.index(0, 0)
-        self.assertEqual(index.data(), "Select All")
+        self.assertEqual(index.data(), "Select all")
 
     def test_set_time_series_repeat_flag(self):
         model = MappingsModel(self._undo_stack, self._model_parent)
@@ -63,6 +62,76 @@ class TestMappingsModel(unittest.TestCase):
             model.set_time_series_repeat_flag(table_index.row(), list_index.row(), True)
             waiter.wait()
         self.assertTrue(flattened_mappings.value_mapping().options["repeat"])
+
+    def test_change_mappings_type(self):
+        model = MappingsModel(self._undo_stack, self._model_parent)
+        model.restore(
+            {
+                "table_mappings": {
+                    "Sheet1": [
+                        {
+                            "Mapping 1": {
+                                "mapping": [
+                                    {"map_type": "EntityClass", "position": "hidden", "value": "Object"},
+                                    {"map_type": "Entity", "position": 0},
+                                    {"map_type": "EntityMetadata", "position": "hidden"},
+                                    {"map_type": "ParameterDefinition", "position": "hidden", "value": "size"},
+                                    {"map_type": "Alternative", "position": "hidden", "value": "Base"},
+                                    {"map_type": "ParameterValueMetadata", "position": "hidden"},
+                                    {"map_type": "ParameterValue", "position": 1},
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "selected_tables": ["Sheet1"],
+                "table_options": {"Sheet1": {}},
+                "table_types": {"Sheet1": {"0": "string", "1": "float"}},
+                "table_default_column_type": {},
+                "table_row_types": {},
+                "source_type": "ExcelConnector",
+            }
+        )
+        self.assertEqual(model.index(0, 0).data(), "Select all")
+        table_index = model.index(1, 0)
+        self.assertEqual(table_index.data(), "Sheet1")
+        list_index = model.index(0, 0, table_index)
+        self.assertEqual(list_index.data(), "Mapping 1")
+        expected = [
+            ["Entity class names", "Constant", "Object", ""],
+            ["Entity names", "Column", 1, ""],
+            ["Entity metadata", "None", None, ""],
+            ["Parameter names", "Constant", "size", ""],
+            ["Alternative names", "Constant", "Base", ""],
+            ["Parameter value metadata", "None", None, ""],
+            ["Parameter values", "Column", 2, ""],
+        ]
+        rows = model.rowCount(list_index)
+        self.assertEqual(rows, len(expected))
+        for row in range(model.rowCount(list_index)):
+            expected_row = expected[row]
+            columns = model.columnCount(list_index)
+            self.assertEqual(columns, len(expected_row))
+            for column in range(columns):
+                with self.subTest(row=row, column=column):
+                    index = model.index(row, column, list_index)
+                    self.assertEqual(index.data(), expected_row[column])
+        model.set_mappings_type(1, 0, "Entity group")
+        expected = [
+            ["Entity class names", "None", None, ""],
+            ["Group names", "None", None, ""],
+            ["Member names", "None", None, ""],
+        ]
+        rows = model.rowCount(list_index)
+        self.assertEqual(rows, len(expected))
+        for row in range(model.rowCount(list_index)):
+            expected_row = expected[row]
+            columns = model.columnCount(list_index)
+            self.assertEqual(columns, len(expected_row))
+            for column in range(columns):
+                with self.subTest(row=row, column=column):
+                    index = model.index(row, column, list_index)
+                    self.assertEqual(index.data(), expected_row[column])
 
 
 class TestTableList(unittest.TestCase):
@@ -117,7 +186,7 @@ class TestTableList(unittest.TestCase):
         )
         self._model.remove_tables_not_in_source_and_specification()
         self.assertEqual(self._model.rowCount(), 3)
-        expected_names = ["Select All", "table that is only in source", "table that is in source and specification"]
+        expected_names = ["Select all", "table that is only in source", "table that is in source and specification"]
         for row, expected_name in zip(range(self._model.rowCount()), expected_names):
             item = self._model.index(row, 0).data(Role.ITEM)
             self.assertEqual(item.name, expected_name)
@@ -140,15 +209,13 @@ class TestTableList(unittest.TestCase):
     def test_empty_model_has_select_all_source_table_item(self):
         self.assertEqual(self._model.rowCount(), 1)
         index = self._model.index(0, 0)
-        self.assertEqual(index.data(), "Select All")
+        self.assertEqual(index.data(), "Select all")
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
-        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole).value)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Checked)
         self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
         self.assertIsNone(index.data(Qt.ItemDataRole.ToolTipRole))
         flags = self._model.flags(index)
-        self.assertEqual(
-            flags, Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable
-        )
+        self.assertEqual(flags, Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
 
     def test_empty_row(self):
         self._model.add_empty_row()
@@ -173,10 +240,11 @@ class TestTableList(unittest.TestCase):
         index = self._model.index(1, 0)
         self.assertEqual(index.data(), "my shiny table (new)")
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
-        self.assertTrue(index.data(Qt.ItemDataRole.CheckStateRole).value)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Checked)
         self.assertIsNone(index.data(Qt.ItemDataRole.FontRole))
         self.assertEqual(
-            index.data(Qt.ItemDataRole.ToolTipRole), "Table's mappings haven't been saved with the specification yet."
+            index.data(Qt.ItemDataRole.ToolTipRole),
+            "<qt>Table's mappings haven't been saved with the specification yet.</qt>",
         )
         flags = self._model.flags(index)
         self.assertEqual(
@@ -189,9 +257,24 @@ class TestTableList(unittest.TestCase):
         index = self._model.index(2, 0)
         self._assert_empty_row(index)
 
+    def test_when_empty_row_turns_into_non_real_table_its_check_status_equals_select_all(self):
+        self._model.add_empty_row()
+        index = self._model.index(0, 0)
+        self.assertTrue(self._model.setData(index, Qt.CheckState.Unchecked.value, Qt.ItemDataRole.CheckStateRole))
+        empty_row_index = self._model.index(1, 0)
+        with signal_waiter(self._model.dataChanged, timeout=1.0) as waiter:
+            self._model.setData(empty_row_index, "my shiny table")
+            waiter.wait()
+        self.assertEqual(self._model.rowCount(), 3)
+        index = self._model.index(1, 0)
+        self.assertEqual(index.data(), "my shiny table (new)")
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
+        index = self._model.index(2, 0)
+        self._assert_empty_row(index)
+
     def _assert_empty_row(self, index):
         self.assertEqual(index.data(), "<rename this to add table>")
-        self.assertFalse(index.data(Qt.ItemDataRole.CheckStateRole).value)
+        self.assertEqual(index.data(Qt.ItemDataRole.CheckStateRole), Qt.CheckState.Unchecked)
         self.assertIsNone(index.data(Qt.ItemDataRole.ForegroundRole))
         self.assertTrue(index.data(Qt.ItemDataRole.FontRole).italic())
         flags = self._model.flags(index)
@@ -240,11 +323,11 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.rowCount(self._list_index), 3)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names")
+        self.assertEqual(index.data(), "Entity class names")
         index = self._model.index(1, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names")
+        self.assertEqual(index.data(), "Entity names")
         index = self._model.index(2, 0, self._list_index)
-        self.assertEqual(index.data(), "Object metadata")
+        self.assertEqual(index.data(), "Entity metadata")
         index = self._model.index(0, 1, self._list_index)
         self.assertEqual(index.data(), "None")
         index = self._model.index(1, 1, self._list_index)
@@ -270,7 +353,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_mapping_invalid_object_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': None},
+            "name": {"map_type": None},
             "parameter_type": "map",
             "value": {"map_type": None},
             "extra_dimensions": [{"map_type": None}],
@@ -287,11 +370,11 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.rowCount(self._list_index), 9)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names")
+        self.assertEqual(index.data(), "Entity class names")
         index = self._model.index(1, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names")
+        self.assertEqual(index.data(), "Entity names")
         index = self._model.index(2, 0, self._list_index)
-        self.assertEqual(index.data(), "Object metadata")
+        self.assertEqual(index.data(), "Entity metadata")
         index = self._model.index(3, 0, self._list_index)
         self.assertEqual(index.data(), "Parameter names")
         index = self._model.index(4, 0, self._list_index)
@@ -327,11 +410,11 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.rowCount(self._list_index), 8)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names")
+        self.assertEqual(index.data(), "Entity class names")
         index = self._model.index(1, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names")
+        self.assertEqual(index.data(), "Entity names")
         index = self._model.index(2, 0, self._list_index)
-        self.assertEqual(index.data(), "Object metadata")
+        self.assertEqual(index.data(), "Entity metadata")
         index = self._model.index(3, 0, self._list_index)
         self.assertEqual(index.data(), "Parameter names")
         index = self._model.index(4, 0, self._list_index)
@@ -396,7 +479,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_mapping_valid_object_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': 'column', 'reference': 99},
+            "name": {"map_type": "column", "reference": 99},
             "parameter_type": "map",
             "value": {"reference": 23, "map_type": "column"},
             "extra_dimensions": [{"reference": "fifth column", "map_type": "column"}],
@@ -415,11 +498,11 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.rowCount(self._list_index), 9)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names")
+        self.assertEqual(index.data(), "Entity class names")
         index = self._model.index(1, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names")
+        self.assertEqual(index.data(), "Entity names")
         index = self._model.index(2, 0, self._list_index)
-        self.assertEqual(index.data(), "Object metadata")
+        self.assertEqual(index.data(), "Entity metadata")
         index = self._model.index(3, 0, self._list_index)
         self.assertEqual(index.data(), "Parameter names")
         index = self._model.index(4, 0, self._list_index)
@@ -492,7 +575,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_valid_object_class_with_nested_map(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': 'column', 'reference': 99},
+            "name": {"map_type": "column", "reference": 99},
             "parameter_type": "map",
             "value": {"reference": 23, "map_type": "column"},
             "extra_dimensions": [
@@ -514,11 +597,11 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.rowCount(self._list_index), 11)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names")
+        self.assertEqual(index.data(), "Entity class names")
         index = self._model.index(1, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names")
+        self.assertEqual(index.data(), "Entity names")
         index = self._model.index(2, 0, self._list_index)
-        self.assertEqual(index.data(), "Object metadata")
+        self.assertEqual(index.data(), "Entity metadata")
         index = self._model.index(3, 0, self._list_index)
         self.assertEqual(index.data(), "Parameter names")
         index = self._model.index(4, 0, self._list_index)
@@ -612,13 +695,13 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.rowCount(self._list_index), 4)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
-        self.assertEqual(index.data(), "Relationship class names")
+        self.assertEqual(index.data(), "Entity class names")
         index = self._model.index(1, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names")
+        self.assertEqual(index.data(), "Dimension names")
         index = self._model.index(2, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names")
+        self.assertEqual(index.data(), "Element names")
         index = self._model.index(3, 0, self._list_index)
-        self.assertEqual(index.data(), "Relationship metadata")
+        self.assertEqual(index.data(), "Entity metadata")
         for row in range(4):
             index = self._model.index(row, 1, self._list_index)
             self.assertEqual(index.data(), "None")
@@ -631,7 +714,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_mapping_invalid_relationship_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': None},
+            "name": {"map_type": None},
             "parameter_type": "map",
             "value": {"map_type": None},
             "extra_dimensions": [{"map_type": None}],
@@ -649,13 +732,13 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.rowCount(self._list_index), 10)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
-        self.assertEqual(index.data(), "Relationship class names")
+        self.assertEqual(index.data(), "Entity class names")
         index = self._model.index(1, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names")
+        self.assertEqual(index.data(), "Dimension names")
         index = self._model.index(2, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names")
+        self.assertEqual(index.data(), "Element names")
         index = self._model.index(3, 0, self._list_index)
-        self.assertEqual(index.data(), "Relationship metadata")
+        self.assertEqual(index.data(), "Entity metadata")
         index = self._model.index(4, 0, self._list_index)
         self.assertEqual(index.data(), "Parameter names")
         index = self._model.index(5, 0, self._list_index)
@@ -680,7 +763,7 @@ class TestMappingComponentsTable(unittest.TestCase):
     def test_data_when_mapping_multidimensional_relationship_class_with_parameters(self):
         indexed_parameter_mapping_dict = {
             "map_type": "parameter",
-            "name": {'map_type': 'column', 'reference': 99},
+            "name": {"map_type": "column", "reference": 99},
             "parameter_type": "map",
             "value": {"reference": 23, "map_type": "column"},
             "extra_dimensions": [{"reference": "fifth column", "map_type": "column"}],
@@ -703,17 +786,17 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.rowCount(self._list_index), 12)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
         index = self._model.index(0, 0, self._list_index)
-        self.assertEqual(index.data(), "Relationship class names")
+        self.assertEqual(index.data(), "Entity class names")
         index = self._model.index(1, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names 1")
+        self.assertEqual(index.data(), "Dimension names 1")
         index = self._model.index(2, 0, self._list_index)
-        self.assertEqual(index.data(), "Object class names 2")
+        self.assertEqual(index.data(), "Dimension names 2")
         index = self._model.index(3, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names 1")
+        self.assertEqual(index.data(), "Element names 1")
         index = self._model.index(4, 0, self._list_index)
-        self.assertEqual(index.data(), "Object names 2")
+        self.assertEqual(index.data(), "Element names 2")
         index = self._model.index(5, 0, self._list_index)
-        self.assertEqual(index.data(), "Relationship metadata")
+        self.assertEqual(index.data(), "Entity metadata")
         index = self._model.index(6, 0, self._list_index)
         self.assertEqual(index.data(), "Parameter names")
         index = self._model.index(7, 0, self._list_index)
@@ -813,5 +896,5 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(self._model.index(2, 3, self._list_index).data(), "choose_me")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

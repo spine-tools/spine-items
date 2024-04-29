@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,11 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Unit tests for View project item.
-
-"""
-
+"""Unit tests for View project item."""
 import os
 from tempfile import TemporaryDirectory
 import unittest
@@ -48,9 +45,6 @@ class TestView(unittest.TestCase):
 
     def test_item_type(self):
         self.assertEqual(View.item_type(), ItemInfo.item_type())
-
-    def test_item_category(self):
-        self.assertEqual(View.item_category(), ItemInfo.item_category())
 
     def test_item_dict(self):
         """Tests Item dictionary creation."""
@@ -94,7 +88,7 @@ class TestView(unittest.TestCase):
         self.view.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self.view.name)  # item name
-        self.assertEqual(expected_name, self.view.get_icon().name_item.text())  # name item on Design View
+        self.assertEqual(expected_name, self.view.get_icon().name())  # name item on Design View
         # Check data_dir
         expected_data_dir = os.path.join(self.project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self.view.data_dir)  # Check data dir

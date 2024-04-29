@@ -2,6 +2,7 @@
 <!--
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and\/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -18,8 +19,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1146</width>
-    <height>801</height>
+    <width>1086</width>
+    <height>780</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,712 +29,500 @@
   <property name="dockNestingEnabled">
    <bool>true</bool>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
-  <widget class="QDockWidget" name="mappings_dock">
-   <property name="windowTitle">
-    <string>Mappings</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <property name="leftMargin">
-      <number>3</number>
-     </property>
-     <property name="topMargin">
-      <number>3</number>
-     </property>
-     <property name="rightMargin">
-      <number>3</number>
-     </property>
-     <property name="bottomMargin">
-      <number>3</number>
-     </property>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QPushButton" name="add_mapping_button">
-         <property name="text">
-          <string>Add</string>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_10">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Export format:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="export_format_combo_box">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="live_preview_check_box">
+        <property name="text">
+         <string>Live preview</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="frame_preview">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <property name="leftMargin">
+          <number>3</number>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="remove_mapping_button">
-         <property name="text">
-          <string>Remove</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="toggle_enabled_button">
-         <property name="toolTip">
-          <string>Enable or disable all mappings at once.</string>
-         </property>
-         <property name="text">
-          <string>Toggle enabled</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QTableView" name="mappings_table">
-       <property name="contextMenuPolicy">
-        <enum>Qt::CustomContextMenu</enum>
-       </property>
-       <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectRows</enum>
-       </property>
-       <property name="showGrid">
-        <bool>false</bool>
-       </property>
-       <attribute name="verticalHeaderVisible">
-        <bool>false</bool>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_6">
-       <item>
-        <spacer name="horizontalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write_earlier_button">
-         <property name="toolTip">
-          <string>Prioratize mapping.</string>
-         </property>
-         <property name="text">
-          <string>Write earlier</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write_later_button">
-         <property name="toolTip">
-          <string>Deprioratize mapping.</string>
-         </property>
-         <property name="text">
-          <string>Write later</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="mapping_options_dock">
-   <property name="windowTitle">
-    <string>Mapping options</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="mapping_options_contents">
-    <layout class="QVBoxLayout" name="verticalLayout_7">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <property name="leftMargin">
-      <number>3</number>
-     </property>
-     <property name="topMargin">
-      <number>3</number>
-     </property>
-     <property name="rightMargin">
-      <number>3</number>
-     </property>
-     <property name="bottomMargin">
-      <number>3</number>
-     </property>
-     <item>
-      <layout class="QFormLayout" name="formLayout">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Item type:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QComboBox" name="item_type_combo_box">
-         <item>
-          <property name="text">
-           <string>Object class</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Relationship class</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Relationship class with object parameter</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Object group</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Alternative</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Scenario</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Scenario alternative</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Parameter value list</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Feature</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Tool</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Tool feature</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Tool feature method</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QCheckBox" name="always_export_header_check_box">
-         <property name="toolTip">
-          <string>Export header even when a table is otherwise empty.</string>
-         </property>
-         <property name="text">
-          <string>Always export header</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Relationship dimensions:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="relationship_dimensions_spin_box">
-         <property name="toolTip">
-          <string>Number of expected relationship dimensions.</string>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Selected dimension:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QSpinBox" name="highlight_dimension_spin_box">
-         <property name="toolTip">
-          <string>Relationship dimension used to select object parameters for export.</string>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Parameter type:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QComboBox" name="parameter_type_combo_box">
-         <item>
-          <property name="text">
-           <string>Value</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Default value</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>None</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_10">
-         <property name="text">
-          <string>Parameter dimensions:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QSpinBox" name="parameter_dimensions_spin_box">
-         <property name="toolTip">
-          <string>Number of expected parameter value dimensions.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QCheckBox" name="fix_table_name_check_box">
-         <property name="text">
-          <string>Fixed table name:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <widget class="QLineEdit" name="fix_table_name_line_edit"/>
-       </item>
-       <item row="7" column="0">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>Group function:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="1">
-        <widget class="QComboBox" name="group_fn_combo_box">
-         <property name="toolTip">
-          <string>Group/aggregate data that ends up in the same cell in pivot tables.</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <spacer name="verticalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>12</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="mapping_spec_dock">
-   <property name="windowTitle">
-    <string>Mapping specification</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="mapping_spec_contents">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <property name="leftMargin">
-      <number>3</number>
-     </property>
-     <property name="topMargin">
-      <number>3</number>
-     </property>
-     <property name="rightMargin">
-      <number>3</number>
-     </property>
-     <property name="bottomMargin">
-      <number>3</number>
-     </property>
-     <item>
-      <widget class="QTableView" name="mapping_table_view">
-       <property name="selectionMode">
-        <enum>QAbstractItemView::SingleSelection</enum>
-       </property>
-       <attribute name="horizontalHeaderStretchLastSection">
-        <bool>true</bool>
-       </attribute>
-       <attribute name="verticalHeaderVisible">
-        <bool>false</bool>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="compact_button">
-         <property name="toolTip">
-          <string>Compact mapping by removing empty columns and rows.</string>
-         </property>
-         <property name="text">
-          <string>Compact</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="preview_tables_dock">
-   <property name="windowTitle">
-    <string>Preview tables</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_5">
-    <layout class="QVBoxLayout" name="verticalLayout_3">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <property name="leftMargin">
-      <number>3</number>
-     </property>
-     <property name="topMargin">
-      <number>3</number>
-     </property>
-     <property name="rightMargin">
-      <number>3</number>
-     </property>
-     <property name="bottomMargin">
-      <number>3</number>
-     </property>
-     <item>
-      <widget class="QTreeView" name="preview_tree_view">
-       <attribute name="headerVisible">
-        <bool>false</bool>
-       </attribute>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="preview_contents_dock">
-   <property name="windowTitle">
-    <string>Preview contents</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_6">
-    <layout class="QVBoxLayout" name="verticalLayout_4">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <property name="leftMargin">
-      <number>3</number>
-     </property>
-     <property name="topMargin">
-      <number>3</number>
-     </property>
-     <property name="rightMargin">
-      <number>3</number>
-     </property>
-     <property name="bottomMargin">
-      <number>3</number>
-     </property>
-     <item>
-      <widget class="QTableView" name="preview_table_view"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="export_options_dock">
-   <property name="allowedAreas">
-    <set>Qt::AllDockWidgetAreas</set>
-   </property>
-   <property name="windowTitle">
-    <string>Export options</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_7">
-    <layout class="QVBoxLayout" name="verticalLayout_5">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <property name="leftMargin">
-      <number>3</number>
-     </property>
-     <property name="topMargin">
-      <number>3</number>
-     </property>
-     <property name="rightMargin">
-      <number>3</number>
-     </property>
-     <property name="bottomMargin">
-      <number>3</number>
-     </property>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Format:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="export_format_combo_box">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>1</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="preview_controls_dock">
-   <property name="windowTitle">
-    <string>Preview controls</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_4">
-    <layout class="QVBoxLayout" name="verticalLayout_6">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <property name="leftMargin">
-      <number>3</number>
-     </property>
-     <property name="topMargin">
-      <number>3</number>
-     </property>
-     <property name="rightMargin">
-      <number>3</number>
-     </property>
-     <property name="bottomMargin">
-      <number>3</number>
-     </property>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="QLabel" name="label_9">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Database url:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="ElidedCombobox" name="database_url_combo_box">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="sizeAdjustPolicy">
-          <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
-         </property>
-         <property name="minimumContentsLength">
+         <property name="topMargin">
           <number>0</number>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="load_url_from_fs_button">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Browse file system&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <property name="rightMargin">
+          <number>3</number>
          </property>
-         <property name="text">
-          <string>...</string>
+         <property name="bottomMargin">
+          <number>0</number>
          </property>
-         <property name="icon">
-          <iconset resource="../../ui/resources/resources_icons.qrc">
-           <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QCheckBox" name="live_preview_check_box">
-         <property name="text">
-          <string>Live preview</string>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Max. tables</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="max_preview_tables_spin_box">
-         <property name="maximum">
-          <number>16777215</number>
-         </property>
-         <property name="singleStep">
-          <number>10</number>
-         </property>
-         <property name="value">
-          <number>20</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Max. content rows:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="max_preview_rows_spin_box">
-         <property name="maximum">
-          <number>16777215</number>
-         </property>
-         <property name="singleStep">
-          <number>10</number>
-         </property>
-         <property name="value">
-          <number>20</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <spacer name="verticalSpacer_2">
+         <item>
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Database url:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="ElidedCombobox" name="database_url_combo_box">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+           </property>
+           <property name="minimumContentsLength">
+            <number>16</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="load_url_from_fs_button">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Browse file system&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../../ui/resources/resources_icons.qrc">
+             <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Max. tables</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="max_preview_tables_spin_box">
+           <property name="maximum">
+            <number>16777215</number>
+           </property>
+           <property name="singleStep">
+            <number>10</number>
+           </property>
+           <property name="value">
+            <number>20</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Max. content rows:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="max_preview_rows_spin_box">
+           <property name="maximum">
+            <number>16777215</number>
+           </property>
+           <property name="singleStep">
+            <number>10</number>
+           </property>
+           <property name="value">
+            <number>20</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QSplitter" name="splitter_3">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QSplitter" name="splitter_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
+       <widget class="QWidget" name="mapping_list_layout_widget" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_9">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QFrame" name="frame">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>3</number>
+            </property>
+            <property name="topMargin">
+             <number>3</number>
+            </property>
+            <property name="rightMargin">
+             <number>3</number>
+            </property>
+            <property name="bottomMargin">
+             <number>3</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>Mappings</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableView" name="mappings_table">
+           <property name="contextMenuPolicy">
+            <enum>Qt::CustomContextMenu</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <property name="showGrid">
+            <bool>false</bool>
+           </property>
+           <attribute name="verticalHeaderVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="mapping_controls_layout_widget" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QPushButton" name="add_mapping_button">
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="remove_mapping_button">
+             <property name="text">
+              <string>Remove</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="toggle_enabled_button">
+             <property name="toolTip">
+              <string>Enable or disable all mappings at once.</string>
+             </property>
+             <property name="text">
+              <string>Toggle enabled</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="write_earlier_button">
+             <property name="toolTip">
+              <string>Prioratize mapping.</string>
+             </property>
+             <property name="text">
+              <string>Write earlier</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="write_later_button">
+             <property name="toolTip">
+              <string>Deprioratize mapping.</string>
+             </property>
+             <property name="text">
+              <string>Write later</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QFrame" name="mapping_options_contents">
+           <layout class="QFormLayout" name="formLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Type:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="item_type_combo_box">
+              <item>
+               <property name="text">
+                <string>Entity class</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Entity class with dimension parameter</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Entity group</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Alternative</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Scenario</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Scenario alternative</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Parameter value list</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Entity dimensions:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="entity_dimensions_spin_box">
+              <property name="toolTip">
+               <string>Number of expected relationship dimensions.</string>
+              </property>
+              <property name="minimum">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Selected dimension:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QSpinBox" name="highlight_dimension_spin_box">
+              <property name="toolTip">
+               <string>Relationship dimension used to select object parameters for export.</string>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Parameter type:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QComboBox" name="parameter_type_combo_box">
+              <item>
+               <property name="text">
+                <string>Value</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Default value</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>None</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>Parameter dimensions:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QSpinBox" name="parameter_dimensions_spin_box">
+              <property name="toolTip">
+               <string>Number of expected parameter value dimensions.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QCheckBox" name="fix_table_name_check_box">
+              <property name="text">
+               <string>Fixed table name:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QLineEdit" name="fix_table_name_line_edit"/>
+            </item>
+            <item row="10" column="0">
+             <widget class="QCheckBox" name="always_export_header_check_box">
+              <property name="toolTip">
+               <string>Export header even when a table is otherwise empty.</string>
+              </property>
+              <property name="text">
+               <string>Always export header</string>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="1">
+             <widget class="QPushButton" name="compact_button">
+              <property name="toolTip">
+               <string>Compact mapping by removing empty columns and rows.</string>
+              </property>
+              <property name="text">
+               <string>Compact</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Group function:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QComboBox" name="group_fn_combo_box">
+              <property name="toolTip">
+               <string>Group/aggregate data that ends up in the same cell in pivot tables.</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableView" name="mapping_table_view">
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
+           </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="verticalHeaderVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QSplitter" name="splitter">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-      </spacer>
-     </item>
-    </layout>
-   </widget>
+       <widget class="QTreeView" name="preview_tree_view">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <attribute name="headerVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+       <widget class="QTableView" name="preview_table_view">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>5</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <customwidgets>
@@ -743,6 +532,33 @@
    <header>spinetoolbox/widgets/custom_combobox.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>export_format_combo_box</tabstop>
+  <tabstop>live_preview_check_box</tabstop>
+  <tabstop>database_url_combo_box</tabstop>
+  <tabstop>load_url_from_fs_button</tabstop>
+  <tabstop>max_preview_tables_spin_box</tabstop>
+  <tabstop>max_preview_rows_spin_box</tabstop>
+  <tabstop>mappings_table</tabstop>
+  <tabstop>add_mapping_button</tabstop>
+  <tabstop>remove_mapping_button</tabstop>
+  <tabstop>toggle_enabled_button</tabstop>
+  <tabstop>write_earlier_button</tabstop>
+  <tabstop>write_later_button</tabstop>
+  <tabstop>item_type_combo_box</tabstop>
+  <tabstop>entity_dimensions_spin_box</tabstop>
+  <tabstop>highlight_dimension_spin_box</tabstop>
+  <tabstop>parameter_type_combo_box</tabstop>
+  <tabstop>parameter_dimensions_spin_box</tabstop>
+  <tabstop>group_fn_combo_box</tabstop>
+  <tabstop>fix_table_name_check_box</tabstop>
+  <tabstop>fix_table_name_line_edit</tabstop>
+  <tabstop>always_export_header_check_box</tabstop>
+  <tabstop>compact_button</tabstop>
+  <tabstop>mapping_table_view</tabstop>
+  <tabstop>preview_tree_view</tabstop>
+  <tabstop>preview_table_view</tabstop>
+ </tabstops>
  <resources>
   <include location="../../ui/resources/resources_icons.qrc"/>
  </resources>

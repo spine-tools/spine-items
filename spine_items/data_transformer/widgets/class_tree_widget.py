@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,14 +9,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`ClassTreeWidget`.
 
-"""
+"""Contains :class:`ClassTreeWidget`."""
 import pickle
 from PySide6.QtCore import QMimeData
 from PySide6.QtWidgets import QTreeWidget, QMessageBox, QTreeWidgetItem
-
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from .drop_target_table import DROP_MIME_TYPE
 
@@ -50,7 +48,7 @@ class ClassTreeWidget(QTreeWidget):
                 self, "Error while reading database", f"Could not read from database {url}:\n{error}"
             )
         finally:
-            db_map.connection.close()
+            db_map.close()
         self.clear()
         for class_name in classes:
             self.addTopLevelItem(QTreeWidgetItem([class_name]))

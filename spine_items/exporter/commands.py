@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,71 +9,102 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains Exporter's undo commands.
 
-"""
+"""Contains Exporter's undo commands."""
 from copy import copy, deepcopy
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QUndoCommand
+
+from spinetoolbox.helpers import SealCommand
 from spinetoolbox.project_commands import SpineToolboxCommand
 from .mvcmodels.mappings_table_model import MappingsTableModel
 
 
 @unique
-class _ID(IntEnum):
+class CommandId(IntEnum):
     CHANGE_POSITION = 1
+    CHANGE_FIXED_TABLE_NAME = 2
+    CHANGE_OUT_LABEL = 3
 
 
 class UpdateOutLabel(SpineToolboxCommand):
     """Command to update exporter's output label."""
 
-    def __init__(self, exporter, out_label, in_label, previous_label):
+    def __init__(self, exporter_name, out_label, in_label, previous_label, project):
         """
         Args:
-            exporter (Exporter): exporter
+            exporter_name (str): exporter's name
             out_label (str): new output resource label
             in_label (str): associated input resource label
             previous_label (str): previous output resource label
+            project (SpineToolboxProject): project
         """
         super().__init__()
-        self._exporter = exporter
+        self._exporter_name = exporter_name
         self._out_label = out_label
         self._previous_out_label = previous_label
         self._in_label = in_label
-        self.setText(f"change output label in {exporter.name}")
+        self._project = project
+        self.setText(f"change output label in {exporter_name}")
+        self._sealed = False
+
+    def id(self):
+        return 1
 
     def redo(self):
-        self._exporter.set_out_label(self._out_label, self._in_label)
+        exporter = self._project.get_item(self._exporter_name)
+        exporter.set_out_label(self._out_label, self._in_label)
 
     def undo(self):
-        self._exporter.set_out_label(self._previous_out_label, self._in_label)
+        exporter = self._project.get_item(self._exporter_name)
+        exporter.set_out_label(self._previous_out_label, self._in_label)
+
+    def mergeWith(self, other):
+        if not self._sealed:
+            if (
+                isinstance(other, UpdateOutLabel)
+                and self._exporter_name == other._exporter_name
+                and self._in_label == other._in_label
+            ):
+                if self._previous_out_label != other._out_label:
+                    self._out_label = other._out_label
+                else:
+                    self.setObsolete(True)
+                return True
+            if isinstance(other, SealCommand):
+                self._sealed = True
+                return True
+        return False
 
 
 class UpdateOutUrl(SpineToolboxCommand):
     """Command to update exporter's output URL."""
 
-    def __init__(self, exporter, in_label, url, previous_url):
+    def __init__(self, exporter_name, in_label, url, previous_url, project):
         """
         Args:
-            exporter (Exporter): exporter
+            exporter_name (str): exporter's name
             in_label (str): input resource label
             url (dict, optional): new URL dict
             previous_url (dict, optional): previous URL dict
+            project (SpineToolboxProject): project
         """
         super().__init__()
-        self._exporter = exporter
+        self._exporter_name = exporter_name
         self._in_label = in_label
         self._url = copy(url)
         self._previous_url = copy(previous_url)
-        self.setText(f"change output URL in {exporter.name}")
+        self._project = project
+        self.setText(f"change output URL in {exporter_name}")
 
     def redo(self):
-        self._exporter.set_out_url(self._in_label, copy(self._url))
+        exporter = self._project.get_item(self._exporter_name)
+        exporter.set_out_url(self._in_label, copy(self._url))
 
     def undo(self):
-        self._exporter.set_out_url(self._in_label, copy(self._previous_url))
+        exporter = self._project.get_item(self._exporter_name)
+        exporter.set_out_url(self._in_label, copy(self._previous_url))
 
 
 class NewMapping(QUndoCommand):
@@ -294,6 +326,8 @@ class SetUseFixedTableNameFlag(QUndoCommand):
 
 
 class SetFixedTableName(QUndoCommand):
+    ID = CommandId.CHANGE_FIXED_TABLE_NAME.value
+
     def __init__(self, index, old_name, new_name):
         """
         Args:
@@ -305,12 +339,29 @@ class SetFixedTableName(QUndoCommand):
         self._index = index
         self._old_name = old_name
         self._new_name = new_name
+        self._sealed = False
 
     def redo(self):
         self._index.model().setData(self._index, self._new_name, MappingsTableModel.FIXED_TABLE_NAME_ROLE)
 
     def undo(self):
         self._index.model().setData(self._index, self._old_name, MappingsTableModel.FIXED_TABLE_NAME_ROLE)
+
+    def id(self):
+        return self.ID
+
+    def mergeWith(self, other):
+        if not self._sealed:
+            if isinstance(other, SetFixedTableName) and self.id() == other.id() and self._index == other._index:
+                if self._old_name != other._new_name:
+                    self._new_name = other._new_name
+                else:
+                    self.setObsolete(True)
+                return True
+            if isinstance(other, SealCommand):
+                self._sealed = True
+                return True
+        return False
 
 
 class SetGroupFunction(QUndoCommand):
@@ -347,10 +398,10 @@ class SetHighlightDimension(QUndoCommand):
         self._new_dimension = new_dimension
 
     def redo(self):
-        self._index.model().setData(self._index, self._new_dimension, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+        self._index.model().setData(self._index, self._new_dimension, MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
 
     def undo(self):
-        self._index.model().setData(self._index, self._old_dimension, MappingsTableModel.HIGHLIGHT_DIMENSION_ROLE)
+        self._index.model().setData(self._index, self._old_dimension, MappingsTableModel.HIGHLIGHT_POSITION_ROLE)
 
 
 class SetMappingPositions(QUndoCommand):
@@ -385,7 +436,7 @@ class SetMappingPositions(QUndoCommand):
         return self._previous_positions
 
     def id(self):
-        return int(_ID.CHANGE_POSITION)
+        return int(CommandId.CHANGE_POSITION)
 
     def redo(self):
         self._mapping_editor_table_model.set_positions(self._positions, self._mapping_name)
@@ -417,7 +468,7 @@ class ClearFixedTableName(QUndoCommand):
         self._previous_mapping_root = self._mapping_index.data(MappingsTableModel.MAPPING_ROOT_ROLE)
 
     def id(self):
-        return int(_ID.CHANGE_POSITION)
+        return int(CommandId.CHANGE_POSITION)
 
     def mergeWith(self, other):
         if self._mapping_editor_table_model is not None:
@@ -534,19 +585,23 @@ class SetExportFormat(QUndoCommand):
 class UpdateOutputTimeStampsFlag(SpineToolboxCommand):
     """Command to set exporter's output directory time stamps flag."""
 
-    def __init__(self, exporter, value):
+    def __init__(self, exporter_name, value, project):
         """
         Args:
-            exporter (Exporter): exporter item
+            exporter_name (str): exporter's name
             value (bool): flag's new value
+            project (SpineToolboxProject): project
         """
         super().__init__()
-        self.setText(f"toggle output time stamps setting of {exporter.name}")
-        self._exporter = exporter
+        self.setText(f"toggle output time stamps setting of {exporter_name}")
+        self._exporter_name = exporter_name
         self._value = value
+        self._project = project
 
     def redo(self):
-        self._exporter.set_output_time_stamps_flag(self._value)
+        exporter = self._project.get_item(self._exporter_name)
+        exporter.set_output_time_stamps_flag(self._value)
 
     def undo(self):
-        self._exporter.set_output_time_stamps_flag(not self._value)
+        exporter = self._project.get_item(self._exporter_name)
+        exporter.set_output_time_stamps_flag(not self._value)

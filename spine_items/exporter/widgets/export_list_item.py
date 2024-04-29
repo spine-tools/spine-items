@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,14 +10,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-A small widget to set up an output in Exporter properties tab.
-
-"""
-
+"""A small widget to set up an output in Exporter properties tab."""
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import QWidget
-
 from spine_items.utils import convert_to_sqlalchemy_url
 from spine_items.widgets import UrlSelectorDialog
 
@@ -30,6 +26,8 @@ class ExportListItem(QWidget):
 
     out_label_changed = Signal(str, str)
     """Emitted when the output label field changes."""
+    out_label_editing_finished = Signal(str)
+    """Emitted when output label editing is finished."""
     out_url_changed = Signal(str, dict)
     """Emitted when the output URL changes."""
 
@@ -56,7 +54,8 @@ class ExportListItem(QWidget):
         self.set_in_label(in_label)
         self._ui.out_url_status_label.setText(self._URL_UNSET_TEXT)
         self._ui.out_label_edit.setText(out_label)
-        self._ui.out_label_edit.editingFinished.connect(self._emit_out_label_changed)
+        self._ui.out_label_edit.textEdited.connect(self._emit_out_label_changed)
+        self._ui.out_label_edit.editingFinished.connect(self._emit_out_label_editing_finished)
         self._ui.out_url_setup_button.clicked.connect(self._show_url_dialog)
         self._ui.out_url_clear_button.clicked.connect(self._clear_out_url)
 
@@ -109,14 +108,21 @@ class ExportListItem(QWidget):
             self._ui.out_url_clear_button.setEnabled(False)
             self._ui.out_url_status_label.setText(self._URL_UNSET_TEXT)
 
-    @Slot()
-    def _emit_out_label_changed(self):
-        """Emits out_label_changed signal."""
-        out_label = self._ui.out_label_edit.text()
+    @Slot(str)
+    def _emit_out_label_changed(self, out_label):
+        """Emits out_label_changed signal.
+
+        Args:
+            out_label (str): new out label
+        """
         if self._out_label == out_label:
             return
         self._out_label = out_label
         self.out_label_changed.emit(out_label, self._in_label)
+
+    @Slot()
+    def _emit_out_label_editing_finished(self):
+        self.out_label_editing_finished.emit(self._in_label)
 
     @Slot(bool)
     def _show_url_dialog(self, _=False):

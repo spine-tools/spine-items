@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -9,10 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""
-Tool class.
-
-"""
+"""Contains the Tool project item class."""
 import os
 from PySide6.QtCore import Slot, QItemSelection, Qt
 from PySide6.QtGui import QAction
@@ -20,7 +18,7 @@ from spinetoolbox.helpers import open_url
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, make_cmd_line_arg, LabelArg
-from spine_engine.utils.helpers import resolve_python_interpreter
+from spine_engine.utils.helpers import resolve_python_interpreter, resolve_julia_executable, ExecutionDirection
 from .commands import (
     UpdateKillCompletedProcesses,
     UpdateToolExecuteInWorkCommand,
@@ -55,8 +53,7 @@ class Tool(DBWriterItemBase):
         log_process_output=False,
         group_id=None,
     ):
-        """Tool class.
-
+        """
         Args:
             name (str): Object name
             description (str): Object description
@@ -67,7 +64,7 @@ class Tool(DBWriterItemBase):
             specification_name (str): Name of this Tool's Tool specification
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
-            options (dict, optional): misc tool options. At the moment it just holds the location of the julia sysimage
+            options (dict, optional): misc tool options. At the moment it just holds the location of the Julia sysimage
             kill_completed_processes (bool): whether to kill completed persistent processes
             log_process_output (bool): whether to log process output to a file
             group_id (str, optional): execution group id
@@ -106,6 +103,21 @@ class Tool(DBWriterItemBase):
         super().set_up()
         self.do_update_execution_mode(execute_in_work)
 
+    def setup_specification_icon(self, spec_icon_path):
+        """Adds a specification icon as the child of this item's icon."""
+        if not self._specification:
+            return
+        icon = self.get_icon()
+        icon.add_specification_icon(spec_icon_path)
+
+    def update_specification_icon(self):
+        """Updates the spec icon when a Tool is selected or when the specification is changed."""
+        icon = self.get_icon()
+        if icon.spec_item is not None:
+            icon.remove_specification_icon()
+        spec_icon = ItemInfo.specification_icon(self.specification())
+        self.setup_specification_icon(spec_icon)
+
     @property
     def group_id(self):
         return self._group_id
@@ -134,11 +146,6 @@ class Tool(DBWriterItemBase):
     def item_type():
         """See base class."""
         return ItemInfo.item_type()
-
-    @staticmethod
-    def item_category():
-        """See base class."""
-        return ItemInfo.item_category()
 
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
@@ -169,7 +176,7 @@ class Tool(DBWriterItemBase):
             group_id = None
         if self._group_id == group_id:
             return
-        self._toolbox.undo_stack.push(UpdateGroupIdCommand(self, group_id))
+        self._toolbox.undo_stack.push(UpdateGroupIdCommand(self.name, group_id, self._project))
 
     def do_set_group_id(self, group_id):
         """Sets group id."""
@@ -219,7 +226,7 @@ class Tool(DBWriterItemBase):
     @Slot(bool)
     def update_execution_mode(self, checked):
         """Pushes a new UpdateToolExecuteInWorkCommand to the toolbox stack."""
-        self._toolbox.undo_stack.push(UpdateToolExecuteInWorkCommand(self, checked))
+        self._toolbox.undo_stack.push(UpdateToolExecuteInWorkCommand(self.name, checked, self._project))
 
     def do_update_execution_mode(self, execute_in_work):
         """Updates execute_in_work setting."""
@@ -267,7 +274,7 @@ class Tool(DBWriterItemBase):
     def _push_update_cmd_line_args_command(self, cmd_line_args):
         if self.cmd_line_args == cmd_line_args:
             return
-        self._toolbox.undo_stack.push(UpdateCmdLineArgsCommand(self, cmd_line_args))
+        self._toolbox.undo_stack.push(UpdateCmdLineArgsCommand(self.name, cmd_line_args, self._project))
 
     def update_cmd_line_args(self, cmd_line_args):
         """Updates instance cmd line args list and sets the list as text to the line edit widget.
@@ -301,11 +308,12 @@ class Tool(DBWriterItemBase):
             self._update_tool_ui()
         self._resources_to_successors_changed()
         self._check_notifications()
+        self.update_specification_icon()
         return True
 
     def update_options(self, options):
         """Pushes a new UpdateToolOptionsCommand to the toolbox undo stack."""
-        self._toolbox.undo_stack.push(UpdateToolOptionsCommand(self, options))
+        self._toolbox.undo_stack.push(UpdateToolOptionsCommand(self.name, options, self._options, self._project))
 
     def do_set_options(self, options):
         """Sets options for this tool.
@@ -324,7 +332,7 @@ class Tool(DBWriterItemBase):
         Args:
             kill_completed_processes (bool): whether to kill completed persistent processes after execution
         """
-        self._toolbox.undo_stack.push(UpdateKillCompletedProcesses(self, kill_completed_processes))
+        self._toolbox.undo_stack.push(UpdateKillCompletedProcesses(self.name, kill_completed_processes, self._project))
 
     def do_update_kill_completed_processes(self, kill_completed_processes):
         """Updates the kill_completed_processes flag.
@@ -343,7 +351,7 @@ class Tool(DBWriterItemBase):
         Args:
             log_process_output (bool): whether to kill completed persistent processes after execution
         """
-        self._toolbox.undo_stack.push(UpdateLogProcessOutput(self, log_process_output))
+        self._toolbox.undo_stack.push(UpdateLogProcessOutput(self.name, log_process_output, self._project))
 
     def do_update_log_process_output(self, log_process_output):
         """Updates the log_process_output flag.
@@ -356,7 +364,7 @@ class Tool(DBWriterItemBase):
             self._properties_ui.log_process_output_check_box.setChecked(log_process_output)
 
     def _update_tool_ui(self):
-        """Updates Tool properties UI. Used when Tool specification is changed.."""
+        """Updates Tool properties UI. Used when Tool specification is changed."""
         options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
         if options_widget:
             options_widget.widget().hide()
@@ -372,22 +380,30 @@ class Tool(DBWriterItemBase):
         if options_widget:
             self._properties_ui.horizontalLayout_options.addWidget(options_widget)
             options_widget.show()
-        if self._specification.tooltype == "python":
-            self.specification().set_execution_settings()
+        self._show_execution_settings()
+        self._properties_ui.kill_consoles_check_box.setChecked(self._kill_completed_processes)
+        self._update_kill_consoles_check_box_enabled()
+        self._properties_ui.log_process_output_check_box.setChecked(self._log_process_output)
+
+    def _show_execution_settings(self):
+        """Updates the label in Tool properties to show the selected execution settings for this Tool."""
+        tstype = self._specification.tooltype
+        if tstype == "python" or tstype == "julia":
+            self.specification().init_execution_settings()
             k_spec_name = self.specification().execution_settings["kernel_spec_name"]
             env = self.specification().execution_settings["env"]
             use_console = self.specification().execution_settings["use_jupyter_console"]
             self._properties_ui.label_jupyter.show()
             if not use_console:
                 exe = self.specification().execution_settings["executable"]
-                p = resolve_python_interpreter(exe)
-                self._properties_ui.label_jupyter.setText(f"[Basic console] {p}")
+                if tstype == "python":
+                    path = exe if exe else resolve_python_interpreter(self._project.app_settings)
+                else:
+                    path = exe if exe else resolve_julia_executable(self._project.app_settings)
+                self._properties_ui.label_jupyter.setText(f"[Basic console] {path}")
             else:
                 env = "" if not env else f"[{env}]"
                 self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
-        self._properties_ui.kill_consoles_check_box.setChecked(self._kill_completed_processes)
-        self._update_kill_consoles_check_box_enabled()
-        self._properties_ui.log_process_output_check_box.setChecked(self._log_process_output)
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
@@ -487,7 +503,7 @@ class Tool(DBWriterItemBase):
     def handle_execution_successful(self, execution_direction, engine_state):
         """See base class."""
         super().handle_execution_successful(execution_direction, engine_state)
-        if execution_direction != "FORWARD":
+        if execution_direction != ExecutionDirection.FORWARD:
             return
         self._resources_to_successors_changed()
 

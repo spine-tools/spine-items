@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,13 +9,10 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains model for export mapping setup table.
 
-"""
+"""Contains model for export mapping setup table."""
 from enum import IntEnum, unique
 from operator import itemgetter
-
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QFont, QColor
 from spinedb_api.mapping import is_pivoted, is_regular, Position, value_index
@@ -24,12 +22,10 @@ from spinedb_api.export_mapping.export_mapping import (
     FixedValueMapping,
     ExpandedParameterValueMapping,
     ExpandedParameterDefaultValueMapping,
-    FeatureEntityClassMapping,
-    FeatureParameterDefinitionMapping,
-    ObjectClassMapping,
-    ObjectGroupMapping,
-    ObjectGroupObjectMapping,
-    ObjectMapping,
+    EntityClassMapping,
+    EntityGroupMapping,
+    EntityGroupEntityMapping,
+    EntityMapping,
     ParameterDefaultValueMapping,
     ParameterDefaultValueIndexMapping,
     ParameterDefinitionMapping,
@@ -38,27 +34,18 @@ from spinedb_api.export_mapping.export_mapping import (
     ParameterValueListValueMapping,
     ParameterValueMapping,
     ParameterValueTypeMapping,
-    RelationshipClassMapping,
-    RelationshipClassObjectClassMapping,
-    RelationshipMapping,
-    RelationshipObjectMapping,
+    DimensionMapping,
+    ElementMapping,
     ScenarioActiveFlagMapping,
     ScenarioAlternativeMapping,
     ScenarioBeforeAlternativeMapping,
     ScenarioDescriptionMapping,
     ScenarioMapping,
-    ToolFeatureEntityClassMapping,
-    ToolFeatureMethodEntityClassMapping,
-    ToolFeatureMethodMethodMapping,
-    ToolFeatureMethodParameterDefinitionMapping,
-    ToolFeatureParameterDefinitionMapping,
-    ToolFeatureRequiredFlagMapping,
-    ToolMapping,
     IndexNameMapping,
     DefaultValueIndexNameMapping,
     ParameterDefaultValueTypeMapping,
 )
-from spinetoolbox.helpers import color_from_index
+from spinetoolbox.helpers import color_from_index, plain_to_rich
 from ..commands import SetMappingNullable, SetMappingPositions, SetMappingProperty
 
 
@@ -165,9 +152,9 @@ class MappingEditorTableModel(QAbstractTableModel):
             return self._mapping_colors.get(m.position, QColor(Qt.GlobalColor.gray).lighter())
         elif role == Qt.ItemDataRole.ToolTipRole:
             if column == EditorColumn.FILTER:
-                return "Regular expression to filter database items."
+                return plain_to_rich("Regular expression to filter database items.")
             elif column == EditorColumn.NULLABLE:
-                return "When checked, ignore this row if it yields nothing to export."
+                return plain_to_rich("When checked, ignore this row if it yields nothing to export.")
         if role == self.MAPPING_ITEM_ROLE:
             return self._mappings[index.row()]
         return None
@@ -443,13 +430,12 @@ _names = {
     DefaultValueIndexNameMapping: "Default value index names",
     ExpandedParameterDefaultValueMapping: "Default values",
     ExpandedParameterValueMapping: "Parameter values",
-    FeatureEntityClassMapping: "Entity classes",
-    FeatureParameterDefinitionMapping: "Parameter definitions",
     IndexNameMapping: "Parameter index names",
-    ObjectClassMapping: "Object classes",
-    ObjectGroupMapping: "Object groups",
-    ObjectGroupObjectMapping: "Objects",
-    ObjectMapping: "Objects",
+    EntityClassMapping: "Entity classes",
+    EntityGroupMapping: "Entity groups",
+    EntityGroupEntityMapping: "Entities",
+    EntityMapping: "Entities",
+    ElementMapping: "Elements",
     ParameterDefaultValueMapping: "Default values",
     ParameterDefaultValueIndexMapping: "Default value indexes",
     ParameterDefaultValueTypeMapping: "Default value types",
@@ -459,22 +445,12 @@ _names = {
     ParameterValueListValueMapping: "Value list values",
     ParameterValueMapping: "Parameter values",
     ParameterValueTypeMapping: "Value types",
-    RelationshipClassMapping: "Relationship classes",
-    RelationshipClassObjectClassMapping: "Object classes",
-    RelationshipMapping: "Relationships",
-    RelationshipObjectMapping: "Objects",
+    DimensionMapping: "Dimensions",
     ScenarioActiveFlagMapping: "Active flags",
     ScenarioAlternativeMapping: "Alternatives",
     ScenarioBeforeAlternativeMapping: "Before alternatives",
     ScenarioDescriptionMapping: "Scenarios description",
     ScenarioMapping: "Scenarios",
-    ToolFeatureEntityClassMapping: "Entity classes",
-    ToolFeatureMethodEntityClassMapping: "Entity classes",
-    ToolFeatureMethodMethodMapping: "Methods",
-    ToolFeatureMethodParameterDefinitionMapping: "Parameter definitions",
-    ToolFeatureParameterDefinitionMapping: "Parameter definitions",
-    ToolFeatureRequiredFlagMapping: "Required flags",
-    ToolMapping: "Tools",
 }
 
 

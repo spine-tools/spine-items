@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,15 +9,12 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""
-Contains :class:`PreviewUpdater`.
 
-"""
+"""Contains :class:`PreviewUpdater`."""
 from copy import deepcopy
 from time import monotonic
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
 from PySide6.QtWidgets import QFileDialog
-
 from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.spine_io.exporters.writer import write
 from spinedb_api import DatabaseMapping, SpineDBVersionError, SpineDBAPIError
@@ -80,6 +78,7 @@ class PreviewUpdater:
         self._ui.preview_tree_view.selectionModel().currentChanged.connect(self._change_table)
         self._ui.preview_table_view.setModel(self._preview_table_model)
         self._ui.database_url_combo_box.currentTextChanged.connect(self._reload_preview)
+        self._ui.live_preview_check_box.stateChanged.connect(self._ui.frame_preview.setEnabled)
         self._ui.live_preview_check_box.clicked.connect(self._reload_preview)
         self._ui.max_preview_rows_spin_box.valueChanged.connect(self._reload_preview)
         self._ui.max_preview_tables_spin_box.valueChanged.connect(self._reload_preview)
@@ -279,9 +278,7 @@ class PreviewUpdater:
         make_index = self._mappings_table_model.index
         indexes = [make_index(row, 0) for row in range(self._mappings_table_model.rowCount())]
         names = [
-            index.data()
-            for index in indexes
-            if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value
+            index.data() for index in indexes if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked
         ]
         old_name, new_name = self._preview_tree_model.rename_mappings(names)
         if not old_name:
@@ -305,7 +302,7 @@ class PreviewUpdater:
         last = bottom_right.row()
         for row in range(first, last + 1):
             index = self._mappings_table_model.index(row, 0)
-            enabled = index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked.value
+            enabled = index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked
             name = index.data()
             if not enabled and self._preview_tree_model.has_name(name):
                 self._preview_tree_model.remove_mapping(name)
@@ -392,7 +389,6 @@ class PreviewUpdater:
     def _enable_controls(self):
         """Enables and disables widgets as needed."""
         urls_available = self._url_model.rowCount() > 0
-        self._ui.live_preview_check_box.setEnabled(urls_available)
         self._ui.max_preview_rows_spin_box.setEnabled(urls_available)
         self._ui.max_preview_tables_spin_box.setEnabled(urls_available)
 
@@ -532,5 +528,5 @@ class _Worker(QRunnable):
             self.signals.table_written.emit((self._url, self._mapping_name), self._mapping_name, tables, self._stamp)
             return
         finally:
-            db_map.connection.close()
+            db_map.close()
             self.signals.deleteLater()
