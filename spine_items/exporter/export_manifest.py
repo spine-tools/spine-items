@@ -68,9 +68,12 @@ def _collect_execution_manifests(data_dir):
     """
     manifests = None
     for path in Path(data_dir).iterdir():
-        if path.name.startswith(EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX) and path.suffix == ".json":
+        if is_manifest_file(path):
             with open(path) as manifest_file:
-                manifest = json.load(manifest_file)
+                try:
+                    manifest = json.load(manifest_file)
+                except json.decoder.JSONDecodeError:
+                    continue
             for out_file_name, paths in manifest.items():
                 relative_paths = list()
                 for file_path in paths:
@@ -81,7 +84,7 @@ def _collect_execution_manifests(data_dir):
                             relative_paths.append(p.relative_to(data_dir))
                         except ValueError:
                             # Project may have been moved to another directory (or system)
-                            # so data_dir is differs from manifest file content.
+                            # so data_dir differs from manifest file content.
                             # Try resolving the relative path manually.
                             parts = tuple(dropwhile(lambda part: part != "output", p.parts))
                             relative_paths.append(str(Path(*parts)))
@@ -91,3 +94,15 @@ def _collect_execution_manifests(data_dir):
                     manifests = dict()
                 manifests.setdefault(out_file_name, list()).extend(paths)
     return manifests
+
+
+def is_manifest_file(path):
+    """Tests if given path is a manifest file.
+
+    Args:
+        path (Path): path to test
+
+    Returns:
+        bool: True if path looks like a manifest file, False otherwise
+    """
+    return path.is_file() and path.name.startswith(EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX) and path.suffix == ".json"

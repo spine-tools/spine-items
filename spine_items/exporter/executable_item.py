@@ -171,9 +171,7 @@ class ExecutableItem(ExecutableItemBase):
         result = self._process.run_until_complete()
         if len(result) > 1:
             self._result_files = result[1]
-            file_name = (
-                EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self.filter_id else "")
-            ) + ".json"
+            file_name = self._manifest_file_name()
             with open(Path(self._data_dir, file_name), "w") as manifest:
                 dump(
                     {
@@ -187,14 +185,15 @@ class ExecutableItem(ExecutableItemBase):
 
     def exclude_execution(self, forward_resources, backward_resources, lock):
         """See base class."""
-        manifest_file_name = (
-            EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")
-        ) + ".json"
+        manifest_file_name = self._manifest_file_name()
         manifest_file_path = Path(self._data_dir, manifest_file_name)
-        if not manifest_file_path.exists():
+        if not manifest_file_path.is_file():
             return
         with open(Path(self._data_dir, manifest_file_name)) as manifest_file:
-            manifest = json.load(manifest_file)
+            try:
+                manifest = json.load(manifest_file)
+            except json.decoder.JSONDecodeError:
+                return
         self._result_files = {label: set(files) for label, files in manifest.items()}
 
     def _output_resources_forward(self):
@@ -205,6 +204,16 @@ class ExecutableItem(ExecutableItemBase):
         if self._specification is not None and self._specification.output_format == OutputFormat.SQL:
             resources += output_database_resources(self.name, self._output_channels)
         return resources
+
+    def _manifest_file_name(self):
+        """Creates file name for manifest file.
+
+        Returns:
+            str: file name
+        """
+        return (
+                EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")
+        ) + ".json"
 
     def _resolve_gams_system_directory(self):
         """Returns GAMS system path from Toolbox settings or None if GAMS default is to be used.
