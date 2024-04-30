@@ -21,7 +21,7 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spine_engine.utils.serialization import deserialize_path
 from spine_engine.utils.helpers import ExecutionDirection
 from spinedb_api import clear_filter_configs
-from .export_manifest import exported_files_as_resources
+from .export_manifest import exported_files_as_resources, is_manifest_file
 from .specification import OutputFormat
 from ..commands import UpdateCancelOnErrorCommand
 from .mvcmodels.full_url_list_model import FullUrlListModel
@@ -30,7 +30,7 @@ from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .commands import CommandId, UpdateOutLabel, UpdateOutputTimeStampsFlag, UpdateOutUrl
 from .output_channel import OutputChannel
-from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX, output_database_resources
+from .utils import output_database_resources
 
 
 @dataclass
@@ -451,7 +451,7 @@ class Exporter(ProjectItem):
         if not super().rename(new_name, rename_data_dir_message):
             return False
         for path in Path(self.data_dir).iterdir():
-            if path.name.startswith(EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX) and path.suffix == ".json":
+            if is_manifest_file(path):
                 path.unlink()
         if self._exported_files is not None:
             data_dir_parts = Path(self.data_dir).parts
