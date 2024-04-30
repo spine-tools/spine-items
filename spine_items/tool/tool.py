@@ -157,12 +157,12 @@ class Tool(DBWriterItemBase):
         s[self._properties_ui.radioButton_execute_in_work.toggled] = self.update_execution_mode
         s[self._properties_ui.toolButton_add_file_path_arg.clicked] = self._add_selected_file_path_args
         s[self._properties_ui.toolButton_remove_arg.clicked] = self._remove_arg
-        s[
-            self._properties_ui.treeView_input_files.selectionModel().selectionChanged
-        ] = self._update_add_args_button_enabled
-        s[
-            self._properties_ui.treeView_cmdline_args.selectionModel().selectionChanged
-        ] = self._update_remove_args_button_enabled
+        s[self._properties_ui.treeView_input_files.selectionModel().selectionChanged] = (
+            self._update_add_args_button_enabled
+        )
+        s[self._properties_ui.treeView_cmdline_args.selectionModel().selectionChanged] = (
+            self._update_remove_args_button_enabled
+        )
         s[self._properties_ui.lineEdit_group_id.editingFinished] = self._set_group_id
         s[self._properties_ui.kill_consoles_check_box.clicked] = self._set_kill_completed_processes
         s[self._properties_ui.log_process_output_check_box.clicked] = self._set_log_process_output

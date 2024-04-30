@@ -212,7 +212,7 @@ class ExecutableItem(ExecutableItemBase):
             str: file name
         """
         return (
-                EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")
+            EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")
         ) + ".json"
 
     def _resolve_gams_system_directory(self):

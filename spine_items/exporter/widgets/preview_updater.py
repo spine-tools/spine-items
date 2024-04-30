@@ -320,14 +320,11 @@ class PreviewUpdater:
             bottom_right (QModelIndex): bottom right corner of modified mappings' in mapping list model
             roles (list of int): changed data's role
         """
-        if (
-            not {
-                MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE,
-                MappingsTableModel.FIXED_TABLE_NAME_ROLE,
-                MappingsTableModel.GROUP_FN_ROLE,
-            }
-            & set(roles)
-        ):
+        if not {
+            MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE,
+            MappingsTableModel.FIXED_TABLE_NAME_ROLE,
+            MappingsTableModel.GROUP_FN_ROLE,
+        } & set(roles):
             return
         row = self._mappings_proxy_model.mapToSource(self._ui.mappings_table.currentIndex()).row()
         index = self._mappings_table_model.index(row, 0)

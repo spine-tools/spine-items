@@ -427,9 +427,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 self._programfile_set_dirty_slots[file_path] = index
                 doc = self._programfile_documents.get(file_path)
                 if doc is not None:
-                    slot = self._programfile_set_dirty_slots[
-                        file_path
-                    ] = lambda dirty, index=index: self._set_program_file_dirty(index, dirty)
+                    slot = self._programfile_set_dirty_slots[file_path] = (
+                        lambda dirty, index=index: self._set_program_file_dirty(index, dirty)
+                    )
                     doc.modificationChanged.connect(slot)
                     self._set_program_file_dirty(index, doc.isModified())
 
@@ -856,9 +856,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             document = self._programfile_documents[file_path] = QTextDocument(self._ui.textEdit_program)
             document.setPlainText(text)
             document.setModified(False)
-            slot = self._programfile_set_dirty_slots[
-                file_path
-            ] = lambda dirty, index=index: self._set_program_file_dirty(index, dirty)
+            slot = self._programfile_set_dirty_slots[file_path] = (
+                lambda dirty, index=index: self._set_program_file_dirty(index, dirty)
+            )
             document.modificationChanged.connect(slot)
             document.modificationChanged.connect(self._update_window_modified)
         else:
