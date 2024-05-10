@@ -12,13 +12,17 @@
 
 """Contains unit tests for Import editor's :class:`MappingsModel`."""
 import unittest
-from PySide6.QtCore import QObject, Qt
+from PySide6.QtCore import QModelIndex, QObject, Qt
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QUndoStack
+
+from spine_items.importer.commands import DeleteMapping
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spinetoolbox.helpers import signal_waiter
 from spinedb_api import import_mapping_from_dict
+
+from tests.importer.helpers import append_source_table_with_mappings
 
 
 class TestMappingsModel(unittest.TestCase):
@@ -252,7 +256,9 @@ class TestTableList(unittest.TestCase):
             Qt.ItemFlag.ItemIsEnabled
             | Qt.ItemFlag.ItemIsSelectable
             | Qt.ItemFlag.ItemIsEditable
-            | Qt.ItemFlag.ItemIsUserCheckable,
+            | Qt.ItemFlag.ItemIsUserCheckable
+            | Qt.ItemFlag.ItemIsDragEnabled
+            | Qt.ItemFlag.ItemIsDropEnabled,
         )
         index = self._model.index(2, 0)
         self._assert_empty_row(index)
@@ -293,6 +299,281 @@ class TestTableList(unittest.TestCase):
         self.assertEqual(self._model.rowCount(), 2)
         index = self._model.index(1, 0)
         self._assert_empty_row(index)
+
+    def test_move_source_table_rows(self):
+        append_source_table_with_mappings(self, self._model, "one", "first", [])
+        append_source_table_with_mappings(self, self._model, "two", "second", [])
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0).data(), "one")
+        self.assertEqual(self._model.index(2, 0).data(), "two")
+        self.assertTrue(self._model.moveRows(QModelIndex(), 1, 1, QModelIndex(), 3))
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0).data(), "two")
+        self.assertEqual(self._model.index(2, 0).data(), "one")
+        self.assertTrue(self._model.moveRows(QModelIndex(), 2, 1, QModelIndex(), 1))
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0, QModelIndex()).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0, QModelIndex()).data(), "one")
+        self.assertEqual(self._model.index(2, 0, QModelIndex()).data(), "two")
+
+    def test_internal_move_source_table_row_by_mime_data_drop(self):
+        append_source_table_with_mappings(self, self._model, "one", "first", [])
+        append_source_table_with_mappings(self, self._model, "two", "second", [])
+        mime_data = self._model.mimeData([self._model.index(1, 0)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 3, 0, QModelIndex()))
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0, QModelIndex()).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0).data(), "two")
+        self.assertEqual(
+            self._model.index(
+                2,
+                0,
+            ).data(),
+            "one",
+        )
+        mime_data = self._model.mimeData([self._model.index(2, 0)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 1, 0, QModelIndex()))
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0, QModelIndex()).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0).data(), "one")
+        self.assertEqual(self._model.index(2, 0).data(), "two")
+
+    def test_cannot_drop_source_tables_above_select_all_row(self):
+        append_source_table_with_mappings(self, self._model, "one", "first", [])
+        mime_data = self._model.mimeData([self._model.index(1, 0)])
+        self.assertFalse(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 0, 0, QModelIndex()))
+
+    def test_cannot_drop_source_tables_below_empty_row(self):
+        self._model.add_empty_row()
+        append_source_table_with_mappings(self, self._model, "one", "first", [])
+        self.assertTrue(self._model.has_empty_source_table_row())
+        self.assertEqual(self._model.rowCount(), 3)
+        mime_data = self._model.mimeData([self._model.index(1, 0)])
+        self.assertFalse(
+            self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, self._model.rowCount(), 0, QModelIndex())
+        )
+
+    def test_undo_moving_source_table_row_down_by_mime_data_drop(self):
+        append_source_table_with_mappings(self, self._model, "one", "first", [])
+        append_source_table_with_mappings(self, self._model, "two", "second", [])
+        mime_data = self._model.mimeData([self._model.index(1, 0)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 3, 0, QModelIndex()))
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0, QModelIndex()).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0).data(), "two")
+        self.assertEqual(
+            self._model.index(
+                2,
+                0,
+            ).data(),
+            "one",
+        )
+        self._undo_stack.undo()
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0, QModelIndex()).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0).data(), "one")
+        self.assertEqual(
+            self._model.index(
+                2,
+                0,
+            ).data(),
+            "two",
+        )
+
+    def test_undo_moving_source_table_row_up_by_mime_data_drop(self):
+        append_source_table_with_mappings(self, self._model, "one", "first", [])
+        append_source_table_with_mappings(self, self._model, "two", "second", [])
+        mime_data = self._model.mimeData([self._model.index(2, 0)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 1, 0, QModelIndex()))
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0, QModelIndex()).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0).data(), "two")
+        self.assertEqual(
+            self._model.index(
+                2,
+                0,
+            ).data(),
+            "one",
+        )
+        self._undo_stack.undo()
+        self.assertEqual(self._model.rowCount(), 3)
+        self.assertEqual(self._model.index(0, 0, QModelIndex()).data(), "Select all")
+        self.assertEqual(self._model.index(1, 0).data(), "one")
+        self.assertEqual(
+            self._model.index(
+                2,
+                0,
+            ).data(),
+            "two",
+        )
+
+
+class TestMappingList(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not QApplication.instance():
+            QApplication()
+
+    def setUp(self):
+        self._model_parent = QObject()
+        self._undo_stack = QUndoStack(self._model_parent)
+        self._model = MappingsModel(self._undo_stack, self._model_parent)
+
+    def _append_source_table_with_mappings(self, table_name, first_mapping_name, additional_mapping_names):
+        return append_source_table_with_mappings(
+            self, self._model, table_name, first_mapping_name, additional_mapping_names
+        )
+
+    def test_move_mapping_row(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", ["second"])
+        self.assertTrue(self._model.moveRows(table_index, 1, 1, table_index, 0))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "first")
+        self.assertTrue(self._model.moveRows(table_index, 0, 1, table_index, 2))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "second")
+
+    def test_internal_move_mapping_row_by_mime_data_drop(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", ["second"])
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 2, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "first")
+        mime_data = self._model.mimeData([self._model.index(1, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 0, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "second")
+
+    def test_internal_move_first_mapping_item_to_second_by_mime_data_drop(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", ["second", "third"])
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 2, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "third")
+
+    def test_internal_move_last_mapping_item_into_the_middle_by_mime_data_drop(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", ["second", "third"])
+        mime_data = self._model.mimeData([self._model.index(2, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 1, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "second")
+
+    def test_internal_move_mapping_items_in_the_middle_by_mime_data_drop(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", ["second", "third", "fourth"])
+        mime_data = self._model.mimeData([self._model.index(1, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 3, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(3, 0, table_index).data(), "fourth")
+        mime_data = self._model.mimeData([self._model.index(2, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 1, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(3, 0, table_index).data(), "fourth")
+
+    def test_internal_move_multiple_mapping_items_by_mime_data_drop(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", ["second", "third", "fourth"])
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index), self._model.index(1, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 4, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "fourth")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(3, 0, table_index).data(), "second")
+        mime_data = self._model.mimeData([self._model.index(2, 0, table_index), self._model.index(3, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 0, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(3, 0, table_index).data(), "fourth")
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index), self._model.index(3, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 2, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "fourth")
+        self.assertEqual(self._model.index(3, 0, table_index).data(), "third")
+        mime_data = self._model.mimeData([self._model.index(1, 0, table_index), self._model.index(2, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 3, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "fourth")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(3, 0, table_index).data(), "third")
+        mime_data = self._model.mimeData([self._model.index(1, 0, table_index), self._model.index(3, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 0, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "fourth")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(3, 0, table_index).data(), "first")
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index), self._model.index(2, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 4, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "fourth")
+        self.assertEqual(self._model.index(3, 0, table_index).data(), "second")
+
+    def test_undo_mapping_list_mime_data_drop(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", ["second", "third", "fourth"])
+        mime_data = self._model.mimeData([self._model.index(2, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 0, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "second")
+        self._undo_stack.undo()
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "third")
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, 3, 0, table_index))
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "third")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "first")
+        self._undo_stack.undo()
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
+        self.assertEqual(self._model.index(1, 0, table_index).data(), "second")
+        self.assertEqual(self._model.index(2, 0, table_index).data(), "third")
+
+    def test_cannot_drop_mappings_on_same_source_table_item(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", [])
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index)])
+        self.assertFalse(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, -1, -1, table_index))
+
+    def test_dropping_mappings_on_another_source_table_copies_the_mappings(self):
+        table_index_1 = self._append_source_table_with_mappings("source_table", "one", [])
+        table_index_2 = self._append_source_table_with_mappings("destination_table", "two", [])
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index_1)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, -1, -1, table_index_2))
+        self.assertEqual(self._model.rowCount(table_index_1), 1)
+        self.assertEqual(self._model.index(0, 0, table_index_1).data(), "one")
+        self.assertEqual(self._model.rowCount(table_index_2), 2)
+        self.assertEqual(self._model.index(0, 0, table_index_2).data(), "two")
+        self.assertEqual(self._model.index(1, 0, table_index_2).data(), "one")
+
+    def test_undoing_mapping_drop_on_another_source_table(self):
+        table_index_1 = self._append_source_table_with_mappings("source_table", "one", [])
+        table_index_2 = self._append_source_table_with_mappings("destination_table", "two", [])
+        mime_data = self._model.mimeData([self._model.index(0, 0, table_index_1)])
+        self.assertTrue(self._model.dropMimeData(mime_data, Qt.DropAction.CopyAction, -1, -1, table_index_2))
+        self.assertEqual(self._model.rowCount(table_index_1), 1)
+        self.assertEqual(self._model.index(0, 0, table_index_1).data(), "one")
+        self.assertEqual(self._model.rowCount(table_index_2), 2)
+        self.assertEqual(self._model.index(0, 0, table_index_2).data(), "two")
+        self.assertEqual(self._model.index(1, 0, table_index_2).data(), "one")
+        self._undo_stack.undo()
+        self.assertEqual(self._model.rowCount(table_index_2), 1)
+        self.assertEqual(self._model.index(0, 0, table_index_2).data(), "two")
+
+    def test_undoing_delete_mapping_command(self):
+        table_index = self._append_source_table_with_mappings("my_table", "first", [])
+        self._undo_stack.push(DeleteMapping(table_index.row(), self._model, 0))
+        self.assertEqual(self._model.rowCount(table_index), 0)
+        self._undo_stack.undo()
+        self.assertEqual(self._model.rowCount(table_index), 1)
+        self.assertEqual(self._model.index(0, 0, table_index).data(), "first")
 
 
 class TestMappingComponentsTable(unittest.TestCase):

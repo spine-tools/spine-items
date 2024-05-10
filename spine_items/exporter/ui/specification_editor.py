@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'specification_editor.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.6.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -51,7 +51,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setSizeConstraint(QLayout.SetDefaultConstraint)
         self.label = QLabel(self.centralwidget)
         self.label.setObjectName(u"label")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
@@ -61,7 +61,7 @@ class Ui_MainWindow(object):
 
         self.export_format_combo_box = QComboBox(self.centralwidget)
         self.export_format_combo_box.setObjectName(u"export_format_combo_box")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(1)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.export_format_combo_box.sizePolicy().hasHeightForWidth())
@@ -78,7 +78,7 @@ class Ui_MainWindow(object):
         self.frame_preview = QFrame(self.centralwidget)
         self.frame_preview.setObjectName(u"frame_preview")
         self.frame_preview.setEnabled(False)
-        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.frame_preview.sizePolicy().hasHeightForWidth())
@@ -95,7 +95,7 @@ class Ui_MainWindow(object):
 
         self.database_url_combo_box = ElidedCombobox(self.frame_preview)
         self.database_url_combo_box.setObjectName(u"database_url_combo_box")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
@@ -203,7 +203,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.toggle_enabled_button)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
@@ -334,7 +334,7 @@ class Ui_MainWindow(object):
         self.splitter.setOrientation(Qt.Horizontal)
         self.preview_tree_view = QTreeView(self.splitter)
         self.preview_tree_view.setObjectName(u"preview_tree_view")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy4.setHorizontalStretch(1)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.preview_tree_view.sizePolicy().hasHeightForWidth())
@@ -343,7 +343,7 @@ class Ui_MainWindow(object):
         self.preview_tree_view.header().setVisible(False)
         self.preview_table_view = QTableView(self.splitter)
         self.preview_table_view.setObjectName(u"preview_table_view")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy5.setHorizontalStretch(5)
         sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.preview_table_view.sizePolicy().hasHeightForWidth())

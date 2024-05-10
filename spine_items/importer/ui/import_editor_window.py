@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'import_editor_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.6.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -85,7 +85,7 @@ class Ui_MainWindow(object):
 
         self.connector_line_edit = QLineEdit(self.centralwidget)
         self.connector_line_edit.setObjectName(u"connector_line_edit")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.connector_line_edit.sizePolicy().hasHeightForWidth())
@@ -102,19 +102,22 @@ class Ui_MainWindow(object):
         self.splitter_source_list.setOrientation(Qt.Horizontal)
         self.source_list = MultiCheckableListView(self.splitter_source_list)
         self.source_list.setObjectName(u"source_list")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy1.setHorizontalStretch(1)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.source_list.sizePolicy().hasHeightForWidth())
         self.source_list.setSizePolicy(sizePolicy1)
         self.source_list.setMaximumSize(QSize(16777215, 16777215))
         self.source_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.source_list.setAcceptDrops(True)
+        self.source_list.setDragEnabled(True)
+        self.source_list.setDragDropMode(QAbstractItemView.DragDrop)
         self.source_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.source_list.setTextElideMode(Qt.ElideLeft)
         self.splitter_source_list.addWidget(self.source_list)
         self.splitter_source_data_mappings = QSplitter(self.splitter_source_list)
         self.splitter_source_data_mappings.setObjectName(u"splitter_source_data_mappings")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(5)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.splitter_source_data_mappings.sizePolicy().hasHeightForWidth())
@@ -122,7 +125,7 @@ class Ui_MainWindow(object):
         self.splitter_source_data_mappings.setOrientation(Qt.Horizontal)
         self.frame_source_data = QFrame(self.splitter_source_data_mappings)
         self.frame_source_data.setObjectName(u"frame_source_data")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy3.setHorizontalStretch(1)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.frame_source_data.sizePolicy().hasHeightForWidth())
@@ -143,7 +146,7 @@ class Ui_MainWindow(object):
 
         self.source_data_table = TableViewWithButtonHeader(self.frame_source_data)
         self.source_data_table.setObjectName(u"source_data_table")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.source_data_table.sizePolicy().hasHeightForWidth())
@@ -155,7 +158,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(1, 1, 1, 1)
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
@@ -189,6 +192,9 @@ class Ui_MainWindow(object):
         self.mapping_list = QListView(self.verticalLayoutWidget_2)
         self.mapping_list.setObjectName(u"mapping_list")
         self.mapping_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.mapping_list.setAcceptDrops(True)
+        self.mapping_list.setDragEnabled(True)
+        self.mapping_list.setDragDropMode(QAbstractItemView.DragDrop)
         self.mapping_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         self.verticalLayout_4.addWidget(self.mapping_list)

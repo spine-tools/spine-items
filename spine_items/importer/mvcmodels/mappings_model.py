@@ -12,15 +12,25 @@
 
 """Contains a model to handle source tables and import mapping."""
 from __future__ import annotations
+
+import pickle
+import uuid
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
 import re
-from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
+
+from PySide6.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor, QFont
 from spinetoolbox.helpers import plain_to_rich, list_to_rich_text, unique_name
 from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.import_mapping.import_mapping import default_import_mapping, ScenarioBeforeAlternativeMapping
+from spinedb_api.import_mapping.import_mapping import (
+    default_import_mapping,
+    EntityClassMapping,
+    EntityMapping,
+    EntityMetadataMapping,
+    ScenarioBeforeAlternativeMapping,
+)
 from spinedb_api.import_mapping.import_mapping_compat import (
     parse_named_mapping_spec,
     import_mapping_from_dict,
@@ -31,8 +41,12 @@ from spinedb_api.import_mapping.import_mapping_compat import (
 )
 from spinedb_api.import_mapping.type_conversion import FloatConvertSpec, StringConvertSpec, DateTimeConvertSpec
 from spinedb_api.mapping import Position
+from spinedb_api.mapping import to_dict as import_mapping_to_dict
 from spinetoolbox.mvcmodels.shared import PARSED_ROLE
 from ..commands import (
+    MoveMappingInList,
+    MoveTableInList,
+    PasteMappings,
     RenameMapping,
     SetTableChecked,
     UpdateTableItem,
@@ -43,7 +57,7 @@ from ..commands import (
 from ..flattened_mappings import FlattenedMappings, VALUE_TYPES
 from ..mapping_colors import ERROR_COLOR
 from .mappings_model_roles import Role
-
+from ..widgets.mime_types import MAPPING_LIST_MIME_TYPE, SOURCE_TABLE_LIST_MIME_TYPE
 
 UNNAMED_TABLE_NAME = "<rename this to add table>"
 
@@ -64,12 +78,14 @@ class SourceTableItem:
     checked: bool
     checkable: bool = True
     editable: bool = False
+    accepts_drags_and_drops: bool = True
     real: bool = True
     in_source: bool = False
     in_specification: bool = False
     empty: bool = False
     select_all: bool = False
     mapping_list: list[MappingListItem] = field(init=False, default_factory=list)
+    id: uuid.UUID = field(init=False, default_factory=uuid.uuid4)
 
     def append_to_mapping_list(self, list_item):
         """Appends an item to mapping list.
@@ -88,7 +104,29 @@ class SourceTableItem:
             list_item (MappingListItem): item
         """
         list_item.source_table_item = self
-        self.mapping_list = self.mapping_list[:row] + [list_item] + self.mapping_list[row:]
+        self.mapping_list.insert(row, list_item)
+
+
+@dataclass
+class SourceTableMimeData:
+    # We currently support only internal move, so we need just the id here.
+    source_table_id: uuid.UUID
+
+
+@dataclass
+class MappingMimeData:
+    name: str
+    mapping_id: uuid.UUID
+    mapping_dict: list[dict]
+
+
+@dataclass
+class MappingListMimeData:
+    """Mime data for dragging and dropping."""
+
+    source_table_name: str
+    source_table_id: uuid.UUID
+    mapping_list: list[MappingMimeData]
 
 
 _dummy = object()
@@ -101,6 +139,7 @@ class MappingListItem:
     name: str
     flattened_mappings: FlattenedMappings = field(init=False)
     source_table_item: SourceTableItem = field(init=False)
+    id: uuid.UUID = field(init=False, default_factory=uuid.uuid4)
 
     def set_flattened_mappings(self, flattened_mappings):
         """Sets flattened mappings for this item.
@@ -138,6 +177,14 @@ class MappingsModel(QAbstractItemModel):
     def __len__(self):
         return len(self._mappings)
 
+    def has_empty_source_table_row(self):
+        """Tests if source table list contains the empty row.
+
+        Returns:
+            bool: True if the last row is empty table, False otherwise
+        """
+        return self._mappings[-1].empty
+
     def real_table_names(self):
         """Returns real table names.
 
@@ -161,7 +208,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             SourceTableItem: 'select all' item
         """
-        return SourceTableItem("Select all", checked=True, real=False, select_all=True)
+        return SourceTableItem("Select all", checked=True, accepts_drags_and_drops=False, real=False, select_all=True)
 
     def columnCount(self, parent=QModelIndex()):
         if not parent.isValid():
@@ -300,6 +347,8 @@ class MappingsModel(QAbstractItemModel):
 
     def flags(self, index):
         index_item = index.internalPointer()
+        if index_item is None:
+            return super().flags(index) | Qt.ItemFlag.ItemIsDropEnabled
         if isinstance(index_item, SourceTableItem):
             return self._table_list_flags(index)
         if isinstance(index_item, MappingListItem):
@@ -317,14 +366,17 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             int: flags
         """
-        flags = Qt.ItemIsEnabled
+        flags = Qt.ItemFlag.ItemIsEnabled
         table_item = self._mappings[index.row()]
         if table_item.checkable:
-            flags |= Qt.ItemIsUserCheckable
+            flags |= Qt.ItemFlag.ItemIsUserCheckable
         if table_item.editable:
-            flags |= Qt.ItemIsEditable
+            flags |= Qt.ItemFlag.ItemIsEditable
+        if table_item.accepts_drags_and_drops:
+            flags |= Qt.ItemFlag.ItemIsDragEnabled
+            flags |= Qt.ItemFlag.ItemIsDropEnabled
         if not table_item.select_all:
-            flags |= Qt.ItemIsSelectable
+            flags |= Qt.ItemFlag.ItemIsSelectable
         return flags
 
     @staticmethod
@@ -332,9 +384,14 @@ class MappingsModel(QAbstractItemModel):
         """Returns flags for mapping list data.
 
         Returns:
-            int: flags
+            Qt.ItemFlag: flags
         """
-        return Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable
+        return (
+            Qt.ItemFlag.ItemIsSelectable
+            | Qt.ItemFlag.ItemIsEnabled
+            | Qt.ItemFlag.ItemIsEditable
+            | Qt.ItemFlag.ItemIsDragEnabled
+        )
 
     @staticmethod
     def _mapping_flags(flattened_item, index):
@@ -361,6 +418,195 @@ class MappingsModel(QAbstractItemModel):
             if component.value is None and component.position == Position.header:
                 return non_editable
         return editable
+
+    def mimeTypes(self):
+        return [SOURCE_TABLE_LIST_MIME_TYPE, MAPPING_LIST_MIME_TYPE]
+
+    def mimeData(self, indexes):
+        if not indexes:
+            return QMimeData()
+        items = [i.internalPointer() for i in indexes]
+        if isinstance(items[0], SourceTableItem):
+            mime_type = SOURCE_TABLE_LIST_MIME_TYPE
+            if not all(isinstance(item, SourceTableItem) for item in items[1:]):
+                raise RuntimeError("Logic error: not all indexes are SourceTableItems.")
+            data = self._source_table_list_mime_data(items)
+        elif isinstance(items[0], MappingListItem):
+            mime_type = MAPPING_LIST_MIME_TYPE
+            source_table_name = items[0].source_table_item.name
+            source_table_id = items[0].source_table_item.id
+            if not all(isinstance(item, MappingListItem) for item in items[1:]):
+                raise RuntimeError("Logic error: not all indexes are MappingListItems.")
+            if not all(item.source_table_item.id == source_table_id for item in items[1:]):
+                raise RuntimeError("Logic error: not all MappingListItems come from same source table.")
+            data = self._mapping_list_mime_data(source_table_name, source_table_id, items)
+        else:
+            raise RuntimeError("Logic error: drag and drop not supported for given indexes")
+        mime_data = QMimeData()
+        mime_data.setData(mime_type, pickle.dumps(data))
+        return mime_data
+
+    @staticmethod
+    def _source_table_list_mime_data(items):
+        """Creates MIME data for source table items.
+
+        Args:
+            items (Iterable of SourceTableItem): items
+
+        Returns:
+            MappingListMimeData: MIME data
+        """
+
+        data = []
+        for item in items:
+            data.append(SourceTableMimeData(item.id))
+        return data
+
+    @staticmethod
+    def _mapping_list_mime_data(source_table_name, source_table_id, items):
+        """Creates MIME data for mapping items that are all from a single source table.
+
+        Args:
+            source_table_name (str): name of the source table
+            source_table_id (uuid.UUID): id of the source table
+            items (Iterable of MappingListItem): items
+
+        Returns:
+            MappingListMimeData: MIME data
+        """
+        mapping_mime_data_list = []
+        for item in items:
+            mapping_mime_data_list.append(
+                MappingMimeData(
+                    item.name,
+                    item.id,
+                    import_mapping_to_dict(item.flattened_mappings.root_mapping),
+                )
+            )
+        return MappingListMimeData(source_table_name, source_table_id, mapping_mime_data_list)
+
+    def canDropMimeData(self, data, action, row, column, parent):
+        if not any(data.hasFormat(mime_type) for mime_type in self.mimeTypes()):
+            return False
+        parent_item = parent.internalPointer()
+        if data.hasFormat(SOURCE_TABLE_LIST_MIME_TYPE):
+            if parent_item is not None:
+                return False
+            if row == 0:
+                return False
+            if self.has_empty_source_table_row() and (row == -1 or row == len(self._mappings)):
+                return False
+            return True
+        if not isinstance(parent_item, SourceTableItem):
+            return False
+        mapping_list_data: MappingListMimeData = pickle.loads(data.data(MAPPING_LIST_MIME_TYPE))
+        source_table: SourceTableItem = parent.internalPointer()
+        is_internal_move = source_table.id == mapping_list_data.source_table_id
+        if is_internal_move and row == -1:
+            return False
+        return True
+
+    def dropMimeData(self, data, action, row, column, parent):
+        if not self.canDropMimeData(data, action, row, column, parent):
+            return False
+        if data.hasFormat(SOURCE_TABLE_LIST_MIME_TYPE):
+            return self._drop_source_table_list(data, row)
+        if data.hasFormat(MAPPING_LIST_MIME_TYPE):
+            return self._drop_mappings_list(data, row, parent)
+        raise RuntimeError(f"Logic error: unknown mime types {data.formats()}")
+
+    def _drop_source_table_list(self, data, row):
+        """Drops source table list.
+
+        Args:
+            data (QMimeData): MIME data
+            row (int): target row index
+
+        Returns:
+            bool: True if operation was successful, False otherwise
+        """
+        source_table_list_data: list[SourceTableMimeData] = pickle.loads(data.data(SOURCE_TABLE_LIST_MIME_TYPE))
+        moves = []
+        # We support internal moves only currently.
+        while source_table_list_data:
+            source_table_data = source_table_list_data.pop(0)
+            for i, source_table in enumerate(self._mappings[1:]):
+                if source_table.id == source_table_data.source_table_id:
+                    table_row = i + 1
+                    # Ensure we're not dropping on the same spot.
+                    if table_row != row and table_row != row - 1:
+                        moved_from_above = len(
+                            [source for source, destination in moves if source < table_row < destination]
+                        )
+                        moves.append((table_row - moved_from_above, row))
+                        row = row if row > table_row else row + 1
+                    break
+        if not moves:
+            return False
+        self._undo_stack.beginMacro("change the order of tables")
+        for source_row, target_row in moves:
+            self._undo_stack.push(MoveTableInList(self, source_row, target_row))
+        self._undo_stack.endMacro()
+        return True
+
+    def _drop_mappings_list(self, data, row, parent):
+        """Drops mapping list.
+
+        Args:
+            data (QMimeData): MIME data
+            row (int): target row index
+            parent (QModelIndex): target index
+
+        Returns:
+            bool: True if operation was successful, False otherwise
+        """
+        source_table: SourceTableItem = parent.internalPointer()
+        mapping_list_data: MappingListMimeData = pickle.loads(data.data(MAPPING_LIST_MIME_TYPE))
+        is_internal_move = source_table.id == mapping_list_data.source_table_id
+        if is_internal_move:
+            moves = []
+            while mapping_list_data.mapping_list:
+                mapping_data = mapping_list_data.mapping_list.pop(0)
+                for i, mapping in enumerate(source_table.mapping_list):
+                    if mapping.id == mapping_data.mapping_id:
+                        # Ensure we're not dropping on the same spot.
+                        if i != row and i != row - 1:
+                            moved_from_above = len(
+                                [source for source, destination in moves if source < i < destination]
+                            )
+                            moves.append((i - moved_from_above, row))
+                            row = row if row > i else row + 1
+                        break
+            if not moves:
+                return False
+            self._undo_stack.beginMacro("change the order of mappings")
+            source_table_row = parent.row()
+            for source_row, target_row in moves:
+                self._undo_stack.push(MoveMappingInList(source_table_row, self, source_row, target_row))
+            self._undo_stack.endMacro()
+        else:
+            if row == -1:
+                row = len(source_table.mapping_list)
+            self._undo_stack.push(PasteMappings(parent.row(), row, self, mapping_list_data, "drop mappings"))
+        return True
+
+    def insert_mapping_mime_data(self, table_row, list_row, mapping_list_data):
+        """Inserts mapping mime data to mapping list
+
+        Args:
+            table_row (int): index to source table list
+            list_row (int): index to mapping list
+            mapping_list_data (list of MappingMimeData): mappings to insert
+        """
+        parent = self.index(table_row, 0)
+        source_table: SourceTableItem = parent.internalPointer()
+        self.beginInsertRows(parent, list_row, list_row + len(mapping_list_data) - 1)
+        for i, mapping_data in enumerate(mapping_list_data):
+            mapping_item = MappingListItem(mapping_data.name)
+            flattened_mappings = FlattenedMappings(import_mapping_from_dict(mapping_data.mapping_dict))
+            mapping_item.set_flattened_mappings(flattened_mappings)
+            source_table.insert_to_mapping_list(list_row + i, mapping_item)
+        self.endInsertRows()
 
     def index(self, row, column, parent=QModelIndex()):
         if row < 0 or column < 0:
@@ -421,6 +667,16 @@ class MappingsModel(QAbstractItemModel):
         elif index_item is _dummy:
             return QModelIndex()
         raise RuntimeError("Cannot create parent index.")
+
+    def hasChildren(self, parent=QModelIndex()):
+        if not QModelIndex().isValid():
+            return True
+        index_item = parent.internalPointer()
+        if isinstance(index_item, SourceTableItem):
+            return bool(index_item.mapping_list)
+        if isinstance(index_item, MappingListItem):
+            return True
+        return False
 
     def store(self):
         """Stores source tables, mappings lists and mappings to a dict.
@@ -561,9 +817,10 @@ class MappingsModel(QAbstractItemModel):
             table_item.real = True
             table_item.checkable = True
             table_item.checked = self._mappings[0].checked
+            table_item.accepts_drags_and_drops = True
             table_item.empty = False
             table_item.in_source = True
-            default_flattened_mappings = FlattenedMappings(self._create_default_mapping())
+            default_flattened_mappings = FlattenedMappings(self.create_default_mapping())
             mapping_list_item = MappingListItem(self._unique_mapping_name(table_item))
             mapping_list_item.set_flattened_mappings(default_flattened_mappings)
             self.beginInsertRows(index, 0, 0)
@@ -574,6 +831,7 @@ class MappingsModel(QAbstractItemModel):
             table_item.real = False
             table_item.checkable = False
             table_item.checked = False
+            table_item.accepts_drags_and_drops = False
             table_item.empty = True
             table_item.in_source = False
             self.beginRemoveRows(index, 0, len(table_item.mapping_list) - 1)
@@ -653,7 +911,7 @@ class MappingsModel(QAbstractItemModel):
         """
         has_root_mapping = root_mapping is not None
         if not has_root_mapping:
-            root_mapping = self._create_default_mapping()
+            root_mapping = self.create_default_mapping()
         flattened_mappings = FlattenedMappings(root_mapping)
         list_item = MappingListItem("Mapping 1")
         list_item.set_flattened_mappings(flattened_mappings)
@@ -661,8 +919,9 @@ class MappingsModel(QAbstractItemModel):
             table_name, checked=self._mappings[0].checked, in_source=True, in_specification=has_root_mapping
         )
         table_item.append_to_mapping_list(list_item)
-        self.beginInsertRows(QModelIndex(), len(self._mappings), len(self._mappings))
-        self._mappings.append(table_item)
+        insertion_point = len(self._mappings) - (1 if self.has_empty_source_table_row() else 0)
+        self.beginInsertRows(QModelIndex(), insertion_point, insertion_point)
+        self._mappings.insert(insertion_point, table_item)
         self.endInsertRows()
 
     def _remove_last_source_table(self):
@@ -1118,7 +1377,8 @@ class MappingsModel(QAbstractItemModel):
         index = self.index(row, FlattenedColumn.REGEXP, list_index)
         self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole])
 
-    def check_validity_of_columns(self, list_index, header):
+    @staticmethod
+    def check_validity_of_columns(list_index, header):
         """Checks that the mapping doesn't have column refs
         that are larger than the source table column count
 
@@ -1235,36 +1495,96 @@ class MappingsModel(QAbstractItemModel):
         """Adds the special 'unnamed table' row at the end of table list."""
         last_row = len(self._mappings) - 1
         empty_item = SourceTableItem(
-            UNNAMED_TABLE_NAME, checked=False, checkable=False, editable=True, real=False, empty=True
+            UNNAMED_TABLE_NAME,
+            checked=False,
+            checkable=False,
+            editable=True,
+            accepts_drags_and_drops=False,
+            real=False,
+            empty=True,
         )
         self.beginInsertRows(QModelIndex(), last_row, last_row)
         self._mappings.append(empty_item)
         self.endInsertRows()
 
-    def insertRow(self, row, parent=QModelIndex()):
+    def insertRows(self, row, count, parent=QModelIndex()):
         parent_item = parent.internalPointer()
         if isinstance(parent_item, SourceTableItem) and parent_item.real:
-            list_item = MappingListItem(self._unique_mapping_name(parent_item))
-            list_item.set_flattened_mappings(FlattenedMappings(self._create_default_mapping()))
-            self.beginInsertRows(parent, row, row)
-            parent_item.insert_to_mapping_list(row, list_item)
+            self.beginInsertRows(parent, row, row + count - 1)
+            for _ in range(count):
+                list_item = MappingListItem(self._unique_mapping_name(parent_item))
+                list_item.set_flattened_mappings(FlattenedMappings(self.create_default_mapping()))
+                parent_item.insert_to_mapping_list(row, list_item)
             self.endInsertRows()
             return True
         return False
 
-    def removeRow(self, row, parent=QModelIndex()):
-        parent_item = parent.internalPointer()
-        if parent_item is None:
-            self.beginRemoveRows(parent, row, row)
-            del self._mappings[row]
-            self.endRemoveRows()
-            return True
-        if isinstance(parent_item, SourceTableItem):
-            self.beginRemoveRows(parent, row, row)
-            del parent_item.mapping_list[row]
-            self.endRemoveRows()
-            return True
+    def moveRows(self, sourceParent, sourceRow, count, destinationParent, destinationChild):
+
+        source_parent_item = sourceParent.internalPointer()
+        if source_parent_item is None:
+            return self._move_source_table_list_rows(sourceRow, count, destinationChild)
+        elif isinstance(source_parent_item, SourceTableItem):
+            return self._move_mapping_list_rows(sourceParent, sourceRow, count, destinationParent, destinationChild)
         return False
+
+    def _move_source_table_list_rows(self, source_row, count, destination_child):
+        """Moves row in mapping list.
+
+        Args:
+            source_row (int): source row index
+            count (int): mapping count
+            destination_child (int): destination row index
+
+        Returns:
+            bool: True if operation was successful, False otherwise
+        """
+        items = self._mappings[source_row : source_row + count]
+        is_legal_move = self.beginMoveRows(
+            QModelIndex(), source_row, source_row + count - 1, QModelIndex(), destination_child
+        )
+        if not is_legal_move:
+            return False
+        self._mappings = self._mappings[:source_row] + self._mappings[source_row + count :]
+        if source_row < destination_child:
+            destination_child -= count
+        for i, item in enumerate(items):
+            self._mappings.insert(destination_child + i, item)
+        self.endMoveRows()
+        return True
+
+    def _move_mapping_list_rows(self, source_parent, source_row, count, destination_parent, destination_child):
+        """Moves row in mapping list.
+
+        Args:
+            source_parent (QModelIndex): source parent
+            source_row (int): source row index
+            count (int): mapping count
+            destination_parent (QModelIndex): destination parent
+            destination_child (int): destination row index
+
+        Returns:
+            bool: True if operation was successful, False otherwise
+        """
+        source_table_item = source_parent.internalPointer()
+        destination_table_item = destination_parent.internalPointer()
+        if not isinstance(destination_table_item, SourceTableItem):
+            return False
+        is_internal_move = source_table_item is destination_table_item
+        source_list = source_table_item.mapping_list
+        items = source_list[source_row : source_row + count]
+        is_legal_move = self.beginMoveRows(
+            source_parent, source_row, source_row + count - 1, destination_parent, destination_child
+        )
+        if not is_legal_move:
+            return False
+        source_table_item.mapping_list = source_list[:source_row] + source_list[source_row + count :]
+        if is_internal_move and source_row < destination_child:
+            destination_child -= count
+        for i, item in enumerate(items):
+            destination_table_item.insert_to_mapping_list(destination_child + i, item)
+        self.endMoveRows()
+        return True
 
     def removeRows(self, row, count, parent=QModelIndex()):
         parent_item = parent.internalPointer()
@@ -1281,13 +1601,16 @@ class MappingsModel(QAbstractItemModel):
         return False
 
     @staticmethod
-    def _create_default_mapping():
+    def create_default_mapping():
         """Creates a default object class mapping.
 
         Returns:
             ImportMapping: new mapping root
         """
-        return import_mapping_from_dict({"map_type": "ObjectClass"})
+        root_mapping = EntityClassMapping(0)
+        object_mapping = root_mapping.child = EntityMapping(1)
+        object_mapping.child = EntityMetadataMapping(Position.hidden)
+        return root_mapping
 
     def has_mapping_name(self, table_row, name):
         """Checks if a name exists in mapping list.
