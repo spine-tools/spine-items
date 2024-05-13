@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_specification_form.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.6.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -103,7 +103,7 @@ class Ui_MainWindow(object):
         self.actionRemove_all_program_files.setIcon(icon3)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
@@ -137,7 +137,7 @@ class Ui_MainWindow(object):
 
         self.lineEdit_args = QLineEdit(self.centralwidget)
         self.lineEdit_args.setObjectName(u"lineEdit_args")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.lineEdit_args.sizePolicy().hasHeightForWidth())
@@ -178,7 +178,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(3, 3, 3, 3)
         self.treeView_programfiles = SourcesTreeView(self.dockWidgetContents_4)
         self.treeView_programfiles.setObjectName(u"treeView_programfiles")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(100)
         sizePolicy2.setHeightForWidth(self.treeView_programfiles.sizePolicy().hasHeightForWidth())

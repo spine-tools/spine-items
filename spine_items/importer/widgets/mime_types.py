@@ -11,5 +11,6 @@
 ######################################################################################################################
 
 """Contains mime types for Import editor's copy-paste functionality"""
+SOURCE_TABLE_LIST_MIME_TYPE = "application/spine_items-importsourcetablelist"
 MAPPING_LIST_MIME_TYPE = "application/spine_items-importmappinglist"
 TABLE_OPTIONS_MIME_TYPE = "application/spine_items-importtableoptions"

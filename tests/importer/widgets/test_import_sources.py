@@ -14,13 +14,16 @@ import unittest
 from unittest import mock
 from PySide6.QtCore import QModelIndex
 from PySide6.QtGui import QUndoStack
-from PySide6.QtWidgets import QApplication, QListWidget, QWidget
+from PySide6.QtWidgets import QApplication, QListView, QListWidget, QWidget
 from spine_items.importer.connection_manager import ConnectionManager
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
+from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.widgets.import_sources import ImportSources
 from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
 from spinedb_api.spine_io.importers.reader import SourceConnection
 from spinetoolbox.helpers import signal_waiter
+
+from tests.importer.helpers import append_source_table_with_mappings
 
 
 class TestImportSources(unittest.TestCase):
@@ -49,7 +52,7 @@ class TestImportSources(unittest.TestCase):
         ui.mapping_list = QListWidget(self._parent_widget)
         import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
         data = []
-        connection_settings = {"data": data}
+        connection_settings = {"data": {"test data table": data}}
         connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
         mapping = {"table_options": {"test data table": {"has_header": False}}}
         import_sources.set_connector(connector, mapping)
@@ -88,7 +91,7 @@ class TestImportSources(unittest.TestCase):
         ui.mapping_list = QListWidget(self._parent_widget)
         import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
         data = [["data 1", "data 2"]]
-        connection_settings = {"data": data}
+        connection_settings = {"data": {"test data table": data}}
         connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
         mapping = {"table_options": {"test data table": {"has_header": False}}}
         import_sources.set_connector(connector, mapping)
@@ -127,7 +130,7 @@ class TestImportSources(unittest.TestCase):
         ui.mapping_list = QListWidget(self._parent_widget)
         import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
         data = [["header 1", "header 2"]]
-        connection_settings = {"data": data}
+        connection_settings = {"data": {"test data table": data}}
         connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
         mapping = {"table_options": {"test data table": {"has_header": True}}}
         import_sources.set_connector(connector, mapping)
@@ -163,10 +166,11 @@ class TestImportSources(unittest.TestCase):
         source_list_index.row.return_value = 0
         source_list_selection_model.currentIndex.return_value = source_list_index
         ui.source_list.selectionModel.return_value = source_list_selection_model
-        ui.mapping_list = QListWidget(self._parent_widget)
+        ui.mapping_list = QListView(self._parent_widget)
+        ui.mapping_list.setModel(self._mappings_model)
         import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
         data = [["header 1", "header 2"], ["data 1", "data 2"]]
-        connection_settings = {"data": data}
+        connection_settings = {"data": {"test data table": data}}
         connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
         mapping = {"table_options": {"test data table": {"has_header": True}}}
         import_sources.set_connector(connector, mapping)
@@ -193,6 +197,84 @@ class TestImportSources(unittest.TestCase):
         self.assertEqual(data_rows, [["data 1", "data 2"]])
         connector.close_connection()
 
+    def test_copying_and_pasting_mappings_and_options_from_one_table_to_another(self):
+        ui = mock.MagicMock()
+        ui.source_list = QListView(self._parent_widget)
+        ui.source_list.setModel(self._mappings_model)
+        ui.source_data_table = TableViewWithButtonHeader(self._parent_widget)
+        ui.mapping_list = QListView(self._parent_widget)
+        ui.mapping_list.setModel(self._mappings_model)
+        import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
+        data = [["header 1", "header 2"], ["data 1", "data 2"]]
+        connection_settings = {
+            "data": {"source table": data, "destination table": data},
+            "options": {"source table": {"has_header": True}, "destination table": {"has_header": False}},
+        }
+        connector = ConnectionManager(_FixedTableReader, connection_settings, self._parent_widget)
+        mapping = {}
+        import_sources.set_connector(connector, mapping)
+        with signal_waiter(connector.connection_ready) as waiter:
+            connector.init_connection("no file test source")
+            waiter.wait()
+        self.assertTrue(connector.is_connected)
+        connector.request_tables()
+        while self._mappings_model.rowCount() != 3:
+            QApplication.processEvents()
+        source_table_rows = {}
+        for row in range(1, self._mappings_model.rowCount()):
+            source_table_rows[self._mappings_model.index(row, 0).data(Role.ITEM).name] = row
+        self.assertIn("source table", source_table_rows)
+        source_table_index = self._mappings_model.index(source_table_rows["source table"], 0)
+        ui.source_list.setCurrentIndex(source_table_index)
+        with mock.patch("spine_items.importer.widgets.import_sources.QApplication") as mock_application:
+            clipboard = _MockClipboard()
+            mock_application.clipboard.return_value = clipboard
+            import_sources._copy_mappings_and_options_to_clipboard(source_table_index)
+            self.assertIn("destination table", source_table_rows)
+            destination_table_index = self._mappings_model.index(source_table_rows["destination table"], 0)
+            ui.source_list.setCurrentIndex(destination_table_index)
+            self.assertEqual(
+                connector.table_options,
+                {"source table": {"has_header": True}, "destination table": {"has_header": False}},
+            )
+            import_sources._paste_mapping_list_from_clipboard()
+            self.assertEqual(self._mappings_model.rowCount(source_table_index), 1)
+            self.assertEqual(self._mappings_model.rowCount(destination_table_index), 1)
+            self.assertEqual(self._mappings_model.index(0, 0, destination_table_index).data(), "Mapping 1")
+            self.assertEqual(
+                connector.table_options,
+                {"source table": {"has_header": True}, "destination table": {"has_header": False}},
+            )
+            import_sources._paste_table_options_from_clipboard()
+        self.assertEqual(
+            connector.table_options, {"source table": {"has_header": True}, "destination table": {"has_header": True}}
+        )
+        connector.close_connection()
+
+    def test_copying_and_pasting_mappings_from_one_table_to_another(self):
+        ui = mock.MagicMock()
+        ui.source_list = QListView(self._parent_widget)
+        ui.source_list.setModel(self._mappings_model)
+        ui.source_data_table = TableViewWithButtonHeader(self._parent_widget)
+        ui.mapping_list = QListView(self._parent_widget)
+        ui.mapping_list.setModel(self._mappings_model)
+        import_sources = ImportSources(self._mappings_model, ui, self._undo_stack, self._parent_widget)
+        source_table_index = append_source_table_with_mappings(
+            self, self._mappings_model, "source table", "one mapping", []
+        )
+        destination_table_index = append_source_table_with_mappings(
+            self, self._mappings_model, "destination table", "another mapping", []
+        )
+        with mock.patch("spine_items.importer.widgets.import_sources.QApplication") as mock_application:
+            clipboard = _MockClipboard()
+            mock_application.clipboard.return_value = clipboard
+            import_sources._copy_mapping_list_to_clipboard(source_table_index)
+            ui.source_list.setCurrentIndex(destination_table_index)
+            import_sources._paste_mapping_list_from_clipboard()
+        self.assertEqual(self._mappings_model.rowCount(source_table_index), 1)
+        self.assertEqual(self._mappings_model.rowCount(destination_table_index), 1)
+        self.assertEqual(self._mappings_model.index(0, 0, destination_table_index).data(), "one mapping")
+
 
 class _MockSpecificationEditor(QWidget):
     def is_file_less(self):
@@ -207,6 +289,7 @@ class _FixedTableReader(SourceConnection):
     def __init__(self, settings):
         super().__init__(None)
         self._data = settings["data"]
+        self._options = settings.get("options")
 
     def connect_to_source(self, source, **extras):
         pass
@@ -215,18 +298,28 @@ class _FixedTableReader(SourceConnection):
         pass
 
     def get_tables(self):
-        return {"data": {"options": {"has_header": False}}}
+        return {table: {"options": self._options.get(table, {})} for table in self._data}
 
     def get_data_iterator(self, table, options, max_rows=-1):
         if options["has_header"]:
-            header = self._data[0]
+            header = self._data[table][0]
             begin = 1
             end = (begin + max_rows) if max_rows > -1 else None
         else:
             header = []
             begin = 0
             end = max_rows if max_rows > -1 else None
-        return self._data[slice(begin, end)], header
+        return self._data[table][slice(begin, end)], header
+
+
+class _MockClipboard:
+    mime_data = None
+
+    def setMimeData(self, data):
+        self.mime_data = data
+
+    def mimeData(self):
+        return self.mime_data
 
 
 if __name__ == "__main__":

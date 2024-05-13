@@ -12,16 +12,14 @@
 
 """ImportMappings widget."""
 import pickle
-from PySide6.QtCore import QPoint, QItemSelectionModel, Slot, QModelIndex, QMimeData, QItemSelection
+from PySide6.QtCore import QPoint, QItemSelectionModel, Slot, QModelIndex, QItemSelection
 from PySide6.QtWidgets import QHeaderView, QStyledItemDelegate, QApplication
-from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
 from spinetoolbox.widgets.parameter_value_editor import ParameterValueEditor
 from .custom_menus import MappingListMenu
 from .filter_edit_delegate import FilterEditDelegate
 from .mime_types import MAPPING_LIST_MIME_TYPE
 from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
-from ..mvcmodels.mappings_model_roles import Role
 from ..mvcmodels.mappings_model import FlattenedColumn
 from ...widgets import combo_box_width
 
@@ -274,21 +272,16 @@ class ImportMappings:
             target_row = index.row() + 1 if self._mappings_model.rowCount(table_index) > 0 else 0
             clipboard = QApplication.clipboard()
             mime_data = clipboard.mimeData()
-            mapping_dicts = pickle.loads(mime_data.data(MAPPING_LIST_MIME_TYPE))
-            self._undo_stack.push(PasteMappings(table_index.row(), target_row, self._mappings_model, mapping_dicts))
+            mapping_list_data = pickle.loads(mime_data.data(MAPPING_LIST_MIME_TYPE))
+            self._undo_stack.push(PasteMappings(table_index.row(), target_row, self._mappings_model, mapping_list_data))
 
     def _copy_selected_mappings_to_clipboard(self):
         """Copies selected mappings to system clipboard."""
         selection_model = self._ui.mapping_list.selectionModel()
         if not selection_model.hasSelection():
             return
-        mapping_dicts = list()
-        for index in selection_model.selectedIndexes():
-            name = index.data()
-            flattened_mappings = index.data(Role.FLATTENED_MAPPINGS)
-            mapping_dicts.append(unparse_named_mapping_spec(name, flattened_mappings.root_mapping))
-        mime_data = QMimeData()
-        mime_data.setData(MAPPING_LIST_MIME_TYPE, pickle.dumps(mapping_dicts))
+        indexes = selection_model.selectedIndexes()
+        mime_data = self._mappings_model.mimeData(indexes)
         clipboard = QApplication.clipboard()
         clipboard.setMimeData(mime_data)
 

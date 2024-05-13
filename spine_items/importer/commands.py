@@ -10,13 +10,13 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""Contains undo and redo commands for Import editor."""
+"""Contains undo and redo commands for Importer specification editor."""
 import pickle
 from enum import auto, IntEnum, unique
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QUndoCommand
 from spinedb_api import import_mapping_from_dict
-from spinedb_api.import_mapping.import_mapping_compat import parse_named_mapping_spec
+from spinedb_api.import_mapping.import_mapping import from_dict as mapping_from_dict
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 
 
@@ -28,34 +28,87 @@ class _Id(IntEnum):
 class PasteMappings(QUndoCommand):
     """Command to paste copied mappings"""
 
-    def __init__(self, table_row, list_row, model, copied_mappings):
+    def __init__(self, table_row, list_row, model, mapping_list_data, text="paste mappings"):
         """
         Args:
             table_row (int): source table row index
             list_row (int): mapping list row index
             model (MappingsModel): model
-            copied_mappings (Iterable of dict): mappings to paste
+            mapping_list_data (MappingListMimeData): mappings to paste
+            text (str): command text
         """
-        super().__init__("paste mappings")
+        super().__init__(text)
         self._table_row = table_row
         self._list_row = list_row
         self._model = model
-        self._mapping_dicts = copied_mappings
+        self._mapping_list_data = mapping_list_data
 
     def redo(self):
         """Pastes the copied mappings."""
         table_index = self._model.index(self._table_row, 0)
-        for i, mapping_dict in enumerate(self._mapping_dicts):
-            name, root_mapping = parse_named_mapping_spec(mapping_dict)
+        for i, mapping_data in enumerate(self._mapping_list_data.mapping_list):
+            root_mapping = mapping_from_dict(mapping_data.mapping_dict)
             row = self._list_row + i
             self._model.insertRow(row, table_index)
-            self._model.rename_mapping(self._table_row, row, name)
+            self._model.rename_mapping(self._table_row, row, mapping_data.name)
             self._model.set_root_mapping(self._table_row, row, root_mapping)
 
     def undo(self):
         """Removes pasted mappings."""
         table_index = self._model.index(self._table_row, 0)
-        self._model.removeRows(self._list_row, len(self._mapping_dicts), table_index)
+        self._model.removeRows(self._list_row, len(self._mapping_list_data.mapping_list), table_index)
+
+
+class MoveTableInList(QUndoCommand):
+    """Command to move source tables in the list."""
+
+    def __init__(self, model, source_row, destination_row):
+        """
+        Args:
+            model (MappingsModel): model
+            source_row (int): source table list row index to move
+            destination_row (int): target source table list row index
+        """
+        super().__init__("move table")
+        self._model = model
+        self._source_row = source_row
+        self._destination_row = destination_row
+
+    def redo(self):
+        self._model.moveRow(QModelIndex(), self._source_row, QModelIndex(), self._destination_row)
+
+    def undo(self):
+        source = self._destination_row - (1 if self._source_row < self._destination_row else 0)
+        destination = self._source_row + (1 if self._source_row > self._destination_row else 0)
+        self._model.moveRow(QModelIndex(), source, QModelIndex(), destination)
+
+
+class MoveMappingInList(QUndoCommand):
+    """Command to move mapping in mapping list."""
+
+    def __init__(self, table_row, model, source_row, destination_row):
+        """
+        Args:
+            table_row (int): source table row index
+            model (MappingsModel): model
+            source_row (int): mapping list row index to move
+            destination_row (int): target mapping list row index
+        """
+        super().__init__("move mapping")
+        self._table_row = table_row
+        self._model = model
+        self._source_row = source_row
+        self._destination_row = destination_row
+
+    def redo(self):
+        parent = self._model.index(self._table_row, 0)
+        self._model.moveRow(parent, self._source_row, parent, self._destination_row)
+
+    def undo(self):
+        parent = self._model.index(self._table_row, 0)
+        source = self._destination_row - (1 if self._source_row < self._destination_row else 0)
+        destination = self._source_row + (1 if self._source_row > self._destination_row else 0)
+        self._model.moveRow(parent, source, parent, destination)
 
 
 class PasteOptions(QUndoCommand):
@@ -392,8 +445,9 @@ class DeleteMapping(QUndoCommand):
         self._list_row = list_row
         table_index = self._model.index(table_row, 0)
         list_index = self._model.index(list_row, 0, table_index)
+        name = list_index.data()
         root_mapping = list_index.data(Role.FLATTENED_MAPPINGS).root_mapping
-        self._mapping_dict = [m.to_dict() for m in root_mapping.flatten()]
+        self._deleted_mapping = name, [m.to_dict() for m in root_mapping.flatten()]
 
     def redo(self):
         """Deletes the mapping."""
@@ -401,8 +455,12 @@ class DeleteMapping(QUndoCommand):
 
     def undo(self):
         """Restores the deleted mapping."""
-        self._model.insertRow(self._list_row, self._model.index(self._table_row, 0))
-        self._model.set_root_mapping(self._table_row, self._list_row, import_mapping_from_dict(self._mapping_dict))
+        table_index = self._model.index(self._table_row, 0)
+        self._model.insertRow(self._list_row, table_index)
+        name, mapping_dict = self._deleted_mapping
+        mapping_list_index = self._model.index(self._list_row, 0, table_index)
+        self._model.setData(mapping_list_index, name)
+        self._model.set_root_mapping(self._table_row, self._list_row, import_mapping_from_dict(mapping_dict))
 
 
 class SetItemMappingType(QUndoCommand):

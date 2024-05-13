@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'julia_kernel_spec_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.6.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -139,7 +139,7 @@ class Ui_Form(object):
 
         self.comboBox_kernel_specs = QComboBox(Form)
         self.comboBox_kernel_specs.setObjectName(u"comboBox_kernel_specs")
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.comboBox_kernel_specs.sizePolicy().hasHeightForWidth())

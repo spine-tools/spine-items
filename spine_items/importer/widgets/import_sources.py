@@ -27,7 +27,6 @@ from PySide6.QtCore import (
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from spinetoolbox.helpers import CharIconEngine
-from spinedb_api.import_mapping.import_mapping_compat import unparse_named_mapping_spec
 from spinedb_api.import_mapping.type_conversion import (
     value_to_convert_spec,
     IntegerSequenceDateTimeConvertSpec,
@@ -496,34 +495,19 @@ class ImportSources(QObject):
         Args:
             table_index (QModelIndex): table index
         """
-        mime_data = QMimeData()
-        mime_data.setData(MAPPING_LIST_MIME_TYPE, self._pickle_mapping_list(table_index))
+        indexes = [
+            self._mappings_model.index(row, 0, table_index) for row in range(self._mappings_model.rowCount(table_index))
+        ]
+        mime_data = self._mappings_model.mimeData(indexes)
         clipboard = QApplication.clipboard()
         clipboard.setMimeData(mime_data)
-
-    def _pickle_mapping_list(self, table_index):
-        """Pickles mapping list of given table.
-
-        Args:
-            table_index (QModelIndex): table index
-
-        Returns:
-            bytes: pickled list
-        """
-        mapping_dicts = list()
-        for list_row in range(self._mappings_model.rowCount(table_index)):
-            list_index = self._mappings_model.index(list_row, 0, table_index)
-            name = list_index.data()
-            flattened_mappings = list_index.data(Role.FLATTENED_MAPPINGS)
-            mapping_dicts.append(unparse_named_mapping_spec(name, flattened_mappings.root_mapping))
-        return pickle.dumps(mapping_dicts)
 
     def _paste_mapping_list_from_clipboard(self):
         """Pastes mapping list from system clipboard to selected source tables."""
         selection_model = self._ui.source_list.selectionModel()
         clipboard = QApplication.clipboard()
         mime_data = clipboard.mimeData()
-        mapping_dicts = pickle.loads(mime_data.data(MAPPING_LIST_MIME_TYPE))
+        mapping_list_data = pickle.loads(mime_data.data(MAPPING_LIST_MIME_TYPE))
         self._undo_stack.beginMacro("paste mappings")
         for table_index in selection_model.selectedIndexes():
             table_row = table_index.row()
@@ -532,7 +516,7 @@ class ImportSources(QObject):
             for list_row in reversed(range(self._mappings_model.rowCount(table_index))):
                 self._undo_stack.push(DeleteMapping(table_row, self._mappings_model, list_row))
             target_row = self._mappings_model.rowCount(table_index)
-            self._undo_stack.push(PasteMappings(table_row, target_row, self._mappings_model, mapping_dicts))
+            self._undo_stack.push(PasteMappings(table_row, target_row, self._mappings_model, mapping_list_data))
         self._undo_stack.endMacro()
 
     def _copy_table_options_to_clipboard(self, table_index):
@@ -559,7 +543,7 @@ class ImportSources(QObject):
         options = self._connector.table_options
         col_types = self._connector.table_types
         row_types = self._connector.table_row_types
-        table_name = table_index.data()
+        table_name = table_index.data(Role.ITEM).name
         options_dict = dict()
         options_dict["options"] = options.get(table_name, {})
         options_dict["col_types"] = col_types.get(table_name, {})
@@ -577,7 +561,7 @@ class ImportSources(QObject):
             if table_row == 0:
                 continue
             pickled_previous_options = self._pickle_table_options(table_index)
-            table_name = table_index.data()
+            table_name = table_index.data(Role.ITEM).name
             self._undo_stack.push(PasteOptions(self, table_name, pickled_options, pickled_previous_options))
         self._undo_stack.endMacro()
 
@@ -599,8 +583,10 @@ class ImportSources(QObject):
         Args:
             table_index (QModelIndex): table index
         """
-        mime_data = QMimeData()
-        mime_data.setData(MAPPING_LIST_MIME_TYPE, self._pickle_mapping_list(table_index))
+        indexes = [
+            self._mappings_model.index(row, 0, table_index) for row in range(self._mappings_model.rowCount(table_index))
+        ]
+        mime_data = self._mappings_model.mimeData(indexes)
         mime_data.setData(TABLE_OPTIONS_MIME_TYPE, self._pickle_table_options(table_index))
         clipboard = QApplication.clipboard()
         clipboard.setMimeData(mime_data)
