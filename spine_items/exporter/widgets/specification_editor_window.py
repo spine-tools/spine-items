@@ -1086,7 +1086,7 @@ def _new_mapping_specification(mapping_type):
     if mapping_type == MappingType.scenario_alternatives:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_alternative_export(0, 1))
     if mapping_type == MappingType.scenarios:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_export(0))
     raise NotImplementedError()
 
 
