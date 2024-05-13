@@ -295,7 +295,7 @@ class FlattenedMappings:
         Returns:
             str: display position
         """
-        if self._components[0].is_pivoted() and row == len(self._display_names) - 1:
+        if self._is_component_pivoted(row):
             return "Pivoted"
         component = self._components[self._display_to_logical[row]]
         if component.position == Position.hidden:
@@ -311,6 +311,9 @@ class FlattenedMappings:
         if component.position >= 0:
             return "Column"
         return "Row"
+
+    def _is_component_pivoted(self, row):
+        return len(self._components) > 1 and self._components[0].is_pivoted() and row == len(self._display_names) - 1
 
     def set_display_position_type(self, row, position_type):
         """Sets component's position 'type'.
@@ -353,7 +356,7 @@ class FlattenedMappings:
         """
         component = self._components[self._display_to_logical[row]]
         # A) Handle two special cases for value mappings
-        if self._components[0].is_pivoted() and row == len(self._display_names) - 1:
+        if self._is_component_pivoted(row):
             # 1. Pivoted data
             return "Pivoted values"
         if self._display_names[row].endswith("values"):
@@ -364,10 +367,8 @@ class FlattenedMappings:
                     return SpineDBManager.display_data_from_parsed(value)
                 except ParameterValueFormatError:
                     return None
-        # B) Handle all other cases cases
+        # B) Handle all other cases
         if component.position == Position.hidden:
-            if self._display_names[row].endswith("flags") and not isinstance(component.value, bool):
-                return string_to_bool(str(component.value))
             return component.value
         if component.position == Position.header:
             if component.value is None:

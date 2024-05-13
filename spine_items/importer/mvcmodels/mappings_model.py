@@ -411,7 +411,8 @@ class MappingsModel(QAbstractItemModel):
             return non_editable
         if flattened_item.root_mapping.is_pivoted():
             # special case where we have pivoted data
-            if index.row() == len(flattened_item.display_names) - 1:
+            row = index.row()
+            if row > 0 and row == len(flattened_item.display_names) - 1:
                 return non_editable
         if column == FlattenedColumn.POSITION:
             component = flattened_item.component_at(index.row())

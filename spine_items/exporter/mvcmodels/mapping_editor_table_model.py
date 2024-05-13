@@ -36,7 +36,6 @@ from spinedb_api.export_mapping.export_mapping import (
     ParameterValueTypeMapping,
     DimensionMapping,
     ElementMapping,
-    ScenarioActiveFlagMapping,
     ScenarioAlternativeMapping,
     ScenarioBeforeAlternativeMapping,
     ScenarioDescriptionMapping,
@@ -380,7 +379,9 @@ class MappingEditorTableModel(QAbstractTableModel):
         Returns:
             bool: True if one or more non-leaf mappings are pivoted, False otherwise
         """
-        return any(is_pivoted(m.position) for m in self._mappings[: value_index(self._mappings)])
+        return len(self._mappings) > 1 and any(
+            is_pivoted(m.position) for m in self._mappings[: value_index(self._mappings)]
+        )
 
     def can_compact(self):
         """Checks if the mapping can be compacted.
@@ -446,7 +447,6 @@ _names = {
     ParameterValueMapping: "Parameter values",
     ParameterValueTypeMapping: "Value types",
     DimensionMapping: "Dimensions",
-    ScenarioActiveFlagMapping: "Active flags",
     ScenarioAlternativeMapping: "Alternatives",
     ScenarioBeforeAlternativeMapping: "Before alternatives",
     ScenarioDescriptionMapping: "Scenarios description",
