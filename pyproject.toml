@@ -19,7 +19,7 @@ dependencies = [
     "sqlalchemy >=1.3, <1.4",
     "pygments >=2.8",
     "numpy >=1.20.2",
-    "spinedb_api>=0.31.0",
+    "spinedb_api>=0.31.1",
     "spine_engine>=0.24.0",
     # "spinetoolbox >=0.6.18",
 ]
