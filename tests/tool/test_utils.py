@@ -173,10 +173,11 @@ class TestGetJuliaPathAndProject(unittest.TestCase):
             "kernel_spec_name": "test_kernel",
             "project": "/path/to/nonexistingprojectthatshouldnotbereturnedherebecausetheprojectisdefinedinkerneljson",
         }
-        with mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
+        with mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs:
             # Return a dict containing a path to a dummy kernel resource dir when find_kernel_specs is called
             mock_find_kernel_specs.return_value = {"test_kernel": Path(__file__).parent / "dummy_julia_kernel"}
             julia_args = get_julia_path_and_project(exec_settings, app_settings)
+            mock_find_kernel_specs.assert_called_once()
             self.assertEqual(2, len(julia_args))
             self.assertTrue(julia_args[0] == "/path/to/somejulia")
             self.assertTrue(julia_args[1] == "--project=/path/to/someotherjuliaproject")

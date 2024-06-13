@@ -78,7 +78,7 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
             "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
+        ) as mock_isfile, mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs:
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
             mock_isfile.return_value = False
             instance.prepare([])
@@ -91,7 +91,7 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(True)
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
             "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
+        ) as mock_isfile, mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs:
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
             mock_isfile.return_value = False
             instance.prepare(["arg1", "arg2"])
@@ -107,7 +107,7 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(True, ["arg3"])
         with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
             "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.find_kernel_specs") as mock_find_kernel_specs:
+        ) as mock_isfile, mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs:
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
             mock_isfile.return_value = False
             instance.prepare(["arg1", "arg2"])
