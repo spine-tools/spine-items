@@ -17,8 +17,7 @@ import os.path
 from pathlib import Path
 import re
 import json
-from jupyter_client.kernelspec import find_kernel_specs
-from spine_engine.utils.helpers import resolve_julia_executable, resolve_julia_project
+from spine_engine.utils.helpers import resolve_julia_executable, resolve_julia_project, custom_find_kernel_specs
 
 
 def get_julia_path_and_project(exec_settings, settings):
@@ -34,7 +33,7 @@ def get_julia_path_and_project(exec_settings, settings):
     use_jupyter_console = exec_settings["use_jupyter_console"]
     if use_jupyter_console:
         kernel_name = exec_settings["kernel_spec_name"]
-        resource_dir = find_kernel_specs().get(kernel_name)
+        resource_dir = custom_find_kernel_specs().get(kernel_name)
         if resource_dir is None:
             return None
         filepath = os.path.join(resource_dir, "kernel.json")
