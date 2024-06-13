@@ -193,7 +193,8 @@ class TestToolInstance(unittest.TestCase):
 
     def test_julia_prepare_with_invalid_kernel(self):
         instance = self._make_julia_tool_instance(True)
-        instance.prepare([])
+        with self.assertRaises(RuntimeError):
+            instance.prepare([])
         self.assertEqual(None, instance.exec_mngr)
         self.assertEqual(False, instance.is_running())
         instance.terminate_instance()  # Cover terminate_instance()
