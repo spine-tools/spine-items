@@ -198,8 +198,8 @@ class JuliaToolInstance(ToolInstance):
         julia_args = get_julia_path_and_project(self.tool_specification.execution_settings, self._settings)
         if not julia_args:
             k_name = self.tool_specification.execution_settings["kernel_spec_name"]
-            self._logger.msg_error(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
-            return
+            self._logger.msg_error.emit(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
+            raise RuntimeError()
         cmdline_args = self.tool_specification.cmdline_args + args
         if self.prepare_sysimg_maker(julia_args, cmdline_args):
             return
