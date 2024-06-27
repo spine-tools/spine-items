@@ -774,7 +774,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         mapping = import_mapping_from_dict(mapping_dict)
         table_name = "source table"
         header = ["1", "2", "3", "4", "fifth column"]
-        mapping.polish(table_name, header)
+        mapping.polish(table_name, header, "")
         self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), mapping)
         self.assertEqual(self._model.rowCount(self._list_index), 9)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
@@ -873,7 +873,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         mapping = import_mapping_from_dict(mapping_dict)
         table_name = "source table"
         header = ["1", "2", "3", "4", "fifth column", "sixth column"]
-        mapping.polish(table_name, header)
+        mapping.polish(table_name, header, "")
         self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), mapping)
         self.assertEqual(self._model.rowCount(self._list_index), 11)
         self.assertEqual(self._model.columnCount(self._list_index), 4)
@@ -1062,7 +1062,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         mapping = import_mapping_from_dict(mapping_dict)
         table_name = "source table"
         header = ["column header", "2", "3", "4", "fifth column", "sixth column"]
-        mapping.polish(table_name, header)
+        mapping.polish(table_name, header, "")
         self._model.set_root_mapping(self._table_index.row(), self._list_index.row(), mapping)
         self.assertEqual(self._model.rowCount(self._list_index), 12)
         self.assertEqual(self._model.columnCount(self._list_index), 4)

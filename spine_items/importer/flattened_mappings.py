@@ -308,6 +308,8 @@ class FlattenedMappings:
             return "Column Header"
         if component.position == Position.table_name:
             return "Table Name"
+        if component.position == Position.mapping_name:
+            return "Mapping Name"
         if component.position >= 0:
             return "Column"
         return "Row"
@@ -343,6 +345,8 @@ class FlattenedMappings:
             component.value = None
         elif position_type == "Table Name":
             component.position = Position.table_name
+        elif position_type == "Mapping Name":
+            component.position = Position.mapping_name
         self._row_issues = None
 
     def display_position(self, row):
@@ -376,6 +380,8 @@ class FlattenedMappings:
             return component.value + 1
         if component.position == Position.table_name:
             return "<table name>"
+        if component.position == Position.mapping_name:
+            return "<mapping name>"
         if component.position >= 0:
             return component.position + 1
         return -(component.position + 1) + 1

@@ -23,7 +23,7 @@ from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMapp
 from ..mvcmodels.mappings_model import FlattenedColumn
 from ...widgets import combo_box_width
 
-SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "None")
+SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "Mapping Name", "None")
 
 
 class ImportMappings:

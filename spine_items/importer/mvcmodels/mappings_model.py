@@ -320,6 +320,8 @@ class MappingsModel(QAbstractItemModel):
                 display = flattened_mappings.display_position(index.row())
                 if display == "<table name>":
                     return flattened_mappings.mapping_list_item.source_table_item.name
+                elif display == "<mapping name>":
+                    return flattened_mappings.mapping_list_item.name
                 return display
             if column == FlattenedColumn.REGEXP:
                 return flattened_mappings.component_at(index.row()).filter_re
@@ -1403,7 +1405,8 @@ class MappingsModel(QAbstractItemModel):
         """
         mapping_list_item = list_index.internalPointer()
         table_name = mapping_list_item.source_table_item.name
-        mapping_list_item.flattened_mappings.root_mapping.polish(table_name, header, for_preview=True)
+        mapping_name = mapping_list_item.name
+        mapping_list_item.flattened_mappings.root_mapping.polish(table_name, header, mapping_name, for_preview=True)
         # We don't emit dataChanged here as polishing is just beautification and
         # it would mess up the undo system which relies on real changes.
 
