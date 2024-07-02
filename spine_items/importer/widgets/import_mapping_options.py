@@ -15,6 +15,7 @@ from PySide6.QtCore import Qt, Slot, QModelIndex
 from .custom_menus import SimpleFilterMenu
 from ..commands import (
     SetImportEntitiesFlag,
+    SetImportEntityAlternatives,
     SetItemMappingDimensionCount,
     SetItemMappingType,
     SetMapCompressFlag,
@@ -62,6 +63,7 @@ class ImportMappingOptions:
         self._ui.import_entities_check_box.stateChanged.connect(self._change_import_entities)
         self._ui_ignore_columns_filtermenu.filterChanged.connect(self._change_skip_columns)
         self._ui.start_read_row_spin_box.valueChanged.connect(self._change_read_start_row)
+        self._ui.import_entity_alternatives_check_box.stateChanged.connect(self._change_import_entity_alternatives)
         self._ui.time_series_repeat_check_box.stateChanged.connect(self._change_time_series_repeat_flag)
         self._ui.map_dimension_spin_box.valueChanged.connect(self._change_map_dimension_count)
         self._ui.map_compression_check_box.stateChanged.connect(self._change_map_compression_flag)
@@ -146,12 +148,22 @@ class ImportMappingOptions:
         self._ui.class_type_combo_box.setCurrentIndex(class_type_index)
 
         # update item mapping settings
+        if flattened_mappings.may_import_entity_alternatives():
+            self._ui.import_entity_alternatives_check_box.setEnabled(True)
+            check_state = (
+                Qt.CheckState.Checked if flattened_mappings.import_entity_alternatives() else Qt.CheckState.Unchecked
+            )
+            self._ui.import_entity_alternatives_check_box.setCheckState(check_state)
+        else:
+            self._ui.import_entity_alternatives_check_box.setEnabled(False)
+            self._ui.import_entity_alternatives_check_box.setCheckState(Qt.CheckState.Unchecked)
         if flattened_mappings.may_import_entities():
             self._ui.import_entities_check_box.setEnabled(True)
             check_state = Qt.CheckState.Checked if flattened_mappings.import_entities() else Qt.CheckState.Unchecked
             self._ui.import_entities_check_box.setCheckState(check_state)
         else:
             self._ui.import_entities_check_box.setEnabled(False)
+            self._ui.import_entities_check_box.setCheckState(Qt.CheckState.Unchecked)
         can_have_dimensions = flattened_mappings.can_have_dimensions()
         self._ui.dimension_label.setEnabled(can_have_dimensions)
         self._ui.dimension_spin_box.setEnabled(can_have_dimensions)
@@ -337,6 +349,27 @@ class ImportMappingOptions:
         self._undo_stack.push(
             SetReadStartRow(
                 self._list_index.parent().row(), self._list_index.row(), self._mappings_model, row, previous_row
+            )
+        )
+
+    @Slot(int)
+    def _change_import_entity_alternatives(self, state):
+        """
+        Pushes SetImportEntityAlternatives command to the undo stack.
+
+        Args:
+            state (Qt.CheckState): New check box state
+        """
+        if self._block_signals or not self._has_current_mappings():
+            return
+        previous_mapping_root = self._list_index.data(Role.FLATTENED_MAPPINGS).root_mapping
+        self._undo_stack.push(
+            SetImportEntityAlternatives(
+                self._list_index.parent().row(),
+                self._list_index.row(),
+                self._mappings_model,
+                state == Qt.CheckState.Checked.value,
+                previous_mapping_root,
             )
         )
 
