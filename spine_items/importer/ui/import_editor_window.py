@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'import_editor_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.3
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -73,7 +73,7 @@ class Ui_MainWindow(object):
         self.browse_source_button = QToolButton(self.centralwidget)
         self.browse_source_button.setObjectName(u"browse_source_button")
         icon = QIcon()
-        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.browse_source_button.setIcon(icon)
 
         self.horizontalLayout_2.addWidget(self.browse_source_button)
@@ -236,41 +236,6 @@ class Ui_MainWindow(object):
         self.mapping_options_contents.setSpacing(3)
         self.mapping_options_contents.setObjectName(u"mapping_options_contents")
         self.mapping_options_contents.setContentsMargins(3, 3, 3, 3)
-        self.ignore_columns_button = QPushButton(self.frame_2)
-        self.ignore_columns_button.setObjectName(u"ignore_columns_button")
-
-        self.mapping_options_contents.addWidget(self.ignore_columns_button, 9, 1, 1, 1)
-
-        self.value_type_label = QLabel(self.frame_2)
-        self.value_type_label.setObjectName(u"value_type_label")
-
-        self.mapping_options_contents.addWidget(self.value_type_label, 4, 0, 1, 1)
-
-        self.class_type_label = QLabel(self.frame_2)
-        self.class_type_label.setObjectName(u"class_type_label")
-
-        self.mapping_options_contents.addWidget(self.class_type_label, 0, 0, 1, 1)
-
-        self.read_start_row_label = QLabel(self.frame_2)
-        self.read_start_row_label.setObjectName(u"read_start_row_label")
-
-        self.mapping_options_contents.addWidget(self.read_start_row_label, 8, 0, 1, 1)
-
-        self.map_dimensions_label = QLabel(self.frame_2)
-        self.map_dimensions_label.setObjectName(u"map_dimensions_label")
-
-        self.mapping_options_contents.addWidget(self.map_dimensions_label, 6, 0, 1, 1)
-
-        self.before_alternative_check_box = QCheckBox(self.frame_2)
-        self.before_alternative_check_box.setObjectName(u"before_alternative_check_box")
-
-        self.mapping_options_contents.addWidget(self.before_alternative_check_box, 10, 1, 1, 1)
-
-        self.ignore_columns_label = QLabel(self.frame_2)
-        self.ignore_columns_label.setObjectName(u"ignore_columns_label")
-
-        self.mapping_options_contents.addWidget(self.ignore_columns_label, 9, 0, 1, 1)
-
         self.class_type_combo_box = QComboBox(self.frame_2)
         self.class_type_combo_box.addItem("")
         self.class_type_combo_box.addItem("")
@@ -282,35 +247,10 @@ class Ui_MainWindow(object):
 
         self.mapping_options_contents.addWidget(self.class_type_combo_box, 0, 1, 1, 1)
 
-        self.start_read_row_spin_box = QSpinBox(self.frame_2)
-        self.start_read_row_spin_box.setObjectName(u"start_read_row_spin_box")
-        self.start_read_row_spin_box.setMinimum(1)
+        self.value_type_label = QLabel(self.frame_2)
+        self.value_type_label.setObjectName(u"value_type_label")
 
-        self.mapping_options_contents.addWidget(self.start_read_row_spin_box, 8, 1, 1, 1)
-
-        self.map_dimension_spin_box = QSpinBox(self.frame_2)
-        self.map_dimension_spin_box.setObjectName(u"map_dimension_spin_box")
-        self.map_dimension_spin_box.setMinimum(1)
-
-        self.mapping_options_contents.addWidget(self.map_dimension_spin_box, 6, 1, 1, 1)
-
-        self.parameter_type_combo_box = QComboBox(self.frame_2)
-        self.parameter_type_combo_box.addItem("")
-        self.parameter_type_combo_box.addItem("")
-        self.parameter_type_combo_box.addItem("")
-        self.parameter_type_combo_box.setObjectName(u"parameter_type_combo_box")
-
-        self.mapping_options_contents.addWidget(self.parameter_type_combo_box, 3, 1, 1, 1)
-
-        self.map_compression_check_box = QCheckBox(self.frame_2)
-        self.map_compression_check_box.setObjectName(u"map_compression_check_box")
-
-        self.mapping_options_contents.addWidget(self.map_compression_check_box, 11, 1, 1, 1)
-
-        self.import_entities_check_box = QCheckBox(self.frame_2)
-        self.import_entities_check_box.setObjectName(u"import_entities_check_box")
-
-        self.mapping_options_contents.addWidget(self.import_entities_check_box, 10, 0, 1, 1)
+        self.mapping_options_contents.addWidget(self.value_type_label, 3, 0, 1, 1)
 
         self.value_type_combo_box = QComboBox(self.frame_2)
         self.value_type_combo_box.addItem("")
@@ -320,28 +260,93 @@ class Ui_MainWindow(object):
         self.value_type_combo_box.addItem("")
         self.value_type_combo_box.setObjectName(u"value_type_combo_box")
 
-        self.mapping_options_contents.addWidget(self.value_type_combo_box, 4, 1, 1, 1)
+        self.mapping_options_contents.addWidget(self.value_type_combo_box, 3, 1, 1, 1)
 
-        self.time_series_repeat_check_box = QCheckBox(self.frame_2)
-        self.time_series_repeat_check_box.setObjectName(u"time_series_repeat_check_box")
+        self.start_read_row_spin_box = QSpinBox(self.frame_2)
+        self.start_read_row_spin_box.setObjectName(u"start_read_row_spin_box")
+        self.start_read_row_spin_box.setMinimum(1)
 
-        self.mapping_options_contents.addWidget(self.time_series_repeat_check_box, 11, 0, 1, 1)
+        self.mapping_options_contents.addWidget(self.start_read_row_spin_box, 7, 1, 1, 1)
 
-        self.parameter_type_label = QLabel(self.frame_2)
-        self.parameter_type_label.setObjectName(u"parameter_type_label")
+        self.class_type_label = QLabel(self.frame_2)
+        self.class_type_label.setObjectName(u"class_type_label")
 
-        self.mapping_options_contents.addWidget(self.parameter_type_label, 3, 0, 1, 1)
-
-        self.dimension_label = QLabel(self.frame_2)
-        self.dimension_label.setObjectName(u"dimension_label")
-
-        self.mapping_options_contents.addWidget(self.dimension_label, 5, 0, 1, 1)
+        self.mapping_options_contents.addWidget(self.class_type_label, 0, 0, 1, 1)
 
         self.dimension_spin_box = QSpinBox(self.frame_2)
         self.dimension_spin_box.setObjectName(u"dimension_spin_box")
         self.dimension_spin_box.setValue(0)
 
-        self.mapping_options_contents.addWidget(self.dimension_spin_box, 5, 1, 1, 1)
+        self.mapping_options_contents.addWidget(self.dimension_spin_box, 4, 1, 1, 1)
+
+        self.parameter_type_label = QLabel(self.frame_2)
+        self.parameter_type_label.setObjectName(u"parameter_type_label")
+
+        self.mapping_options_contents.addWidget(self.parameter_type_label, 2, 0, 1, 1)
+
+        self.dimension_label = QLabel(self.frame_2)
+        self.dimension_label.setObjectName(u"dimension_label")
+
+        self.mapping_options_contents.addWidget(self.dimension_label, 4, 0, 1, 1)
+
+        self.ignore_columns_button = QPushButton(self.frame_2)
+        self.ignore_columns_button.setObjectName(u"ignore_columns_button")
+
+        self.mapping_options_contents.addWidget(self.ignore_columns_button, 8, 1, 1, 1)
+
+        self.time_series_repeat_check_box = QCheckBox(self.frame_2)
+        self.time_series_repeat_check_box.setObjectName(u"time_series_repeat_check_box")
+
+        self.mapping_options_contents.addWidget(self.time_series_repeat_check_box, 12, 0, 1, 1)
+
+        self.import_entity_alternatives_check_box = QCheckBox(self.frame_2)
+        self.import_entity_alternatives_check_box.setObjectName(u"import_entity_alternatives_check_box")
+
+        self.mapping_options_contents.addWidget(self.import_entity_alternatives_check_box, 9, 0, 1, 1)
+
+        self.map_compression_check_box = QCheckBox(self.frame_2)
+        self.map_compression_check_box.setObjectName(u"map_compression_check_box")
+
+        self.mapping_options_contents.addWidget(self.map_compression_check_box, 12, 1, 1, 1)
+
+        self.map_dimension_spin_box = QSpinBox(self.frame_2)
+        self.map_dimension_spin_box.setObjectName(u"map_dimension_spin_box")
+        self.map_dimension_spin_box.setMinimum(1)
+
+        self.mapping_options_contents.addWidget(self.map_dimension_spin_box, 5, 1, 1, 1)
+
+        self.parameter_type_combo_box = QComboBox(self.frame_2)
+        self.parameter_type_combo_box.addItem("")
+        self.parameter_type_combo_box.addItem("")
+        self.parameter_type_combo_box.addItem("")
+        self.parameter_type_combo_box.setObjectName(u"parameter_type_combo_box")
+
+        self.mapping_options_contents.addWidget(self.parameter_type_combo_box, 2, 1, 1, 1)
+
+        self.read_start_row_label = QLabel(self.frame_2)
+        self.read_start_row_label.setObjectName(u"read_start_row_label")
+
+        self.mapping_options_contents.addWidget(self.read_start_row_label, 7, 0, 1, 1)
+
+        self.ignore_columns_label = QLabel(self.frame_2)
+        self.ignore_columns_label.setObjectName(u"ignore_columns_label")
+
+        self.mapping_options_contents.addWidget(self.ignore_columns_label, 8, 0, 1, 1)
+
+        self.map_dimensions_label = QLabel(self.frame_2)
+        self.map_dimensions_label.setObjectName(u"map_dimensions_label")
+
+        self.mapping_options_contents.addWidget(self.map_dimensions_label, 5, 0, 1, 1)
+
+        self.before_alternative_check_box = QCheckBox(self.frame_2)
+        self.before_alternative_check_box.setObjectName(u"before_alternative_check_box")
+
+        self.mapping_options_contents.addWidget(self.before_alternative_check_box, 10, 1, 1, 1)
+
+        self.import_entities_check_box = QCheckBox(self.frame_2)
+        self.import_entities_check_box.setObjectName(u"import_entities_check_box")
+
+        self.mapping_options_contents.addWidget(self.import_entities_check_box, 10, 0, 1, 1)
 
 
         self.verticalLayout_3.addLayout(self.mapping_options_contents)
@@ -379,9 +384,7 @@ class Ui_MainWindow(object):
         QWidget.setTabOrder(self.dimension_spin_box, self.map_dimension_spin_box)
         QWidget.setTabOrder(self.map_dimension_spin_box, self.start_read_row_spin_box)
         QWidget.setTabOrder(self.start_read_row_spin_box, self.ignore_columns_button)
-        QWidget.setTabOrder(self.ignore_columns_button, self.import_entities_check_box)
-        QWidget.setTabOrder(self.import_entities_check_box, self.before_alternative_check_box)
-        QWidget.setTabOrder(self.before_alternative_check_box, self.time_series_repeat_check_box)
+        QWidget.setTabOrder(self.ignore_columns_button, self.time_series_repeat_check_box)
         QWidget.setTabOrder(self.time_series_repeat_check_box, self.map_compression_check_box)
         QWidget.setTabOrder(self.map_compression_check_box, self.mapping_spec_table)
 
@@ -410,16 +413,6 @@ class Ui_MainWindow(object):
         self.new_button.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.remove_button.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
         self.duplicate_button.setText(QCoreApplication.translate("MainWindow", u"Duplicate", None))
-        self.ignore_columns_button.setText("")
-        self.value_type_label.setText(QCoreApplication.translate("MainWindow", u"Default value type:", None))
-        self.class_type_label.setText(QCoreApplication.translate("MainWindow", u"Item type:", None))
-        self.read_start_row_label.setText(QCoreApplication.translate("MainWindow", u"Read data from row:", None))
-        self.map_dimensions_label.setText(QCoreApplication.translate("MainWindow", u"Map dimensions:", None))
-#if QT_CONFIG(tooltip)
-        self.before_alternative_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Enable or disable 'Before alternative name' mapping for scenario alternative item type.", None))
-#endif // QT_CONFIG(tooltip)
-        self.before_alternative_check_box.setText(QCoreApplication.translate("MainWindow", u"Use before alternative", None))
-        self.ignore_columns_label.setText(QCoreApplication.translate("MainWindow", u"Ignore columns:", None))
         self.class_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Entity class", None))
         self.class_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Entity group", None))
         self.class_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Alternative", None))
@@ -427,6 +420,26 @@ class Ui_MainWindow(object):
         self.class_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
         self.class_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
 
+        self.value_type_label.setText(QCoreApplication.translate("MainWindow", u"Default value type:", None))
+        self.value_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Single value", None))
+        self.value_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Time series", None))
+        self.value_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Time pattern", None))
+        self.value_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Map", None))
+        self.value_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Array", None))
+
+        self.class_type_label.setText(QCoreApplication.translate("MainWindow", u"Item type:", None))
+#if QT_CONFIG(tooltip)
+        self.dimension_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of entity dimensions.", None))
+#endif // QT_CONFIG(tooltip)
+        self.parameter_type_label.setText(QCoreApplication.translate("MainWindow", u"Parameter type:", None))
+        self.dimension_label.setText(QCoreApplication.translate("MainWindow", u"Number of dimensions:", None))
+        self.ignore_columns_button.setText("")
+#if QT_CONFIG(tooltip)
+        self.time_series_repeat_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Set the repeat flag for all imported time series", None))
+#endif // QT_CONFIG(tooltip)
+        self.time_series_repeat_check_box.setText(QCoreApplication.translate("MainWindow", u"Repeat time series", None))
+        self.import_entity_alternatives_check_box.setText(QCoreApplication.translate("MainWindow", u"Import entity alternatives", None))
+        self.map_compression_check_box.setText(QCoreApplication.translate("MainWindow", u"Compress Maps", None))
 #if QT_CONFIG(tooltip)
         self.map_dimension_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of dimensions when value type is Map.", None))
 #endif // QT_CONFIG(tooltip)
@@ -434,22 +447,13 @@ class Ui_MainWindow(object):
         self.parameter_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Definition", None))
         self.parameter_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"None", None))
 
-        self.map_compression_check_box.setText(QCoreApplication.translate("MainWindow", u"Compress Maps", None))
+        self.read_start_row_label.setText(QCoreApplication.translate("MainWindow", u"Read data from row:", None))
+        self.ignore_columns_label.setText(QCoreApplication.translate("MainWindow", u"Ignore columns:", None))
+        self.map_dimensions_label.setText(QCoreApplication.translate("MainWindow", u"Map dimensions:", None))
+#if QT_CONFIG(tooltip)
+        self.before_alternative_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Enable or disable 'Before alternative name' mapping for scenario alternative item type.", None))
+#endif // QT_CONFIG(tooltip)
+        self.before_alternative_check_box.setText(QCoreApplication.translate("MainWindow", u"Use before alternative", None))
         self.import_entities_check_box.setText(QCoreApplication.translate("MainWindow", u"Import entities", None))
-        self.value_type_combo_box.setItemText(0, QCoreApplication.translate("MainWindow", u"Single value", None))
-        self.value_type_combo_box.setItemText(1, QCoreApplication.translate("MainWindow", u"Time series", None))
-        self.value_type_combo_box.setItemText(2, QCoreApplication.translate("MainWindow", u"Time pattern", None))
-        self.value_type_combo_box.setItemText(3, QCoreApplication.translate("MainWindow", u"Map", None))
-        self.value_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Array", None))
-
-#if QT_CONFIG(tooltip)
-        self.time_series_repeat_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Set the repeat flag for all imported time series", None))
-#endif // QT_CONFIG(tooltip)
-        self.time_series_repeat_check_box.setText(QCoreApplication.translate("MainWindow", u"Repeat time series", None))
-        self.parameter_type_label.setText(QCoreApplication.translate("MainWindow", u"Parameter type:", None))
-        self.dimension_label.setText(QCoreApplication.translate("MainWindow", u"Number of dimensions:", None))
-#if QT_CONFIG(tooltip)
-        self.dimension_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of entity dimensions.", None))
-#endif // QT_CONFIG(tooltip)
     # retranslateUi
 

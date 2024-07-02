@@ -26,9 +26,6 @@ from spinedb_api.parameter_value import join_value_and_type, split_value_and_typ
 from spinedb_api import from_database, ParameterValueFormatError
 from spinedb_api.import_mapping.import_mapping import (
     default_import_mapping,
-    EntityClassMapping,
-    EntityMapping,
-    EntityMetadataMapping,
     ScenarioBeforeAlternativeMapping,
 )
 from spinedb_api.import_mapping.import_mapping_compat import (
@@ -1199,6 +1196,27 @@ class MappingsModel(QAbstractItemModel):
         self.endInsertRows()
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
 
+    def set_import_entity_alternatives(self, table_row, list_row, import_entity_alternatives):
+        """Adds or removes entity alternative imports.
+
+        Args:
+            table_row (int): source table row index
+            list_row (int): mapping list row index
+            import_entity_alternatives (bool): True to import entity alternatives, False to disable importing
+        """
+        table_index = self.index(table_row, 0)
+        list_index = self.index(list_row, 0, table_index)
+        mapping_list = self._mappings[table_row].mapping_list[list_row]
+        flattened_mappings = mapping_list.flattened_mappings
+        self.beginRemoveRows(list_index, 0, len(flattened_mappings.display_names) - 1)
+        mapping_list.flattened_mappings = None
+        self.endRemoveRows()
+        flattened_mappings.set_import_entity_alternatives(import_entity_alternatives)
+        self.beginInsertRows(list_index, 0, len(flattened_mappings.display_names) - 1)
+        mapping_list.flattened_mappings = flattened_mappings
+        self.endInsertRows()
+        self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
+
     def change_component_mapping(self, flattened_mappings, index, new_type, new_ref):
         """
         Pushes :class:`SetComponentMappingType` to the undo stack.
@@ -1611,10 +1629,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             ImportMapping: new mapping root
         """
-        root_mapping = EntityClassMapping(0)
-        object_mapping = root_mapping.child = EntityMapping(1)
-        object_mapping.child = EntityMetadataMapping(Position.hidden)
-        return root_mapping
+        return default_import_mapping("EntityClass")
 
     def has_mapping_name(self, table_row, name):
         """Checks if a name exists in mapping list.

@@ -194,7 +194,7 @@ class UpdateTableItem(QUndoCommand):
 
 
 class SetMappingPositionType(QUndoCommand):
-    """Sets the type of a component mapping."""
+    """Sets the type of component mapping."""
 
     def __init__(self, table_row, list_row, row, model, position_type, previous_type, previous_position):
         """
@@ -504,7 +504,7 @@ class SetImportEntitiesFlag(QUndoCommand):
             model (MappingsModel): model
             import_entities (bool): new flag value
         """
-        super().__init__("import objects flag change")
+        super().__init__(("check" if import_entities else "uncheck") + " import entities")
         self._table_row = table_row
         self._list_row = list_row
         self._model = model
@@ -519,8 +519,38 @@ class SetImportEntitiesFlag(QUndoCommand):
         self._model.set_import_entities(self._table_row, self._list_row, not self._import_entities)
 
 
+class SetImportEntityAlternatives(QUndoCommand):
+    """Command to add/remove entity alternative imports to/from mappings."""
+
+    def __init__(self, table_row, list_row, model, import_entity_alternatives, previous_mapping):
+        """
+        Args:
+            table_row (int): source table row index
+            list_row (int): mapping list row index
+            model (MappingsModel): model
+            import_entity_alternatives (bool): new flag value
+            previous_mapping (ImportMapping): previous mapping root
+        """
+        super().__init__(("check" if import_entity_alternatives else "uncheck") + " import entities")
+        self._table_row = table_row
+        self._list_row = list_row
+        self._model = model
+        self._import_entity_alternatives = import_entity_alternatives
+        self._previous_mapping_dict = [m.to_dict() for m in previous_mapping.flatten()]
+
+    def redo(self):
+        """Changes the ."""
+        self._model.set_import_entity_alternatives(self._table_row, self._list_row, self._import_entity_alternatives)
+
+    def undo(self):
+        """Restores the mappings to previous state."""
+        self._model.set_root_mapping(
+            self._table_row, self._list_row, import_mapping_from_dict(self._previous_mapping_dict)
+        )
+
+
 class SetParameterType(QUndoCommand):
-    """Command to change the parameter type of an item mapping."""
+    """Command to change the parameter type of item mapping."""
 
     def __init__(self, table_row, list_row, model, new_type, previous_mapping):
         """
@@ -550,7 +580,7 @@ class SetParameterType(QUndoCommand):
 
 
 class SetValueType(QUndoCommand):
-    """Command to change the value type of an item mapping."""
+    """Command to change the value type of item mapping."""
 
     def __init__(self, table_row, list_row, model, new_type, old_type):
         """

@@ -12,17 +12,19 @@
 
 """Contains a model to handle source tables and import mapping."""
 from enum import Enum, unique
-from spinedb_api.mapping import Position
+from spinedb_api.mapping import Position, unflatten
 from spinedb_api.parameter_value import split_value_and_type
 from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.helpers import fix_name_ambiguity, string_to_bool
+from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.import_mapping.import_mapping import (
     EntityClassMapping,
     EntityMapping,
     DimensionMapping,
     ElementMapping,
     EntityGroupMapping,
+    EntityAlternativeActivityMapping,
     AlternativeMapping,
+    EntityMetadataMapping,
     ScenarioMapping,
     ScenarioAlternativeMapping,
     ParameterValueListMapping,
@@ -45,7 +47,6 @@ from spinetoolbox.spine_db_manager import SpineDBManager
 @unique
 class MappingType(Enum):
     EntityClass = "Entity class"
-    Entity = "Entity"
     EntityGroup = "Entity group"
     Alternative = "Alternative"
     Scenario = "Scenario"
@@ -69,6 +70,7 @@ DISPLAY_MAPPING_NAMES = {
     "EntityGroup": "Member names",
     "Dimension": "Dimension names",
     "Element": "Element names",
+    "EntityAlternativeActivity": "Entity activities",
     "Alternative": "Alternative names",
     "Scenario": "Scenario names",
     "ScenarioActiveFlag": "Scenario active flags",
@@ -470,13 +472,13 @@ class FlattenedMappings:
             return None
         head_mapping = flattened[0]
         if isinstance(head_mapping, EntityClassMapping):
-            if any(isinstance(m, EntityGroupMapping) for m in flattened):
+            if any(isinstance(m, EntityGroupMapping) for m in flattened[1:]):
                 return MappingType.EntityGroup
             return MappingType.EntityClass
         if isinstance(head_mapping, AlternativeMapping):
             return MappingType.Alternative
         if isinstance(head_mapping, ScenarioMapping):
-            if any(isinstance(m, ScenarioAlternativeMapping) for m in flattened):
+            if any(isinstance(m, ScenarioAlternativeMapping) for m in flattened[1:]):
                 return MappingType.ScenarioAlternative
             return MappingType.Scenario
         if isinstance(head_mapping, ParameterValueListMapping):
@@ -526,7 +528,7 @@ class FlattenedMappings:
             dimension_count (int): new dimension count
         """
         if not self.can_have_dimensions():
-            return None, None
+            return
         current_dimension_count = self.dimension_count()
         last_dim_mapping = next(
             m for m in reversed(self._components) if isinstance(m, (DimensionMapping, EntityClassMapping))
@@ -549,13 +551,74 @@ class FlattenedMappings:
         self.set_root_mapping(self._components[0])
         self._ensure_consistent_import_entities()
 
+    def may_import_entity_alternatives(self):
+        """Checks if the mappings can optionally import entity alternatives.
+
+        Returns:
+            bool: True if mappings can import entity alternatives, False otherwise
+        """
+        return self._map_type == MappingType.EntityClass
+
+    def import_entity_alternatives(self):
+        """Returns the import entity alternatives flag.
+
+        Returns:
+            bool: True if import entity alternatives is set, False otherwise
+        """
+        return any(isinstance(m, EntityAlternativeActivityMapping) for m in self._components)
+
+    def set_import_entity_alternatives(self, import_entity_alternatives):
+        """Adds or removes AlternativeMapping and EntityAlternativeActivityMapping.
+
+        Legacy mappings may already have AlternativeMapping as part of parameter value mappings;
+        in this case we move the AlternativeMapping before EntityAlternativeActivityMapping.
+
+        Args:
+            import_entity_alternatives (bool): if True, mappings will be added; if False they will be removed
+        """
+        if not self.may_import_entity_alternatives():
+            return
+        if import_entity_alternatives:
+            for i in range(len(self._components)):
+                if isinstance(self._components[i], AlternativeMapping):
+                    alternative_mapping = self._components.pop(i)
+                    break
+            else:
+                alternative_mapping = AlternativeMapping(Position.hidden)
+            for i, m in enumerate(self._components):
+                if isinstance(m, EntityMetadataMapping):
+                    insertion_point = i
+                    break
+            else:
+                raise RuntimeError("Logic error: expected to find EntityMetadataMapping")
+            new_mappings = []
+            for i, m in enumerate(self._components):
+                new_mappings.append(m)
+                if i == insertion_point:
+                    new_mappings.append(alternative_mapping)
+                    new_mappings.append(EntityAlternativeActivityMapping(Position.hidden))
+        else:
+            new_mappings = []
+            has_value = any(isinstance(m, (ParameterValueMapping, ParameterValueTypeMapping)) for m in self._components)
+            for m in self._components:
+                if isinstance(m, EntityAlternativeActivityMapping):
+                    continue
+                if isinstance(m, AlternativeMapping) and not has_value:
+                    continue
+                new_mappings.append(m)
+        self.set_root_mapping(unflatten(new_mappings))
+
     def may_import_entities(self):
         """Checks if the mappings can optionally import entities.
 
         Returns:
             bool: True if mappings can import entities, False otherwise
         """
-        return self._map_type in (MappingType.EntityClass, MappingType.EntityGroup)
+        if self._map_type == MappingType.EntityGroup:
+            return True
+        if self._map_type == MappingType.EntityClass:
+            return bool(self._import_entities_mappings())
+        return False
 
     def _import_entities_mappings(self):
         """Collects a list of mapping components that have an import_entities attribute.
@@ -571,7 +634,8 @@ class FlattenedMappings:
         Returns:
             bool: True if imports entities is set, False otherwise
         """
-        return all(m.import_entities for m in self._import_entities_mappings())
+        import_enabled_mappings = self._import_entities_mappings()
+        return bool(import_enabled_mappings) and all(m.import_entities for m in self._import_entities_mappings())
 
     def set_import_entities(self, import_entities):
         """Sets the import entities flag for components that support it.
@@ -585,7 +649,7 @@ class FlattenedMappings:
     def _ensure_consistent_import_entities(self):
         """If any mapping has the import entities flag set, sets the flag also for all other mappings."""
         mappings = self._import_entities_mappings()
-        if any(mapping.import_entities for mapping in mappings):
+        if mappings and any(mapping.import_entities for mapping in mappings):
             for m in mappings:
                 m.import_entities = True
 
@@ -612,9 +676,20 @@ class FlattenedMappings:
             parameter_definition_component (ImportMapping, optional): root of parameter mappings;
                 None removes the mappings
         """
+        if parameter_definition_component is not None and any(
+            isinstance(m, AlternativeMapping) for m in self._components
+        ):
+            parameter_definition_component = unflatten(
+                filter(lambda m: not isinstance(m, AlternativeMapping), parameter_definition_component.flatten())
+            )
         m = self._parameter_definition_component()
         parent = m.parent if m is not None else self._components[-1]
         parent.child = parameter_definition_component
+        if parameter_definition_component is None and not self.import_entity_alternatives():
+            for c in self._components:
+                if isinstance(c, AlternativeMapping):
+                    c.parent.child = c.child
+                    break
         self.set_root_mapping(self._components[0])
 
     def display_parameter_type(self):

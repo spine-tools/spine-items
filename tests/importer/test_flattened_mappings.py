@@ -13,7 +13,9 @@
 """Unit tests for ``flattened_mappings`` module."""
 import unittest
 from spinedb_api import import_mapping_from_dict
-from spine_items.importer.flattened_mappings import FlattenedMappings
+from spine_items.importer.flattened_mappings import FlattenedMappings, MappingType
+from spinedb_api.import_mapping.import_mapping import default_import_mapping
+from spinedb_api.import_mapping.import_mapping_compat import parameter_mapping_from_dict
 
 
 class TestFlattenedMappings(unittest.TestCase):
@@ -37,6 +39,323 @@ class TestFlattenedMappings(unittest.TestCase):
         self.assertTrue(flattened_mappings.import_entities())
         flattened_mappings.set_dimension_count(2)
         self.assertTrue(flattened_mappings.import_entities())
+
+    def test_default_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        self.assertEqual(flattened_mappings.map_type, MappingType.EntityClass)
+        self.assertEqual(flattened_mappings.display_names, ["Entity class names", "Entity names", "Entity metadata"])
+        self.assertIs(flattened_mappings.root_mapping, root_mapping)
+        self.assertIsNone(flattened_mappings.value_type)
+        self.assertFalse(flattened_mappings.is_time_series_value())
+        self.assertFalse(flattened_mappings.is_map_value())
+        self.assertEqual(flattened_mappings.map_dimension_count(), 1)
+        self.assertFalse(flattened_mappings.uses_before_alternative())
+        self.assertEqual(flattened_mappings.read_start_row(), 0)
+        self.assertEqual(flattened_mappings.skip_columns(), [])
+        for row in range(len(flattened_mappings.display_names)):
+            with self.subTest(row=row):
+                self.assertEqual(flattened_mappings.display_position_type(row), "None")
+                self.assertIsNone(flattened_mappings.display_position(row))
+                self.assertEqual(flattened_mappings.display_row_issues(row), [])
+        self.assertTrue(flattened_mappings.can_have_dimensions())
+        self.assertFalse(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 0)
+        self.assertTrue(flattened_mappings.may_import_entity_alternatives())
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        self.assertFalse(flattened_mappings.may_import_entities())
+        self.assertFalse(flattened_mappings.import_entities())
+        self.assertTrue(flattened_mappings.has_parameters())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+
+    def test_add_dimensions_to_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        self.assertFalse(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 0)
+        flattened_mappings.set_dimension_count(1)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 1)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Dimension names", "Element names", "Entity metadata"],
+        )
+        self.assertTrue(flattened_mappings.may_import_entities())
+        self.assertFalse(flattened_mappings.import_entities())
+        flattened_mappings.set_dimension_count(2)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 2)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Dimension names 1",
+                "Dimension names 2",
+                "Element names 1",
+                "Element names 2",
+                "Entity metadata",
+            ],
+        )
+        self.assertTrue(flattened_mappings.may_import_entities())
+        self.assertFalse(flattened_mappings.import_entities())
+        flattened_mappings.set_dimension_count(0)
+        self.assertFalse(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 0)
+        self.assertEqual(flattened_mappings.display_names, ["Entity class names", "Entity names", "Entity metadata"])
+        self.assertFalse(flattened_mappings.may_import_entities())
+        self.assertFalse(flattened_mappings.import_entities())
+
+    def test_add_parameter_definition_to_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "<no label>")
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterDefinition"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        self.assertEqual(flattened_mappings.display_parameter_type(), "Definition")
+        self.assertTrue(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "Default value:")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+                "Parameter names",
+                "Value list names",
+                "Parameter default values",
+            ],
+        )
+
+    def test_remove_parameter_definition_from_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterDefinition"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        flattened_mappings.set_parameter_components(None)
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "<no label>")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+            ],
+        )
+
+    def test_add_parameter_value_to_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "<no label>")
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterValue"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        self.assertEqual(flattened_mappings.display_parameter_type(), "Value")
+        self.assertTrue(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "Value:")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+                "Alternative names",
+                "Parameter names",
+                "Parameter value metadata",
+                "Parameter values",
+            ],
+        )
+
+    def test_remove_parameter_value_from_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterValue"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        flattened_mappings.set_parameter_components(None)
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "<no label>")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+            ],
+        )
+
+    def test_add_entity_alternative_to_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        flattened_mappings.set_import_entity_alternatives(True)
+        self.assertTrue(flattened_mappings.import_entity_alternatives())
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+                "Alternative names",
+                "Entity activities",
+            ],
+        )
+
+    def test_remove_entity_alternative_from_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        flattened_mappings.set_import_entity_alternatives(True)
+        flattened_mappings.set_import_entity_alternatives(False)
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+            ],
+        )
+
+    def test_add_entity_alternative_and_parameter_value_to_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        flattened_mappings.set_import_entity_alternatives(True)
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterValue"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        self.assertTrue(flattened_mappings.import_entity_alternatives())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "Value")
+        self.assertTrue(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "Value:")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+                "Alternative names",
+                "Entity activities",
+                "Parameter names",
+                "Parameter value metadata",
+                "Parameter values",
+            ],
+        )
+
+    def test_add_parameter_value_and_entity_alternative_to_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterValue"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        flattened_mappings.set_import_entity_alternatives(True)
+        self.assertTrue(flattened_mappings.import_entity_alternatives())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "Value")
+        self.assertTrue(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "Value:")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+                "Alternative names",
+                "Entity activities",
+                "Parameter names",
+                "Parameter value metadata",
+                "Parameter values",
+            ],
+        )
+
+    def test_remove_parameter_value_from_entity_class_mapping_with_entity_alternative(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterValue"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        flattened_mappings.set_import_entity_alternatives(True)
+        flattened_mappings.set_parameter_components(None)
+        self.assertTrue(flattened_mappings.import_entity_alternatives())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "<no label>")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+                "Alternative names",
+                "Entity activities",
+            ],
+        )
+
+    def test_remove_entity_alternative_from_entity_class_mapping_with_parameter_value(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterValue"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        flattened_mappings.set_import_entity_alternatives(True)
+        flattened_mappings.set_import_entity_alternatives(False)
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "Value")
+        self.assertTrue(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "Value:")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+                "Alternative names",
+                "Parameter names",
+                "Parameter value metadata",
+                "Parameter values",
+            ],
+        )
+
+    def test_remove_entity_alternative_and_parameter_value_from_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterValue"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        flattened_mappings.set_import_entity_alternatives(True)
+        flattened_mappings.set_import_entity_alternatives(False)
+        flattened_mappings.set_parameter_components(None)
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "<no label>")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+            ],
+        )
+
+    def test_remove_parameter_value_and_entity_alternative_from_entity_class_mapping(self):
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        parameter_root = parameter_mapping_from_dict({"map_type": "ParameterValue"})
+        flattened_mappings.set_parameter_components(parameter_root)
+        flattened_mappings.set_import_entity_alternatives(True)
+        flattened_mappings.set_parameter_components(None)
+        flattened_mappings.set_import_entity_alternatives(False)
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+        self.assertEqual(flattened_mappings.value_type_label(), "<no label>")
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Entity metadata",
+            ],
+        )
 
 
 if __name__ == "__main__":
