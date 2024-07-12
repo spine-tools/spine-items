@@ -386,10 +386,12 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         mock_logger = mock.MagicMock()
         script_file_name = "hello.jl"
         script_file_name2 = "hello2.jl"
+        script_file_name3 = "hello3.jl"
         data_file_name = "data.csv"
         file_path = Path(self._temp_dir.name, script_file_name)
         file_path2 = Path(self._temp_dir.name, script_file_name2)
         file_path3 = Path(self._temp_dir.name, data_file_name)
+        file_path4 = Path(self._temp_dir.name, script_file_name3)
         # Make files so os.path.samefile() works
         with open(file_path, "w") as h:
             h.writelines(["println('Hello world')"])  # Make hello.jl
@@ -418,6 +420,13 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
                 self.tool_specification_widget.browse_main_program_file()
                 mock_mb.assert_called()
             self.assertEqual("hello2.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
+            # Rename the current main program file hello2.jl -> hello3.jl
+            os.rename(file_path2, file_path4)
+            mock_fd_gofn.return_value = [file_path4]
+            # Select renamed main program file hello3.jl
+            self.tool_specification_widget.browse_main_program_file()
+            mock_fd_gofn.assert_called()
+            self.assertEqual("hello3.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
         # Test new_main_program_file()
         with mock.patch(
             "spine_items.tool.widgets.tool_specification_editor_window.QFileDialog.getSaveFileName"

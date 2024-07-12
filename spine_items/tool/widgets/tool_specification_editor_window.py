@@ -876,7 +876,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self, "Select existing main program file", self._project.project_dir, "*.*"
         )
         file_path = answer[0]
-        existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
+        existing_file_paths = [
+            os.path.join(self.includes_main_path, i)
+            for i in self.spec_dict.get("includes", [])
+            if os.path.exists(os.path.join(self.includes_main_path, i))
+        ]
         if not file_path:  # Cancel button clicked
             return
         for i, existing_file in enumerate(existing_file_paths):
