@@ -13,28 +13,28 @@
 """QWidget that is used to create or edit Tool specifications.
 In the former case it is presented empty, but in the latter it
 is filled with all the information from the specification being edited."""
+from copy import deepcopy
 from enum import IntEnum, unique
 import logging
-import os
-from copy import deepcopy
 from operator import methodcaller
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QTextDocument, QFont
-from PySide6.QtWidgets import QInputDialog, QFileDialog, QFileIconProvider, QMessageBox, QLabel
-from PySide6.QtCore import Slot, Qt, QFileInfo, QItemSelection, QModelIndex, QItemSelectionModel
-from spinetoolbox.helpers import busy_effect, open_url, same_path, SealCommand
-from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
-from spinetoolbox.config import STATUSBAR_SS
-from spinetoolbox.project_item.specification_editor_window import (
-    SpecificationEditorWindowBase,
-    ChangeSpecPropertyCommand,
-    UniqueCommandId,
-)
+import os
+from PySide6.QtCore import QFileInfo, QItemSelection, QItemSelectionModel, QModelIndex, Qt, Slot
+from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextDocument
+from PySide6.QtWidgets import QFileDialog, QFileIconProvider, QInputDialog, QLabel, QMessageBox
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from spine_items.tool.widgets.tool_spec_optional_widgets import (
-    PythonToolSpecOptionalWidget,
-    JuliaToolSpecOptionalWidget,
     ExecutableToolSpecOptionalWidget,
+    JuliaToolSpecOptionalWidget,
+    PythonToolSpecOptionalWidget,
 )
+from spinetoolbox.config import STATUSBAR_SS
+from spinetoolbox.helpers import SealCommand, busy_effect, open_url, same_path
+from spinetoolbox.project_item.specification_editor_window import (
+    ChangeSpecPropertyCommand,
+    SpecificationEditorWindowBase,
+    UniqueCommandId,
+)
+from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from ..item_info import ItemInfo
 from ..tool_specifications import TOOL_TYPES, make_specification
 

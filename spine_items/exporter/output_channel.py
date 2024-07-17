@@ -12,7 +12,7 @@
 
 """Contains :class:`OutputChannel` class."""
 from contextlib import suppress
-from dataclasses import dataclass, InitVar
+from dataclasses import InitVar, dataclass
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 
 

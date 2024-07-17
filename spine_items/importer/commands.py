@@ -11,13 +11,13 @@
 ######################################################################################################################
 
 """Contains undo and redo commands for Importer specification editor."""
+from enum import IntEnum, auto, unique
 import pickle
-from enum import auto, IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QUndoCommand
+from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spinedb_api import import_mapping_from_dict
 from spinedb_api.import_mapping.import_mapping import from_dict as mapping_from_dict
-from spine_items.importer.mvcmodels.mappings_model_roles import Role
 
 
 @unique

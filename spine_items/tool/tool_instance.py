@@ -13,19 +13,15 @@
 """Contains ToolInstance classes."""
 import os
 import sys
-from spine_engine.utils.helpers import (
-    resolve_python_interpreter,
-    resolve_gams_executable,
-    resolve_conda_executable,
-)
 from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager
-from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
 from spine_engine.execution_managers.persistent_execution_manager import (
     JuliaPersistentExecutionManager,
     PythonPersistentExecutionManager,
 )
-from spine_items.utils import escape_backward_slashes
+from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
+from spine_engine.utils.helpers import resolve_conda_executable, resolve_gams_executable, resolve_python_interpreter
 from spine_items.tool.utils import get_julia_path_and_project
+from spine_items.utils import escape_backward_slashes
 
 
 class ToolInstance:

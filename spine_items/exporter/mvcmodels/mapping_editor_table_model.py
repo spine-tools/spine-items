@@ -14,39 +14,38 @@
 from enum import IntEnum, unique
 from operator import itemgetter
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide6.QtGui import QFont, QColor
-from spinedb_api.mapping import is_pivoted, is_regular, Position, value_index
+from PySide6.QtGui import QColor, QFont
 from spinedb_api.export_mapping.export_mapping import (
     AlternativeDescriptionMapping,
     AlternativeMapping,
-    FixedValueMapping,
-    ExpandedParameterValueMapping,
-    ExpandedParameterDefaultValueMapping,
+    DefaultValueIndexNameMapping,
+    DimensionMapping,
+    ElementMapping,
     EntityClassMapping,
-    EntityGroupMapping,
     EntityGroupEntityMapping,
+    EntityGroupMapping,
     EntityMapping,
-    ParameterDefaultValueMapping,
+    ExpandedParameterDefaultValueMapping,
+    ExpandedParameterValueMapping,
+    FixedValueMapping,
+    IndexNameMapping,
     ParameterDefaultValueIndexMapping,
+    ParameterDefaultValueMapping,
+    ParameterDefaultValueTypeMapping,
     ParameterDefinitionMapping,
     ParameterValueIndexMapping,
     ParameterValueListMapping,
     ParameterValueListValueMapping,
     ParameterValueMapping,
     ParameterValueTypeMapping,
-    DimensionMapping,
-    ElementMapping,
     ScenarioAlternativeMapping,
     ScenarioBeforeAlternativeMapping,
     ScenarioDescriptionMapping,
     ScenarioMapping,
-    IndexNameMapping,
-    DefaultValueIndexNameMapping,
-    ParameterDefaultValueTypeMapping,
 )
+from spinedb_api.mapping import Position, is_pivoted, is_regular, value_index
 from spinetoolbox.helpers import color_from_index, plain_to_rich
 from ..commands import SetMappingNullable, SetMappingPositions, SetMappingProperty
-
 
 POSITION_DISPLAY_TEXT = {Position.hidden: "hidden", Position.table_name: "table name", Position.header: "column header"}
 

@@ -15,8 +15,8 @@ from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .view import View
 from .view_icon import ViewIcon
-from .widgets.view_properties_widget import ViewPropertiesWidget
 from .widgets.add_view_widget import AddViewWidget
+from .widgets.view_properties_widget import ViewPropertiesWidget
 
 
 class ViewFactory(ProjectItemFactory):

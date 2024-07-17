@@ -11,27 +11,27 @@
 ######################################################################################################################
 
 """Unit tests for DataStore class."""
+import logging
+import os
 from pathlib import Path
+import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-import os
-import logging
-import sys
-from spinedb_api import create_new_spine_database
-from spine_engine.project_item.project_item_resource import database_resource
 from PySide6.QtWidgets import QApplication
-import spine_items.resources_icons_rc  # pylint: disable=unused-import
+from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.item_info import ItemInfo
+import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.utils import convert_to_sqlalchemy_url, database_label
+from spinedb_api import create_new_spine_database
 from spinetoolbox.helpers import signal_waiter
 from ..mock_helpers import (
-    mock_finish_project_item_construction,
     create_mock_project,
     create_mock_toolbox,
     create_toolboxui_with_project,
+    mock_finish_project_item_construction,
 )
 
 

@@ -18,10 +18,10 @@ from PySide6.QtWidgets import QFileDialog
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .tool import Tool
 from .tool_icon import ToolIcon
-from .widgets.tool_properties_widget import ToolPropertiesWidget
-from .widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from .widgets.add_tool_widget import AddToolWidget
 from .widgets.custom_menus import ToolSpecificationMenu
+from .widgets.tool_properties_widget import ToolPropertiesWidget
+from .widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 
 
 class ToolFactory(ProjectItemFactory):

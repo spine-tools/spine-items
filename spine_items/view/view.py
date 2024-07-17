@@ -12,19 +12,19 @@
 
 """Module for view class."""
 import os
-from PySide6.QtCore import Qt, Slot, Signal, QObject, QTimer
-from PySide6.QtGui import QStandardItem, QStandardItemModel, QIcon, QPixmap
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QTextBrowser, QLineEdit, QLabel
+from PySide6.QtCore import QObject, Qt, QTimer, Signal, Slot
+from PySide6.QtGui import QIcon, QPixmap, QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QLineEdit, QTextBrowser, QVBoxLayout
 from sqlalchemy.engine.url import URL, make_url
-from spinetoolbox.project_item.project_item import ProjectItem
-from spinetoolbox.plotting import plot_db_mngr_items, PlottingError
-from spinetoolbox.helpers import busy_effect
 from spinetoolbox.fetch_parent import FetchParent
+from spinetoolbox.helpers import busy_effect
+from spinetoolbox.plotting import PlottingError, plot_db_mngr_items
+from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
 from spinetoolbox.widgets.notification import Notification
-from .item_info import ItemInfo
-from .executable_item import ExecutableItem
 from .commands import PinOrUnpinDBValuesCommand
+from .executable_item import ExecutableItem
+from .item_info import ItemInfo
 
 
 class View(ProjectItem):

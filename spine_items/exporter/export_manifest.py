@@ -11,8 +11,8 @@
 ######################################################################################################################
 
 """Contains utilities to manage export manifest files."""
-import json
 from itertools import dropwhile
+import json
 from pathlib import Path
 from spine_engine.project_item.project_item_resource import file_resource_in_pack, transient_file_resource
 from .specification import OutputFormat

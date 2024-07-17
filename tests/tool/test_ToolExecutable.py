@@ -12,19 +12,18 @@
 
 """Unit tests for ToolExecutable item."""
 from multiprocessing import Lock
-import sys
 import pathlib
-from tempfile import TemporaryDirectory
 from queue import Queue
+import sys
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from PySide6.QtCore import QCoreApplication
-from spine_engine.project_item.project_item_resource import file_resource
 from spine_engine.execution_managers.persistent_execution_manager import kill_persistent_processes
-from spine_engine.project_item.project_item_resource import CmdLineArg
+from spine_engine.project_item.project_item_resource import CmdLineArg, file_resource
 from spine_engine.utils.queue_logger import QueueLogger
 from spine_items.tool.executable_item import ExecutableItem, _count_files_and_dirs
-from spine_items.tool.tool_specifications import ToolSpecification, PythonTool
+from spine_items.tool.tool_specifications import PythonTool, ToolSpecification
 
 
 class TestToolExecutable(unittest.TestCase):

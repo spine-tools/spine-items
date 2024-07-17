@@ -14,20 +14,22 @@
 from dataclasses import dataclass
 from enum import Enum, unique
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
-from spinedb_api.mapping import to_dict as mapping_to_dict, Position, unflatten
 from spinedb_api.export_mapping.export_mapping import (
+    DefaultValueIndexNameMapping,
+    EntityClassMapping,
+    EntityGroupEntityMapping,
+    EntityGroupMapping,
     ExportMapping,
     FixedValueMapping,
-    from_dict as mapping_from_dict,
-    EntityClassMapping,
-    EntityGroupMapping,
-    EntityGroupEntityMapping,
-    ParameterValueIndexMapping,
-    ParameterDefaultValueIndexMapping,
     IndexNameMapping,
-    DefaultValueIndexNameMapping,
-    legacy_group_fn_from_dict,
+    ParameterDefaultValueIndexMapping,
+    ParameterValueIndexMapping,
 )
+from spinedb_api.export_mapping.export_mapping import from_dict as mapping_from_dict
+from spinedb_api.export_mapping.export_mapping import legacy_group_fn_from_dict
+from spinedb_api.mapping import Position
+from spinedb_api.mapping import to_dict as mapping_to_dict
+from spinedb_api.mapping import unflatten
 from .item_info import ItemInfo
 
 

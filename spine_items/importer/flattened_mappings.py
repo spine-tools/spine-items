@@ -12,34 +12,34 @@
 
 """Contains a model to handle source tables and import mapping."""
 from enum import Enum, unique
-from spinedb_api.mapping import Position, unflatten
-from spinedb_api.parameter_value import split_value_and_type
-from spinedb_api import from_database, ParameterValueFormatError
+from spinedb_api import ParameterValueFormatError, from_database
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.import_mapping.import_mapping import (
-    EntityClassMapping,
-    EntityMapping,
+    AlternativeMapping,
+    DefaultValueIndexNameMapping,
     DimensionMapping,
     ElementMapping,
-    EntityGroupMapping,
     EntityAlternativeActivityMapping,
-    AlternativeMapping,
+    EntityClassMapping,
+    EntityGroupMapping,
+    EntityMapping,
     EntityMetadataMapping,
-    ScenarioMapping,
-    ScenarioAlternativeMapping,
+    IndexNameMapping,
+    ParameterDefaultValueIndexMapping,
+    ParameterDefaultValueMapping,
+    ParameterDefaultValueTypeMapping,
+    ParameterDefinitionMapping,
+    ParameterValueIndexMapping,
     ParameterValueListMapping,
     ParameterValueMapping,
     ParameterValueTypeMapping,
-    ParameterDefaultValueMapping,
-    ParameterDefaultValueTypeMapping,
-    check_validity,
-    ParameterDefinitionMapping,
-    ParameterValueIndexMapping,
-    ParameterDefaultValueIndexMapping,
-    DefaultValueIndexNameMapping,
-    IndexNameMapping,
+    ScenarioAlternativeMapping,
     ScenarioBeforeAlternativeMapping,
+    ScenarioMapping,
+    check_validity,
 )
+from spinedb_api.mapping import Position, unflatten
+from spinedb_api.parameter_value import split_value_and_type
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.spine_db_manager import SpineDBManager
 

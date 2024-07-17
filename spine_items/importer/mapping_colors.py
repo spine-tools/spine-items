@@ -13,5 +13,4 @@
 """Contains colors used in Import editor's tables."""
 from PySide6.QtGui import QColor
 
-
 ERROR_COLOR = QColor("red")

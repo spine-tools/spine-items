@@ -16,12 +16,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from spinedb_api import create_new_spine_database, DatabaseMapping, import_functions
-from spinedb_api.spine_db_server import db_server_manager
-from spine_engine.project_item.project_item_resource import database_resource
 from spine_engine.project_item.connection import Connection
+from spine_engine.project_item.project_item_resource import database_resource
 from spine_engine.spine_engine import SpineEngine, SpineEngineState
 from spine_items.merger.executable_item import ExecutableItem
+from spinedb_api import DatabaseMapping, create_new_spine_database, import_functions
+from spinedb_api.spine_db_server import db_server_manager
 
 
 class TestMergerExecutable(unittest.TestCase):

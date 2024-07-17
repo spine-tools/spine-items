@@ -11,17 +11,17 @@
 ######################################################################################################################
 
 """Unit tests for the custom_menus.py module."""
+import logging
+from pathlib import Path
+import sys
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-import logging
-import sys
-from pathlib import Path
-from tempfile import TemporaryDirectory
+from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from spine_items.tool.tool_specifications import ExecutableTool, JuliaTool
 from spine_items.tool.widgets.custom_menus import ToolSpecificationMenu
-from spine_items.tool.tool_specifications import JuliaTool, ExecutableTool
-from tests.mock_helpers import create_mock_toolbox_with_mock_qsettings, MockQSettings
+from tests.mock_helpers import MockQSettings, create_mock_toolbox_with_mock_qsettings
 
 
 class TestToolSpecificationMenu(unittest.TestCase):

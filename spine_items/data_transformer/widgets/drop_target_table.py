@@ -14,7 +14,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTableView
 
-
 DROP_MIME_TYPE = "application/spine_items-dtdata"
 """Mime type for drag and drop actions."""
 

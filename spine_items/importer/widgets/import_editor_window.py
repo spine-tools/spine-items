@@ -11,33 +11,33 @@
 ######################################################################################################################
 
 """ Contains ImportPreviewWindow class. """
-import os
-import json
 import fnmatch
-from PySide6.QtCore import Qt, Signal, Slot, QModelIndex, QItemSelectionModel
-from PySide6.QtWidgets import QFileDialog, QDialog, QVBoxLayout, QListWidget, QDialogButtonBox
+import json
+import os
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QListWidget, QVBoxLayout
 from spinedb_api.helpers import remove_credentials_from_url
-from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
-from spinetoolbox.helpers import get_open_file_name_in_last_dir
-from spinetoolbox.config import APPLICATION_PATH
+from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
+from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
 from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
 from spinedb_api.spine_io.importers.json_reader import JSONConnector
-from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
-from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
 from spinedb_api.spine_io.importers.reader import SourceConnection
-from spinedb_api.spine_io.gdx_utils import find_gams_directory
-from ..connection_manager import ConnectionManager
+from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
+from spinetoolbox.config import APPLICATION_PATH
+from spinetoolbox.helpers import get_open_file_name_in_last_dir
+from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
+from ...utils import convert_to_sqlalchemy_url
+from ...widgets import UrlSelectorDialog
 from ..commands import RestoreMappingsFromDict
-from .import_sources import ImportSources
-from .import_mapping_options import ImportMappingOptions
-from .import_mappings import ImportMappings
+from ..connection_manager import ConnectionManager
 from ..importer_specification import ImporterSpecification
 from ..mvcmodels.mappings_model import MappingsModel
 from ..mvcmodels.source_list_selection_model import SourceListSelectionModel
-from ...utils import convert_to_sqlalchemy_url
-from ...widgets import UrlSelectorDialog
+from .import_mapping_options import ImportMappingOptions
+from .import_mappings import ImportMappings
+from .import_sources import ImportSources
 
 _CONNECTOR_NAME_TO_CLASS = {
     klass.__name__: klass

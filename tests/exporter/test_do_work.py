@@ -17,12 +17,12 @@ import sqlite3
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock
+from spine_items.exporter.do_work import do_work
+from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
 from spinedb_api import DatabaseMapping, import_object_classes, import_objects
+from spinedb_api.export_mapping import entity_export
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping
 from spinedb_api.export_mapping.group_functions import NoGroup
-from spinedb_api.export_mapping import entity_export
-from spine_items.exporter.do_work import do_work
-from spine_items.exporter.specification import OutputFormat, Specification, MappingSpecification, MappingType
 from spinedb_api.mapping import Position
 
 

@@ -12,19 +12,19 @@
 
 """Unit tests for ``tool_specifications`` module."""
 import os
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from tempfile import TemporaryDirectory
+from spine_engine.project_item.connection import Jump
+from spine_engine.spine_engine import SpineEngine
 from spine_items.tool.tool_specifications import (
+    ExecutableTool,
+    GAMSTool,
+    JuliaTool,
+    PythonTool,
     ToolSpecification,
     make_specification,
-    PythonTool,
-    JuliaTool,
-    GAMSTool,
-    ExecutableTool,
 )
-from spine_engine.spine_engine import SpineEngine
-from spine_engine.project_item.connection import Jump
 from tests.mock_helpers import MockQSettings
 
 

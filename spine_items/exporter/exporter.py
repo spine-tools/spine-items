@@ -15,22 +15,22 @@ from dataclasses import dataclass
 from itertools import combinations, zip_longest
 from operator import itemgetter
 from pathlib import Path
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Qt, Slot
+from spine_engine.utils.helpers import ExecutionDirection
+from spine_engine.utils.serialization import deserialize_path
+from spinedb_api import clear_filter_configs
 from spinetoolbox.helpers import SealCommand
 from spinetoolbox.project_item.project_item import ProjectItem
-from spine_engine.utils.serialization import deserialize_path
-from spine_engine.utils.helpers import ExecutionDirection
-from spinedb_api import clear_filter_configs
-from .export_manifest import exported_files_as_resources, is_manifest_file
-from .specification import OutputFormat
 from ..commands import UpdateCancelOnErrorCommand
-from .mvcmodels.full_url_list_model import FullUrlListModel
-from .widgets.export_list_item import ExportListItem
-from .item_info import ItemInfo
-from .executable_item import ExecutableItem
 from .commands import CommandId, UpdateOutLabel, UpdateOutputTimeStampsFlag, UpdateOutUrl
+from .executable_item import ExecutableItem
+from .export_manifest import exported_files_as_resources, is_manifest_file
+from .item_info import ItemInfo
+from .mvcmodels.full_url_list_model import FullUrlListModel
 from .output_channel import OutputChannel
+from .specification import OutputFormat
 from .utils import output_database_resources
+from .widgets.export_list_item import ExportListItem
 
 
 @dataclass

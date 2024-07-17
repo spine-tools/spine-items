@@ -11,24 +11,24 @@
 ######################################################################################################################
 
 """Unit tests for ToolSpecificationEditorWindow class and tool_spec_optional_widgets module."""
-import unittest
 import logging
-import sys
 import os
-from unittest import mock
-from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt, QItemSelectionModel
+import sys
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+import unittest
+from unittest import mock
+from PySide6.QtCore import QItemSelectionModel, Qt
 from PySide6.QtGui import QIcon
-from spine_items.tool.tool_specifications import JuliaTool, ExecutableTool, PythonTool
-from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
+from PySide6.QtWidgets import QApplication
+from spine_items.tool.tool_specifications import ExecutableTool, JuliaTool, PythonTool
 from spine_items.tool.widgets.tool_spec_optional_widgets import (
+    ExecutableToolSpecOptionalWidget,
     JuliaToolSpecOptionalWidget,
     PythonToolSpecOptionalWidget,
-    ExecutableToolSpecOptionalWidget,
 )
-from tests.mock_helpers import create_mock_toolbox_with_mock_qsettings, MockQSettings
+from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
+from tests.mock_helpers import MockQSettings, create_mock_toolbox_with_mock_qsettings
 
 
 class TestToolSpecificationEditorWindow(unittest.TestCase):

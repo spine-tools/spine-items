@@ -12,7 +12,7 @@
 
 """Module for Importer icon class."""
 from spinetoolbox.project_item_icon import ProjectItemIcon
-from ..animations import ImporterAnimation, AnimationSignaller
+from ..animations import AnimationSignaller, ImporterAnimation
 
 
 class ImporterIcon(ProjectItemIcon):

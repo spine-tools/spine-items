@@ -11,11 +11,11 @@
 ######################################################################################################################
 
 """Contains unit tests for the ``import_mapping_options`` module."""
-import unittest
 from contextlib import contextmanager
-from PySide6.QtCore import Qt, QItemSelectionModel
-from PySide6.QtWidgets import QApplication, QMainWindow
+import unittest
+from PySide6.QtCore import QItemSelectionModel, Qt
 from PySide6.QtGui import QUndoStack
+from PySide6.QtWidgets import QApplication, QMainWindow
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.ui.import_editor_window import Ui_MainWindow

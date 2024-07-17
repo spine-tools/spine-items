@@ -11,7 +11,7 @@
 ######################################################################################################################
 
 """View properties widget."""
-from PySide6.QtCore import Slot, QPoint
+from PySide6.QtCore import QPoint, Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from .custom_menus import ViewRefsContextMenu, ViewSelectionsContextMenu
 

@@ -11,37 +11,36 @@
 ######################################################################################################################
 
 """Contains Tool's executable item and support functionality."""
+from contextlib import ExitStack
 import datetime
 import fnmatch
 import glob
 import os
 import os.path
-import sys
 import pathlib
+import re
 import shutil
+import sys
 import time
 import uuid
-import re
-from contextlib import ExitStack
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.project_item.project_item_resource import (
-    make_cmd_line_arg,
     expand_cmd_line_args,
     labelled_resource_args,
+    make_cmd_line_arg,
 )
+from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.utils.helpers import (
-    resolve_julia_executable,
-    resolve_gams_executable,
-    write_filter_id_file,
     create_log_file_timestamp,
+    resolve_gams_executable,
+    resolve_julia_executable,
+    write_filter_id_file,
 )
-from .item_info import ItemInfo
-from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
-from .output_resources import scan_for_resources
-from ..utils import generate_filter_subdirectory_name
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
-
+from ..utils import generate_filter_subdirectory_name
+from .item_info import ItemInfo
+from .output_resources import scan_for_resources
+from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
 
 _ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 

@@ -11,13 +11,13 @@
 ######################################################################################################################
 
 """Contains Importer project item class."""
-import os
 from operator import itemgetter
+import os
 from PySide6.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
+from ..commands import ChangeItemSelectionCommand, UpdateCancelOnErrorCommand, UpdateOnConflictCommand
 from ..db_writer_item_base import DBWriterItemBase
-from ..commands import UpdateCancelOnErrorCommand, ChangeItemSelectionCommand, UpdateOnConflictCommand
 from ..models import CheckableFileListModel
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo

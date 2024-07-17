@@ -14,11 +14,11 @@
 import unittest
 from unittest.mock import MagicMock
 from PySide6.QtCore import Qt
-from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
-from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
-from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
+from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.mvcmodels.source_data_table_model import SourceDataTableModel
+from spinedb_api.import_mapping.import_mapping_compat import import_mapping_from_dict
+from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 
 
 class TestSourceDataTableModel(unittest.TestCase):

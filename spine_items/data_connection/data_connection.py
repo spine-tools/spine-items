@@ -11,27 +11,27 @@
 ######################################################################################################################
 
 """Module for data connection class."""
+import logging
 import os
 import shutil
-import logging
-from PySide6.QtCore import Slot, Qt, QFileInfo, QModelIndex, QItemSelection, QTimer
-from PySide6.QtGui import QStandardItem, QStandardItemModel, QBrush
-from PySide6.QtWidgets import QFileDialog, QGraphicsItem, QFileIconProvider, QInputDialog, QMessageBox
+from PySide6.QtCore import QFileInfo, QItemSelection, QModelIndex, Qt, QTimer, Slot
+from PySide6.QtGui import QBrush, QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import QFileDialog, QFileIconProvider, QGraphicsItem, QInputDialog, QMessageBox
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinedb_api.helpers import remove_credentials_from_url
+from spinetoolbox.config import INVALID_FILENAME_CHARS
+from spinetoolbox.helpers import open_url, same_path
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
-from spinetoolbox.helpers import open_url, same_path
-from spinetoolbox.config import INVALID_FILENAME_CHARS
-from .commands import AddDCReferencesCommand, RemoveDCReferencesCommand, MoveReferenceToData
+from ..database_validation import DatabaseConnectionValidator
+from ..utils import convert_to_sqlalchemy_url, convert_url_to_safe_string
+from ..widgets import UrlSelectorDialog
+from .commands import AddDCReferencesCommand, MoveReferenceToData, RemoveDCReferencesCommand
 from .custom_file_system_watcher import CustomFileSystemWatcher
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from .utils import restore_database_references
-from ..database_validation import DatabaseConnectionValidator
-from ..widgets import UrlSelectorDialog
-from ..utils import convert_to_sqlalchemy_url, convert_url_to_safe_string
 
 
 class _Role:

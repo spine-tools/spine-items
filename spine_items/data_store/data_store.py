@@ -11,25 +11,25 @@
 ######################################################################################################################
 
 """ Module for data store class. """
-import os
 from dataclasses import dataclass
+import os
 from shutil import copyfile
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QFileDialog, QApplication, QMenu
 from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QApplication, QFileDialog, QMenu
+from spine_engine.project_item.project_item_resource import ProjectItemResource, database_resource
+from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinedb_api.helpers import remove_credentials_from_url, vacuum
-from spine_engine.project_item.project_item_resource import database_resource, ProjectItemResource
-from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.helpers import create_dir
+from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
-from spine_engine.utils.serialization import serialize_path, deserialize_path
 from spinetoolbox.widgets.custom_qwidgets import SelectDatabaseItemsDialog
+from ..database_validation import DatabaseConnectionValidator
+from ..utils import convert_to_sqlalchemy_url, database_label
 from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from ..database_validation import DatabaseConnectionValidator
-from ..utils import database_label, convert_to_sqlalchemy_url
 
 
 @dataclass(frozen=True)

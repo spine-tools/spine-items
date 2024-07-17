@@ -13,12 +13,12 @@
 """The ImporterFactory class."""
 from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
-from .widgets.import_editor_window import ImportEditorWindow
 from .importer import Importer
 from .importer_icon import ImporterIcon
-from .widgets.importer_properties_widget import ImporterPropertiesWidget
 from .widgets.add_importer_widget import AddImporterWidget
 from .widgets.custom_menus import SpecificationMenu
+from .widgets.import_editor_window import ImportEditorWindow
+from .widgets.importer_properties_widget import ImporterPropertiesWidget
 
 
 class ImporterFactory(ProjectItemFactory):

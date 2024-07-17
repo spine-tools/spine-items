@@ -12,23 +12,22 @@
 
 """Contains Exporter's executable item as well as support utilities."""
 import json
-import os
 from json import dump
+import os
 from pathlib import Path
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import file_resource_in_pack
+from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.serialization import deserialize_path
-from spine_engine.spine_engine import ItemExecutionFinishState
 from spinedb_api import clear_filter_configs
-from ..utils import generate_filter_subdirectory_name
-from .utils import Database, output_database_resources
 from spinedb_api.spine_io import gdx_utils
-from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX
+from ..utils import generate_filter_subdirectory_name
 from .do_work import do_work
-from .output_channel import OutputChannel
 from .item_info import ItemInfo
+from .output_channel import OutputChannel
 from .specification import OutputFormat
+from .utils import EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX, Database, output_database_resources
 
 
 class ExecutableItem(ExecutableItemBase):

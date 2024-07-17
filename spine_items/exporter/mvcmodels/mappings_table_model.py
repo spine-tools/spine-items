@@ -13,10 +13,10 @@
 """Contains the :class:`MappingListModel` model."""
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (
-    ParameterDefaultValueIndexMapping,
-    ParameterValueIndexMapping,
     DimensionMapping,
     EntityClassMapping,
+    ParameterDefaultValueIndexMapping,
+    ParameterValueIndexMapping,
 )
 from spinetoolbox.helpers import unique_name
 

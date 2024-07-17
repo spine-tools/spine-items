@@ -12,22 +12,22 @@
 
 """Contains common & shared (Q)widgets."""
 import os
-from PySide6.QtCore import Qt, Signal, QUrl, QMimeData, Property, Slot
+from PySide6.QtCore import Property, QMimeData, Qt, QUrl, Signal, Slot
+from PySide6.QtGui import QDrag, QIntValidator
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
+    QDialogButtonBox,
     QLineEdit,
+    QStatusBar,
     QStyle,
+    QStyledItemDelegate,
     QStyleOptionComboBox,
     QTreeView,
-    QStyledItemDelegate,
     QWidget,
-    QDialog,
-    QStatusBar,
-    QDialogButtonBox,
 )
-from PySide6.QtGui import QDrag, QIntValidator
-from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
+from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from .utils import convert_to_sqlalchemy_url
 
 

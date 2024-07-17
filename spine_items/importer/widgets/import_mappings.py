@@ -12,16 +12,16 @@
 
 """ImportMappings widget."""
 import pickle
-from PySide6.QtCore import QPoint, QItemSelectionModel, Slot, QModelIndex, QItemSelection
-from PySide6.QtWidgets import QHeaderView, QStyledItemDelegate, QApplication
+from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex, QPoint, Slot
+from PySide6.QtWidgets import QApplication, QHeaderView, QStyledItemDelegate
 from spinetoolbox.widgets.custom_delegates import ComboBoxDelegate
 from spinetoolbox.widgets.parameter_value_editor import ParameterValueEditor
+from ...widgets import combo_box_width
+from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
+from ..mvcmodels.mappings_model import FlattenedColumn
 from .custom_menus import MappingListMenu
 from .filter_edit_delegate import FilterEditDelegate
 from .mime_types import MAPPING_LIST_MIME_TYPE
-from ..commands import CreateMapping, DeleteMapping, DuplicateMapping, PasteMappings
-from ..mvcmodels.mappings_model import FlattenedColumn
-from ...widgets import combo_box_width
 
 SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "Mapping Name", "None")
 

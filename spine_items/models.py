@@ -13,13 +13,13 @@
 """Contains a generic File list model and an Item for that model."""
 from collections import namedtuple
 from PySide6.QtCore import QModelIndex, Qt, Signal
-from spinetoolbox.mvcmodels.file_list_models import (
-    FileListModel,
-    CommandLineArgsModel,
-    NewCommandLineArgItem,
-    CommandLineArgItem,
-)
 from spine_engine.project_item.project_item_resource import extract_packs
+from spinetoolbox.mvcmodels.file_list_models import (
+    CommandLineArgItem,
+    CommandLineArgsModel,
+    FileListModel,
+    NewCommandLineArgItem,
+)
 
 
 class CheckableFileListModel(FileListModel):

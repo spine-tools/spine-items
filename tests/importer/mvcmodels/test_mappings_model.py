@@ -13,15 +13,13 @@
 """Contains unit tests for Import editor's :class:`MappingsModel`."""
 import unittest
 from PySide6.QtCore import QModelIndex, QObject, Qt
-from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QUndoStack
-
+from PySide6.QtWidgets import QApplication
 from spine_items.importer.commands import DeleteMapping
-from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
-from spinetoolbox.helpers import signal_waiter
+from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spinedb_api import import_mapping_from_dict
-
+from spinetoolbox.helpers import signal_waiter
 from tests.importer.helpers import append_source_table_with_mappings
 
 

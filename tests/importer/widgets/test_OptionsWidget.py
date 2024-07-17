@@ -13,8 +13,8 @@
 """Contains unit tests for the OptionsWidget class."""
 import unittest
 from unittest.mock import MagicMock
-from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QUndoStack
+from PySide6.QtWidgets import QApplication
 from spine_items.importer.widgets.options_widget import OptionsWidget
 
 

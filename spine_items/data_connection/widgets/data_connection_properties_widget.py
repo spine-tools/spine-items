@@ -12,9 +12,9 @@
 
 """Data connection properties widget."""
 import os
-from PySide6.QtCore import QPoint, Qt, Slot, QUrl
+from PySide6.QtCore import QPoint, Qt, QUrl, Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from .custom_menus import DcRefContextMenu, DcDataContextMenu
+from .custom_menus import DcDataContextMenu, DcRefContextMenu
 
 
 class DataConnectionPropertiesWidget(PropertiesWidgetBase):

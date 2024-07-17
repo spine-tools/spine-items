@@ -15,9 +15,9 @@ from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .exporter import Exporter
 from .exporter_icon import ExporterIcon
+from .widgets.add_exporter_widget import AddExporterWidget
 from .widgets.exporter_properties import ExporterProperties
 from .widgets.specification_editor_window import SpecificationEditorWindow
-from .widgets.add_exporter_widget import AddExporterWidget
 from .widgets.specification_menu import SpecificationMenu
 
 

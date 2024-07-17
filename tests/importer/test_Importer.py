@@ -18,12 +18,12 @@ import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMenu
+from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource
 from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.importer_specification import ImporterSpecification
 from spine_items.importer.item_info import ItemInfo
-from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource
-from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
+from ..mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
 
 
 class TestImporter(unittest.TestCase):

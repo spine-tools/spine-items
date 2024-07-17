@@ -15,12 +15,12 @@ from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock
-from spinedb_api import append_filter_config
-from spine_engine.utils.helpers import ExecutionDirection
 from spine_engine.project_item.project_item_resource import database_resource
-from spine_items.data_transformer.executable_item import ExecutableItem
+from spine_engine.utils.helpers import ExecutionDirection
 from spine_items.data_transformer.data_transformer_specification import DataTransformerSpecification
+from spine_items.data_transformer.executable_item import ExecutableItem
 from spine_items.data_transformer.settings import EntityClassRenamingSettings
+from spinedb_api import append_filter_config
 
 
 class TestDataTransformerExecutable(unittest.TestCase):

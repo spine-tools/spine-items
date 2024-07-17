@@ -12,11 +12,11 @@
 
 """Contains Merger's executable item as well as support utilities."""
 from contextlib import ExitStack
-from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.spine_engine import ItemExecutionFinishState
+from spine_engine.utils.returning_process import ReturningProcess
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
-from .item_info import ItemInfo
 from .do_work import do_work
+from .item_info import ItemInfo
 
 
 class ExecutableItem(DBWriterExecutableItemBase):

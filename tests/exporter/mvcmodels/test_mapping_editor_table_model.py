@@ -13,11 +13,11 @@
 """Unit tests for export mapping setup table."""
 import unittest
 from unittest.mock import MagicMock
-from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QUndoStack
-from spinedb_api.mapping import Position
-from spinedb_api.export_mapping import entity_export
+from PySide6.QtWidgets import QApplication
 from spine_items.exporter.mvcmodels.mapping_editor_table_model import MappingEditorTableModel
+from spinedb_api.export_mapping import entity_export
+from spinedb_api.mapping import Position
 
 
 class TestMappingTableModel(unittest.TestCase):

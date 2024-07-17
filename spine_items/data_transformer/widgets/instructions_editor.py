@@ -12,10 +12,9 @@
 
 """Contains controller that manages value transformations editor."""
 from PySide6.QtCore import QModelIndex, QObject, Slot
-from PySide6.QtWidgets import QLineEdit, QFormLayout
+from PySide6.QtWidgets import QFormLayout, QLineEdit
 from ..commands import AppendInstruction, ChangeInstructionParameter, ChangeOperation, RemoveInstruction
 from ..mvcmodels.value_transformations_table_model import TransformationsTableColumn, TransformationsTableRole
-
 
 _DISPLAY_TEXT_TO_OPERATION = {
     "multiply": "multiply",
