@@ -11,36 +11,35 @@
 ######################################################################################################################
 
 """Contains ImportSources widget and SourceDataTableMenu."""
-import pickle
 from operator import itemgetter
+import pickle
 from PySide6.QtCore import (
+    QItemSelection,
     QItemSelectionModel,
+    QMimeData,
     QModelIndex,
     QObject,
     QPoint,
     Qt,
     Signal,
     Slot,
-    QMimeData,
-    QItemSelection,
 )
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
-from spinetoolbox.helpers import CharIconEngine
+from spinedb_api.exception import InvalidMappingComponent
 from spinedb_api.import_mapping.type_conversion import (
-    value_to_convert_spec,
     IntegerSequenceDateTimeConvertSpec,
     StringConvertSpec,
+    value_to_convert_spec,
 )
-from spinedb_api.exception import InvalidMappingComponent
-from .custom_menus import SourceListMenu, SourceDataTableMenu
+from spinetoolbox.helpers import CharIconEngine
+from ..commands import DeleteMapping, PasteMappings, PasteOptions, RestoreMappingsFromDict, SetColumnDefaultType
+from ..mvcmodels.mappings_model import Role
+from ..mvcmodels.source_data_table_model import SourceDataTableModel
+from .custom_menus import SourceDataTableMenu, SourceListMenu
 from .mime_types import MAPPING_LIST_MIME_TYPE, TABLE_OPTIONS_MIME_TYPE
 from .options_widget import OptionsWidget
 from .table_view_with_button_header import TYPE_TO_FONT_AWESOME_ICON
-from ..commands import PasteMappings, PasteOptions, RestoreMappingsFromDict, DeleteMapping, SetColumnDefaultType
-from ..mvcmodels.mappings_model import Role
-from ..mvcmodels.source_data_table_model import SourceDataTableModel
-
 
 _EMPTY_DEFAULT_COLUMN_TYPE = "undefined"
 

@@ -17,8 +17,7 @@ import os.path
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .item_info import ItemInfo
-from .tool_instance import GAMSToolInstance, JuliaToolInstance, PythonToolInstance, ExecutableToolInstance
-
+from .tool_instance import ExecutableToolInstance, GAMSToolInstance, JuliaToolInstance, PythonToolInstance
 
 # Tool types
 TOOL_TYPES = ["Julia", "Python", "GAMS", "Executable"]

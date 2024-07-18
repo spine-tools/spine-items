@@ -10,8 +10,8 @@
 ######################################################################################################################
 
 """Unit tests for the ``output_channel`` module."""
-import unittest
 from pathlib import Path
+import unittest
 from spine_items.exporter.output_channel import OutputChannel
 
 

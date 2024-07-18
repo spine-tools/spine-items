@@ -13,10 +13,10 @@
 """The DataConnectionFactory class."""
 from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
-from .data_connection_icon import DataConnectionIcon
 from .data_connection import DataConnection
-from .widgets.data_connection_properties_widget import DataConnectionPropertiesWidget
+from .data_connection_icon import DataConnectionIcon
 from .widgets.add_data_connection_widget import AddDataConnectionWidget
+from .widgets.data_connection_properties_widget import DataConnectionPropertiesWidget
 
 
 class DataConnectionFactory(ProjectItemFactory):

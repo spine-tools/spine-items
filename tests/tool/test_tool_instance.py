@@ -11,12 +11,12 @@
 ######################################################################################################################
 
 """Contains unit tests for the tool_instance module."""
+from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from tempfile import TemporaryDirectory
-from pathlib import Path
-from spine_items.tool.tool_specifications import PythonTool, JuliaTool, GAMSTool, ExecutableTool
+from spine_items.tool.tool_specifications import ExecutableTool, GAMSTool, JuliaTool, PythonTool
 from tests.mock_helpers import MockQSettings
 
 

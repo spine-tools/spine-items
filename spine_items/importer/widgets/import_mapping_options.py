@@ -11,8 +11,7 @@
 ######################################################################################################################
 
 """ImportMappingOptions widget."""
-from PySide6.QtCore import Qt, Slot, QModelIndex
-from .custom_menus import SimpleFilterMenu
+from PySide6.QtCore import QModelIndex, Qt, Slot
 from ..commands import (
     SetImportEntitiesFlag,
     SetImportEntityAlternatives,
@@ -21,14 +20,15 @@ from ..commands import (
     SetMapCompressFlag,
     SetMapDimensionCount,
     SetParameterType,
-    SetValueType,
-    SetSkipColumns,
     SetReadStartRow,
+    SetSkipColumns,
     SetTimeSeriesRepeatFlag,
     SetUseBeforeAlternativeFlag,
+    SetValueType,
 )
 from ..flattened_mappings import MappingType
 from ..mvcmodels.mappings_model import Role
+from .custom_menus import SimpleFilterMenu
 
 
 class ImportMappingOptions:

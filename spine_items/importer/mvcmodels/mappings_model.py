@@ -12,49 +12,44 @@
 
 """Contains a model to handle source tables and import mapping."""
 from __future__ import annotations
-
-import pickle
-import uuid
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
+import pickle
 import re
-
+import uuid
 from PySide6.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor, QFont
-from spinetoolbox.helpers import plain_to_rich, list_to_rich_text, unique_name
-from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
-from spinedb_api import from_database, ParameterValueFormatError
-from spinedb_api.import_mapping.import_mapping import (
-    default_import_mapping,
-    ScenarioBeforeAlternativeMapping,
-)
+from spinedb_api import ParameterValueFormatError, from_database
+from spinedb_api.import_mapping.import_mapping import ScenarioBeforeAlternativeMapping, default_import_mapping
 from spinedb_api.import_mapping.import_mapping_compat import (
-    parse_named_mapping_spec,
     import_mapping_from_dict,
-    parameter_mapping_from_dict,
     parameter_default_value_mapping_from_dict,
+    parameter_mapping_from_dict,
     parameter_value_mapping_from_dict,
+    parse_named_mapping_spec,
     unparse_named_mapping_spec,
 )
-from spinedb_api.import_mapping.type_conversion import FloatConvertSpec, StringConvertSpec, DateTimeConvertSpec
+from spinedb_api.import_mapping.type_conversion import DateTimeConvertSpec, FloatConvertSpec, StringConvertSpec
 from spinedb_api.mapping import Position
 from spinedb_api.mapping import to_dict as import_mapping_to_dict
+from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
+from spinetoolbox.helpers import list_to_rich_text, plain_to_rich, unique_name
 from spinetoolbox.mvcmodels.shared import PARSED_ROLE
 from ..commands import (
     MoveMappingInList,
     MoveTableInList,
     PasteMappings,
     RenameMapping,
+    SetFilterRe,
+    SetMappingPosition,
+    SetMappingPositionType,
     SetTableChecked,
     UpdateTableItem,
-    SetMappingPositionType,
-    SetMappingPosition,
-    SetFilterRe,
 )
-from ..flattened_mappings import FlattenedMappings, VALUE_TYPES
+from ..flattened_mappings import VALUE_TYPES, FlattenedMappings
 from ..mapping_colors import ERROR_COLOR
-from .mappings_model_roles import Role
 from ..widgets.mime_types import MAPPING_LIST_MIME_TYPE, SOURCE_TABLE_LIST_MIME_TYPE
+from .mappings_model_roles import Role
 
 UNNAMED_TABLE_NAME = "<rename this to add table>"
 

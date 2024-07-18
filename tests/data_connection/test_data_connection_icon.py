@@ -11,11 +11,11 @@
 ######################################################################################################################
 
 """Unit tests for DataConnectionIcon class."""
-import unittest
 from tempfile import TemporaryDirectory
+import unittest
 from PySide6.QtWidgets import QApplication
-from tests.mock_helpers import create_toolboxui_with_project, clean_up_toolbox
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
+from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
 
 class TestDataConnectionIcon(unittest.TestCase):

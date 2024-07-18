@@ -11,13 +11,13 @@
 ######################################################################################################################
 
 """Unit tests for DataStoreIcon class."""
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from tempfile import TemporaryDirectory
 from PySide6.QtCore import QEvent
 from PySide6.QtWidgets import QApplication, QGraphicsSceneMouseEvent
-from tests.mock_helpers import create_toolboxui_with_project, clean_up_toolbox
 from spine_items.data_store.data_store_factory import DataStoreFactory
+from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
 
 class TestDataStoreIcon(unittest.TestCase):

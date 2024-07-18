@@ -11,19 +11,19 @@
 ######################################################################################################################
 
 """Exporter's execute kernel (do_work), as target for a multiprocess.Process"""
-import os
 from datetime import datetime
+import os
 from pathlib import Path
 from time import time
-from spinedb_api.spine_io.exporters.writer import write, WriterException
+from spine_engine.utils.helpers import write_filter_id_file
+from spinedb_api import DatabaseMapping, SpineDBAPIError
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
 from spinedb_api.spine_io.exporters.excel_writer import ExcelWriter
 from spinedb_api.spine_io.exporters.gdx_writer import GdxWriter
 from spinedb_api.spine_io.exporters.sql_writer import SqlWriter
-from spinedb_api import DatabaseMapping, SpineDBAPIError
-from spine_engine.utils.helpers import write_filter_id_file
-from .specification import Specification, OutputFormat
+from spinedb_api.spine_io.exporters.writer import WriterException, write
 from ..utils import convert_to_sqlalchemy_url, split_url_credentials
+from .specification import OutputFormat, Specification
 
 
 def do_work(

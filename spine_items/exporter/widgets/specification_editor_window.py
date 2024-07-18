@@ -14,36 +14,36 @@
 from copy import deepcopy
 import json
 from PySide6.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot
-from PySide6.QtGui import QKeySequence, QAction
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QApplication, QHeaderView, QMenu
-from spinedb_api.mapping import unflatten
 from spinedb_api.export_mapping import (
     alternative_export,
-    entity_group_export,
-    parameter_value_list_export,
-    entity_export,
     entity_dimension_parameter_default_value_export,
     entity_dimension_parameter_value_export,
+    entity_export,
+    entity_group_export,
     entity_parameter_default_value_export,
     entity_parameter_value_export,
+    parameter_value_list_export,
     scenario_alternative_export,
     scenario_export,
-)
-from spinedb_api.export_mapping.settings import (
-    set_parameter_dimensions,
-    set_parameter_default_value_dimensions,
-    set_entity_dimensions,
 )
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping, Position
 from spinedb_api.export_mapping.group_functions import (
     GROUP_FUNCTION_DISPLAY_NAMES,
-    group_function_name_from_display,
-    group_function_display_from_name,
     NoGroup,
+    group_function_display_from_name,
+    group_function_name_from_display,
 )
-from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
+from spinedb_api.export_mapping.settings import (
+    set_entity_dimensions,
+    set_parameter_default_value_dimensions,
+    set_parameter_dimensions,
+)
+from spinedb_api.mapping import unflatten
 from spinetoolbox.helpers import SealCommand
-from .preview_updater import PreviewUpdater
+from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
+from ...widgets import combo_box_width
 from ..commands import (
     ChangeWriteOrder,
     ClearFixedTableName,
@@ -54,22 +54,22 @@ from ..commands import (
     RemoveMapping,
     RenameMapping,
     SetAlwaysExportHeader,
-    SetMappingEnabled,
-    SetMappingType,
     SetExportFormat,
-    SetMapping,
-    SetUseFixedTableNameFlag,
     SetFixedTableName,
     SetGroupFunction,
     SetHighlightDimension,
+    SetMapping,
+    SetMappingEnabled,
+    SetMappingType,
+    SetUseFixedTableNameFlag,
 )
+from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT, EditorColumn, MappingEditorTableModel
 from ..mvcmodels.mappings_table_model import MappingsTableModel
-from ..mvcmodels.mapping_editor_table_model import EditorColumn, MappingEditorTableModel, POSITION_DISPLAY_TEXT
 from ..mvcmodels.mappings_table_proxy import MappingsTableProxy
 from ..specification import MappingSpecification, MappingType, OutputFormat, Specification
 from .filter_edit_delegate import FilterEditDelegate
 from .position_edit_delegate import PositionEditDelegate
-from ...widgets import combo_box_width
+from .preview_updater import PreviewUpdater
 
 mapping_type_to_combo_box_label = {
     MappingType.alternatives: "Alternative",
@@ -222,7 +222,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         return "exportSpecificationEditorWindow"
 
     def _make_ui(self):
-        from ..ui.specification_editor import Ui_MainWindow
+        from ..ui.specification_editor import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         return Ui_MainWindow()
 

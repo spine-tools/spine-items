@@ -20,7 +20,7 @@ import spine_items.resources_icons_rc  # pylint: disable=unused-import
 from spine_items.view.item_info import ItemInfo
 from spine_items.view.view import View
 from spine_items.view.view_factory import ViewFactory
-from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
+from ..mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
 
 
 class TestView(unittest.TestCase):

@@ -13,34 +13,34 @@
 """Classes for handling models in PySide6's model/view framework."""
 from collections import namedtuple
 from collections.abc import Iterable
-from PySide6.QtCore import QPoint, Qt, Signal, Slot, QModelIndex
-from PySide6.QtGui import QCursor, QFont, QIcon, QAction
-from PySide6.QtWidgets import (
-    QHeaderView,
-    QMenu,
-    QTableView,
-    QToolButton,
+from PySide6.QtCore import QModelIndex, QPoint, Qt, Signal, Slot
+from PySide6.QtGui import QAction, QCursor, QFont, QIcon
+from PySide6.QtWidgets import (  # pylint: disable=unused-import
+    QDateTimeEdit,
     QDialog,
     QDialogButtonBox,
-    QVBoxLayout,
     QFormLayout,
-    QSpinBox,
-    QDateTimeEdit,
+    QHeaderView,
     QLineEdit,
+    QMenu,
+    QSpinBox,
+    QTableView,
+    QToolButton,
+    QVBoxLayout,
     QWidget,
 )
 from spinedb_api import DateTime, Duration, ParameterValueFormatError
-from spinetoolbox.helpers import CharIconEngine
-from spinedb_api.spine_io.importers.reader import TYPE_STRING_TO_CLASS
 from spinedb_api.import_mapping.type_conversion import (
-    IntegerSequenceDateTimeConvertSpec,
-    value_to_convert_spec,
     BooleanConvertSpec,
-    StringConvertSpec,
     DateTimeConvertSpec,
     DurationConvertSpec,
     FloatConvertSpec,
+    IntegerSequenceDateTimeConvertSpec,
+    StringConvertSpec,
+    value_to_convert_spec,
 )
+from spinedb_api.spine_io.importers.reader import TYPE_STRING_TO_CLASS
+from spinetoolbox.helpers import CharIconEngine
 from ..commands import SetColumnOrRowType
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
 

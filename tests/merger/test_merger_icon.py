@@ -11,11 +11,11 @@
 ######################################################################################################################
 
 """Unit tests for MergerIcon class."""
-import unittest
 from tempfile import TemporaryDirectory
+import unittest
 from PySide6.QtWidgets import QApplication
-from tests.mock_helpers import create_toolboxui_with_project, clean_up_toolbox
 from spine_items.merger.merger_factory import MergerFactory
+from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
 
 class TestMergerIcon(unittest.TestCase):

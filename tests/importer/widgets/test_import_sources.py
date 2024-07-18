@@ -22,7 +22,6 @@ from spine_items.importer.widgets.import_sources import ImportSources
 from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
 from spinedb_api.spine_io.importers.reader import SourceConnection
 from spinetoolbox.helpers import signal_waiter
-
 from tests.importer.helpers import append_source_table_with_mappings
 
 

@@ -15,8 +15,8 @@ from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .data_store import DataStore
 from .data_store_icon import DataStoreIcon
-from .widgets.data_store_properties_widget import DataStorePropertiesWidget
 from .widgets.add_data_store_widget import AddDataStoreWidget
+from .widgets.data_store_properties_widget import DataStorePropertiesWidget
 
 
 class DataStoreFactory(ProjectItemFactory):

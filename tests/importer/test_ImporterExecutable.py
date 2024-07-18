@@ -16,11 +16,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from spinedb_api import create_new_spine_database, DatabaseMapping
-from spinedb_api.spine_db_server import db_server_manager
 from spine_engine.project_item.project_item_resource import database_resource, file_resource
 from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.importer_specification import ImporterSpecification
+from spinedb_api import DatabaseMapping, create_new_spine_database
+from spinedb_api.spine_db_server import db_server_manager
 
 
 class TestImporterExecutable(unittest.TestCase):

@@ -12,25 +12,25 @@
 
 """Unit tests for Data Connection project item."""
 import os
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtCore import QItemSelectionModel
-from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 from PySide6.QtGui import Qt
-from spinedb_api import create_new_spine_database
-from spinetoolbox.helpers import signal_waiter
-from spine_items.data_connection.data_connection import _Role, DataConnection
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
+from spine_items.data_connection.data_connection import DataConnection, _Role
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.data_connection.item_info import ItemInfo
+from spinedb_api import create_new_spine_database
+from spinetoolbox.helpers import signal_waiter
 from tests.mock_helpers import (
     clean_up_toolbox,
-    create_toolboxui_with_project,
-    mock_finish_project_item_construction,
     create_mock_project,
     create_mock_toolbox,
+    create_toolboxui_with_project,
+    mock_finish_project_item_construction,
 )
 
 

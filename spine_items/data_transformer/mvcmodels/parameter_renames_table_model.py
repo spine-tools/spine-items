@@ -13,8 +13,8 @@
 """Contains :class:`ParameterRenamesTableModel`."""
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt
-from .parameter_drop_target_table_model import ParameterDropTargetTableModel
 from ..commands import SetData
+from .parameter_drop_target_table_model import ParameterDropTargetTableModel
 
 
 @unique

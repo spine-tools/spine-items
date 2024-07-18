@@ -11,22 +11,22 @@
 ######################################################################################################################
 
 """Contains Importer's executable item as well as support utilities."""
-import os
 from contextlib import ExitStack
+import os
+from spine_engine.project_item.executable_item_base import ExecutableItemBase
+from spine_engine.project_item.project_item_resource import get_labelled_source_resources
+from spine_engine.spine_engine import ItemExecutionFinishState
+from spine_engine.utils.returning_process import ReturningProcess
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
+from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
 from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
 from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
 from spinedb_api.spine_io.importers.json_reader import JSONConnector
-from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
 from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
-from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import get_labelled_source_resources
-from spine_engine.utils.returning_process import ReturningProcess
-from spine_engine.spine_engine import ItemExecutionFinishState
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
-from .item_info import ItemInfo
 from .do_work import do_work
+from .item_info import ItemInfo
 
 
 class ExecutableItem(DBWriterExecutableItemBase):

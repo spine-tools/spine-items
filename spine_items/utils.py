@@ -11,14 +11,14 @@
 ######################################################################################################################
 
 """ Contains utilities shared between project items. """
-import os.path
 from contextlib import suppress
+import os.path
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL, make_url
+from spine_engine.utils.queue_logger import SuppressedMessage
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
-from spine_engine.utils.queue_logger import SuppressedMessage
-from spinedb_api.helpers import remove_credentials_from_url, SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS
+from spinedb_api.helpers import SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS, remove_credentials_from_url
 
 
 class URLError(Exception):

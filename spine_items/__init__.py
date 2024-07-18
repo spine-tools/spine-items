@@ -15,25 +15,18 @@ from .version import __version__
 
 
 def _factories_and_executable_items():
-    from . import data_connection
+    from . import data_connection, data_store, data_transformer, exporter, importer, merger, tool, view
     from .data_connection.data_connection_factory import DataConnectionFactory
-    from . import data_store
     from .data_store.data_store_factory import DataStoreFactory
-    from . import data_transformer
-    from .data_transformer.data_transformer_factory import DataTransformerFactory
     from .data_transformer import specification_factory
-    from . import exporter
-    from .exporter.exporter_factory import ExporterFactory
+    from .data_transformer.data_transformer_factory import DataTransformerFactory
     from .exporter import specification_factory
-    from . import importer
-    from .importer.importer_factory import ImporterFactory
+    from .exporter.exporter_factory import ExporterFactory
     from .importer import specification_factory
-    from . import merger
+    from .importer.importer_factory import ImporterFactory
     from .merger.merger_factory import MergerFactory
-    from . import tool
-    from .tool.tool_factory import ToolFactory
     from .tool import specification_factory
-    from . import view
+    from .tool.tool_factory import ToolFactory
     from .view.view_factory import ViewFactory
 
     modules = (data_connection, data_store, data_transformer, exporter, importer, merger, tool, view)

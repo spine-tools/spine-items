@@ -11,9 +11,9 @@
 ######################################################################################################################
 
 """Unit tests for the options_widgets.py module."""
-import unittest
 import logging
 import sys
+import unittest
 from PySide6.QtWidgets import QApplication, QWidget
 from spine_items.tool.widgets.options_widgets import JuliaOptionsWidget
 

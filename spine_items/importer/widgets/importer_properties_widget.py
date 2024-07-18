@@ -13,8 +13,8 @@
 """Importer properties widget."""
 from PySide6.QtCore import QPoint, Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from .custom_menus import FilesContextMenu
 from ..item_info import ItemInfo
+from .custom_menus import FilesContextMenu
 
 
 class ImporterPropertiesWidget(PropertiesWidgetBase):

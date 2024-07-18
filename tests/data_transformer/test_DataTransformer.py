@@ -16,7 +16,6 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtWidgets import QApplication
-from spinedb_api import append_filter_config
 from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.data_transformer.data_transformer import DataTransformer
 from spine_items.data_transformer.data_transformer_factory import DataTransformerFactory
@@ -24,7 +23,8 @@ from spine_items.data_transformer.data_transformer_specification import DataTran
 from spine_items.data_transformer.filter_config_path import filter_config_path
 from spine_items.data_transformer.item_info import ItemInfo
 from spine_items.data_transformer.settings import EntityClassRenamingSettings
-from ..mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
+from spinedb_api import append_filter_config
+from ..mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
 
 
 class TestDataTransformer(unittest.TestCase):

@@ -14,9 +14,9 @@
 import unittest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
+from spine_items.importer.widgets.table_view_with_button_header import IntegerSequenceDateTimeConvertSpecDialog
 from spinedb_api import DateTime, Duration
 from spinedb_api.import_mapping.type_conversion import IntegerSequenceDateTimeConvertSpec
-from spine_items.importer.widgets.table_view_with_button_header import IntegerSequenceDateTimeConvertSpecDialog
 
 
 class TestIntegerSequenceDateTimeConvertSpecDialog(unittest.TestCase):

@@ -16,8 +16,8 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtWidgets import QApplication
-from spine_engine.utils.helpers import shorten
 from spine_engine.project_item.project_item_resource import database_resource
+from spine_engine.utils.helpers import shorten
 from spine_items.data_store.data_store import DataStore
 from spine_items.exporter.exporter import Exporter
 from spine_items.exporter.exporter_factory import ExporterFactory
@@ -28,10 +28,10 @@ from spinedb_api import create_new_spine_database
 from spinetoolbox.project_item.logging_connection import LoggingConnection
 from ..mock_helpers import (
     clean_up_toolbox,
-    create_toolboxui_with_project,
-    mock_finish_project_item_construction,
     create_mock_project,
     create_mock_toolbox,
+    create_toolboxui_with_project,
+    mock_finish_project_item_construction,
 )
 
 

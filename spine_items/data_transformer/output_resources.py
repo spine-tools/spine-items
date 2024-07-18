@@ -12,9 +12,9 @@
 
 """Contains utilities to scan for Data Transformer's output resources."""
 from spine_engine.project_item.project_item_resource import database_resource
+from spine_items.utils import database_label
 from spinedb_api import append_filter_config
 from spinedb_api.filters.tools import store_filter
-from spine_items.utils import database_label
 
 
 def scan_for_resources(provider, dt_specification, db_resources, filter_config_path):

@@ -14,16 +14,16 @@
 import functools
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QComboBox,
-    QCheckBox,
     QSpinBox,
-    QWidget,
+    QStyle,
     QTableWidget,
     QToolButton,
-    QHBoxLayout,
-    QStyle,
+    QWidget,
 )
 from ..commands import SetConnectorOption
 

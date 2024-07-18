@@ -19,7 +19,7 @@ from unittest import mock
 from PySide6.QtWidgets import QApplication
 from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
 from spine_items.exporter.widgets.specification_editor_window import SpecificationEditorWindow
-from spinedb_api.export_mapping.export_mapping import FixedValueMapping, EntityClassMapping
+from spinedb_api.export_mapping.export_mapping import EntityClassMapping, FixedValueMapping
 from spinedb_api.export_mapping.export_mapping import from_dict as mappings_from_dict
 from spinedb_api.mapping import Position, unflatten
 from ...mock_helpers import clean_up_toolbox, create_toolboxui_with_project

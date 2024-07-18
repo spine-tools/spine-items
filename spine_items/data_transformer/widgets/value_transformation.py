@@ -14,13 +14,13 @@
 from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.value_transformations_table_model import (
-    ValueTransformationsTableModel,
     TransformationsTableColumn,
     TransformationsTableRole,
+    ValueTransformationsTableModel,
 )
+from ..settings import ValueTransformSettings
 from .copy_paste import copy_table_data, paste_table_data
 from .instructions_editor import InstructionsEditor
-from ..settings import ValueTransformSettings
 
 
 class ValueTransformation(QObject):

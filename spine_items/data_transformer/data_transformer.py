@@ -15,9 +15,9 @@ from json import dump
 from PySide6.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
-from .item_info import ItemInfo
 from .executable_item import ExecutableItem
 from .filter_config_path import filter_config_path
+from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 
 

@@ -13,7 +13,7 @@
 """Contains :class:`ClassTreeWidget`."""
 import pickle
 from PySide6.QtCore import QMimeData
-from PySide6.QtWidgets import QTreeWidget, QMessageBox, QTreeWidgetItem
+from PySide6.QtWidgets import QMessageBox, QTreeWidget, QTreeWidgetItem
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from .drop_target_table import DROP_MIME_TYPE
 

@@ -11,10 +11,10 @@
 ######################################################################################################################
 
 """Unit tests for Exporter's ``executable_item`` module."""
-import unittest
-from unittest import mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import unittest
+from unittest import mock
 from PySide6.QtWidgets import QApplication
 from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.exporter.executable_item import ExecutableItem

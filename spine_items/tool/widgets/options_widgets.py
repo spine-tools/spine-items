@@ -14,14 +14,14 @@
 import os
 import sys
 import uuid
-from PySide6.QtCore import Qt, Slot, QVariantAnimation, QPointF
-from PySide6.QtWidgets import QWidget, QFileDialog
-from PySide6.QtGui import QIcon, QLinearGradient, QPalette, QBrush
-from spine_items.utils import escape_backward_slashes
+from PySide6.QtCore import QPointF, Qt, QVariantAnimation, Slot
+from PySide6.QtGui import QBrush, QIcon, QLinearGradient, QPalette
+from PySide6.QtWidgets import QFileDialog, QWidget
 from spine_items.tool.utils import get_julia_path_and_project
-from spinetoolbox.spine_engine_worker import SpineEngineWorker
+from spine_items.utils import escape_backward_slashes
 from spinetoolbox.execution_managers import QProcessExecutionManager
-from spinetoolbox.helpers import get_open_file_name_in_last_dir, CharIconEngine, make_settings_dict_for_engine
+from spinetoolbox.helpers import CharIconEngine, get_open_file_name_in_last_dir, make_settings_dict_for_engine
+from spinetoolbox.spine_engine_worker import SpineEngineWorker
 
 
 class OptionsWidget(QWidget):

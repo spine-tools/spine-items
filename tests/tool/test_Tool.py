@@ -11,19 +11,19 @@
 ######################################################################################################################
 
 """Unit tests for Tool project item."""
+import os
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-import os
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QApplication, QMenu
+from spine_engine.config import TOOL_OUTPUT_DIR
+from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_items.tool.item_info import ItemInfo
-from spine_items.tool.tool_specifications import ExecutableTool
 from spine_items.tool.tool import Tool
 from spine_items.tool.tool_factory import ToolFactory
-from spine_engine.project_item.project_item_resource import ProjectItemResource
-from spine_engine.config import TOOL_OUTPUT_DIR
-from tests.mock_helpers import mock_finish_project_item_construction, create_mock_project, create_mock_toolbox
+from spine_items.tool.tool_specifications import ExecutableTool
+from tests.mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
 
 
 class TestTool(unittest.TestCase):

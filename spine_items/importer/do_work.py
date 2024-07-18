@@ -13,12 +13,12 @@
 """Importer's execute kernel (do_work), as target for a multiprocess.Process"""
 import os
 from spine_engine.project_item.project_item_resource import get_source, get_source_extras
-from spinedb_api import clear_filter_configs, InvalidMapping
-from spinedb_api.helpers import remove_credentials_from_url
-from spinedb_api.spine_db_client import SpineDBClient
-from spinedb_api.parameter_value import to_database
-from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spine_engine.utils.helpers import create_log_file_timestamp
+from spinedb_api import InvalidMapping, clear_filter_configs
+from spinedb_api.helpers import remove_credentials_from_url
+from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
+from spinedb_api.parameter_value import to_database
+from spinedb_api.spine_db_client import SpineDBClient
 
 
 def do_work(

@@ -15,7 +15,6 @@ from PySide6.QtCore import Property, Slot
 from PySide6.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate
 from ..mvcmodels.mapping_editor_table_model import POSITION_DISPLAY_TEXT
 
-
 _positions = list(POSITION_DISPLAY_TEXT.values())
 
 

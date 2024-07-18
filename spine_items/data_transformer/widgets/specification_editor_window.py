@@ -13,17 +13,16 @@
 """Contains :class:`SpecificationEditorWindow`."""
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QFileDialog, QHeaderView
-
 from spinetoolbox.helpers import disconnect
 from spinetoolbox.project_item.specification_editor_window import (
-    SpecificationEditorWindowBase,
     ChangeSpecPropertyCommand,
+    SpecificationEditorWindowBase,
 )
+from ..data_transformer_specification import DataTransformerSpecification
+from ..settings import EntityClassRenamingSettings, ParameterRenamingSettings, ValueTransformSettings
 from .class_rename import ClassRename
 from .parameter_rename import ParameterRename
 from .value_transformation import ValueTransformation
-from ..data_transformer_specification import DataTransformerSpecification
-from ..settings import EntityClassRenamingSettings, ParameterRenamingSettings, ValueTransformSettings
 
 _FILTER_NAMES = ("Rename entity classes", "Rename parameters", "Transform values")
 

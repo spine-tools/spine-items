@@ -11,13 +11,13 @@
 ######################################################################################################################
 
 """Unit tests for DataTransformerIcon class."""
+from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from tempfile import TemporaryDirectory
 from PySide6.QtCore import QEvent
 from PySide6.QtWidgets import QApplication, QGraphicsSceneMouseEvent
-from tests.mock_helpers import create_toolboxui_with_project, clean_up_toolbox
 from spine_items.data_transformer.data_transformer_factory import DataTransformerFactory
+from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
 
 class TestDataTransformerIcon(unittest.TestCase):

@@ -16,8 +16,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from spine_items.tool.utils import find_last_output_files, get_julia_path_and_project
 from spine_engine.utils.helpers import AppSettings
+from spine_items.tool.utils import find_last_output_files, get_julia_path_and_project
 
 
 class TestFindLastOutputFiles(unittest.TestCase):

@@ -15,8 +15,8 @@ from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .merger import Merger
 from .merger_icon import MergerIcon
-from .widgets.merger_properties_widget import MergerPropertiesWidget
 from .widgets.add_merger_widget import AddMergerWidget
+from .widgets.merger_properties_widget import MergerPropertiesWidget
 
 
 class MergerFactory(ProjectItemFactory):
