@@ -15,7 +15,7 @@ from collections import namedtuple
 from collections.abc import Iterable
 from PySide6.QtCore import QModelIndex, QPoint, Qt, Signal, Slot
 from PySide6.QtGui import QAction, QCursor, QFont, QIcon
-from PySide6.QtWidgets import (
+from PySide6.QtWidgets import (  # pylint: disable=unused-import
     QDateTimeEdit,
     QDialog,
     QDialogButtonBox,

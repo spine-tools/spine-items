@@ -22,7 +22,6 @@ from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinedb_api.helpers import remove_credentials_from_url, vacuum
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project_item.project_item import ProjectItem
-from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import MultiSpineDBEditor
 from spinetoolbox.widgets.custom_qwidgets import SelectDatabaseItemsDialog
 from ..database_validation import DatabaseConnectionValidator
 from ..utils import convert_to_sqlalchemy_url, database_label

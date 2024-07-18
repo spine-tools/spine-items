@@ -20,7 +20,6 @@ import os.path
 import pathlib
 import re
 import shutil
-import sys
 import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR

@@ -13,7 +13,7 @@
 """Contains Exporter's undo commands."""
 from copy import copy, deepcopy
 from enum import IntEnum, unique
-from PySide6.QtCore import QModelIndex, Qt
+from PySide6.QtCore import QModelIndex, Qt  # pylint: disable=unused-import
 from PySide6.QtGui import QUndoCommand
 from spinetoolbox.helpers import SealCommand
 from spinetoolbox.project_commands import SpineToolboxCommand

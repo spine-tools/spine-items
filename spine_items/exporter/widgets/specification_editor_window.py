@@ -222,7 +222,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         return "exportSpecificationEditorWindow"
 
     def _make_ui(self):
-        from ..ui.specification_editor import Ui_MainWindow
+        from ..ui.specification_editor import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         return Ui_MainWindow()
 
