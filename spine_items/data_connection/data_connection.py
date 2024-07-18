@@ -63,9 +63,9 @@ class DataConnection(ProjectItem):
         """
         super().__init__(name, description, x, y, project)
         if file_references is None:
-            file_references = list()
+            file_references = []
         if db_references is None:
-            db_references = list()
+            db_references = []
         self._toolbox = toolbox
         self.reference_model = QStandardItemModel()  # References
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
@@ -825,7 +825,7 @@ class DataConnection(ProjectItem):
     def from_dict(name, item_dict, toolbox, project):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         # FIXME: Do we want to convert references to file_references via upgrade?
-        file_references = item_dict.get("file_references", list()) or item_dict.get("references", list())
+        file_references = item_dict.get("file_references", []) or item_dict.get("references", [])
         file_references = [deserialize_path(r, project.project_dir) for r in file_references]
         db_references = restore_database_references(
             item_dict.get("db_references", []), item_dict.get("db_credentials", {}), project.project_dir

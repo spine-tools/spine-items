@@ -119,7 +119,7 @@ class ValueTransformation(QObject):
         Returns:
             FilterSettings: settings
         """
-        settings = dict()
+        settings = {}
         for row in range(self._transformation_table_model.rowCount()):
             entity_class = self._transformation_table_model.index(row, TransformationsTableColumn.CLASS).data()
             parameter = self._transformation_table_model.index(row, TransformationsTableColumn.PARAMETER).data()

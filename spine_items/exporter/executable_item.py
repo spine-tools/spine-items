@@ -49,7 +49,7 @@ class ExecutableItem(ExecutableItemBase):
         self._output_time_stamps = output_time_stamps
         self._cancel_on_error = cancel_on_error
         self._gams_path = gams_path
-        self._forks = dict()
+        self._forks = {}
         self._result_files = {}
         self._process = None
         self._specification = specification
@@ -197,7 +197,7 @@ class ExecutableItem(ExecutableItemBase):
 
     def _output_resources_forward(self):
         """See base class."""
-        resources = list()
+        resources = []
         for label, output_files in self._result_files.items():
             resources += [file_resource_in_pack(self.name, label, str(Path(self._data_dir, f))) for f in output_files]
         if self._specification is not None and self._specification.output_format == OutputFormat.SQL:

@@ -126,7 +126,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             name, ItemInfo.item_type(), specification_name, specifications, logger
         )
         mapping = specification.mapping if specification else {}
-        file_selection = {label: selected for label, selected in item_dict.get("file_selection", list())}
+        file_selection = {label: selected for label, selected in item_dict.get("file_selection", [])}
         selected_files = [filepath for filepath, selected in file_selection.items() if selected]
         gams_path = app_settings.value("appSettings/gamsPath", defaultValue=None)
         cancel_on_error = item_dict["cancel_on_error"]

@@ -54,7 +54,7 @@ class MappingsTableModel(QAbstractTableModel):
         """
         super().__init__(parent)
         if mappings is None:
-            mappings = dict()
+            mappings = {}
         self._names = list(mappings)
         self._mappings = mappings
 

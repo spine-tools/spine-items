@@ -571,7 +571,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
 
 class FakeSignal:
     def __init__(self):
-        self.call_list = list()  # List of slots
+        self.call_list = []  # List of slots
 
     def connect(self, method):
         """Stores all slots connected to this FakeSignal into a list."""
@@ -594,8 +594,8 @@ class FakeKernelFetcher:
     def start(self):
         for m in self.kernel_found.call_list:
             # Calls SharedToolSpecOptionalWidget.add_kernel()
-            m("python310", "", False, QIcon(), dict())
-            m("python311", "", False, QIcon(), dict())
+            m("python310", "", False, QIcon(), {})
+            m("python311", "", False, QIcon(), {})
         for meth in self.finished.call_list:
             # Calls two methods:
             # 1. Either SharedToolSpecOptionalWidget._restore_saved_kernel() or

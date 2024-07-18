@@ -109,7 +109,7 @@ class ParameterRename(QObject):
         Returns:
             FilterSettings: settings
         """
-        settings = dict()
+        settings = {}
         for row in range(self._rename_table_model.rowCount()):
             entity_class = self._rename_table_model.index(row, RenamesTableColumn.CLASS).data()
             parameter = self._rename_table_model.index(row, RenamesTableColumn.PARAMETER).data()

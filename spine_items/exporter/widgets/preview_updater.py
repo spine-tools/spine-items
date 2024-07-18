@@ -71,9 +71,9 @@ class PreviewUpdater:
         self._preview_tree_model.dataChanged.connect(self._expand_tree_after_table_change)
         self._preview_tree_model.rowsInserted.connect(self._expand_tree_after_table_insert)
         self._preview_table_model = PreviewTableModel()
-        self._stamps = dict()
+        self._stamps = {}
         self._thread_pool = QThreadPool()
-        self._mapping_tables = dict()
+        self._mapping_tables = {}
         self._ui.preview_tree_view.setModel(self._preview_tree_model)
         self._ui.preview_tree_view.selectionModel().currentChanged.connect(self._change_table)
         self._ui.preview_table_view.setModel(self._preview_table_model)

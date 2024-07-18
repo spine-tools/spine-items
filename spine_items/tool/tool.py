@@ -92,9 +92,9 @@ class Tool(DBWriterItemBase):
         self._options = options if options is not None else {}
         self._kill_completed_processes = kill_completed_processes
         self._log_process_output = log_process_output
-        self._resources_from_upstream = list()
-        self._resources_from_downstream = list()
-        self._available_resources = list()
+        self._resources_from_upstream = []
+        self._resources_from_downstream = []
+        self._available_resources = []
         self._req_file_paths = set()
         self._input_files_not_found = None
 
@@ -445,7 +445,7 @@ class Tool(DBWriterItemBase):
         """
         if not self.specification():
             return {}
-        file_paths = dict()
+        file_paths = {}
         for req_file_path in self.specification().inputfiles:
             # Just get the filename if there is a path attached to the file
             _, filename = os.path.split(req_file_path)
@@ -550,7 +550,7 @@ class Tool(DBWriterItemBase):
         """Updates the file model and command line arguments."""
         resources = self._resources_from_upstream + self._resources_from_downstream
         self._input_file_model.update(resources)
-        update_args = list()
+        update_args = []
         resource_labels = {resource.label for resource in resources}
         for arg in self.cmd_line_args:
             if arg.arg in resource_labels:

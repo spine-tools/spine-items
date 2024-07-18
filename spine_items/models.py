@@ -199,7 +199,7 @@ class ToolCommandLineArgsModel(CommandLineArgsModel):
 
     def reset_model(self, spec_args, tool_args):
         self._args = tool_args
-        self._reset_root(self._spec_args_root, spec_args, dict(), has_empty_row=False)
+        self._reset_root(self._spec_args_root, spec_args, {}, has_empty_row=False)
         self._reset_root(
             self._tool_args_root, tool_args, dict(editable=True, selectable=True, drag_enabled=True), has_empty_row=True
         )

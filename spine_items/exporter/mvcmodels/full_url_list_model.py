@@ -20,7 +20,7 @@ class FullUrlListModel(QAbstractListModel):
             parent (QObject, optional): model's parent
         """
         super().__init__(parent)
-        self._urls = list()
+        self._urls = []
 
     def append(self, url):
         """

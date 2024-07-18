@@ -38,7 +38,7 @@ class TestMergerExecutable(unittest.TestCase):
         name = "Output Data Store"
         item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "cancel_on_error": True}
         logger = mock.MagicMock()
-        item = ExecutableItem.from_dict(item_dict, name, self._temp_dir.name, None, dict(), logger)
+        item = ExecutableItem.from_dict(item_dict, name, self._temp_dir.name, None, {}, logger)
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("Merger", item.item_type())
 

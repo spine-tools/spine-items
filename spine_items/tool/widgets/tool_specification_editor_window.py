@@ -980,7 +980,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         path = self.includes_main_path if self.includes_main_path else self._project.project_dir
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QFileDialog.getExistingDirectory(self, "Select a directory to add to program files", path)
-        file_paths = list()
+        file_paths = []
         main_program_file = self._current_main_program_file()
         for root, _, files in os.walk(answer):
             for file in files:

@@ -59,8 +59,8 @@ def do_work(
         tuple: boolean success flag, dictionary of output files
     """
     specification = Specification.from_dict(specification)
-    successes = list()
-    written_files = dict()
+    successes = []
+    written_files = {}
     for url, output_label in databases.items():
         try:
             database_map = DatabaseMapping(url)
@@ -157,7 +157,7 @@ def _export_to_file(
             files = {out_path}
         written_files[output_label] = files
         if len(files) > 1:
-            anchors = list()
+            anchors = []
             for path in (Path(f) for f in files):
                 anchors.append(f"\t<a style='color:#BB99FF;' title='{path}' href='file:///{path}'>{path.name}</a>")
             logger.msg_success.emit(f"Wrote multiple files:<br>{'<br>'.join(anchors)}")

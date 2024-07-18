@@ -543,7 +543,7 @@ class ImportSources(QObject):
         col_types = self._connector.table_types
         row_types = self._connector.table_row_types
         table_name = table_index.data(Role.ITEM).name
-        options_dict = dict()
+        options_dict = {}
         options_dict["options"] = options.get(table_name, {})
         options_dict["col_types"] = col_types.get(table_name, {})
         options_dict["row_types"] = row_types.get(table_name, {})
@@ -594,7 +594,7 @@ class ImportSources(QObject):
 def _sanitize_data(data, header):
     """Fills empty data cells with None."""
     expected_columns = len(header) if header else max((len(x) for x in data))
-    sanitized_data = list()
+    sanitized_data = []
     for row in data:
         length_diff = expected_columns - len(row)
         if length_diff > 0:

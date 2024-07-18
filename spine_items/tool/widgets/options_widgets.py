@@ -243,7 +243,7 @@ class JuliaOptionsWidget(OptionsWidget):
             options["julia_sysimage"] = ""  # Don't use any previous sysimages
         spec_dict = spec.to_dict()
         spec_dict["definition_file_path"] = spec.definition_file_path
-        engine_data["specifications"].setdefault(self._tool.item_type(), list()).append(spec_dict)
+        engine_data["specifications"].setdefault(self._tool.item_type(), []).append(spec_dict)
         self.sysimage_worker.set_engine_data(engine_data)
         self.sysimage_worker.finished.connect(lambda tool=self._tool: self._do_create_sysimage(tool))
         self._update_ui()

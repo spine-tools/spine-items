@@ -32,7 +32,7 @@ class ExecutableItem(ExecutableItemBase):
             logger (LoggerInterface): a logger
         """
         super().__init__(name, project_dir, logger)
-        data_files = list()
+        data_files = []
         with os.scandir(self._data_dir) as scan_iterator:
             for entry in scan_iterator:
                 if entry.is_file():

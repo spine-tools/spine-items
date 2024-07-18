@@ -192,7 +192,7 @@ class ToolSpecification(ProjectItemSpecification):
         Returns:
             dict: definition or None if there was a problem in the tool definition.
         """
-        kwargs = dict()
+        kwargs = {}
         for p in REQUIRED_KEYS + OPTIONAL_KEYS:
             try:
                 kwargs[p] = data[p]
@@ -433,7 +433,7 @@ class JuliaTool(ToolSpecification):
             julia_project (str): Julia project
             julia_kernel (str): Julia kernel for Jupyter Console
         """
-        d = dict()
+        d = {}
         d["kernel_spec_name"] = julia_kernel
         d["env"] = ""
         d["use_jupyter_console"] = use_julia_jupyter_console
@@ -447,7 +447,7 @@ class JuliaTool(ToolSpecification):
             # Use global (default) execution settings from Settings->Tools
             # This part is for providing support for Julia Tool specs that do not have
             # the execution_settings dict yet
-            d = dict()
+            d = {}
             d["kernel_spec_name"] = self._settings.value("appSettings/juliaKernel", defaultValue="")
             d["env"] = ""
             d["use_jupyter_console"] = bool(
@@ -549,7 +549,7 @@ class PythonTool(ToolSpecification):
             python_kernel (str): Julia kernel for Jupyter Console
             env (str): empty string for regular kernels, 'conda' for Conda kernels
         """
-        d = dict()
+        d = {}
         d["kernel_spec_name"] = python_kernel
         d["env"] = env
         d["use_jupyter_console"] = use_python_jupyter_console
@@ -567,7 +567,7 @@ class PythonTool(ToolSpecification):
             # Use global (default) execution settings from Settings->Tools
             # This part is for providing support for Python Tool specs that do not have
             # the execution_settings dict yet
-            d = dict()
+            d = {}
             d["kernel_spec_name"] = self._settings.value("appSettings/pythonKernel", defaultValue="")
             d["env"] = ""
             d["use_jupyter_console"] = bool(
@@ -684,7 +684,7 @@ class ExecutableTool(ToolSpecification):
             void
         """
         if not self.execution_settings:
-            d = dict()
+            d = {}
             d["cmd"] = ""
             d["shell"] = ""
             self.execution_settings = d

@@ -43,7 +43,7 @@ class ToolInstance:
         self._owner = owner
         self.exec_mngr = None
         self.program = None  # Program to start in the subprocess
-        self.args = list()  # List of command line arguments for the program
+        self.args = []  # List of command line arguments for the program
         self.killed = False
 
     def _update_killed(self):
@@ -278,7 +278,7 @@ class PythonToolInstance(ToolInstance):
         Returns:
             list: List of commands for the Python Basic Console
         """
-        commands = list()
+        commands = []
         fp = self.tool_specification.main_prgm
         full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm).replace(os.sep, "/")
         commandline_args = [full_fp] + cmdline_args

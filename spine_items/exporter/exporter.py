@@ -76,8 +76,8 @@ class Exporter(ProjectItem):
         self._toolbox = toolbox
         self._append_output_time_stamps = output_time_stamps
         self._cancel_on_error = cancel_on_error
-        self._output_filenames = dict()
-        self._export_list_items = dict()
+        self._output_filenames = {}
+        self._export_list_items = {}
         self._full_url_model = FullUrlListModel()
         self._exported_files = None
         self._notifications = _Notifications()
@@ -456,7 +456,7 @@ class Exporter(ProjectItem):
         if self._exported_files is not None:
             data_dir_parts = Path(self.data_dir).parts
             for label, file_list in self._exported_files.items():
-                new_file_list = list()
+                new_file_list = []
                 for file_path in file_list:
                     new_file_path = Path()
                     for old_part, new_part in zip_longest(Path(file_path).parts, data_dir_parts):

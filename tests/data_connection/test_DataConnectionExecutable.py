@@ -45,7 +45,7 @@ class TestDataConnectionExecutable(unittest.TestCase):
         dc_data_dir.mkdir(parents=True)
         temp_file_path = pathlib.Path(dc_data_dir, "file.txt")
         temp_file_path.touch()
-        item = ExecutableItem.from_dict(item_dict, "DC", self._temp_dir.name, None, dict(), logger)
+        item = ExecutableItem.from_dict(item_dict, "DC", self._temp_dir.name, None, {}, logger)
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("Data Connection", item.item_type())
         self.assertEqual(2, len(item._file_paths))

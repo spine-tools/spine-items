@@ -420,7 +420,7 @@ class FlattenedMappings:
             self._row_issues = {}
             for issue in check_validity(self._components[0]):
                 self._row_issues.setdefault(issue.rank, []).append(issue.msg)
-        return self._row_issues.get(self._display_to_logical[row], list())
+        return self._row_issues.get(self._display_to_logical[row], [])
 
     def _component_name_from_type(self, component_type):
         """Computes display name for a mapping component.

@@ -42,7 +42,7 @@ def scan_for_resources(provider, tool_specification, output_dir):
         return []
     last_output_files = find_last_output_files(tool_specification.outputfiles, output_dir)
     for out_file_label in tool_specification.outputfiles:
-        latest_files = last_output_files.get(out_file_label, list())
+        latest_files = last_output_files.get(out_file_label, [])
         make_resource = file_resource if not is_pattern(out_file_label) else file_resource_in_pack
         for out_file in latest_files:
             resources.append(make_resource(provider.name, file_path=out_file, label=out_file_label))

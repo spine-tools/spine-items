@@ -93,7 +93,7 @@ class TestToolExecutable(unittest.TestCase):
             name="T",
             project_dir=temp_project_dir,
             app_settings=mock_settings,
-            specifications=dict(),
+            specifications={},
             logger=mock.MagicMock(),
         )
         self.assertIsInstance(item, ExecutableItem)
@@ -138,7 +138,7 @@ class TestToolExecutable(unittest.TestCase):
             project_dir=self._temp_dir.name,
             logger=logger,
         )
-        self.assertFalse(executable.ready_to_execute(settings=dict()))
+        self.assertFalse(executable.ready_to_execute(settings={}))
 
     def test_execute_archives_output_files(self):
         script_dir = pathlib.Path(self._temp_dir.name, "scripts")

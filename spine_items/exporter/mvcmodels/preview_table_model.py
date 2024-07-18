@@ -19,7 +19,7 @@ class PreviewTableModel(QAbstractTableModel):
 
     def __init__(self):
         super().__init__()
-        self._table = list()
+        self._table = []
         self._mapping_name = None
         self._table_name = None
         self._row_to_map_color = {}

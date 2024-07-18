@@ -28,7 +28,7 @@ class ExecutableItem(ExecutableItemBase):
             logger (LoggerInterface): a logger
         """
         super().__init__(name, project_dir, logger)
-        self._db_resources = list()
+        self._db_resources = []
         self._specification = specification
         self._filter_config_path = filter_config_path(self._data_dir)
 

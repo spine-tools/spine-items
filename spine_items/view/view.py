@@ -42,8 +42,8 @@ class View(ProjectItem):
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
-        self._references = dict()
-        self._pinned_values = pinned_values if pinned_values is not None else dict()
+        self._references = {}
+        self._pinned_values = pinned_values if pinned_values is not None else {}
         self.pinned_value_model = QStandardItemModel()
         self.reference_model = QStandardItemModel()
         self._spine_ref_icon = QIcon(QPixmap(":/icons/Spine_db_ref_icon.png"))
@@ -169,7 +169,7 @@ class View(ProjectItem):
         pks_by_resource_label = {}
         for value in pinned_values:
             resource_label, pk = value
-            pks_by_resource_label.setdefault(resource_label, list()).append(pk)
+            pks_by_resource_label.setdefault(resource_label, []).append(pk)
         fetch_id_base = 0
         for resource_label, pks in pks_by_resource_label.items():
             url_provider_tuple = self._references.get(resource_label)
@@ -348,7 +348,7 @@ class View(ProjectItem):
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
-        pinned_values = item_dict.get("pinned_values", dict())
+        pinned_values = item_dict.get("pinned_values", {})
         for values in pinned_values.values():
             for value in values:
                 pks = value[1]

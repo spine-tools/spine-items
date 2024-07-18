@@ -39,7 +39,7 @@ class ClassTreeWidget(QTreeWidget):
         except SpineDBAPIError as error:
             QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
             return
-        classes = list()
+        classes = []
         try:
             for class_row in db_map.query(db_map.entity_class_sq):
                 classes.append(class_row.name)

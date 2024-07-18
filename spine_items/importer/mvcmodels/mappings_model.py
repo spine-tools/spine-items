@@ -679,7 +679,7 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             dict: stored data
         """
-        table_dicts = dict()
+        table_dicts = {}
         for table_item in self._mappings[1:]:
             if not table_item.real:
                 continue
@@ -1231,7 +1231,7 @@ class MappingsModel(QAbstractItemModel):
         parent_index = index.parent()
         mapping_list_row = parent_index.row()
         table_row = parent_index.parent().row()
-        commands = list()
+        commands = []
         if new_type != previous_type:
             commands.append(
                 SetMappingPositionType(table_row, mapping_list_row, row, self, new_type, previous_type, previous_ref)

@@ -58,8 +58,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         ]
         for dock in self._changing_docks:
             dock.hide()
-        self._urls = dict()
-        self._filter_sub_interfaces = dict()
+        self._urls = {}
+        self._filter_sub_interfaces = {}
         self._current_filter_name = None
         self.takeCentralWidget().deleteLater()
         self._ui.filter_combo_box.addItems(_FILTER_NAMES)

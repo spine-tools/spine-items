@@ -35,9 +35,9 @@ def copy_table_data(table_view, mime_type):
     max_column = max(columns)
     index_lookup = {(i.row(), i.column()): i for i in indexes}
     model = table_view.model().sourceModel()
-    data = list()
+    data = []
     for row in range(min_row, max_row + 1):
-        row_data = list()
+        row_data = []
         for column in range(min_column, max_column + 1):
             index = index_lookup.get((row, column))
             if index is None:

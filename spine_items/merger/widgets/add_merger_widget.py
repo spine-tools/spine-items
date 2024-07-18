@@ -37,7 +37,7 @@ class AddMergerWidget(AddProjectItemWidget):
                 "description": self.description,
                 "x": self._x,
                 "y": self._y,
-                "url": dict(),
+                "url": {},
             }
         }
         self._toolbox.add_project_items(item)

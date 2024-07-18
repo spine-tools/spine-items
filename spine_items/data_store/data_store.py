@@ -58,7 +58,7 @@ class DataStore(ProjectItem):
         except OSError:
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         if url is None:
-            url = dict()
+            url = {}
         self._url = self.parse_url(url)
         self._url_validated = False
         self._resource_to_replace = None

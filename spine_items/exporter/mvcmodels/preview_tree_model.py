@@ -21,9 +21,9 @@ class PreviewTreeModel(QAbstractItemModel):
 
     def __init__(self):
         super().__init__()
-        self._tables = dict()
-        self._table_names = dict()
-        self._mapping_names = list()
+        self._tables = {}
+        self._table_names = {}
+        self._mapping_names = []
 
     def add_or_update_tables(self, mapping_name, tables):
         """
@@ -41,9 +41,9 @@ class PreviewTreeModel(QAbstractItemModel):
             new_names.sort(key=methodcaller("lower"))
             row = len(list(takewhile(lambda x: x[0] == x[1], zip(new_names, self._mapping_names))))
             self.beginInsertRows(QModelIndex(), row, row)
-            self._tables[mapping_name] = dict()
+            self._tables[mapping_name] = {}
             self._mapping_names = new_names
-            self._table_names[mapping_name] = list()
+            self._table_names[mapping_name] = []
             self.endInsertRows()
         parent_index = self.index(self._mapping_names.index(mapping_name), 0)
         for old_name in list(self._tables[mapping_name]):
@@ -92,7 +92,7 @@ class PreviewTreeModel(QAbstractItemModel):
         self.beginResetModel()
         self._tables = {}
         self._table_names = {}
-        self._mapping_names = list()
+        self._mapping_names = []
         self.endResetModel()
 
     def flags(self, parent=QModelIndex()):
