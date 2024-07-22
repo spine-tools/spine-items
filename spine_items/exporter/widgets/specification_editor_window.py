@@ -314,9 +314,16 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             MappingType.entity_dimension_parameter_values,
             MappingType.entity_dimension_parameter_default_values,
         }:
+            self._ui.entity_dimensions_spin_box.setMinimum(0)
             self._set_entity_dimensions_silently(current.data(MappingsTableModel.ENTITY_DIMENSIONS_ROLE))
+            if mapping_type in {
+                MappingType.entity_dimension_parameter_values,
+                MappingType.entity_dimension_parameter_default_values,
+            }:
+                self._ui.entity_dimensions_spin_box.setMinimum(1)
         else:
             self._set_entity_dimensions_silently(0)
+            self._ui.entity_dimensions_spin_box.setMinimum(0)
         if mapping_type in {
             MappingType.entity_dimension_parameter_values,
             MappingType.entity_dimension_parameter_default_values,
@@ -392,6 +399,13 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             mapping_type = MappingType(top_left.data(MappingsTableModel.MAPPING_TYPE_ROLE))
             self._set_mapping_type_silently(mapping_type_to_combo_box_label[mapping_type])
             self._set_parameter_type_silently(mapping_type_to_parameter_type_label[mapping_type])
+            if mapping_type in (
+                MappingType.entity_dimension_parameter_default_values,
+                MappingType.entity_dimension_parameter_values,
+            ):
+                self._ui.entity_dimensions_spin_box.setMinimum(1)
+            else:
+                self._ui.entity_dimensions_spin_box.setMinimum(0)
             enable_controls = True
         if MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE in roles:
             self._set_always_export_header_silently(top_left.data(MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE))
