@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'value_type_filter_editor.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.6.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -33,7 +33,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(354, 141)
+        Form.resize(354, 138)
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.regexp_line_edit = QLineEdit(Form)
@@ -68,6 +68,6 @@ class Ui_Form(object):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.regexp_line_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type regular expression here...", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"<html><head/><body><p><a href=\"https://docs.python.org/3/library/re.html#regular-expression-syntax\"><span style=\" text-decoration: underline; color:#0000ff;\">Link</span></a> to regular expression syntax.</p></body></html>", None))
-        self.label.setText(QCoreApplication.translate("Form", u"<html><head/><body><p>Available types for filtering:<br><span style=\" font-weight:600;\">single_value</span> - scalars, strings, booleans<br><span style=\" font-weight:600;\">array</span> - arrays<br><span style=\" font-weight:600;\">time_series</span> - time series<br><span style=\" font-weight:600;\">time_pattern</span> - time patterns<br><span style=\" font-weight:600;\">1d_map</span>, <span style=\" font-weight:600;\">2d_map</span>,... - maps of <span style=\" font-style:italic;\">n</span>d dimensions</p></body></html>", None))
+        self.label.setText(QCoreApplication.translate("Form", u"<html><head/><body><p>Available types for filtering:<br/><span style=\" font-weight:700;\">float</span>, <span style=\" font-weight:700;\">str</span>, <span style=\" font-weight:700;\">bool</span> - numbers, strings, booleans<br/><span style=\" font-weight:700;\">array</span>, <span style=\" font-weight:700;\">time_series</span>, <span style=\" font-weight:700;\">time_pattern</span><br/><span style=\" font-weight:700;\">1d_map</span>, <span style=\" font-weight:700;\">2d_map</span>,... - maps of <span style=\" font-style:italic;\">n</span>d dimensions</p></body></html>", None))
     # retranslateUi
 

@@ -2,6 +2,7 @@
 <!--
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Items contributors
 # This file is part of Spine Items.
 # Spine Items is free software: you can redistribute it and\/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -19,7 +20,7 @@
     <x>0</x>
     <y>0</y>
     <width>354</width>
-    <height>141</height>
+    <height>138</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,7 +56,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available types for filtering:&lt;br&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;single_value&lt;/span&gt; - scalars, strings, booleans&lt;br&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;array&lt;/span&gt; - arrays&lt;br&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;time_series&lt;/span&gt; - time series&lt;br&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;time_pattern&lt;/span&gt; - time patterns&lt;br&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;1d_map&lt;/span&gt;, &lt;span style=&quot; font-weight:600;&quot;&gt;2d_map&lt;/span&gt;,... - maps of &lt;span style=&quot; font-style:italic;&quot;&gt;n&lt;/span&gt;d dimensions&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available types for filtering:&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;float&lt;/span&gt;, &lt;span style=&quot; font-weight:700;&quot;&gt;str&lt;/span&gt;, &lt;span style=&quot; font-weight:700;&quot;&gt;bool&lt;/span&gt; - numbers, strings, booleans&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;array&lt;/span&gt;, &lt;span style=&quot; font-weight:700;&quot;&gt;time_series&lt;/span&gt;, &lt;span style=&quot; font-weight:700;&quot;&gt;time_pattern&lt;/span&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;1d_map&lt;/span&gt;, &lt;span style=&quot; font-weight:700;&quot;&gt;2d_map&lt;/span&gt;,... - maps of &lt;span style=&quot; font-style:italic;&quot;&gt;n&lt;/span&gt;d dimensions&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>
