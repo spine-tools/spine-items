@@ -48,7 +48,7 @@ def _sanitize(x):
     Returns:
         float or int or str: sanitized value
     """
-    if isinstance(x, numpy.float_):
+    if isinstance(x, numpy.float64):
         return float(x)
     if not isinstance(x, (float, str, int)) and x is not None:
         return str(x)

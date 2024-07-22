@@ -9,3 +9,26 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
+import unittest
+import numpy
+from spine_items.exporter.preview_table_writer import TableWriter
+
+
+class TestTableWriter(unittest.TestCase):
+    def setUp(self):
+        self._writer = TableWriter()
+        self._writer.start()
+
+    def tearDown(self):
+        self._writer.finish()
+
+    def test_write_row_float64_converted_to_float(self):
+        self.assertTrue(self._writer.start_table("My table", {}))
+        self.assertTrue(self._writer.write_row([numpy.float64(2.3)]))
+        self._writer.finish_table()
+        tables = self._writer.tables
+        self.assertEqual(tables, {"My table": [[2.3]]})
+
+
+if __name__ == "__main__":
+    unittest.main()
