@@ -11,10 +11,11 @@
 ######################################################################################################################
 
 """Classes and functions that can be shared among unit test modules."""
+from contextlib import contextmanager
 import os.path
 from unittest.mock import MagicMock, patch
 from PySide6.QtGui import QStandardItemModel
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 from spinetoolbox.ui_main import ToolboxUI
 
 
@@ -140,3 +141,12 @@ def clean_up_toolbox(toolbox):
     # Delete undo stack explicitly to prevent emitting certain signals well after ToolboxUI has been destroyed.
     toolbox.undo_stack.deleteLater()
     toolbox.deleteLater()
+
+
+@contextmanager
+def parent_widget():
+    parent = QMainWindow()
+    try:
+        yield parent
+    finally:
+        parent.deleteLater()

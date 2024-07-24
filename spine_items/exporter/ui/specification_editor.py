@@ -71,7 +71,7 @@ class Ui_MainWindow(object):
 
         self.live_preview_check_box = QCheckBox(self.centralwidget)
         self.live_preview_check_box.setObjectName(u"live_preview_check_box")
-        self.live_preview_check_box.setChecked(False)
+        self.live_preview_check_box.setChecked(True)
 
         self.horizontalLayout_3.addWidget(self.live_preview_check_box)
 

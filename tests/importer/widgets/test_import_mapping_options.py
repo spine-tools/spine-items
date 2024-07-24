@@ -21,6 +21,7 @@ from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.ui.import_editor_window import Ui_MainWindow
 from spine_items.importer.widgets.import_mapping_options import ImportMappingOptions
 from spinetoolbox.helpers import signal_waiter
+from tests.mock_helpers import parent_widget
 
 
 class TestImportMappingOptions(unittest.TestCase):
@@ -87,15 +88,6 @@ class TestImportMappingOptions(unittest.TestCase):
             "table_row_types": {},
             "source_type": "ExcelConnector",
         }
-
-
-@contextmanager
-def parent_widget():
-    parent = QMainWindow()
-    try:
-        yield parent
-    finally:
-        parent.deleteLater()
 
 
 if __name__ == "__main__":
