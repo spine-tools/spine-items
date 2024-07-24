@@ -12,13 +12,15 @@
 
 """Contains :class:`PreviewUpdater`."""
 from copy import deepcopy
+from dataclasses import dataclass
+from multiprocessing import Pipe, Process
 from time import monotonic
-from PySide6.QtCore import QItemSelectionModel, QModelIndex, QObject, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Slot
 from PySide6.QtWidgets import QFileDialog
 from spinedb_api import DatabaseMapping, SpineDBAPIError, SpineDBVersionError
-from spinedb_api.export_mapping.group_functions import NoGroup
+from spinedb_api.export_mapping.export_mapping import ExportMapping
+from spinedb_api.export_mapping.group_functions import GroupFunction
 from spinedb_api.spine_io.exporters.writer import write
-from spinetoolbox.helpers import busy_effect
 from ..mvcmodels.full_url_list_model import FullUrlListModel
 from ..mvcmodels.mappings_table_model import MappingsTableModel
 from ..mvcmodels.preview_table_model import PreviewTableModel
@@ -72,7 +74,11 @@ class PreviewUpdater:
         self._preview_tree_model.rowsInserted.connect(self._expand_tree_after_table_insert)
         self._preview_table_model = PreviewTableModel()
         self._stamps = {}
-        self._thread_pool = QThreadPool()
+        self._writer_connection, connection = Pipe()
+        self._writer_process = Process(target=write_task_loop, args=(connection,))
+        self._writer_timer = QTimer(window)
+        self._writer_timer.setInterval(100)
+        self._writer_timer.timeout.connect(self._communicate)
         self._mapping_tables = {}
         self._ui.preview_tree_view.setModel(self._preview_tree_model)
         self._ui.preview_tree_view.selectionModel().currentChanged.connect(self._change_table)
@@ -404,18 +410,38 @@ class PreviewUpdater:
         id_ = (self._current_url, mapping_name)
         stamp = monotonic()
         self._stamps[id_] = stamp
-        worker = _Worker(
-            self._current_url,
-            mapping_name,
-            deepcopy(mapping_spec.root),
-            mapping_spec.always_export_header,
-            stamp,
-            max_tables,
-            max_rows,
-            mapping_spec.group_fn,
+        if not self._writer_process.is_alive():
+            self._writer_process.start()
+        self._writer_connection.send(
+            WriteTableTask(
+                self._current_url,
+                mapping_name,
+                stamp,
+                deepcopy(mapping_spec.root),
+                mapping_spec.always_export_header,
+                max_tables,
+                max_rows,
+                mapping_spec.group_fn,
+            )
         )
-        worker.signals.table_written.connect(self._add_or_update_data)
-        self._thread_pool.start(worker)
+        if not self._writer_timer.isActive():
+            self._writer_timer.start()
+
+    @Slot()
+    def _communicate(self):
+        """Periodically communicates with the writer process."""
+        self._writer_timer.stop()
+        if self._writer_connection.poll():
+            # Receive and process one table at time to keep the UI responsive
+            message = self._writer_connection.recv()
+            if message == "finished":
+                return
+            self._add_or_update_data(*message)
+        if self._stamps:
+            self._writer_timer.setInterval(50)
+            self._writer_timer.start()
+        else:
+            self._writer_timer.setInterval(100)
 
     @Slot(tuple, str, object, float)
     def _add_or_update_data(self, worker_id, mapping_name, data, stamp):
@@ -426,7 +452,7 @@ class PreviewUpdater:
             worker_id (tuple): a worker identifier
             mapping_name (str): mapping's name
             data (dict): mapping from table name to table
-            stamp (float): worker's time stamp
+            stamp (float): task's time stamp
         """
         current_stamp = self._stamps.pop(worker_id, None)
         if stamp != current_stamp:
@@ -467,63 +493,87 @@ class PreviewUpdater:
         self._reload_preview()
 
     def tear_down(self):
-        """Stops all workers."""
+        """Stops the writer process and cleans up."""
+        self._writer_connection.send("quit")
+        self._writer_timer.stop()
         self._stamps.clear()
-        self._thread_pool.clear()
-        self._thread_pool.deleteLater()
         self._url_model.rowsInserted.disconnect(self._enable_controls_after_url_insertion)
         self._url_model.modelReset.disconnect(self._enable_controls)
         self._url_model.destroyed.disconnect(self._forget_url_model)
+        if self._writer_process.is_alive():
+            while self._writer_connection.poll():
+                # Drain the pipe, otherwise writer process's send() may block and the join() below hangs.
+                self._writer_connection.recv()
+            self._writer_process.join()
 
 
-class _Worker(QRunnable):
-    class Signals(QObject):
-        table_written = Signal(tuple, str, object, float)
+@dataclass(frozen=True)
+class WriteTableTask:
+    url: str
+    mapping_name: str
+    stamp: float
+    mapping: ExportMapping
+    always_export_header: bool
+    max_tables: int
+    max_rows: int
+    group_fn: GroupFunction
 
-    def __init__(
-        self, url, mapping_name, mapping, always_export_header, stamp, max_tables=20, max_rows=20, group_fn=NoGroup.NAME
-    ):
-        super().__init__()
-        self._url = url
-        self._mapping_name = mapping_name
-        self._mapping = mapping
-        self._always_export_header = always_export_header
-        self._max_tables = max_tables
-        self._max_rows = max_rows
-        self._group_fn = group_fn
-        self._stamp = stamp
-        self.signals = self.Signals()
 
-    @busy_effect
-    def run(self):
-        try:
-            db_map = DatabaseMapping(self._url)
-        except SpineDBVersionError:
-            tables = {"error": [["unsupported database version"]]}
-            self.signals.table_written.emit((self._url, self._mapping_name), self._mapping_name, tables, self._stamp)
-            return
-        except SpineDBAPIError as error:
-            tables = {"error": [[str(error)]]}
-            self.signals.table_written.emit((self._url, self._mapping_name), self._mapping_name, tables, self._stamp)
-            return
-        try:
-            writer = TableWriter()
-            write(
-                db_map,
-                writer,
-                self._mapping,
-                empty_data_header=self._always_export_header,
-                max_tables=self._max_tables,
-                max_rows=self._max_rows,
-                group_fns=self._group_fn,
-            )
-            self.signals.table_written.emit(
-                (self._url, self._mapping_name), self._mapping_name, writer.tables, self._stamp
-            )
-        except SpineDBAPIError as error:
-            tables = {"error": [[str(error)]]}
-            self.signals.table_written.emit((self._url, self._mapping_name), self._mapping_name, tables, self._stamp)
-            return
-        finally:
+def write_task_loop(connection):
+    """A task loop that processes table writing tasks.
+
+    Args:
+        connection (Connection): Pipe endpoint to communicate with the loop
+    """
+    db_map = None
+    tasks = []
+    try:
+        while True:
+            if connection.poll() or not tasks:
+                while True:
+                    task = connection.recv()
+                    if task == "quit":
+                        return
+                    tasks.append(task)
+                    if not connection.poll():
+                        break
+            next_task = tasks.pop(0)
+            try:
+                if db_map is not None and next_task.url != db_map.db_url:
+                    db_map.close()
+                    db_map = None
+                if db_map is None:
+                    db_map = DatabaseMapping(next_task.url)
+                tables = _write_tables(db_map, next_task)
+            except SpineDBVersionError:
+                tables = {"error": [["unsupported database version"]]}
+            except SpineDBAPIError as error:
+                tables = {"error": [[str(error)]]}
+            connection.send(((next_task.url, next_task.mapping_name), next_task.mapping_name, tables, next_task.stamp))
+    finally:
+        if db_map is not None:
             db_map.close()
-            self.signals.deleteLater()
+        connection.send("finished")
+
+
+def _write_tables(db_map, write_task):
+    """Creates preview tables with given parameters.
+
+    Args:
+        db_map (DatabaseMapping): database mapping
+        write_task (WriteTableTask): task parameters
+
+    Returns:
+        tuple: mappings from table names to tables (list of rows)
+    """
+    writer = TableWriter()
+    write(
+        db_map,
+        writer,
+        write_task.mapping,
+        empty_data_header=write_task.always_export_header,
+        max_tables=write_task.max_tables,
+        max_rows=write_task.max_rows,
+        group_fns=write_task.group_fn,
+    )
+    return writer.tables
