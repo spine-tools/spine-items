@@ -67,8 +67,8 @@ class SourceDataTableModel(MinimalTableModel):
         self._infinite_extent = 0
         self._fetching = False
 
-    def set_horizontal_header_labels(self, header):
-        super().set_horizontal_header_labels(header)
+    def set_horizontal_header_labels(self, labels):
+        super().set_horizontal_header_labels(labels)
         self.polish_mapping_requested.emit()
 
     def canFetchMore(self, parent):

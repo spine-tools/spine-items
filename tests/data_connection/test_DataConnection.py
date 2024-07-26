@@ -88,7 +88,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self.assertEqual(1, len(self._data_connection.file_references))
             self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(0, 0)))
             self.assertEqual(str(a), self._ref_model.index(0, 0, self._ref_model.index(0, 0)).data())
-            self._data_connection.file_references = list()
+            self._data_connection.file_references = []
             self._data_connection.populate_reference_list([])
             # Add two references (the other one is non-existing)
             # Note: non-existing files cannot be added with the toolbox but this tests a situation when
@@ -288,7 +288,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
         ) as mock_filenames, mock.patch(
             "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
+        ), mock.patch(
             "spine_items.data_connection.data_connection.UrlSelectorDialog.url", new_callable=mock.PropertyMock
         ) as url_selector_url:
             a = Path(temp_dir, "a.txt")

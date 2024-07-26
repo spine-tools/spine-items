@@ -99,7 +99,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._init_optional_widget(specification)
         else:
             # If no specification is given, specification dict needs to be prepared
-            self.spec_dict = dict(item_type=ItemInfo.item_type())
+            self.spec_dict = {"item_type": ItemInfo.item_type()}
         # Init lists
         programfiles = list(specification.includes) if specification else []
         # Get first item from programfiles list as the main program file
@@ -967,9 +967,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                     msg.setText("Can't add main program file\nto additional program files")
                     msg.exec()
                     return
-                else:
-                    msg.setText("One file not added because\nit is the main program file")
-                    msg.exec()
+                msg.setText("One file not added because\nit is the main program file")
+                msg.exec()
         self.add_program_files(*file_paths)
 
     @Slot(bool)
@@ -980,7 +979,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         path = self.includes_main_path if self.includes_main_path else self._project.project_dir
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QFileDialog.getExistingDirectory(self, "Select a directory to add to program files", path)
-        file_paths = list()
+        file_paths = []
         main_program_file = self._current_main_program_file()
         for root, _, files in os.walk(answer):
             for file in files:
@@ -1097,15 +1096,14 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         _, ext = os.path.splitext(program_file)
         if ext in [".bat", ".exe"]:
             self._toolbox.msg_warning.emit(
-                "Sorry, opening files with extension <b>{0}</b> not implemented. "
-                "Please open the file manually.".format(ext)
+                f"Sorry, opening files with extension <b>{ext}</b> not implemented. Please open the file manually."
             )
             return
         url = "file:///" + os.path.join(self.includes_main_path, program_file)
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         res = open_url(url)
         if not res:
-            self._toolbox.msg_error.emit("Failed to open file: <b>{0}</b>".format(program_file))
+            self._toolbox.msg_error.emit(f"Failed to open file: <b>{program_file}</b>")
 
     @Slot(bool)
     def _enable_additional_program_files_actions(self, _=False):

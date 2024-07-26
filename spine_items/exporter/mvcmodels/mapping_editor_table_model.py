@@ -151,7 +151,7 @@ class MappingEditorTableModel(QAbstractTableModel):
         elif role == Qt.ItemDataRole.ToolTipRole:
             if column == EditorColumn.FILTER:
                 return plain_to_rich("Regular expression to filter database items.")
-            elif column == EditorColumn.NULLABLE:
+            if column == EditorColumn.NULLABLE:
                 return plain_to_rich("When checked, ignore this row if it yields nothing to export.")
         if role == self.MAPPING_ITEM_ROLE:
             return self._mappings[index.row()]
@@ -524,7 +524,7 @@ def _insert_into_position(positions, target_index, new_position):
         target_index (int): index of position to modify
         new_position (Position or int): new position
     """
-    for i in range(len(positions)):
+    for i in range(len(positions)):  # pylint: disable=consider-using-enumerate
         if i == target_index:
             continue
         if positions[i] == new_position:
@@ -542,7 +542,7 @@ def _remove_column(positions, column):
 
     """
     new_position = column + 1
-    for i in range(len(positions)):
+    for i in range(len(positions)):  # pylint: disable=consider-using-enumerate
         if positions[i] == new_position:
             _insert_into_position(positions, i, new_position)
             break

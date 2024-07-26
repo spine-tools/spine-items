@@ -58,7 +58,7 @@ class DataStore(ProjectItem):
         except OSError:
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         if url is None:
-            url = dict()
+            url = {}
         self._url = self.parse_url(url)
         self._url_validated = False
         self._resource_to_replace = None
@@ -97,7 +97,7 @@ class DataStore(ProjectItem):
 
     def parse_url(self, url):
         """Return a complete url dictionary from the given dict or string"""
-        base_url = dict(dialect="", username="", password="", host="", port="", database="", schema="")
+        base_url = {"dialect": "", "username": "", "password": "", "host": "", "port": "", "database": "", "schema": ""}
         if isinstance(url, dict):
             if url.get("dialect") == "sqlite" and "database" in url and url["database"] is not None:
                 # Convert relative database path back to absolute

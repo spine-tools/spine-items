@@ -146,7 +146,7 @@ class ParameterRenamingSettings(RenamingSettings):
 
     def filter_config(self):
         """See base class."""
-        name_map = dict()
+        name_map = {}
         for class_name, param_renames in self.name_map.items():
             useful = {name: rename for name, rename in param_renames.items() if rename and name != rename}
             if useful:
@@ -185,7 +185,7 @@ class ValueTransformSettings(FilterSettings):
 
     def filter_config(self):
         # Remove no-op instructions.
-        instructions = dict()
+        instructions = {}
         for class_name, parameter_transformation in self.instructions.items():
             useful = {
                 param_name: instructions

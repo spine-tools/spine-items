@@ -485,4 +485,4 @@ class ImportMappingOptions:
         self._ui.map_dimension_spin_box.setEnabled(is_map)
         self._ui.map_dimension_spin_box.setValue(dimension_count)
         self._ui.map_compression_check_box.setEnabled(is_map)
-        self._ui.map_compression_check_box.setChecked(True if is_map and value_mapping.compress else False)
+        self._ui.map_compression_check_box.setChecked(bool(is_map and value_mapping.compress))

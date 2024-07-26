@@ -32,7 +32,7 @@ class TestViewExecutable(unittest.TestCase):
     def test_from_dict(self):
         logger = mock.MagicMock()
         item_dict = {"type": "View", "description": "", "x": 0, "y": 0}
-        item = ExecutableItem.from_dict(item_dict, "Viewer", self._temp_dir.name, None, dict(), logger)
+        item = ExecutableItem.from_dict(item_dict, "Viewer", self._temp_dir.name, None, {}, logger)
         self.assertIsInstance(item, ExecutableItem)
         self.assertEqual("View", item.item_type())
 

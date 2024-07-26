@@ -21,7 +21,7 @@ class ParameterDropTargetTableModel(QAbstractTableModel):
     def dropMimeData(self, data, action, row, column, parent):
         if row < 0:
             row = self.rowCount()
-        rows = list()
+        rows = []
         parameters = pickle.loads(data.data(DROP_MIME_TYPE))
         for entity_class, parameter_list in parameters.items():
             for parameter in parameter_list:

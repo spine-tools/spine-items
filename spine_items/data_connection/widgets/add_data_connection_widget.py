@@ -37,7 +37,7 @@ class AddDataConnectionWidget(AddProjectItemWidget):
                 "description": self.description,
                 "x": self._x,
                 "y": self._y,
-                "references": list(),
+                "references": [],
             }
         }
         self._toolbox.add_project_items(item)

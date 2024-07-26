@@ -23,7 +23,7 @@ class ParameterTreeWidget(QTreeWidget):
 
     def mimeData(self, items):
         mime_data = QMimeData()
-        parameters = dict()
+        parameters = {}
         for item in items:
             if item.parent() is None:
                 for i in range(item.childCount()):
@@ -45,10 +45,10 @@ class ParameterTreeWidget(QTreeWidget):
         except SpineDBAPIError as error:
             QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
             return
-        parameters = dict()
+        parameters = {}
         try:
             for definition_row in db_map.query(db_map.entity_parameter_definition_sq):
-                parameters.setdefault(definition_row.entity_class_name, list()).append(definition_row.parameter_name)
+                parameters.setdefault(definition_row.entity_class_name, []).append(definition_row.parameter_name)
         except SpineDBAPIError as error:
             QMessageBox.information(
                 self, "Error while reading database", f"Could not read from database {url}:\n{error}"

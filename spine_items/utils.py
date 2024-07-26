@@ -78,7 +78,7 @@ def _convert_url(url):
         with suppress(KeyError):
             del url["schema"]
         if not dialect:
-            raise URLError(f"missing dialect")
+            raise URLError("missing dialect")
         if dialect not in set(SUPPORTED_DIALECTS) | set(UNSUPPORTED_DIALECTS):
             raise URLError(f"invalid dialect '{dialect}'")
         if dialect == "sqlite":
@@ -106,16 +106,16 @@ def _validate_sa_url(sa_url, dialect):
         URLError: raised if given URL is invalid
     """
     if not sa_url.database:
-        raise URLError(f"database missing")
+        raise URLError("database missing")
     if dialect != "sqlite":
         if sa_url.host is None:
-            raise URLError(f"missing host")
+            raise URLError("missing host")
         if sa_url.port is None:
-            raise URLError(f"missing port")
+            raise URLError("missing port")
         if sa_url.username is None:
-            raise URLError(f"missing username")
+            raise URLError("missing username")
         if sa_url.password is None:
-            raise URLError(f"missing password")
+            raise URLError("missing password")
 
 
 def convert_url_to_safe_string(url):
@@ -145,8 +145,7 @@ def check_database_url(sa_url):
             pass
     except Exception as error:  # pylint: disable=broad-except
         return str(error)
-    else:
-        return None
+    return None
 
 
 class _NoLogger:

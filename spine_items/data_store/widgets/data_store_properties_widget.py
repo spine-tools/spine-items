@@ -34,13 +34,13 @@ class DataStorePropertiesWidget(UrlSelectorMixin, PropertiesWidgetBase):
             list(SUPPORTED_DIALECTS.keys()), self._select_sqlite_file, True, self._toolbox
         )
 
-    def set_item(self, data_store):
+    def set_item(self, project_item):
         """Sets the active project item for the properties widget.
 
         Args:
-            data_store (DataStore): data store
+            project_item (DataStore): data store
         """
-        self._active_item = data_store
+        self._active_item = project_item
 
     def unset_item(self):
         """Unsets the active item."""

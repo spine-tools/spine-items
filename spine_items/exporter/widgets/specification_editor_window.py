@@ -267,7 +267,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             return OutputFormat.SQL
         out_labels = self.item.get_out_labels()
         for label in out_labels:
-            name, separator, extension = label.rpartition(".")
+            _, separator, extension = label.rpartition(".")
             if not separator:
                 continue
             output_format = OutputFormat.output_format_from_extension(extension)

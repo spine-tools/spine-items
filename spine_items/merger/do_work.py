@@ -49,14 +49,11 @@ def do_work(process, cancel_on_error, logs_dir, from_server_urls, to_server_urls
                             "commit_session", f"Import {import_count} items from {sanitized_from_url}"
                         )
                         logger.msg_success.emit(
-                            "Merged {0} items with {1} errors from {2} into {3}".format(
-                                import_count, len(import_errors), sanitized_from_url, sanitized_to_url
-                            )
+                            f"Merged {import_count} items with {len(import_errors)} errors"
+                            f"from {sanitized_from_url} into {sanitized_to_url}"
                         )
                     else:
-                        logger.msg_warning.emit(
-                            "No new data merged from {0} into {1}".format(sanitized_from_url, sanitized_to_url)
-                        )
+                        logger.msg_warning.emit(f"No new data merged from {sanitized_from_url} into {sanitized_to_url}")
             finally:
                 lock.release()
         to_client.db_checkout()
@@ -66,8 +63,8 @@ def do_work(process, cancel_on_error, logs_dir, from_server_urls, to_server_urls
         logfilepath = os.path.abspath(os.path.join(logs_dir, timestamp + "_error.log"))
         with open(logfilepath, "w") as f:
             for err in all_errors:
-                f.write("{0}\n".format(err))
+                f.write(f"{err}\n")
         # Make error log file anchor with path as tooltip
         logfile_anchor = f"<a style='color:#BB99FF;' title='{logfilepath}' href='file:///{logfilepath}'>error log</a>"
-        logger.msg_error.emit("Import errors. Logfile: {0}".format(logfile_anchor))
+        logger.msg_error.emit(f"Import errors. Logfile: {logfile_anchor}")
     return (True,)

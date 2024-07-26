@@ -93,7 +93,7 @@ class DataTreeView(QTreeView):
         """
         super().__init__(parent=parent)
         self.drag_start_pos = None
-        self.drag_indexes = list()
+        self.drag_indexes = []
 
     def dragEnterEvent(self, event):
         """Accepts file drops from the filesystem."""
@@ -135,7 +135,7 @@ class DataTreeView(QTreeView):
             return
         drag = QDrag(self)
         mimeData = QMimeData()
-        urls = list()
+        urls = []
         for index in self.drag_indexes:
             file_path = index.data(Qt.ItemDataRole.UserRole)
             if not file_path:
@@ -270,7 +270,7 @@ class UrlSelectorMixin:
 
             dsns = pyodbc.dataSources()
             # Collect dsns which use the msodbcsql driver
-            mssql_dsns = list()
+            mssql_dsns = []
             for key, value in dsns.items():
                 if "msodbcsql" in value.lower():
                     mssql_dsns.append(key)
@@ -461,7 +461,7 @@ class UrlSelectorWidget(QWidget):
 
             dsns = pyodbc.dataSources()
             # Collect dsns which use the msodbcsql driver
-            mssql_dsns = list()
+            mssql_dsns = []
             for key, value in dsns.items():
                 if "msodbcsql" in value.lower():
                     mssql_dsns.append(key)

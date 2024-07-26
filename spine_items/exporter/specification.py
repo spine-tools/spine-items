@@ -186,7 +186,7 @@ class Specification(ProjectItemSpecification):
         """
         super().__init__(name, description, ItemInfo.item_type())
         if mapping_specifications is None:
-            mapping_specifications = dict()
+            mapping_specifications = {}
         self._mapping_specifications = mapping_specifications
         self.output_format = output_format
 
@@ -268,7 +268,7 @@ class Specification(ProjectItemSpecification):
         Returns:
             dict: serialized specification
         """
-        mappings = dict()
+        mappings = {}
         for name, mapping_spec in self._mapping_specifications.items():
             spec_dict = {
                 "type": mapping_spec.type.value,
@@ -343,7 +343,7 @@ def _add_index_names(mapping):
     if any((isinstance(m, (IndexNameMapping, DefaultValueIndexNameMapping)) for m in flattened)):
         return mapping
     if any((isinstance(m, (ParameterValueIndexMapping, ParameterDefaultValueIndexMapping)) for m in flattened)):
-        fixed = list()
+        fixed = []
         for m in flattened:
             if isinstance(m, ParameterValueIndexMapping):
                 fixed.append(IndexNameMapping(Position.hidden))

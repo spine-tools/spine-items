@@ -54,7 +54,7 @@ class MappingsTableModel(QAbstractTableModel):
         """
         super().__init__(parent)
         if mappings is None:
-            mappings = dict()
+            mappings = {}
         self._names = list(mappings)
         self._mappings = mappings
 
@@ -307,8 +307,8 @@ class MappingsTableModel(QAbstractTableModel):
         """
         first = None
         last = 0
-        for i in range(len(self._names)):
-            mapping = self._mappings[self._names[i]]
+        for i, name in enumerate(self._names):
+            mapping = self._mappings[name]
             if mapping.enabled != enabled:
                 mapping.enabled = enabled
                 if first is None:
@@ -327,8 +327,8 @@ class MappingsTableModel(QAbstractTableModel):
         """
         first = None
         last = 0
-        for row in range(len(self._names)):
-            mapping = self._mappings[self._names[row]]
+        for row, name in enumerate(self._names):
+            mapping = self._mappings[name]
             enabled = row in rows
             if mapping.enabled != enabled:
                 mapping.enabled = enabled
@@ -347,8 +347,8 @@ class MappingsTableModel(QAbstractTableModel):
             set of int: enabled mapping row indexes.
         """
         rows = set()
-        for row in range(len(self._names)):
-            if self._mappings[self._names[row]].enabled:
+        for row, name in enumerate(self._names):
+            if self._mappings[name].enabled:
                 rows.add(row)
         return rows
 

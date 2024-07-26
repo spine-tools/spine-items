@@ -111,7 +111,7 @@ class TestExporter(unittest.TestCase):
         source_item.item_type = MagicMock(return_value="View")
         self._exporter.notify_destination(source_item)
         self._exporter.logger.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a " "<b>View</b> and a <b>Exporter</b> has not been implemented yet."
+            "Link established. Interaction between a <b>View</b> and a <b>Exporter</b> has not been implemented yet."
         )
 
     def test_rename(self):

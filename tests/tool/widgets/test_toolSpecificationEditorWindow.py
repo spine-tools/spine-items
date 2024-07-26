@@ -223,8 +223,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         )
         python_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(python_tool_spec)
-        parent = self.tool_specification_widget.programfiles_model.index(0, 0)
-        index = self.tool_specification_widget.programfiles_model.index(0, 0, parent)  # Index of 'hello.py'
         self.tool_specification_widget._ui.textEdit_program.appendPlainText("print('hi')")
         self.tool_specification_widget._save_program_file(
             file_path, self.tool_specification_widget._ui.textEdit_program.document()
@@ -571,7 +569,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
 
 class FakeSignal:
     def __init__(self):
-        self.call_list = list()  # List of slots
+        self.call_list = []  # List of slots
 
     def connect(self, method):
         """Stores all slots connected to this FakeSignal into a list."""
@@ -594,8 +592,8 @@ class FakeKernelFetcher:
     def start(self):
         for m in self.kernel_found.call_list:
             # Calls SharedToolSpecOptionalWidget.add_kernel()
-            m("python310", "", False, QIcon(), dict())
-            m("python311", "", False, QIcon(), dict())
+            m("python310", "", False, QIcon(), {})
+            m("python311", "", False, QIcon(), {})
         for meth in self.finished.call_list:
             # Calls two methods:
             # 1. Either SharedToolSpecOptionalWidget._restore_saved_kernel() or

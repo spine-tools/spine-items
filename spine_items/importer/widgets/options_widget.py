@@ -81,7 +81,7 @@ class OptionsWidget(QTableWidget):
             max_length = options.get("MaxLength", None)
             if max_length is not None:
                 ui_element.setMaxLength(max_length)
-            bound_arguments = dict(option_key=key, options_widget=self)
+            bound_arguments = {"option_key": key, "options_widget": self}
             if isinstance(ui_element, QSpinBox):
                 handler = functools.partial(_emit_spin_box_option_changed, **bound_arguments)
                 ui_element.valueChanged.connect(handler)

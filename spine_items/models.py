@@ -127,17 +127,16 @@ class CheckableFileListModel(FileListModel):
                         index = self.index(row, 0, pack_index)
                         self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole])
                         return
-                    else:
-                        single_resources = [item.resource for item in self._single_resources]
-                        new_pack_resources = [
-                            r
-                            for existing_pack in self._pack_resources
-                            for r in existing_pack.resources
-                            if r is not resource
-                        ]
-                        new_pack_resources.append(new_resource)
-                        self.update(single_resources + new_pack_resources)
-                        return
+                    single_resources = [item.resource for item in self._single_resources]
+                    new_pack_resources = [
+                        r
+                        for existing_pack in self._pack_resources
+                        for r in existing_pack.resources
+                        if r is not resource
+                    ]
+                    new_pack_resources.append(new_resource)
+                    self.update(single_resources + new_pack_resources)
+                    return
 
     def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         """Sets data in the model."""
@@ -199,9 +198,12 @@ class ToolCommandLineArgsModel(CommandLineArgsModel):
 
     def reset_model(self, spec_args, tool_args):
         self._args = tool_args
-        self._reset_root(self._spec_args_root, spec_args, dict(), has_empty_row=False)
+        self._reset_root(self._spec_args_root, spec_args, {}, has_empty_row=False)
         self._reset_root(
-            self._tool_args_root, tool_args, dict(editable=True, selectable=True, drag_enabled=True), has_empty_row=True
+            self._tool_args_root,
+            tool_args,
+            {"editable": True, "selectable": True, "drag_enabled": True},
+            has_empty_row=True,
         )
 
     def canDropMimeData(self, data, drop_action, row, column, parent):

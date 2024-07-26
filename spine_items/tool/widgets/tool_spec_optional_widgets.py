@@ -291,10 +291,6 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         super().connect_signals()
         self.ui.toolButton_browse_python.clicked.connect(self.browse_python_button_clicked)
 
-    def add_execution_settings(self, tool_spec_type):
-        """See base class."""
-        return super().add_execution_settings(tool_spec_type)
-
     def default_execution_settings(self):
         """See base class."""
         use_jupyter_cons = bool(int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0")))
@@ -310,7 +306,7 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
                 index = self.kernel_spec_model.index(row, 0)
                 item_data = self.kernel_spec_model.itemFromIndex(index).data()
                 env = item_data["env"]
-        d = dict()
+        d = {}
         d["kernel_spec_name"] = k_name
         d["env"] = env
         d["use_jupyter_console"] = use_jupyter_cons
@@ -397,7 +393,7 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
 
     def default_execution_settings(self):
         """See base class."""
-        d = dict()
+        d = {}
         use_jupyter_console = bool(int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0")))
         d["kernel_spec_name"] = self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue="")
         d["env"] = ""

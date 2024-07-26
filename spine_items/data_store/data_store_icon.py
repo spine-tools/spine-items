@@ -15,15 +15,7 @@ from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
 class DataStoreIcon(ProjectItemIcon):
-    def __init__(self, toolbox, icon, icon_color):
-        """Data Store icon for the Design View.
-
-        Args:
-            toolbox (ToolBoxUI): QMainWindow instance
-            icon (str): icon resource path
-            icon_color (QColor): Icon's color
-        """
-        super().__init__(toolbox, icon, icon_color)
+    """Data Store icon for the Design View."""
 
     def mouseDoubleClickEvent(self, e):
         """Opens Spine database editor when this Data Store icon is double-clicked.

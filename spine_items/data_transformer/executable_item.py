@@ -28,7 +28,7 @@ class ExecutableItem(ExecutableItemBase):
             logger (LoggerInterface): a logger
         """
         super().__init__(name, project_dir, logger)
-        self._db_resources = list()
+        self._db_resources = []
         self._specification = specification
         self._filter_config_path = filter_config_path(self._data_dir)
 
@@ -58,7 +58,6 @@ class ExecutableItem(ExecutableItemBase):
         self._db_resources = [r for r in forward_resources if r.type_ == "database"]
         return ItemExecutionFinishState.SUCCESS
 
-    # pylint: disable=no-self-use
     def exclude_execution(self, forward_resources, backward_resources, lock):
         """See base class."""
         self.execute(forward_resources, backward_resources, lock)

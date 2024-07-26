@@ -73,13 +73,13 @@ class PreviewUpdater:
         self._preview_tree_model.dataChanged.connect(self._expand_tree_after_table_change)
         self._preview_tree_model.rowsInserted.connect(self._expand_tree_after_table_insert)
         self._preview_table_model = PreviewTableModel()
-        self._stamps = dict()
+        self._stamps = {}
         self._writer_connection, connection = Pipe()
         self._writer_process = Process(target=write_task_loop, args=(connection,))
         self._writer_timer = QTimer(window)
         self._writer_timer.setInterval(100)
         self._writer_timer.timeout.connect(self._communicate)
-        self._mapping_tables = dict()
+        self._mapping_tables = {}
         self._ui.preview_tree_view.setModel(self._preview_tree_model)
         self._ui.preview_tree_view.selectionModel().currentChanged.connect(self._change_table)
         self._ui.preview_table_view.setModel(self._preview_table_model)
@@ -365,7 +365,7 @@ class PreviewUpdater:
         """
         if self._current_url is None:
             return
-        for row in range(first, last + 1):
+        for _ in range(first, last + 1):
             index = self._mappings_table_model.index(first, 0)
             if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
                 continue

@@ -32,6 +32,7 @@ class TestTool(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self.toolbox = create_mock_toolbox()
         self.project = create_mock_project(self._temp_dir.name)
+        self._properties_widget = None
         specifications = [
             ExecutableTool(
                 name="simple_exec",
@@ -99,12 +100,12 @@ class TestTool(unittest.TestCase):
         source_item.item_type = mock.MagicMock(return_value="Importer")
         tool.notify_destination(source_item)
         tool.logger.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a " "<b>Importer</b> and a <b>Tool</b> has not been implemented yet."
+            "Link established. Interaction between a <b>Importer</b> and a <b>Tool</b> has not been implemented yet."
         )
         source_item.item_type = mock.MagicMock(return_value="Data Store")
         tool.notify_destination(source_item)
         tool.logger.msg.emit.assert_called_with(
-            "Link established. Data Store <b>source name</b> url will " "be passed to Tool <b>T</b> when executing."
+            "Link established. Data Store <b>source name</b> url will be passed to Tool <b>T</b> when executing."
         )
         source_item.item_type = mock.MagicMock(return_value="Exporter")
         tool.notify_destination(source_item)
@@ -117,7 +118,7 @@ class TestTool(unittest.TestCase):
         source_item.item_type = mock.MagicMock(return_value="View")
         tool.notify_destination(source_item)
         tool.logger.msg_warning.emit.assert_called_with(
-            "Link established. Interaction between a " "<b>View</b> and a <b>Tool</b> has not been implemented yet."
+            "Link established. Interaction between a <b>View</b> and a <b>Tool</b> has not been implemented yet."
         )
 
     def test_rename(self):

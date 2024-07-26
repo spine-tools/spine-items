@@ -38,7 +38,7 @@ class TestDataConnectionIcon(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_make_data_connection_icon(self):
-        icon = self._toolbox.project()._project_items["DC"].get_icon()
+        _ = self._toolbox.project()._project_items["DC"].get_icon()
 
 
 if __name__ == "__main__":

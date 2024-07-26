@@ -41,7 +41,7 @@ def exported_files_as_resources(item_name, exported_files, data_dir, output_chan
             label: files for label, files in _collect_execution_manifests(data_dir).items() if label in out_labels
         }
         exported_files = {label: [str(Path(data_dir, f)) for f in files] for label, files in manifests.items()}
-    resources = list()
+    resources = []
     if exported_files is not None:
         for channel in output_channels:
             if channel.out_label:
@@ -75,7 +75,7 @@ def _collect_execution_manifests(data_dir):
                 except json.decoder.JSONDecodeError:
                     continue
             for out_file_name, paths in manifest.items():
-                relative_paths = list()
+                relative_paths = []
                 for file_path in paths:
                     p = Path(file_path)
                     if p.is_absolute():
@@ -91,8 +91,8 @@ def _collect_execution_manifests(data_dir):
                     else:
                         relative_paths.append(file_path)
                 if manifests is None:
-                    manifests = dict()
-                manifests.setdefault(out_file_name, list()).extend(paths)
+                    manifests = {}
+                manifests.setdefault(out_file_name, []).extend(paths)
     return manifests
 
 

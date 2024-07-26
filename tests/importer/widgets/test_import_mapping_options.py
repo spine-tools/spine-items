@@ -11,11 +11,10 @@
 ######################################################################################################################
 
 """Contains unit tests for the ``import_mapping_options`` module."""
-from contextlib import contextmanager
 import unittest
 from PySide6.QtCore import QItemSelectionModel, Qt
 from PySide6.QtGui import QUndoStack
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication
 from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.ui.import_editor_window import Ui_MainWindow
@@ -41,7 +40,7 @@ class TestImportMappingOptions(unittest.TestCase):
             ui.source_list.setModel(mappings_model)
             ui.mapping_list.setModel(mappings_model)
             ui.mapping_list.setRootIndex(mappings_model.dummy_parent())
-            import_mapping_options = ImportMappingOptions(mappings_model, ui, undo_stack)
+            _ = ImportMappingOptions(mappings_model, ui, undo_stack)
             table_index = mappings_model.index(1, 0)
             ui.source_list.selectionModel().setCurrentIndex(table_index, QItemSelectionModel.ClearAndSelect)
             mapping_list_index = mappings_model.index(0, 0, table_index)

@@ -272,8 +272,8 @@ class ExecutableItem(DBWriterExecutableItemBase):
         Raises:
             OSError: If creating a directory fails.
         """
-        failed_files = list()
-        saved_files = list()
+        failed_files = []
+        saved_files = []
         for pattern in self._tool_specification.outputfiles:
             # Create subdirectories if necessary
             dst_subdir, fname_pattern = os.path.split(pattern)
@@ -510,8 +510,8 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     return ItemExecutionFinishState.FAILURE
             else:
                 self._logger.msg_warning.emit(
-                    f"Project is not self-contained. Please make sure all Tool specification "
-                    f"files are in the project directory."
+                    "Project is not self-contained. Please make sure all Tool specification "
+                    "files are in the project directory."
                 )
                 return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(
@@ -550,7 +550,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         Returns:
             Dictionary mapping required files to path where they are found, or to None if not found
         """
-        file_paths = dict()
+        file_paths = {}
         for required_path in self._tool_specification.inputfiles:
             _, filename = os.path.split(required_path)
             if not filename:
@@ -569,7 +569,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             dict: Dictionary of optional input file paths or an empty dictionary if no files found. Key is the
                 optional input item and value is a list of paths that matches the item.
         """
-        file_paths = dict()
+        file_paths = {}
         paths_in_resources = file_paths_from_resources(resources)
         for file_path in self._tool_specification.inputfiles_opt:
             _, pattern = os.path.split(file_path)
@@ -657,7 +657,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         Returns:
             dict: a map from source path to destination path
         """
-        destination_paths = dict()
+        destination_paths = {}
         for dst, src_paths in paths.items():
             for src_path in src_paths:
                 if not os.path.exists(src_path):

@@ -98,7 +98,7 @@ class TestDataStoreWithToolbox(unittest.TestCase):
     def test_rename(self):
         """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
         temp_path = self.create_temp_db()
-        url = dict(dialect="sqlite", database=temp_path)
+        url = {"dialect": "sqlite", "database": temp_path}
         self.ds._url = self.ds.parse_url(url)
         self.ds.activate()
         # Check that DS is connected to an existing DS.sqlite file that is in data_dir
@@ -125,7 +125,7 @@ class TestDataStoreWithToolbox(unittest.TestCase):
     def test_dirty_db_notification(self):
         """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
         temp_path = self.create_temp_db()
-        url = dict(dialect="sqlite", database=temp_path)
+        url = {"dialect": "sqlite", "database": temp_path}
         self.ds._url = self.ds.parse_url(url)
         self.ds.activate()
         # Test that there are no notifications
@@ -233,7 +233,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         """
         temp_path = self.create_temp_db()
         # Connect to an existing .sqlite db
-        url = dict(dialect="sqlite", database=temp_path)
+        url = {"dialect": "sqlite", "database": temp_path}
         self.ds._url = self.ds.parse_url(url)
         self.ds.activate()  # This loads the url into properties UI widgets
         # DS should now have "sqlite" selected in the combobox
@@ -302,7 +302,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
     def test_save_and_restore_mysql_selections(self):
         """Test that MySQL selections are saved and restored when
         deactivating a Data Store and activating it again."""
-        url = dict(dialect="mysql", database="sqlite:///mock_db.sqlite")
+        url = {"dialect": "mysql", "database": "sqlite:///mock_db.sqlite"}
         self.ds._url = self.ds.parse_url(url)  # Set a URL for the Data Store
         self.ds.activate()
         self.ds_properties_ui.url_selector_widget.set_url(
@@ -330,7 +330,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         """Test that the database url from current selections is copied to clipboard."""
         QApplication.clipboard().clear()
         temp_path = self.create_temp_db()
-        url = dict(dialect="sqlite", database=temp_path)
+        url = {"dialect": "sqlite", "database": temp_path}
         self.ds._url = self.ds.parse_url(url)
         self.ds.activate()  # This loads the url into properties UI widgets
         self.ds_properties_ui.toolButton_copy_url.click()

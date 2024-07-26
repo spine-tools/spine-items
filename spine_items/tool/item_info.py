@@ -26,10 +26,10 @@ class ItemInfo(ProjectItemInfo):
             return None
         if specification.tooltype == "python":
             return ":icons/item_icons/python-logo.svg"
-        elif specification.tooltype == "julia":
+        if specification.tooltype == "julia":
             return ":icons/item_icons/julia-logo.svg"
-        elif specification.tooltype == "executable":
+        if specification.tooltype == "executable":
             return ":icons/item_icons/terminal-logo.svg"
-        elif specification.tooltype == "gams":
+        if specification.tooltype == "gams":
             return ":icons/item_icons/gams-logo.svg"
         return None

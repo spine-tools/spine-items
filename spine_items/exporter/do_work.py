@@ -59,8 +59,8 @@ def do_work(
         tuple: boolean success flag, dictionary of output files
     """
     specification = Specification.from_dict(specification)
-    successes = list()
-    written_files = dict()
+    successes = []
+    written_files = {}
     for url, output_label in databases.items():
         try:
             database_map = DatabaseMapping(url)
@@ -157,7 +157,7 @@ def _export_to_file(
             files = {out_path}
         written_files[output_label] = files
         if len(files) > 1:
-            anchors = list()
+            anchors = []
             for path in (Path(f) for f in files):
                 anchors.append(f"\t<a style='color:#BB99FF;' title='{path}' href='file:///{path}'>{path.name}</a>")
             logger.msg_success.emit(f"Wrote multiple files:<br>{'<br>'.join(anchors)}")
@@ -203,7 +203,7 @@ def _export_to_database(database_map, specification, out_url, successes, cancel_
             return False
         successes.append(False)
     else:
-        logger.msg_success.emit(f"Wrote to database.")
+        logger.msg_success.emit("Wrote to database.")
         successes.append(True)
     return True
 
@@ -223,9 +223,9 @@ def make_writer(output_format, out_path, gams_path):
     if output_format == OutputFormat.CSV:
         path = Path(out_path)
         return CsvWriter(path.parent, path.name)
-    elif output_format == OutputFormat.EXCEL:
+    if output_format == OutputFormat.EXCEL:
         return ExcelWriter(out_path)
-    elif output_format == OutputFormat.SQL:
+    if output_format == OutputFormat.SQL:
         return SqlWriter(out_path, overwrite_existing=True)
     return GdxWriter(out_path, gams_path)
 

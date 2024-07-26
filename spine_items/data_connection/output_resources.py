@@ -31,7 +31,7 @@ def scan_for_resources(provider, file_paths, urls, project_dir):
     Returns:
         list of ProjectItemResource: output resources
     """
-    resources = list()
+    resources = []
     for fp in file_paths:
         try:
             if path_in_dir(fp, provider.data_dir):
