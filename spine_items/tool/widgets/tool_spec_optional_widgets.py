@@ -291,10 +291,6 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         super().connect_signals()
         self.ui.toolButton_browse_python.clicked.connect(self.browse_python_button_clicked)
 
-    def add_execution_settings(self, tool_spec_type):
-        """See base class."""
-        return super().add_execution_settings(tool_spec_type)
-
     def default_execution_settings(self):
         """See base class."""
         use_jupyter_cons = bool(int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0")))

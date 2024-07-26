@@ -365,7 +365,7 @@ class PreviewUpdater:
         """
         if self._current_url is None:
             return
-        for row in range(first, last + 1):
+        for _ in range(first, last + 1):
             index = self._mappings_table_model.index(first, 0)
             if index.data(Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Unchecked.value:
                 continue

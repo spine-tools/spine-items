@@ -83,7 +83,7 @@ class ExecutableItem(ExecutableItemBase):
             database_path = Path(self._url.database)
             if not database_path.exists():
                 return False
-            elif database_path.is_dir():
+            if database_path.is_dir():
                 return False
         return True
 

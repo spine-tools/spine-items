@@ -223,8 +223,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         )
         python_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(python_tool_spec)
-        parent = self.tool_specification_widget.programfiles_model.index(0, 0)
-        index = self.tool_specification_widget.programfiles_model.index(0, 0, parent)  # Index of 'hello.py'
         self.tool_specification_widget._ui.textEdit_program.appendPlainText("print('hi')")
         self.tool_specification_widget._save_program_file(
             file_path, self.tool_specification_widget._ui.textEdit_program.document()

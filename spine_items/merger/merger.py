@@ -64,6 +64,7 @@ class Merger(DBWriterItemBase):
             Qt.CheckState.Checked if self.cancel_on_error else Qt.CheckState.Unchecked
         )
 
+    @property
     def project(self):
         """Returns current project or None if no project open."""
         return self._project

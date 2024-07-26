@@ -388,7 +388,7 @@ class Tool(DBWriterItemBase):
     def _show_execution_settings(self):
         """Updates the label in Tool properties to show the selected execution settings for this Tool."""
         tstype = self._specification.tooltype
-        if tstype == "python" or tstype == "julia":
+        if tstype in {"python", "julia"}:
             self.specification().init_execution_settings()
             k_spec_name = self.specification().execution_settings["kernel_spec_name"]
             env = self.specification().execution_settings["env"]
@@ -480,10 +480,8 @@ class Tool(DBWriterItemBase):
                 self._input_files_not_found = [k for k, v in file_paths.items() if v is None]
         if self._input_files_not_found:
             self.add_notification(
-                "File(s) {0} needed to execute this Tool are not provided by any input item. "
-                "Connect items that provide the required files to this Tool.".format(
-                    ", ".join(self._input_files_not_found)
-                )
+                f"File(s) {', '.join(self._input_files_not_found)} needed to execute this Tool are not provided"
+                f"by any input item. Connect items that provide the required files to this Tool."
             )
         if resources_changed or req_files_changed:
             # Only check for duplicate files in available resources when the resources have changed
@@ -491,7 +489,7 @@ class Tool(DBWriterItemBase):
                 self._available_resources = resources
                 duplicates = self._input_file_model.duplicate_paths()
                 if duplicates:
-                    self.add_notification("Duplicate input files:<br>{}".format("<br>".join(duplicates)))
+                    self.add_notification(f"Duplicate input files:<br>{'<br>'.join(duplicates)}")
             if req_files_changed:
                 self._req_file_paths = required_files
         missing_args = ", ".join(arg.arg for arg in self.cmd_line_args if isinstance(arg, LabelArg) and arg.missing)

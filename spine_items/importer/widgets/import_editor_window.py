@@ -123,7 +123,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     @property
     def _duplicate_kwargs(self):
-        return dict(source=self._source)
+        return {"source": self._source}
 
     def _make_ui(self):
         from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel

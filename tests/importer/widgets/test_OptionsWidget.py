@@ -35,7 +35,7 @@ class TestOptionsWidget(unittest.TestCase):
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         changed_options = {}
-        widget.options_changed.connect(lambda o: changed_options.update(o))
+        widget.options_changed.connect(changed_options.update)
         spin_box = widget.cellWidget(0, 0).layout().itemAt(1).widget()
         spin_box.setValue(23)
         connector.update_options.assert_called_once_with({"number": 23})
@@ -49,7 +49,7 @@ class TestOptionsWidget(unittest.TestCase):
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         changed_options = {}
-        widget.options_changed.connect(lambda o: changed_options.update(o))
+        widget.options_changed.connect(changed_options.update)
         line_edit = widget.cellWidget(0, 0).layout().itemAt(1).widget()
         line_edit.setText("the text has been set")
         connector.update_options.assert_called_once_with({"text": "the text has been set"})
@@ -65,7 +65,7 @@ class TestOptionsWidget(unittest.TestCase):
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         changed_options = {}
-        widget.options_changed.connect(lambda o: changed_options.update(o))
+        widget.options_changed.connect(changed_options.update)
         combo_box = widget.cellWidget(0, 0).layout().itemAt(1).widget()
         combo_box.setCurrentText("choice b")
         connector.update_options.assert_called_once_with({"choice": "choice b"})
@@ -79,7 +79,7 @@ class TestOptionsWidget(unittest.TestCase):
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         changed_options = {}
-        widget.options_changed.connect(lambda o: changed_options.update(o))
+        widget.options_changed.connect(changed_options.update)
         check_box = widget.cellWidget(0, 0).layout().itemAt(1).widget()
         check_box.setChecked(False)
         connector.update_options.assert_called_once_with({"yesno": False})

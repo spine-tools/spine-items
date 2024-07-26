@@ -579,7 +579,7 @@ class FlattenedMappings:
         if not self.may_import_entity_alternatives():
             return
         if import_entity_alternatives:
-            for i in range(len(self._components)):
+            for i in range(len(self._components)):  # pylint: disable=consider-using-enumerate
                 if isinstance(self._components[i], AlternativeMapping):
                     alternative_mapping = self._components.pop(i)
                     break

@@ -31,7 +31,7 @@ class OutputChannel:
 
     def __post_init__(self, item_name):
         if self.out_label is None:
-            label, separator, in_name = self.in_label.partition("@")
+            _, separator, in_name = self.in_label.partition("@")
             if separator:
                 self.out_label = f"{in_name}_exported@{item_name}"
             else:

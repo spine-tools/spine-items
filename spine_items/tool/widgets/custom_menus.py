@@ -47,13 +47,12 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
         file_path = os.path.join(spec.path, spec.includes[0])
         # Check that file exists
         if not os.path.isfile(file_path):
-            self._toolbox.msg_error.emit("Tool spec main program file <b>{0}</b> not found.".format(file_path))
+            self._toolbox.msg_error.emit(f"Tool spec main program file <b>{file_path}</b> not found.")
             return
         ext = os.path.splitext(os.path.split(file_path)[1])[1]
         if ext in [".bat", ".exe"]:
             self._toolbox.msg_warning.emit(
-                "Sorry, opening files with extension <b>{0}</b> not supported. "
-                "Please open the file manually.".format(ext)
+                f"Sorry, opening files with extension <b>{ext}</b> not supported. " f"Please open the file manually."
             )
             return
         main_program_url = "file:///" + file_path
@@ -61,10 +60,10 @@ class ToolSpecificationMenu(ItemSpecificationMenu):
         if not res:
             filename, file_extension = os.path.splitext(file_path)
             self._toolbox.msg_error.emit(
-                "Unable to open Tool specification main program file {0}. "
-                "Make sure that <b>{1}</b> "
-                "files are associated with an editor. E.g. on Windows "
-                "10, go to Control Panel -> Default Programs to do this.".format(filename, file_extension)
+                f"Unable to open Tool specification main program file {filename}. "
+                f"Make sure that <b>{file_extension}</b> "
+                f"files are associated with an editor. E.g. on Windows "
+                f"10, go to Control Panel -> Default Programs to do this."
             )
 
     @Slot()

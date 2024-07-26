@@ -180,9 +180,6 @@ class TestToolSpecificationMenu(unittest.TestCase):
 class CustomQStandardItemModel(QStandardItemModel):
     """Fake specification model."""
 
-    def __init__(self):
-        super().__init__()
-
     def specification(self, row):
         item = self.item(row, 0)
         return item.data()

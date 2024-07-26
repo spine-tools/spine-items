@@ -312,7 +312,7 @@ class MappingsModel(QAbstractItemModel):
                 display = flattened_mappings.display_position(index.row())
                 if display == "<table name>":
                     return flattened_mappings.mapping_list_item.source_table_item.name
-                elif display == "<mapping name>":
+                if display == "<mapping name>":
                     return flattened_mappings.mapping_list_item.name
                 return display
             if column == FlattenedColumn.REGEXP:
@@ -529,7 +529,7 @@ class MappingsModel(QAbstractItemModel):
                 if source_table.id == source_table_data.source_table_id:
                     table_row = i + 1
                     # Ensure we're not dropping on the same spot.
-                    if table_row != row and table_row != row - 1:
+                    if table_row not in {row, row - 1}:
                         moved_from_above = len(
                             [source for source, destination in moves if source < table_row < destination]
                         )
@@ -565,7 +565,7 @@ class MappingsModel(QAbstractItemModel):
                 for i, mapping in enumerate(source_table.mapping_list):
                     if mapping.id == mapping_data.mapping_id:
                         # Ensure we're not dropping on the same spot.
-                        if i != row and i != row - 1:
+                        if i not in {row, row - 1}:
                             moved_from_above = len(
                                 [source for source, destination in moves if source < i < destination]
                             )
@@ -1040,7 +1040,7 @@ class MappingsModel(QAbstractItemModel):
                 pass
             if isinstance(value, int):
                 return self.change_component_mapping(flattened_mappings, index, "Column", value)
-            elif isinstance(value, str):
+            if isinstance(value, str):
                 return self.change_component_mapping(flattened_mappings, index, "Constant", value)
         if column == FlattenedColumn.REGEXP:
             parent_index = index.parent()
@@ -1541,7 +1541,7 @@ class MappingsModel(QAbstractItemModel):
         source_parent_item = sourceParent.internalPointer()
         if source_parent_item is None:
             return self._move_source_table_list_rows(sourceRow, count, destinationChild)
-        elif isinstance(source_parent_item, SourceTableItem):
+        if isinstance(source_parent_item, SourceTableItem):
             return self._move_mapping_list_rows(sourceParent, sourceRow, count, destinationParent, destinationChild)
         return False
 

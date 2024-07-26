@@ -268,7 +268,7 @@ class Exporter(ProjectItem):
             return
         output_formats = set()
         for channel in self._output_channels:
-            name, separator, extension = channel.out_label.rpartition(".")
+            _, separator, extension = channel.out_label.rpartition(".")
             if not separator:
                 continue
             output_format = OutputFormat.output_format_from_extension(extension)

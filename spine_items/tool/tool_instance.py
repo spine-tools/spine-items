@@ -371,7 +371,7 @@ class ExecutableToolInstance(ToolInstance):
                     self.program = "sh"
                 else:
                     self.program = shell
-            if self.program == "cmd.exe" or self.program == "cmd":
+            if self.program in {"cmd.exe", "cmd"}:
                 # If cmd.exe shell is not given the /C flag, it will just open cmd.exe in the Execution Log
                 if "/C" not in cmd:
                     cmd = ["/C"] + cmd

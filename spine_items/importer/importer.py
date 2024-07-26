@@ -269,7 +269,7 @@ class Importer(DBWriterItemBase):
             )
         duplicates = self._file_model.duplicate_paths()
         if duplicates:
-            self.add_notification("Duplicate input files from upstream items:<br>{}".format("<br>".join(duplicates)))
+            self.add_notification(f"Duplicate input files from upstream items:<br>{'<br>'.join(duplicates)}")
         if self._file_model.rowCount() == 0:
             self.add_notification(
                 "This Importer does not have any input data. "
@@ -299,7 +299,7 @@ class Importer(DBWriterItemBase):
         specification_name = item_dict.get("specification", "")
         cancel_on_error = item_dict.get("cancel_on_error", False)
         on_conflict = item_dict.get("on_conflict", "merge")
-        file_selection = {label: selected for label, selected in item_dict.get("file_selection", [])}
+        file_selection = dict(item_dict.get("file_selection", []))
         return Importer(
             name, description, x, y, toolbox, project, specification_name, cancel_on_error, on_conflict, file_selection
         )

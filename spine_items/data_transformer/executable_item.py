@@ -58,7 +58,6 @@ class ExecutableItem(ExecutableItemBase):
         self._db_resources = [r for r in forward_resources if r.type_ == "database"]
         return ItemExecutionFinishState.SUCCESS
 
-    # pylint: disable=no-self-use
     def exclude_execution(self, forward_resources, backward_resources, lock):
         """See base class."""
         self.execute(forward_resources, backward_resources, lock)

@@ -101,7 +101,7 @@ class PreviewTableModel(QAbstractTableModel):
         self._column_to_map_color = {}
         # Compute in-pivot color
         positions = list(mapping_colors)
-        is_pivoted = any([p < 0 for p in positions[:-1]])
+        is_pivoted = any(p < 0 for p in positions[:-1])
         if is_pivoted:
             p = positions.pop(-1)
             self._in_pivot_color = mapping_colors[p]

@@ -510,8 +510,8 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     return ItemExecutionFinishState.FAILURE
             else:
                 self._logger.msg_warning.emit(
-                    f"Project is not self-contained. Please make sure all Tool specification "
-                    f"files are in the project directory."
+                    "Project is not self-contained. Please make sure all Tool specification "
+                    "files are in the project directory."
                 )
                 return ItemExecutionFinishState.FAILURE
         self._tool_instance = self._tool_specification.create_tool_instance(

@@ -288,7 +288,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
         ) as mock_filenames, mock.patch(
             "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
+        ), mock.patch(
             "spine_items.data_connection.data_connection.UrlSelectorDialog.url", new_callable=mock.PropertyMock
         ) as url_selector_url:
             a = Path(temp_dir, "a.txt")

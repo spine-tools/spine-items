@@ -260,7 +260,7 @@ class InstructionsEditor(QObject):
     def _remove_operation_widgets(self):
         """Removes operation-specific widgets from instruction option layout."""
         while self._ui.instruction_options_layout.rowCount() > 1:
-            row = self._ui.instruction_options_layout.removeRow(1)
+            self._ui.instruction_options_layout.removeRow(1)
 
     @Slot(QModelIndex, QModelIndex)
     def _transformation_changed(self, current, previous):

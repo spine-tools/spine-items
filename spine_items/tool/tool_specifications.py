@@ -198,13 +198,13 @@ class ToolSpecification(ProjectItemSpecification):
                 kwargs[p] = data[p]
             except KeyError:
                 if p in REQUIRED_KEYS:
-                    logger.msg_error.emit("Required keyword '{0}' missing".format(p))
+                    logger.msg_error.emit(f"Required keyword '{p}' missing")
                     return None
             # Check that some values are lists
             if p in LIST_REQUIRED_KEYS:
                 try:
                     if not isinstance(data[p], list):
-                        logger.msg_error.emit("Keyword '{0}' value must be a list".format(p))
+                        logger.msg_error.emit(f"Keyword '{p}' value must be a list")
                         return None
                 except KeyError:
                     pass
@@ -325,22 +325,19 @@ class GAMSTool(ToolSpecification):
         """
         lst_file_path = os.path.join(basedir, self.lst_file)  # We need the latest from work dir or from source dir
         main_prgm_path = os.path.join(self.path, self.main_prgm)  # Always get the one from source dir
-        try:
-            with open(prj_file_path, "w") as f:
-                f.write("[PROJECT]\n\n")
-                f.write("[MRUFILES]\n")  # Most Recently Used (MRU)
-                f.write("1=" + lst_file_path + "\n\n")
-                f.write("[OPENWINDOW_1]\n")
-                f.write("FILE0=" + main_prgm_path + "\n")
-                f.write("FILE1=" + lst_file_path + "\n")
-                f.write("FILE2=" + main_prgm_path + "\n")
-                f.write("MAXIM=0\n")
-                f.write("TOP=0\n")
-                f.write("LEFT=0\n")
-                f.write("HEIGHT=600\n")
-                f.write("WIDTH=1000\n")
-        except OSError:
-            raise
+        with open(prj_file_path, "w") as f:
+            f.write("[PROJECT]\n\n")
+            f.write("[MRUFILES]\n")  # Most Recently Used (MRU)
+            f.write("1=" + lst_file_path + "\n\n")
+            f.write("[OPENWINDOW_1]\n")
+            f.write("FILE0=" + main_prgm_path + "\n")
+            f.write("FILE1=" + lst_file_path + "\n")
+            f.write("FILE2=" + main_prgm_path + "\n")
+            f.write("MAXIM=0\n")
+            f.write("TOP=0\n")
+            f.write("LEFT=0\n")
+            f.write("HEIGHT=600\n")
+            f.write("WIDTH=1000\n")
 
     @staticmethod
     def load(path, data, settings, logger):

@@ -225,7 +225,7 @@ class JuliaOptionsWidget(OptionsWidget):
         if self.sysimage_path is None:
             return
         execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
-        settings = make_settings_dict_for_engine(self._settings, self._project.settings)
+        settings = make_settings_dict_for_engine(self._settings)
         settings["appSettings/makeSysImage"] = "true"  # See JuliaToolInstance.prepare()
         dag_identifier = f"containing {self._tool.name}"
         job_id = self._project.LOCAL_EXECUTION_JOB_ID
