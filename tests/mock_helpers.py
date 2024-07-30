@@ -94,9 +94,10 @@ def qsettings_value_side_effect(key, defaultValue="0"):
 def create_toolboxui():
     """Returns ToolboxUI, where QSettings among others has been mocked."""
     with patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"), patch(
-        "spinetoolbox.ui_main.QSettings.value"
-    ) as mock_qsettings_value:
+            "spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value, patch(
+            "spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style:
         mock_qsettings_value.side_effect = qsettings_value_side_effect
+        mock_set_app_style.return_value = True
         toolbox = ToolboxUI()
     return toolbox
 
@@ -113,15 +114,14 @@ def create_toolboxui_with_project(project_dir):
     """Returns ToolboxUI with a project instance where
     QSettings among others has been mocked."""
     with patch("spinetoolbox.ui_main.ToolboxUI.save_project"), patch(
-        "spinetoolbox.ui_main.QSettings.value"
-    ) as mock_qsettings_value, patch("spinetoolbox.ui_main.QSettings.setValue"), patch(
-        "spinetoolbox.ui_main.QSettings.sync"
-    ), patch(
-        "spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"
-    ), patch(
-        "spinetoolbox.ui_main.QScrollArea.setWidget"
-    ):
+            "spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value, patch(
+            "spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style, patch(
+            "spinetoolbox.ui_main.QSettings.setValue"), patch(
+            "spinetoolbox.ui_main.QSettings.sync"), patch(
+            "spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"), patch(
+            "spinetoolbox.ui_main.QScrollArea.setWidget"):
         mock_qsettings_value.side_effect = qsettings_value_side_effect
+        mock_set_app_style.return_value = True
         toolbox = ToolboxUI()
         toolbox.create_project(project_dir)
     return toolbox
