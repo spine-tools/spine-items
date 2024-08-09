@@ -71,7 +71,7 @@ class DataStore(ProjectItem):
         self._purge_dialog = None
         self._database_validator = DatabaseConnectionValidator(self)
         db_map = self.get_db_map_for_ds()
-        # Notify db manager about the Data Stores in the project so it can notify abobut the dirtyness of them
+        # Notify db manager about the Data Stores in the project, so it can notify about the dirtiness of them
         self._toolbox.db_mngr.add_data_store_db_map(db_map, self)
 
     def get_db_map_for_ds(self):
@@ -100,9 +100,9 @@ class DataStore(ProjectItem):
         """Return a complete url dictionary from the given dict or string"""
         base_url = {"dialect": "", "username": "", "password": "", "host": "", "port": "", "database": "", "schema": ""}
         if isinstance(url, dict):
-            if url.get("dialect") == "sqlite" and "database" in url and url["database"] is not None:
+            if url.get("dialect") == "sqlite" and (database := url.get("database")):
                 # Convert relative database path back to absolute
-                url["database"] = os.path.abspath(os.path.join(self._project.project_dir, url["database"]))
+                url["database"] = os.path.abspath(os.path.join(self._project.project_dir, database))
             for key, value in url.items():
                 if value is not None:
                     base_url[key] = value
