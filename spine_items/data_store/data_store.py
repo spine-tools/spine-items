@@ -76,8 +76,9 @@ class DataStore(ProjectItem):
 
     def get_db_map_for_ds(self):
         """Returns the db map for the Data Store"""
-        if self._url.get("dialect"):
-            return self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, codename=self.name)
+        sa_url = self.sql_alchemy_url()
+        if sa_url is not None:
+            return self._toolbox.db_mngr.get_db_map(sa_url, self._logger, codename=self.name)
         return None
 
     @staticmethod
@@ -545,5 +546,6 @@ class DataStore(ProjectItem):
         """See base class"""
         self._database_validator.wait_for_finish()
         db_map = self.get_db_map_for_ds()
-        self._toolbox.db_mngr.remove_data_store_db_map(db_map, self)
+        if db_map is not None:
+            self._toolbox.db_mngr.remove_data_store_db_map(db_map, self)
         super().tear_down()
