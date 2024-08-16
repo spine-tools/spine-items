@@ -62,7 +62,7 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
         factory = DataStoreFactory()
         item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
-        self._project = self._toolbox.project()
+        self._project = self._toolbox.project
         with mock.patch("spine_items.data_store.data_store.QMenu"):
             self.ds = factory.make_item("DS", item_dict, self._toolbox, self._project)
         self._project.add_item(self.ds)

@@ -71,7 +71,7 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.fetch_mode = fetch_mode
-        self.conda_path = self._toolbox.qsettings().value("appSettings/condaPath", defaultValue="")
+        self.conda_path = self._toolbox.qsettings.value("appSettings/condaPath", defaultValue="")
         self.kernel_spec_model = QStandardItemModel(self)
         self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
         self._kernel_spec_editor = None
@@ -273,15 +273,15 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         super().__init__(specification_editor, toolbox, Ui_Form, 2)
         # Initialize UI elements with defaults
         use_jupyter_console = bool(
-            int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
+            int(self._toolbox.qsettings.value("appSettings/usePythonKernel", defaultValue="0"))
         )
         if use_jupyter_console:
             self.ui.radioButton_jupyter_console.setChecked(True)
             # Get the default kernel spec from Settings->Tools for new Jupyter Console Tool Specs
-            self._saved_kernel = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
+            self._saved_kernel = self._toolbox.qsettings.value("appSettings/pythonKernel", defaultValue="")
         else:
             self.ui.radioButton_basic_console.setChecked(True)
-        default_python_path = resolve_python_interpreter(self._toolbox.qsettings())
+        default_python_path = resolve_python_interpreter(self._toolbox.qsettings)
         self.ui.lineEdit_executable.setPlaceholderText(default_python_path)
         self.set_ui_for_jupyter_console(use_jupyter_console)
         self.connect_signals()
@@ -293,8 +293,8 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
 
     def default_execution_settings(self):
         """See base class."""
-        use_jupyter_cons = bool(int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0")))
-        k_name = self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue="")
+        use_jupyter_cons = bool(int(self._toolbox.qsettings.value("appSettings/usePythonKernel", defaultValue="0")))
+        k_name = self._toolbox.qsettings.value("appSettings/pythonKernel", defaultValue="")
         env = ""
         if use_jupyter_cons:
             # Check if the kernel is a Conda kernel by matching the name with the one that is in kernel_spec_model
@@ -310,7 +310,7 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         d["kernel_spec_name"] = k_name
         d["env"] = env
         d["use_jupyter_console"] = use_jupyter_cons
-        d["executable"] = self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue="")
+        d["executable"] = self._toolbox.qsettings.value("appSettings/pythonPath", defaultValue="")
         return d
 
     @Slot(bool)
@@ -352,15 +352,15 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
 
         super().__init__(specification_editor, toolbox, Ui_Form, 4)
         # Initialize UI elements with defaults
-        use_jupyter_console = bool(int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0")))
+        use_jupyter_console = bool(int(self._toolbox.qsettings.value("appSettings/useJuliaKernel", defaultValue="0")))
         if use_jupyter_console:
             self.ui.radioButton_jupyter_console.setChecked(True)
             # Get the default kernel spec from Settings->Tools for new Jupyter Console Tool Specs
-            self._saved_kernel = self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue="")
+            self._saved_kernel = self._toolbox.qsettings.value("appSettings/juliaKernel", defaultValue="")
         else:
             self.ui.radioButton_basic_console.setChecked(True)
-        default_julia_path = self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue="")
-        default_julia_project = self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue="")
+        default_julia_path = self._toolbox.qsettings.value("appSettings/juliaPath", defaultValue="")
+        default_julia_project = self._toolbox.qsettings.value("appSettings/juliaProjectPath", defaultValue="")
         if not default_julia_path:
             default_julia_path = resolve_default_julia_executable()
         self.ui.lineEdit_executable.setPlaceholderText(default_julia_path)
@@ -394,12 +394,12 @@ class JuliaToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
     def default_execution_settings(self):
         """See base class."""
         d = {}
-        use_jupyter_console = bool(int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0")))
-        d["kernel_spec_name"] = self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue="")
+        use_jupyter_console = bool(int(self._toolbox.qsettings.value("appSettings/useJuliaKernel", defaultValue="0")))
+        d["kernel_spec_name"] = self._toolbox.qsettings.value("appSettings/juliaKernel", defaultValue="")
         d["env"] = ""
         d["use_jupyter_console"] = use_jupyter_console
-        d["executable"] = self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue="")
-        d["project"] = self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue="")
+        d["executable"] = self._toolbox.qsettings.value("appSettings/juliaPath", defaultValue="")
+        d["project"] = self._toolbox.qsettings.value("appSettings/juliaProjectPath", defaultValue="")
         return d
 
     @Slot(bool)

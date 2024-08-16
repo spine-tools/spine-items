@@ -152,13 +152,13 @@ class TestExporterWithToolbox(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_notifications_when_not_configured(self):
-        project = self._toolbox.project()
+        project = self._toolbox.project
         exporter = Exporter("Test exporter", "Exporter for unit testing", 0.0, 0.0, self._toolbox, project)
         project.add_item(exporter)
         self.assertEqual(exporter.get_icon().exclamation_icon._notifications, ["Export specification missing."])
 
     def test_notifications_when_specification_is_set(self):
-        project = self._toolbox.project()
+        project = self._toolbox.project
         specification = Specification("Test spec", "Exporter specification for testing")
         project.add_specification(specification)
         exporter = Exporter("Test exporter", "Exporter for unit testing", 0.0, 0.0, self._toolbox, project, "Test spec")
@@ -166,7 +166,7 @@ class TestExporterWithToolbox(unittest.TestCase):
         self.assertEqual(exporter.get_icon().exclamation_icon._notifications, [])
 
     def test_notifications_when_output_file_name_extension_mismatches_with_specification_output_format(self):
-        project = self._toolbox.project()
+        project = self._toolbox.project
         url = "sqlite:///" + os.path.join(self._temp_dir.name, "db.sqlite")
         create_new_spine_database(url)
         url_dict = {"dialect": "sqlite", "database": os.path.join(self._temp_dir.name, "db.sqlite")}

@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_specification_form.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.3
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -45,12 +45,12 @@ class Ui_MainWindow(object):
         self.actionNew_main_program_file = QAction(MainWindow)
         self.actionNew_main_program_file.setObjectName(u"actionNew_main_program_file")
         icon = QIcon()
-        icon.addFile(u":/icons/file-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/file-regular.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionNew_main_program_file.setIcon(icon)
         self.actionSelect_main_program_file = QAction(MainWindow)
         self.actionSelect_main_program_file.setObjectName(u"actionSelect_main_program_file")
         icon1 = QIcon()
-        icon1.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/icons/folder-open-regular.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionSelect_main_program_file.setIcon(icon1)
         self.actionAdd_program_file = QAction(MainWindow)
         self.actionAdd_program_file.setObjectName(u"actionAdd_program_file")
@@ -60,18 +60,18 @@ class Ui_MainWindow(object):
         self.actionAdd_program_directory.setObjectName(u"actionAdd_program_directory")
         self.actionAdd_program_directory.setEnabled(False)
         icon2 = QIcon()
-        icon2.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon2.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionAdd_program_directory.setIcon(icon2)
         self.actionRemove_selected_program_files = QAction(MainWindow)
         self.actionRemove_selected_program_files.setObjectName(u"actionRemove_selected_program_files")
         self.actionRemove_selected_program_files.setEnabled(False)
         icon3 = QIcon()
-        icon3.addFile(u":/icons/trash-alt.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon3.addFile(u":/icons/trash-alt.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionRemove_selected_program_files.setIcon(icon3)
         self.actionAdd_input_files = QAction(MainWindow)
         self.actionAdd_input_files.setObjectName(u"actionAdd_input_files")
         icon4 = QIcon()
-        icon4.addFile(u":/icons/plus.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon4.addFile(u":/icons/plus.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionAdd_input_files.setIcon(icon4)
         self.actionRemove_selected_input_files = QAction(MainWindow)
         self.actionRemove_selected_input_files.setObjectName(u"actionRemove_selected_input_files")
@@ -158,8 +158,8 @@ class Ui_MainWindow(object):
 
         self.line_2 = QFrame(self.centralwidget)
         self.line_2.setObjectName(u"line_2")
-        self.line_2.setFrameShape(QFrame.VLine)
-        self.line_2.setFrameShadow(QFrame.Sunken)
+        self.line_2.setFrameShape(QFrame.Shape.VLine)
+        self.line_2.setFrameShadow(QFrame.Shadow.Sunken)
 
         self.verticalLayout_3.addWidget(self.line_2)
 
@@ -197,7 +197,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.treeView_programfiles)
 
         self.dockWidget_program_files.setWidget(self.dockWidgetContents_4)
-        MainWindow.addDockWidget(Qt.BottomDockWidgetArea, self.dockWidget_program_files)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.dockWidget_program_files)
         self.dockWidget_io_files = QDockWidget(MainWindow)
         self.dockWidget_io_files.setObjectName(u"dockWidget_io_files")
         self.dockWidget_io_files.setAllowedAreas(Qt.BottomDockWidgetArea)
@@ -217,7 +217,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.addWidget(self.treeView_io_files)
 
         self.dockWidget_io_files.setWidget(self.dockWidgetContents_2)
-        MainWindow.addDockWidget(Qt.BottomDockWidgetArea, self.dockWidget_io_files)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.dockWidget_io_files)
         self.dockWidget_program = QDockWidget(MainWindow)
         self.dockWidget_program.setObjectName(u"dockWidget_program")
         self.dockWidget_program.setAllowedAreas(Qt.BottomDockWidgetArea)
@@ -233,7 +233,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_8.addWidget(self.textEdit_program)
 
         self.dockWidget_program.setWidget(self.dockWidgetContents)
-        MainWindow.addDockWidget(Qt.BottomDockWidgetArea, self.dockWidget_program)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.dockWidget_program)
 
         self.retranslateUi(MainWindow)
 

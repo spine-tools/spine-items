@@ -219,7 +219,7 @@ class DataConnection(ProjectItem):
     @Slot(bool)
     def show_add_db_reference_dialog(self, _=False):
         """Opens a dialog where user can select a url to be added as reference for this Data Connection."""
-        selector = UrlSelectorDialog(self._toolbox.qsettings(), False, self._toolbox, self._toolbox)
+        selector = UrlSelectorDialog(self._toolbox.qsettings, False, self._toolbox, self._toolbox)
         result = selector.exec()
         if result == UrlSelectorDialog.DialogCode.Rejected:
             return

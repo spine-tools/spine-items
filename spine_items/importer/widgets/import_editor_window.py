@@ -172,7 +172,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self.start_ui()
 
     def _get_source_url(self):
-        selector = UrlSelectorDialog(self._toolbox.qsettings(), False, self._toolbox, parent=self)
+        selector = UrlSelectorDialog(self._toolbox.qsettings, False, self._toolbox, parent=self)
         selector.exec()
         if selector.result() != QDialog.DialogCode.Accepted:
             return None
@@ -182,7 +182,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         filter_ = ";;".join(["*.*"] + [conn.FILE_EXTENSIONS for conn in _CONNECTOR_NAME_TO_CLASS.values()])
         key = f"selectInputDataFileFor{self.specification.name if self.specification else None}"
         filepath, _ = get_open_file_name_in_last_dir(
-            self._toolbox.qsettings(),
+            self._toolbox.qsettings,
             key,
             self,
             "Select an input data file to define the specification",
@@ -368,7 +368,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     @Slot()
     def import_mapping_from_file(self):
         """Imports mapping spec from a user selected .json file to the preview window."""
-        start_dir = self._toolbox.project().project_dir
+        start_dir = self._toolbox.project.project_dir
         # noinspection PyCallByClass
         filename = QFileDialog.getOpenFileName(
             self, "Import mapping specification", start_dir, "Import mapping (*.json)"
@@ -390,7 +390,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     @Slot()
     def export_mapping_to_file(self):
         """Exports all mapping specs in current preview window to .json file."""
-        start_dir = self._toolbox.project().project_dir
+        start_dir = self._toolbox.project.project_dir
         # noinspection PyCallByClass
         filename = QFileDialog.getSaveFileName(
             self, "Export mapping spec to a file", start_dir, "Import mapping (*.json)"
@@ -442,7 +442,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
 def _gams_system_directory(toolbox):
     """Returns GAMS system path from Toolbox settings or None if GAMS default is to be used."""
-    path = toolbox.qsettings().value("appSettings/gamsPath", defaultValue=None)
+    path = toolbox.qsettings.value("appSettings/gamsPath", defaultValue=None)
     if not path:
         path = find_gams_directory()
     if path is not None and os.path.isfile(path):

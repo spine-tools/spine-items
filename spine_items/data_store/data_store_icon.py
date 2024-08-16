@@ -24,5 +24,5 @@ class DataStoreIcon(ProjectItemIcon):
             e (QGraphicsSceneMouseEvent): Event
         """
         super().mouseDoubleClickEvent(e)
-        item = self._toolbox.project().get_item(self._name)
+        item = self._toolbox.project.get_item(self._name)
         item.open_url_in_spine_db_editor()

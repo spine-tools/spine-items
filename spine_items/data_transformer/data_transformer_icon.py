@@ -25,5 +25,5 @@ class DataTransformerIcon(ProjectItemIcon):
             e (QGraphicsSceneMouseEvent): Event
         """
         super().mouseDoubleClickEvent(e)
-        item = self._toolbox.project().get_item(self._name)
+        item = self._toolbox.project.get_item(self._name)
         item.show_specification_window()

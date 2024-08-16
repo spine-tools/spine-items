@@ -29,8 +29,8 @@ class TestDataConnectionIcon(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
         item_dict = {"type": "Data Connection", "description": "", "x": 0, "y": 0}
-        dc = DataConnectionFactory.make_item("DC", item_dict, self._toolbox, self._toolbox.project())
-        self._toolbox.project().add_item(dc)
+        dc = DataConnectionFactory.make_item("DC", item_dict, self._toolbox, self._toolbox.project)
+        self._toolbox.project.add_item(dc)
 
     def tearDown(self):
         super().tearDown()
@@ -38,7 +38,7 @@ class TestDataConnectionIcon(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_make_data_connection_icon(self):
-        _ = self._toolbox.project()._project_items["DC"].get_icon()
+        _ = self._toolbox.project._project_items["DC"].get_icon()
 
 
 if __name__ == "__main__":

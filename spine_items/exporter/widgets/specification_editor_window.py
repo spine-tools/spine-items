@@ -213,7 +213,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._mappings_table_model,
             self._sort_mappings_table_model,
             self._mapping_editor_model,
-            self._toolbox.project().project_dir,
+            self._toolbox.project.project_dir,
         )
         self._ui.mappings_table.setCurrentIndex(self._sort_mappings_table_model.index(0, 0))
 

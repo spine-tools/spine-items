@@ -57,7 +57,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             item (ProjectItem, optional): Sets the spec for this item if accepted
         """
         super().__init__(toolbox, specification, item)  # Inherit stylesheet from ToolboxUI
-        self._project = self._toolbox.project()
+        self._project = self._toolbox.project
         # Customize text edit main program
         self._ui.textEdit_program.setEnabled(False)
         self._ui.textEdit_program.file_selected(False)
@@ -263,7 +263,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         except NameError:
             self.show_error(f"Creating a {self._ui.comboBox_tooltype.currentText().lower()} Tool spec failed")
             return None
-        tool_spec = make_specification(new_spec_dict, self._toolbox.qsettings(), self._toolbox)
+        tool_spec = make_specification(new_spec_dict, self._toolbox.qsettings, self._toolbox)
         if not tool_spec:
             self.show_error("Creating Tool specification failed")
             return None
@@ -567,21 +567,21 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         if spec_type == "python":
             self.spec_dict["execution_settings"] = {
                 "use_jupyter_console": bool(
-                    int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
+                    int(self._toolbox.qsettings.value("appSettings/usePythonKernel", defaultValue="0"))
                 ),
-                "kernel_spec_name": self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue=""),
+                "kernel_spec_name": self._toolbox.qsettings.value("appSettings/pythonKernel", defaultValue=""),
                 "env": "",
-                "executable": self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue=""),
+                "executable": self._toolbox.qsettings.value("appSettings/pythonPath", defaultValue=""),
             }
         elif spec_type == "julia":
             self.spec_dict["execution_settings"] = {
                 "use_jupyter_console": bool(
-                    int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0"))
+                    int(self._toolbox.qsettings.value("appSettings/useJuliaKernel", defaultValue="0"))
                 ),
-                "kernel_spec_name": self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue=""),
-                "project": self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue=""),
+                "kernel_spec_name": self._toolbox.qsettings.value("appSettings/juliaKernel", defaultValue=""),
+                "project": self._toolbox.qsettings.value("appSettings/juliaProjectPath", defaultValue=""),
                 "env": "",
-                "executable": self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue=""),
+                "executable": self._toolbox.qsettings.value("appSettings/juliaPath", defaultValue=""),
             }
         elif spec_type == "executable":
             self.spec_dict["execution_settings"] = {"cmd": "", "shell": ""}

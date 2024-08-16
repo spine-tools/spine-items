@@ -161,7 +161,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         Returns:
             str: path to database file
         """
-        initial_path = self._toolbox.project().project_dir
+        initial_path = self._toolbox.project.project_dir
         return QFileDialog.getOpenFileName(self, "Select database", initial_path, "sqlite (*.sqlite)")[0]
 
     @Slot(bool)

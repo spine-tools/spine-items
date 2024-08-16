@@ -118,7 +118,7 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         specification = Specification("spec name", mapping_specifications={"my mappings": mapping_specification})
         specification_path = pathlib.Path(self._temp_dir.name) / "my spec.json"
         specification.definition_file_path = str(specification_path)
-        self._toolbox.project().add_specification(specification, save_to_disk=False)
+        self._toolbox.project.add_specification(specification, save_to_disk=False)
         editor = SpecificationEditorWindow(self._toolbox, specification)
         self.assertEqual(editor._ui.highlight_dimension_spin_box.value(), 2)
         self.assertEqual(editor._ui.entity_dimensions_spin_box.value(), 2)

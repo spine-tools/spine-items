@@ -46,7 +46,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
         factory = DataConnectionFactory()
         item_dict = {"type": "Data Connection", "description": "", "db_references": [], "x": 0, "y": 0}
-        project = self._toolbox.project()
+        project = self._toolbox.project
         self._data_connection = factory.make_item("DC", item_dict, self._toolbox, project)
         project.add_item(self._data_connection)
         self._ref_model = self._data_connection.reference_model
@@ -383,12 +383,12 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection.copy_to_project()
             waiter.wait()
         self.assertEqual(self._ref_model.rowCount(ref_root_index), 0)
-        self.assertTrue(Path(self._toolbox.project().items_dir, "dc", "a.txt").exists())
+        self.assertTrue(Path(self._toolbox.project.items_dir, "dc", "a.txt").exists())
         self.assertEqual(self._data_connection.data_model.rowCount(), 1)
         index = self._data_connection.data_model.index(0, 0)
         self.assertEqual(index.data(), "a.txt")
         self.assertEqual(
-            index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self._toolbox.project().items_dir, "dc", "a.txt")
+            index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self._toolbox.project.items_dir, "dc", "a.txt")
         )
 
     def test_create_data_file(self):
@@ -402,7 +402,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         index = model.index(0, 0)
         self.assertEqual(index.data(), "data.csv")
         self.assertEqual(
-            index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self._toolbox.project().items_dir, "dc", "data.csv")
+            index.data(Qt.ItemDataRole.UserRole + 1), os.path.join(self._toolbox.project.items_dir, "dc", "data.csv")
         )
 
     def test_deleting_data_file_removes_it_from_dc(self):
@@ -467,7 +467,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self.assertEqual(len(item_dict["db_references"]), 1)
         self.assertNotIn("username", item_dict["db_references"][0])
         self.assertNotIn("password", item_dict["db_references"][0])
-        deserialized = DataConnection.from_dict("deserialized", item_dict, self._toolbox, self._toolbox.project())
+        deserialized = DataConnection.from_dict("deserialized", item_dict, self._toolbox, self._toolbox.project)
         self.assertTrue(deserialized.has_db_references())
         self.assertEqual(
             list(deserialized.db_reference_iter()),
@@ -506,7 +506,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self.assertEqual(len(item_dict["db_references"]), 1)
         self.assertNotIn("username", item_dict["db_references"][0])
         self.assertNotIn("password", item_dict["db_references"][0])
-        deserialized = DataConnection.from_dict("deserialized", item_dict, self._toolbox, self._toolbox.project())
+        deserialized = DataConnection.from_dict("deserialized", item_dict, self._toolbox, self._toolbox.project)
         self.assertTrue(deserialized.has_db_references())
         self.assertEqual(
             list(deserialized.db_reference_iter()),
@@ -679,7 +679,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self._data_connection.activate()
         expected_name = "ABC"
         expected_short_name = "abc"
-        expected_data_dir = os.path.join(self._toolbox.project().items_dir, expected_short_name)
+        expected_data_dir = os.path.join(self._toolbox.project.items_dir, expected_short_name)
         self._data_connection.rename(expected_name, "")
         # Check name
         self.assertEqual(expected_name, self._data_connection.name)  # item name

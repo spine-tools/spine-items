@@ -31,8 +31,8 @@ class TestDataStoreIcon(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
         item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "url": None}
-        ds = DataStoreFactory.make_item("DS", item_dict, self._toolbox, self._toolbox.project())
-        self._toolbox.project().add_item(ds)
+        ds = DataStoreFactory.make_item("DS", item_dict, self._toolbox, self._toolbox.project)
+        self._toolbox.project.add_item(ds)
 
     def tearDown(self):
         super().tearDown()
@@ -40,7 +40,7 @@ class TestDataStoreIcon(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_mouse_double_click_event(self):
-        icon = self._toolbox.project()._project_items["DS"].get_icon()
+        icon = self._toolbox.project._project_items["DS"].get_icon()
         with mock.patch("spine_items.data_store.data_store.DataStore._open_spine_db_editor") as mock_open_db_editor:
             mock_open_db_editor.return_value = True
             icon.mouseDoubleClickEvent(QGraphicsSceneMouseEvent(QEvent.Type.GraphicsSceneMouseDoubleClick))

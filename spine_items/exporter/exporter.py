@@ -153,7 +153,7 @@ class Exporter(ProjectItem):
         self._export_list_items.clear()
         for channel in self._output_channels:
             item = self._export_list_items[channel.in_label] = ExportListItem(
-                channel.in_label, channel.out_label, channel.out_url, self._toolbox.qsettings(), self._toolbox
+                channel.in_label, channel.out_label, channel.out_url, self._toolbox.qsettings, self._toolbox
             )
             outputs_layout.addWidget(item)
             output_format = self._specification.output_format if self._specification is not None else None

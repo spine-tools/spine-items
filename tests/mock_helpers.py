@@ -55,7 +55,7 @@ def create_mock_toolbox():
 
 def create_mock_toolbox_with_mock_qsettings():
     mock_toolbox = create_mock_toolbox()
-    mock_toolbox.qsettings().value.side_effect = qsettings_value_side_effect
+    mock_toolbox.qsettings.value.side_effect = qsettings_value_side_effect
     return mock_toolbox
 
 
@@ -95,10 +95,12 @@ def create_toolboxui():
     """Returns ToolboxUI, where QSettings among others has been mocked."""
     with patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"), patch(
             "spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value, patch(
-            "spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style:
+            "spinetoolbox.top_ui_main.ToolboxUIBase._set_app_style") as mock_set_app_style:
         mock_qsettings_value.side_effect = qsettings_value_side_effect
         mock_set_app_style.return_value = True
-        toolbox = ToolboxUI()
+        toolbox = ToolboxUI(None)
+        mock_qsettings_value.assert_called()
+        mock_set_app_style.assert_called()
     return toolbox
 
 
@@ -115,15 +117,17 @@ def create_toolboxui_with_project(project_dir):
     QSettings among others has been mocked."""
     with patch("spinetoolbox.ui_main.ToolboxUI.save_project"), patch(
             "spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value, patch(
-            "spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style, patch(
+            "spinetoolbox.top_ui_main.ToolboxUIBase._set_app_style") as mock_set_app_style, patch(
             "spinetoolbox.ui_main.QSettings.setValue"), patch(
             "spinetoolbox.ui_main.QSettings.sync"), patch(
             "spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"), patch(
             "spinetoolbox.ui_main.QScrollArea.setWidget"):
         mock_qsettings_value.side_effect = qsettings_value_side_effect
         mock_set_app_style.return_value = True
-        toolbox = ToolboxUI()
+        toolbox = ToolboxUI(None)
         toolbox.create_project(project_dir)
+        mock_qsettings_value.assert_called()
+        mock_set_app_style.assert_called()
     return toolbox
 
 
@@ -131,7 +135,7 @@ def clean_up_toolbox(toolbox):
     """Cleans up toolbox and project."""
     with patch("spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value:
         mock_qsettings_value.side_effect = qsettings_value_side_effect
-        if toolbox.project():
+        if toolbox.project:
             toolbox.close_project(ask_confirmation=False)
             QApplication.processEvents()  # Makes sure Design view animations finish properly.
             mock_qsettings_value.assert_called()  # The call in _shutdown_engine_kernels()

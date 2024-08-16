@@ -31,8 +31,8 @@ class TestToolIcon(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
         item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": None}
-        t = ToolFactory.make_item("T", item_dict, self._toolbox, self._toolbox.project())
-        self._toolbox.project().add_item(t)
+        t = ToolFactory.make_item("T", item_dict, self._toolbox, self._toolbox.project)
+        self._toolbox.project.add_item(t)
 
     def tearDown(self):
         super().tearDown()
@@ -40,14 +40,14 @@ class TestToolIcon(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_mouse_double_click_event(self):
-        icon = self._toolbox.project()._project_items["T"].get_icon()
+        icon = self._toolbox.project._project_items["T"].get_icon()
         with mock.patch("spine_items.tool.tool.Tool.show_specification_window") as mock_show_spec_window:
             mock_show_spec_window.return_value = True
             icon.mouseDoubleClickEvent(QGraphicsSceneMouseEvent(QEvent.Type.GraphicsSceneMouseDoubleClick))
             mock_show_spec_window.assert_called()
 
     def test_animation(self):
-        icon = self._toolbox.project()._project_items["T"].get_icon()
+        icon = self._toolbox.project._project_items["T"].get_icon()
         icon.start_animation()
         icon.stop_animation()
 

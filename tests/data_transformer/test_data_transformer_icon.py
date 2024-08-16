@@ -31,8 +31,8 @@ class TestDataTransformerIcon(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
         item_dict = {"type": "Data Transformer", "description": "", "x": 0, "y": 0, "specification": None}
-        dt = DataTransformerFactory.make_item("DT", item_dict, self._toolbox, self._toolbox.project())
-        self._toolbox.project().add_item(dt)
+        dt = DataTransformerFactory.make_item("DT", item_dict, self._toolbox, self._toolbox.project)
+        self._toolbox.project.add_item(dt)
 
     def tearDown(self):
         super().tearDown()
@@ -40,7 +40,7 @@ class TestDataTransformerIcon(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_mouse_double_click_event(self):
-        icon = self._toolbox.project()._project_items["DT"].get_icon()
+        icon = self._toolbox.project._project_items["DT"].get_icon()
         with mock.patch(
             "spine_items.data_transformer.data_transformer.DataTransformer.show_specification_window"
         ) as mock_show_spec_window:

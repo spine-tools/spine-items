@@ -40,7 +40,7 @@ class TestExecutableItemWithToolbox(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_from_dict(self):
-        project = self._toolbox.project()
+        project = self._toolbox.project
         specification = Specification("Test spec", "Exporter specification for testing")
         project.add_specification(specification)
         database_path = str(Path(project.project_dir, "database.sqlite"))
@@ -67,7 +67,7 @@ class TestExecutableItemWithToolbox(unittest.TestCase):
         logger = mock.MagicMock()
         specifications = {exporter.item_type(): {specification.name: specification}}
         executable = ExecutableItem.from_dict(
-            item_dict, "My exporter", project.project_dir, self._toolbox.qsettings(), specifications, logger=logger
+            item_dict, "My exporter", project.project_dir, self._toolbox.qsettings, specifications, logger=logger
         )
         self.assertEqual(executable.item_type(), exporter.item_type())
         self.assertEqual(executable.name, exporter.name)

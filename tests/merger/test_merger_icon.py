@@ -29,8 +29,8 @@ class TestMergerIcon(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
         item_dict = {"type": "Merger", "description": "", "x": 0, "y": 0}
-        merger = MergerFactory.make_item("M", item_dict, self._toolbox, self._toolbox.project())
-        self._toolbox.project().add_item(merger)
+        merger = MergerFactory.make_item("M", item_dict, self._toolbox, self._toolbox.project)
+        self._toolbox.project.add_item(merger)
 
     def tearDown(self):
         super().tearDown()
@@ -38,7 +38,7 @@ class TestMergerIcon(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_animation(self):
-        icon = self._toolbox.project()._project_items["M"].get_icon()
+        icon = self._toolbox.project._project_items["M"].get_icon()
         icon.start_animation()
         icon.stop_animation()
 
