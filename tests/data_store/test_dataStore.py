@@ -112,7 +112,7 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         self.ds.rename(expected_name, "")  # Do rename
         # Check name
         self.assertEqual(expected_name, self.ds.name)  # item name
-        self.assertEqual(expected_name, self.ds.get_icon().name())  # name item on Design View
+        self.assertEqual(expected_name, self.ds.get_icon().name)  # name item on Design View
         # Check data_dir and logs_dir
         self.assertEqual(expected_data_dir, self.ds.data_dir)  # Check data dir
         # Check that the database path in properties has been updated

@@ -121,7 +121,7 @@ class TestExporter(unittest.TestCase):
         expected_short_name = shorten(expected_name)
         self.assertTrue(self._exporter.rename(expected_name, ""))
         self.assertEqual(expected_name, self._exporter.name)
-        self.assertEqual(expected_name, self._exporter.get_icon().name())
+        self.assertEqual(expected_name, self._exporter.get_icon().name)
         expected_data_dir = os.path.join(self._project.items_dir, expected_short_name)
         self.assertEqual(expected_data_dir, self._exporter.data_dir)
 
