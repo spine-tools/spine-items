@@ -376,7 +376,7 @@ class UrlSelectorWidget(QWidget):
         self._ui.comboBox_dialect.currentTextChanged.connect(lambda: self.url_changed.emit())
         self._ui.lineEdit_host.textChanged.connect(lambda: self.url_changed.emit())
         self._ui.lineEdit_port.textChanged.connect(lambda: self.url_changed.emit())
-        self._ui.lineEdit_database.textChanged.connect(lambda: self.url_changed.emit())
+        self._ui.lineEdit_database.editingFinished.connect(lambda: self.url_changed.emit())
         self._ui.lineEdit_username.textChanged.connect(lambda: self.url_changed.emit())
         self._ui.lineEdit_password.textChanged.connect(lambda: self.url_changed.emit())
 
