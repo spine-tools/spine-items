@@ -264,6 +264,9 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockWidget_program">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
    <property name="allowedAreas">
     <set>Qt::BottomDockWidgetArea</set>
    </property>
