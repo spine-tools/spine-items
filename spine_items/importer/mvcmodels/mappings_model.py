@@ -20,7 +20,7 @@ import uuid
 from PySide6.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor, QFont
 from spinedb_api import ParameterValueFormatError, from_database
-from spinedb_api.import_mapping.import_mapping import ScenarioBeforeAlternativeMapping, default_import_mapping
+from spinedb_api.import_mapping.import_mapping import default_import_mapping
 from spinedb_api.import_mapping.import_mapping_compat import (
     import_mapping_from_dict,
     parameter_default_value_mapping_from_dict,
@@ -1304,29 +1304,6 @@ class MappingsModel(QAbstractItemModel):
         flattened_mappings.set_import_entities(import_entities)
         table_index = self.index(table_row, 0)
         list_index = self.index(list_row, 0, table_index)
-        self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
-
-    def set_use_before_alternative(self, table_row, list_row, use_before_alternative):
-        """Sets the use before alternative flag.
-
-        Args:
-            table_row (int): source table row index
-            list_row (int): mapping list row index
-            use_before_alternative (bool): flag value
-        """
-        table_index = self.index(table_row, 0)
-        list_index = self.index(list_row, 0, table_index)
-        mapping_list = self._mappings[table_row].mapping_list[list_row]
-        flattened_mappings = mapping_list.flattened_mappings
-        if use_before_alternative:
-            before_alternative_mapping = ScenarioBeforeAlternativeMapping(Position.hidden)
-            self.beginInsertRows(list_index, 2, 2)
-            flattened_mappings.append_tail_component(before_alternative_mapping)
-            self.endInsertRows()
-        else:
-            self.beginRemoveRows(list_index, 2, 2)
-            flattened_mappings.cut_tail_component()
-            self.endRemoveRows()
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
 
     def set_read_start_row(self, table_row, list_row, start_row):

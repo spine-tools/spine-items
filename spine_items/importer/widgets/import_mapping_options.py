@@ -23,7 +23,6 @@ from ..commands import (
     SetReadStartRow,
     SetSkipColumns,
     SetTimeSeriesRepeatFlag,
-    SetUseBeforeAlternativeFlag,
     SetValueType,
 )
 from ..flattened_mappings import MappingType
@@ -59,7 +58,6 @@ class ImportMappingOptions:
         self._ui.class_type_combo_box.currentTextChanged.connect(self._change_item_mapping_type)
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_parameter_type)
         self._ui.value_type_combo_box.currentTextChanged.connect(self._change_value_type)
-        self._ui.before_alternative_check_box.stateChanged.connect(self._change_use_before_alternative)
         self._ui.import_entities_check_box.stateChanged.connect(self._change_import_entities)
         self._ui_ignore_columns_filtermenu.filterChanged.connect(self._change_skip_columns)
         self._ui.start_read_row_spin_box.valueChanged.connect(self._change_read_start_row)
@@ -183,12 +181,6 @@ class ImportMappingOptions:
             self._ui.value_type_combo_box.setCurrentText(flattened_mappings.value_type)
             self._ui.value_type_label.setText(flattened_mappings.value_type_label())
 
-        # update before alternative settings
-        is_scenario_alternative_mapping = flattened_mappings.map_type == MappingType.ScenarioAlternative
-        self._ui.before_alternative_check_box.setEnabled(is_scenario_alternative_mapping)
-        if is_scenario_alternative_mapping:
-            self._ui.before_alternative_check_box.setChecked(flattened_mappings.uses_before_alternative())
-
         # update ignore columns filter
         self._ui.ignore_columns_button.setEnabled(flattened_mappings.root_mapping.is_pivoted())
         self._ui.ignore_columns_label.setEnabled(flattened_mappings.root_mapping.is_pivoted())
@@ -291,27 +283,6 @@ class ImportMappingOptions:
         self._undo_stack.push(
             SetValueType(
                 self._list_index.parent().row(), self._list_index.row(), self._mappings_model, new_type, old_type
-            )
-        )
-
-    @Slot(int)
-    def _change_use_before_alternative(self, state):
-        """
-        Pushes SetUseBeforeAlternative command to the undo stack.
-
-        Args:
-            state (int): New state value
-        """
-        if self._block_signals or not self._has_current_mappings():
-            return
-        previous_mapping = self._list_index.data(Role.FLATTENED_MAPPINGS).root_mapping
-        self._undo_stack.push(
-            SetUseBeforeAlternativeFlag(
-                self._list_index.parent().row(),
-                self._list_index.row(),
-                self._mappings_model,
-                state == Qt.CheckState.Checked.value,
-                previous_mapping,
             )
         )
 

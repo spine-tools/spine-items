@@ -607,37 +607,6 @@ class SetValueType(QUndoCommand):
         self._model.set_value_type(self._table_row, self._list_row, self._old_type)
 
 
-class SetUseBeforeAlternativeFlag(QUndoCommand):
-    """Command to set item mapping's use before alternative flag."""
-
-    def __init__(self, table_row, list_row, model, use_before_alternative, previous_mapping):
-        """
-        Args:
-            table_row (int): source table row index
-            list_row (int): mapping list row index
-            model (MappingsModel): model
-            use_before_alternative (bool): new flag value
-            previous_mapping (ImportMapping): previous mapping root
-        """
-        text = ("enable" if use_before_alternative else "disable") + " before alternative"
-        super().__init__(text)
-        self._table_row = table_row
-        self._list_row = list_row
-        self._model = model
-        self._use_before_alternative = use_before_alternative
-        self._previous_mapping_dict = [m.to_dict() for m in previous_mapping.flatten()]
-
-    def redo(self):
-        """Changes the use before alternative flag."""
-        self._model.set_use_before_alternative(self._table_row, self._list_row, self._use_before_alternative)
-
-    def undo(self):
-        """Restores the use before alternative flag."""
-        self._model.set_root_mapping(
-            self._table_row, self._list_row, import_mapping_from_dict(self._previous_mapping_dict)
-        )
-
-
 class SetSkipColumns(QUndoCommand):
     """Command to change item mapping's skip columns option."""
 

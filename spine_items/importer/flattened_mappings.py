@@ -34,7 +34,6 @@ from spinedb_api.import_mapping.import_mapping import (
     ParameterValueMapping,
     ParameterValueTypeMapping,
     ScenarioAlternativeMapping,
-    ScenarioBeforeAlternativeMapping,
     ScenarioMapping,
     check_validity,
 )
@@ -169,14 +168,6 @@ class FlattenedMappings:
         parameter_type = self.display_parameter_type()
         index_mapping = ParameterValueIndexMapping if parameter_type == "Value" else ParameterDefaultValueIndexMapping
         return len([m for m in self._components if isinstance(m, index_mapping)])
-
-    def uses_before_alternative(self):
-        """Checks if before alternative component is part of the mappings.
-
-        Returns:
-            bool: True if mapping uses before alternative, False otherwise
-        """
-        return any(isinstance(c, ScenarioBeforeAlternativeMapping) for c in reversed(self._components))
 
     def set_map_dimension_count(self, dimension_count):
         """Sets new dimensions for Map type value.
