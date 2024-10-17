@@ -34,11 +34,10 @@ from spinedb_api.import_mapping.import_mapping import (
     ParameterValueMapping,
     ParameterValueTypeMapping,
     ScenarioAlternativeMapping,
-    ScenarioBeforeAlternativeMapping,
     ScenarioMapping,
     check_validity,
 )
-from spinedb_api.mapping import Position, unflatten
+from spinedb_api.mapping import Position, is_pivoted, unflatten
 from spinedb_api.parameter_value import split_value_and_type
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.spine_db_manager import SpineDBManager
@@ -170,14 +169,6 @@ class FlattenedMappings:
         index_mapping = ParameterValueIndexMapping if parameter_type == "Value" else ParameterDefaultValueIndexMapping
         return len([m for m in self._components if isinstance(m, index_mapping)])
 
-    def uses_before_alternative(self):
-        """Checks if before alternative component is part of the mappings.
-
-        Returns:
-            bool: True if mapping uses before alternative, False otherwise
-        """
-        return any(isinstance(c, ScenarioBeforeAlternativeMapping) for c in reversed(self._components))
-
     def set_map_dimension_count(self, dimension_count):
         """Sets new dimensions for Map type value.
 
@@ -297,7 +288,7 @@ class FlattenedMappings:
         Returns:
             str: display position
         """
-        if self._is_component_pivoted(row):
+        if self.is_component_pivoted(row):
             return "Pivoted"
         component = self._components[self._display_to_logical[row]]
         if component.position == Position.hidden:
@@ -316,8 +307,12 @@ class FlattenedMappings:
             return "Column"
         return "Row"
 
-    def _is_component_pivoted(self, row):
-        return len(self._components) > 1 and self._components[0].is_pivoted() and row == len(self._display_names) - 1
+    def is_component_pivoted(self, row):
+        return (
+            len(self._components) > 1
+            and any(is_pivoted(c.position) or c.position == Position.header for c in self._components[:-1])
+            and row == len(self._display_names) - 1
+        )
 
     def set_display_position_type(self, row, position_type):
         """Sets component's position 'type'.
@@ -362,7 +357,7 @@ class FlattenedMappings:
         """
         component = self._components[self._display_to_logical[row]]
         # A) Handle two special cases for value mappings
-        if self._is_component_pivoted(row):
+        if self.is_component_pivoted(row):
             # 1. Pivoted data
             return "Pivoted values"
         if self._display_names[row].endswith("values"):

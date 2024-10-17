@@ -50,7 +50,6 @@ class TestFlattenedMappings(unittest.TestCase):
         self.assertFalse(flattened_mappings.is_time_series_value())
         self.assertFalse(flattened_mappings.is_map_value())
         self.assertEqual(flattened_mappings.map_dimension_count(), 1)
-        self.assertFalse(flattened_mappings.uses_before_alternative())
         self.assertEqual(flattened_mappings.read_start_row(), 0)
         self.assertEqual(flattened_mappings.skip_columns(), [])
         for row in range(len(flattened_mappings.display_names)):

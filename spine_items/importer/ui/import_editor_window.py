@@ -294,20 +294,10 @@ class Ui_MainWindow(object):
 
         self.mapping_options_contents.addWidget(self.ignore_columns_button, 8, 1, 1, 1)
 
-        self.time_series_repeat_check_box = QCheckBox(self.frame_2)
-        self.time_series_repeat_check_box.setObjectName(u"time_series_repeat_check_box")
-
-        self.mapping_options_contents.addWidget(self.time_series_repeat_check_box, 12, 0, 1, 1)
-
         self.import_entity_alternatives_check_box = QCheckBox(self.frame_2)
         self.import_entity_alternatives_check_box.setObjectName(u"import_entity_alternatives_check_box")
 
         self.mapping_options_contents.addWidget(self.import_entity_alternatives_check_box, 9, 0, 1, 1)
-
-        self.map_compression_check_box = QCheckBox(self.frame_2)
-        self.map_compression_check_box.setObjectName(u"map_compression_check_box")
-
-        self.mapping_options_contents.addWidget(self.map_compression_check_box, 12, 1, 1, 1)
 
         self.map_dimension_spin_box = QSpinBox(self.frame_2)
         self.map_dimension_spin_box.setObjectName(u"map_dimension_spin_box")
@@ -338,15 +328,20 @@ class Ui_MainWindow(object):
 
         self.mapping_options_contents.addWidget(self.map_dimensions_label, 5, 0, 1, 1)
 
-        self.before_alternative_check_box = QCheckBox(self.frame_2)
-        self.before_alternative_check_box.setObjectName(u"before_alternative_check_box")
-
-        self.mapping_options_contents.addWidget(self.before_alternative_check_box, 10, 1, 1, 1)
-
         self.import_entities_check_box = QCheckBox(self.frame_2)
         self.import_entities_check_box.setObjectName(u"import_entities_check_box")
 
         self.mapping_options_contents.addWidget(self.import_entities_check_box, 10, 0, 1, 1)
+
+        self.time_series_repeat_check_box = QCheckBox(self.frame_2)
+        self.time_series_repeat_check_box.setObjectName(u"time_series_repeat_check_box")
+
+        self.mapping_options_contents.addWidget(self.time_series_repeat_check_box, 9, 1, 1, 1)
+
+        self.map_compression_check_box = QCheckBox(self.frame_2)
+        self.map_compression_check_box.setObjectName(u"map_compression_check_box")
+
+        self.mapping_options_contents.addWidget(self.map_compression_check_box, 10, 1, 1, 1)
 
 
         self.verticalLayout_3.addLayout(self.mapping_options_contents)
@@ -384,9 +379,7 @@ class Ui_MainWindow(object):
         QWidget.setTabOrder(self.dimension_spin_box, self.map_dimension_spin_box)
         QWidget.setTabOrder(self.map_dimension_spin_box, self.start_read_row_spin_box)
         QWidget.setTabOrder(self.start_read_row_spin_box, self.ignore_columns_button)
-        QWidget.setTabOrder(self.ignore_columns_button, self.time_series_repeat_check_box)
-        QWidget.setTabOrder(self.time_series_repeat_check_box, self.map_compression_check_box)
-        QWidget.setTabOrder(self.map_compression_check_box, self.mapping_spec_table)
+        QWidget.setTabOrder(self.ignore_columns_button, self.mapping_spec_table)
 
         self.retranslateUi(MainWindow)
 
@@ -434,12 +427,7 @@ class Ui_MainWindow(object):
         self.parameter_type_label.setText(QCoreApplication.translate("MainWindow", u"Parameter type:", None))
         self.dimension_label.setText(QCoreApplication.translate("MainWindow", u"Number of dimensions:", None))
         self.ignore_columns_button.setText("")
-#if QT_CONFIG(tooltip)
-        self.time_series_repeat_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Set the repeat flag for all imported time series", None))
-#endif // QT_CONFIG(tooltip)
-        self.time_series_repeat_check_box.setText(QCoreApplication.translate("MainWindow", u"Repeat time series", None))
         self.import_entity_alternatives_check_box.setText(QCoreApplication.translate("MainWindow", u"Import entity alternatives", None))
-        self.map_compression_check_box.setText(QCoreApplication.translate("MainWindow", u"Compress Maps", None))
 #if QT_CONFIG(tooltip)
         self.map_dimension_spin_box.setToolTip(QCoreApplication.translate("MainWindow", u"Number of dimensions when value type is Map.", None))
 #endif // QT_CONFIG(tooltip)
@@ -450,10 +438,11 @@ class Ui_MainWindow(object):
         self.read_start_row_label.setText(QCoreApplication.translate("MainWindow", u"Read data from row:", None))
         self.ignore_columns_label.setText(QCoreApplication.translate("MainWindow", u"Ignore columns:", None))
         self.map_dimensions_label.setText(QCoreApplication.translate("MainWindow", u"Map dimensions:", None))
-#if QT_CONFIG(tooltip)
-        self.before_alternative_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Enable or disable 'Before alternative name' mapping for scenario alternative item type.", None))
-#endif // QT_CONFIG(tooltip)
-        self.before_alternative_check_box.setText(QCoreApplication.translate("MainWindow", u"Use before alternative", None))
         self.import_entities_check_box.setText(QCoreApplication.translate("MainWindow", u"Import entities", None))
+#if QT_CONFIG(tooltip)
+        self.time_series_repeat_check_box.setToolTip(QCoreApplication.translate("MainWindow", u"Set the repeat flag for all imported time series", None))
+#endif // QT_CONFIG(tooltip)
+        self.time_series_repeat_check_box.setText(QCoreApplication.translate("MainWindow", u"Repeat time series", None))
+        self.map_compression_check_box.setText(QCoreApplication.translate("MainWindow", u"Compress Maps", None))
     # retranslateUi
 
