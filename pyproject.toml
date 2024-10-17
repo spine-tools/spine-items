@@ -11,11 +11,11 @@ classifiers = [
     "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.8.1"
+requires-python = ">=3.9, <3.13"
 dependencies = [
     "spinedb_api>=0.31.3",
     "spine_engine>=0.24.2",
-    # "spinetoolbox >=0.8.3",
+    # "spinetoolbox >=0.8.5",
 ]
 
 [project.urls]
