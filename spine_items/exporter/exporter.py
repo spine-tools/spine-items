@@ -283,7 +283,8 @@ class Exporter(ProjectItem):
             self._notifications.unrecognized_extension = True
             return
         output_format = next(iter(output_formats))
-        self._notifications.unrecognized_extension = output_format != self._specification.output_format
+        if self._specification is not None:
+            self._notifications.unrecognized_extension = output_format != self._specification.output_format
 
     @Slot(str, str)
     def _update_out_label(self, out_label, in_label):
