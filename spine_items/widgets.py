@@ -327,8 +327,8 @@ class UrlSelectorWidget(QWidget):
         username = url.get("username", "")
         password = url.get("password", "")
         self.blockSignals(True)
-        if dialect == "":
-            self._ui.comboBox_dialect.setCurrentIndex(-1)
+        if not dialect:
+            self._ui.comboBox_dialect.setCurrentIndex(-1 if self._ui.comboBox_dialect.count() == 0 else 0)
         elif dialect != self._ui.comboBox_dialect.currentText():
             self._ui.comboBox_dialect.setCurrentText(dialect)
         _set_line_edit_text(self._ui.lineEdit_host, host)

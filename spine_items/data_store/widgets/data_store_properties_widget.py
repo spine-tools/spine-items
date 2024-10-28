@@ -29,9 +29,8 @@ class DataStorePropertiesWidget(PropertiesWidgetBase):
         self._active_item = None
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.url_selector_widget.setup(
-            list(SUPPORTED_DIALECTS.keys()), self._select_sqlite_file, True, self._toolbox
-        )
+        dialects = ["sqlite"] + list(filter(lambda d: d != "sqlite", SUPPORTED_DIALECTS.keys()))
+        self.ui.url_selector_widget.setup(dialects, self._select_sqlite_file, True, self._toolbox)
 
     def _select_sqlite_file(self):
         """Lets active item select an SQLite file.

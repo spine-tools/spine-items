@@ -214,13 +214,13 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         """
         self.ds.activate()
         url = self.ds_properties_ui.url_selector_widget.url_dict()
-        self.assertEqual(url["dialect"], "")
+        self.assertEqual(url["dialect"], "sqlite")
         self.assertEqual(url["database"], "")
         # Click New Spine db button
         self.toolbox.db_mngr = mock.MagicMock()
         self.ds_properties_ui.pushButton_create_new_spine_db.click()
         url = self.ds_properties_ui.url_selector_widget.url_dict()
-        self.assertEqual(url["dialect"], "")
+        self.assertEqual(url["dialect"], "sqlite")
         self.assertEqual(url["database"], "")
         self.toolbox.db_mngr.create_new_spine_database.assert_not_called()
 
