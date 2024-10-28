@@ -123,7 +123,6 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         self.assertTrue(os.path.exists(url["database"]))
 
     def test_dirty_db_notification(self):
-        """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
         temp_path = self.create_temp_db()
         url = {"dialect": "sqlite", "database": temp_path}
         self.ds._url = self.ds.parse_url(url)
@@ -132,15 +131,13 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         self.ds._check_notifications()
         self.assertEqual([], self.ds.get_icon().exclamation_icon._notifications)
         # Check that there is a warning about uncommitted changes
-        db_map = self.ds.get_db_map_for_ds()
+        db_map = self.ds.get_db_map()
         self._toolbox.db_mngr.add_entity_classes({db_map: [{"name": "my_object_class"}]})
-        self.ds._check_notifications()
         self.assertEqual(
             [f"{self.ds.name} has uncommitted changes"], self.ds.get_icon().exclamation_icon._notifications
         )
         # Check that the warning disappears after committing the changes
         self._toolbox.db_mngr.commit_session("Added entity classes", db_map)
-        self.ds._check_notifications()
         self.assertEqual([], self.ds.get_icon().exclamation_icon._notifications)
 
 
