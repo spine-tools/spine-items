@@ -13,10 +13,9 @@
 """Data store properties widget."""
 from spinedb_api import SUPPORTED_DIALECTS
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
-from ...widgets import UrlSelectorMixin
 
 
-class DataStorePropertiesWidget(UrlSelectorMixin, PropertiesWidgetBase):
+class DataStorePropertiesWidget(PropertiesWidgetBase):
     """Widget for the Data Store Item Properties."""
 
     def __init__(self, toolbox):
@@ -30,21 +29,8 @@ class DataStorePropertiesWidget(UrlSelectorMixin, PropertiesWidgetBase):
         self._active_item = None
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.ui.url_selector_widget.setup(
-            list(SUPPORTED_DIALECTS.keys()), self._select_sqlite_file, True, self._toolbox
-        )
-
-    def set_item(self, project_item):
-        """Sets the active project item for the properties widget.
-
-        Args:
-            project_item (DataStore): data store
-        """
-        self._active_item = project_item
-
-    def unset_item(self):
-        """Unsets the active item."""
-        self._active_item = None
+        dialects = ["sqlite"] + list(filter(lambda d: d != "sqlite", SUPPORTED_DIALECTS.keys()))
+        self.ui.url_selector_widget.setup(dialects, self._select_sqlite_file, True, self._toolbox)
 
     def _select_sqlite_file(self):
         """Lets active item select an SQLite file.
