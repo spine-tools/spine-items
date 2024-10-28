@@ -70,16 +70,14 @@ class DataStore(ProjectItem):
         self._purge_settings = None
         self._purge_dialog = None
         self._database_validator = DatabaseConnectionValidator(self)
-        db_map = self.get_db_map_for_ds()
-        # Notify db manager about the Data Stores in the project, so it can notify about the dirtiness of them
-        self._toolbox.db_mngr.add_data_store_db_map(db_map, self)
+        self._toolbox.db_mngr.database_clean_changed.connect(self._set_database_clean)
 
-    def get_db_map_for_ds(self):
+    def get_db_map(self):
         """Returns the db map for the Data Store"""
         sa_url = self.sql_alchemy_url()
-        if sa_url is not None:
-            return self._toolbox.db_mngr.get_db_map(sa_url, self._logger, codename=self.name)
-        return None
+        if sa_url is None:
+            return None
+        return self._toolbox.db_mngr.get_db_map(sa_url, self._logger, codename=self.name)
 
     @staticmethod
     def item_type():
@@ -372,13 +370,20 @@ class DataStore(ProjectItem):
         self._database_validator.validate_url(
             self._url["dialect"], sa_url, self._set_invalid_url_notification, self._accept_url
         )
-        db_map = self.get_db_map_for_ds()
-        if db_map:
-            clean = not self._toolbox.db_mngr.is_dirty(db_map)
-            self.notify_about_dirtiness(clean)
 
-    @Slot(bool)
-    def notify_about_dirtiness(self, clean):
+    @Slot(object, bool)
+    def _set_database_clean(self, db_map, clean):
+        """Updates database cleanliness status.
+
+        Args:
+            db_map (DatabaseMapping): database mapping
+            clean (bool): True if database is clean, False otherwise
+        """
+        if db_map is not self.get_db_map():
+            return
+        self._notify_about_dirtiness(clean)
+
+    def _notify_about_dirtiness(self, clean):
         """
         Handles the notification for the dirtiness of the Data Store
 
@@ -422,7 +427,10 @@ class DataStore(ProjectItem):
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
         self._update_actions_enabled()
-        self._toolbox.db_mngr.update_data_store_db_maps()
+        db_map = self.get_db_map()
+        if db_map:
+            clean = not self._toolbox.db_mngr.is_dirty(db_map)
+            self._notify_about_dirtiness(clean)
 
     def is_url_validated(self):
         """Tests whether the URL has been validated.
@@ -485,7 +493,6 @@ class DataStore(ProjectItem):
         """See base class."""
         old_data_dir = os.path.abspath(self.data_dir)  # Old data_dir before rename
         old_name = self.name
-        self.rename_data_store_in_db_mngr(old_name)  # Notify db manager about the rename
         if not super().rename(new_name, rename_data_dir_message):
             return False
         # If dialect is sqlite and db line edit refers to a file in the old data_dir, db line edit needs updating
@@ -534,18 +541,8 @@ class DataStore(ProjectItem):
         """See base class."""
         return self.resources_for_direct_successors()
 
-    def rename_data_store_in_db_mngr(self, old_name):
-        """Renames the Data Store in the used db manager"""
-        db_map = self.get_db_map_for_ds()
-        self._toolbox.db_mngr.update_data_store_db_maps()
-        index = next((i for i, store in enumerate(self._toolbox.db_mngr.data_stores[db_map]) if store.name == old_name))
-        if index is not None:
-            self._toolbox.db_mngr.data_stores[db_map][index] = self
-
     def tear_down(self):
         """See base class"""
+        self._toolbox.db_mngr.database_clean_changed.disconnect(self._set_database_clean)
         self._database_validator.wait_for_finish()
-        db_map = self.get_db_map_for_ds()
-        if db_map is not None:
-            self._toolbox.db_mngr.remove_data_store_db_map(db_map, self)
         super().tear_down()
