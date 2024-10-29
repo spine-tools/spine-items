@@ -264,7 +264,7 @@ def _set_line_edit_text(edit, text):
         edit.setText(text)
 
 
-KNOWN_SQL_DIALECTS = ("mysql", "sqlite", "mssql", "postgresql")
+KNOWN_SQL_DIALECTS = ("mysql", "sqlite", "postgresql")
 
 
 class UrlSelectorWidget(QWidget):
@@ -373,30 +373,12 @@ class UrlSelectorWidget(QWidget):
             self.enable_no_dialect()
         elif dialect == "sqlite":
             self.enable_sqlite()
-        elif dialect == "mssql":
-            import pyodbc  # pylint: disable=import-outside-toplevel
-
-            dsns = pyodbc.dataSources()
-            # Collect dsns which use the msodbcsql driver
-            mssql_dsns = []
-            for key, value in dsns.items():
-                if "msodbcsql" in value.lower():
-                    mssql_dsns.append(key)
-            if mssql_dsns:
-                self._ui.comboBox_dsn.clear()
-                self._ui.comboBox_dsn.addItems(mssql_dsns)
-                self._ui.comboBox_dsn.setCurrentIndex(-1)
-                self.enable_mssql()
-            else:
-                msg = "Please create an SQL Server ODBC Data Source first."
-                self._logger.msg_warning.emit(msg)
         else:
             self.enable_common()
 
     def enable_no_dialect(self):
         """Adjusts widget enabled status to default when no dialect is selected."""
         self._ui.comboBox_dialect.setEnabled(True)
-        self._ui.comboBox_dsn.setEnabled(False)
         self._ui.toolButton_select_sqlite_file.setEnabled(False)
         self._ui.lineEdit_host.setEnabled(False)
         self._ui.lineEdit_port.setEnabled(False)
@@ -405,24 +387,8 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_password.setEnabled(False)
         self._ui.schema_line_edit.setEnabled(False)
 
-    def enable_mssql(self):
-        """Adjusts controls to mssql connection specification."""
-        self._ui.comboBox_dsn.setEnabled(True)
-        self._ui.toolButton_select_sqlite_file.setEnabled(False)
-        self._ui.lineEdit_host.setEnabled(False)
-        self._ui.lineEdit_port.setEnabled(False)
-        self._ui.lineEdit_database.setEnabled(False)
-        self._ui.lineEdit_username.setEnabled(True)
-        self._ui.lineEdit_password.setEnabled(True)
-        self._ui.schema_line_edit.setEnabled(True)
-        self._ui.lineEdit_host.clear()
-        self._ui.lineEdit_port.clear()
-        self._ui.lineEdit_database.clear()
-
     def enable_sqlite(self):
         """Adjusts controls to sqlite connection specification."""
-        self._ui.comboBox_dsn.setEnabled(False)
-        self._ui.comboBox_dsn.setCurrentIndex(-1)
         self._ui.toolButton_select_sqlite_file.setEnabled(True)
         self._ui.lineEdit_host.setEnabled(False)
         self._ui.lineEdit_port.setEnabled(False)
@@ -437,8 +403,6 @@ class UrlSelectorWidget(QWidget):
 
     def enable_common(self):
         """Adjusts controls to 'common' connection specification."""
-        self._ui.comboBox_dsn.setEnabled(False)
-        self._ui.comboBox_dsn.setCurrentIndex(-1)
         self._ui.toolButton_select_sqlite_file.setEnabled(False)
         self._ui.lineEdit_host.setEnabled(True)
         self._ui.lineEdit_port.setEnabled(True)

@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'import_editor_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.3
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -73,7 +73,7 @@ class Ui_MainWindow(object):
         self.browse_source_button = QToolButton(self.centralwidget)
         self.browse_source_button.setObjectName(u"browse_source_button")
         icon = QIcon()
-        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.browse_source_button.setIcon(icon)
 
         self.horizontalLayout_2.addWidget(self.browse_source_button)
