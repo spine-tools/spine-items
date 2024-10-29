@@ -56,6 +56,12 @@ class _ValidationTask(QRunnable):
                         self._sa_url,
                     )
                     return
+                elif database_path.stat().st_size == 0:
+                    self._signals.validation_failed.emit(
+                        "Database points to an empty file. Check the Database field in the URL.",
+                        self._sa_url,
+                    )
+                    return
             error = check_database_url(self._sa_url)
             if error is not None:
                 self._signals.validation_failed.emit(error, self._sa_url)
