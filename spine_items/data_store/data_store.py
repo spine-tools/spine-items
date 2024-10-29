@@ -73,11 +73,15 @@ class DataStore(ProjectItem):
         self._toolbox.db_mngr.database_clean_changed.connect(self._set_database_clean)
 
     def get_db_map(self):
-        """Returns the db map for the Data Store"""
+        """Returns the db map for the Data Store.
+
+        Returns:
+            DatabaseMapping: database mapping or None if URL/database is invalid
+        """
         sa_url = self.sql_alchemy_url()
         if sa_url is None:
             return None
-        return self._toolbox.db_mngr.get_db_map(sa_url, self._logger, codename=self.name)
+        return self._toolbox.db_mngr.get_db_map(sa_url, self._logger, codename=None)
 
     @staticmethod
     def item_type():
@@ -220,11 +224,7 @@ class DataStore(ProjectItem):
              (bool): True if there are listeners for the Data Store, False otherwise
         """
         if self._multi_db_editors_open:
-            return bool(
-                self._toolbox.db_mngr.db_map_listeners(
-                    self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, codename=self.name)
-                )
-            )
+            return bool(self._toolbox.db_mngr.db_map_listeners(self.get_db_map()))
         return False
 
     def _update_actions_enabled(self):
@@ -257,7 +257,7 @@ class DataStore(ProjectItem):
     def _purge(self):
         """Purges the database."""
         self._purge_settings = self._purge_dialog.get_checked_states()
-        db_map = self._toolbox.db_mngr.get_db_map(self.sql_alchemy_url(), self._logger, codename=self.name)
+        db_map = self.get_db_map()
         if db_map is None:
             return
         db_map_purge_data = {db_map: {item_type for item_type, checked in self._purge_settings.items() if checked}}
