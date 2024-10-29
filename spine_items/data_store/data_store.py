@@ -379,7 +379,7 @@ class DataStore(ProjectItem):
             db_map (DatabaseMapping): database mapping
             clean (bool): True if database is clean, False otherwise
         """
-        if db_map is not self.get_db_map():
+        if self._url_validated and db_map is not self.get_db_map():
             return
         self._notify_about_dirtiness(clean)
 
