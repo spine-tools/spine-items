@@ -280,7 +280,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
                 failure_messages.append("create_new_spine_database() called with wrong URL")
 
         with mock.patch("spine_items.data_store.data_store.QFileDialog") as file_dialog:
-            Path(database_file_path).touch()
+            Path(database_file_path).write_bytes(b"fake sqlite file")
             file_dialog.getSaveFileName.return_value = (database_file_path,)
             self.project.notify_resource_changes_to_successors.side_effect = lambda item: check_database_exists(
                 item, True, calls_with_non_empty_resources
@@ -401,14 +401,14 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
 
     def test_do_update_url_uses_filterable_resources_when_replacing_them(self):
         database_1 = os.path.join(self._temp_dir.name, "db1.sqlite")
-        Path(database_1).touch()
+        Path(database_1).write_bytes(b"empty fake db")
         self.ds.do_update_url(dialect="sqlite", database=database_1)
         self.project.notify_resource_changes_to_predecessors.assert_called_once_with(self.ds)
         self.project.notify_resource_changes_to_successors.assert_called_once_with(self.ds)
         while not self.ds.is_url_validated():
             QApplication.processEvents()
         database_2 = os.path.join(self._temp_dir.name, "db2.sqlite")
-        Path(database_2).touch()
+        Path(database_2).write_bytes(b"empty fake db")
         self.ds.do_update_url(dialect="sqlite", database=database_2)
         while not self.ds.is_url_validated():
             QApplication.processEvents()
