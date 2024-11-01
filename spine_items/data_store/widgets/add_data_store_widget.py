@@ -37,7 +37,7 @@ class AddDataStoreWidget(AddProjectItemWidget):
                 "description": self.description,
                 "x": self._x,
                 "y": self._y,
-                "url": {},
+                "url": None,
             }
         }
         self._toolbox.add_project_items(item)
