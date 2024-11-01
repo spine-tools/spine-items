@@ -12,6 +12,7 @@
 
 """Unit tests for DataStoreExecutable."""
 from multiprocessing import Lock
+import os.path
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -82,7 +83,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         self.assertEqual(len(resources), 1)
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
-        self.assertEqual(resource.url, "sqlite:///" + str(db_file_path))
+        self.assertEqual(resource.url, "sqlite:///" + os.path.normcase(str(db_file_path)))
         self.assertEqual(resource.label, "db_url@name")
 
     def test_output_resources_forward(self):
@@ -95,7 +96,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         self.assertEqual(len(resources), 1)
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
-        self.assertEqual(resource.url, "sqlite:///" + str(db_file_path))
+        self.assertEqual(resource.url, "sqlite:///" + os.path.normcase(str(db_file_path)))
         self.assertEqual(resource.label, "db_url@name")
 
 

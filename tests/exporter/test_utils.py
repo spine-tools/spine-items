@@ -28,7 +28,7 @@ class TestOutputDatabaseResources(unittest.TestCase):
             ),
         ]
         resources = output_database_resources(item_name, channels)
-        expected_url = "sqlite:///" + os.path.abspath("/path/to/db.sqlite")
+        expected_url = "sqlite:///" + os.path.normcase(os.path.abspath("/path/to/db.sqlite"))
         self.assertEqual(resources, [url_resource(item_name, expected_url, "out database")])
 
 
