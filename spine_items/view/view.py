@@ -20,6 +20,7 @@ from spinetoolbox.fetch_parent import FetchParent
 from spinetoolbox.helpers import busy_effect
 from spinetoolbox.plotting import PlottingError, plot_db_mngr_items
 from spinetoolbox.project_item.project_item import ProjectItem
+from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import open_db_editor
 from spinetoolbox.spine_db_editor.widgets.spine_db_editor import SpineDBEditor
 from spinetoolbox.widgets.notification import Notification
 from .commands import PinOrUnpinDBValuesCommand
@@ -89,19 +90,19 @@ class View(ProjectItem):
     def open_editor(self, checked=False):
         """Opens selected db in the Spine database editor."""
         indexes = self._selected_reference_indexes()
-        db_url_codenames = self._db_url_codenames(indexes)
-        if not db_url_codenames:
+        db_urls = self._db_urls(indexes)
+        if not db_urls:
             return
-        self._toolbox.db_mngr.open_db_editor(db_url_codenames, reuse_existing_editor=True)
+        open_db_editor(db_urls, self._toolbox.db_mngr, reuse_existing_editor=True)
 
     @Slot(bool)
     def pin_values(self, checked=False):
         """Opens selected db in the Spine database editor to pin values."""
         indexes = self._selected_reference_indexes()
-        db_url_codenames = self._db_url_codenames(indexes)
-        if not db_url_codenames:
+        db_urls = self._db_urls(indexes)
+        if not db_urls:
             return
-        db_editor = SpineDBEditor(self._toolbox.db_mngr, db_url_codenames)
+        db_editor = SpineDBEditor(self._toolbox.db_mngr, db_urls)
         dialog = _PinValuesDialog(self, db_editor)
         db_editor.pinned_values_updated.connect(dialog.update_pinned_values)
         dialog.data_committed.connect(self._pin_db_values)
@@ -115,7 +116,7 @@ class View(ProjectItem):
         return self._properties_ui.treeView_pinned_values.selectedIndexes()
 
     def reference_resource_label_from_url(self, url):
-        for label, (ref_url, _) in self._references.items():
+        for label, ref_url in self._references.items():
             if str(ref_url) == str(url):
                 return label
         self._logger.msg_error.emit(f"<b>{self.name}</b>: Can't find any resource having url {url}.")
@@ -203,7 +204,7 @@ class View(ProjectItem):
     def failed_to_plot(self, fetch_id, db_map, conditions):
         self._logger.msg_warning.emit(
             f"<b>{self.name}</b>: "
-            f"Couldn't find any values having {_pk_to_ul(conditions)} in <b>{db_map.codename}</b>"
+            f"Couldn't find any values having {_pk_to_ul(conditions)} in <b>{self._toolbox.db_mngr.name_registry.display_name(db_map.sa_url)}</b>"
         )
         if not self._fetched_parameter_values:
             self._fetched_parameter_values = len(self._data_fetchers) * [None]
@@ -218,7 +219,7 @@ class View(ProjectItem):
         if any(v != "skip" for v in self._fetched_parameter_values):
             plot_db_maps, plot_items = zip(*existing_fetched_parameter_values)
             try:
-                plot_widget = plot_db_mngr_items(plot_items, plot_db_maps)
+                plot_widget = plot_db_mngr_items(plot_items, plot_db_maps, self._toolbox.db_mngr.name_registry)
             except PlottingError as error:
                 self._logger.msg_error.emit(str(error))
                 return
@@ -279,12 +280,12 @@ class View(ProjectItem):
         for resource in resources:
             if resource.type_ == "database":
                 url = make_url(resource.url)
-                self._references[resource.label] = (url, resource.provider_name)
+                self._references[resource.label] = url
             elif resource.type_ == "file":
                 filepath = resource.path
                 if os.path.splitext(filepath)[1] == ".sqlite":
                     url = URL("sqlite", database=filepath)
-                    self._references[resource.label] = (url, resource.provider_name)
+                    self._references[resource.label] = url
         self.populate_reference_list()
 
     def replace_resources_from_upstream(self, old, new):
@@ -321,9 +322,9 @@ class View(ProjectItem):
             self._properties_ui.treeView_pinned_values.selectAll()
         return self._properties_ui.treeView_pinned_values.selectionModel().selectedRows()
 
-    def _db_url_codenames(self, indexes):
-        """Returns a dict mapping url to provider's name for given indexes in the reference model."""
-        return dict(self._references[index.data(Qt.ItemDataRole.DisplayRole)] for index in indexes)
+    def _db_urls(self, indexes):
+        """Returns a list of database URLs for given indexes in the reference model."""
+        return [self._references[index.data(Qt.ItemDataRole.DisplayRole)] for index in indexes]
 
     def notify_destination(self, source_item):
         """See base class."""
