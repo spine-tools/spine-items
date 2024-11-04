@@ -54,7 +54,7 @@ class SourceDataTableModel(MinimalTableModel):
         self._fetching = False
 
     def flags(self, index):
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable & ~Qt.ItemIsEditable
+        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEditable
 
     def clear(self, infinite=False):
         super().clear()
@@ -123,7 +123,7 @@ class SourceDataTableModel(MinimalTableModel):
                 if data is not None:
                     try:
                         self._converted_data[row, section] = converter(data)
-                    except (ValueError, ParameterValueFormatError) as e:
+                    except (ValueError, TypeError, ParameterValueFormatError) as e:
                         self._converted_data.pop((row, section), None)
                         self._column_type_errors[row, section] = e
             top_left = self.index(0, section)

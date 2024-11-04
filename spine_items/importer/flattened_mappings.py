@@ -310,7 +310,10 @@ class FlattenedMappings:
     def is_component_pivoted(self, row):
         return (
             len(self._components) > 1
-            and any(is_pivoted(c.position) or c.position == Position.header for c in self._components[:-1])
+            and any(
+                is_pivoted(c.position) or (c.position == Position.header and c.value is None)
+                for c in self._components[:-1]
+            )
             and row == len(self._display_names) - 1
         )
 
