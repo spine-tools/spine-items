@@ -13,7 +13,7 @@ classifiers = [
 ]
 requires-python = ">=3.9, <3.13"
 dependencies = [
-    "spinedb_api>=0.32.0",
+    "spinedb_api>=0.32.1",
     "spine_engine>=0.25.0",
     # "spinetoolbox >=0.8.5",
 ]
