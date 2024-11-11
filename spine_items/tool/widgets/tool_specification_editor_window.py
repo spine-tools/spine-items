@@ -830,7 +830,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _clear_program_text_edit(self):
         """Clears contents of the text editor."""
-        self._ui.textEdit_program.setDocument(None)
+        empty_doc = QTextDocument(self._ui.textEdit_program)
+        self._ui.textEdit_program.setDocument(empty_doc)
         self._ui.textEdit_program.setEnabled(False)
         self._ui.textEdit_program.file_selected(False)
         self._ui.dockWidget_program.setWindowTitle("No file selected")
