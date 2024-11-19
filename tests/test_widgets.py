@@ -9,27 +9,27 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""Contains unit tests for Exporter's ``utils`` module."""
-import os.path
 import unittest
-from spine_engine.project_item.project_item_resource import url_resource
-from spine_items.exporter.output_channel import OutputChannel
-from spine_items.exporter.utils import output_database_resources
+from unittest import mock
+from PySide6.QtWidgets import QApplication
+from spine_items.widgets import UrlSelectorWidget
+from tests.mock_helpers import parent_widget
 
 
-class TestOutputDatabaseResources(unittest.TestCase):
-    def test_creates_url_resources_for_channels_with_urls(self):
-        item_name = "test exporter"
-        channels = [
-            OutputChannel("label 1", item_name, "file.csv"),
-            OutputChannel(
-                "label 1", item_name, "out database", {"dialect": "sqlite", "database": "/path/to/db.sqlite"}
-            ),
-        ]
-        resources = output_database_resources(item_name, channels)
-        expected_url = "sqlite:///" + os.path.normcase(os.path.abspath("/path/to/db.sqlite"))
-        self.assertEqual(resources, [url_resource(item_name, expected_url, "out database")])
+class TestUrlSelectorWidget(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not QApplication.instance():
+            QApplication()
+
+    def test_first_dialect_is_selected_in_combo_box(self):
+        with parent_widget() as parent:
+            widget = UrlSelectorWidget(parent)
+            callback = mock.MagicMock()
+            logger = mock.MagicMock()
+            widget.setup(["dialect 1", "dialect 2"], callback, False, logger)
+            widget.set_url({})
+            self.assertEqual(widget._ui.comboBox_dialect.currentIndex(), 0)
 
 
 if __name__ == "__main__":

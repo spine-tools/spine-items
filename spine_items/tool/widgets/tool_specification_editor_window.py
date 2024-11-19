@@ -830,7 +830,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _clear_program_text_edit(self):
         """Clears contents of the text editor."""
-        self._ui.textEdit_program.setDocument(QTextDocument())
+        empty_doc = QTextDocument(self._ui.textEdit_program)
+        self._ui.textEdit_program.setDocument(empty_doc)
         self._ui.textEdit_program.setEnabled(False)
         self._ui.textEdit_program.file_selected(False)
         self._ui.dockWidget_program.setWindowTitle("No file selected")
@@ -853,7 +854,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             except (IOError, UnicodeDecodeError) as e:
                 self._show_status_bar_msg(str(e))
                 return
-            document = self._programfile_documents[file_path] = QTextDocument(self._ui.textEdit_program)
+            document = self._programfile_documents[file_path] = QTextDocument(self)
             document.setPlainText(text)
             document.setModified(False)
             slot = self._programfile_set_dirty_slots[file_path] = (

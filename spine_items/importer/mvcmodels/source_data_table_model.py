@@ -54,7 +54,7 @@ class SourceDataTableModel(MinimalTableModel):
         self._fetching = False
 
     def flags(self, index):
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable & ~Qt.ItemIsEditable
+        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEditable
 
     def clear(self, infinite=False):
         super().clear()
@@ -123,7 +123,7 @@ class SourceDataTableModel(MinimalTableModel):
                 if data is not None:
                     try:
                         self._converted_data[row, section] = converter(data)
-                    except (ValueError, ParameterValueFormatError) as e:
+                    except (ValueError, TypeError, ParameterValueFormatError) as e:
                         self._converted_data.pop((row, section), None)
                         self._column_type_errors[row, section] = e
             top_left = self.index(0, section)
@@ -267,11 +267,17 @@ class SourceDataTableModel(MinimalTableModel):
             QColor: color of index
         """
         row = index.row()
-        column = index.column()
         flattened_mappings = self._mapping_list_index.data(Role.FLATTENED_MAPPINGS)
-        last_row = self._last_row(flattened_mappings)
+        if row < flattened_mappings.root_mapping.read_start_row:
+            return None
+        root_mapping = flattened_mappings.root_mapping
+        row -= root_mapping.read_start_row
+        column = index.column()
+        last_row = root_mapping.last_pivot_row()
         non_pivoted_and_skipped_columns = self._non_pivoted_and_skipped_columns(flattened_mappings)
-        if self.index_below_last_pivot_row(row, column, last_row, flattened_mappings, non_pivoted_and_skipped_columns):
+        if self.index_below_last_pivot_row(
+            row, column, last_row, root_mapping.is_pivoted(), non_pivoted_and_skipped_columns
+        ):
             return flattened_mappings.display_colors[-1]
         for k in range(len(flattened_mappings.display_names)):
             component_mapping = flattened_mappings.component_at(k)
@@ -280,33 +286,20 @@ class SourceDataTableModel(MinimalTableModel):
         return None
 
     @staticmethod
-    def _last_row(flattened_mappings):
-        """Calculates last row when mapping is pivoted.
-
-        Args:
-            flattened_mappings (FlattenedMappings, optional): flattened mappings
-
-        Returns:
-            int: last row
-        """
-        root_mapping = flattened_mappings.root_mapping
-        return max(root_mapping.last_pivot_row(), root_mapping.read_start_row - 1)
-
-    @staticmethod
-    def index_below_last_pivot_row(row, column, last_row, flattened_mappings, non_pivoted_and_skipped_columns):
+    def index_below_last_pivot_row(row, column, last_row, is_pivoted, non_pivoted_and_skipped_columns):
         """Checks if given index is outside pivot.
 
         Args:
             row (int): index row
             column (int): index column
             last_row (int): last non-pivoted row index
-            flattened_mappings (FlattenedMappings): flattened mappings
+            is_pivoted (bool): whether mappings are pivoted
             non_pivoted_and_skipped_columns (set of int): set of column indexes
 
         Returns:
             bool: True if index is below the pivot, False otherwise
         """
-        if not flattened_mappings.root_mapping.is_pivoted():
+        if not is_pivoted:
             return False
         return row > last_row and column not in non_pivoted_and_skipped_columns
 

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from multiprocessing import Pipe, Process
 from time import monotonic
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Slot
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QApplication, QFileDialog
 from spinedb_api import DatabaseMapping, SpineDBAPIError, SpineDBVersionError
 from spinedb_api.export_mapping.export_mapping import ExportMapping
 from spinedb_api.export_mapping.group_functions import GroupFunction
@@ -426,13 +426,16 @@ class PreviewUpdater:
         )
         if not self._writer_timer.isActive():
             self._writer_timer.start()
+        else:
+            # This ensures we don't end up in a deadlock where we keep sending
+            # new tasks while the pipe is stuck with finished ones.
+            self._communicate()
 
     @Slot()
     def _communicate(self):
         """Periodically communicates with the writer process."""
         self._writer_timer.stop()
         if self._writer_connection.poll():
-            # Receive and process one table at time to keep the UI responsive
             message = self._writer_connection.recv()
             if message == "finished":
                 return

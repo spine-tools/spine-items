@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'specification_editor.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.3
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -48,7 +48,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_10.setObjectName(u"verticalLayout_10")
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.horizontalLayout_3.setSizeConstraint(QLayout.SetDefaultConstraint)
+        self.horizontalLayout_3.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.label = QLabel(self.centralwidget)
         self.label.setObjectName(u"label")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
@@ -77,14 +77,13 @@ class Ui_MainWindow(object):
 
         self.frame_preview = QFrame(self.centralwidget)
         self.frame_preview.setObjectName(u"frame_preview")
-        self.frame_preview.setEnabled(False)
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.frame_preview.sizePolicy().hasHeightForWidth())
         self.frame_preview.setSizePolicy(sizePolicy2)
-        self.frame_preview.setFrameShape(QFrame.StyledPanel)
-        self.frame_preview.setFrameShadow(QFrame.Raised)
+        self.frame_preview.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_preview.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout = QHBoxLayout(self.frame_preview)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(3, 0, 3, 0)
@@ -100,7 +99,7 @@ class Ui_MainWindow(object):
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
         self.database_url_combo_box.setSizePolicy(sizePolicy3)
-        self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.database_url_combo_box.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.database_url_combo_box.setMinimumContentsLength(16)
 
         self.horizontalLayout.addWidget(self.database_url_combo_box)
@@ -108,7 +107,7 @@ class Ui_MainWindow(object):
         self.load_url_from_fs_button = QToolButton(self.frame_preview)
         self.load_url_from_fs_button.setObjectName(u"load_url_from_fs_button")
         icon = QIcon()
-        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.load_url_from_fs_button.setIcon(icon)
 
         self.horizontalLayout.addWidget(self.load_url_from_fs_button)
@@ -147,10 +146,10 @@ class Ui_MainWindow(object):
 
         self.splitter_3 = QSplitter(self.centralwidget)
         self.splitter_3.setObjectName(u"splitter_3")
-        self.splitter_3.setOrientation(Qt.Horizontal)
+        self.splitter_3.setOrientation(Qt.Orientation.Horizontal)
         self.splitter_2 = QSplitter(self.splitter_3)
         self.splitter_2.setObjectName(u"splitter_2")
-        self.splitter_2.setOrientation(Qt.Vertical)
+        self.splitter_2.setOrientation(Qt.Orientation.Vertical)
         self.mapping_list_layout_widget = QWidget(self.splitter_2)
         self.mapping_list_layout_widget.setObjectName(u"mapping_list_layout_widget")
         self.verticalLayout_9 = QVBoxLayout(self.mapping_list_layout_widget)
@@ -158,8 +157,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
         self.frame = QFrame(self.mapping_list_layout_widget)
         self.frame.setObjectName(u"frame")
-        self.frame.setFrameShape(QFrame.StyledPanel)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_11 = QVBoxLayout(self.frame)
         self.verticalLayout_11.setSpacing(0)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
@@ -174,8 +173,8 @@ class Ui_MainWindow(object):
 
         self.mappings_table = QTableView(self.mapping_list_layout_widget)
         self.mappings_table.setObjectName(u"mappings_table")
-        self.mappings_table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.mappings_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.mappings_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.mappings_table.setShowGrid(False)
         self.mappings_table.verticalHeader().setVisible(False)
 
@@ -321,7 +320,7 @@ class Ui_MainWindow(object):
 
         self.mapping_table_view = QTableView(self.mapping_controls_layout_widget)
         self.mapping_table_view.setObjectName(u"mapping_table_view")
-        self.mapping_table_view.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.mapping_table_view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.mapping_table_view.horizontalHeader().setStretchLastSection(True)
         self.mapping_table_view.verticalHeader().setVisible(False)
 
@@ -331,7 +330,7 @@ class Ui_MainWindow(object):
         self.splitter_3.addWidget(self.splitter_2)
         self.splitter = QSplitter(self.splitter_3)
         self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Horizontal)
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.preview_tree_view = QTreeView(self.splitter)
         self.preview_tree_view.setObjectName(u"preview_tree_view")
         sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)

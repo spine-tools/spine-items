@@ -719,7 +719,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         index = self._model.index(6, 1, self._list_index)
         self.assertEqual(index.data(), "None")
         index = self._model.index(7, 1, self._list_index)
-        self.assertEqual(index.data(), "Pivoted")
+        self.assertEqual(index.data(), "Row")
         index = self._model.index(0, 2, self._list_index)
         self.assertEqual(index.data(), 0 + 1)
         self.assertEqual(index.data(Qt.ItemDataRole.BackgroundRole), None)
@@ -749,7 +749,7 @@ class TestMappingComponentsTable(unittest.TestCase):
         self.assertEqual(index.data(Qt.ItemDataRole.BackgroundRole), None)
         self.assertFalse(index.data(Qt.ItemDataRole.ToolTipRole))
         index = self._model.index(7, 2, self._list_index)
-        self.assertEqual(index.data(), "Pivoted values")
+        self.assertEqual(index.data(), 1)
         self.assertEqual(index.data(Qt.ItemDataRole.BackgroundRole), None)
         self.assertFalse(index.data(Qt.ItemDataRole.ToolTipRole))
         for row in range(8):

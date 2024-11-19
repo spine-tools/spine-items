@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_specification_form.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -220,6 +220,7 @@ class Ui_MainWindow(object):
         MainWindow.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.dockWidget_io_files)
         self.dockWidget_program = QDockWidget(MainWindow)
         self.dockWidget_program.setObjectName(u"dockWidget_program")
+        self.dockWidget_program.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
         self.dockWidget_program.setAllowedAreas(Qt.BottomDockWidgetArea)
         self.dockWidgetContents = QWidget()
         self.dockWidgetContents.setObjectName(u"dockWidgetContents")

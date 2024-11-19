@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'python_kernel_spec_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.3
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -42,8 +42,8 @@ class Ui_Form(object):
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.line_3 = QFrame(Form)
         self.line_3.setObjectName(u"line_3")
-        self.line_3.setFrameShape(QFrame.HLine)
-        self.line_3.setFrameShadow(QFrame.Sunken)
+        self.line_3.setFrameShape(QFrame.Shape.HLine)
+        self.line_3.setFrameShadow(QFrame.Shadow.Sunken)
 
         self.verticalLayout_3.addWidget(self.line_3)
 
@@ -71,8 +71,8 @@ class Ui_Form(object):
 
         self.line = QFrame(Form)
         self.line.setObjectName(u"line")
-        self.line.setFrameShape(QFrame.VLine)
-        self.line.setFrameShadow(QFrame.Sunken)
+        self.line.setFrameShape(QFrame.Shape.VLine)
+        self.line.setFrameShadow(QFrame.Shadow.Sunken)
 
         self.horizontalLayout_3.addWidget(self.line)
 
@@ -97,7 +97,7 @@ class Ui_Form(object):
         self.toolButton_browse_python = QToolButton(Form)
         self.toolButton_browse_python.setObjectName(u"toolButton_browse_python")
         icon = QIcon()
-        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.toolButton_browse_python.setIcon(icon)
 
         self.horizontalLayout_2.addWidget(self.toolButton_browse_python)
@@ -129,7 +129,7 @@ class Ui_Form(object):
         self.toolButton_refresh_kernel_specs = QToolButton(Form)
         self.toolButton_refresh_kernel_specs.setObjectName(u"toolButton_refresh_kernel_specs")
         icon1 = QIcon()
-        icon1.addFile(u":/icons/sync.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/icons/sync.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.toolButton_refresh_kernel_specs.setIcon(icon1)
         self.toolButton_refresh_kernel_specs.setToolButtonStyle(Qt.ToolButtonIconOnly)
 

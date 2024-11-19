@@ -51,6 +51,7 @@ class UpdateDSURLCommand(SpineToolboxCommand):
             not isinstance(command, UpdateDSURLCommand)
             or self._ds_name != command._ds_name
             or command._undo_url_is_valid
+            or set(self._redo_kwargs.keys()).isdisjoint(command._redo_kwargs.keys())
         ):
             return False
         diff_key = None

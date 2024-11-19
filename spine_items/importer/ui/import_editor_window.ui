@@ -464,27 +464,10 @@
                 </property>
                </widget>
               </item>
-              <item row="12" column="0">
-               <widget class="QCheckBox" name="time_series_repeat_check_box">
-                <property name="toolTip">
-                 <string>Set the repeat flag for all imported time series</string>
-                </property>
-                <property name="text">
-                 <string>Repeat time series</string>
-                </property>
-               </widget>
-              </item>
               <item row="9" column="0">
                <widget class="QCheckBox" name="import_entity_alternatives_check_box">
                 <property name="text">
                  <string>Import entity alternatives</string>
-                </property>
-               </widget>
-              </item>
-              <item row="12" column="1">
-               <widget class="QCheckBox" name="map_compression_check_box">
-                <property name="text">
-                 <string>Compress Maps</string>
                 </property>
                </widget>
               </item>
@@ -538,20 +521,27 @@
                 </property>
                </widget>
               </item>
-              <item row="10" column="1">
-               <widget class="QCheckBox" name="before_alternative_check_box">
-                <property name="toolTip">
-                 <string>Enable or disable 'Before alternative name' mapping for scenario alternative item type.</string>
-                </property>
-                <property name="text">
-                 <string>Use before alternative</string>
-                </property>
-               </widget>
-              </item>
               <item row="10" column="0">
                <widget class="QCheckBox" name="import_entities_check_box">
                 <property name="text">
                  <string>Import entities</string>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="1">
+               <widget class="QCheckBox" name="time_series_repeat_check_box">
+                <property name="toolTip">
+                 <string>Set the repeat flag for all imported time series</string>
+                </property>
+                <property name="text">
+                 <string>Repeat time series</string>
+                </property>
+               </widget>
+              </item>
+              <item row="10" column="1">
+               <widget class="QCheckBox" name="map_compression_check_box">
+                <property name="text">
+                 <string>Compress Maps</string>
                 </property>
                </widget>
               </item>
@@ -632,8 +622,6 @@
   <tabstop>map_dimension_spin_box</tabstop>
   <tabstop>start_read_row_spin_box</tabstop>
   <tabstop>ignore_columns_button</tabstop>
-  <tabstop>time_series_repeat_check_box</tabstop>
-  <tabstop>map_compression_check_box</tabstop>
   <tabstop>mapping_spec_table</tabstop>
  </tabstops>
  <resources>

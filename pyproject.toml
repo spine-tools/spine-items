@@ -1,7 +1,7 @@
 [project]
 name = "spine_items"
 dynamic = ["version"]
-authors = [{name = "Spine Project consortium", email = "spine_info@vtt.fi"}]
+authors = [{name = "Spine Project consortium", email = "spine_info@vtt.fi"}, {name = "contributors"}]
 license = {text = "LGPL-3.0-or-later"}
 description = "Spine project items"
 keywords = ["energy system modelling", "workflow", "optimisation", "database"]
@@ -11,15 +11,17 @@ classifiers = [
     "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.8.1"
+requires-python = ">=3.9, <3.13"
 dependencies = [
-    "spinedb_api>=0.31.3",
-    "spine_engine>=0.24.2",
-    # "spinetoolbox >=0.8.3",
+    "spinedb_api>=0.32.1",
+    "spine_engine>=0.25.0",
+    # "spinetoolbox >=0.8.5",
 ]
 
 [project.urls]
 Repository = "https://github.com/spine-tools/spine-items"
+Issues = "https://github.com/spine-tools/Spine-Toolbox/issues"
+Changelog = "https://github.com/spine-tools/Spine-Toolbox/blob/master/CHANGELOG.md"
 
 [build-system]
 requires = ["setuptools>=64", "setuptools_scm[toml]>=6.2", "wheel", "build"]
