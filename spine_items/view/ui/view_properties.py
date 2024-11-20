@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'view_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -27,8 +27,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHeaderView,
-    QPushButton, QSizePolicy, QSpacerItem, QTreeView,
-    QVBoxLayout, QWidget)
+    QPushButton, QScrollArea, QSizePolicy, QSpacerItem,
+    QTreeView, QVBoxLayout, QWidget)
 
 from spine_items.widgets import ReferencesTreeView
 from spine_items import resources_icons_rc
@@ -37,15 +37,27 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(274, 241)
-        self.verticalLayout = QVBoxLayout(Form)
+        Form.resize(262, 346)
+        self.verticalLayout_2 = QVBoxLayout(Form)
+        self.verticalLayout_2.setSpacing(0)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.scrollArea = QScrollArea(Form)
+        self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollAreaWidgetContents = QWidget()
+        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 260, 344))
+        self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.treeView_references = ReferencesTreeView(Form)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.treeView_references = ReferencesTreeView(self.scrollAreaWidgetContents)
         self.treeView_references.setObjectName(u"treeView_references")
-        self.treeView_references.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView_references.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeView_references.setAcceptDrops(True)
-        self.treeView_references.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.treeView_references.setTextElideMode(Qt.ElideLeft)
+        self.treeView_references.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.treeView_references.setTextElideMode(Qt.TextElideMode.ElideLeft)
         self.treeView_references.setRootIsDecorated(False)
 
         self.verticalLayout.addWidget(self.treeView_references)
@@ -53,16 +65,16 @@ class Ui_Form(object):
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setSpacing(6)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.pushButton_pin_values = QPushButton(Form)
+        self.pushButton_pin_values = QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_pin_values.setObjectName(u"pushButton_pin_values")
 
         self.horizontalLayout_8.addWidget(self.pushButton_pin_values)
 
-        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer_9)
 
-        self.pushButton_open_editor = QPushButton(Form)
+        self.pushButton_open_editor = QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_open_editor.setObjectName(u"pushButton_open_editor")
 
         self.horizontalLayout_8.addWidget(self.pushButton_open_editor)
@@ -70,27 +82,31 @@ class Ui_Form(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_8)
 
-        self.treeView_pinned_values = QTreeView(Form)
+        self.treeView_pinned_values = QTreeView(self.scrollAreaWidgetContents)
         self.treeView_pinned_values.setObjectName(u"treeView_pinned_values")
-        self.treeView_pinned_values.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.treeView_pinned_values.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.treeView_pinned_values.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.treeView_pinned_values.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.treeView_pinned_values.setRootIsDecorated(False)
 
         self.verticalLayout.addWidget(self.treeView_pinned_values)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
-        self.pushButton_plot_pinned = QPushButton(Form)
+        self.pushButton_plot_pinned = QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_plot_pinned.setObjectName(u"pushButton_plot_pinned")
 
         self.horizontalLayout.addWidget(self.pushButton_plot_pinned)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout)
+
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+        self.verticalLayout_2.addWidget(self.scrollArea)
 
 
         self.retranslateUi(Form)
