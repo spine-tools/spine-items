@@ -73,11 +73,12 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
                 self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox)
                 mock_restore_ui.assert_called()
         else:
-            with mock.patch(
-                "spinetoolbox.project_item.specification_editor_window.restore_ui"
-            ) as mock_restore_ui, mock.patch(
-                "spine_items.tool.tool_specifications.ToolSpecification._includes_main_path_relative"
-            ) as mock_impr:
+            with (
+                mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui,
+                mock.patch(
+                    "spine_items.tool.tool_specifications.ToolSpecification._includes_main_path_relative"
+                ) as mock_impr,
+            ):
                 mock_impr.return_value = ""
                 self.tool_specification_widget = ToolSpecificationEditorWindow(self.toolbox, spec)
                 mock_restore_ui.assert_called()
@@ -369,9 +370,10 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         python_tool_spec.init_execution_settings()  # Sets defaults
         python_tool_spec.execution_settings["use_jupyter_console"] = True
         python_tool_spec.execution_settings["kernel_spec_name"] = "unknown_kernel"
-        with mock.patch(
-            "spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher
-        ), mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.Notification") as mock_notify:
+        with (
+            mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher),
+            mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.Notification") as mock_notify,
+        ):
             self.make_tool_spec_editor(python_tool_spec)
             opt_widget = self.tool_specification_widget.optional_widget
             self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())

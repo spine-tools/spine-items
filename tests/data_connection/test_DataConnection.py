@@ -110,11 +110,12 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self.assertEqual(str(a), self._ref_model.index(1, 0, self._ref_model.index(0, 0)).data())
 
     def test_add_db_references(self):
-        with mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
-        ) as url_selector_url_dict:
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
+            mock.patch(
+                "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+            ) as url_selector_url_dict,
+        ):
             # Add nothing
             url_selector_exec.return_value = QDialog.DialogCode.Rejected
             self._data_connection.show_add_db_reference_dialog()
@@ -152,15 +153,16 @@ class TestDataConnectionWithProject(unittest.TestCase):
     def test_remove_references(self):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
-        with mock.patch(
-            "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
-        ) as mock_filenames, mock.patch.object(
-            self._data_connection._properties_ui.treeView_dc_references, "selectedIndexes"
-        ) as mock_selected_indexes, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
-        ) as url_selector_url_dict:
+        with (
+            mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames,
+            mock.patch.object(
+                self._data_connection._properties_ui.treeView_dc_references, "selectedIndexes"
+            ) as mock_selected_indexes,
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
+            mock.patch(
+                "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+            ) as url_selector_url_dict,
+        ):
             a = Path(temp_dir, "a.txt")
             a.touch()
             b = Path(temp_dir, "b.txt")
@@ -284,13 +286,13 @@ class TestDataConnectionWithProject(unittest.TestCase):
     def test_remove_references_with_del_key(self):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
-        with mock.patch(
-            "spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames"
-        ) as mock_filenames, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ), mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url", new_callable=mock.PropertyMock
-        ) as url_selector_url:
+        with (
+            mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileNames") as mock_filenames,
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec"),
+            mock.patch(
+                "spine_items.data_connection.data_connection.UrlSelectorDialog.url", new_callable=mock.PropertyMock
+            ) as url_selector_url,
+        ):
             a = Path(temp_dir, "a.txt")
             a.touch()
             b = Path(temp_dir, "b.txt")
@@ -447,11 +449,12 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self.assertTrue(k in d, f"Key '{k}' not in dict {d}")
 
     def test_deserialization_with_remote_db_reference(self):
-        with mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
-        ) as url_selector_url_dict:
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
+            mock.patch(
+                "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+            ) as url_selector_url_dict,
+        ):
             # Add nothing
             url_selector_exec.return_value = QDialog.DialogCode.Accepted
             url_selector_url_dict.return_value = {
@@ -486,11 +489,12 @@ class TestDataConnectionWithProject(unittest.TestCase):
     def test_deserialization_with_sqlite_db_reference_in_project_directory(self):
         db_path = Path(self._temp_dir.name, "db.sqlite")
         create_new_spine_database("sqlite:///" + str(db_path))
-        with mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
-        ) as url_selector_url_dict:
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
+            mock.patch(
+                "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+            ) as url_selector_url_dict,
+        ):
             # Add nothing
             url_selector_exec.return_value = QDialog.DialogCode.Accepted
             url_selector_url_dict.return_value = {
@@ -525,11 +529,12 @@ class TestDataConnectionWithProject(unittest.TestCase):
     def test_sqlite_db_reference_is_marked_missing_when_db_file_is_renamed(self):
         db_path = Path(self._temp_dir.name, "db.sqlite")
         create_new_spine_database("sqlite:///" + str(db_path))
-        with mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
-        ) as url_selector_url_dict:
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
+            mock.patch(
+                "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+            ) as url_selector_url_dict,
+        ):
             # Add nothing
             url_selector_exec.return_value = QDialog.DialogCode.Accepted
             url_selector_url_dict.return_value = {
@@ -564,11 +569,12 @@ class TestDataConnectionWithProject(unittest.TestCase):
     def test_refreshing_missing_sqlite_reference_resurrects_it(self):
         db_path = Path(self._temp_dir.name, "db.sqlite")
         create_new_spine_database("sqlite:///" + str(db_path))
-        with mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
-        ) as url_selector_url_dict:
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
+            mock.patch(
+                "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+            ) as url_selector_url_dict,
+        ):
             # Add nothing
             url_selector_exec.return_value = QDialog.DialogCode.Accepted
             url_selector_url_dict.return_value = {
@@ -617,11 +623,12 @@ class TestDataConnectionWithProject(unittest.TestCase):
 
     def test_broken_sqlite_url_marks_the_reference_missing(self):
         db_path = Path(self._temp_dir.name, "db.sqlite")
-        with mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.exec"
-        ) as url_selector_exec, mock.patch(
-            "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
-        ) as url_selector_url_dict:
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
+            mock.patch(
+                "spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict"
+            ) as url_selector_url_dict,
+        ):
             # Add nothing
             url_selector_exec.return_value = QDialog.DialogCode.Accepted
             url_selector_url_dict.return_value = {
