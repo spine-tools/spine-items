@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'importer_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.7.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -28,23 +28,35 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QHBoxLayout, QHeaderView, QLabel, QRadioButton,
-    QSizePolicy, QToolButton, QTreeView, QVBoxLayout,
-    QWidget)
+    QScrollArea, QSizePolicy, QToolButton, QTreeView,
+    QVBoxLayout, QWidget)
 from spine_items import resources_icons_rc
 
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(375, 368)
+        Form.resize(329, 338)
         self.verticalLayout = QVBoxLayout(Form)
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.scrollArea = QScrollArea(Form)
+        self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollAreaWidgetContents = QWidget()
+        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 327, 336))
+        self.verticalLayout_3 = QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout_3.setSpacing(0)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setSpacing(4)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.label_specification = QLabel(Form)
+        self.label_specification = QLabel(self.scrollAreaWidgetContents)
         self.label_specification.setObjectName(u"label_specification")
-        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_specification.sizePolicy().hasHeightForWidth())
@@ -53,9 +65,9 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.label_specification)
 
-        self.comboBox_specification = QComboBox(Form)
+        self.comboBox_specification = QComboBox(self.scrollAreaWidgetContents)
         self.comboBox_specification.setObjectName(u"comboBox_specification")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.comboBox_specification.sizePolicy().hasHeightForWidth())
@@ -63,30 +75,30 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.comboBox_specification)
 
-        self.toolButton_edit_specification = QToolButton(Form)
+        self.toolButton_edit_specification = QToolButton(self.scrollAreaWidgetContents)
         self.toolButton_edit_specification.setObjectName(u"toolButton_edit_specification")
         icon = QIcon()
-        icon.addFile(u":/icons/wrench.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/wrench.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.toolButton_edit_specification.setIcon(icon)
-        self.toolButton_edit_specification.setPopupMode(QToolButton.InstantPopup)
+        self.toolButton_edit_specification.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
 
         self.horizontalLayout_9.addWidget(self.toolButton_edit_specification)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout_9)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_9)
 
-        self.treeView_files = QTreeView(Form)
+        self.treeView_files = QTreeView(self.scrollAreaWidgetContents)
         self.treeView_files.setObjectName(u"treeView_files")
-        self.treeView_files.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.treeView_files.setTextElideMode(Qt.ElideLeft)
+        self.treeView_files.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.treeView_files.setTextElideMode(Qt.TextElideMode.ElideLeft)
         self.treeView_files.setUniformRowHeights(True)
 
-        self.verticalLayout.addWidget(self.treeView_files)
+        self.verticalLayout_3.addWidget(self.treeView_files)
 
-        self.frame = QFrame(Form)
+        self.frame = QFrame(self.scrollAreaWidgetContents)
         self.frame.setObjectName(u"frame")
-        self.frame.setFrameShape(QFrame.StyledPanel)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.frame)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(-1, 0, -1, -1)
@@ -122,7 +134,11 @@ class Ui_Form(object):
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
 
-        self.verticalLayout.addWidget(self.frame)
+        self.verticalLayout_3.addWidget(self.frame)
+
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+        self.verticalLayout.addWidget(self.scrollArea)
 
         QWidget.setTabOrder(self.comboBox_specification, self.toolButton_edit_specification)
         QWidget.setTabOrder(self.toolButton_edit_specification, self.treeView_files)
