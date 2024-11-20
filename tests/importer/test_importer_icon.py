@@ -31,8 +31,8 @@ class TestImporterIcon(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
         self._toolbox = create_toolboxui_with_project(self._temp_dir.name)
         item_dict = {"type": "Importer", "description": "", "x": 0, "y": 0, "specification": None}
-        exp = ImporterFactory.make_item("I", item_dict, self._toolbox, self._toolbox.project)
-        self._toolbox.project.add_item(exp)
+        exp = ImporterFactory.make_item("I", item_dict, self._toolbox, self._toolbox.project())
+        self._toolbox.project().add_item(exp)
 
     def tearDown(self):
         super().tearDown()
@@ -40,7 +40,7 @@ class TestImporterIcon(unittest.TestCase):
         self._temp_dir.cleanup()
 
     def test_mouse_double_click_event(self):
-        icon = self._toolbox.project._project_items["I"].get_icon()
+        icon = self._toolbox.project()._project_items["I"].get_icon()
         with mock.patch("spine_items.importer.importer.Importer.open_import_editor") as mock_open_import_editor:
             mock_open_import_editor.return_value = True
             icon.mouseDoubleClickEvent(QGraphicsSceneMouseEvent(QEvent.Type.GraphicsSceneMouseDoubleClick))
