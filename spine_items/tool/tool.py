@@ -478,6 +478,15 @@ class Tool(DBWriterItemBase):
                 file_paths = self._find_input_files(resources)
                 file_paths = flatten_file_path_duplicates(file_paths, self._logger)
                 self._input_files_not_found = [k for k, v in file_paths.items() if v is None]
+            # Check that main program file exists. If not, log a message with an anchor to find it
+            if len(self.specification().includes) > 0:
+                filename = self.specification().includes[0]
+                full_path = os.path.join(self.specification().path, filename)
+                if not os.path.isfile(full_path):
+                    self.add_notification(
+                        f"Tool spec <b>{self.specification().name}</b> won't work because "
+                        f"main program file <b>{full_path}</b> doesn't exist."
+                    )
         if self._input_files_not_found:
             self.add_notification(
                 f"File(s) {', '.join(self._input_files_not_found)} needed to execute this Tool are not provided"
