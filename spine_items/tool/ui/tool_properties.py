@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -41,16 +41,20 @@ class Ui_Form(object):
         if not Form.objectName():
             Form.setObjectName(u"Form")
         Form.resize(312, 603)
+        Form.setStyleSheet(u"QScrollArea { background: transparent; }\n"
+"QScrollArea > QWidget > QWidget { background: transparent; }")
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.scrollArea = QScrollArea(Form)
         self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 310, 601))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 312, 603))
+        self.scrollAreaWidgetContents.setAutoFillBackground(False)
         self.verticalLayout_3 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
@@ -210,16 +214,17 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addWidget(self.kill_consoles_check_box)
 
+        self.log_process_output_check_box = QCheckBox(self.frame)
+        self.log_process_output_check_box.setObjectName(u"log_process_output_check_box")
+
+        self.verticalLayout_2.addWidget(self.log_process_output_check_box)
+
         self.horizontalLayout_11 = QHBoxLayout()
         self.horizontalLayout_11.setSpacing(6)
         self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_11.addItem(self.horizontalSpacer_6)
-
         self.pushButton_tool_results = QPushButton(self.frame)
         self.pushButton_tool_results.setObjectName(u"pushButton_tool_results")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.pushButton_tool_results.sizePolicy().hasHeightForWidth())
@@ -227,13 +232,12 @@ class Ui_Form(object):
 
         self.horizontalLayout_11.addWidget(self.pushButton_tool_results)
 
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_11.addItem(self.horizontalSpacer_6)
+
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_11)
-
-        self.log_process_output_check_box = QCheckBox(self.frame)
-        self.log_process_output_check_box.setObjectName(u"log_process_output_check_box")
-
-        self.verticalLayout_2.addWidget(self.log_process_output_check_box)
 
 
         self.verticalLayout_3.addWidget(self.frame)
@@ -252,7 +256,6 @@ class Ui_Form(object):
         QWidget.setTabOrder(self.radioButton_execute_in_work, self.lineEdit_group_id)
         QWidget.setTabOrder(self.lineEdit_group_id, self.kill_consoles_check_box)
         QWidget.setTabOrder(self.kill_consoles_check_box, self.log_process_output_check_box)
-        QWidget.setTabOrder(self.log_process_output_check_box, self.pushButton_tool_results)
 
         self.retranslateUi(Form)
 
@@ -288,10 +291,10 @@ class Ui_Form(object):
         self.kill_consoles_check_box.setToolTip(QCoreApplication.translate("Form", u"If checked, console processes will be killed automatically after execution finishes freeing memory and other resources.", None))
 #endif // QT_CONFIG(tooltip)
         self.kill_consoles_check_box.setText(QCoreApplication.translate("Form", u"Kill consoles at the end of execution", None))
+        self.log_process_output_check_box.setText(QCoreApplication.translate("Form", u"Log process output to a file", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_tool_results.setText(QCoreApplication.translate("Form", u"Results...", None))
-        self.log_process_output_check_box.setText(QCoreApplication.translate("Form", u"Log process output to a file", None))
     # retranslateUi
 
