@@ -76,9 +76,11 @@ class TestToolInstance(unittest.TestCase):
     def test_julia_prepare_with_jupyter_console(self):
         # No cmd line args
         instance = self._make_julia_tool_instance(True)
-        with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
-            "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs:
+        with (
+            mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem,
+            mock.patch("os.path.isfile") as mock_isfile,
+            mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs,
+        ):
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
             mock_isfile.return_value = False
             instance.prepare([])
@@ -89,9 +91,11 @@ class TestToolInstance(unittest.TestCase):
             self.assertEqual(mock_kem.call_args[0][2], ['cd("path/");', 'include("hello.jl")'])  # commands
         # With tool cmd line args
         instance = self._make_julia_tool_instance(True)
-        with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
-            "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs:
+        with (
+            mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem,
+            mock.patch("os.path.isfile") as mock_isfile,
+            mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs,
+        ):
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
             mock_isfile.return_value = False
             instance.prepare(["arg1", "arg2"])
@@ -105,9 +109,11 @@ class TestToolInstance(unittest.TestCase):
             )
         # With tool and tool spec cmd line args
         instance = self._make_julia_tool_instance(True, ["arg3"])
-        with mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem, mock.patch(
-            "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs:
+        with (
+            mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem,
+            mock.patch("os.path.isfile") as mock_isfile,
+            mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs,
+        ):
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
             mock_isfile.return_value = False
             instance.prepare(["arg1", "arg2"])
@@ -124,9 +130,11 @@ class TestToolInstance(unittest.TestCase):
         # No cmd line args
         instance = self._make_julia_tool_instance(False)
         instance._owner.options = {"julia_sysimage": "path/to/sysimage.so"}
-        with mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager, mock.patch(
-            "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia:
+        with (
+            mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
+            mock.patch("os.path.isfile") as mock_isfile,
+            mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
+        ):
             mock_isfile.return_value = True  # Make isfile() accept fake julia_sysimage path
             mock_manager.return_value = True
             mock_resolve_julia.return_value = "path/to/julia"
@@ -141,9 +149,11 @@ class TestToolInstance(unittest.TestCase):
             self.assertEqual("julia hello.jl", mock_manager.call_args[0][3])  # alias
         # With tool cmd line args
         instance = self._make_julia_tool_instance(False)
-        with mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager, mock.patch(
-            "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia:
+        with (
+            mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
+            mock.patch("os.path.isfile") as mock_isfile,
+            mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
+        ):
             mock_isfile.return_value = False
             mock_manager.return_value = True
             mock_resolve_julia.return_value = "path/to/julia"
@@ -159,9 +169,11 @@ class TestToolInstance(unittest.TestCase):
             self.assertEqual("julia hello.jl arg1 arg2", mock_manager.call_args[0][3])  # alias
         # With tool and tool spec cmd line args
         instance = self._make_julia_tool_instance(False, ["arg3"])
-        with mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager, mock.patch(
-            "os.path.isfile"
-        ) as mock_isfile, mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia:
+        with (
+            mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
+            mock.patch("os.path.isfile") as mock_isfile,
+            mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
+        ):
             mock_isfile.return_value = False
             mock_manager.return_value = True
             mock_resolve_julia.return_value = "path/to/julia"
@@ -179,9 +191,10 @@ class TestToolInstance(unittest.TestCase):
     def test_prepare_sysimg_maker(self):
         instance = self._make_julia_tool_instance(False)
         instance._settings = FakeQSettings()
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_pem, mock.patch(
-            "spine_items.tool.utils.resolve_julia_executable"
-        ) as mock_resolve_julia:
+        with (
+            mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_pem,
+            mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
+        ):
             mock_resolve_julia.return_value = "path/to/julia"
             instance.prepare([])
             mock_pem.assert_called_once()
@@ -203,9 +216,10 @@ class TestToolInstance(unittest.TestCase):
         # No cmd line args
         instance = self._make_gams_tool_instance()
         path_to_gams = "path/to/gams"
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
-            "spine_items.tool.tool_instance.resolve_gams_executable"
-        ) as mock_gams_exe:
+        with (
+            mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager,
+            mock.patch("spine_items.tool.tool_instance.resolve_gams_executable") as mock_gams_exe,
+        ):
             mock_manager.return_value = True
             mock_gams_exe.return_value = path_to_gams
             instance.prepare([])
@@ -219,9 +233,10 @@ class TestToolInstance(unittest.TestCase):
         # With tool cmd line args
         instance = self._make_gams_tool_instance()
         path_to_gams = "path/to/gams"
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
-            "spine_items.tool.tool_instance.resolve_gams_executable"
-        ) as mock_gams_exe:
+        with (
+            mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager,
+            mock.patch("spine_items.tool.tool_instance.resolve_gams_executable") as mock_gams_exe,
+        ):
             mock_manager.return_value = True
             mock_gams_exe.return_value = path_to_gams
             instance.prepare(["arg1", "arg2"])
@@ -237,9 +252,10 @@ class TestToolInstance(unittest.TestCase):
         # With tool and tool spec cmd line args
         instance = self._make_gams_tool_instance(tool_spec_args=["arg3"])
         path_to_gams = "path/to/gams"
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
-            "spine_items.tool.tool_instance.resolve_gams_executable"
-        ) as mock_gams_exe:
+        with (
+            mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager,
+            mock.patch("spine_items.tool.tool_instance.resolve_gams_executable") as mock_gams_exe,
+        ):
             mock_manager.return_value = True
             mock_gams_exe.return_value = path_to_gams
             instance.prepare(["arg1", "arg2"])
@@ -259,9 +275,11 @@ class TestToolInstance(unittest.TestCase):
         # when os.path.isfile fails, we throw a RuntimeError
         self.assertRaises(RuntimeError, instance.prepare, ["arg1", "arg2"])
         # Test when sys.platform is win32
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
-            "os.path.isfile"
-        ) as mock_isfile, mock.patch("sys.platform", "win32"):
+        with (
+            mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager,
+            mock.patch("os.path.isfile") as mock_isfile,
+            mock.patch("sys.platform", "win32"),
+        ):
             mock_isfile.return_value = True
             mock_manager.return_value = True
             instance.prepare(["arg1", "arg2"])  # With tool cmd line args
@@ -277,9 +295,11 @@ class TestToolInstance(unittest.TestCase):
             self.assertEqual("path/program.exe", instance.program)
             self.assertEqual(0, len(instance.args))
         # Test when sys.platform is linux
-        with mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager, mock.patch(
-            "os.path.isfile"
-        ) as mock_isfile, mock.patch("sys.platform", "linux"):
+        with (
+            mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_manager,
+            mock.patch("os.path.isfile") as mock_isfile,
+            mock.patch("sys.platform", "linux"),
+        ):
             instance = self._make_executable_tool_instance(tool_spec_args=["arg3"])
             mock_isfile.return_value = True
             mock_manager.return_value = True

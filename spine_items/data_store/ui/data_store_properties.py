@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'data_store_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -26,8 +26,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QGroupBox, QHBoxLayout, QPushButton,
-    QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFrame, QGroupBox, QHBoxLayout,
+    QPushButton, QScrollArea, QSizePolicy, QSpacerItem,
+    QVBoxLayout, QWidget)
 
 from spine_items.widgets import UrlSelectorWidget
 from spine_items import resources_icons_rc
@@ -37,9 +38,24 @@ class Ui_Form(object):
         if not Form.objectName():
             Form.setObjectName(u"Form")
         Form.resize(369, 337)
-        self.verticalLayout = QVBoxLayout(Form)
+        Form.setStyleSheet(u"QScrollArea { background: transparent; }\n"
+"QScrollArea > QWidget > QWidget { background: transparent; }")
+        self.verticalLayout_3 = QVBoxLayout(Form)
+        self.verticalLayout_3.setSpacing(0)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.scrollArea = QScrollArea(Form)
+        self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollAreaWidgetContents = QWidget()
+        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 369, 337))
+        self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.groupBox = QGroupBox(Form)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.groupBox = QGroupBox(self.scrollAreaWidgetContents)
         self.groupBox.setObjectName(u"groupBox")
         self.verticalLayout_2 = QVBoxLayout(self.groupBox)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
@@ -54,35 +70,35 @@ class Ui_Form(object):
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.purge_button = QPushButton(Form)
+        self.purge_button = QPushButton(self.scrollAreaWidgetContents)
         self.purge_button.setObjectName(u"purge_button")
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.purge_button.sizePolicy().hasHeightForWidth())
         self.purge_button.setSizePolicy(sizePolicy)
         icon = QIcon()
-        icon.addFile(u":/icons/bolt-lightning.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/bolt-lightning.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.purge_button.setIcon(icon)
 
         self.horizontalLayout_3.addWidget(self.purge_button)
 
-        self.toolButton_vacuum = QPushButton(Form)
+        self.toolButton_vacuum = QPushButton(self.scrollAreaWidgetContents)
         self.toolButton_vacuum.setObjectName(u"toolButton_vacuum")
         icon1 = QIcon()
-        icon1.addFile(u":/icons/broom.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/icons/broom.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.toolButton_vacuum.setIcon(icon1)
 
         self.horizontalLayout_3.addWidget(self.toolButton_vacuum)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
 
-        self.toolButton_copy_url = QPushButton(Form)
+        self.toolButton_copy_url = QPushButton(self.scrollAreaWidgetContents)
         self.toolButton_copy_url.setObjectName(u"toolButton_copy_url")
         icon2 = QIcon()
-        icon2.addFile(u":/icons/copy.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon2.addFile(u":/icons/copy.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.toolButton_copy_url.setIcon(icon2)
 
         self.horizontalLayout_3.addWidget(self.toolButton_copy_url)
@@ -90,32 +106,32 @@ class Ui_Form(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_3)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 228, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer_2)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.pushButton_create_new_spine_db = QPushButton(Form)
+        self.pushButton_create_new_spine_db = QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_create_new_spine_db.setObjectName(u"pushButton_create_new_spine_db")
-        sizePolicy1 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.pushButton_create_new_spine_db.sizePolicy().hasHeightForWidth())
         self.pushButton_create_new_spine_db.setSizePolicy(sizePolicy1)
         icon3 = QIcon()
-        icon3.addFile(u":/icons/Spine_symbol.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon3.addFile(u":/icons/Spine_symbol.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_create_new_spine_db.setIcon(icon3)
 
         self.horizontalLayout.addWidget(self.pushButton_create_new_spine_db)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
-        self.pushButton_ds_open_editor = QPushButton(Form)
+        self.pushButton_ds_open_editor = QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_ds_open_editor.setObjectName(u"pushButton_ds_open_editor")
-        sizePolicy2 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.pushButton_ds_open_editor.sizePolicy().hasHeightForWidth())
@@ -125,6 +141,10 @@ class Ui_Form(object):
 
 
         self.verticalLayout.addLayout(self.horizontalLayout)
+
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+        self.verticalLayout_3.addWidget(self.scrollArea)
 
         QWidget.setTabOrder(self.purge_button, self.toolButton_vacuum)
         QWidget.setTabOrder(self.toolButton_vacuum, self.toolButton_copy_url)
