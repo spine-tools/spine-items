@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'data_transformer_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -26,9 +26,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QLabel,
-    QScrollArea, QSizePolicy, QSpacerItem, QToolButton,
-    QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout,
+    QLabel, QScrollArea, QSizePolicy, QSpacerItem,
+    QToolButton, QVBoxLayout, QWidget)
 from spine_items import resources_icons_rc
 
 class Ui_Form(object):
@@ -36,16 +36,19 @@ class Ui_Form(object):
         if not Form.objectName():
             Form.setObjectName(u"Form")
         Form.resize(212, 91)
+        Form.setStyleSheet(u"QScrollArea { background: transparent; }\n"
+"QScrollArea > QWidget > QWidget { background: transparent; }")
         self.verticalLayout = QVBoxLayout(Form)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.scrollArea = QScrollArea(Form)
         self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 210, 89))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 212, 91))
         self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setSpacing(0)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
