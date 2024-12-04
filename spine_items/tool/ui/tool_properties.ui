@@ -20,7 +20,7 @@
     <x>0</x>
     <y>0</y>
     <width>312</width>
-    <height>603</height>
+    <height>612</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
         <x>0</x>
         <y>0</y>
         <width>312</width>
-        <height>603</height>
+        <height>612</height>
        </rect>
       </property>
       <property name="autoFillBackground">
@@ -85,7 +85,10 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_9">
          <property name="spacing">
-          <number>4</number>
+          <number>6</number>
+         </property>
+         <property name="bottomMargin">
+          <number>6</number>
          </property>
          <item>
           <widget class="QLabel" name="label_tool_specification">
@@ -136,7 +139,14 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_options"/>
+        <layout class="QHBoxLayout" name="horizontalLayout_options">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>6</number>
+         </property>
+        </layout>
        </item>
        <item>
         <widget class="QSplitter" name="splitter">
@@ -262,29 +272,63 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
           <enum>QFrame::Shadow::Raised</enum>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Execute in</string>
-            </property>
-           </widget>
-          </item>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Execute in</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QRadioButton" name="radioButton_execute_in_source">
               <property name="text">
-               <string>Source directory</string>
+               <string>Source dir</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QRadioButton" name="radioButton_execute_in_work">
               <property name="text">
-               <string>Work directory</string>
+               <string>Work dir</string>
               </property>
               <property name="checked">
                <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QLineEdit" name="lineEdit_root_directory">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string>Root directory...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_browse_root_directory">
+              <property name="icon">
+               <iconset resource="../../ui/resources/resources_icons.qrc">
+                <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
               </property>
              </widget>
             </item>
@@ -398,9 +442,13 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
   <tabstop>treeView_input_files</tabstop>
   <tabstop>radioButton_execute_in_source</tabstop>
   <tabstop>radioButton_execute_in_work</tabstop>
+  <tabstop>lineEdit_root_directory</tabstop>
+  <tabstop>toolButton_browse_root_directory</tabstop>
   <tabstop>lineEdit_group_id</tabstop>
   <tabstop>kill_consoles_check_box</tabstop>
   <tabstop>log_process_output_check_box</tabstop>
+  <tabstop>pushButton_tool_results</tabstop>
+  <tabstop>scrollArea</tabstop>
  </tabstops>
  <resources>
   <include location="../../ui/resources/resources_icons.qrc"/>

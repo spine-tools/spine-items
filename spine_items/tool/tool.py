@@ -17,9 +17,9 @@ from PySide6.QtGui import QAction
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg, make_cmd_line_arg
 from spine_engine.utils.helpers import ExecutionDirection, resolve_julia_executable, resolve_python_interpreter
-from spinetoolbox.helpers import open_url
+from spinetoolbox.helpers import open_url, select_root_directory
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
-from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand
+from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand
 from ..db_writer_item_base import DBWriterItemBase
 from ..models import ToolCommandLineArgsModel
 from .commands import (
@@ -52,6 +52,7 @@ class Tool(DBWriterItemBase):
         kill_completed_processes=False,
         log_process_output=False,
         group_id=None,
+        root_dir="",
     ):
         """
         Args:
@@ -68,6 +69,7 @@ class Tool(DBWriterItemBase):
             kill_completed_processes (bool): whether to kill completed persistent processes
             log_process_output (bool): whether to log process output to a file
             group_id (str, optional): execution group id
+            root_dir (str, optional): Root directory for the Tool Spec's program
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -83,6 +85,7 @@ class Tool(DBWriterItemBase):
                 f"<b>{specification_name}</b> but it was not found"
             )
         self._group_id = group_id
+        self._root_directory = root_dir
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
@@ -121,6 +124,10 @@ class Tool(DBWriterItemBase):
     @property
     def group_id(self):
         return self._group_id
+
+    @property
+    def root_dir(self):
+        return self._root_directory
 
     def _get_options_widget(self):
         """Returns a widget to specify the options for this tool.
@@ -164,6 +171,8 @@ class Tool(DBWriterItemBase):
             self._update_remove_args_button_enabled
         )
         s[self._properties_ui.lineEdit_group_id.editingFinished] = self._set_group_id
+        s[self._properties_ui.lineEdit_root_directory.editingFinished] = self._set_root_directory
+        s[self._properties_ui.toolButton_browse_root_directory.clicked] = self._browse_root_directory
         s[self._properties_ui.kill_consoles_check_box.clicked] = self._set_kill_completed_processes
         s[self._properties_ui.log_process_output_check_box.clicked] = self._set_log_process_output
         return s
@@ -211,12 +220,34 @@ class Tool(DBWriterItemBase):
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
-        self._properties_ui.label_jupyter.elided_mode = Qt.ElideMiddle
+        self._properties_ui.label_jupyter.elided_mode = Qt.TextElideMode.ElideMiddle
         self._properties_ui.label_jupyter.hide()
         self._update_tool_ui()
         self._do_update_add_args_button_enabled()
         self._do_update_remove_args_button_enabled()
         self._properties_ui.lineEdit_group_id.setText(self._group_id)
+        self._properties_ui.lineEdit_root_directory.setText(self._root_directory)
+
+    @Slot(bool)
+    def _browse_root_directory(self, _=False):
+        """Calls static method that shows a file browser for selecting a Python interpreter."""
+        select_root_directory(self._toolbox, self._properties_ui.lineEdit_root_directory)
+
+    @Slot()
+    def _set_root_directory(self):
+        """Pushes a command to update root directory whenever the user edits the line edit."""
+        root_dir = self._properties_ui.lineEdit_root_directory.text()
+        if not root_dir:
+            root_dir = None
+        if self._root_directory == root_dir:
+            return
+        self._toolbox.undo_stack.push(UpdateRootDirCommand(self.name, root_dir, self._project))
+
+    def do_set_root_directory(self, root_dir):
+        """Sets root directory."""
+        self._root_directory = root_dir
+        if self._active:
+            self._properties_ui.lineEdit_root_directory.setText(root_dir)
 
     @Slot(bool)
     def show_specification_window(self, _=True):
@@ -590,7 +621,14 @@ class Tool(DBWriterItemBase):
         d["log_process_output"] = self._log_process_output
         if self._group_id:
             d["group_id"] = self._group_id
+        if self._root_directory:
+            d["root_directory"] = self._root_directory
         return d
+
+    @staticmethod
+    def item_dict_local_entries():
+        """See base class."""
+        return [("root_directory",)]
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
@@ -604,6 +642,7 @@ class Tool(DBWriterItemBase):
         kill_completed_processes = item_dict.get("kill_completed_processes", False)
         log_process_output = item_dict.get("log_process_output", False)
         group_id = item_dict.get("group_id")
+        root_dir = item_dict.get("root_directory", "")
         return Tool(
             name,
             description,
@@ -618,6 +657,7 @@ class Tool(DBWriterItemBase):
             kill_completed_processes,
             log_process_output,
             group_id,
+            root_dir,
         )
 
     def rename(self, new_name, rename_data_dir_message):
