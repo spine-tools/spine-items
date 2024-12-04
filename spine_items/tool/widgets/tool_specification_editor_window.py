@@ -127,7 +127,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         index = self.programfiles_model.index(0, 0, parent)
         selection_model = self._ui.treeView_programfiles.selectionModel()
-        selection_model.setCurrentIndex(index, QItemSelectionModel.Select)
+        selection_model.setCurrentIndex(index, QItemSelectionModel.SelectionFlag.Select)
         self._load_programfile_in_editor(index)
         self._enable_additional_program_files_actions()
 
@@ -305,7 +305,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._show_status_bar_msg(f"Program files {saved} saved successfully")
         return True
 
-    def _save_program_file(self, file_path, doc):
+    @staticmethod
+    def _save_program_file(file_path, doc):
         """Saves program file."""
         try:
             with open(file_path, "w") as file:
@@ -318,7 +319,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """List program files in QTreeView."""
         for name in ("Main program file", "Additional program files"):
             item = QStandardItem(name + "        ")
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsSelectable)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             self.programfiles_model.appendRow(item)
         # Setup 'Main' item
         index = self.programfiles_model.index(0, 0)
@@ -330,7 +331,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 self._ui.actionRemove_all_program_files,
             ]
         )
-        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self._ui.treeView_programfiles.setIndexWidget(index, widget)
         # Setup 'Additional...' item
         index = self.programfiles_model.index(1, 0)
@@ -343,7 +344,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 self._ui.actionRemove_selected_program_files,
             ]
         )
-        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self._ui.treeView_programfiles.setIndexWidget(index, widget)
         self._ui.treeView_programfiles.expandAll()
         tool_tip = (
@@ -377,14 +378,14 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         root_item.removeRows(0, root_item.rowCount())
         if file_path:  # Do only if the spec has a main program (Executable Tool specs may not have one)
             item = QStandardItem(os.path.basename(file_path))
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.ItemDataRole.DecorationRole)
             item.setData(file_path, Qt.ItemDataRole.UserRole)
             root_item.appendRow(item)
             tool_tip = f"<p>{self._current_main_program_file()}</p>"
             self.programfiles_model.setData(root_item.child(0).index(), tool_tip, role=Qt.ItemDataRole.ToolTipRole)
             self._ui.treeView_programfiles.selectionModel().setCurrentIndex(
-                root_item.child(0).index(), QItemSelectionModel.Select
+                root_item.child(0).index(), QItemSelectionModel.SelectionFlag.Select
             )
         if self.spec_dict.get("tooltype") == "executable":
             self.optional_widget.set_command_and_shell_edit_disabled_state(bool(file_path))
@@ -397,7 +398,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """
         # Find visible indexes, disconnect 'set program file dirty' slots
         visible = set()
-        for item in self.programfiles_model.findItems("", Qt.MatchContains | Qt.MatchRecursive):
+        for item in self.programfiles_model.findItems("", Qt.MatchFlag.MatchContains | Qt.MatchFlag.MatchRecursive):
             if not item.rowCount():
                 index = self.programfiles_model.indexFromItem(item)
                 file_path = self._programfile_path_from_index(index)
@@ -413,9 +414,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         root_item.removeRows(0, root_item.rowCount())
         components = _collect_components(names)
         _build_tree(root_item, components)
-        # Reexpand visible, connect 'set program file dirty' slots
+        # Re-expand visible, connect 'set program file dirty' slots
         self._programfile_set_dirty_slots.clear()
-        for item in self.programfiles_model.findItems("", Qt.MatchContains | Qt.MatchRecursive):
+        for item in self.programfiles_model.findItems("", Qt.MatchFlag.MatchContains | Qt.MatchFlag.MatchRecursive):
             if not item.rowCount():
                 index = self.programfiles_model.indexFromItem(item)
                 file_path = self._programfile_path_from_index(index)
@@ -428,7 +429,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                 doc = self._programfile_documents.get(file_path)
                 if doc is not None:
                     slot = self._programfile_set_dirty_slots[file_path] = (
-                        lambda dirty, index=index: self._set_program_file_dirty(index, dirty)
+                        lambda dirty, ind=index: self._set_program_file_dirty(ind, dirty)
                     )
                     doc.modificationChanged.connect(slot)
                     self._set_program_file_dirty(index, doc.isModified())
@@ -449,25 +450,25 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def init_io_file_list(self):
         for name in ("Input files", "Optional input files", "Output files"):
             item = QStandardItem(name + "         ")
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsSelectable)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             self.io_files_model.appendRow(item)
         # Setup 'Input' item
         index = self.io_files_model.index(0, 0)
         widget = ToolBarWidget("Input files", self, True)
         widget.tool_bar.addActions([self._ui.actionAdd_input_files, self._ui.actionRemove_selected_input_files])
-        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self._ui.treeView_io_files.setIndexWidget(index, widget)
         # Setup 'Optional' item
         index = self.io_files_model.index(1, 0)
         widget = ToolBarWidget("Optional input files", self, True)
         widget.tool_bar.addActions([self._ui.actionAdd_opt_input_files, self._ui.actionRemove_selected_opt_input_files])
-        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self._ui.treeView_io_files.setIndexWidget(index, widget)
         # Setup 'Output' item
         index = self.io_files_model.index(2, 0)
         widget = ToolBarWidget("Output files", self, True)
         widget.tool_bar.addActions([self._ui.actionAdd_output_files, self._ui.actionRemove_selected_output_files])
-        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self._ui.treeView_io_files.setIndexWidget(index, widget)
 
     def _input_file_list(self):
@@ -858,7 +859,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             document.setPlainText(text)
             document.setModified(False)
             slot = self._programfile_set_dirty_slots[file_path] = (
-                lambda dirty, index=index: self._set_program_file_dirty(index, dirty)
+                lambda dirty, ind=index: self._set_program_file_dirty(ind, dirty)
             )
             document.modificationChanged.connect(slot)
             document.modificationChanged.connect(self._update_window_modified)
@@ -870,7 +871,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.dockWidget_program.setWindowTitle(os.path.basename(file_path) + "[*]")
 
     @Slot(bool)
-    def browse_main_program_file(self, checked=False):
+    def browse_main_program_file(self, _=False):
         """Opens a file dialog where user can select the path of the main program file."""
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QFileDialog.getOpenFileName(
@@ -949,7 +950,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.add_program_files(file_path)
 
     @Slot(bool)
-    def show_add_program_files_dialog(self, checked=False):
+    def show_add_program_files_dialog(self, _=False):
         """Let user select program files for this tool specification."""
         path = self.includes_main_path if self.includes_main_path else self._project.project_dir
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
@@ -973,7 +974,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.add_program_files(*file_paths)
 
     @Slot(bool)
-    def show_add_program_dirs_dialog(self, checked=False):
+    def show_add_program_dirs_dialog(self, _=False):
         """Let user select a program directory for this tool specification.
         All files and sub-directories will be added to the program files.
         """
@@ -1050,7 +1051,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return {ind for ind in indexes if self.programfiles_model.rowCount(ind) == 0}
 
     @Slot(bool)
-    def remove_all_program_files(self, checked=False):
+    def remove_all_program_files(self, _=False):
         """Removes all program files including main program. Useful with Executable Tool Specs."""
         self._ui.treeView_programfiles.selectAll()
         inds = set(self._ui.treeView_programfiles.selectedIndexes())
@@ -1069,7 +1070,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         )
 
     @Slot(bool)
-    def remove_program_files(self, checked=False):
+    def remove_program_files(self, _=False):
         """Removes selected program files from program_file list."""
         indexes = self._selected_program_file_indexes()
         if not indexes:  # Nothing removable selected
@@ -1115,7 +1116,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.actionAdd_program_directory.setEnabled(main_program_file_exists)
 
     @Slot(bool)
-    def add_inputfiles(self, checked=False):
+    def add_inputfiles(self, _=False):
         """Opens a file dialog for selecting input files for this tool specification."""
         msg = (
             "Add an input file or a directory required by your program. Wildcards "
@@ -1126,8 +1127,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             "copies file data.csv there.<br/>"
             "<b>output/</b> -> Creates an empty directory into the work directory.<br/><br/>"
         )
+        title = "Add input item"
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QInputDialog.getText(self, "Add input item", msg, flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
+        answer = QInputDialog.getText(
+            self, title, msg, flags=Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint
+        )
         file_name = answer[0]
         if not file_name:  # Cancel button clicked
             return
@@ -1138,7 +1142,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         )
 
     @Slot(bool)
-    def add_inputfiles_opt(self, checked=False):
+    def add_inputfiles_opt(self, _=False):
         """Opens a file dialog for selecting optional input files for this tool specification."""
         msg = (
             "Add optional input files that may be utilized by your program. <br/>"
@@ -1149,9 +1153,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             "<b>input/data_?.dat</b> -> All found files matching the pattern 'data_?.dat' will be copied to <br/>"
             "input/ subdirectory under the same work directory as the main program.<br/><br/>"
         )
+        title = "Add optional input item"
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QInputDialog.getText(
-            self, "Add optional input item", msg, flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+            self, title, msg, flags=Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint
         )
         file_name = answer[0]
         if not file_name:  # Cancel button clicked
@@ -1165,7 +1170,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         )
 
     @Slot(bool)
-    def add_outputfiles(self, checked=False):
+    def add_outputfiles(self, _=False):
         """Opens a file dialog for selecting output files for this tool specification."""
         msg = (
             "Add output files that will be archived into the Tool results directory after the <br/>"
@@ -1176,8 +1181,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             "<b>output/*.gdx</b> -> All GDX files from the work subdirectory /output will be copied into <br/>"
             "results /output subdirectory.<br/><br/>"
         )
+        title = "Add output item"
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QInputDialog.getText(self, "Add output item", msg, flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
+        answer = QInputDialog.getText(
+            self, title, msg, flags=Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint
+        )
         file_name = answer[0]
         if not file_name:  # Cancel button clicked
             return
@@ -1234,7 +1242,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.actionRemove_selected_output_files.setEnabled(bool(indexes))
 
     @Slot(bool)
-    def remove_inputfiles(self, checked=False):
+    def remove_inputfiles(self, _=False):
         """Removes selected input files from list. Does not remove anything if no items selected."""
         parent = self.io_files_model.index(0, 0)
         indexes = self._selected_io_file_indexes(parent)
@@ -1249,7 +1257,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         )
 
     @Slot(bool)
-    def remove_inputfiles_opt(self, checked=False):
+    def remove_inputfiles_opt(self, _=False):
         """Removes selected optional input files from list. Does not remove anything if no items selected."""
         parent = self.io_files_model.index(1, 0)
         indexes = self._selected_io_file_indexes(parent)
@@ -1266,7 +1274,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         )
 
     @Slot(bool)
-    def remove_outputfiles(self, checked=False):
+    def remove_outputfiles(self, _=False):
         """Removes selected output files from list. Does not remove anything if no items selected."""
         parent = self.io_files_model.index(2, 0)
         indexes = self._selected_io_file_indexes(parent)
@@ -1329,7 +1337,7 @@ def _build_tree(root, components):
     for parent, children in components.items():
         item = QStandardItem(parent)
         item.setData(parent, Qt.ItemDataRole.UserRole)
-        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         _build_tree(item, children)
         if item.hasChildren():
             nodes.append(item)

@@ -138,3 +138,29 @@ class UpdateGroupIdCommand(SpineToolboxCommand):
     def undo(self):
         item = self._project.get_item(self._item_name)
         item.do_set_group_id(self._undo_group_id)
+
+
+class UpdateRootDirCommand(SpineToolboxCommand):
+    def __init__(self, item_name, root_dir, project):
+        """Command to update Tool root directory.
+
+        Args:
+            item_name (str): Item's name
+            root_dir (str): Root directory
+            project (SpineToolboxProject): Project
+        """
+        super().__init__()
+        self._item_name = item_name
+        self._redo_root_dir = root_dir
+        item = project.get_item(item_name)
+        self._undo_root_dir = item.root_dir
+        self._project = project
+        self.setText(f"change root directory of {item_name}")
+
+    def redo(self):
+        item = self._project.get_item(self._item_name)
+        item.do_set_root_directory(self._redo_root_dir)
+
+    def undo(self):
+        item = self._project.get_item(self._item_name)
+        item.do_set_root_directory(self._undo_root_dir)

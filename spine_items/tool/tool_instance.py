@@ -279,12 +279,13 @@ class PythonToolInstance(ToolInstance):
             list: List of commands for the Python Basic Console
         """
         commands = []
-        fp = self.tool_specification.main_prgm
+        fp = self.tool_specification.main_prgm.replace(os.sep, "/")
         full_fp = os.path.join(self.basedir, self.tool_specification.main_prgm).replace(os.sep, "/")
         commandline_args = [full_fp] + cmdline_args
         fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(commandline_args)) + '"]'
         commands.append(f"import sys; sys.argv = {fmt_cmdline_args};")
-        commands.append(f"import os; os.chdir({repr(self.basedir)})")
+        basedir = self.basedir.replace(os.sep, "/")
+        commands.append(f"import os; os.chdir({repr(basedir)})")
         commands += self._make_exec_code(fp, full_fp)
         return commands
 
