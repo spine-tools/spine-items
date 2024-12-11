@@ -108,6 +108,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         inputfiles_opt = list(specification.inputfiles_opt) if specification else []
         outputfiles = list(specification.outputfiles) if specification else []
         self.includes_main_path = specification.path if specification else None
+        if self.has_root_directory():
+            self.includes_main_path = self.item.root_dir
         # Populate lists (this will also create headers)
         self.init_programfile_list()
         self.init_io_file_list()
@@ -116,7 +118,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.populate_inputfiles_opt_list(inputfiles_opt)
         self.populate_outputfiles_list(outputfiles)
         if main_program_file:
-            self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
+            if self.has_root_directory():
+                self._set_main_program_file(os.path.abspath(os.path.join(self.item.root_dir, main_program_file)))
+            else:
+                self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
         else:
             self._label_main_path.setText(self.includes_main_path)
             self._clear_program_text_edit()
@@ -135,6 +140,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         from ..ui.tool_specification_form import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 
         return Ui_MainWindow()
+
+    def has_root_directory(self):
+        if self.item is not None and self.item.root_dir != "":
+            return True
+        return False
 
     @property
     def settings_group(self):
@@ -242,10 +252,14 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self.show_error("Please add a main program file")
             return None
         new_spec_dict = {"name": spec_name, "description": self._spec_toolbar.description(), "tooltype": toolspectype}
-        main_prgm_dir, main_prgm_file_name = os.path.split(main_program_file) if main_program_file else ("", "")
-        if not main_prgm_dir:
+        if not main_program_file:
+            main_prgm_file_name = ""
             self.includes_main_path = None
+        elif self.has_root_directory():
+            main_prgm_file_name = os.path.relpath(main_program_file, self.item.root_dir)
+            self.includes_main_path = self.item.root_dir
         else:
+            main_prgm_dir, main_prgm_file_name = os.path.split(main_program_file)
             self.includes_main_path = os.path.abspath(main_prgm_dir)
         self._label_main_path.setText(self.includes_main_path)
         new_spec_dict["includes"] = [main_prgm_file_name] if main_prgm_file_name else []
@@ -371,16 +385,22 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """Adds the main program item into the program files model.
 
         Args:
-            file_path (str): *absolute* path to main program file
+            file_path (str): Absolute path to main program file
         """
         index = self.programfiles_model.index(0, 0)
         root_item = self.programfiles_model.itemFromIndex(index)
         root_item.removeRows(0, root_item.rowCount())
         if file_path:  # Do only if the spec has a main program (Executable Tool specs may not have one)
-            item = QStandardItem(os.path.basename(file_path))
+            if self.has_root_directory():
+                rel = os.path.relpath(file_path, self.item.root_dir)
+                item = QStandardItem(rel)
+                full_path = os.path.abspath(os.path.join(self.item.root_dir, file_path))
+                item.setData(full_path, Qt.ItemDataRole.UserRole)
+            else:
+                item = QStandardItem(os.path.basename(file_path))
+                item.setData(file_path, Qt.ItemDataRole.UserRole)
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             item.setData(QFileIconProvider().icon(QFileInfo(file_path)), Qt.ItemDataRole.DecorationRole)
-            item.setData(file_path, Qt.ItemDataRole.UserRole)
             root_item.appendRow(item)
             tool_tip = f"<p>{self._current_main_program_file()}</p>"
             self.programfiles_model.setData(root_item.child(0).index(), tool_tip, role=Qt.ItemDataRole.ToolTipRole)
@@ -435,17 +455,22 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                     self._set_program_file_dirty(index, doc.isModified())
 
     def _set_program_file_dirty(self, index, dirty):
-        """
-        Appends a * to the file name in program files tree view if dirty.
+        """Appends a * to the file name in program files tree view if dirty.
 
         Args:
-            index (QModelIndex): index in program files model
-            dirty (bool)
+            index (QModelIndex): Index in program files model
+            dirty (bool): True or False
         """
-        basename = os.path.basename(index.data(Qt.ItemDataRole.UserRole))
+        file_path = index.data(Qt.ItemDataRole.UserRole)
+        # Main program file items have their full path as UserRole data, additional
+        # program file items have only their file name as UserRole data
+        if self.has_root_directory() and os.path.exists(file_path) and os.path.samefile(self._current_main_program_file(), file_path):
+            name = os.path.relpath(file_path, self.item.root_dir)
+        else:
+            name = os.path.basename(file_path)
         if dirty:
-            basename += "*"
-        self.programfiles_model.setData(index, basename, role=Qt.ItemDataRole.DisplayRole)
+            name += "*"
+        self.programfiles_model.setData(index, name, role=Qt.ItemDataRole.DisplayRole)
 
     def init_io_file_list(self):
         for name in ("Input files", "Optional input files", "Output files"):
@@ -785,20 +810,26 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         """Sets program files.
 
         Args:
-            program_files (list of str): List of *absolute* paths
+            program_files (list of str): List of paths. First item is the absolute path to main program file,
+                the remaining items are path stubs relative to the item root directory or to includes main path.
         """
         main_program_file = program_files[0] if program_files else ""
-        self.includes_main_path = os.path.dirname(next(iter(f for f in program_files if f), ""))
-        additional_program_files = [os.path.relpath(file, self.includes_main_path) for file in program_files[1:]]
+        if self.has_root_directory():
+            additional_program_files = [os.path.relpath(file, self.includes_main_path) for file in program_files[1:]]
+            main_program_path = os.path.relpath(main_program_file, self.item.root_dir) if main_program_file else ""
+        else:
+            self.includes_main_path = os.path.dirname(next(iter(f for f in program_files if f), ""))
+            additional_program_files = [os.path.relpath(file, self.includes_main_path) for file in program_files[1:]]
+            main_program_path = os.path.basename(main_program_file)
         self._set_main_program_file(main_program_file)
         self.populate_programfile_list(additional_program_files)
-        self.spec_dict["includes"] = [os.path.basename(main_program_file), *additional_program_files]
+        self.spec_dict["includes"] = [main_program_path, *additional_program_files]
 
     def _set_main_program_file(self, file_path):
         """Sets main program file and dumps its contents into the text edit.
 
         Args:
-            file_path (str): absolute path
+            file_path (str): Absolute path
         """
         self.populate_main_programfile(file_path)
         self._label_main_path.setText(self.includes_main_path)
@@ -1078,6 +1109,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         removed_files = {os.path.join(*_path_components_from_index(ind)) for ind in indexes}
         old_program_files = self.spec_dict.get("includes", [])
+        old_program_files = [f.replace(os.sep, "/") for f in old_program_files]
+        removed_files = [f.replace(os.sep, "/") for f in removed_files]
         new_program_files = [f for f in old_program_files if f not in removed_files]
         if self.includes_main_path is not None:
             old_program_files = [os.path.join(self.includes_main_path, f) for f in old_program_files]
