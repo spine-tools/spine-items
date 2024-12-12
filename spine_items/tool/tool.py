@@ -231,7 +231,8 @@ class Tool(DBWriterItemBase):
     @Slot(bool)
     def _browse_root_directory(self, _=False):
         """Calls static method that shows a file browser for selecting a Python interpreter."""
-        select_root_directory(self._toolbox, self._properties_ui.lineEdit_root_directory)
+        select_root_directory(self._toolbox, self._properties_ui.lineEdit_root_directory, self._project.project_dir)
+        self._set_root_directory()
 
     @Slot()
     def _set_root_directory(self):

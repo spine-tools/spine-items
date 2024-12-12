@@ -313,14 +313,30 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
            </layout>
           </item>
           <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Source code root directory:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
              <widget class="QLineEdit" name="lineEdit_root_directory">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string/>
               </property>
               <property name="placeholderText">
-               <string>Root directory...</string>
+               <string>Root directory path...</string>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -335,22 +351,27 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
-             <widget class="QLabel" name="label_group_id">
-              <property name="text">
-               <string>Reuse console id:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="lineEdit_group_id">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an id for sharing a console with other Tools in this project. Leave empty to run this Tool in isolation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           <widget class="QLabel" name="label_group_id">
+            <property name="text">
+             <string>Reuse console id:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_group_id">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an id for sharing a console with other Tools in this project. Leave empty to run this Tool in isolation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="ElidedLabel" name="label_jupyter">

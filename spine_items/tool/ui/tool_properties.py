@@ -192,10 +192,21 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
+        self.label = QLabel(self.frame)
+        self.label.setObjectName(u"label")
+
+        self.verticalLayout_2.addWidget(self.label)
+
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.lineEdit_root_directory = QLineEdit(self.frame)
         self.lineEdit_root_directory.setObjectName(u"lineEdit_root_directory")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.lineEdit_root_directory.sizePolicy().hasHeightForWidth())
+        self.lineEdit_root_directory.setSizePolicy(sizePolicy3)
+        self.lineEdit_root_directory.setClearButtonEnabled(True)
 
         self.horizontalLayout_3.addWidget(self.lineEdit_root_directory)
 
@@ -210,20 +221,18 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
 
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.label_group_id = QLabel(self.frame)
         self.label_group_id.setObjectName(u"label_group_id")
 
-        self.horizontalLayout_2.addWidget(self.label_group_id)
+        self.verticalLayout_2.addWidget(self.label_group_id)
 
         self.lineEdit_group_id = QLineEdit(self.frame)
         self.lineEdit_group_id.setObjectName(u"lineEdit_group_id")
+        sizePolicy3.setHeightForWidth(self.lineEdit_group_id.sizePolicy().hasHeightForWidth())
+        self.lineEdit_group_id.setSizePolicy(sizePolicy3)
+        self.lineEdit_group_id.setClearButtonEnabled(True)
 
-        self.horizontalLayout_2.addWidget(self.lineEdit_group_id)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_2.addWidget(self.lineEdit_group_id)
 
         self.label_jupyter = ElidedLabel(self.frame)
         self.label_jupyter.setObjectName(u"label_jupyter")
@@ -245,9 +254,6 @@ class Ui_Form(object):
         self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
         self.pushButton_tool_results = QPushButton(self.frame)
         self.pushButton_tool_results.setObjectName(u"pushButton_tool_results")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.pushButton_tool_results.sizePolicy().hasHeightForWidth())
         self.pushButton_tool_results.setSizePolicy(sizePolicy3)
 
@@ -307,8 +313,9 @@ class Ui_Form(object):
         self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
         self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source dir", None))
         self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work dir", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Source code root directory:", None))
         self.lineEdit_root_directory.setText("")
-        self.lineEdit_root_directory.setPlaceholderText(QCoreApplication.translate("Form", u"Root directory...", None))
+        self.lineEdit_root_directory.setPlaceholderText(QCoreApplication.translate("Form", u"Root directory path...", None))
         self.label_group_id.setText(QCoreApplication.translate("Form", u"Reuse console id:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_group_id.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Enter an id for sharing a console with other Tools in this project. Leave empty to run this Tool in isolation.</p></body></html>", None))
