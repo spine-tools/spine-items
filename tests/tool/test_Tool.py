@@ -198,6 +198,8 @@ class TestTool(unittest.TestCase):
         expected = {"input1.csv": [expected_urls["url1"], expected_urls["url3"]], "input2.csv": None}
         self.assertEqual(2, len(result))
         self.assertEqual(expected["input2.csv"], result["input2.csv"])
+        print(f"expected_urls:{expected_urls}")
+        print(f"result:{result}")
         self.assertTrue(expected_urls["url3"] in result["input1.csv"] or expected_urls["url1"] in result["input1.csv"])
         resources.pop(0)
         resources.append(
