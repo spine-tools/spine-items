@@ -198,9 +198,7 @@ class TestTool(unittest.TestCase):
         expected = {"input1.csv": [expected_urls["url1"], expected_urls["url3"]], "input2.csv": None}
         self.assertEqual(2, len(result))
         self.assertEqual(expected["input2.csv"], result["input2.csv"])
-        print(f"expected_urls:{expected_urls}")
-        print(f"result:{result}")
-        self.assertTrue(expected_urls["url3"] in result["input1.csv"] or expected_urls["url1"] in result["input1.csv"])
+        self.assertTrue(os.path.abspath(expected_urls["url3"]) in os.path.abspath(result["input1.csv"][0]) or os.path.abspath(expected_urls["url1"]) in os.path.abspath(result["input1.csv"][0]))
         resources.pop(0)
         resources.append(
             ProjectItemResource("Exporter", "file", "fifth", url="file:///" + url5, metadata={}, filterable=False)
