@@ -12,7 +12,7 @@
 
 """Animation class for importers and exporters."""
 from PySide6.QtCore import QLineF, QObject, QPointF, QRectF, Qt, QTimeLine, Signal, Slot
-from PySide6.QtGui import QFont, QFontMetrics, QPainterPath
+from PySide6.QtGui import QFont, QFontMetrics, QPainterPath, QColor
 from PySide6.QtWidgets import QGraphicsPathItem
 from spinetoolbox.helpers import color_from_index
 
@@ -47,7 +47,7 @@ class ImporterExporterAnimation:
     @Slot(float)
     def _handle_time_line_value_changed(self, value):
         for plane in self._planes:
-            plane.advance()
+            plane.advance(value)
 
     @Slot(QTimeLine.State)
     def _handle_time_line_state_changed(self, new_state):
@@ -135,7 +135,7 @@ class _PaperPlane(QGraphicsPathItem):
         self._step = step
         self._loop_rect = loop_rect
         self._icon_code = "\uf1d8"
-        self.setAcceptedMouseButtons(Qt.NoButton)
+        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         self.setZValue(self._parent.svg_item.zValue())
         path = QPainterPath()
         path.addText(0, (1 - 0.14) * QFontMetrics(font).height(), font, self._icon_code)  # 14% baseline for FA
@@ -144,10 +144,10 @@ class _PaperPlane(QGraphicsPathItem):
         border_pen = self.pen()
         border_pen.setWidthF(0.5)
         self.setPen(border_pen)
-        self.color = Qt.white
+        self.color = QColor(Qt.GlobalColor.white)
         self.hide()
 
-    def advance(self):
+    def advance(self, phase):
         self._percent = self._percent + self._step
         if self._percent > 1:
             self._percent = -0.8
