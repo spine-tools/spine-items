@@ -17,6 +17,7 @@ from PySide6.QtGui import QAction
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg, make_cmd_line_arg
 from spine_engine.utils.helpers import ExecutionDirection, resolve_julia_executable, resolve_python_interpreter
+from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.helpers import open_url, select_root_directory
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand
@@ -85,7 +86,7 @@ class Tool(DBWriterItemBase):
                 f"<b>{specification_name}</b> but it was not found"
             )
         self._group_id = group_id
-        self._root_directory = root_dir
+        self._root_directory = deserialize_path(root_dir, self._project.project_dir)
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
@@ -623,7 +624,7 @@ class Tool(DBWriterItemBase):
         if self._group_id:
             d["group_id"] = self._group_id
         if self._root_directory:
-            d["root_directory"] = self._root_directory
+            d["root_directory"] = serialize_path(self._root_directory, self._project.project_dir)
         return d
 
     @staticmethod

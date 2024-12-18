@@ -118,10 +118,13 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self.populate_inputfiles_opt_list(inputfiles_opt)
         self.populate_outputfiles_list(outputfiles)
         if main_program_file:
-            if self.has_root_directory():
-                self._set_main_program_file(os.path.abspath(os.path.join(self.item.root_dir, main_program_file)))
-            else:
-                self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
+            try:
+                if self.has_root_directory():
+                    self._set_main_program_file(os.path.abspath(os.path.join(self.item.root_dir, main_program_file)))
+                else:
+                    self._set_main_program_file(os.path.join(self.includes_main_path, main_program_file))
+            except TypeError:
+                self._set_main_program_file("")
         else:
             self._label_main_path.setText(self.includes_main_path)
             self._clear_program_text_edit()
@@ -901,12 +904,20 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.textEdit_program.file_selected(True)
         self._ui.dockWidget_program.setWindowTitle(os.path.basename(file_path) + "[*]")
 
+    def _start_dir(self):
+        """Returns path to main program directory if available, or to project directory otherwise."""
+        if self._current_main_program_file() is not None:
+            current_main_program_dir, _ = os.path.split(self._current_main_program_file())
+        else:
+            current_main_program_dir = None
+        return self._project.project_dir if not current_main_program_dir else current_main_program_dir
+
     @Slot(bool)
     def browse_main_program_file(self, _=False):
         """Opens a file dialog where user can select the path of the main program file."""
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QFileDialog.getOpenFileName(
-            self, "Select existing main program file", self._project.project_dir, "*.*"
+            self, "Select existing main program file", self._start_dir(), "*.*"
         )
         file_path = answer[0]
         existing_file_paths = [
@@ -934,7 +945,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def new_main_program_file(self, _=False):
         """Creates a new blank main program file."""
         # noinspection PyCallByClass
-        answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._project.project_dir)
+        answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._start_dir())
         file_path = answer[0]
         existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if not file_path:  # Cancel button clicked
@@ -1000,7 +1011,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
                     msg.setText("Can't add main program file\nto additional program files")
                     msg.exec()
                     return
-                msg.setText("One file not added because\nit is the main program file")
+                msg.setText("Skipped main program file")
                 msg.exec()
         self.add_program_files(*file_paths)
 
