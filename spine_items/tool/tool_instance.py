@@ -170,11 +170,12 @@ class JuliaToolInstance(ToolInstance):
             list of str: Commands to execute in the Julia Console
         """
         mod_work_dir = escape_backward_slashes(self.basedir)
+        mod_main_prgm = escape_backward_slashes(self.tool_specification.main_prgm)
         cmds = [f'cd("{mod_work_dir}");']
         if cmdline_args:
             fmt_cmdline_args = '["' + escape_backward_slashes('", "'.join(cmdline_args)) + '"]'
             cmds += [f"empty!(ARGS); append!(ARGS, {fmt_cmdline_args});"]
-        cmds += [f'include("{self.tool_specification.main_prgm}")']
+        cmds += [f'include("{mod_main_prgm}")']
         return cmds
 
     def make_sysimage_arg(self):

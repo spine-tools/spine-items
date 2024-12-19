@@ -257,7 +257,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         new_spec_dict = {"name": spec_name, "description": self._spec_toolbar.description(), "tooltype": toolspectype}
         if not main_program_file:
             main_prgm_file_name = ""
-            self.includes_main_path = None
+            if self.has_root_directory():
+                self.includes_main_path = self.item.root_dir
+            else:
+                self.includes_main_path = None
         elif self.has_root_directory():
             main_prgm_file_name = os.path.relpath(main_program_file, self.item.root_dir)
             self.includes_main_path = self.item.root_dir
