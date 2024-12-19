@@ -470,7 +470,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         file_path = index.data(Qt.ItemDataRole.UserRole)
         # Main program file items have their full path as UserRole data, additional
         # program file items have only their file name as UserRole data
-        if self.has_root_directory() and os.path.exists(file_path) and os.path.samefile(self._current_main_program_file(), file_path):
+        if (
+            self.has_root_directory()
+            and os.path.exists(file_path)
+            and os.path.samefile(self._current_main_program_file(), file_path)
+        ):
             name = os.path.relpath(file_path, self.item.root_dir)
         else:
             name = os.path.basename(file_path)
@@ -895,8 +899,8 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             document = self._programfile_documents[file_path] = QTextDocument(self)
             document.setPlainText(text)
             document.setModified(False)
-            slot = self._programfile_set_dirty_slots[file_path] = (
-                lambda dirty, ind=index: self._set_program_file_dirty(ind, dirty)
+            slot = self._programfile_set_dirty_slots[file_path] = lambda dirty, ind=index: self._set_program_file_dirty(
+                ind, dirty
             )
             document.modificationChanged.connect(slot)
             document.modificationChanged.connect(self._update_window_modified)
@@ -919,9 +923,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def browse_main_program_file(self, _=False):
         """Opens a file dialog where user can select the path of the main program file."""
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileName(
-            self, "Select existing main program file", self._start_dir(), "*.*"
-        )
+        answer = QFileDialog.getOpenFileName(self, "Select existing main program file", self._start_dir(), "*.*")
         file_path = answer[0]
         existing_file_paths = [
             os.path.join(self.includes_main_path, i)
