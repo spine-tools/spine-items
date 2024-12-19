@@ -268,11 +268,12 @@ class GAMSTool(ToolSpecification):
             outputfiles,
             cmdline_args,
         )
-        main_file = includes[0]
+        main_file_path = includes[0]
         # Add .lst file to list of output files
+        subdir, main_file = os.path.split(main_file_path)
         self.lst_file = os.path.splitext(main_file)[0] + ".lst"
         self.outputfiles.add(self.lst_file)
-        self.main_prgm = main_file
+        self.main_prgm = main_file_path
         self.gams_options = OrderedDict()
         self.return_codes = {
             0: "Normal return",
