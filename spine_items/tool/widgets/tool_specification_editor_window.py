@@ -922,8 +922,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     @Slot(bool)
     def browse_main_program_file(self, _=False):
         """Opens a file dialog where user can select the path of the main program file."""
+        filter = self._get_filetype_filter()
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileName(self, "Select existing main program file", self._start_dir(), "*.*")
+        answer = QFileDialog.getOpenFileName(self, "Select existing main program file", self._start_dir(), filter)
         file_path = answer[0]
         existing_file_paths = [
             os.path.join(self.includes_main_path, i)
@@ -949,8 +950,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     @Slot(bool)
     def new_main_program_file(self, _=False):
         """Creates a new blank main program file."""
+        filter = self._get_filetype_filter()
         # noinspection PyCallByClass
-        answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._start_dir())
+        answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._start_dir(), filter)
         file_path = answer[0]
         existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if not file_path:  # Cancel button clicked
@@ -1041,6 +1043,18 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def add_dropped_program_files(self, file_paths):
         """Adds dropped file paths to Source files list."""
         self.add_program_files(*file_paths)
+
+    def _get_filetype_filter(self):
+        """Returns a filter for the QFileDialog based on the selected tool spec type."""
+        tooltype = self.spec_dict.get("tooltype", "")
+        if tooltype == "python":
+            return "Python (*.py);;*.*"
+        elif tooltype == "julia":
+            return "Julia (*.jl);;*.*"
+        elif tooltype == "gams":
+            return "Gams (*.gms);;*.*"
+        else:
+            return "*.*"
 
     def _validate_additional_program_files(self, new_files, old_program_files):
         valid_files = []
