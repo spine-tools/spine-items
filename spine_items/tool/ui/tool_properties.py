@@ -40,7 +40,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(312, 603)
+        Form.resize(312, 612)
         Form.setStyleSheet(u"QScrollArea { background: transparent; }\n"
 "QScrollArea > QWidget > QWidget { background: transparent; }")
         self.verticalLayout = QVBoxLayout(Form)
@@ -53,15 +53,16 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 312, 603))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 312, 612))
         self.scrollAreaWidgetContents.setAutoFillBackground(False)
         self.verticalLayout_3 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_9 = QHBoxLayout()
-        self.horizontalLayout_9.setSpacing(4)
+        self.horizontalLayout_9.setSpacing(6)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
+        self.horizontalLayout_9.setContentsMargins(-1, -1, -1, 6)
         self.label_tool_specification = QLabel(self.scrollAreaWidgetContents)
         self.label_tool_specification.setObjectName(u"label_tool_specification")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -97,6 +98,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_options = QHBoxLayout()
         self.horizontalLayout_options.setObjectName(u"horizontalLayout_options")
+        self.horizontalLayout_options.setContentsMargins(-1, 0, -1, 6)
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_options)
 
@@ -168,13 +170,14 @@ class Ui_Form(object):
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.frame)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.label_2 = QLabel(self.frame)
         self.label_2.setObjectName(u"label_2")
 
-        self.verticalLayout_2.addWidget(self.label_2)
+        self.horizontalLayout.addWidget(self.label_2)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.radioButton_execute_in_source = QRadioButton(self.frame)
         self.radioButton_execute_in_source.setObjectName(u"radioButton_execute_in_source")
 
@@ -189,20 +192,47 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.label = QLabel(self.frame)
+        self.label.setObjectName(u"label")
+
+        self.verticalLayout_2.addWidget(self.label)
+
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.lineEdit_root_directory = QLineEdit(self.frame)
+        self.lineEdit_root_directory.setObjectName(u"lineEdit_root_directory")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.lineEdit_root_directory.sizePolicy().hasHeightForWidth())
+        self.lineEdit_root_directory.setSizePolicy(sizePolicy3)
+        self.lineEdit_root_directory.setClearButtonEnabled(True)
+
+        self.horizontalLayout_3.addWidget(self.lineEdit_root_directory)
+
+        self.toolButton_browse_root_directory = QToolButton(self.frame)
+        self.toolButton_browse_root_directory.setObjectName(u"toolButton_browse_root_directory")
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.toolButton_browse_root_directory.setIcon(icon3)
+
+        self.horizontalLayout_3.addWidget(self.toolButton_browse_root_directory)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
+
         self.label_group_id = QLabel(self.frame)
         self.label_group_id.setObjectName(u"label_group_id")
 
-        self.horizontalLayout_2.addWidget(self.label_group_id)
+        self.verticalLayout_2.addWidget(self.label_group_id)
 
         self.lineEdit_group_id = QLineEdit(self.frame)
         self.lineEdit_group_id.setObjectName(u"lineEdit_group_id")
+        sizePolicy3.setHeightForWidth(self.lineEdit_group_id.sizePolicy().hasHeightForWidth())
+        self.lineEdit_group_id.setSizePolicy(sizePolicy3)
+        self.lineEdit_group_id.setClearButtonEnabled(True)
 
-        self.horizontalLayout_2.addWidget(self.lineEdit_group_id)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_2.addWidget(self.lineEdit_group_id)
 
         self.label_jupyter = ElidedLabel(self.frame)
         self.label_jupyter.setObjectName(u"label_jupyter")
@@ -224,9 +254,6 @@ class Ui_Form(object):
         self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
         self.pushButton_tool_results = QPushButton(self.frame)
         self.pushButton_tool_results.setObjectName(u"pushButton_tool_results")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.pushButton_tool_results.sizePolicy().hasHeightForWidth())
         self.pushButton_tool_results.setSizePolicy(sizePolicy3)
 
@@ -253,9 +280,13 @@ class Ui_Form(object):
         QWidget.setTabOrder(self.toolButton_remove_arg, self.treeView_input_files)
         QWidget.setTabOrder(self.treeView_input_files, self.radioButton_execute_in_source)
         QWidget.setTabOrder(self.radioButton_execute_in_source, self.radioButton_execute_in_work)
-        QWidget.setTabOrder(self.radioButton_execute_in_work, self.lineEdit_group_id)
+        QWidget.setTabOrder(self.radioButton_execute_in_work, self.lineEdit_root_directory)
+        QWidget.setTabOrder(self.lineEdit_root_directory, self.toolButton_browse_root_directory)
+        QWidget.setTabOrder(self.toolButton_browse_root_directory, self.lineEdit_group_id)
         QWidget.setTabOrder(self.lineEdit_group_id, self.kill_consoles_check_box)
         QWidget.setTabOrder(self.kill_consoles_check_box, self.log_process_output_check_box)
+        QWidget.setTabOrder(self.log_process_output_check_box, self.pushButton_tool_results)
+        QWidget.setTabOrder(self.pushButton_tool_results, self.scrollArea)
 
         self.retranslateUi(Form)
 
@@ -280,8 +311,11 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.toolButton_add_file_path_arg.setText("")
         self.label_2.setText(QCoreApplication.translate("Form", u"Execute in", None))
-        self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source directory", None))
-        self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work directory", None))
+        self.radioButton_execute_in_source.setText(QCoreApplication.translate("Form", u"Source dir", None))
+        self.radioButton_execute_in_work.setText(QCoreApplication.translate("Form", u"Work dir", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Source code root directory:", None))
+        self.lineEdit_root_directory.setText("")
+        self.lineEdit_root_directory.setPlaceholderText(QCoreApplication.translate("Form", u"Root directory path...", None))
         self.label_group_id.setText(QCoreApplication.translate("Form", u"Reuse console id:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_group_id.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Enter an id for sharing a console with other Tools in this project. Leave empty to run this Tool in isolation.</p></body></html>", None))
