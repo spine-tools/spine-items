@@ -190,7 +190,7 @@ class TestToolExecutable(unittest.TestCase):
         self.assertEqual(len(logs), 1)
         with open(logs[0], "r") as f:
             lines = f.readlines()
-        expected_lines = [
+        expected_stdout = [
             "### Spine execution log file\n",
             "### Item name: Logs stuff\n",
             "### Filter id: \n",
@@ -198,13 +198,26 @@ class TestToolExecutable(unittest.TestCase):
             "\n",
             "# Running python script.py\n",
             "hello\n",
-            "Traceback (most recent call last):\n",
-            '  File "<stdin>", line 3, in <module>\n',
-            '  File "script.py", line 2, in <module>\n',
-            "    raise ValueError('foo')\n",
-            "ValueError: foo\n",
         ]
-        self.assertCountEqual(lines, expected_lines)
+        if sys.version_info.minor < 13:
+            expected_stderr = [
+                "Traceback (most recent call last):\n",
+                '  File "<stdin>", line 3, in <module>\n',
+                '  File "script.py", line 2, in <module>\n',
+                "    raise ValueError('foo')\n",
+                "ValueError: foo\n",
+            ]
+        else:
+            expected_stderr = [
+                "Traceback (most recent call last):\n",
+                '  File "<stdin>", line 3, in <module>\n',
+                "    with open('script.py', 'rb') as f: exec(compile(f.read(), 'script.py', 'exec'), globals_dict, globals_dict)\n",
+                "                                       ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+                '  File "script.py", line 2, in <module>\n',
+                "    raise ValueError('foo')\n",
+                "ValueError: foo\n",
+            ]
+        self.assertCountEqual(lines, expected_stdout + expected_stderr)
         kill_persistent_processes()
 
     def test_find_optional_input_files_without_wildcards(self):
