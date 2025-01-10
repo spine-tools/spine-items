@@ -34,6 +34,7 @@ class TestImportEditorWindow(unittest.TestCase):
         toolbox.qsettings = mock.MagicMock(return_value=QSettings(toolbox))
         toolbox.restore_and_activate = mock.MagicMock()
         widget = ImportEditorWindow(toolbox, spec)
+        QApplication.processEvents()  # Let QTimer call ImportEditorWindow.start_ui().
         widget._app_settings = mock.NonCallableMagicMock()
         widget.close()
         widget._app_settings.beginGroup.assert_called_once_with("mappingPreviewWindow")

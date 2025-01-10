@@ -23,7 +23,7 @@ from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.importer_specification import ImporterSpecification
 from spine_items.importer.item_info import ItemInfo
-from ..mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
+from tests.mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
 
 
 class TestImporter(unittest.TestCase):

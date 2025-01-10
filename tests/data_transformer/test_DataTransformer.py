@@ -24,7 +24,7 @@ from spine_items.data_transformer.filter_config_path import filter_config_path
 from spine_items.data_transformer.item_info import ItemInfo
 from spine_items.data_transformer.settings import EntityClassRenamingSettings
 from spinedb_api import append_filter_config
-from ..mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
+from tests.mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
 
 
 class TestDataTransformer(unittest.TestCase):

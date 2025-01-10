@@ -14,8 +14,8 @@
 import fnmatch
 import json
 import os
-from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal, Slot
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QListWidget, QVBoxLayout
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Signal, Slot
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QListWidget, QMessageBox, QVBoxLayout
 from spinedb_api.helpers import remove_credentials_from_url
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVConnector
@@ -38,6 +38,18 @@ from ..mvcmodels.source_list_selection_model import SourceListSelectionModel
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
 from .import_sources import ImportSources
+
+
+class _ConnectorProblemInMapping(Exception):
+    """Raised when mapping has no connector or the connector looks different to file type."""
+
+    def __init__(self, connector_in_mapping):
+        """
+        Args:
+            connector_in_mapping (type, optional): connector class defined in mapping
+        """
+        self.connector_in_mapping = connector_in_mapping
+
 
 _CONNECTOR_NAME_TO_CLASS = {
     klass.__name__: klass
@@ -106,7 +118,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self.connection_failed.connect(self.show_error)
         self._import_sources.preview_data_updated.connect(self._import_mapping_options.set_num_available_columns)
         self._mappings_model.restore(self.specification.mapping if self.specification is not None else {})
-        self.start_ui()
+        QTimer.singleShot(0, self.start_ui)
 
     def is_file_less(self):
         return not self._ui.source_line_edit.text()
@@ -208,26 +220,26 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self.start_ui()
 
     def _get_connector_from_mapping(self, source):
-        """Guesses connector for given source.
+        """Reads connector for given source from mapping.
 
         Args:
             source (str): importee file path or URL
 
         Returns:
-            type: connector class, or None if no suitable connector was found
+            type: connector class
         """
         if not self.specification:
-            return None
+            raise _ConnectorProblemInMapping(None)
         mapping = self.specification.mapping
         source_type = mapping.get("source_type")
         if source_type is None:
-            return None
+            raise _ConnectorProblemInMapping(None)
         connector = _CONNECTOR_NAME_TO_CLASS[source_type]
         file_extensions = connector.FILE_EXTENSIONS.split(";;")
         if source != self._FILE_LESS and not any(fnmatch.fnmatch(source, ext) for ext in file_extensions):
             if connector is SqlAlchemyConnector and self._is_url(source):
                 return connector
-            return None
+            raise _ConnectorProblemInMapping(connector)
         return connector
 
     @Slot()
@@ -263,9 +275,16 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     def start_ui(self):
         """Connects to source and fills the tables and lists with data."""
-        connector = self._get_connector_from_mapping(self._source)
-        if connector is None:
-            # Ask user
+        try:
+            connector = self._get_connector_from_mapping(self._source)
+        except _ConnectorProblemInMapping as connector_problem:
+            if connector_problem.connector_in_mapping is not None:
+                QMessageBox.warning(
+                    self,
+                    "Verify source type",
+                    f"Source type is set to {connector_problem.connector_in_mapping.DISPLAY_NAME} but the source looks incompatible. "
+                    "You will be prompted to verify the type.",
+                )
             connector = self._get_connector(self._source)
             if not connector:
                 return
@@ -275,6 +294,17 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
                 self._ui.source_line_edit.clear()
                 self._source = self._FILE_LESS
                 self._source_extras = None
+            if (
+                connector_problem.connector_in_mapping is not None
+                and connector is not connector_problem.connector_in_mapping
+            ):
+                QMessageBox.information(
+                    self,
+                    "Source type changed",
+                    f"Source type changed from {connector_problem.connector_in_mapping.DISPLAY_NAME} to {connector.DISPLAY_NAME}. "
+                    "Don't forget to save the changes.",
+                )
+                self._undo_stack.resetClean()
         connector_name = connector.__name__
         if self._is_database_connector(connector):
             self._ui.source_label.setText("URL:")
