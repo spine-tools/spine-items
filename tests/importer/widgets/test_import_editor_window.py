@@ -48,6 +48,7 @@ class TestImportEditorWindow(unittest.TestCase):
         with mock.patch("spine_items.importer.widgets.import_editor_window.QDialog.exec") as exec_dialog:
             exec_dialog.return_value = QDialog.DialogCode.Accepted
             editor = ImportEditorWindow(self._toolbox, None)
+            QApplication.processEvents()  # Let QTimer call ImportEditorWindow.start_ui()
             exec_dialog.assert_called_once()
             exec_dialog.reset_mock()
             connector = editor._get_connector("mysql://server.com/db")

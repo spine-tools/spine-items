@@ -26,7 +26,7 @@ from spine_items.exporter.specification import OutputFormat, Specification
 from spine_items.utils import database_label
 from spinedb_api import create_new_spine_database
 from spinetoolbox.project_item.logging_connection import LoggingConnection
-from ..mock_helpers import (
+from tests.mock_helpers import (
     clean_up_toolbox,
     create_mock_project,
     create_mock_toolbox,
