@@ -334,7 +334,7 @@ class DataStore(ProjectItem):
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
         if sa_url is None:
             return
-        sa_url.password = None
+        sa_url = sa_url.set(password=None)
         QApplication.clipboard().setText(str(sa_url))
         self._logger.msg.emit(f"Database url <b>{sa_url}</b> copied to clipboard")
 
