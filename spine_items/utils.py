@@ -85,12 +85,12 @@ def _convert_url(url):
             database = url.get("database", "")
             if database:
                 url["database"] = os.path.normcase(os.path.abspath(database))
-            return URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
+            return URL.create("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
         db_api = spinedb_api.SUPPORTED_DIALECTS.get(dialect)
         if db_api is None:
             db_api = spinedb_api.helpers.UNSUPPORTED_DIALECTS[dialect]
         driver_name = f"{dialect}+{db_api}"
-        return URL(driver_name, **url)  # pylint: disable=unexpected-keyword-arg
+        return URL.create(driver_name, **url)  # pylint: disable=unexpected-keyword-arg
     except Exception as error:
         raise URLError(str(error)) from error
 

@@ -43,6 +43,7 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         editor = SpecificationEditorWindow(self._toolbox)
         self.assertEqual(editor._ui.mappings_table.model().rowCount(), 1)
         self.assertEqual(editor._ui.mappings_table.model().index(0, 0).data(), "Mapping (1)")
+        editor.tear_down()
 
     def test_mapping_in_table_name_position_disables_fixed_table_name_widgets(self):
         editor = SpecificationEditorWindow(self._toolbox)
@@ -57,6 +58,11 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         self.assertFalse(editor._ui.fix_table_name_check_box.isChecked())
         self.assertFalse(editor._ui.fix_table_name_line_edit.isEnabled())
         self.assertEqual(editor._ui.fix_table_name_line_edit.text(), "")
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase.tear_down"
+        ) as tear_down_window:
+            tear_down_window.return_value = True
+            editor.tear_down()
 
     def test_mapping_with_fixed_table_enables_the_check_box_and_fills_the_table_name_field(self):
         flattened_mappings = [FixedValueMapping(Position.table_name, "nice table name"), EntityClassMapping(0)]
@@ -69,6 +75,7 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         self.assertTrue(editor._ui.fix_table_name_check_box.isChecked())
         self.assertTrue(editor._ui.fix_table_name_line_edit.isEnabled())
         self.assertEqual(editor._ui.fix_table_name_line_edit.text(), "nice table name")
+        editor.tear_down()
 
     def test_duplicate_specification(self):
         flattened_mappings = [FixedValueMapping(Position.table_name, "nice table name"), EntityClassMapping(0)]
@@ -96,6 +103,11 @@ class TestSpecificationEditorWindow(unittest.TestCase):
                 show_duplicate.call_args.args[1].mapping_specifications()["my mappings"], mapping_specification
             )
             self.assertEqual(show_duplicate.call_args.kwargs, {})
+        with mock.patch(
+            "spinetoolbox.project_item.specification_editor_window.SpecificationEditorWindowBase.tear_down"
+        ) as tear_down_window:
+            tear_down_window.return_value = True
+            editor.tear_down()
 
     def test_forced_decrease_of_selected_dimension_by_entity_dimensions_is_stored_properly(self):
         mapping_dicts = [
@@ -143,6 +155,7 @@ class TestSpecificationEditorWindow(unittest.TestCase):
             {"map_type": "ParameterValue", "position": 5},
         ]
         self.assertEqual(loaded_specification.mapping_specifications()["my mappings"].to_dict()["root"], expected_dicts)
+        editor.tear_down()
 
 
 if __name__ == "__main__":
