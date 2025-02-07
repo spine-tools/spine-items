@@ -284,7 +284,7 @@ class View(ProjectItem):
             elif resource.type_ == "file":
                 filepath = resource.path
                 if os.path.splitext(filepath)[1] == ".sqlite":
-                    url = URL("sqlite", database=filepath)
+                    url = URL.create("sqlite", database=filepath)
                     self._references[resource.label] = url
         self.populate_reference_list()
 
