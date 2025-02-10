@@ -12,8 +12,9 @@
 
 """Animation class for importers and exporters."""
 from PySide6.QtCore import QLineF, QObject, QPointF, QRectF, Qt, QTimeLine, Signal, Slot
-from PySide6.QtGui import QFont, QFontMetrics, QPainterPath, QColor
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainterPath
 from PySide6.QtWidgets import QGraphicsPathItem
+from spinetoolbox.font import TOOLBOX_FONT
 from spinetoolbox.helpers import color_from_index
 
 
@@ -35,7 +36,7 @@ class ImporterExporterAnimation:
         self._loop_aspect_ratio = loop_aspect_ratio
         self._loop_width = loop_width
         self._loop_height = loop_width / loop_aspect_ratio
-        self._font = QFont("Font Awesome 5 Free Solid")
+        self._font = QFont(TOOLBOX_FONT.family)
         self._font.setPixelSize(pixel_size)
         self.time_line = QTimeLine()
         self.time_line.setDuration(duration)

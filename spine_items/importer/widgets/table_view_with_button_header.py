@@ -40,6 +40,7 @@ from spinedb_api.import_mapping.type_conversion import (
     value_to_convert_spec,
 )
 from spinedb_api.spine_io.importers.reader import TYPE_STRING_TO_CLASS
+from spinetoolbox.font import TOOLBOX_FONT
 from spinetoolbox.helpers import CharIconEngine
 from ..commands import SetColumnOrRowType
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
@@ -229,7 +230,7 @@ class HeaderWithButton(QHeaderView):
         self.setDefaultAlignment(Qt.AlignLeft)
         self.sectionResized.connect(self._section_resize)
         self.sectionMoved.connect(self._section_move)
-        self._font = QFont("Font Awesome 5 Free Solid")
+        self._font = QFont(TOOLBOX_FONT.family)
 
         self._display_all = True
         self._display_sections = []
