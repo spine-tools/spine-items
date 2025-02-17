@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 512 810"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="filter-junction.svg"
+   xml:space="preserve"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   width="512"
+   height="810"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.23709318"
+     inkscape:cx="145.51241"
+     inkscape:cy="141.29466"
+     inkscape:window-width="1812"
+     inkscape:window-height="1057"
+     inkscape:window-x="100"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" /><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path
+     d="M 3.9,54.9 C 10.5,40.9 24.5,32 40,32 h 432 c 15.5,0 29.5,8.9 36.1,22.9 6.6,14 4.6,30.5 -5.2,42.5 L 320,320.9 V 448 c 0,12.1 -6.8,23.2 -17.7,28.6 -10.9,5.4 -23.8,4.3 -33.5,-3 l -64,-48 C 196.7,419.6 192,410.1 192,400 V 320.9 L 9,97.3 C -0.7,85.4 -2.8,68.8 3.9,54.9 Z"
+     id="path1" /><path
+     d="m 111.97525,687.96102 c 13.25484,0 23.99999,10.74517 23.99999,24 0,13.25484 -10.74515,24 -23.99999,24 -13.254831,0 -23.999981,-10.74516 -23.999981,-24 0,-13.25483 10.74515,-24 23.999981,-24 z m 112,-254.7 v 70.7 h -48 c -53,0 -95.999991,43 -95.999991,96 v 38.7 c -28.3,12.3 -48,40.5 -48,73.3 0,44.2 35.8,80 79.999991,80 44.2,0 80,-35.8 80,-80 0,-32.8 -19.7,-61 -48,-73.3 v -38.7 c 0,-17.7 14.3,-32 32,-32 h 160 c 17.7,0 32,14.3 32,32 v 38.7 c -28.3,12.3 -48,40.5 -48,73.3 0,44.2 35.8,80 80,80 44.20001,0 80.00001,-35.8 80.00001,-80 0,-32.8 -19.7,-61 -48,-73.3 v -38.7 c 0,-53 -43.00001,-96 -96.00001,-96 h -48 v -70.7 m 112,254.7 c 13.25485,0 23.99999,10.74517 23.99999,24 0,13.25484 -10.74514,24 -23.99999,24 -13.25484,0 -23.99999,-10.74516 -23.99999,-24 0,-13.25483 10.74515,-24 23.99999,-24 z"
+     id="path2"
+     sodipodi:nodetypes="sssssccsscssscsssscssscssccsssss" /></svg>

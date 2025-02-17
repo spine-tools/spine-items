@@ -683,8 +683,13 @@ class Tool(DBWriterItemBase):
             )
         elif source_item.item_type() == "Exporter":
             self._logger.msg.emit(
-                f"Link established. The file exported by <b>{source_item.name}</b> are now "
+                f"Link established. The files exported by <b>{source_item.name}</b> are now "
                 f"available in <b>{self.name}</b>."
+            )
+        elif source_item.item_type() == "Filter Junction":
+            self._logger.msg.emit(
+                f"Link established. Upstream resources will be passed through <b>{source_item.name}</b> "
+                f"to Tool <b>{self.name}</b> when executing."
             )
         elif source_item.item_type() in ["Data Transformer", "Tool"]:
             self._logger.msg.emit("Link established")

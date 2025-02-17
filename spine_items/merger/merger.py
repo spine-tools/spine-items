@@ -132,8 +132,8 @@ class Merger(DBWriterItemBase):
 
     def notify_destination(self, source_item):
         """See base class."""
+        dst_ds_names = ", ".join(x.name for x in self.successor_data_stores())
         if source_item.item_type() == "Data Store":
-            dst_ds_names = ", ".join(x.name for x in self.successor_data_stores())
             if dst_ds_names:
                 self._logger.msg.emit(
                     "Link established. "
@@ -141,5 +141,10 @@ class Merger(DBWriterItemBase):
                 )
             else:
                 self._logger.msg.emit("Link established. " f"<b>{self.name} is missing output database, though.</b>")
+        elif source_item.item_type() == "Filter Junction":
+            self._logger.msg.emit(
+                f"Link established. Upstream Data Stores from <b>{source_item.name}</b> "
+                f"will be merged into <b>{dst_ds_names}</b> upon execution."
+            )
         else:
             super().notify_destination(source_item)

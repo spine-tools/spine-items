@@ -543,6 +543,11 @@ class Exporter(ProjectItem):
                 f"Link established. You can now export the database transformed by <b>{source_item.name}</b> "
                 f"in <b>{self.name}</b>."
             )
+        elif source_item.item_type() == "Filter Junction":
+            self._logger.msg.emit(
+                f"Link established. You can now export databases connected to <b>{source_item.name}</b> "
+                f"in <b>{self.name}</b>."
+            )
         else:
             super().notify_destination(source_item)
 

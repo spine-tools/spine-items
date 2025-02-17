@@ -120,6 +120,11 @@ class DataTransformer(ProjectItem):
                 "Link established. You can now define additional transformations "
                 f"in Data Transformer <b>{self.name}</b>."
             )
+        elif source_item.item_type() == "Filter Junction":
+            self._logger.msg.emit(
+                f"Link established. You can now define transformations for Data Stores connected to "
+                f"<b>{source_item.name} in <b>{self.name}</b>."
+            )
         else:
             super().notify_destination(source_item)
 

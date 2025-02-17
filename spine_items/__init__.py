@@ -15,13 +15,14 @@ from .version import __version__
 
 
 def _factories_and_executable_items():
-    from . import data_connection, data_store, data_transformer, exporter, importer, merger, tool, view
+    from . import data_connection, data_store, data_transformer, exporter, filter_junction, importer, merger, tool, view
     from .data_connection.data_connection_factory import DataConnectionFactory
     from .data_store.data_store_factory import DataStoreFactory
     from .data_transformer import specification_factory
     from .data_transformer.data_transformer_factory import DataTransformerFactory
     from .exporter import specification_factory
     from .exporter.exporter_factory import ExporterFactory
+    from .filter_junction.filter_junction_factory import FilterJunctionFactory
     from .importer import specification_factory
     from .importer.importer_factory import ImporterFactory
     from .merger.merger_factory import MergerFactory
@@ -29,13 +30,14 @@ def _factories_and_executable_items():
     from .tool.tool_factory import ToolFactory
     from .view.view_factory import ViewFactory
 
-    modules = (data_connection, data_store, data_transformer, exporter, importer, merger, tool, view)
+    modules = (data_connection, data_store, data_transformer, exporter, filter_junction, importer, merger, tool, view)
     item_infos = tuple(module.item_info.ItemInfo for module in modules)
     factories = (
         DataConnectionFactory,
         DataStoreFactory,
         DataTransformerFactory,
         ExporterFactory,
+        FilterJunctionFactory,
         ImporterFactory,
         MergerFactory,
         ToolFactory,

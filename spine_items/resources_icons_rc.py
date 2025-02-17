@@ -3031,6 +3031,158 @@ h-112v52.706c20.\
 ll:#f39619;strok\
 e-width:1.8855\x22/\
 ></svg>\x0d\x0a\
+\x00\x00\x09[\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22UTF\
+-8\x22 standalone=\x22\
+no\x22?>\x0a<svg\x0a   vi\
+ewBox=\x220 0 512 8\
+10\x22\x0a   version=\x22\
+1.1\x22\x0a   id=\x22svg1\
+\x22\x0a   sodipodi:do\
+cname=\x22filter-ju\
+nction.svg\x22\x0a   x\
+ml:space=\x22preser\
+ve\x22\x0a   inkscape:\
+version=\x221.3.2 (\
+091e20e, 2023-11\
+-25, custom)\x22\x0a  \
+ width=\x22512\x22\x0a   \
+height=\x22810\x22\x0a   \
+xmlns:inkscape=\x22\
+http://www.inksc\
+ape.org/namespac\
+es/inkscape\x22\x0a   \
+xmlns:sodipodi=\x22\
+http://sodipodi.\
+sourceforge.net/\
+DTD/sodipodi-0.d\
+td\x22\x0a   xmlns=\x22ht\
+tp://www.w3.org/\
+2000/svg\x22\x0a   xml\
+ns:svg=\x22http://w\
+ww.w3.org/2000/s\
+vg\x22><defs\x0a     i\
+d=\x22defs1\x22 /><sod\
+ipodi:namedview\x0a\
+     id=\x22namedvi\
+ew1\x22\x0a     pageco\
+lor=\x22#ffffff\x22\x0a  \
+   bordercolor=\x22\
+#000000\x22\x0a     bo\
+rderopacity=\x220.2\
+5\x22\x0a     inkscape\
+:showpageshadow=\
+\x222\x22\x0a     inkscap\
+e:pageopacity=\x220\
+.0\x22\x0a     inkscap\
+e:pagecheckerboa\
+rd=\x220\x22\x0a     inks\
+cape:deskcolor=\x22\
+#d1d1d1\x22\x0a     in\
+kscape:zoom=\x220.2\
+3709318\x22\x0a     in\
+kscape:cx=\x22145.5\
+1241\x22\x0a     inksc\
+ape:cy=\x22141.2946\
+6\x22\x0a     inkscape\
+:window-width=\x221\
+812\x22\x0a     inksca\
+pe:window-height\
+=\x221057\x22\x0a     ink\
+scape:window-x=\x22\
+100\x22\x0a     inksca\
+pe:window-y=\x22-8\x22\
+\x0a     inkscape:w\
+indow-maximized=\
+\x221\x22\x0a     inkscap\
+e:current-layer=\
+\x22svg1\x22 /><!--!Fo\
+nt Awesome Free \
+6.7.2 by @fontaw\
+esome - https://\
+fontawesome.com \
+License - https:\
+//fontawesome.co\
+m/license/free C\
+opyright 2025 Fo\
+nticons, Inc.-->\
+<path\x0a     d=\x22M \
+3.9,54.9 C 10.5,\
+40.9 24.5,32 40,\
+32 h 432 c 15.5,\
+0 29.5,8.9 36.1,\
+22.9 6.6,14 4.6,\
+30.5 -5.2,42.5 L\
+ 320,320.9 V 448\
+ c 0,12.1 -6.8,2\
+3.2 -17.7,28.6 -\
+10.9,5.4 -23.8,4\
+.3 -33.5,-3 l -6\
+4,-48 C 196.7,41\
+9.6 192,410.1 19\
+2,400 V 320.9 L \
+9,97.3 C -0.7,85\
+.4 -2.8,68.8 3.9\
+,54.9 Z\x22\x0a     id\
+=\x22path1\x22 /><path\
+\x0a     d=\x22m 111.9\
+7525,687.96102 c\
+ 13.25484,0 23.9\
+9999,10.74517 23\
+.99999,24 0,13.2\
+5484 -10.74515,2\
+4 -23.99999,24 -\
+13.254831,0 -23.\
+999981,-10.74516\
+ -23.999981,-24 \
+0,-13.25483 10.7\
+4515,-24 23.9999\
+81,-24 z m 112,-\
+254.7 v 70.7 h -\
+48 c -53,0 -95.9\
+99991,43 -95.999\
+991,96 v 38.7 c \
+-28.3,12.3 -48,4\
+0.5 -48,73.3 0,4\
+4.2 35.8,80 79.9\
+99991,80 44.2,0 \
+80,-35.8 80,-80 \
+0,-32.8 -19.7,-6\
+1 -48,-73.3 v -3\
+8.7 c 0,-17.7 14\
+.3,-32 32,-32 h \
+160 c 17.7,0 32,\
+14.3 32,32 v 38.\
+7 c -28.3,12.3 -\
+48,40.5 -48,73.3\
+ 0,44.2 35.8,80 \
+80,80 44.20001,0\
+ 80.00001,-35.8 \
+80.00001,-80 0,-\
+32.8 -19.7,-61 -\
+48,-73.3 v -38.7\
+ c 0,-53 -43.000\
+01,-96 -96.00001\
+,-96 h -48 v -70\
+.7 m 112,254.7 c\
+ 13.25485,0 23.9\
+9999,10.74517 23\
+.99999,24 0,13.2\
+5484 -10.74514,2\
+4 -23.99999,24 -\
+13.25484,0 -23.9\
+9999,-10.74516 -\
+23.99999,-24 0,-\
+13.25483 10.7451\
+5,-24 23.99999,-\
+24 z\x22\x0a     id=\x22p\
+ath2\x22\x0a     sodip\
+odi:nodetypes=\x22s\
+ssssccsscssscsss\
+scssscssccsssss\x22\
+ /></svg>\x0a\
 "
 
 qt_resource_name = b"\
@@ -3195,6 +3347,11 @@ qt_resource_name = b"\
 \x0e\xea\x93\x07\
 \x00g\
 \x00a\x00m\x00s\x00-\x00l\x00o\x00g\x00o\x00.\x00s\x00v\x00g\
+\x00\x13\
+\x0c\x9f}\xa7\
+\x00f\
+\x00i\x00l\x00t\x00e\x00r\x00-\x00j\x00u\x00n\x00c\x00t\x00i\x00o\x00n\x00.\x00s\
+\x00v\x00g\
 "
 
 qt_resource_struct = b"\
@@ -3216,7 +3373,7 @@ qt_resource_struct = b"\
 \x00\x00\x01\x8aF\x12\x1c\xe1\
 \x00\x00\x00\x5c\x00\x00\x00\x00\x00\x01\x00\x00-\x06\
 \x00\x00\x01\x8aF\x12\x1c\xf2\
-\x00\x00\x00&\x00\x02\x00\x00\x00\x0d\x00\x00\x00\x1a\
+\x00\x00\x00&\x00\x02\x00\x00\x00\x0e\x00\x00\x00\x1a\
 \x00\x00\x00\x00\x00\x00\x00\x00\
 \x00\x00\x02\x84\x00\x00\x00\x00\x00\x01\x00\x00d\xd7\
 \x00\x00\x01\x8aF\x12\x1c\xe1\
@@ -3268,6 +3425,8 @@ qt_resource_struct = b"\
 \x00\x00\x01\x8aF\x12\x1c\xe1\
 \x00\x00\x03\xb8\x00\x00\x00\x00\x00\x01\x00\x00\x98\x02\
 \x00\x00\x01\x8aF\x12\x1c\xe1\
+\x00\x00\x04\xd6\x00\x00\x00\x00\x00\x01\x00\x00\xb7\x90\
+\x00\x00\x01\x95\x0b7)\xa1\
 \x00\x00\x03\x96\x00\x00\x00\x00\x00\x01\x00\x00\x93\x89\
 \x00\x00\x01\x94\xb2\x0c~\x0b\
 \x00\x00\x04\xb6\x00\x00\x00\x00\x00\x01\x00\x00\xb5R\

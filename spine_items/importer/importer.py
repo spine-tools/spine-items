@@ -319,7 +319,12 @@ class Importer(DBWriterItemBase):
                 f"<b>{source_item.name}</b> using <b>{self.name}</b>."
             )
         elif source_item.item_type() == "Data Store":
-            self._logger.msg.emit("Link established")
+            self._logger.msg.emit("Link established.")
+        elif source_item.item_type() == "Filter Junction":
+            self._logger.msg.emit(
+                f"Link established. You can define mappings on data passed through <b>{source_item.name}</b> "
+                f"using <b>{self.name}</b>."
+            )
         else:
             super().notify_destination(source_item)
 

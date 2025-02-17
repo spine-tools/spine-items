@@ -338,6 +338,11 @@ class View(ProjectItem):
                 "Link established. You can visualize Data Store "
                 f"<b>{source_item.name}</b> in View <b>{self.name}</b>."
             )
+        elif source_item.item_type() == "Filter Junction":
+            self._logger.msg.emit(
+                f"Link established. Upstream Data Stores connected through <b>{source_item.name}</b> "
+                f"can now be visualized in View <b>{self.name}</b>."
+            )
         else:
             super().notify_destination(source_item)
 
