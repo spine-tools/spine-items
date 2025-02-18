@@ -32,8 +32,7 @@ class FilesContextMenu(CustomContextMenu):
         if not index.isValid():
             self.add_action("Open directory...")
         else:
-            self.add_action("Open import editor")
-            self.add_action("Select connector type")
+            self.add_action("Open import editor...")
             self.addSeparator()
             self.add_action("Open directory...")
 

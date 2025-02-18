@@ -37,7 +37,7 @@ class ConnectionManager(QObject):
     data_ready = Signal(list, list)
     """data from source is ready, should send list of data and headers  """
 
-    tables_ready = Signal(dict)
+    tables_ready = Signal(list)
     """tables from source is ready, should send a list of str of available tables  """
 
     default_mapping_ready = Signal(dict)
@@ -147,7 +147,6 @@ class ConnectionManager(QObject):
         # connect worker signals
         self._worker.connectionReady.connect(self._handle_connection_ready)
         self._worker.tablesReady.connect(self._handle_tables_ready)
-        self._worker.tablesReady[dict].connect(self._handle_tables_ready)
         self._worker.dataReady.connect(self.data_ready.emit)
         self._worker.defaultMappingReady.connect(self.default_mapping_ready.emit)
         self._worker.error.connect(self.error.emit)
@@ -166,26 +165,16 @@ class ConnectionManager(QObject):
         self._is_connected = True
         self.connection_ready.emit()
 
-    @Slot(list)
     @Slot(dict)
-    def _handle_tables_ready(self, table_options):
-        if isinstance(table_options, list):
-            table_options = {name: {} for name in table_options}
-
-        # save table options if they don't already exist
-        for key, table_settings in table_options.items():
-            options = table_settings.get("options", {})
-            if options is not None:
-                self._table_options.setdefault(key, options)
-            types = table_settings.get("types", {})
-            if types is not None:
-                self._table_types.setdefault(key, types)
-            row_types = table_settings.get("row_types", {})
-            if row_types is not None:
-                self._table_row_types.setdefault(key, row_types)
-
-        tables = {k: t.get("mapping", None) for k, t in table_options.items()}
-        self.tables_ready.emit(tables)
+    def _handle_tables_ready(self, table_properties):
+        for key, properties in table_properties.items():
+            if key not in self._table_options:
+                self._table_options[key] = properties.options
+            if key not in self._table_types:
+                self._table_types[key] = {}
+            if key not in self._table_row_types:
+                self._table_row_types[key] = {}
+        self.tables_ready.emit(list(table_properties))
         # update options if a sheet is selected
         if self._current_table in self._table_options:
             self.current_table_changed.emit()
@@ -278,7 +267,7 @@ class ConnectionWorker(QObject):
     """Signal with error message if something errors"""
     connectionReady = Signal()
     """Signal that connection is ready to be read"""
-    tablesReady = Signal((list,), (dict,))
+    tablesReady = Signal(dict)
     """Signal when tables from source is ready, a list of table names or dict mapping table name to table options."""
     dataReady = Signal(list, list)
     """Signal when data from a specific table in source is ready, list of data and list of headers"""
@@ -314,11 +303,8 @@ class ConnectionWorker(QObject):
     @Slot()
     def tables(self):
         try:
-            tables = self._connection.get_tables()
-            if isinstance(tables, list):
-                self.tablesReady.emit(tables)
-            else:
-                self.tablesReady[dict].emit(tables)
+            table_properties = self._connection.get_tables_and_properties()
+            self.tablesReady.emit(table_properties)
         except Exception as error:
             self.error.emit(f"Could not get tables from source: {error}")
 

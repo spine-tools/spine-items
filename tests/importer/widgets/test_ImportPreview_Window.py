@@ -16,7 +16,7 @@ from unittest import mock
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication, QWidget
 from spine_items.importer.widgets.import_editor_window import ImportEditorWindow
-from spinedb_api.spine_io.importers.csv_reader import CSVConnector
+from spinedb_api.spine_io.importers.csv_reader import CSVReader
 
 
 class TestImportEditorWindow(unittest.TestCase):
@@ -29,7 +29,7 @@ class TestImportEditorWindow(unittest.TestCase):
         spec = mock.NonCallableMagicMock()
         spec.name = "spec_name"
         spec.description = "spec_desc"
-        spec.mapping = {"source_type": CSVConnector.__name__}
+        spec.mapping = {"source_type": CSVReader.__name__}
         toolbox = QWidget()
         toolbox.qsettings = mock.MagicMock(return_value=QSettings(toolbox))
         toolbox.restore_and_activate = mock.MagicMock()

@@ -23,7 +23,7 @@ class ImporterSpecification(ProjectItemSpecification):
         Args:
             name (str): specification's name
             mapping (dict): mapping dict
-            description (str): specification's description
+            description (str, optional): specification's description
         """
         super().__init__(name, description, ItemInfo.item_type())
         self._mapping = mapping
@@ -60,4 +60,13 @@ class ImporterSpecification(ProjectItemSpecification):
         name = specification_dict["name"]
         description = specification_dict.get("description", None)
         mapping = specification_dict["mapping"]
+        source_type = mapping["source_type"]
+        mapping["source_type"] = {
+            "CSVConnector": "CSVReader",
+            "DataPackageConnector": "DatapackageReader",
+            "ExcelConnector": "ExcelReader",
+            "GdxConnector": "GDXReader",
+            "JSONConnector": "JSONReader",
+            "SqlAlchemyConnector": "SQLAlchemyReader",
+        }.get(source_type, source_type)
         return ImporterSpecification(name, mapping, description)

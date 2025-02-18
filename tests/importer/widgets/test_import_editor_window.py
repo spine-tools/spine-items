@@ -16,7 +16,7 @@ import unittest
 from unittest import mock
 from PySide6.QtWidgets import QApplication, QDialog
 from spine_items.importer.widgets.import_editor_window import ImportEditorWindow
-from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
+from spinedb_api.spine_io.importers.sqlalchemy_reader import SQLAlchemyReader
 from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
 
@@ -44,17 +44,17 @@ class TestImportEditorWindow(unittest.TestCase):
         clean_up_toolbox(self._toolbox)
         self._temp_dir.cleanup()
 
-    def test_get_connector_selects_sql_alchemy_connector_when_source_is_url(self):
+    def test_get_reader_selects_sql_alchemy_reader_when_source_is_url(self):
         with mock.patch("spine_items.importer.widgets.import_editor_window.QDialog.exec") as exec_dialog:
             exec_dialog.return_value = QDialog.DialogCode.Accepted
             editor = ImportEditorWindow(self._toolbox, None)
             QApplication.processEvents()  # Let QTimer call ImportEditorWindow.start_ui()
             exec_dialog.assert_called_once()
             exec_dialog.reset_mock()
-            connector = editor._get_connector("mysql://server.com/db")
+            reader = editor._get_reader("mysql://server.com/db")
             exec_dialog.assert_called_once()
             editor.close()
-        self.assertIs(connector, SqlAlchemyConnector)
+        self.assertIs(reader, SQLAlchemyReader)
 
 
 if __name__ == "__main__":

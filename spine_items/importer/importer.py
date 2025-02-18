@@ -230,17 +230,6 @@ class Importer(DBWriterItemBase):
             self.item_type(), self.specification(), self, source=source, source_extras=source_extras
         )
 
-    def select_connector_type(self, index):
-        """Opens dialog to select connector type for the given index."""
-        # FIXME: Move this to a file menu option in Import editor maybe
-        importee = index.data()
-        connector = self.get_connector(importee)
-        if not connector:
-            # Aborted by the user
-            return
-        settings = self.get_settings(importee)
-        settings["source_type"] = connector.__name__
-
     @Slot(QModelIndex, bool)
     def _push_file_selection_change_to_undo_stack(self, index, checked):
         """Makes changes to file selection undoable.
@@ -373,8 +362,8 @@ class Importer(DBWriterItemBase):
         return new_item_dict
 
 
-def _fix_csv_connector_settings(settings):
-    """CSVConnector saved the table names as the filepath, change that
+def _fix_csv_reader_settings(settings):
+    """CSVReader saved the table names as the filepath, change that
     to 'csv' instead. This function will mutate the dictionary.
 
     Args:

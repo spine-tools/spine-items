@@ -12,7 +12,7 @@
 
 """Contains a model to handle source tables and import mapping."""
 from enum import Enum, unique
-from spinedb_api import ParameterValueFormatError, from_database
+from spinedb_api import InvalidMapping, ParameterValueFormatError, from_database
 from spinedb_api.helpers import fix_name_ambiguity
 from spinedb_api.import_mapping.import_mapping import (
     AlternativeMapping,
@@ -37,7 +37,13 @@ from spinedb_api.import_mapping.import_mapping import (
     ScenarioMapping,
     check_validity,
 )
-from spinedb_api.mapping import Position, is_pivoted, unflatten
+from spinedb_api.mapping import (
+    Position,
+    is_pivoted,
+    parse_fixed_position_value,
+    unflatten,
+    unparse_fixed_position_value,
+)
 from spinedb_api.parameter_value import split_value_and_type
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.spine_db_manager import SpineDBManager
@@ -303,6 +309,8 @@ class FlattenedMappings:
             return "Table Name"
         if component.position == Position.mapping_name:
             return "Mapping Name"
+        if component.position == Position.fixed:
+            return "Fixed"
         if component.position >= 0:
             return "Column"
         return "Row"
@@ -347,6 +355,9 @@ class FlattenedMappings:
             component.position = Position.table_name
         elif position_type == "Mapping Name":
             component.position = Position.mapping_name
+        elif position_type == "Fixed":
+            component.position = Position.fixed
+            component.value = "table_name: row, column"
         self._row_issues = None
 
     def display_position(self, row):
@@ -382,6 +393,12 @@ class FlattenedMappings:
             return "<table name>"
         if component.position == Position.mapping_name:
             return "<mapping name>"
+        if component.position == Position.fixed:
+            try:
+                table_name, row, column = parse_fixed_position_value(component.value)
+            except InvalidMapping:
+                return component.value
+            return unparse_fixed_position_value(table_name, row + 1, column + 1)
         if component.position >= 0:
             return component.position + 1
         return -(component.position + 1) + 1
@@ -403,6 +420,13 @@ class FlattenedMappings:
             component.value = position - 1
         elif position_type == "Row":
             component.position = -position
+        if position_type == "Fixed":
+            try:
+                table_name, row, column = parse_fixed_position_value(position)
+            except InvalidMapping:
+                component.value = position
+            else:
+                component.value = unparse_fixed_position_value(table_name, row - 1, column - 1)
         self._row_issues = None
 
     def display_row_issues(self, row):

@@ -21,7 +21,7 @@ from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spine_items.importer.widgets.import_sources import ImportSources
 from spine_items.importer.widgets.table_view_with_button_header import TableViewWithButtonHeader
-from spinedb_api.spine_io.importers.reader import SourceConnection
+from spinedb_api.spine_io.importers.reader import Reader, TableProperties
 from spinetoolbox.helpers import signal_waiter
 from tests.importer.helpers import append_source_table_with_mappings
 
@@ -281,7 +281,7 @@ class _MockSpecificationEditor(QWidget):
         return False
 
 
-class _FixedTableReader(SourceConnection):
+class _FixedTableReader(Reader):
     DISPLAY_NAME = "test data source"
     OPTIONS = {"has_header": {"type": bool, "label": "Has header", "default": False}}
     FILE_EXTENSIONS = {"*.*"}
@@ -297,8 +297,8 @@ class _FixedTableReader(SourceConnection):
     def disconnect(self):
         pass
 
-    def get_tables(self):
-        return {table: {"options": self._options.get(table, {})} for table in self._data}
+    def get_tables_and_properties(self):
+        return {table: TableProperties(self._options.get(table, {})) for table in self._data}
 
     def get_data_iterator(self, table, options, max_rows=-1):
         if options["has_header"]:
