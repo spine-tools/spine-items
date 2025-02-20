@@ -505,7 +505,7 @@ class DataStore(ProjectItem):
         # If dialect is sqlite and db line edit refers to a file in the old data_dir, db line edit needs updating
         if self._url["dialect"] == "sqlite":
             db_dir, db_filename = os.path.split(os.path.abspath(self._url["database"].strip()))
-            if db_dir == os.path.normcase(old_data_dir):
+            if os.path.normcase(db_dir) == os.path.normcase(old_data_dir):
                 database = os.path.join(self.data_dir, db_filename)  # NOTE: data_dir has been updated at this point
                 # Check that the db was moved successfully to the new data_dir
                 if os.path.exists(database):
