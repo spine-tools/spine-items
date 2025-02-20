@@ -23,7 +23,7 @@ from .custom_menus import MappingListMenu
 from .filter_edit_delegate import FilterEditDelegate
 from .mime_types import MAPPING_LIST_MIME_TYPE
 
-SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "Mapping Name", "None")
+SOURCE_TYPES = ("Constant", "Column", "Row", "Column Header", "Headers", "Table Name", "Mapping Name", "Fixed", "None")
 
 
 class ImportMappings:

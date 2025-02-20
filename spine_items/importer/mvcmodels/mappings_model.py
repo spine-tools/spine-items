@@ -158,6 +158,7 @@ class MappingsModel(QAbstractItemModel):
     def __init__(self, undo_stack, parent):
         """
         Args:
+            undo_stack (QUndoStack): undo stack
             parent (QObject): parent object
         """
         super().__init__(parent)

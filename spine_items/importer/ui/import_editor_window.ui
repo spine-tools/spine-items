@@ -34,16 +34,16 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLabel" name="source_label">
+       <widget class="QLabel" name="input_path_label">
         <property name="text">
-         <string>File path:</string>
+         <string>Input file/URL:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="source_line_edit">
+       <widget class="QLineEdit" name="input_path_line_edit">
         <property name="placeholderText">
-         <string>Select source from the browse button...</string>
+         <string>Select input file from the browse button...</string>
         </property>
         <property name="clearButtonEnabled">
          <bool>true</bool>
@@ -51,9 +51,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="browse_source_button">
+       <widget class="QToolButton" name="browse_inputs_button">
         <property name="toolTip">
-         <string>Browse source files or specify database URL.</string>
+         <string>Browse input files or specify database URL.</string>
         </property>
         <property name="text">
          <string>...</string>
@@ -65,14 +65,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="connector_label">
+       <widget class="QLabel" name="input_type_label">
         <property name="text">
-         <string>Connector:</string>
+         <string>Input type:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="connector_line_edit">
+       <widget class="QLineEdit" name="input_type_line_edit">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -89,7 +89,7 @@
     <item>
      <widget class="QSplitter" name="splitter_source_list">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <widget class="MultiCheckableListView" name="source_list">
        <property name="sizePolicy">
@@ -105,7 +105,7 @@
         </size>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::CustomContextMenu</enum>
+        <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
        </property>
        <property name="acceptDrops">
         <bool>true</bool>
@@ -114,13 +114,13 @@
         <bool>true</bool>
        </property>
        <property name="dragDropMode">
-        <enum>QAbstractItemView::DragDrop</enum>
+        <enum>QAbstractItemView::DragDropMode::DragDrop</enum>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::ExtendedSelection</enum>
+        <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
        </property>
        <property name="textElideMode">
-        <enum>Qt::ElideLeft</enum>
+        <enum>Qt::TextElideMode::ElideLeft</enum>
        </property>
       </widget>
       <widget class="QSplitter" name="splitter_source_data_mappings">
@@ -131,7 +131,7 @@
         </sizepolicy>
        </property>
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <widget class="QFrame" name="frame_source_data">
         <property name="sizePolicy">
@@ -141,10 +141,10 @@
          </sizepolicy>
         </property>
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+         <enum>QFrame::Shadow::Raised</enum>
         </property>
         <property name="lineWidth">
          <number>0</number>
@@ -184,7 +184,7 @@
             </sizepolicy>
            </property>
            <property name="contextMenuPolicy">
-            <enum>Qt::CustomContextMenu</enum>
+            <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
            </property>
           </widget>
          </item>
@@ -205,7 +205,7 @@
            <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -235,7 +235,7 @@
        </widget>
        <widget class="QSplitter" name="splitter">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
         <widget class="QWidget" name="verticalLayoutWidget_2">
          <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -249,7 +249,7 @@
           <item>
            <widget class="QListView" name="mapping_list">
             <property name="contextMenuPolicy">
-             <enum>Qt::CustomContextMenu</enum>
+             <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
             </property>
             <property name="acceptDrops">
              <bool>true</bool>
@@ -258,10 +258,10 @@
              <bool>true</bool>
             </property>
             <property name="dragDropMode">
-             <enum>QAbstractItemView::DragDrop</enum>
+             <enum>QAbstractItemView::DragDropMode::DragDrop</enum>
             </property>
             <property name="selectionMode">
-             <enum>QAbstractItemView::ExtendedSelection</enum>
+             <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
             </property>
            </widget>
           </item>
@@ -269,10 +269,10 @@
         </widget>
         <widget class="QFrame" name="frame_2">
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
          <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
+          <enum>QFrame::Shadow::Raised</enum>
          </property>
          <property name="lineWidth">
           <number>0</number>
@@ -583,12 +583,15 @@
     <string>Import mappings...</string>
    </property>
   </action>
-  <action name="actionSwitch_connector">
+  <action name="switch_input_type_action">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Switch connector...</string>
+    <string>Switch input type...</string>
+   </property>
+   <property name="toolTip">
+    <string>Open a dialog to change input type.</string>
    </property>
   </action>
  </widget>
@@ -605,9 +608,9 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>source_line_edit</tabstop>
-  <tabstop>browse_source_button</tabstop>
-  <tabstop>connector_line_edit</tabstop>
+  <tabstop>input_path_line_edit</tabstop>
+  <tabstop>browse_inputs_button</tabstop>
+  <tabstop>input_type_line_edit</tabstop>
   <tabstop>source_list</tabstop>
   <tabstop>source_data_table</tabstop>
   <tabstop>default_column_type_combo_box</tabstop>

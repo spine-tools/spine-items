@@ -52,9 +52,7 @@ class ImporterPropertiesWidget(PropertiesWidgetBase):
         global_pos = self.ui.treeView_files.viewport().mapToGlobal(pos)
         self.files_context_menu = FilesContextMenu(self, global_pos, ind)
         option = self.files_context_menu.get_action()
-        if option == "Open import editor":
+        if option == "Open import editor...":
             importer.open_import_editor(ind)
-        elif option == "Select connector type":
-            importer.select_connector_type(ind)
         elif option == "Open directory...":
             importer.open_directory()

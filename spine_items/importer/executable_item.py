@@ -18,15 +18,20 @@ from spine_engine.project_item.project_item_resource import get_labelled_source_
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.utils.returning_process import ReturningProcess
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
-from spinedb_api.spine_io.importers.csv_reader import CSVConnector
-from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
-from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
-from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
-from spinedb_api.spine_io.importers.json_reader import JSONConnector
-from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
+from spinedb_api.spine_io.importers.csv_reader import CSVReader
+from spinedb_api.spine_io.importers.datapackage_reader import DatapackageReader
+from spinedb_api.spine_io.importers.excel_reader import ExcelReader
+from spinedb_api.spine_io.importers.gdx_reader import GDXReader
+from spinedb_api.spine_io.importers.json_reader import JSONReader
+from spinedb_api.spine_io.importers.sqlalchemy_reader import SQLAlchemyReader
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 from .do_work import do_work
 from .item_info import ItemInfo
+
+READER_NAME_TO_CLASS = {
+    klass.__name__: klass
+    for klass in (CSVReader, ExcelReader, GDXReader, JSONReader, DatapackageReader, SQLAlchemyReader)
+}
 
 
 class ExecutableItem(DBWriterExecutableItemBase):
@@ -77,18 +82,11 @@ class ExecutableItem(DBWriterExecutableItemBase):
         if not selected_resources or not to_resources:
             return ItemExecutionFinishState.SUCCESS
         source_type = self._mapping["source_type"]
-        if source_type == "GdxConnector":
+        if source_type == "GDXReader":
             source_settings = {"gams_directory": self._gams_system_directory()}
         else:
             source_settings = None
-        connector = {
-            "CSVConnector": CSVConnector,
-            "ExcelConnector": ExcelConnector,
-            "GdxConnector": GdxConnector,
-            "JSONConnector": JSONConnector,
-            "DataPackageConnector": DataPackageConnector,
-            "SqlAlchemyConnector": SqlAlchemyConnector,
-        }[source_type](source_settings)
+        connector = READER_NAME_TO_CLASS[source_type](source_settings)
         with ExitStack() as stack:
             to_server_urls = [stack.enter_context(resource.open()) for resource in to_resources]
             self._process = ReturningProcess(

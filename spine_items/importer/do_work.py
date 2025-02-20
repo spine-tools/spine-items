@@ -15,14 +15,16 @@ import os
 from spine_engine.project_item.project_item_resource import get_source, get_source_extras
 from spine_engine.utils.helpers import create_log_file_timestamp
 from spinedb_api import InvalidMapping, clear_filter_configs
+from spinedb_api.exception import ReaderError
 from spinedb_api.helpers import remove_credentials_from_url
+from spinedb_api.import_mapping.import_mapping_compat import parse_named_mapping_spec, unparse_named_mapping_spec
 from spinedb_api.import_mapping.type_conversion import value_to_convert_spec
 from spinedb_api.parameter_value import to_database
 from spinedb_api.spine_db_client import SpineDBClient
 
 
 def do_work(
-    process, mapping, cancel_on_error, on_conflict, logs_dir, source_resources, connector, to_server_urls, lock, logger
+    process, mapping, cancel_on_error, on_conflict, logs_dir, source_resources, reader, to_server_urls, lock, logger
 ):
     all_data = []
     all_errors = []
@@ -58,17 +60,31 @@ def do_work(
         logger.msg.emit("Importing " + source_anchor)
         extras = get_source_extras(resource)
         try:
-            connector.connect_to_source(src, **extras)
+            reader.connect_to_source(src, **extras)
         except Exception as error:  # pylint: disable=broad-except
             logger.msg_error.emit(f"Failed to connect to {source_anchor}: {error}")
             return (False,)
+        parsed_table_mappings = _parse_mappings(table_mappings)
+        try:
+            parsed_table_mappings = reader.resolve_values_for_fixed_position_mappings(
+                parsed_table_mappings, table_options
+            )
+        except ReaderError as error:
+            logger.msg_error.emit(f"Failed to read fixed position data in {source_anchor}: {error}")
+            return (False,)
+        table_mappings = {
+            table_name: [
+                unparse_named_mapping_spec(mapping_name, root_mapping) for mapping_name, root_mapping in mappings
+            ]
+            for table_name, mappings in parsed_table_mappings.items()
+        }
         for name, mappings in table_mappings.items():
             logger.msg.emit(f"Processing table <b>{name}</b>")
             for spec in mappings:
                 mapping_name = next(iter(spec.keys()))
                 logger.msg.emit(f"* Applying mapping <b>{mapping_name}</b>...")
                 try:
-                    data, errors = connector.get_mapped_data(
+                    data, errors = reader.get_mapped_data(
                         {name: [spec]},
                         table_options,
                         table_column_convert_specs,
@@ -91,7 +107,7 @@ def do_work(
                     )
                 all_data.append(data)
                 all_errors.extend(errors)
-        connector.disconnect()
+        reader.disconnect()
         if all_data:
             for client in to_clients:
                 lock.acquire()
@@ -167,3 +183,10 @@ def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client
         logger.msg_error.emit(logfile_anchor)
         return False
     return True
+
+
+def _parse_mappings(mapping_specs):
+    parsed_mappings = {}
+    for table, mapping_specs in mapping_specs.items():
+        parsed_mappings[table] = [(parse_named_mapping_spec(spec)) for spec in mapping_specs]
+    return parsed_mappings

@@ -66,7 +66,7 @@ class TestImporterExecutable(unittest.TestCase):
                 "table_types": {"Sheet1": {"0": "string", "1": "string"}},
                 "table_row_types": {},
                 "selected_tables": ["Sheet1"],
-                "source_type": "ExcelConnector",
+                "source_type": "ExcelReader",
             },
         }
         logger = mock.MagicMock()
@@ -165,7 +165,7 @@ class TestImporterExecutable(unittest.TestCase):
             "table_types": {"csv": {0: "string", 1: "string"}},
             "table_row_types": {},
             "selected_tables": ["csv"],
-            "source_type": "CSVConnector",
+            "source_type": "CSVReader",
         }
 
 

@@ -295,7 +295,7 @@ class SetFilterRe(QUndoCommand):
         self._model.set_filter_re(self._table_row, self._list_row, self._row, self._previous_re)
 
 
-class SetConnectorOption(QUndoCommand):
+class SetReaderOption(QUndoCommand):
     """Command to set a :class:`ConnectorManager` option."""
 
     def __init__(self, source_table, option_key, options_widget, value, previous_value):
@@ -334,7 +334,7 @@ class SetConnectorOption(QUndoCommand):
         Returns:
             bool: True if merge was successful, False otherwise
         """
-        if not isinstance(command, SetConnectorOption):
+        if not isinstance(command, SetReaderOption):
             return False
         return command._option_key == self._option_key and command._value == self._value
 

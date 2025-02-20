@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
     QToolButton,
     QWidget,
 )
-from ..commands import SetConnectorOption
+from ..commands import SetReaderOption
 
 
 class OptionsWidget(QTableWidget):
@@ -235,7 +235,7 @@ def _emit_spin_box_option_changed(i, option_key, options_widget):
     if options_widget.undo_enabled:
         previous_value = options_widget.connector.get_current_option_value(option_key)
         options_widget.undo_stack.push(
-            SetConnectorOption(options_widget.current_source_table, option_key, options_widget, i, previous_value)
+            SetReaderOption(options_widget.current_source_table, option_key, options_widget, i, previous_value)
         )
     options = {option_key: i}
     options_widget.options_changed.emit(options)
@@ -253,7 +253,7 @@ def _emit_line_edit_option_changed(text, option_key, options_widget):
     if options_widget.undo_enabled:
         previous_value = options_widget.connector.get_current_option_value(option_key)
         options_widget.undo_stack.push(
-            SetConnectorOption(options_widget.current_source_table, option_key, options_widget, text, previous_value)
+            SetReaderOption(options_widget.current_source_table, option_key, options_widget, text, previous_value)
         )
     options = {option_key: text}
     options_widget.options_changed.emit(options)
@@ -272,7 +272,7 @@ def _emit_check_box_option_changed(state, option_key, options_widget):
     if options_widget.undo_enabled:
         previous_value = options_widget.connector.get_current_option_value(option_key)
         options_widget.undo_stack.push(
-            SetConnectorOption(options_widget.current_source_table, option_key, options_widget, checked, previous_value)
+            SetReaderOption(options_widget.current_source_table, option_key, options_widget, checked, previous_value)
         )
     options = {option_key: checked}
     options_widget.options_changed.emit(options)
@@ -290,7 +290,7 @@ def _emit_combo_box_option_changed(text, option_key, options_widget):
     if options_widget.undo_enabled:
         previous_value = options_widget.connector.get_current_option_value(option_key)
         options_widget.undo_stack.push(
-            SetConnectorOption(options_widget.current_source_table, option_key, options_widget, text, previous_value)
+            SetReaderOption(options_widget.current_source_table, option_key, options_widget, text, previous_value)
         )
     options = {option_key: text}
     options_widget.options_changed.emit(options)
