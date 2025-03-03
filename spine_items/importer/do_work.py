@@ -67,7 +67,7 @@ def do_work(
         parsed_table_mappings = _parse_mappings(table_mappings)
         try:
             parsed_table_mappings = reader.resolve_values_for_fixed_position_mappings(
-                parsed_table_mappings, table_options
+                parsed_table_mappings, table_options, cancel_on_error
             )
         except ReaderError as error:
             logger.msg_error.emit(f"Failed to read fixed position data in {source_anchor}: {error}")
