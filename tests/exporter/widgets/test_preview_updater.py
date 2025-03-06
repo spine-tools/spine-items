@@ -11,7 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``preview_updater`` module."""
-from multiprocessing import Pipe, Process
+from multiprocessing import Process, Queue
 import pathlib
 from tempfile import TemporaryDirectory
 import unittest
@@ -66,11 +66,11 @@ class TestPreviewUpdater(unittest.TestCase):
 
 class TestWriteTaskLoop(unittest.TestCase):
     def test_quit(self):
-        connection1, connection2 = Pipe()
-        connection1.send("quit")
-        write_task_loop(connection2)
-        self.assertTrue(connection1.poll())
-        self.assertTrue(connection1.recv(), "finished")
+        sender = Queue()
+        receiver = Queue()
+        sender.put("quit")
+        write_task_loop(receiver, sender)
+        self.assertTrue(receiver.get(), "finished")
 
     def test_quitting_takes_precedence_over_writing(self):
         with TemporaryDirectory() as temp_dir:
@@ -79,16 +79,17 @@ class TestWriteTaskLoop(unittest.TestCase):
                 db_map.add_alternative_item(name="alt1")
                 db_map.add_alternative_item(name="alt2")
                 db_map.commit_session("Add test data.")
-            connection1, connection2 = Pipe()
-            connection1.send(WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
-            connection1.send("quit")
-            write_task_loop(connection2)
-            self.assertTrue(connection1.poll())
-            self.assertTrue(connection1.recv(), "finished")
+            sender = Queue()
+            receiver = Queue()
+            sender.put(WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
+            sender.put("quit")
+            write_task_loop(receiver, sender)
+            self.assertTrue(receiver.get(), "finished")
 
     def test_writing(self):
-        connection1, connection2 = Pipe()
-        process = Process(target=write_task_loop, args=(connection2,))
+        sender = Queue()
+        receiver = Queue()
+        process = Process(target=write_task_loop, args=(receiver, sender))
         process.start()
         with TemporaryDirectory() as temp_dir:
             url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db.sqlite")
@@ -96,16 +97,17 @@ class TestWriteTaskLoop(unittest.TestCase):
                 db_map.add_alternative_item(name="alt1")
                 db_map.add_alternative_item(name="alt2")
                 db_map.commit_session("Add test data.")
-            connection1.send(WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
-            tables = connection1.recv()
+            sender.put(WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
+            tables = receiver.get()
             self.assertEqual(tables, ((url, "my mapping"), "my mapping", {None: [["Base"], ["alt1"], ["alt2"]]}, 2.3))
-        connection1.send("quit")
-        self.assertTrue(connection1.recv(), "finished")
+        sender.put("quit")
+        self.assertTrue(receiver.get(), "finished")
         process.join()
 
     def test_change_database_between_writes(self):
-        connection1, connection2 = Pipe()
-        process = Process(target=write_task_loop, args=(connection2,))
+        sender = Queue()
+        receiver = Queue()
+        process = Process(target=write_task_loop, args=(receiver, sender))
         process.start()
         with TemporaryDirectory() as temp_dir:
             url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db1.sqlite")
@@ -113,19 +115,19 @@ class TestWriteTaskLoop(unittest.TestCase):
                 db_map.add_alternative_item(name="alt1")
                 db_map.add_alternative_item(name="alt2")
                 db_map.commit_session("Add test data.")
-            connection1.send(WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
-            tables = connection1.recv()
+            sender.put(WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
+            tables = receiver.get()
             self.assertEqual(tables, ((url, "my mapping"), "my mapping", {None: [["Base"], ["alt1"], ["alt2"]]}, 2.3))
             url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db2.sqlite")
             with DatabaseMapping(url, create=True) as db_map:
                 db_map.add_alternative_item(name="alt3")
                 db_map.add_alternative_item(name="alt4")
                 db_map.commit_session("Add test data.")
-            connection1.send(WriteTableTask(url, "my mapping", 23.0, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
-            tables = connection1.recv()
+            sender.put(WriteTableTask(url, "my mapping", 23.0, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
+            tables = receiver.get()
             self.assertEqual(tables, ((url, "my mapping"), "my mapping", {None: [["Base"], ["alt3"], ["alt4"]]}, 23.0))
-        connection1.send("quit")
-        self.assertTrue(connection1.recv(), "finished")
+        sender.put("quit")
+        self.assertTrue(receiver.get(), "finished")
         process.join()
 
 
