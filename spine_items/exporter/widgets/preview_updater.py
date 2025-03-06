@@ -13,10 +13,11 @@
 """Contains :class:`PreviewUpdater`."""
 from copy import deepcopy
 from dataclasses import dataclass
-from multiprocessing import Pipe, Process
+from multiprocessing import Process, Queue
+import queue
 from time import monotonic
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Slot
-from PySide6.QtWidgets import QApplication, QFileDialog
+from PySide6.QtWidgets import QFileDialog
 from spinedb_api import DatabaseMapping, SpineDBAPIError, SpineDBVersionError
 from spinedb_api.export_mapping.export_mapping import ExportMapping
 from spinedb_api.export_mapping.group_functions import GroupFunction
@@ -74,8 +75,9 @@ class PreviewUpdater:
         self._preview_tree_model.rowsInserted.connect(self._expand_tree_after_table_insert)
         self._preview_table_model = PreviewTableModel()
         self._stamps = {}
-        self._writer_connection, connection = Pipe()
-        self._writer_process = Process(target=write_task_loop, args=(connection,))
+        self._writer_sender = Queue()
+        self._writer_receiver = Queue()
+        self._writer_process = Process(target=write_task_loop, args=(self._writer_receiver, self._writer_sender))
         self._writer_timer = QTimer(window)
         self._writer_timer.setInterval(100)
         self._writer_timer.timeout.connect(self._communicate)
@@ -412,7 +414,7 @@ class PreviewUpdater:
         self._stamps[id_] = stamp
         if not self._writer_process.is_alive():
             self._writer_process.start()
-        self._writer_connection.send(
+        self._writer_sender.put(
             WriteTableTask(
                 self._current_url,
                 mapping_name,
@@ -435,10 +437,13 @@ class PreviewUpdater:
     def _communicate(self):
         """Periodically communicates with the writer process."""
         self._writer_timer.stop()
-        if self._writer_connection.poll():
-            message = self._writer_connection.recv()
-            if message == "finished":
-                return
+        if self._writer_process is None:
+            return
+        try:
+            message = self._writer_receiver.get_nowait()
+        except queue.Empty:
+            pass
+        else:
             self._add_or_update_data(*message)
         if self._stamps:
             self._writer_timer.setInterval(50)
@@ -497,17 +502,19 @@ class PreviewUpdater:
 
     def tear_down(self):
         """Stops the writer process and cleans up."""
-        self._writer_connection.send("quit")
+        self._writer_sender.put("quit")
         self._writer_timer.stop()
         self._stamps.clear()
         self._url_model.rowsInserted.disconnect(self._enable_controls_after_url_insertion)
         self._url_model.modelReset.disconnect(self._enable_controls)
         self._url_model.destroyed.disconnect(self._forget_url_model)
         if self._writer_process.is_alive():
-            while self._writer_connection.poll():
+            finished = False
+            while not finished:
                 # Drain the pipe, otherwise writer process's send() may block and the join() below hangs.
-                self._writer_connection.recv()
+                finished = self._writer_receiver.get() == "finished"
             self._writer_process.join()
+        self._writer_process = None
 
 
 @dataclass(frozen=True)
@@ -522,41 +529,37 @@ class WriteTableTask:
     group_fn: GroupFunction
 
 
-def write_task_loop(connection):
+def write_task_loop(sender, receiver):
     """A task loop that processes table writing tasks.
 
     Args:
-        connection (Connection): Pipe endpoint to communicate with the loop
+        sender (Queue): Sending queue to communicate with the loop
+        receiver (Queue): Receiving queue endpoint to communicate with the loop
     """
     db_map = None
     tasks = []
     try:
         while True:
-            if connection.poll() or not tasks:
+            if not receiver.empty() or not tasks:
                 while True:
-                    task = connection.recv()
+                    task = receiver.get()
                     if task == "quit":
                         return
                     tasks.append(task)
-                    if not connection.poll():
+                    if receiver.empty():
                         break
             next_task = tasks.pop(0)
             try:
-                if db_map is not None and next_task.url != db_map.db_url:
-                    db_map.close()
-                    db_map = None
-                if db_map is None:
+                if db_map is None or next_task.url != db_map.db_url:
                     db_map = DatabaseMapping(next_task.url)
                 tables = _write_tables(db_map, next_task)
             except SpineDBVersionError:
                 tables = {"error": [["unsupported database version"]]}
             except SpineDBAPIError as error:
                 tables = {"error": [[str(error)]]}
-            connection.send(((next_task.url, next_task.mapping_name), next_task.mapping_name, tables, next_task.stamp))
+            sender.put(((next_task.url, next_task.mapping_name), next_task.mapping_name, tables, next_task.stamp))
     finally:
-        if db_map is not None:
-            db_map.close()
-        connection.send("finished")
+        sender.put_nowait("finished")
 
 
 def _write_tables(db_map, write_task):
