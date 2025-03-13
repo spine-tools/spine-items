@@ -34,7 +34,7 @@ from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from .utils import find_file, flatten_file_path_duplicates
 from .widgets.custom_menus import ToolSpecificationMenu
-from .widgets.options_widgets import JuliaOptionsWidget
+from .widgets.options_widgets import JuliaOptionsWidget, PythonToolSpecOptionalWidget
 
 
 class Tool(DBWriterItemBase):
@@ -138,7 +138,7 @@ class Tool(DBWriterItemBase):
             OptionsWidget
         """
         # At the moment only Julia has options, but the code is made generic
-        constructors = {"julia": JuliaOptionsWidget}  # Add others as needed
+        constructors = {"julia": JuliaOptionsWidget, "python": PythonToolSpecOptionalWidget}  # Add others as needed
         tooltype = self.specification().tooltype
         constructor = constructors.get(tooltype)
         if constructor is None:

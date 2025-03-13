@@ -15,13 +15,21 @@ import os
 import sys
 import uuid
 from PySide6.QtCore import QPointF, Qt, QVariantAnimation, Slot
-from PySide6.QtGui import QBrush, QIcon, QLinearGradient, QPalette
-from PySide6.QtWidgets import QFileDialog, QWidget
+from PySide6.QtGui import QBrush, QIcon, QLinearGradient, QPalette, QStandardItemModel
+from PySide6.QtWidgets import QFileDialog, QWidget, QApplication
 from spine_items.tool.utils import get_julia_path_and_project
 from spine_items.utils import escape_backward_slashes
 from spinetoolbox.execution_managers import QProcessExecutionManager
-from spinetoolbox.helpers import CharIconEngine, get_open_file_name_in_last_dir, make_settings_dict_for_engine
+from spinetoolbox.helpers import (
+    CharIconEngine,
+    get_open_file_name_in_last_dir,
+    make_settings_dict_for_engine,
+    file_is_valid,
+    select_file_path,
+    get_current_item_data,
+)
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
+from spine_engine.utils.helpers import resolve_current_python_interpreter
 
 
 class OptionsWidget(QWidget):
@@ -49,10 +57,241 @@ class OptionsWidget(QWidget):
     def _logger(self):
         return self._tool.logger
 
+    @property
+    def _models(self):
+        return self._project.toolbox().exec_compound_models
+
+
+class SharedToolSpecOptionalWidget(OptionsWidget):
+    """Superclass for Python and Julia Tool Spec optional widgets."""
+
+    def __init__(self, Ui_Form, fetch_mode):
+        """
+        Args:
+            Ui_Form (Form): Optional widget UI form
+            fetch_mode (int): Kernel fetch mode (see KernelFetcher class)
+        """
+        super().__init__()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
+        # self.fetch_mode = fetch_mode
+        # self.kernel_spec_model = QStandardItemModel(self)
+        # self.ui.comboBox_kernel_specs.setModel(self.kernel_spec_model)
+        # self._kernel_spec_editor = None
+        # self._kernel_spec_model_initialized = False
+        # self._saved_kernel = None
+        # self._selected_kernel = None
+        # self.kernel_fetcher = None
+
+    def connect_signals(self):
+        """Connects signals."""
+        # self.ui.toolButton_refresh_kernel_specs.clicked.connect(self.start_kernel_fetcher)
+        # self.ui.comboBox_kernel_specs.activated.connect(self._specification_editor.push_change_kernel_spec_command)
+        # self.ui.radioButton_jupyter_console.toggled.connect(self._specification_editor.push_set_jupyter_console_mode)
+        # self.ui.lineEdit_executable.textEdited.connect(self._specification_editor.push_change_executable)
+        # self.ui.lineEdit_executable.editingFinished.connect(self._specification_editor.finish_changing_executable)
+        # QApplication.aboutToQuit.connect(self.stop_fetching_kernels)  # pylint: disable=undefined-variable
+
+    def init_widget(self, specification):
+        """Initializes UI elements based on specification
+
+        Args:
+            specification (ToolSpecification): Specification to load
+        """
+        use_jupyter_console = specification.execution_settings["use_jupyter_console"]
+        self.ui.radioButton_jupyter_console.blockSignals(True)
+        self.ui.radioButton_basic_console.blockSignals(True)
+        if use_jupyter_console:
+            self.ui.radioButton_jupyter_console.setChecked(True)
+        else:
+            self.ui.radioButton_basic_console.setChecked(True)
+        self.ui.radioButton_jupyter_console.blockSignals(False)
+        self.ui.radioButton_basic_console.blockSignals(False)
+        self._saved_kernel = specification.execution_settings["kernel_spec_name"]
+        self.set_executable(specification.execution_settings["executable"])
+        self.set_ui_for_jupyter_console(use_jupyter_console)
+
+    def set_ui_for_jupyter_console(self, use_jupyter_console):
+        """Enables or disables some UI elements in the optional widget according to a checkBox state.
+
+        Args:
+            use_jupyter_console (bool): True when Jupyter Console checkBox is checked, false otherwise
+        """
+        self.ui.comboBox_executable.setEnabled(not use_jupyter_console)  # Disable for jupyter console
+        self.ui.comboBox_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
+        self.ui.toolButton_refresh_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
+        # if use_jupyter_console and not self._kernel_spec_model_initialized:
+        #     self.start_kernel_fetcher(restore_saved_kernel=True)
+
+    def add_execution_settings(self, tool_spec_type):
+        """See base class."""
+        idx = self.ui.comboBox_kernel_specs.currentIndex()
+        if idx < 1:
+            d = {"kernel_spec_name": "", "env": ""}
+        else:
+            item = self.ui.comboBox_kernel_specs.model().item(idx)
+            k_spec_data = item.data()
+            d = k_spec_data
+        d["use_jupyter_console"] = self.ui.radioButton_jupyter_console.isChecked()
+        p = self.get_executable()
+        self.validate_executable(p, tool_spec_type)  # Raises NameError if Python or Julia path is not valid
+        d["executable"] = p
+        return d
+
+    def validate_executable(self, p, tool_spec_type):
+        """Check that given Python or Julia path is a file, it exists, and the
+        file name starts with either 'python' or 'julia'.
+
+        Args:
+            p (str): Abs. path to check
+            tool_spec_type (str): 'python' or 'julia'
+
+        Raises:
+            NameError: If the python path in the line edit is not valid
+        """
+        if not file_is_valid(
+            self,
+            p,
+            f"Invalid {tool_spec_type.capitalize()} Interpreter",
+            extra_check=tool_spec_type,
+        ):
+            raise NameError
+
+    def set_executable(self, p):
+        """Sets given path p to either Python or Julia line edit."""
+        if p == self.get_executable():
+            return
+        self.ui.lineEdit_executable.setText(p)
+
+    def get_executable(self):
+        """Returns either Python or Julia executable path."""
+        return self.ui.lineEdit_executable.text().strip()
+
+    def find_index_by_data(self, string):
+        """Searches the kernel spec model for the first item whose data matches the given string.
+        Returns the items row number or -1 if not found."""
+        if string == "":
+            return 0
+        for row in range(1, self.kernel_spec_model.rowCount()):  # Start from index 1
+            index = self.kernel_spec_model.index(row, 0)
+            item = self.kernel_spec_model.itemFromIndex(index)
+            d = item.data()
+            if d["kernel_spec_name"] == string:
+                return row
+        return -1
+
+
+class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
+    def __init__(self):
+        from ..ui.python_tool_options import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__(Ui_Form, 2)
+        # Initialize UI elements with defaults
+        self.ui.radioButton_basic_console.setChecked(True)
+        # default_python_path = resolve_current_python_interpreter()
+        self.set_ui_for_jupyter_console(False)
+        self._saved_python_kernel = None
+        self.connect_signals()
+
+    def connect_signals(self):
+        """Connects signals to slots."""
+        super().connect_signals()
+        self.ui.radioButton_jupyter_console.toggled.connect(self.set_ui_for_jupyter_console)
+        self.ui.toolButton_browse_python.clicked.connect(self._add_python_interpreter)
+
+    def do_update_options(self, options):
+        print(f"Restoring options:{options}")
+        self.ui.comboBox_executable.setModel(self._models.python_interpreters_model)
+        self._models.refresh_python_interpreters_model()
+        self.ui.comboBox_kernel_specs.setModel(self._models.python_kernel_model)
+        use_jupyter_console, python_exe, python_kernel = self._get_python_settings()
+        self._saved_python_kernel = python_kernel
+        self._models.start_fetching_python_kernels(self._set_saved_python_kernel_selected)
+
+    def _get_python_settings(self):
+        """Returns current Python settings in the Python optional widget."""
+        use_python_jupyter_console = "2" if self.ui.radioButton_jupyter_console.isChecked() else "0"
+        data = get_current_item_data(self.ui.comboBox_executable, self._models.python_interpreters_model)
+        python_exe = data["exe"]
+        python_kernel = ""
+        if self.ui.comboBox_kernel_specs.currentIndex() != 0:
+            kernel_data = get_current_item_data(self.ui.comboBox_kernel_specs, self._models.python_kernel_model)
+            try:
+                python_kernel = kernel_data["kernel_name"]
+            except KeyError:  # Happens when conda kernel is selected and user clears the conda line edit path
+                python_kernel = ""
+            except TypeError:  # Happens when kernel_data is None
+                python_kernel = ""
+        return use_python_jupyter_console, python_exe, python_kernel
+
+    @Slot()
+    def _set_saved_python_kernel_selected(self):
+        """Sets saved python as selected after Pythons have been (re)loaded."""
+        ind = self._models.find_python_kernel_index(self._saved_python_kernel, self)
+        self.ui.comboBox_kernel_specs.setCurrentIndex(ind.row())
+        self._saved_python_kernel = None
+
+    def default_execution_settings(self):
+        """See base class."""
+        print("default_execution_settings() called")
+        return
+        use_jupyter_cons = bool(int(self._settings.value("appSettings/usePythonKernel", defaultValue="0")))
+        k_name = self._settings.value("appSettings/pythonKernel", defaultValue="")
+        env = ""
+        if use_jupyter_cons:
+            # Check if the kernel is a Conda kernel by matching the name with the one that is in kernel_spec_model
+            # Find k_name in kernel_spec_model and check it's data
+            row = self.find_index_by_data(k_name)
+            if row == -1:
+                pass  # kernel not found
+            else:
+                index = self.kernel_spec_model.index(row, 0)
+                item_data = self.kernel_spec_model.itemFromIndex(index).data()
+                env = item_data["env"]
+        d = dict()
+        d["kernel_spec_name"] = k_name
+        d["env"] = env
+        d["use_jupyter_console"] = use_jupyter_cons
+        d["executable"] = self._settings.value("appSettings/pythonPath", defaultValue="")
+        return d
+
+    @Slot(bool)
+    def _add_python_interpreter(self, _=False):
+        """Calls static method that shows a file browser for selecting a Python interpreter."""
+        current_path = self.ui.comboBox_executable.currentText()
+        if not current_path:
+            current_path = resolve_current_python_interpreter()
+        init_dir, _ = os.path.split(current_path)
+        new_python = select_file_path(self._project.toolbox(), "Select Python Interpreter", init_dir, "python")
+        if not new_python:
+            return
+        ind = self._models.add_python_interpreter(new_python, self._project.toolbox())
+        self.ui.comboBox_executable.setCurrentIndex(ind.row())
+
+    def set_ui_for_jupyter_console(self, use_jupyter_console):
+        """Enables or disables some UI elements in the optional widget according to a checkBox state.
+
+        Args:
+            use_jupyter_console (bool): True when Jupyter Console checkBox is checked, false otherwise
+        """
+        self.ui.toolButton_browse_python.setEnabled(not use_jupyter_console)  # Disable for jupyter console
+        super().set_ui_for_jupyter_console(use_jupyter_console)
+
+    def get_widgets_in_tab_order(self):
+        """See base class."""
+        return (
+            self.ui.radioButton_basic_console,
+            self.ui.comboBox_executable,
+            self.ui.toolButton_browse_python,
+            self.ui.radioButton_jupyter_console,
+            self.ui.comboBox_kernel_specs,
+            self.ui.toolButton_refresh_kernel_specs,
+        )
+
 
 class JuliaOptionsWidget(OptionsWidget):
     def __init__(self):
-        from ..ui.julia_options import Ui_Form  # pylint: disable=import-outside-toplevel
+        from ..ui.julia_tool_options import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__()
         self.ui = Ui_Form()
@@ -61,7 +300,7 @@ class JuliaOptionsWidget(OptionsWidget):
         self._sysimage_paths = {}
         self._sysimage_workers = {}
         self._work_animation = self._make_work_animation()
-        icon_abort = QIcon(CharIconEngine("\uf057", Qt.red))
+        icon_abort = QIcon(CharIconEngine("\uf057", Qt.GlobalColor.red))
         self.ui.toolButton_abort_sysimage.setIcon(icon_abort)
         self.ui.toolButton_new_sysimage.clicked.connect(self._create_sysimage)
         self.ui.toolButton_open_sysimage.clicked.connect(self._open_sysimage)

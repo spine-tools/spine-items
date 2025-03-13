@@ -16,7 +16,13 @@ from PySide6.QtCore import Slot
 from PySide6.QtGui import QIcon, QStandardItem, QStandardItemModel, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 from spine_engine.utils.helpers import resolve_default_julia_executable, resolve_python_interpreter
-from spinetoolbox.helpers import file_is_valid, select_julia_executable, select_julia_project, select_python_interpreter
+from spinetoolbox.helpers import (
+    file_is_valid,
+    select_julia_executable,
+    select_julia_project,
+    select_python_interpreter,
+    restore_override_cursor,
+)
 from spinetoolbox.kernel_fetcher import KernelFetcher
 from spinetoolbox.widgets.notification import Notification
 
@@ -195,7 +201,7 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
             self.kernel_fetcher.finished.connect(self._restore_saved_kernel)
         else:
             self.kernel_fetcher.finished.connect(self._restore_selected_kernel)
-        self.kernel_fetcher.finished.connect(self._toolbox.restore_override_cursor)
+        self.kernel_fetcher.finished.connect(restore_override_cursor)
         self.kernel_fetcher.start()
 
     @Slot()
