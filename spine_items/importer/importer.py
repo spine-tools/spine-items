@@ -279,8 +279,9 @@ class Importer(DBWriterItemBase):
             label, selected = self._file_model.checked_data(self._file_model.index(row, 0))
             any_selected.append(selected)
         if not any(any_selected):
-            self.add_notification("No source files selected. Select <b>available resources</b> "
-                                  "from this Importer's Properties.")
+            self.add_notification(
+                "No source files selected. Select <b>available resources</b> " "from this Importer's Properties."
+            )
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
