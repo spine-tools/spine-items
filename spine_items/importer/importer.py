@@ -63,13 +63,14 @@ class Importer(DBWriterItemBase):
         self._specification = self._project.get_specification(specification_name)
         if specification_name and not self._specification:
             self._logger.msg_error.emit(
-                f"Importer <b>{self.name}</b> should have a specification <b>{specification_name}</b> but it was not found"
+                f"Importer <b>{self.name}</b> uses specification <b>{specification_name}</b> but it was not found"
             )
         self.cancel_on_error = cancel_on_error
         self.on_conflict = on_conflict
         self._file_model = CheckableFileListModel(header_label="Available resources")
         self._file_model.set_initial_state(file_selection if file_selection is not None else {})
         self._file_model.checked_state_changed.connect(self._push_file_selection_change_to_undo_stack)
+        self._file_model.dataChanged.connect(self.check_notifs)
 
     @staticmethod
     def item_type():
@@ -249,6 +250,12 @@ class Importer(DBWriterItemBase):
         for old_resource, new_resource in zip(old, new):
             self._file_model.replace(old_resource, new_resource)
 
+    @Slot(QModelIndex, QModelIndex, list)
+    def check_notifs(self, _tl_ind, _br_ind, _roles):
+        """Checks notifications when the data in the resource model changes. E.g.
+        when a resource is checked or unchecked."""
+        self._check_notifications()
+
     def _check_notifications(self):
         self.clear_notifications()
         self._check_write_index()
@@ -256,13 +263,24 @@ class Importer(DBWriterItemBase):
             self.add_notification(
                 "This Importer does not have a specification. Set it in the Importer Properties Panel."
             )
+            return
         duplicates = self._file_model.duplicate_paths()
         if duplicates:
             self.add_notification(f"Duplicate input files from upstream items:<br>{'<br>'.join(duplicates)}")
+            return
         if self._file_model.rowCount() == 0:
             self.add_notification(
                 "This Importer does not have any input data. "
                 "Connect Data Connections to this Importer to use their data as input."
+            )
+            return
+        any_selected = list()
+        for row in range(self._file_model.rowCount()):
+            label, selected = self._file_model.checked_data(self._file_model.index(row, 0))
+            any_selected.append(selected)
+        if not any(any_selected):
+            self.add_notification(
+                "No source files selected. Select <b>available resources</b> " "from this Importer's Properties."
             )
 
     def item_dict(self):
