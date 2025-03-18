@@ -85,12 +85,12 @@ def _convert_url(url):
             database = url.get("database", "")
             if database:
                 url["database"] = os.path.normcase(os.path.abspath(database))
-            return URL("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
+            return URL.create("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
         db_api = spinedb_api.SUPPORTED_DIALECTS.get(dialect)
         if db_api is None:
             db_api = spinedb_api.helpers.UNSUPPORTED_DIALECTS[dialect]
         driver_name = f"{dialect}+{db_api}"
-        return URL(driver_name, **url)  # pylint: disable=unexpected-keyword-arg
+        return URL.create(driver_name, **url)  # pylint: disable=unexpected-keyword-arg
     except Exception as error:
         raise URLError(str(error)) from error
 
@@ -166,7 +166,7 @@ def split_url_credentials(url):
     connect_args = sa_url.translate_connect_args()
     username = connect_args.pop("username", None)
     password = connect_args.pop("password", None)
-    new_sa_url = URL(sa_url.drivername, **connect_args)
+    new_sa_url = URL.create(sa_url.drivername, **connect_args)
     return str(new_sa_url), (username, password)
 
 
@@ -183,7 +183,7 @@ def unsplit_url_credentials(url, credentials):
     sa_url = make_url(url)
     connect_args = sa_url.translate_connect_args()
     connect_args["username"], connect_args["password"] = credentials
-    new_sa_url = URL(sa_url.drivername, **connect_args)
+    new_sa_url = URL.create(sa_url.drivername, **connect_args)
     return str(new_sa_url)
 
 

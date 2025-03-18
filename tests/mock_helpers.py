@@ -124,7 +124,6 @@ def create_toolboxui_with_project(project_dir):
         patch("spinetoolbox.ui_main.QSettings.setValue"),
         patch("spinetoolbox.ui_main.QSettings.sync"),
         patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"),
-        patch("spinetoolbox.ui_main.QScrollArea.setWidget"),
     ):
         mock_qsettings_value.side_effect = qsettings_value_side_effect
         mock_set_app_style.return_value = True

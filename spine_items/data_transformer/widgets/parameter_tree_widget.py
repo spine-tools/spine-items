@@ -40,21 +40,21 @@ class ParameterTreeWidget(QTreeWidget):
         Args:
             url (str): database URL
         """
+        parameters = {}
         try:
-            db_map = DatabaseMapping(url)
+            with DatabaseMapping(url) as db_map:
+                try:
+                    for definition_row in db_map.query(db_map.entity_parameter_definition_sq):
+                        parameters.setdefault(definition_row.entity_class_name, []).append(
+                            definition_row.parameter_name
+                        )
+                except SpineDBAPIError as error:
+                    QMessageBox.information(
+                        self, "Error while reading database", f"Could not read from database {url}:\n{error}"
+                    )
         except SpineDBAPIError as error:
             QMessageBox.information(self, "Error while opening database", f"Could not open database {url}:\n{error}")
             return
-        parameters = {}
-        try:
-            for definition_row in db_map.query(db_map.entity_parameter_definition_sq):
-                parameters.setdefault(definition_row.entity_class_name, []).append(definition_row.parameter_name)
-        except SpineDBAPIError as error:
-            QMessageBox.information(
-                self, "Error while reading database", f"Could not read from database {url}:\n{error}"
-            )
-        finally:
-            db_map.close()
         self.clear()
         for class_name, parameter_names in parameters.items():
             class_item = QTreeWidgetItem([class_name])

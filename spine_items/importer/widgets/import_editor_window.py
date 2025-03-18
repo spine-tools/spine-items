@@ -13,18 +13,14 @@
 """ Contains ImportPreviewWindow class. """
 import fnmatch
 import json
+from operator import attrgetter
 import os
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Signal, Slot
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QListWidget, QMessageBox, QVBoxLayout
 from spinedb_api.helpers import remove_credentials_from_url
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
-from spinedb_api.spine_io.importers.csv_reader import CSVConnector
-from spinedb_api.spine_io.importers.datapackage_reader import DataPackageConnector
-from spinedb_api.spine_io.importers.excel_reader import ExcelConnector
-from spinedb_api.spine_io.importers.gdx_connector import GdxConnector
-from spinedb_api.spine_io.importers.json_reader import JSONConnector
-from spinedb_api.spine_io.importers.reader import SourceConnection
-from spinedb_api.spine_io.importers.sqlalchemy_connector import SqlAlchemyConnector
+from spinedb_api.spine_io.importers.reader import Reader
+from spinedb_api.spine_io.importers.sqlalchemy_reader import SQLAlchemyReader
 from spinetoolbox.config import APPLICATION_PATH
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
@@ -32,6 +28,7 @@ from ...utils import convert_to_sqlalchemy_url
 from ...widgets import UrlSelectorDialog
 from ..commands import RestoreMappingsFromDict
 from ..connection_manager import ConnectionManager
+from ..executable_item import READER_NAME_TO_CLASS
 from ..importer_specification import ImporterSpecification
 from ..mvcmodels.mappings_model import MappingsModel
 from ..mvcmodels.source_list_selection_model import SourceListSelectionModel
@@ -40,21 +37,15 @@ from .import_mappings import ImportMappings
 from .import_sources import ImportSources
 
 
-class _ConnectorProblemInMapping(Exception):
-    """Raised when mapping has no connector or the connector looks different to file type."""
+class _ReaderProblemInMapping(Exception):
+    """Raised when mapping has no reader or the reader looks different to file type."""
 
-    def __init__(self, connector_in_mapping):
+    def __init__(self, reader_in_mapping):
         """
         Args:
-            connector_in_mapping (type, optional): connector class defined in mapping
+            reader_in_mapping (type, optional): reader class defined in mapping
         """
-        self.connector_in_mapping = connector_in_mapping
-
-
-_CONNECTOR_NAME_TO_CLASS = {
-    klass.__name__: klass
-    for klass in (CSVConnector, ExcelConnector, GdxConnector, JSONConnector, DataPackageConnector, SqlAlchemyConnector)
-}
+        self.reader_in_mapping = reader_in_mapping
 
 
 class ImportEditorWindow(SpecificationEditorWindowBase):
@@ -63,11 +54,12 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     connection_failed = Signal(str)
 
     _FILE_LESS = "anonymous"
-    """Name of the 'file-less' source."""
+    """Name of the 'file-less' input."""
 
-    class _FileLessConnector(SourceConnection):
+    class _FileLessReader(Reader):
         """A connector that has no tables or contents, used for the file-less mode."""
 
+        DISPLAY_NAME = "<unspecified>"
         FILE_EXTENSIONS = ""
         OPTIONS = {}
 
@@ -77,24 +69,24 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         def disconnect(self):
             pass
 
-        def get_tables(self):
-            return []
+        def get_tables_and_properties(self):
+            return {}
 
         def get_data_iterator(self, table, options, max_rows=-1):
             return iter([]), ()
 
-    def __init__(self, toolbox, specification, item=None, source=None, source_extras=None):
+    def __init__(self, toolbox, specification, item=None, input=None, input_extras=None):
         """
         Args:
             toolbox (QMainWindow): ToolboxUI class
             specification (ImporterSpecification, optional): Importer specification
             item (Importer, optional): Linked Importer item
-            source (str, optional): Importee file path or URL; if None, work in file-less mode
-            source_extras (dict, optional): Additional source settings such as database schema
+            input (str, optional): Importee file path or URL; if None, work in file-less mode
+            input_extras (dict, optional): Additional input settings such as database schema
         """
         super().__init__(toolbox, specification, item)
-        self._source = source if source is not None else self._FILE_LESS
-        self._source_extras = source_extras if source_extras is not None else {}
+        self._input = input if input is not None else self._FILE_LESS
+        self._input_extras = input_extras if input_extras is not None else {}
         self._mappings_model = MappingsModel(self._undo_stack, self)
         self._mappings_model.rowsInserted.connect(self._reselect_source_table)
         self._ui.source_list.setModel(self._mappings_model)
@@ -104,24 +96,24 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.mapping_spec_table.setModel(self._mappings_model)
         self._ui.mapping_spec_table.setRootIndex(self._mappings_model.dummy_parent())
         self._connection_manager = None
-        self._memoized_connector = None
+        self._memoized_reader = None
         self._import_mappings = ImportMappings(self._mappings_model, self._ui, self._undo_stack, self)
         self._import_mapping_options = ImportMappingOptions(self._mappings_model, self._ui, self._undo_stack)
         self._import_sources = ImportSources(self._mappings_model, self._ui, self._undo_stack, self)
-        self._set_source_text()
-        self._ui.source_line_edit.editingFinished.connect(self._read_source_from_line)
-        self._ui.source_line_edit.textEdited.connect(self._maybe_switch_to_file_less_mode)
-        self._ui.browse_source_button.clicked.connect(self._show_open_file_dialog)
+        self._set_input_text()
+        self._ui.input_path_line_edit.editingFinished.connect(self._read_input_path_from_line)
+        self._ui.input_path_line_edit.textEdited.connect(self._maybe_switch_to_file_less_mode)
+        self._ui.browse_inputs_button.clicked.connect(self._show_open_file_dialog)
         self._ui.import_mappings_action.triggered.connect(self.import_mapping_from_file)
         self._ui.export_mappings_action.triggered.connect(self.export_mapping_to_file)
-        self._ui.actionSwitch_connector.triggered.connect(self._switch_connector)
+        self._ui.switch_input_type_action.triggered.connect(self._switch_input_type)
         self.connection_failed.connect(self.show_error)
         self._import_sources.preview_data_updated.connect(self._import_mapping_options.set_num_available_columns)
         self._mappings_model.restore(self.specification.mapping if self.specification is not None else {})
         QTimer.singleShot(0, self.start_ui)
 
     def is_file_less(self):
-        return not self._ui.source_line_edit.text()
+        return not self._ui.input_path_line_edit.text()
 
     @property
     def settings_group(self):
@@ -135,7 +127,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
 
     @property
     def _duplicate_kwargs(self):
-        return {"source": self._source}
+        return {"input": self._input}
 
     def _make_ui(self):
         from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
@@ -152,46 +144,46 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         super()._populate_main_menu()
         menu = self._spec_toolbar.menu
         before = self._spec_toolbar.save_action
-        menu.insertAction(before, self._ui.actionSwitch_connector)
+        menu.insertAction(before, self._ui.switch_input_type_action)
         menu.insertSeparator(before)
         menu.insertActions(before, [self._ui.import_mappings_action, self._ui.export_mappings_action])
         menu.insertSeparator(before)
 
-    def _set_source_text(self):
-        """Sets source path/URL to the source line edit cleaning credentials from URLs."""
-        if self._source == self._FILE_LESS:
-            self._ui.source_line_edit.clear()
+    def _set_input_text(self):
+        """Sets input path/URL to the input line edit cleaning credentials from URLs."""
+        if self._input == self._FILE_LESS:
+            self._ui.input_path_line_edit.clear()
             return
-        label = remove_credentials_from_url(self._source) if self._is_url(self._source) else self._source
-        self._ui.source_line_edit.setText(label)
+        label = remove_credentials_from_url(self._input) if self._is_url(self._input) else self._input
+        self._ui.input_path_line_edit.setText(label)
 
     @Slot(bool)
     def _show_open_file_dialog(self, _=False):
-        if self._is_database_connector(self._connection_manager.connection):
-            url = self._get_source_url()
+        if self._is_database_reader(self._connection_manager.connection):
+            url = self._get_input_url()
             if url is None:
                 return
-            self._source = str(convert_to_sqlalchemy_url(url, logger=self))
+            self._input = str(convert_to_sqlalchemy_url(url, logger=self))
             schema = url["schema"]
-            self._source_extras = {"schema": schema if schema else None}
+            self._input_extras = {"schema": schema if schema else None}
         else:
-            file_path = self._get_source_file_path()
-            if file_path is None:
+            file_path = self._get_input_file_path()
+            if not file_path:
                 return
-            self._source = file_path
-            self._source_extras = None
-        self._set_source_text()
+            self._input = file_path
+            self._input_extras = None
+        self._set_input_text()
         self.start_ui()
 
-    def _get_source_url(self):
+    def _get_input_url(self):
         selector = UrlSelectorDialog(self._toolbox.qsettings(), False, self._toolbox, parent=self)
         selector.exec()
         if selector.result() != QDialog.DialogCode.Accepted:
             return None
         return selector.url_dict()
 
-    def _get_source_file_path(self):
-        filter_ = ";;".join(["*.*"] + [conn.FILE_EXTENSIONS for conn in _CONNECTOR_NAME_TO_CLASS.values()])
+    def _get_input_file_path(self):
+        filter_ = ";;".join(["*.*"] + [conn.FILE_EXTENSIONS for conn in READER_NAME_TO_CLASS.values()])
         key = f"selectInputDataFileFor{self.specification.name if self.specification else None}"
         filepath, _ = get_open_file_name_in_last_dir(
             self._toolbox.qsettings(),
@@ -204,60 +196,60 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         return filepath
 
     @staticmethod
-    def _is_database_connector(connector):
-        """Tests if connector class works with database URLs.
+    def _is_database_reader(reader):
+        """Tests if reader class works with database URLs.
 
         Args:
-            connector (type): connector class to test
+            reader (type): reader class to test
         """
-        return connector.__name__ == SqlAlchemyConnector.__name__
+        return reader.__name__ == SQLAlchemyReader.__name__
 
     @Slot(bool)
-    def _switch_connector(self, _=False):
+    def _switch_input_type(self, _=False):
         if self.specification:
             self.specification.mapping.pop("source_type", None)
-        self._memoized_connector = None
+        self._memoized_reader = None
         self.start_ui()
 
-    def _get_connector_from_mapping(self, source):
-        """Reads connector for given source from mapping.
+    def _get_reader_from_mapping(self, input_path):
+        """Reads reader for given input from mapping.
 
         Args:
-            source (str): importee file path or URL
+            input_path (str): importee file path or URL
 
         Returns:
-            type: connector class
+            type: reader class
         """
         if not self.specification:
-            raise _ConnectorProblemInMapping(None)
+            raise _ReaderProblemInMapping(None)
         mapping = self.specification.mapping
         source_type = mapping.get("source_type")
         if source_type is None:
-            raise _ConnectorProblemInMapping(None)
-        connector = _CONNECTOR_NAME_TO_CLASS[source_type]
-        file_extensions = connector.FILE_EXTENSIONS.split(";;")
-        if source != self._FILE_LESS and not any(fnmatch.fnmatch(source, ext) for ext in file_extensions):
-            if connector is SqlAlchemyConnector and self._is_url(source):
-                return connector
-            raise _ConnectorProblemInMapping(connector)
-        return connector
+            raise _ReaderProblemInMapping(None)
+        reader = READER_NAME_TO_CLASS[source_type]
+        file_extensions = reader.FILE_EXTENSIONS.split(";;")
+        if input_path != self._FILE_LESS and not any(fnmatch.fnmatch(input_path, ext) for ext in file_extensions):
+            if reader is SQLAlchemyReader and self._is_url(input_path):
+                return reader
+            raise _ReaderProblemInMapping(reader)
+        return reader
 
     @Slot()
-    def _read_source_from_line(self):
-        """Sets source from source line edit."""
-        label = self._ui.source_line_edit.text()
-        if self._source == self._FILE_LESS:
+    def _read_input_path_from_line(self):
+        """Sets input from input path line edit."""
+        label = self._ui.input_path_line_edit.text()
+        if self._input == self._FILE_LESS:
             if not label:
                 return
-            self._source = label
+            self._input = label
         else:
-            if self._is_url(self._source):
-                if label == remove_credentials_from_url(self._source):
+            if self._is_url(self._input):
+                if label == remove_credentials_from_url(self._input):
                     return
-                self._source_extras = None
-            elif label == self._source:
+                self._input_extras = None
+            elif label == self._input:
                 return
-            self._source = label if label else self._FILE_LESS
+            self._input = label if label else self._FILE_LESS
         self.start_ui()
 
     @Slot(str)
@@ -267,132 +259,126 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         Args:
             text (str): text
         """
-        if text or self._source == self._FILE_LESS:
+        if text or self._input == self._FILE_LESS:
             return
-        self._source = self._FILE_LESS
-        self._source_extras = None
+        self._input = self._FILE_LESS
+        self._input_extras = None
         self.start_ui()
 
     def start_ui(self):
-        """Connects to source and fills the tables and lists with data."""
+        """Connects to input and fills the tables and lists with data."""
         try:
-            connector = self._get_connector_from_mapping(self._source)
-        except _ConnectorProblemInMapping as connector_problem:
-            if connector_problem.connector_in_mapping is not None:
+            reader = self._get_reader_from_mapping(self._input)
+        except _ReaderProblemInMapping as reader_problem:
+            if reader_problem.reader_in_mapping is not None:
                 QMessageBox.warning(
                     self,
-                    "Verify source type",
-                    f"Source type is set to {connector_problem.connector_in_mapping.DISPLAY_NAME} but the source looks incompatible. "
+                    "Verify input type",
+                    f"Input type is set to {reader_problem.reader_in_mapping.DISPLAY_NAME} but the input looks incompatible. "
                     "You will be prompted to verify the type.",
                 )
-            connector = self._get_connector(self._source)
-            if not connector:
+            reader = self._get_reader(self._input)
+            if not reader:
                 return
-            is_db_connector = self._is_database_connector(connector)
-            is_url_source = self._is_url(self._source)
-            if (is_db_connector and not is_url_source) or (not is_db_connector and is_url_source):
-                self._ui.source_line_edit.clear()
-                self._source = self._FILE_LESS
-                self._source_extras = None
-            if (
-                connector_problem.connector_in_mapping is not None
-                and connector is not connector_problem.connector_in_mapping
-            ):
+            is_db_reader = self._is_database_reader(reader)
+            is_url_input = self._is_url(self._input)
+            if (is_db_reader and not is_url_input) or (not is_db_reader and is_url_input):
+                self._ui.input_path_line_edit.clear()
+                self._input = self._FILE_LESS
+                self._input_extras = None
+            if reader_problem.reader_in_mapping is not None and reader is not reader_problem.reader_in_mapping:
                 QMessageBox.information(
                     self,
-                    "Source type changed",
-                    f"Source type changed from {connector_problem.connector_in_mapping.DISPLAY_NAME} to {connector.DISPLAY_NAME}. "
+                    "Input type changed",
+                    f"Input type changed from {reader_problem.reader_in_mapping.DISPLAY_NAME} to {reader.DISPLAY_NAME}. "
                     "Don't forget to save the changes.",
                 )
                 self._undo_stack.resetClean()
-        connector_name = connector.__name__
-        if self._is_database_connector(connector):
-            self._ui.source_label.setText("URL:")
-        else:
-            self._ui.source_label.setText("File path:")
-        if self._source == self._FILE_LESS:
-            self._FileLessConnector.__name__ = connector.__name__
-            self._FileLessConnector.FILE_EXTENSIONS = connector.FILE_EXTENSIONS
-            self._FileLessConnector.OPTIONS = connector.OPTIONS
-            connector = self._FileLessConnector
+        if self._input == self._FILE_LESS:
+            self._FileLessReader.__name__ = reader.__name__
+            self._FileLessReader.FILE_EXTENSIONS = reader.FILE_EXTENSIONS
+            self._FileLessReader.OPTIONS = reader.OPTIONS
+            reader = self._FileLessReader
             self._mappings_model.set_tables_editable(True)
         else:
             self._mappings_model.set_tables_editable(False)
-        self._ui.actionSwitch_connector.setEnabled(True)
-        connector_settings = {"gams_directory": _gams_system_directory(self._toolbox)}
+        self._ui.switch_input_type_action.setEnabled(True)
+        reader_settings = {"gams_directory": _gams_system_directory(self._toolbox)}
         if self._connection_manager:
             self._connection_manager.close_connection()
-        self._connection_manager = ConnectionManager(connector, connector_settings, self)
+        self._connection_manager = ConnectionManager(reader, reader_settings, self)
         self._connection_manager.connection_failed.connect(self.connection_failed.emit)
         self._connection_manager.error.connect(self.show_error)
         for header in (self._ui.source_data_table.horizontalHeader(), self._ui.source_data_table.verticalHeader()):
-            self._ui.source_list.selectionModel().currentChanged.connect(header.set_source_table, Qt.UniqueConnection)
+            self._ui.source_list.selectionModel().currentChanged.connect(
+                header.set_source_table, Qt.ConnectionType.UniqueConnection
+            )
         self._connection_manager.connection_ready.connect(self._handle_connection_ready)
         mapping = self.specification.mapping if self.specification else {}
         self._import_sources.set_connector(self._connection_manager, mapping)
-        self._display_connector_name(connector_name)
-        extras = self._source_extras if self._source_extras is not None else {}
-        self._connection_manager.init_connection(self._source, **extras)
+        self._display_input_type(reader.DISPLAY_NAME)
+        extras = self._input_extras if self._input_extras is not None else {}
+        self._connection_manager.init_connection(self._input, **extras)
 
-    def _display_connector_name(self, name):
+    def _display_input_type(self, input_type):
         """Shows connector's name on the ui.
 
         Args:
-            name (str): connector's name
+            input_type (str): readers's display name
         """
-        self._ui.connector_line_edit.setText(name)
+        self._ui.input_type_line_edit.setText(input_type)
 
     @Slot()
     def _handle_connection_ready(self):
         self._ui.export_mappings_action.setEnabled(True)
         self._ui.import_mappings_action.setEnabled(True)
 
-    def _get_connector(self, source):
-        """Shows a QDialog to select a connector for the given source file.
+    def _get_reader(self, input_path):
+        """Shows a QDialog to select a reader for the given data input.
 
         Args:
-            source (str): Path of the file acting as an importee
+            input_path (str): Path of the file acting as an importee
 
         Returns:
             Asynchronous data reader class for the given importee
         """
-        if self._memoized_connector:
-            return self._memoized_connector
-        connector_list = list(_CONNECTOR_NAME_TO_CLASS.values())
-        connector_names = [c.DISPLAY_NAME for c in connector_list]
+        if self._memoized_reader:
+            return self._memoized_reader
+        reader_list = sorted(list(READER_NAME_TO_CLASS.values()), key=attrgetter("DISPLAY_NAME"))
+        reader_names = [c.DISPLAY_NAME for c in reader_list]
         dialog = QDialog(self)
         dialog.setLayout(QVBoxLayout())
-        connector_list_wg = QListWidget()
-        connector_list_wg.addItems(connector_names)
-        # Set current item in `connector_list_wg` based on file extension
+        reader_list_wg = QListWidget()
+        reader_list_wg.addItems(reader_names)
+        # Set current item in `reader_list_wg` based on file extension
         row = None
-        for k, conn in enumerate(connector_list):
-            file_extensions = conn.FILE_EXTENSIONS.split(";;")
-            if any(fnmatch.fnmatch(source, ext) for ext in file_extensions):
+        for k, reader in enumerate(reader_list):
+            file_extensions = reader.FILE_EXTENSIONS.split(";;")
+            if any(fnmatch.fnmatch(input_path, ext) for ext in file_extensions):
                 row = k
                 break
         else:
-            if self._is_url(source):
-                row = connector_names.index(SqlAlchemyConnector.DISPLAY_NAME)
+            if self._is_url(input_path):
+                row = reader_names.index(SQLAlchemyReader.DISPLAY_NAME)
         if row is not None:
-            connector_list_wg.setCurrentRow(row)
+            reader_list_wg.setCurrentRow(row)
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         button_box.button(QDialogButtonBox.StandardButton.Ok).clicked.connect(dialog.accept)
         button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(dialog.reject)
-        connector_list_wg.doubleClicked.connect(dialog.accept)
-        dialog.layout().addWidget(connector_list_wg)
+        reader_list_wg.doubleClicked.connect(dialog.accept)
+        dialog.layout().addWidget(reader_list_wg)
         dialog.layout().addWidget(button_box)
         spec_name = self._spec_toolbar.name()
         if not spec_name:
             spec_name = "unnamed specification"
-        dialog.setWindowTitle(f"Select connector for {spec_name}")
+        dialog.setWindowTitle(f"Select input type for {spec_name}")
         answer = dialog.exec()
         if answer != QDialog.DialogCode.Accepted:
             return None
-        row = connector_list_wg.currentIndex().row()
+        row = reader_list_wg.currentIndex().row()
         if row < 0:
             return None
-        connector = self._memoized_connector = connector_list[row]
+        connector = self._memoized_reader = reader_list[row]
         return connector
 
     @Slot()
@@ -448,7 +434,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if parent.isValid():
             return
         index = self._mappings_model.index(last, 0)
-        self._ui.source_list.selectionModel().setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+        self._ui.source_list.selectionModel().setCurrentIndex(index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
 
     @staticmethod
     def _is_url(string):

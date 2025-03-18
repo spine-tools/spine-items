@@ -14,7 +14,13 @@
 import sys
 import unittest
 from unittest import mock
-from spine_items.utils import convert_to_sqlalchemy_url, convert_url_to_safe_string, database_label
+from spine_items.utils import (
+    convert_to_sqlalchemy_url,
+    convert_url_to_safe_string,
+    database_label,
+    split_url_credentials,
+    unsplit_url_credentials,
+)
 
 
 class TestDatabaseLabel(unittest.TestCase):
@@ -181,6 +187,24 @@ class TestConvertUrlToSafeString(unittest.TestCase):
             "database": database_path,
         }
         self.assertEqual(convert_url_to_safe_string(url), r"sqlite:///" + database_path)
+
+
+class TestSplitUrlCredentials(unittest.TestCase):
+    def test_splitting_works(self):
+        url = "pymysql://superhuman:verysecret@big.organization.org/d_base"
+        sanitized_url, (username, password) = split_url_credentials(url)
+        self.assertEqual(sanitized_url, "pymysql://big.organization.org/d_base")
+        self.assertEqual(username, "superhuman")
+        self.assertEqual(password, "verysecret")
+
+
+class TestUnsplitUrlCredentials(unittest.TestCase):
+    def test_splitting_works(self):
+        sanitized_url = "pymysql://big.organization.org/d_base"
+        username = "superhuman"
+        password = "veryverysecret"
+        url = unsplit_url_credentials(sanitized_url, (username, password))
+        self.assertEqual(url, "pymysql://superhuman:veryverysecret@big.organization.org/d_base")
 
 
 if __name__ == "__main__":

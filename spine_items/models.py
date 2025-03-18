@@ -78,7 +78,7 @@ class CheckableFileListModel(FileListModel):
     def flags(self, index):
         flags = super().flags(index)
         if index.internalPointer() is None:
-            return flags | Qt.ItemIsUserCheckable
+            return flags | Qt.ItemFlag.ItemIsUserCheckable
         return flags
 
     def update(self, resources):
