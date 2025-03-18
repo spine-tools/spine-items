@@ -173,7 +173,7 @@ def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client
         # Log errors in a time stamped file into the logs directory
         timestamp = create_log_file_timestamp()
         logfilepath = os.path.abspath(os.path.join(logs_dir, timestamp + "_import_error.log"))
-        with open(logfilepath, "w") as f:
+        with open(logfilepath, "w", encoding="utf-8") as f:
             for err in all_import_errors:
                 f.write(str(err) + "\n")
         # Make error log file anchor with path as tooltip
