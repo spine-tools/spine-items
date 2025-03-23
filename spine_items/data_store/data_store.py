@@ -417,6 +417,14 @@ class DataStore(ProjectItem):
     @Slot(object)
     def _accept_url(self, url):
         """Sets URL as validated and updates advertised resources."""
+        db_map = self.get_db_map()
+        if db_map:
+            self._toolbox.db_mngr.name_registry.register(db_map.sa_url, self.name)
+            clean = not self._toolbox.db_mngr.is_dirty(db_map)
+            self._notify_about_dirtiness(clean)
+        else:
+            self.add_notification(f"Database is not valid.")
+            return
         self._url_validated = True
         self.clear_other_notifications(f"{self.name} has uncommitted changes")
         if self._resource_to_replace is not None and self._resource_to_replace.is_valid:
@@ -430,11 +438,6 @@ class DataStore(ProjectItem):
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
         self._update_actions_enabled()
-        db_map = self.get_db_map()
-        if db_map:
-            self._toolbox.db_mngr.name_registry.register(db_map.sa_url, self.name)
-            clean = not self._toolbox.db_mngr.is_dirty(db_map)
-            self._notify_about_dirtiness(clean)
 
     def is_url_validated(self):
         """Tests whether the URL has been validated.
