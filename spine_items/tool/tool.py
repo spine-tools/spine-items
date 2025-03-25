@@ -34,7 +34,7 @@ from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from .utils import find_file, flatten_file_path_duplicates
 from .widgets.custom_menus import ToolSpecificationMenu
-from .widgets.options_widgets import JuliaOptionsWidget, PythonToolSpecOptionalWidget
+from .widgets.options_widgets import JuliaOptionsWidget, PythonOptionsWidget
 
 
 class Tool(DBWriterItemBase):
@@ -66,7 +66,7 @@ class Tool(DBWriterItemBase):
             specification_name (str): Name of this Tool's Tool specification
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
-            options (dict, optional): misc tool options. At the moment it just holds the location of the Julia sysimage
+            options (dict, optional): Tool execution settings and Julia sysimage
             kill_completed_processes (bool): whether to kill completed persistent processes
             log_process_output (bool): whether to log process output to a file
             group_id (str, optional): execution group id
@@ -74,6 +74,7 @@ class Tool(DBWriterItemBase):
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
+        self._models = self._toolbox.exec_compound_models
         self.execute_in_work = execute_in_work
         if cmd_line_args is None:
             cmd_line_args = []
@@ -102,6 +103,26 @@ class Tool(DBWriterItemBase):
         self._req_file_paths = set()
         self._input_files_not_found = None
 
+    @property
+    def group_id(self):
+        return self._group_id
+
+    @property
+    def root_dir(self):
+        return self._root_directory
+
+    @property
+    def models(self):
+        return self._models
+
+    @property
+    def options(self):
+        return self._options
+
+    @property
+    def executable_class(self):
+        return ExecutableItem
+
     def set_up(self):
         execute_in_work = self.execute_in_work
         super().set_up()
@@ -122,14 +143,6 @@ class Tool(DBWriterItemBase):
         spec_icon = ItemInfo.specification_icon(self.specification())
         self.setup_specification_icon(spec_icon)
 
-    @property
-    def group_id(self):
-        return self._group_id
-
-    @property
-    def root_dir(self):
-        return self._root_directory
-
     def _get_options_widget(self):
         """Returns a widget to specify the options for this tool.
         It is embedded in the ui in ``self._update_tool_ui()``.
@@ -137,18 +150,36 @@ class Tool(DBWriterItemBase):
         Returns:
             OptionsWidget
         """
-        # At the moment only Julia has options, but the code is made generic
-        constructors = {"julia": JuliaOptionsWidget, "python": PythonToolSpecOptionalWidget}  # Add others as needed
+        constructors = {"julia": JuliaOptionsWidget, "python": PythonOptionsWidget}  # Add others as needed
         tooltype = self.specification().tooltype
         constructor = constructors.get(tooltype)
         if constructor is None:
             return None
+        self._options = self._check_options(tooltype)
         if tooltype not in self._properties_ui.options_widgets:
-            self._properties_ui.options_widgets[tooltype] = constructor()
-        options_widget = self._properties_ui.options_widgets[tooltype]
-        options_widget.set_tool(self)
-        options_widget.do_update_options(self._options)
-        return options_widget
+            self._properties_ui.options_widgets[tooltype] = constructor(self.models)
+        self._properties_ui.options_widgets[tooltype].set_tool(self)
+        self._properties_ui.options_widgets[tooltype].do_update_options(self._options)
+        return self._properties_ui.options_widgets[tooltype]
+
+    def _check_options(self, tooltype):
+        """Returns the default options based on given tool type if options are
+        missing. If some but not all options are available, fills in the missing
+        key-value pairs with default values."""
+        if tooltype == "python":
+            defaults = self.models.default_python_execution_settings()
+        elif tooltype == "julia":
+            defaults = self.models.default_julia_execution_settings()
+        else:
+            self._logger.msg_error.emit(f"Default execution settings for {tooltype} do not exist")
+            return {}
+        if not self._options:
+            return defaults
+        # If key is missing, insert the key and the default value
+        for key in defaults.keys():
+            if key not in self._options.keys():
+                self._options[key] = defaults[key]
+        return self._options
 
     @staticmethod
     def item_type():
@@ -290,6 +321,7 @@ class Tool(DBWriterItemBase):
             text (str): Tool specification name in the comboBox
         """
         spec = self._project.get_specification(text)
+        self._options = {}
         self.set_specification(spec)
 
     @Slot(bool)
@@ -397,7 +429,7 @@ class Tool(DBWriterItemBase):
             self._properties_ui.log_process_output_check_box.setChecked(log_process_output)
 
     def _update_tool_ui(self):
-        """Updates Tool properties UI. Used when Tool specification is changed."""
+        """Updates Tool properties UI."""
         options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
         if options_widget:
             options_widget.widget().hide()
@@ -462,10 +494,6 @@ class Tool(DBWriterItemBase):
     def resources_for_direct_successors(self):
         """See base class"""
         return scan_for_resources(self, self.specification(), self.output_dir)
-
-    @property
-    def executable_class(self):
-        return ExecutableItem
 
     def _find_input_files(self, resources):
         """Iterates files in required input files model and looks for them in the given resources.
@@ -630,7 +658,7 @@ class Tool(DBWriterItemBase):
     @staticmethod
     def item_dict_local_entries():
         """See base class."""
-        return [("root_directory",)]
+        return [("root_directory",), ("options",)]
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):

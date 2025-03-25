@@ -56,6 +56,10 @@ class ToolInstance:
     def owner(self):
         return self._owner
 
+    @property
+    def options(self):
+        return self._owner.options
+
     def is_running(self):
         return self.exec_mngr is not None
 
@@ -181,7 +185,7 @@ class JuliaToolInstance(ToolInstance):
     def make_sysimage_arg(self):
         """Returns a '--sysimage=path/to/sysimage' arg for the Julia
         process or None if the sysimage path is missing or invalid."""
-        sysimage_path = self._owner.options.get("julia_sysimage", "")
+        sysimage_path = self.options.get("julia_sysimage", "")
         if sysimage_path == "":
             return None
         if sysimage_path != "" and not os.path.isfile(sysimage_path):
@@ -191,10 +195,17 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        self.tool_specification.init_execution_settings()  # Set default execution settings if they are missing
-        julia_args = get_julia_path_and_project(self.tool_specification.execution_settings, self._settings)
+        # self.tool_specification.init_execution_settings()  # Set default execution settings if they are missing
+        exec_settings = {
+            "kernel_spec_name": self.options["kernel_spec_name"],
+            "env": self.options["env"],
+            "use_jupyter_console": self.options["use_jupyter_console"],
+            "executable": self.options["executable"],
+            "project": self.options["project"],
+        }
+        julia_args = get_julia_path_and_project(exec_settings, self._settings)
         if not julia_args:
-            k_name = self.tool_specification.execution_settings["kernel_spec_name"]
+            k_name = exec_settings["kernel_spec_name"]
             self._logger.msg_error.emit(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
             raise RuntimeError()
         cmdline_args = self.tool_specification.cmdline_args + args
@@ -202,11 +213,11 @@ class JuliaToolInstance(ToolInstance):
             return
         sysimage_arg = self.make_sysimage_arg()
         commands = self.make_julia_commands(cmdline_args)
-        if self.tool_specification.execution_settings["use_jupyter_console"]:
+        if exec_settings["use_jupyter_console"]:
             server_ip = "127.0.0.1"
             if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
                 server_ip = self._settings.value("engineSettings/remoteHost", "")
-            kernel_name = self.tool_specification.execution_settings["kernel_spec_name"]
+            kernel_name = exec_settings["kernel_spec_name"]
             extra_switches = [sysimage_arg] if sysimage_arg else None
             self.exec_mngr = KernelExecutionManager(
                 self._logger,
@@ -292,15 +303,15 @@ class PythonToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        self.tool_specification.init_execution_settings()  # Initialize execution settings
+        # self.tool_specification.init_execution_settings()  # Initialize execution settings
         cmdline_args = self.tool_specification.cmdline_args + args
-        if self.tool_specification.execution_settings["use_jupyter_console"]:
+        if self.options["use_jupyter_console"]:
             server_ip = "127.0.0.1"
             if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
                 server_ip = self._settings.value("engineSettings/remoteHost", "")
-            kernel_name = self.tool_specification.execution_settings["kernel_spec_name"]
+            kernel_name = self.options["kernel_spec_name"]
             commands = self.make_python_jupyter_console_commands(cmdline_args)
-            env = self.tool_specification.execution_settings["env"]  # Activate environment if "conda"
+            env = self.options["env"]  # Activate environment if "conda"
             conda_exe = resolve_conda_executable(self._settings.value("appSettings/condaPath", defaultValue=""))
             self.exec_mngr = KernelExecutionManager(
                 self._logger,
@@ -313,7 +324,7 @@ class PythonToolInstance(ToolInstance):
                 server_ip=server_ip,
             )
         else:
-            interpreter = self.tool_specification.execution_settings["executable"]
+            interpreter = self.options["executable"]
             python_exe = interpreter if interpreter else resolve_python_interpreter(self._settings)
             commands = self.make_python_basic_console_commands(cmdline_args)
             alias = f"python {' '.join([self.tool_specification.main_prgm] + cmdline_args)}"
