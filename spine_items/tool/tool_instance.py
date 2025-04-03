@@ -195,7 +195,6 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        # self.tool_specification.init_execution_settings()  # Set default execution settings if they are missing
         exec_settings = {
             "kernel_spec_name": self.options["kernel_spec_name"],
             "env": self.options["env"],
@@ -303,7 +302,6 @@ class PythonToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        # self.tool_specification.init_execution_settings()  # Initialize execution settings
         cmdline_args = self.tool_specification.cmdline_args + args
         if self.options["use_jupyter_console"]:
             server_ip = "127.0.0.1"

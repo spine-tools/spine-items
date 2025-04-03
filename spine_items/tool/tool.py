@@ -658,6 +658,7 @@ class Tool(DBWriterItemBase):
     @staticmethod
     def item_dict_local_entries():
         """See base class."""
+        # TODO: Make "julia_sysimage" a local option
         return [("root_directory",), ("options",)]
 
     @staticmethod
