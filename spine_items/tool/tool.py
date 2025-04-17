@@ -389,6 +389,7 @@ class Tool(DBWriterItemBase):
         self._options = options
         if self._active:
             _ = self._get_options_widget()
+            self._check_notifications()
 
     @Slot(bool)
     def _set_kill_completed_processes(self, kill_completed_processes):
