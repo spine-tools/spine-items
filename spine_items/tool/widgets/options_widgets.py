@@ -77,12 +77,6 @@ class SharedToolOptionsWidget(OptionsWidget):
 
     def connect_signals(self):
         """Connects signals."""
-        # self.ui.toolButton_refresh_kernel_specs.clicked.connect(self.start_kernel_fetcher)
-        # self.ui.comboBox_kernel_specs.activated.connect(self._specification_editor.push_change_kernel_spec_command)
-        # self.ui.radioButton_jupyter_console.toggled.connect(self._specification_editor.push_set_jupyter_console_mode)
-        # self.ui.lineEdit_executable.textEdited.connect(self._specification_editor.push_change_executable)
-        # self.ui.lineEdit_executable.editingFinished.connect(self._specification_editor.finish_changing_executable)
-        # QApplication.aboutToQuit.connect(self.stop_fetching_kernels)  # pylint: disable=undefined-variable
 
     def _enable_widgets(self, use_jupyter_console):
         """Enables or disables some UI elements in the optional widget according to a checkBox state.
@@ -92,7 +86,6 @@ class SharedToolOptionsWidget(OptionsWidget):
         """
         self.ui.comboBox_executable.setEnabled(not use_jupyter_console)  # Disable for jupyter console
         self.ui.comboBox_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
-        self.ui.toolButton_refresh_kernel_specs.setEnabled(use_jupyter_console)  # Enable for jupyter console
 
     def validate_executable(self, p, tool_spec_type):
         """Check that given Python or Julia path is a file, it exists, and the
@@ -149,18 +142,14 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
     @Slot(int)
     def _update_executable(self, _row):
         """Updates Python executable."""
-        print(f"Updating executable: {self.get_executable()}")
         self._tool.update_options({"executable": self.get_executable()})
 
     @Slot(int)
     def _update_python_kernel(self, _row):
-        print(f"Updating kernel: {self.get_kernel_name()}")
-        print(f"Updating is conda: {self.is_conda()}")
         self._tool.update_options({"kernel_spec_name": self.get_kernel_name(), "env": self.is_conda()})
 
     @Slot(bool)
     def _update_use_jupyter_console(self, checked):
-        print(f"Updating use_jupyter_console: {checked}")
         self._tool.update_options({"use_jupyter_console": checked})
 
     def do_update_options(self, options):
@@ -168,16 +157,14 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
         self._block_signals(True)
         self._enable_widgets(options["use_jupyter_console"])
         self.ui.radioButton_jupyter_console.setChecked(True) if options["use_jupyter_console"] else self.ui.radioButton_basic_console.setChecked(True)
-        ind = self.models.find_python_kernel_index(options["kernel_spec_name"])
-        if not ind.isValid():
-            self._tool.add_notification(
-                f"Python kernel {options['kernel_spec_name']} does not "
-                f"exist. Please check execution settings in Tool Properties."
-            )
-            ind = self.models.python_kernel_model.index(0, 0)
-        self.ui.comboBox_kernel_specs.setCurrentIndex(ind.row())
-        ind = self._models.find_python_interpreter_index(options["executable"])
-        self.ui.comboBox_executable.setCurrentIndex(ind.row())
+        kernel_index = self.models.find_python_kernel_index(options["kernel_spec_name"])
+        if not kernel_index.isValid():
+            kernel_index = self.models.python_kernel_model.index(0, 0)
+        self.ui.comboBox_kernel_specs.setCurrentIndex(kernel_index.row())
+        exec_index = self._models.find_python_interpreter_index(options["executable"])
+        if not exec_index.isValid():
+            exec_index = self.models.python_interpreters_model.index(0, 0)
+        self.ui.comboBox_executable.setCurrentIndex(exec_index.row())
         self._block_signals(False)
 
     def _block_signals(self, block):
@@ -199,7 +186,6 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
     def get_kernel_name(self):
         """Returns the selected Python kernel name in the combobox."""
         data = self.get_current_kernel_item_data()
-        print(f"data:{data}")
         return data["kernel_name"]
 
     def is_conda(self):
@@ -216,7 +202,12 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
         new_python = select_file_path(self._project.toolbox(), "Add Python Interpreter...", init_dir, "python")
         if not new_python:
             return
-        ind = self.models.add_python_interpreter(new_python, self._project.toolbox())
+        self._block_signals(True)
+        ind = self.models.add_python_interpreter(new_python)
+        self._block_signals(False)
+        if not ind.isValid():
+            self._logger.msg_error.emit(f"Adding Python {new_python} failed")
+            ind = self.models.python_interpreters_model.index(0, 0)
         self.ui.comboBox_executable.setCurrentIndex(ind.row())
 
     def _enable_widgets(self, use_jupyter_console):
@@ -236,7 +227,6 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
             self.ui.toolButton_browse_python,
             self.ui.radioButton_jupyter_console,
             self.ui.comboBox_kernel_specs,
-            self.ui.toolButton_refresh_kernel_specs,
         )
 
 
@@ -273,25 +263,20 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
 
     @Slot(bool)
     def _update_use_jupyter_console(self, checked):
-        print(f"Updating use_jupyter_console: {checked}")
         self._tool.update_options({"use_jupyter_console": checked})
 
     @Slot(int)
     def _update_executable(self, _row):
         """Updates Julia executable."""
-        print(f"Updating executable: {self.get_executable()}")
         self._tool.update_options({"executable": self.get_executable()})
 
     @Slot(int)
     def _update_project(self, _row):
         """Updates Julia project."""
-        print(f"Updating Julia project: {self.get_project()}")
         self._tool.update_options({"project": self.get_project()})
 
     @Slot(int)
     def _update_julia_kernel(self, _row):
-        print(f"Updating kernel: {self.get_kernel_name()}")
-        print(f"Updating is conda: {self.is_conda()}")
         self._tool.update_options({"kernel_spec_name": self.get_kernel_name(), "env": self.is_conda()})
 
     def do_update_options(self, options):
@@ -303,10 +288,6 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self.ui.radioButton_jupyter_console.setChecked(True) if options["use_jupyter_console"] else self.ui.radioButton_basic_console.setChecked(True)
         ind = self.models.find_julia_kernel_index(options["kernel_spec_name"])
         if not ind.isValid():
-            self._tool.add_notification(
-                f"Julia kernel {options['kernel_spec_name']} does not "
-                f"exist. Please check execution settings in Tool Properties."
-            )
             ind = self.models.julia_kernel_model.index(0, 0)
         self.ui.comboBox_kernel_specs.setCurrentIndex(ind.row())
         ind = self.models.find_julia_executable_index(options["executable"])
@@ -336,7 +317,6 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
     def get_kernel_name(self):
         """Returns the selected Julia kernel name in the combobox."""
         data = self.get_current_kernel_item_data()
-        print(f"data:{data}")
         return data["kernel_name"]
 
     def is_conda(self):
@@ -359,7 +339,12 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         fpath = select_file_path(self, "Add Julia Executable...", init_dir, "julia")
         if not fpath:
             return
-        ind = self.models.add_julia_executable(fpath, self)
+        self._block_signals(True)
+        ind = self.models.add_julia_executable(fpath)
+        self._block_signals(False)
+        if not ind.isValid():
+            self._logger.msg_error.emit(f"Adding Julia executable {fpath} failed")
+            ind = self.models.julia_executables_model.index(0, 0)
         self.ui.comboBox_executable.setCurrentIndex(ind.row())
 
     @Slot(bool)
@@ -368,7 +353,12 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         dpath = select_dir(self, "Add Julia project directory...")
         if not dpath:
             return
-        ind = self.models.add_julia_project(dpath, self)
+        self._block_signals(True)
+        ind = self.models.add_julia_project(dpath)
+        self._block_signals(False)
+        if not ind.isValid():
+            self._logger.msg_error.emit(f"Adding Julia Project {dpath} failed")
+            ind = self.models.julia_projects_model.index(0, 0)
         self.ui.comboBox_julia_project.setCurrentIndex(ind.row())
 
     def _enable_widgets(self, use_jupyter_console):
@@ -392,7 +382,6 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
             self.ui.toolButton_browse_julia_project,
             self.ui.radioButton_jupyter_console,
             self.ui.comboBox_kernel_specs,
-            self.ui.toolButton_refresh_kernel_specs,
         )
 
     def _make_work_animation(self):

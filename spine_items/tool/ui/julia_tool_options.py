@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'julia_tool_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.1
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -166,15 +166,6 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.comboBox_kernel_specs)
 
-        self.toolButton_refresh_kernel_specs = QToolButton(Form)
-        self.toolButton_refresh_kernel_specs.setObjectName(u"toolButton_refresh_kernel_specs")
-        icon4 = QIcon()
-        icon4.addFile(u":/icons/sync.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.toolButton_refresh_kernel_specs.setIcon(icon4)
-        self.toolButton_refresh_kernel_specs.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-
-        self.horizontalLayout.addWidget(self.toolButton_refresh_kernel_specs)
-
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
@@ -185,7 +176,6 @@ class Ui_Form(object):
         QWidget.setTabOrder(self.radioButton_jupyter_console, self.toolButton_browse_julia)
         QWidget.setTabOrder(self.toolButton_browse_julia, self.toolButton_browse_julia_project)
         QWidget.setTabOrder(self.toolButton_browse_julia_project, self.comboBox_kernel_specs)
-        QWidget.setTabOrder(self.comboBox_kernel_specs, self.toolButton_refresh_kernel_specs)
 
         self.retranslateUi(Form)
 
@@ -218,10 +208,6 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Julia kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh kernel specs list</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolButton_refresh_kernel_specs.setText("")
         pass
     # retranslateUi
 

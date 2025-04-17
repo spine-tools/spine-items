@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'python_tool_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.1
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -98,15 +98,6 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.comboBox_kernel_specs)
 
-        self.toolButton_refresh_kernel_specs = QToolButton(Form)
-        self.toolButton_refresh_kernel_specs.setObjectName(u"toolButton_refresh_kernel_specs")
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/sync.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.toolButton_refresh_kernel_specs.setIcon(icon1)
-        self.toolButton_refresh_kernel_specs.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-
-        self.horizontalLayout.addWidget(self.toolButton_refresh_kernel_specs)
-
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
@@ -128,10 +119,6 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.toolButton_refresh_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Refresh kernel specs list</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.toolButton_refresh_kernel_specs.setText("")
         pass
     # retranslateUi
 

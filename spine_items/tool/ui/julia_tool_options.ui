@@ -230,23 +230,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_refresh_kernel_specs">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Refresh kernel specs list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="../../ui/resources/resources_icons.qrc">
-           <normaloff>:/icons/sync.svg</normaloff>:/icons/sync.svg</iconset>
-         </property>
-         <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
-         </property>
-        </widget>
-       </item>
       </layout>
      </item>
     </layout>
@@ -266,7 +249,6 @@
   <tabstop>toolButton_browse_julia</tabstop>
   <tabstop>toolButton_browse_julia_project</tabstop>
   <tabstop>comboBox_kernel_specs</tabstop>
-  <tabstop>toolButton_refresh_kernel_specs</tabstop>
  </tabstops>
  <resources>
   <include location="../../ui/resources/resources_icons.qrc"/>

@@ -249,32 +249,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         python_tool_spec.execution_settings["kernel_spec_name"] = "python310"
         with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
             self.make_tool_spec_editor(python_tool_spec)
-            opt_widget = self.tool_specification_widget.optional_widget
-            self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())
-            self.assertEqual(3, opt_widget.kernel_spec_model.rowCount())
-            self.assertEqual(1, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-            self.assertEqual("python310", opt_widget.ui.comboBox_kernel_specs.currentText())
-            self.tool_specification_widget.push_change_kernel_spec_command(2)
-            self.assertEqual(
-                "python311", self.tool_specification_widget.spec_dict["execution_settings"]["kernel_spec_name"]
-            )
-            self.assertEqual(2, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-            self.assertEqual("python311", opt_widget.ui.comboBox_kernel_specs.currentText())
-            self.assertTrue(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
-            # Test SharedToolSpecOptionalWidget._restore_selected_kernel()
-            # Restore selected kernel after the kernel spec model has been reloaded
-            opt_widget.start_kernel_fetcher()
-            self.assertEqual(3, opt_widget.kernel_spec_model.rowCount())
-            self.assertEqual(2, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-            self.assertEqual("python311", opt_widget.ui.comboBox_kernel_specs.currentText())
-            # Test push_set_jupyter_console_mode()
-            self.tool_specification_widget.push_set_jupyter_console_mode(False)
-            self.assertFalse(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
-            opt_widget.set_executable("path/to/executable")
-            self.tool_specification_widget.push_change_executable(opt_widget.get_executable())
-            self.assertEqual(
-                "path/to/executable", self.tool_specification_widget.spec_dict["execution_settings"]["executable"]
-            )
             self.tool_specification_widget._push_change_args_command("-A -B")
             self.assertEqual(["-A", "-B"], self.tool_specification_widget.spec_dict["cmdline_args"])
 
@@ -344,43 +318,30 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.tool_specification_widget.push_change_shell_command(index_of_bash)
             self.assertEqual("bash", self.tool_specification_widget.optional_widget.get_current_shell())
 
-    def test_change_julia_project(self):
-        mock_logger = mock.MagicMock()
-        julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, ["hello.jl"], MockQSettings(), mock_logger)
-        julia_tool_spec.init_execution_settings()  # Sets defaults
-        julia_tool_spec.execution_settings["use_jupyter_console"] = True
-        with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
-            self.make_tool_spec_editor(julia_tool_spec)
-            self.assertEqual("", self.tool_specification_widget.spec_dict["execution_settings"]["project"])
-            self.tool_specification_widget.optional_widget.ui.lineEdit_julia_project.setText("path/to/julia_project")
-            self.tool_specification_widget.push_change_project()
-            self.assertEqual(
-                "path/to/julia_project", self.tool_specification_widget.spec_dict["execution_settings"]["project"]
-            )
-
-    def test_restore_unknown_saved_kernel_into_optional_widget(self):
-        mock_logger = mock.MagicMock()
-        script_file_name = "hello.py"
-        file_path = Path(self._temp_dir.name, script_file_name)
-        with open(file_path, "w") as h:
-            h.writelines(["# hello.py"])  # Make hello.py
-        python_tool_spec = PythonTool(
-            "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
-        )
-        python_tool_spec.init_execution_settings()  # Sets defaults
-        python_tool_spec.execution_settings["use_jupyter_console"] = True
-        python_tool_spec.execution_settings["kernel_spec_name"] = "unknown_kernel"
-        with (
-            mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher),
-            mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.Notification") as mock_notify,
-        ):
-            self.make_tool_spec_editor(python_tool_spec)
-            opt_widget = self.tool_specification_widget.optional_widget
-            self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())
-            self.assertEqual(3, opt_widget.kernel_spec_model.rowCount())
-            self.assertEqual(0, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-            self.assertEqual("Select kernel spec...", opt_widget.ui.comboBox_kernel_specs.currentText())
-            mock_notify.assert_called()
+    # TODO: Move to test_options_widgets.py
+    # def test_restore_unknown_saved_kernel_into_optional_widget(self):
+    #     mock_logger = mock.MagicMock()
+    #     script_file_name = "hello.py"
+    #     file_path = Path(self._temp_dir.name, script_file_name)
+    #     with open(file_path, "w") as h:
+    #         h.writelines(["# hello.py"])  # Make hello.py
+    #     python_tool_spec = PythonTool(
+    #         "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
+    #     )
+    #     python_tool_spec.init_execution_settings()  # Sets defaults
+    #     python_tool_spec.execution_settings["use_jupyter_console"] = True
+    #     python_tool_spec.execution_settings["kernel_spec_name"] = "unknown_kernel"
+    #     with (
+    #         mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher),
+    #         mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.Notification") as mock_notify,
+    #     ):
+    #         self.make_tool_spec_editor(python_tool_spec)
+    #         opt_widget = self.tool_specification_widget.optional_widget
+    #         self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())
+    #         self.assertEqual(3, opt_widget.kernel_spec_model.rowCount())
+    #         self.assertEqual(0, opt_widget.ui.comboBox_kernel_specs.currentIndex())
+    #         self.assertEqual("Select kernel spec...", opt_widget.ui.comboBox_kernel_specs.currentText())
+    #         mock_notify.assert_called()
 
     def test_program_file_dialogs(self):
         mock_logger = mock.MagicMock()
