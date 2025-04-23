@@ -12,13 +12,13 @@
 
 """Contains the Tool project item class."""
 import os
-from PySide6.QtCore import QItemSelection, Qt, Slot
+from PySide6.QtCore import QItemSelection, Slot
 from PySide6.QtGui import QAction
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg, make_cmd_line_arg
-from spine_engine.utils.helpers import ExecutionDirection, resolve_julia_executable, resolve_python_interpreter
+from spine_engine.utils.helpers import ExecutionDirection
 from spine_engine.utils.serialization import deserialize_path, serialize_path
-from spinetoolbox.helpers import open_url, select_root_directory
+from spinetoolbox.helpers import open_url, select_root_directory, default_python_execution_settings, default_julia_execution_settings, default_executable_execution_settings
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand
 from ..db_writer_item_base import DBWriterItemBase
@@ -34,7 +34,7 @@ from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from .utils import find_file, flatten_file_path_duplicates
 from .widgets.custom_menus import ToolSpecificationMenu
-from .widgets.options_widgets import JuliaOptionsWidget, PythonOptionsWidget
+from .widgets.options_widgets import JuliaOptionsWidget, PythonOptionsWidget, ExecutableOptionsWidget
 
 
 class Tool(DBWriterItemBase):
@@ -144,13 +144,13 @@ class Tool(DBWriterItemBase):
         self.setup_specification_icon(spec_icon)
 
     def _get_options_widget(self):
-        """Returns a widget to specify the options for this tool.
+        """Returns a widget to specify extra options for this tool depending on specification type.
         It is embedded in the ui in ``self._update_tool_ui()``.
 
         Returns:
-            OptionsWidget
+            OptionsWidget: Options widget or None
         """
-        constructors = {"julia": JuliaOptionsWidget, "python": PythonOptionsWidget}  # Add others as needed
+        constructors = {"julia": JuliaOptionsWidget, "python": PythonOptionsWidget, "executable": ExecutableOptionsWidget}
         tooltype = self.specification().tooltype
         constructor = constructors.get(tooltype)
         if constructor is None:
@@ -167,9 +167,11 @@ class Tool(DBWriterItemBase):
         missing. If some but not all options are available, fills in the missing
         key-value pairs with default values."""
         if tooltype == "python":
-            defaults = self.models.default_python_execution_settings()
+            defaults = default_python_execution_settings()
         elif tooltype == "julia":
-            defaults = self.models.default_julia_execution_settings()
+            defaults = default_julia_execution_settings()
+        elif tooltype == "executable":
+            defaults = default_executable_execution_settings()
         else:
             self._logger.msg_error.emit(f"Default execution settings for {tooltype} do not exist")
             return {}

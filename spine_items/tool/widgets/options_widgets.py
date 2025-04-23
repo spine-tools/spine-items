@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""Provides OptionsWidget and subclasses for each tool type (julia, python, executable, gams)."""
+"""Provides OptionsWidget classes for Python and Julia tool types."""
 import os
 import sys
 import uuid
@@ -37,7 +37,7 @@ class OptionsWidget(QWidget):
         super().__init__()
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self._models = models  # Python and Julia models
+        self._models = models  # Models containing saved Pythons and Julias
         self._tool = None
 
     def set_tool(self, tool):
@@ -219,16 +219,6 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
         self.ui.toolButton_browse_python.setEnabled(not use_jupyter_console)  # Disable for jupyter console
         super()._enable_widgets(use_jupyter_console)
 
-    def get_widgets_in_tab_order(self):
-        """TODO: Not used."""
-        return (
-            self.ui.radioButton_basic_console,
-            self.ui.comboBox_executable,
-            self.ui.toolButton_browse_python,
-            self.ui.radioButton_jupyter_console,
-            self.ui.comboBox_kernel_specs,
-        )
-
 
 class JuliaOptionsWidget(SharedToolOptionsWidget):
     def __init__(self, models):
@@ -328,7 +318,6 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         item = self.models.julia_kernel_model.itemFromIndex(current_index)
         return item.data()
 
-
     @Slot(bool)
     def _add_julia_executable(self, _=False):
         """Calls static method that shows a file browser for selecting a Julia path."""
@@ -371,18 +360,6 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self.ui.toolButton_browse_julia_project.setEnabled(not use_jupyter_console)  # Disable for jupyter console
         self.ui.comboBox_julia_project.setEnabled(not use_jupyter_console)
         super()._enable_widgets(use_jupyter_console)
-
-    def get_widgets_in_tab_order(self):
-        """TODO: Not used."""
-        return (
-            self.ui.radioButton_basic_console,
-            self.ui.comboBox_executable,
-            self.ui.toolButton_browse_julia,
-            self.ui.comboBox_julia_project,
-            self.ui.toolButton_browse_julia_project,
-            self.ui.radioButton_jupyter_console,
-            self.ui.comboBox_kernel_specs,
-        )
 
     def _make_work_animation(self):
         """
@@ -723,3 +700,125 @@ end"""
             if errors:
                 msg += f" with the following error(s):\n{errors}"
         return msg
+
+
+class ExecutableOptionsWidget(OptionsWidget):
+    def __init__(self, models):
+        from ..ui.executable_tool_options import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__(Ui_Form, models)
+        self.shells = ["No shell", "cmd.exe", "powershell.exe", "bash"]
+        self.ui.comboBox_shell.addItems(self.shells)
+        # Disable shell selections that are not compatible with the os running toolbox
+        msg = f"<p>Selection not available for platform {sys.platform}</p>"
+        if sys.platform == "win32":
+            # No bash for windows
+            self.ui.comboBox_shell.model().item(3).setEnabled(False)
+            self.ui.comboBox_shell.model().item(3).setToolTip(msg)
+        else:
+            # For other systems no cmd or powershell
+            self.ui.comboBox_shell.model().item(1).setEnabled(False)
+            self.ui.comboBox_shell.model().item(1).setToolTip(msg)
+            self.ui.comboBox_shell.model().item(2).setEnabled(False)
+            self.ui.comboBox_shell.model().item(2).setToolTip(msg)
+        self.connect_signals()
+
+    def connect_signals(self):
+        self.ui.lineEdit_command.textEdited.connect(self._update_command)
+        # self.ui.lineEdit_command.editingFinished.connect(self._specification_editor._finish_updating_command)
+        self.ui.comboBox_shell.activated.connect(self._update_shell)
+
+    def do_update_options(self, options):
+        print(f"[{self._tool.name}] restoring options:{options}")
+        self._block_signals(True)
+        self.ui.lineEdit_command.setText(options["cmd"])
+        shell = options["shell"]
+        ind = next(iter(k for k, t in enumerate(self.shells) if t.lower() == shell), 0)
+        self.ui.comboBox_shell.setCurrentIndex(ind)
+        self._block_signals(False)
+
+    def _block_signals(self, block):
+        self.ui.lineEdit_command.blockSignals(block)
+        self.ui.comboBox_shell.blockSignals(block)
+
+    # def init_widget(self, specification):
+    #     """Initializes UI elements based on specification."""
+    #     self.ui.lineEdit_command.setText(specification.execution_settings["cmd"])
+    #     shell = specification.execution_settings["shell"]
+    #     ind = next(iter(k for k, t in enumerate(self.shells) if t.lower() == shell), 0)
+    #     self.ui.comboBox_shell.setCurrentIndex(ind)
+
+    # def add_execution_settings(self, tool_spec_type):
+    #     """See base class."""
+    #     return {"cmd": self.ui.lineEdit_command.text(), "shell": self.get_current_shell()}
+
+    def get_shell(self):
+        """Returns the selected shell in the shell combo box."""
+        ind = self.ui.comboBox_shell.currentIndex()
+        if ind < 1:
+            return ""
+        return self.ui.comboBox_shell.currentText()
+
+    @Slot(str)
+    def _update_command(self, cmd):
+        """Updates command."""
+        self._tool.update_options({"cmd": cmd})
+
+    # @Slot()
+    # def _finish_updating_command(self):
+    #     """Seals latest undo stack command."""
+    #     self._undo_stack.push(SealCommand(CommandId.COMMAND_UPDATE.value))
+
+    @Slot(int)
+    def _update_shell(self, _row):
+        """Updates shell."""
+        self._tool.update_options({"shell": self.get_shell()})
+
+    def set_command_and_shell_edit_disabled_state(self, enabled):
+        # TODO: This could be used when tool spec does have or does not have a main file. (In do_update_options())
+        """Sets the enabled state for the Command -text editor and the Shell -combobox"""
+        self.ui.comboBox_shell.setDisabled(enabled)
+        self.ui.lineEdit_command.setDisabled(enabled)
+
+    # @Slot(str)
+    # def push_change_executable_command(self, command):
+    #     """Changes command for Executable Tool Specs.
+    #
+    #     Args:
+    #         command (str): new command
+    #     """
+    #     old_value = self.spec_dict["execution_settings"]["cmd"]
+    #     new_value = command.strip()
+    #     if new_value == old_value:
+    #         return
+    #     self._undo_stack.push(
+    #         ChangeSpecPropertyCommand(self._set_cmd, new_value, old_value, "change command", CommandId.COMMAND_UPDATE)
+    #     )
+
+    # def _set_cmd(self, value):
+    #     self.spec_dict["execution_settings"]["cmd"] = value
+    #     opt_widget = self._get_optional_widget("executable")
+    #     opt_widget.ui.lineEdit_command.setText(value)
+
+
+    # @Slot()
+    # def finish_changing_executable(self):
+    #     """Seals latest undo stack command."""
+    #     self._undo_stack.push(SealCommand(CommandId.EXECUTABLE_UPDATE.value))
+
+    # @Slot(int)
+    # def push_change_shell_command(self, index):
+    #     """Changes shell for Executable Tool Specs."""
+    #     toolspectype = self.spec_dict.get("tooltype", "")
+    #     opt_widget = self._get_optional_widget(toolspectype)
+    #     new_shell = opt_widget.shells[index] if index != 0 else ""
+    #     old_shell = self.spec_dict["execution_settings"]["shell"]
+    #     if new_shell == old_shell:
+    #         return
+    #     self._undo_stack.push(ChangeSpecPropertyCommand(self._set_shell, new_shell, old_shell, "change shell"))
+    #
+    # def _set_shell(self, value):
+    #     self.spec_dict["execution_settings"]["shell"] = value
+    #     opt_widget = self._get_optional_widget("executable")
+    #     index = next(iter(k for k, t in enumerate(opt_widget.shells) if t.lower() == value), 0)
+    #     opt_widget.ui.comboBox_shell.setCurrentIndex(index)

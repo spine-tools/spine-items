@@ -82,10 +82,6 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.radioButton_jupyter_console)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setSpacing(4)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(0, -1, -1, -1)
         self.comboBox_kernel_specs = QComboBox(Form)
         self.comboBox_kernel_specs.setObjectName(u"comboBox_kernel_specs")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -96,13 +92,17 @@ class Ui_Form(object):
         self.comboBox_kernel_specs.setMinimumSize(QSize(100, 24))
         self.comboBox_kernel_specs.setMaximumSize(QSize(16777215, 24))
 
-        self.horizontalLayout.addWidget(self.comboBox_kernel_specs)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout.addWidget(self.comboBox_kernel_specs)
 
 
         self.verticalLayout_2.addLayout(self.verticalLayout)
+
+        self.line = QFrame(Form)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.Shape.HLine)
+        self.line.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.verticalLayout_2.addWidget(self.line)
 
 
         self.retranslateUi(Form)

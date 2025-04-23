@@ -369,8 +369,8 @@ class ExecutableToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         if not self.tool_specification.main_prgm:  # Run command
-            cmd = self.tool_specification.execution_settings["cmd"].split()  # Convert str to list
-            shell = self.tool_specification.execution_settings["shell"]
+            cmd = self.options["cmd"].split()  # Convert str to list
+            shell = self.options["shell"]
             if not shell:
                 # If shell is not given (empty str), The first item in cmd list will be considered as self.program.
                 # The rest of the cmd list will be considered as cmd line args

@@ -531,8 +531,8 @@ class ExecutableTool(ToolSpecification):
         inputfiles_opt=None,
         outputfiles=None,
         cmdline_args=None,
-        execution_settings=None,
         definition_file_path=None,
+        **kwargs,
     ):
         """
         Args:
@@ -552,6 +552,7 @@ class ExecutableTool(ToolSpecification):
             execution_settings (dict): Settings for executing a (shell) command instead of a file
             definition_file_path (str): Absolute path to spec definition file. Only used when running a (shell) command
                 in 'source' execution mode
+            kwargs (dict): Used to soak up unnecessary kwargs
         """
         super().__init__(
             name,
@@ -570,8 +571,8 @@ class ExecutableTool(ToolSpecification):
             self.main_prgm = includes[0]
         except IndexError:
             self.main_prgm = None
-        self.execution_settings = execution_settings
         if definition_file_path and not path:
+            # TODO: Check if self.default_execution_dir is still necessary
             # Set the default execution dir in source execution mode when running a command (no program files)
             # This part is processed when Tool Specs are loaded at app startup or when Spine Engine loads them
             # Note: When a Tool Spec is saved in Tool Spec Editor, definition_file_path == None
@@ -580,29 +581,10 @@ class ExecutableTool(ToolSpecification):
         self.options = OrderedDict()
         self.return_codes = {0: "Normal exit", 1: "Error happened"}
 
-    def to_dict(self):
-        """Adds execution settings dict to Executable Tool spec dicts."""
-        d = super().to_dict()
-        d["execution_settings"] = self.execution_settings
-        return d
-
     def _includes_main_path_relative(self):
         if not self.path:
             return None
         return super()._includes_main_path_relative()
-
-    def init_execution_settings(self):
-        """Updates old Executable Tool specifications by adding the
-        default execution settings dict for this specification.
-
-        Returns:
-            void
-        """
-        if not self.execution_settings:
-            d = {}
-            d["cmd"] = ""
-            d["shell"] = ""
-            self.execution_settings = d
 
     @staticmethod
     def load(path, data, settings, logger):

@@ -145,15 +145,6 @@ class Ui_Form(object):
 
         self.verticalLayout.addWidget(self.radioButton_jupyter_console)
 
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setSpacing(4)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(0, -1, -1, -1)
-        self.label = QLabel(Form)
-        self.label.setObjectName(u"label")
-
-        self.horizontalLayout.addWidget(self.label)
-
         self.comboBox_kernel_specs = QComboBox(Form)
         self.comboBox_kernel_specs.setObjectName(u"comboBox_kernel_specs")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -164,18 +155,21 @@ class Ui_Form(object):
         self.comboBox_kernel_specs.setMinimumSize(QSize(100, 24))
         self.comboBox_kernel_specs.setMaximumSize(QSize(16777215, 24))
 
-        self.horizontalLayout.addWidget(self.comboBox_kernel_specs)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout.addWidget(self.comboBox_kernel_specs)
 
 
         self.verticalLayout_2.addLayout(self.verticalLayout)
 
+        self.line = QFrame(Form)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.Shape.HLine)
+        self.line.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.verticalLayout_2.addWidget(self.line)
+
         QWidget.setTabOrder(self.radioButton_basic_console, self.radioButton_jupyter_console)
         QWidget.setTabOrder(self.radioButton_jupyter_console, self.toolButton_browse_julia)
         QWidget.setTabOrder(self.toolButton_browse_julia, self.toolButton_browse_julia_project)
-        QWidget.setTabOrder(self.toolButton_browse_julia_project, self.comboBox_kernel_specs)
 
         self.retranslateUi(Form)
 
@@ -183,7 +177,7 @@ class Ui_Form(object):
     # setupUi
 
     def retranslateUi(self, Form):
-        self.label_sysimage.setText(QCoreApplication.translate("Form", u"Sysimage", None))
+        self.label_sysimage.setText(QCoreApplication.translate("Form", u"Sysimage:", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_abort_sysimage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Abort sysimage creation</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -204,7 +198,6 @@ class Ui_Form(object):
         self.toolButton_browse_julia_project.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Julia project using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.radioButton_jupyter_console.setText(QCoreApplication.translate("Form", u"Use Jupyter kernel", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Kernel:", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Julia kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
