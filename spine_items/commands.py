@@ -164,3 +164,29 @@ class UpdateRootDirCommand(SpineToolboxCommand):
     def undo(self):
         item = self._project.get_item(self._item_name)
         item.do_set_root_directory(self._undo_root_dir)
+
+
+class UpdateResultDirCommand(SpineToolboxCommand):
+    def __init__(self, item_name, result_dir, project):
+        """Command to update Tool result directory.
+
+        Args:
+            item_name (str): Item's name
+            result_dir (str): Result directory
+            project (SpineToolboxProject): Project
+        """
+        super().__init__()
+        self._item_name = item_name
+        self._redo_result_dir = result_dir
+        item = project.get_item(item_name)
+        self._undo_result_dir = item._options.get("output_directory")
+        self._project = project
+        self.setText(f"change result directory of {item_name}")
+
+    def redo(self):
+        item = self._project.get_item(self._item_name)
+        item.do_set_result_directory(self._redo_result_dir)
+
+    def undo(self):
+        item = self._project.get_item(self._item_name)
+        item.do_set_result_directory(self._undo_result_dir)

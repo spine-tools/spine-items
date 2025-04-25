@@ -20,7 +20,7 @@ from spine_engine.utils.helpers import ExecutionDirection, resolve_julia_executa
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.helpers import open_url, select_root_directory
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
-from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand
+from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand, UpdateResultDirCommand
 from ..db_writer_item_base import DBWriterItemBase
 from ..models import ToolCommandLineArgsModel
 from .commands import (
@@ -90,8 +90,8 @@ class Tool(DBWriterItemBase):
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
-        # Make directory for results
-        self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
+        output_dir = options.get("output_directory")
+        self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR) if not output_dir else output_dir
         self._specification_menu = None
         self._options = options if options is not None else {}
         self._kill_completed_processes = kill_completed_processes
@@ -174,6 +174,8 @@ class Tool(DBWriterItemBase):
         s[self._properties_ui.lineEdit_group_id.editingFinished] = self._set_group_id
         s[self._properties_ui.lineEdit_root_directory.editingFinished] = self._set_root_directory
         s[self._properties_ui.toolButton_browse_root_directory.clicked] = self._browse_root_directory
+        s[self._properties_ui.lineEdit_result_directory.editingFinished] = self._set_result_directory
+        s[self._properties_ui.toolButton_browse_result_directory.clicked] = self._browse_result_directory
         s[self._properties_ui.kill_consoles_check_box.clicked] = self._set_kill_completed_processes
         s[self._properties_ui.log_process_output_check_box.clicked] = self._set_log_process_output
         return s
@@ -228,10 +230,18 @@ class Tool(DBWriterItemBase):
         self._do_update_remove_args_button_enabled()
         self._properties_ui.lineEdit_group_id.setText(self._group_id)
         self._properties_ui.lineEdit_root_directory.setText(self._root_directory)
+        output_dir = self._options.get("output_directory")
+        if not output_dir:
+            self._properties_ui.lineEdit_result_directory.clear()
+            self._properties_ui.lineEdit_result_directory.setPlaceholderText(self.output_dir)
+            self._properties_ui.lineEdit_result_directory.setToolTip(self.output_dir)
+        else:
+            self._properties_ui.lineEdit_result_directory.setText(output_dir.replace("/", os.sep))
+            self._properties_ui.lineEdit_result_directory.setToolTip(output_dir.replace("/", os.sep))
 
     @Slot(bool)
     def _browse_root_directory(self, _=False):
-        """Calls static method that shows a file browser for selecting a Python interpreter."""
+        """Calls static method that shows a file browser for selecting a Tool spec main program file root directory."""
         select_root_directory(self._toolbox, self._properties_ui.lineEdit_root_directory, self._project.project_dir)
         self._set_root_directory()
 
@@ -250,6 +260,36 @@ class Tool(DBWriterItemBase):
         self._root_directory = root_dir
         if self._active:
             self._properties_ui.lineEdit_root_directory.setText(root_dir)
+
+    @Slot(bool)
+    def _browse_result_directory(self, _=False):
+        """Calls static method that shows a file browser for selecting a result directory."""
+        select_root_directory(self._toolbox, self._properties_ui.lineEdit_result_directory, self._project.project_dir)
+        self._set_result_directory()
+
+    @Slot()
+    def _set_result_directory(self):
+        """Pushes a command to update result directory whenever the user edits the line edit."""
+        result_dir = self._properties_ui.lineEdit_result_directory.text().strip()
+        if result_dir and self._options.get("output_directory") == result_dir:
+            return
+        self._toolbox.undo_stack.push(UpdateResultDirCommand(self.name, result_dir, self._project))
+
+    def do_set_result_directory(self, result_dir):
+        """Sets results directory."""
+        if not result_dir:
+            self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
+            self._options["output_directory"] = None
+        else:
+            self.output_dir = self._options["output_directory"] = result_dir
+        if self._active:
+            if not result_dir:
+                self._properties_ui.lineEdit_result_directory.clear()
+                self._properties_ui.lineEdit_result_directory.setPlaceholderText(self.output_dir)
+            else:
+                self._properties_ui.lineEdit_result_directory.setText(self.output_dir)
+                self._properties_ui.lineEdit_result_directory.setToolTip(self.output_dir)
+            self._properties_ui.lineEdit_result_directory.setToolTip(self.output_dir)
 
     @Slot(bool)
     def show_specification_window(self, _=True):
@@ -630,7 +670,7 @@ class Tool(DBWriterItemBase):
     @staticmethod
     def item_dict_local_entries():
         """See base class."""
-        return [("root_directory",)]
+        return [("root_directory",), ("options",)]
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
@@ -666,7 +706,8 @@ class Tool(DBWriterItemBase):
         """See base class."""
         if not super().rename(new_name, rename_data_dir_message):
             return False
-        self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
+        output_dir = self._options.get("output_directory")
+        self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR) if not output_dir else output_dir
         return True
 
     def notify_destination(self, source_item):

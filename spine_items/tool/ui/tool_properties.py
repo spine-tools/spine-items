@@ -259,9 +259,18 @@ class Ui_Form(object):
 
         self.horizontalLayout_11.addWidget(self.pushButton_tool_results)
 
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.lineEdit_result_directory = QLineEdit(self.frame)
+        self.lineEdit_result_directory.setObjectName(u"lineEdit_result_directory")
+        self.lineEdit_result_directory.setReadOnly(False)
+        self.lineEdit_result_directory.setClearButtonEnabled(True)
 
-        self.horizontalLayout_11.addItem(self.horizontalSpacer_6)
+        self.horizontalLayout_11.addWidget(self.lineEdit_result_directory)
+
+        self.toolButton_browse_result_directory = QToolButton(self.frame)
+        self.toolButton_browse_result_directory.setObjectName(u"toolButton_browse_result_directory")
+        self.toolButton_browse_result_directory.setIcon(icon3)
+
+        self.horizontalLayout_11.addWidget(self.toolButton_browse_result_directory)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_11)
@@ -286,7 +295,9 @@ class Ui_Form(object):
         QWidget.setTabOrder(self.lineEdit_group_id, self.kill_consoles_check_box)
         QWidget.setTabOrder(self.kill_consoles_check_box, self.log_process_output_check_box)
         QWidget.setTabOrder(self.log_process_output_check_box, self.pushButton_tool_results)
-        QWidget.setTabOrder(self.pushButton_tool_results, self.scrollArea)
+        QWidget.setTabOrder(self.pushButton_tool_results, self.lineEdit_result_directory)
+        QWidget.setTabOrder(self.lineEdit_result_directory, self.toolButton_browse_result_directory)
+        QWidget.setTabOrder(self.toolButton_browse_result_directory, self.scrollArea)
 
         self.retranslateUi(Form)
 
@@ -330,5 +341,12 @@ class Ui_Form(object):
         self.pushButton_tool_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open results archive in file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_tool_results.setText(QCoreApplication.translate("Form", u"Results...", None))
+#if QT_CONFIG(tooltip)
+        self.lineEdit_result_directory.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Result directory</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.lineEdit_result_directory.setText("")
+#if QT_CONFIG(tooltip)
+        self.toolButton_browse_result_directory.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select Result directory using file browser. Leave blank to use default directory.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
     # retranslateUi
 
