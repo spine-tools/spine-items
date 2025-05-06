@@ -142,13 +142,7 @@ class TestTool(unittest.TestCase):
         """Test that specification is loaded into selections on Tool creation,
         and then shown in the ui when Tool is activated.
         """
-        options = {
-                "output_directory": {
-                    "type": "path",
-                    "relative": False,
-                    "path": "/somedir/outputs"
-                }
-            }
+        options = {"output_directory": {"type": "path", "relative": False, "path": "/somedir/outputs"}}
         item_dict = {
             "type": "Tool",
             "description": "",
@@ -166,13 +160,7 @@ class TestTool(unittest.TestCase):
 
     def test_save_and_restore_selections(self):
         """Test that selections are saved and restored when deactivating a Tool and activating it again."""
-        options = {
-                "output_directory": {
-                    "type": "path",
-                    "relative": True,
-                    "path": ".spinetoolbox/outputs"
-                }
-            }
+        options = {"output_directory": {"type": "path", "relative": True, "path": ".spinetoolbox/outputs"}}
         item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "", "options": options}
         tool = self._add_tool(item_dict)
         expected_result_dir = os.path.abspath(os.path.join(tool._project.project_dir, ".spinetoolbox", "outputs"))
