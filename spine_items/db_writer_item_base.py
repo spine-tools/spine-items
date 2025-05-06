@@ -26,7 +26,7 @@ class DBWriterItemBase(ProjectItem):
                 yield item
 
     @Slot(object, object)
-    def handle_execution_successful(self, execution_direction, engine_state):
+    def handle_execution_successful(self, execution_direction):
         """Notifies Toolbox of successful database import."""
         if execution_direction != ExecutionDirection.FORWARD:
             return

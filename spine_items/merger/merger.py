@@ -47,10 +47,6 @@ class Merger(DBWriterItemBase):
         """See base class."""
         return ItemInfo.item_type()
 
-    @property
-    def executable_class(self):
-        return ExecutableItem
-
     def make_signal_handler_dict(self):
         """Returns a dictionary of all shared signals and their handlers.
         This is to enable simpler connecting and disconnecting."""
@@ -63,11 +59,6 @@ class Merger(DBWriterItemBase):
         self._properties_ui.cancel_on_error_checkBox.setCheckState(
             Qt.CheckState.Checked if self.cancel_on_error else Qt.CheckState.Unchecked
         )
-
-    @property
-    def project(self):
-        """Returns current project or None if no project open."""
-        return self._project
 
     @Slot(int)
     def _handle_cancel_on_error_changed(self, _state):

@@ -463,10 +463,6 @@ class Tool(DBWriterItemBase):
         """See base class"""
         return scan_for_resources(self, self.specification(), self.output_dir)
 
-    @property
-    def executable_class(self):
-        return ExecutableItem
-
     def _find_input_files(self, resources):
         """Iterates files in required input files model and looks for them in the given resources.
 
@@ -540,9 +536,9 @@ class Tool(DBWriterItemBase):
                 f"The following command line argument(s) don't match any available resources: {missing_args}"
             )
 
-    def handle_execution_successful(self, execution_direction, engine_state):
+    def handle_execution_successful(self, execution_direction):
         """See base class."""
-        super().handle_execution_successful(execution_direction, engine_state)
+        super().handle_execution_successful(execution_direction)
         if execution_direction != ExecutionDirection.FORWARD:
             return
         self._resources_to_successors_changed()

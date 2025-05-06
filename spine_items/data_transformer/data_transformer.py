@@ -50,10 +50,6 @@ class DataTransformer(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @property
-    def executable_class(self):
-        return ExecutableItem
-
     def item_dict(self):
         """See base class."""
         serialized = super().item_dict()

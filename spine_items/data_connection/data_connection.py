@@ -98,10 +98,6 @@ class DataConnection(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @property
-    def executable_class(self):
-        return ExecutableItem
-
     def db_reference_iter(self):
         """Iterates over database references.
 
