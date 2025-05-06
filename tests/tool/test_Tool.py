@@ -136,12 +136,13 @@ class TestTool(unittest.TestCase):
         self.assertEqual(expected_data_dir, tool.data_dir)  # Check data dir
         # Check that output_dir has been updated
         expected_output_dir = os.path.join(tool.data_dir, TOOL_OUTPUT_DIR)
-        self.assertEqual(expected_output_dir, tool.output_dir)
+        self.assertEqual(expected_output_dir, tool._output_dir)
 
     def test_load_tool_specification(self):
         """Test that specification is loaded into selections on Tool creation,
         and then shown in the ui when Tool is activated.
         """
+        options = {"output_directory": {"type": "path", "relative": False, "path": "/somedir/outputs"}}
         item_dict = {
             "type": "Tool",
             "description": "",
@@ -149,17 +150,20 @@ class TestTool(unittest.TestCase):
             "y": 0,
             "specification": "simple_exec",
             "execute_in_work": False,
+            "options": options,
         }
         tool = self._add_tool(item_dict)
         with mock.patch("spine_items.tool.tool.ToolSpecificationMenu") as mock_tool_spec_menu:
             mock_tool_spec_menu.side_effect = lambda *args: QMenu()
             tool.activate()
-            self._assert_is_simple_exec_tool(tool)
+            self._assert_is_simple_exec_tool(tool, "/somedir/outputs".replace("/", os.sep))
 
     def test_save_and_restore_selections(self):
         """Test that selections are saved and restored when deactivating a Tool and activating it again."""
-        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": ""}
+        options = {"output_directory": {"type": "path", "relative": True, "path": ".spinetoolbox/outputs"}}
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "", "options": options}
         tool = self._add_tool(item_dict)
+        expected_result_dir = os.path.abspath(os.path.join(tool._project.project_dir, ".spinetoolbox", "outputs"))
         with mock.patch("spine_items.tool.tool.ToolSpecificationMenu") as mock_tool_spec_menu:
             mock_tool_spec_menu.side_effect = lambda *args: QMenu()
             tool.activate()
@@ -167,10 +171,10 @@ class TestTool(unittest.TestCase):
             # Set the simple_exec tool specification manually
             tool._properties_ui.comboBox_tool.textActivated.emit("simple_exec")
             tool._properties_ui.radioButton_execute_in_source.setChecked(True)
-            self._assert_is_simple_exec_tool(tool)
+            self._assert_is_simple_exec_tool(tool, expected_result_dir)
             tool.deactivate()
             tool.activate()
-            self._assert_is_simple_exec_tool(tool)
+            self._assert_is_simple_exec_tool(tool, expected_result_dir)
 
     @unittest.skip("Test doesn't work on Python 3.12 on Windows")
     def test_find_input_files(self):
@@ -229,7 +233,7 @@ class TestTool(unittest.TestCase):
         self.project.get_item.return_value = tool
         return tool
 
-    def _assert_is_simple_exec_tool(self, tool):
+    def _assert_is_simple_exec_tool(self, tool, expected_result_dir=""):
         """Assert that the given tool has the simple_exec specification."""
         # Check tool spec
         source_files = tool.specification().includes
@@ -251,6 +255,8 @@ class TestTool(unittest.TestCase):
         combox_text = tool._properties_ui.comboBox_tool.currentText()
         in_work = tool._properties_ui.radioButton_execute_in_work.isChecked()
         in_source = tool._properties_ui.radioButton_execute_in_source.isChecked()
+        result_dir = tool._properties_ui.lineEdit_result_directory.text()
+        self.assertEqual(expected_result_dir, result_dir)
         self.assertEqual(combox_text, "simple_exec")
         self.assertFalse(in_work)
         self.assertTrue(in_source)

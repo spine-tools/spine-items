@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'julia_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -62,7 +62,7 @@ class Ui_Form(object):
         self.toolButton_new_sysimage = QToolButton(Form)
         self.toolButton_new_sysimage.setObjectName(u"toolButton_new_sysimage")
         icon = QIcon()
-        icon.addFile(u":/icons/file.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/file.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.toolButton_new_sysimage.setIcon(icon)
         self.toolButton_new_sysimage.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
@@ -71,7 +71,7 @@ class Ui_Form(object):
         self.toolButton_open_sysimage = QToolButton(Form)
         self.toolButton_open_sysimage.setObjectName(u"toolButton_open_sysimage")
         icon1 = QIcon()
-        icon1.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/icons/folder-open-solid.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.toolButton_open_sysimage.setIcon(icon1)
 
         self.horizontalLayout.addWidget(self.toolButton_open_sysimage)

@@ -35,6 +35,7 @@ from spine_engine.utils.helpers import (
     resolve_julia_executable,
     write_filter_id_file,
 )
+from spine_engine.utils.serialization import deserialize_path
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 from ..utils import generate_filter_subdirectory_name
 from .item_info import ItemInfo
@@ -78,7 +79,8 @@ class ExecutableItem(DBWriterExecutableItemBase):
         """
         super().__init__(name, project_dir, logger, group_id=group_id)
         self._work_dir = work_dir
-        self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR))
+        output_dir = deserialize_path(options.get("output_directory"), project_dir)
+        self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR)) if not output_dir else output_dir
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
         self._options = options
@@ -592,37 +594,37 @@ class ExecutableItem(DBWriterExecutableItemBase):
             forward_resources (Iterable of ProjectItemResource): forward resources
             execution_dir (str): path to the execution directory
         """
-        if filter_id:
-            filter_output_dir = os.path.join(
-                self._output_dir, generate_filter_subdirectory_name(forward_resources, self.hash_filter_id())
-            )
-            try:
-                os.makedirs(filter_output_dir, exist_ok=True)
-                self._output_dir = filter_output_dir
-            except OSError:
-                self._logger.msg_error.emit(f"[OSError] Creating directory <b>{filter_output_dir}</b> failed.")
-        output_dir_timestamp = _create_output_dir_timestamp()  # Get timestamp when tool finished
-        # Create an output folder with timestamp and copy output directly there
-        if return_code != 0:
-            result_path = os.path.abspath(os.path.join(self._output_dir, "failed", output_dir_timestamp))
-        else:
-            result_path = os.path.abspath(os.path.join(self._output_dir, output_dir_timestamp))
-        try:
-            os.makedirs(result_path, exist_ok=True)
-        except OSError:
-            self._logger.msg_error.emit(
-                "\tError creating timestamped output directory. "
-                "Tool specification output files not copied. Please check directory permissions."
-            )
-            return
-        # Make link to output folder
-        result_anchor = (
-            f"<a style='color:#BB99FF;' title='{result_path}' href='file:///{result_path}'>results directory</a>"
-        )
-        if filter_id:
-            write_filter_id_file(filter_id, os.path.dirname(result_path))
-        self._logger.msg.emit(f"*** Archiving output files to {result_anchor} ***")
         if self._tool_specification.outputfiles:
+            if filter_id:
+                filter_output_dir = os.path.join(
+                    self._output_dir, generate_filter_subdirectory_name(forward_resources, self.hash_filter_id())
+                )
+                try:
+                    os.makedirs(filter_output_dir, exist_ok=True)
+                    self._output_dir = filter_output_dir
+                except OSError:
+                    self._logger.msg_error.emit(f"[OSError] Creating directory <b>{filter_output_dir}</b> failed.")
+            output_dir_timestamp = _create_output_dir_timestamp()  # Get timestamp when tool finished
+            # Create an output folder with timestamp and copy output directly there
+            if return_code != 0:
+                result_path = os.path.abspath(os.path.join(self._output_dir, "failed", output_dir_timestamp))
+            else:
+                result_path = os.path.abspath(os.path.join(self._output_dir, output_dir_timestamp))
+            try:
+                os.makedirs(result_path, exist_ok=True)
+            except OSError:
+                self._logger.msg_error.emit(
+                    "\tError creating timestamped output directory. "
+                    "Tool specification output files not copied. Please check directory permissions."
+                )
+                return
+            # Make link to output folder
+            result_anchor = (
+                f"<a style='color:#BB99FF;' title='{result_path}' href='file:///{result_path}'>results directory</a>"
+            )
+            if filter_id:
+                write_filter_id_file(filter_id, os.path.dirname(result_path))
+            self._logger.msg.emit(f"*** Archiving output files to {result_anchor} ***")
             saved_files, failed_files = self._copy_output_files(result_path, execution_dir)
             if not saved_files:
                 # If no files were saved
@@ -641,11 +643,11 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 self._logger.msg.emit(f"\t<b>{failed_files_anchor}")
         else:
             tip_anchor = (
-                "<a style='color:#99CCFF;' title='When you add output files to the Tool specification,\n "
-                "they will be archived into results directory. Also, output files are passed to\n "
-                "subsequent project items.' href='#'>Tip</a>"
+                "<a style='color:#99CCFF;' title='By adding <b>output files</b> to the Tool specification,\n "
+                "they will be archived into the results directory. In addition, <b>output files</b> will be \n"
+                "passed to subsequent project items.' href='#'>Tip</a>"
             )
-            self._logger.msg_warning.emit(f"\tNo output files defined for this Tool specification. {tip_anchor}")
+            self._logger.msg_warning.emit(f"No output files defined for this Tool specification. {tip_anchor}")
 
     def _optional_output_destination_paths(self, paths, execution_dir):
         """Returns a dictionary telling where optional output files should be copied to before execution.

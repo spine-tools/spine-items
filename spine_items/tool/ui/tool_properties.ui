@@ -419,17 +419,31 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer_6">
-              <property name="orientation">
-               <enum>Qt::Orientation::Horizontal</enum>
+             <widget class="QLineEdit" name="lineEdit_result_directory">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Result directory&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
+              <property name="text">
+               <string/>
               </property>
-             </spacer>
+              <property name="readOnly">
+               <bool>false</bool>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_browse_result_directory">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select Result directory using file browser. Leave blank to use default directory.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../../ui/resources/resources_icons.qrc">
+                <normaloff>:/icons/folder-open-solid.svg</normaloff>:/icons/folder-open-solid.svg</iconset>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -469,6 +483,8 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
   <tabstop>kill_consoles_check_box</tabstop>
   <tabstop>log_process_output_check_box</tabstop>
   <tabstop>pushButton_tool_results</tabstop>
+  <tabstop>lineEdit_result_directory</tabstop>
+  <tabstop>toolButton_browse_result_directory</tabstop>
   <tabstop>scrollArea</tabstop>
  </tabstops>
  <resources>
