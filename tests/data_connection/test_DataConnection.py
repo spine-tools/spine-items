@@ -689,10 +689,10 @@ class TestDataConnectionWithProject(unittest.TestCase):
         expected_data_dir = os.path.join(self._toolbox.project().items_dir, expected_short_name)
         self._data_connection.rename(expected_name, "")
         # Check name
-        self.assertEqual(expected_name, self._data_connection.name)  # item name
+        self.assertEqual(expected_name, self._data_connection.name)
         self.assertEqual(expected_name, self._data_connection.get_icon().name())
         # Check data_dir
-        self.assertEqual(expected_data_dir, self._data_connection.data_dir)  # Check data dir
+        self.assertEqual(expected_data_dir, self._data_connection.data_dir)
         # Check that file_system_watcher has one path (new data_dir)
         watched_dirs = self._data_connection.file_system_watcher.directories()
         self.assertEqual(1, len(watched_dirs))
