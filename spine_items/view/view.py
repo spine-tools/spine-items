@@ -59,10 +59,6 @@ class View(ProjectItem):
         return ItemInfo.item_type()
 
     @property
-    def executable_class(self):
-        return ExecutableItem
-
-    @property
     def pinned_values(self):
         return self._pinned_values
 
