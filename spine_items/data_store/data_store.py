@@ -90,10 +90,6 @@ class DataStore(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @property
-    def executable_class(self):
-        return ExecutableItem
-
     def set_up(self):
         """See base class."""
         super().set_up()
@@ -135,10 +131,6 @@ class DataStore(ProjectItem):
     def sql_alchemy_url(self):
         """Returns the URL as an SQLAlchemy URL object or None if no URL is set."""
         return convert_to_sqlalchemy_url(self._url, self.name, self._logger)
-
-    def project(self):
-        """Returns current project or None if no project open."""
-        return self._project
 
     def select_sqlite_file(self):
         """Open file browser where user can select the path to an SQLite file that they want to use."""
