@@ -35,6 +35,7 @@ from spine_engine.utils.helpers import (
     resolve_julia_executable,
     write_filter_id_file,
 )
+from spine_engine.utils.serialization import deserialize_path
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 from ..utils import generate_filter_subdirectory_name
 from .item_info import ItemInfo
@@ -78,7 +79,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         """
         super().__init__(name, project_dir, logger, group_id=group_id)
         self._work_dir = work_dir
-        output_dir = options.get("output_directory")
+        output_dir = deserialize_path(options.get("output_directory"), project_dir)
         self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR)) if not output_dir else output_dir
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args

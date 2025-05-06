@@ -18,7 +18,7 @@ from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg, make_cmd_line_arg
 from spine_engine.utils.helpers import ExecutionDirection, resolve_julia_executable, resolve_python_interpreter
 from spine_engine.utils.serialization import deserialize_path, serialize_path
-from spinetoolbox.helpers import open_url, select_root_directory
+from spinetoolbox.helpers import open_url, select_root_directory, same_path
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand, UpdateResultDirCommand
 from ..db_writer_item_base import DBWriterItemBase
@@ -62,14 +62,14 @@ class Tool(DBWriterItemBase):
             x (float): Initial X coordinate of item icon
             y (float): Initial Y coordinate of item icon
             toolbox (ToolboxUI): QMainWindow instance
-            project (SpineToolboxProject): the project this item belongs to
+            project (SpineToolboxProject): The project this item belongs to
             specification_name (str): Name of this Tool's Tool specification
             execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
             cmd_line_args (list, optional): Tool command line arguments
-            options (dict, optional): misc tool options. At the moment it just holds the location of the Julia sysimage
-            kill_completed_processes (bool): whether to kill completed persistent processes
-            log_process_output (bool): whether to log process output to a file
-            group_id (str, optional): execution group id
+            options (dict, optional): Misc tool options
+            kill_completed_processes (bool): Whether to kill completed persistent processes
+            log_process_output (bool): Whether to log process output to a file
+            group_id (str, optional): Execution group id
             root_dir (str, optional): Root directory for the Tool Spec's program
         """
         super().__init__(name, description, x, y, project)
@@ -90,10 +90,10 @@ class Tool(DBWriterItemBase):
         self._cmdline_args_model.args_updated.connect(self._push_update_cmd_line_args_command)
         self._populate_cmdline_args_model()
         self._input_file_model = FileListModel(header_label="Available resources", draggable=True)
-        output_dir = options.get("output_directory")
-        self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR) if not output_dir else output_dir
         self._specification_menu = None
         self._options = options if options is not None else {}
+        output_dir = deserialize_path(self._options.get("output_directory"), self._project.project_dir)
+        self._output_dir = self.default_output_dir if not output_dir else output_dir
         self._kill_completed_processes = kill_completed_processes
         self._log_process_output = log_process_output
         self._resources_from_upstream = []
@@ -129,6 +129,10 @@ class Tool(DBWriterItemBase):
     @property
     def root_dir(self):
         return self._root_directory
+
+    @property
+    def default_output_dir(self):
+        return os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
 
     def _get_options_widget(self):
         """Returns a widget to specify the options for this tool.
@@ -230,14 +234,13 @@ class Tool(DBWriterItemBase):
         self._do_update_remove_args_button_enabled()
         self._properties_ui.lineEdit_group_id.setText(self._group_id)
         self._properties_ui.lineEdit_root_directory.setText(self._root_directory)
-        output_dir = self._options.get("output_directory")
-        if not output_dir:
+        output_dir_displayed = self._output_dir.replace("/", os.sep)
+        if same_path(self._output_dir, self.default_output_dir):
             self._properties_ui.lineEdit_result_directory.clear()
-            self._properties_ui.lineEdit_result_directory.setPlaceholderText(self.output_dir)
-            self._properties_ui.lineEdit_result_directory.setToolTip(self.output_dir)
-        else:
-            self._properties_ui.lineEdit_result_directory.setText(output_dir.replace("/", os.sep))
-            self._properties_ui.lineEdit_result_directory.setToolTip(output_dir.replace("/", os.sep))
+        else:  # Set text only if results directory is not default
+            self._properties_ui.lineEdit_result_directory.setText(output_dir_displayed)
+        self._properties_ui.lineEdit_result_directory.setPlaceholderText(output_dir_displayed)
+        self._properties_ui.lineEdit_result_directory.setToolTip(output_dir_displayed)
 
     @Slot(bool)
     def _browse_root_directory(self, _=False):
@@ -271,25 +274,26 @@ class Tool(DBWriterItemBase):
     def _set_result_directory(self):
         """Pushes a command to update result directory whenever the user edits the line edit."""
         result_dir = self._properties_ui.lineEdit_result_directory.text().strip()
-        if result_dir and self._options.get("output_directory") == result_dir:
+        if same_path(self._output_dir, result_dir):  # When user picks the same folder again
+            self._properties_ui.lineEdit_result_directory.clear()
+            return
+        if not result_dir and same_path(self._output_dir, self.default_output_dir):
             return
         self._toolbox.undo_stack.push(UpdateResultDirCommand(self.name, result_dir, self._project))
 
     def do_set_result_directory(self, result_dir):
         """Sets results directory."""
-        if not result_dir:
-            self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
-            self._options["output_directory"] = None
-        else:
-            self.output_dir = self._options["output_directory"] = result_dir
+        self._output_dir = self.default_output_dir if not result_dir else result_dir
+        self._options["output_directory"] = serialize_path(self._output_dir, self._project.project_dir)
         if self._active:
+            output_dir_displayed = self._output_dir.replace("/", os.sep)
             if not result_dir:
                 self._properties_ui.lineEdit_result_directory.clear()
-                self._properties_ui.lineEdit_result_directory.setPlaceholderText(self.output_dir)
+                self._properties_ui.lineEdit_result_directory.setPlaceholderText(output_dir_displayed)
             else:
-                self._properties_ui.lineEdit_result_directory.setText(self.output_dir)
-                self._properties_ui.lineEdit_result_directory.setToolTip(self.output_dir)
-            self._properties_ui.lineEdit_result_directory.setToolTip(self.output_dir)
+                self._properties_ui.lineEdit_result_directory.setText(output_dir_displayed)
+                self._properties_ui.lineEdit_result_directory.setToolTip(output_dir_displayed)
+            self._properties_ui.lineEdit_result_directory.setToolTip(output_dir_displayed)
 
     @Slot(bool)
     def show_specification_window(self, _=True):
@@ -486,14 +490,14 @@ class Tool(DBWriterItemBase):
     @Slot(bool)
     def _open_results_directory(self, _):
         """Open output directory in file browser."""
-        if not os.path.exists(self.output_dir):
+        if not os.path.exists(self._output_dir):
             self._logger.msg_warning.emit(f"Tool <b>{self.name}</b> has no results. Click Execute to generate them.")
             return
-        url = "file:///" + self.output_dir
+        url = "file:///" + self._output_dir
         # noinspection PyTypeChecker, PyCallByClass, PyArgumentList
         res = open_url(url)
         if not res:
-            self._logger.msg_error.emit(f"Failed to open directory: {self.output_dir}")
+            self._logger.msg_error.emit(f"Failed to open directory: {self._output_dir}")
 
     def specification(self):
         """Returns Tool specification."""
@@ -501,7 +505,7 @@ class Tool(DBWriterItemBase):
 
     def resources_for_direct_successors(self):
         """See base class"""
-        return scan_for_resources(self, self.specification(), self.output_dir)
+        return scan_for_resources(self, self.specification(), self._output_dir)
 
     @property
     def executable_class(self):
@@ -657,6 +661,10 @@ class Tool(DBWriterItemBase):
             d["specification"] = self.specification().name
         d["execute_in_work"] = self.execute_in_work
         d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
+        if not same_path(self._output_dir, self.default_output_dir):
+            self._options["output_directory"] = serialize_path(self._output_dir, self._project.project_dir)
+        else:
+            self._options.pop("output_directory", None)
         if self._options:
             d["options"] = self._options
         d["kill_completed_processes"] = self._kill_completed_processes
@@ -706,8 +714,8 @@ class Tool(DBWriterItemBase):
         """See base class."""
         if not super().rename(new_name, rename_data_dir_message):
             return False
-        output_dir = self._options.get("output_directory")
-        self.output_dir = os.path.join(self.data_dir, TOOL_OUTPUT_DIR) if not output_dir else output_dir
+        output_dir = deserialize_path(self._options.get("output_directory"), self._project.project_dir)
+        self._output_dir = self.default_output_dir if not output_dir else output_dir
         return True
 
     def notify_destination(self, source_item):
