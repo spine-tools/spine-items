@@ -132,7 +132,7 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         self.assertEqual([], self.ds.get_icon().exclamation_icon._notifications)
         # Check that there is a warning about uncommitted changes
         db_map = self.ds.get_db_map()
-        self._toolbox.db_mngr.add_entity_classes({db_map: [{"name": "my_object_class"}]})
+        self._toolbox.db_mngr.add_items("entity_class", {db_map: [{"name": "my_object_class"}]})
         self.assertEqual(
             [f"{self.ds.name} has uncommitted changes"], self.ds.get_icon().exclamation_icon._notifications
         )
