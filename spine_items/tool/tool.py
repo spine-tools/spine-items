@@ -11,15 +11,19 @@
 ######################################################################################################################
 
 """Contains the Tool project item class."""
+from __future__ import annotations
 import os
+from typing import Optional, TYPE_CHECKING
 from PySide6.QtCore import QItemSelection, Slot
 from PySide6.QtGui import QAction
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg, make_cmd_line_arg
 from spine_engine.utils.helpers import ExecutionDirection
 from spine_engine.utils.serialization import deserialize_path, serialize_path
+from spinetoolbox.project import SpineToolboxProject
 from spinetoolbox.helpers import open_url, select_root_directory, same_path, default_python_execution_settings, default_julia_execution_settings, default_executable_execution_settings
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
+from .tool_specifications import ToolSpecification
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand, UpdateResultDirCommand
 from ..db_writer_item_base import DBWriterItemBase
 from ..models import ToolCommandLineArgsModel
@@ -36,41 +40,44 @@ from .utils import find_file, flatten_file_path_duplicates
 from .widgets.custom_menus import ToolSpecificationMenu
 from .widgets.options_widgets import JuliaOptionsWidget, PythonOptionsWidget, ExecutableOptionsWidget
 
+if TYPE_CHECKING:
+    from spinetoolbox.ui_main import ToolboxUI
+
 
 class Tool(DBWriterItemBase):
     def __init__(
         self,
-        name,
-        description,
-        x,
-        y,
-        toolbox,
-        project,
-        specification_name="",
-        execute_in_work=True,
-        cmd_line_args=None,
-        options=None,
-        kill_completed_processes=False,
-        log_process_output=False,
-        group_id=None,
-        root_dir="",
+        name: str,
+        description: str,
+        x: float,
+        y: float,
+        toolbox: ToolboxUI,
+        project: SpineToolboxProject,
+        specification_name: str = "",
+        execute_in_work: bool = True,
+        cmd_line_args: Optional[list] = None,
+        options: Optional[dict] = None,
+        kill_completed_processes: bool = False,
+        log_process_output: bool = False,
+        group_id: Optional[str] = None,
+        root_dir: Optional[dict] = "",
     ):
         """
         Args:
-            name (str): Object name
-            description (str): Object description
-            x (float): Initial X coordinate of item icon
-            y (float): Initial Y coordinate of item icon
-            toolbox (ToolboxUI): QMainWindow instance
-            project (SpineToolboxProject): The project this item belongs to
-            specification_name (str): Name of this Tool's Tool specification
-            execute_in_work (bool): Execute associated Tool specification in work (True) or source directory (False)
-            cmd_line_args (list, optional): Tool command line arguments
-            options (dict, optional): Tool execution settings and Julia sysimage
-            kill_completed_processes (bool): Whether to kill completed persistent processes
-            log_process_output (bool): Whether to log process output to a file
-            group_id (str, optional): Execution group id
-            root_dir (str, optional): Root directory for the Tool Spec's program
+            name: Object name
+            description: Object description
+            x: Initial X coordinate of item icon
+            y: Initial Y coordinate of item icon
+            toolbox: QMainWindow instance
+            project: The project this item belongs to
+            specification_name: Name of this Tool's Tool specification
+            execute_in_work: Execute associated Tool specification in work (True) or source directory (False)
+            cmd_line_args: Tool command line arguments
+            options: Tool execution settings and Julia sysimage
+            kill_completed_processes: Whether to kill completed persistent processes
+            log_process_output: Whether to log process output to a file
+            group_id: Execution group id
+            root_dir: Root directory for the Tool Spec's program
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -511,7 +518,7 @@ class Tool(DBWriterItemBase):
         if not res:
             self._logger.msg_error.emit(f"Failed to open directory: {self._output_dir}")
 
-    def specification(self):
+    def specification(self) -> Optional[ToolSpecification]:
         """Returns Tool specification."""
         return self._specification
 
