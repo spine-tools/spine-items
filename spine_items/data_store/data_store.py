@@ -90,10 +90,6 @@ class DataStore(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @property
-    def executable_class(self):
-        return ExecutableItem
-
     def set_up(self):
         """See base class."""
         super().set_up()
@@ -135,10 +131,6 @@ class DataStore(ProjectItem):
     def sql_alchemy_url(self):
         """Returns the URL as an SQLAlchemy URL object or None if no URL is set."""
         return convert_to_sqlalchemy_url(self._url, self.name, self._logger)
-
-    def project(self):
-        """Returns current project or None if no project open."""
-        return self._project
 
     def select_sqlite_file(self):
         """Open file browser where user can select the path to an SQLite file that they want to use."""
@@ -417,6 +409,14 @@ class DataStore(ProjectItem):
     @Slot(object)
     def _accept_url(self, url):
         """Sets URL as validated and updates advertised resources."""
+        db_map = self.get_db_map()
+        if db_map:
+            self._toolbox.db_mngr.name_registry.register(db_map.sa_url, self.name)
+            clean = not self._toolbox.db_mngr.is_dirty(db_map)
+            self._notify_about_dirtiness(clean)
+        else:
+            self.add_notification(f"Database is not valid.")
+            return
         self._url_validated = True
         self.clear_other_notifications(f"{self.name} has uncommitted changes")
         if self._resource_to_replace is not None and self._resource_to_replace.is_valid:
@@ -430,11 +430,6 @@ class DataStore(ProjectItem):
             self._resources_to_predecessors_changed()
             self._resources_to_successors_changed()
         self._update_actions_enabled()
-        db_map = self.get_db_map()
-        if db_map:
-            self._toolbox.db_mngr.name_registry.register(db_map.sa_url, self.name)
-            clean = not self._toolbox.db_mngr.is_dirty(db_map)
-            self._notify_about_dirtiness(clean)
 
     def is_url_validated(self):
         """Tests whether the URL has been validated.

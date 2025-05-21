@@ -98,10 +98,6 @@ class DataConnection(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @property
-    def executable_class(self):
-        return ExecutableItem
-
     def db_reference_iter(self):
         """Iterates over database references.
 
@@ -835,9 +831,10 @@ class DataConnection(ProjectItem):
     def rename(self, new_name, rename_data_dir_message):
         """See base class."""
         old_data_dir = self.data_dir
-        if not super().rename(new_name, rename_data_dir_message):
-            return False
         self.file_system_watcher.remove_persistent_dir_path(old_data_dir)
+        if not super().rename(new_name, rename_data_dir_message):
+            self.file_system_watcher.add_persistent_dir_path(old_data_dir)
+            return False
         self.file_system_watcher.add_persistent_dir_path(self.data_dir)
         self.populate_data_list()
         return True

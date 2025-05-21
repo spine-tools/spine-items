@@ -98,10 +98,6 @@ class Exporter(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    @property
-    def executable_class(self):
-        return ExecutableItem
-
     def has_out_url(self):
         """Returns whether any output channel has a URL set.
 
@@ -110,7 +106,7 @@ class Exporter(ProjectItem):
         """
         return any(c.out_url is not None for c in self._output_channels)
 
-    def handle_execution_successful(self, execution_direction, engine_state):
+    def handle_execution_successful(self, execution_direction):
         """See base class."""
         if execution_direction != ExecutionDirection.FORWARD:
             return
