@@ -19,14 +19,6 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 from spinetoolbox.ui_main import ToolboxUI
 
 
-class MockQWidget(QWidget):
-    """Dummy QWidget for mocking test_push_vars method in SpineConsoleWidget class."""
-
-    # noinspection PyMethodMayBeStatic
-    def test_push_vars(self):
-        return True
-
-
 class MockQSettings:
     """Class for replacing an argument where e.g. class constructor requires an instance of QSettings.
     For example all ToolSpecification classes require a QSettings instance."""
@@ -55,7 +47,7 @@ def create_mock_toolbox():
 
 def create_mock_toolbox_with_mock_qsettings():
     mock_toolbox = create_mock_toolbox()
-    mock_toolbox.qsettings().value.side_effect = qsettings_value_side_effect
+    mock_toolbox.qsettings().value.side_effect = return_default_value
     return mock_toolbox
 
 
@@ -76,41 +68,23 @@ def mock_finish_project_item_construction(factory, project_item, mock_toolbox):
     return properties_widget
 
 
-# noinspection PyMethodMayBeStatic, PyPep8Naming,SpellCheckingInspection
-def qsettings_value_side_effect(key, defaultValue="0"):
-    """Returns the default value.
-
-    Args:
-        key (str): Key to read
-        defaultValue (Any): Default value if key is missing
-
-    Returns:
-        Any: settings value
-    """
-    # Tip: add return values for specific keys here as needed.
-    return defaultValue
-
-
 def create_toolboxui():
-    """Returns ToolboxUI, where QSettings among others has been mocked."""
+    """Returns ToolboxUI for tests."""
     with (
-        patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"),
-        patch("spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value,
         patch("spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style,
+        patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"),
     ):
-        mock_qsettings_value.side_effect = qsettings_value_side_effect
         mock_set_app_style.return_value = True
         toolbox = ToolboxUI()
+        toolbox._qsettings = MagicMock()
+        toolbox._qsettings.value = MagicMock()
+        toolbox._qsettings.value.side_effect = return_default_value
     return toolbox
 
 
 def create_project(toolbox, project_dir):
     """Creates a project for the given ToolboxUI."""
-    with (
-        patch("spinetoolbox.ui_main.ToolboxUI.update_recent_projects"),
-        patch("spinetoolbox.ui_main.QSettings.setValue"),
-        patch("spinetoolbox.ui_main.QSettings.sync"),
-    ):
+    with (patch("spinetoolbox.ui_main.ToolboxUI.update_recent_projects"),):
         toolbox.create_project(project_dir)
 
 
@@ -118,28 +92,29 @@ def create_toolboxui_with_project(project_dir):
     """Returns ToolboxUI with a project instance where
     QSettings among others has been mocked."""
     with (
-        patch("spinetoolbox.ui_main.ToolboxUI.save_project"),
-        patch("spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value,
         patch("spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style,
-        patch("spinetoolbox.ui_main.QSettings.setValue"),
-        patch("spinetoolbox.ui_main.QSettings.sync"),
+        patch("spinetoolbox.ui_main.ToolboxUI.save_project"),
         patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"),
     ):
-        mock_qsettings_value.side_effect = qsettings_value_side_effect
         mock_set_app_style.return_value = True
         toolbox = ToolboxUI()
+        toolbox._qsettings = MagicMock()
+        toolbox._qsettings.value = MagicMock()
+        toolbox._qsettings.value.side_effect = return_default_value
         toolbox.create_project(project_dir)
     return toolbox
 
 
+def return_default_value(key, defaultValue=None):
+    """Side effect function for QSettings.value() which returns defaultValue."""
+    return defaultValue
+
+
 def clean_up_toolbox(toolbox):
     """Cleans up toolbox and project."""
-    with patch("spinetoolbox.ui_main.QSettings.value") as mock_qsettings_value:
-        mock_qsettings_value.side_effect = qsettings_value_side_effect
-        if toolbox.project():
-            toolbox.close_project(ask_confirmation=False)
-            QApplication.processEvents()  # Makes sure Design view animations finish properly.
-            mock_qsettings_value.assert_called()  # The call in _shutdown_engine_kernels()
+    if toolbox.project():
+        toolbox.close_project(ask_confirmation=False)
+        QApplication.processEvents()  # Makes sure Design view animations finish properly.
     toolbox.db_mngr.close_all_sessions()
     toolbox.db_mngr.clean_up()
     toolbox.db_mngr = None
