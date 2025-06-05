@@ -19,6 +19,7 @@ from spine_engine.utils.queue_logger import SuppressedMessage
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spinedb_api.helpers import SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS, remove_credentials_from_url
+from spinetoolbox.helpers import default_python_execution_settings, default_julia_execution_settings, default_executable_execution_settings
 
 
 class URLError(Exception):
@@ -241,3 +242,25 @@ def escape_backward_slashes(string):
         str: escaped string
     """
     return string.replace("\\", "\\\\")
+
+
+def check_options(tooltype, current_options, logger):
+    """Returns the default options based on given tool type if options are
+    missing. If some but not all options are available, fills in the missing
+    key-value pairs with default values."""
+    if tooltype == "python":
+        defaults = default_python_execution_settings()
+    elif tooltype == "julia":
+        defaults = default_julia_execution_settings()
+    elif tooltype == "executable":
+        defaults = default_executable_execution_settings()
+    else:
+        logger.msg_error.emit(f"Default execution settings for {tooltype} do not exist")
+        return {}
+    if not current_options:
+        return defaults
+    # If key is missing, insert the key and the default value
+    for key in defaults.keys():
+        if key not in current_options.keys():
+            current_options[key] = defaults[key]
+    return current_options

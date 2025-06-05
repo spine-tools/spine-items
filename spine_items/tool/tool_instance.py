@@ -21,7 +21,7 @@ from spine_engine.execution_managers.persistent_execution_manager import (
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
 from spine_engine.utils.helpers import resolve_conda_executable, resolve_gams_executable, resolve_python_interpreter
 from spine_items.tool.utils import get_julia_path_and_project
-from spine_items.utils import escape_backward_slashes
+from spine_items.utils import escape_backward_slashes, check_options
 
 
 class ToolInstance:
@@ -195,12 +195,13 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
+        options = check_options("julia", self.options, self._logger)
         exec_settings = {
-            "kernel_spec_name": self.options["kernel_spec_name"],
-            "env": self.options["env"],
-            "use_jupyter_console": self.options["use_jupyter_console"],
-            "executable": self.options["executable"],
-            "project": self.options["project"],
+            "kernel_spec_name": options["kernel_spec_name"],
+            "env": options["env"],
+            "use_jupyter_console": options["use_jupyter_console"],
+            "executable": options["executable"],
+            "project": options["project"],
         }
         julia_args = get_julia_path_and_project(exec_settings, self._settings)
         if not julia_args:
@@ -303,13 +304,14 @@ class PythonToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         cmdline_args = self.tool_specification.cmdline_args + args
-        if self.options["use_jupyter_console"]:
+        options = check_options("python", self.options, self._logger)
+        if options["use_jupyter_console"]:
             server_ip = "127.0.0.1"
             if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
                 server_ip = self._settings.value("engineSettings/remoteHost", "")
-            kernel_name = self.options["kernel_spec_name"]
+            kernel_name = options["kernel_spec_name"]
             commands = self.make_python_jupyter_console_commands(cmdline_args)
-            env = self.options["env"]  # Activate environment if "conda"
+            env = options["env"]  # Activate environment if "conda"
             conda_exe = resolve_conda_executable(self._settings.value("appSettings/condaPath", defaultValue=""))
             self.exec_mngr = KernelExecutionManager(
                 self._logger,
@@ -322,7 +324,7 @@ class PythonToolInstance(ToolInstance):
                 server_ip=server_ip,
             )
         else:
-            interpreter = self.options["executable"]
+            interpreter = options["executable"]
             python_exe = interpreter if interpreter else resolve_python_interpreter(self._settings)
             commands = self.make_python_basic_console_commands(cmdline_args)
             alias = f"python {' '.join([self.tool_specification.main_prgm] + cmdline_args)}"
@@ -368,9 +370,10 @@ class ExecutableToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
+        options = check_options("executable", self.options, self._logger)
         if not self.tool_specification.main_prgm:  # Run command
-            cmd = self.options["cmd"].split()  # Convert str to list
-            shell = self.options["shell"]
+            cmd = options["cmd"].split()  # Convert str to list
+            shell = options["shell"]
             if not shell:
                 # If shell is not given (empty str), The first item in cmd list will be considered as self.program.
                 # The rest of the cmd list will be considered as cmd line args

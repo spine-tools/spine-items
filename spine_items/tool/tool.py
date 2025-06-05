@@ -21,9 +21,10 @@ from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg
 from spine_engine.utils.helpers import ExecutionDirection
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinetoolbox.project import SpineToolboxProject
-from spinetoolbox.helpers import open_url, select_root_directory, same_path, default_python_execution_settings, default_julia_execution_settings, default_executable_execution_settings
+from spinetoolbox.helpers import open_url, select_root_directory, same_path
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from .tool_specifications import ToolSpecification
+from ..utils import check_options
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand, UpdateResultDirCommand
 from ..db_writer_item_base import DBWriterItemBase
 from ..models import ToolCommandLineArgsModel
@@ -166,33 +167,12 @@ class Tool(DBWriterItemBase):
         constructor = constructors.get(tooltype)
         if constructor is None:
             return None
-        self._options = self._check_options(tooltype)
+        self._options = check_options(tooltype, self._options, self._logger)
         if tooltype not in self._properties_ui.options_widgets:
             self._properties_ui.options_widgets[tooltype] = constructor(self.models)
         self._properties_ui.options_widgets[tooltype].set_tool(self)
         self._properties_ui.options_widgets[tooltype].do_update_options(self._options)
         return self._properties_ui.options_widgets[tooltype]
-
-    def _check_options(self, tooltype):
-        """Returns the default options based on given tool type if options are
-        missing. If some but not all options are available, fills in the missing
-        key-value pairs with default values."""
-        if tooltype == "python":
-            defaults = default_python_execution_settings()
-        elif tooltype == "julia":
-            defaults = default_julia_execution_settings()
-        elif tooltype == "executable":
-            defaults = default_executable_execution_settings()
-        else:
-            self._logger.msg_error.emit(f"Default execution settings for {tooltype} do not exist")
-            return {}
-        if not self._options:
-            return defaults
-        # If key is missing, insert the key and the default value
-        for key in defaults.keys():
-            if key not in self._options.keys():
-                self._options[key] = defaults[key]
-        return self._options
 
     @staticmethod
     def item_type():
