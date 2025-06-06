@@ -157,9 +157,6 @@ class ToolSpecification(ProjectItemSpecification):
         """See base class"""
         return [("execution_settings",)]
 
-    def init_execution_settings(self):
-        """Updates Tool specifications by adding the default execution settings dict for this specification."""
-
     def is_equivalent(self, other):
         """See base class."""
         for k, v in other.__dict__.items():

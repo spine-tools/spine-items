@@ -156,7 +156,11 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
         print(f"[{self._tool.name}] restoring options:{options}")
         self._block_signals(True)
         self._enable_widgets(options["use_jupyter_console"])
-        self.ui.radioButton_jupyter_console.setChecked(True) if options["use_jupyter_console"] else self.ui.radioButton_basic_console.setChecked(True)
+        (
+            self.ui.radioButton_jupyter_console.setChecked(True)
+            if options["use_jupyter_console"]
+            else self.ui.radioButton_basic_console.setChecked(True)
+        )
         kernel_index = self.models.find_python_kernel_index(options["kernel_spec_name"])
         if not kernel_index.isValid():
             kernel_index = self.models.python_kernel_model.index(0, 0)
@@ -275,7 +279,11 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
         self._block_signals(True)
         self._enable_widgets(options["use_jupyter_console"])
-        self.ui.radioButton_jupyter_console.setChecked(True) if options["use_jupyter_console"] else self.ui.radioButton_basic_console.setChecked(True)
+        (
+            self.ui.radioButton_jupyter_console.setChecked(True)
+            if options["use_jupyter_console"]
+            else self.ui.radioButton_basic_console.setChecked(True)
+        )
         ind = self.models.find_julia_kernel_index(options["kernel_spec_name"])
         if not ind.isValid():
             ind = self.models.julia_kernel_model.index(0, 0)
@@ -799,7 +807,6 @@ class ExecutableOptionsWidget(OptionsWidget):
     #     self.spec_dict["execution_settings"]["cmd"] = value
     #     opt_widget = self._get_optional_widget("executable")
     #     opt_widget.ui.lineEdit_command.setText(value)
-
 
     # @Slot()
     # def finish_changing_executable(self):

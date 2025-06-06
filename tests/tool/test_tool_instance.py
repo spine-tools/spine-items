@@ -17,6 +17,11 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spine_items.tool.tool_specifications import ExecutableTool, GAMSTool, JuliaTool, PythonTool
+from spine_items.utils import (
+    default_python_execution_settings,
+    default_julia_execution_settings,
+    default_executable_execution_settings,
+)
 from tests.mock_helpers import MockQSettings
 
 
@@ -78,13 +83,10 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(True)
         with (
             mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem,
-            mock.patch("os.path.isfile") as mock_isfile,
             mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs,
         ):
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
-            mock_isfile.return_value = False
             instance.prepare([])
-            mock_isfile.assert_called()
             mock_kem.assert_called_once()
             mock_find_kernel_specs.assert_called_once()
             self.assertEqual(mock_kem.call_args[0][1], "some_julia_kernel")  # kernel_name
@@ -93,13 +95,10 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(True)
         with (
             mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem,
-            mock.patch("os.path.isfile") as mock_isfile,
             mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs,
         ):
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
-            mock_isfile.return_value = False
             instance.prepare(["arg1", "arg2"])
-            mock_isfile.assert_called()
             mock_kem.assert_called_once()
             mock_find_kernel_specs.assert_called_once()
             self.assertEqual(mock_kem.call_args[0][1], "some_julia_kernel")
@@ -111,13 +110,10 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(True, ["arg3"])
         with (
             mock.patch("spine_items.tool.tool_instance.KernelExecutionManager") as mock_kem,
-            mock.patch("os.path.isfile") as mock_isfile,
             mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs,
         ):
             mock_find_kernel_specs.return_value = {"some_julia_kernel": Path(__file__).parent / "dummy_julia_kernel"}
-            mock_isfile.return_value = False
             instance.prepare(["arg1", "arg2"])
-            mock_isfile.assert_called()
             mock_kem.assert_called_once()
             mock_find_kernel_specs.assert_called_once()
             self.assertEqual(mock_kem.call_args[0][1], "some_julia_kernel")
@@ -129,7 +125,7 @@ class TestToolInstance(unittest.TestCase):
     def test_julia_prepare_with_basic_console(self):
         # No cmd line args
         instance = self._make_julia_tool_instance(False)
-        instance._owner.options = {"julia_sysimage": "path/to/sysimage.so"}
+        instance._owner.options.update({"julia_sysimage": "path/to/sysimage.so"})
         with (
             mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
             mock.patch("os.path.isfile") as mock_isfile,
@@ -151,14 +147,11 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(False)
         with (
             mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
-            mock.patch("os.path.isfile") as mock_isfile,
             mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
         ):
-            mock_isfile.return_value = False
             mock_manager.return_value = True
             mock_resolve_julia.return_value = "path/to/julia"
             instance.prepare(["arg1", "arg2"])
-            mock_isfile.assert_called()
             mock_manager.assert_called_once()
             mock_resolve_julia.assert_called()
             self.assertEqual(["path/to/julia"], mock_manager.call_args[0][1])
@@ -171,14 +164,11 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(False, ["arg3"])
         with (
             mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
-            mock.patch("os.path.isfile") as mock_isfile,
             mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
         ):
-            mock_isfile.return_value = False
             mock_manager.return_value = True
             mock_resolve_julia.return_value = "path/to/julia"
             instance.prepare(["arg1", "arg2"])
-            mock_isfile.assert_called()
             mock_manager.assert_called_once()
             mock_resolve_julia.assert_called()
             self.assertEqual(["path/to/julia"], mock_manager.call_args[0][1])
@@ -383,11 +373,8 @@ class TestToolInstance(unittest.TestCase):
             mock.MagicMock(),
             cmdline_args=tool_spec_args,
         )
-        specification.init_execution_settings()
-        if use_jupyter_console:
-            specification.execution_settings["use_jupyter_console"] = True
-            specification.execution_settings["kernel_spec_name"] = "some_kernel"
-        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
+        fake_tool = FakeTool("python", use_jupyter_console)
+        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=fake_tool)
 
     @staticmethod
     def _make_julia_tool_instance(use_jupyter_console, tool_spec_args=None):
@@ -400,11 +387,8 @@ class TestToolInstance(unittest.TestCase):
             mock.MagicMock(),
             cmdline_args=tool_spec_args,
         )
-        specification.init_execution_settings()
-        if use_jupyter_console:
-            specification.execution_settings["use_jupyter_console"] = True
-            specification.execution_settings["kernel_spec_name"] = "some_julia_kernel"
-        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
+        fake_tool = FakeTool("julia", use_jupyter_console)
+        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=fake_tool)
 
     @staticmethod
     def _make_gams_tool_instance(temp_dir=None, tool_spec_args=None):
@@ -436,14 +420,8 @@ class TestToolInstance(unittest.TestCase):
                 mock.MagicMock(),
                 cmdline_args=tool_spec_args,
             )
-        specification.init_execution_settings()
-        if shell == "cmd.exe":
-            specification.execution_settings["shell"] = "cmd.exe"
-        elif shell == "bash":
-            specification.execution_settings["shell"] = "bash"
-        if cmd:
-            specification.execution_settings["cmd"] = cmd
-        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=mock.MagicMock())
+        fake_tool = FakeTool("executable", False, shell, cmd)
+        return specification.create_tool_instance("path/", False, logger=mock.MagicMock(), owner=fake_tool)
 
 
 class FakeExecutionManager:
@@ -458,6 +436,33 @@ class FakeQSettings:
     def value(self, key, defaultValue=""):
         if key == "appSettings/makeSysImage":
             return "true"
+
+
+class FakeTool:
+    def __init__(self, tooltype, use_jupyter_console, shell=None, cmd=None):
+        if tooltype == "python":
+            options = default_python_execution_settings()
+            if use_jupyter_console:
+                options["use_jupyter_console"] = True
+                options["kernel_spec_name"] = "some_kernel"
+            self.options = options
+        elif tooltype == "julia":
+            options = default_julia_execution_settings()
+            if use_jupyter_console:
+                options["use_jupyter_console"] = True
+                options["kernel_spec_name"] = "some_julia_kernel"
+        elif tooltype == "executable":
+            options = default_executable_execution_settings()
+            if shell == "cmd.exe":
+                options["shell"] = "cmd.exe"
+            elif shell == "bash":
+                options["shell"] = "bash"
+            if cmd:
+                options["cmd"] = cmd
+        else:
+            options = {}
+        self.options = options
+        self.group_id = None
 
 
 if __name__ == "__main__":

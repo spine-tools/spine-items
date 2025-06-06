@@ -19,7 +19,6 @@ from spine_engine.utils.queue_logger import SuppressedMessage
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spinedb_api.helpers import SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS, remove_credentials_from_url
-from spinetoolbox.helpers import default_python_execution_settings, default_julia_execution_settings, default_executable_execution_settings
 
 
 class URLError(Exception):
@@ -247,7 +246,16 @@ def escape_backward_slashes(string):
 def check_options(tooltype, current_options, logger):
     """Returns the default options based on given tool type if options are
     missing. If some but not all options are available, fills in the missing
-    key-value pairs with default values."""
+    key-value pairs with default values.
+
+    Args:
+        tooltype (str): Tool spec type
+        current_options (dict): Options dict to check
+        logger (LoggerInterface): For logging
+
+    Returns:
+        dict: Original or modified dict depending on if required key-values are present
+    """
     if tooltype == "python":
         defaults = default_python_execution_settings()
     elif tooltype == "julia":
@@ -264,3 +272,32 @@ def check_options(tooltype, current_options, logger):
         if key not in current_options.keys():
             current_options[key] = defaults[key]
     return current_options
+
+
+def default_python_execution_settings():
+    """Returns default Python Tool execution settings."""
+    d = dict()
+    d["kernel_spec_name"] = ""
+    d["env"] = ""
+    d["use_jupyter_console"] = False
+    d["executable"] = ""
+    return d
+
+
+def default_julia_execution_settings():
+    """Returns default Julia Tool execution settings."""
+    d = dict()
+    d["kernel_spec_name"] = ""
+    d["env"] = ""
+    d["use_jupyter_console"] = False
+    d["executable"] = ""
+    d["project"] = ""
+    return d
+
+
+def default_executable_execution_settings():
+    """Returns default Executable Tool execution settings."""
+    d = dict()
+    d["cmd"] = ""
+    d["shell"] = ""
+    return d

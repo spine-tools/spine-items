@@ -647,7 +647,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def browse_main_program_file(self, _=False):
         """Opens a file dialog where user can select the path of the main program file."""
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileName(self, "Select existing main program file", self._start_dir(), self._get_filetype_filter())
+        answer = QFileDialog.getOpenFileName(
+            self, "Select existing main program file", self._start_dir(), self._get_filetype_filter()
+        )
         file_path = answer[0]
         existing_file_paths = [
             os.path.join(self.includes_main_path, i)
@@ -674,7 +676,9 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     def new_main_program_file(self, _=False):
         """Creates a new blank main program file."""
         # noinspection PyCallByClass
-        answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._start_dir(), self._get_filetype_filter())
+        answer = QFileDialog.getSaveFileName(
+            self, "Create new main program file", self._start_dir(), self._get_filetype_filter()
+        )
         file_path = answer[0]
         existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if not file_path:  # Cancel button clicked

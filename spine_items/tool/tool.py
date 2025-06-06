@@ -162,7 +162,11 @@ class Tool(DBWriterItemBase):
         Returns:
             OptionsWidget: Options widget or None
         """
-        constructors = {"julia": JuliaOptionsWidget, "python": PythonOptionsWidget, "executable": ExecutableOptionsWidget}
+        constructors = {
+            "julia": JuliaOptionsWidget,
+            "python": PythonOptionsWidget,
+            "executable": ExecutableOptionsWidget,
+        }
         tooltype = self.specification().tooltype
         constructor = constructors.get(tooltype)
         if constructor is None:
