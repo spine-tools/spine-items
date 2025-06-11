@@ -304,6 +304,8 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         """Returns the Julia executable path of the currently selected item in the combobox."""
         current_index = self.models.julia_executables_model.index(self.ui.comboBox_executable.currentIndex(), 0)
         item = self.models.julia_executables_model.itemFromIndex(current_index)
+        if not item.data():  # Happens when Julia is not in PATH and the julia_executables_model is empty
+            return ""
         return item.data()["exe"]
 
     def get_project(self):
@@ -749,17 +751,6 @@ class ExecutableOptionsWidget(OptionsWidget):
         self.ui.lineEdit_command.blockSignals(block)
         self.ui.comboBox_shell.blockSignals(block)
 
-    # def init_widget(self, specification):
-    #     """Initializes UI elements based on specification."""
-    #     self.ui.lineEdit_command.setText(specification.execution_settings["cmd"])
-    #     shell = specification.execution_settings["shell"]
-    #     ind = next(iter(k for k, t in enumerate(self.shells) if t.lower() == shell), 0)
-    #     self.ui.comboBox_shell.setCurrentIndex(ind)
-
-    # def add_execution_settings(self, tool_spec_type):
-    #     """See base class."""
-    #     return {"cmd": self.ui.lineEdit_command.text(), "shell": self.get_current_shell()}
-
     def get_shell(self):
         """Returns the selected shell in the shell combo box."""
         ind = self.ui.comboBox_shell.currentIndex()
@@ -783,49 +774,8 @@ class ExecutableOptionsWidget(OptionsWidget):
         self._tool.update_options({"shell": self.get_shell()})
 
     def set_command_and_shell_edit_disabled_state(self, enabled):
-        # TODO: This could be used when tool spec does have or does not have a main file. (In do_update_options())
-        """Sets the enabled state for the Command -text editor and the Shell -combobox"""
+        """Sets the enabled state for the Command line edit and the Shell combobox.
+        # TODO: Use this when tool spec does have or does not have a main file. (In do_update_options())
+        """
         self.ui.comboBox_shell.setDisabled(enabled)
         self.ui.lineEdit_command.setDisabled(enabled)
-
-    # @Slot(str)
-    # def push_change_executable_command(self, command):
-    #     """Changes command for Executable Tool Specs.
-    #
-    #     Args:
-    #         command (str): new command
-    #     """
-    #     old_value = self.spec_dict["execution_settings"]["cmd"]
-    #     new_value = command.strip()
-    #     if new_value == old_value:
-    #         return
-    #     self._undo_stack.push(
-    #         ChangeSpecPropertyCommand(self._set_cmd, new_value, old_value, "change command", CommandId.COMMAND_UPDATE)
-    #     )
-
-    # def _set_cmd(self, value):
-    #     self.spec_dict["execution_settings"]["cmd"] = value
-    #     opt_widget = self._get_optional_widget("executable")
-    #     opt_widget.ui.lineEdit_command.setText(value)
-
-    # @Slot()
-    # def finish_changing_executable(self):
-    #     """Seals latest undo stack command."""
-    #     self._undo_stack.push(SealCommand(CommandId.EXECUTABLE_UPDATE.value))
-
-    # @Slot(int)
-    # def push_change_shell_command(self, index):
-    #     """Changes shell for Executable Tool Specs."""
-    #     toolspectype = self.spec_dict.get("tooltype", "")
-    #     opt_widget = self._get_optional_widget(toolspectype)
-    #     new_shell = opt_widget.shells[index] if index != 0 else ""
-    #     old_shell = self.spec_dict["execution_settings"]["shell"]
-    #     if new_shell == old_shell:
-    #         return
-    #     self._undo_stack.push(ChangeSpecPropertyCommand(self._set_shell, new_shell, old_shell, "change shell"))
-    #
-    # def _set_shell(self, value):
-    #     self.spec_dict["execution_settings"]["shell"] = value
-    #     opt_widget = self._get_optional_widget("executable")
-    #     index = next(iter(k for k, t in enumerate(opt_widget.shells) if t.lower() == value), 0)
-    #     opt_widget.ui.comboBox_shell.setCurrentIndex(index)

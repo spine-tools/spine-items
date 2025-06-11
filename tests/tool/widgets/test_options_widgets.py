@@ -13,14 +13,12 @@
 """Unit tests for the options_widgets.py module."""
 import logging
 import sys
-from pathlib import Path
 import unittest
 from unittest import mock
+from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QStandardItem, QIcon
 from spine_items.tool.widgets.options_widgets import JuliaOptionsWidget, PythonOptionsWidget, ExecutableOptionsWidget
-from spine_items.tool.tool_specifications import PythonTool
-from tests.mock_helpers import MockQSettings
-from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtGui import QIcon
+from spinetoolbox.kernel_models import ExecutableCompoundModels
 
 
 class TestJuliaOptionsWidget(unittest.TestCase):
@@ -38,112 +36,116 @@ class TestJuliaOptionsWidget(unittest.TestCase):
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-    @unittest.skip("Under construction")
-    def test_options_widget(self):
-        ow = JuliaOptionsWidget()
-        ow.set_tool(QWidget())  # Obviously not a real Tool
+    def test_julia_options_widget(self):
+        models = ExecutableCompoundModels(mock.MagicMock())
+        # Test without using Julia in PATH
+        with mock.patch("spinetoolbox.kernel_models.resolve_default_julia_executable") as mock_default_julia:
+            mock_default_julia.return_value = ""
+            models.load_julia_executables([])
+            mock_default_julia.assert_called()
+        models.load_julia_projects([])
+        ow = JuliaOptionsWidget(models)
+        tool = FakeTool(models)
+        ow.set_tool(tool)
         ow._set_ui_at_work()
         ow._set_ui_at_rest()
-        options = {"julia_sysimage": "/some/path"}
+        options = {
+            "julia_sysimage": "/some/path",
+            "kernel_spec_name": "", "env": "", "use_jupyter_console": False, "executable": "", "project": ""}
+        tool._options = options
         ow.do_update_options(options)
         self.assertEqual("/some/path", ow.ui.lineEdit_sysimage.text())
+        self.assertEqual("", ow.get_executable())
+        self.assertEqual("", ow.get_project())
+        self.assertTrue(ow.ui.radioButton_basic_console.isChecked())
+        ow._block_signals(True)
+        first_item = QStandardItem("Select Jupyter kernel...")
+        models.julia_kernel_model.appendRow(first_item)
+        deats = {"kernel_name": "julia-kernel"}
+        models._add_julia_kernel("julia-kernel", "/kernel_dir", False, QIcon(), deats)
+        ow._block_signals(False)
+        with mock.patch("spine_items.tool.widgets.options_widgets.select_file_path") as mock_select_fpath:
+            mock_select_fpath.return_value = "new/julia"
+            ow._add_julia_executable()
+            mock_select_fpath.assert_called()
+        self.assertEqual("new/julia", ow.get_executable())
+        with mock.patch("spine_items.tool.widgets.options_widgets.select_dir") as mock_select_dir:
+            mock_select_dir.return_value = "julia/project"
+            ow._add_julia_project()
+            mock_select_dir.assert_called()
+        self.assertEqual("julia/project", ow.get_project())
+        options = {
+            "julia_sysimage": "/some/path",
+            "kernel_spec_name": "julia-kernel", "env": "", "use_jupyter_console": True, "executable": "", "project": ""}
+        tool._options = options
+        ow.do_update_options(options)
+        self.assertTrue(ow.ui.radioButton_jupyter_console.isChecked())
+        self.assertEqual("julia-kernel", ow.get_kernel_name())
+
+    def test_python_options_widget(self):
+        models = ExecutableCompoundModels(mock.MagicMock())
+        models.load_python_system_interpreters([])
+        ow = PythonOptionsWidget(models)
+        tool = FakeTool(models)
+        ow.set_tool(tool)
+        options = {"kernel_spec_name": "", "env": "", "use_jupyter_console": False, "executable": ""}
+        tool._options = options
+        ow.do_update_options(options)
+        self.assertEqual("", ow.get_executable())
+        self.assertTrue(ow.ui.radioButton_basic_console.isChecked())
+        ow._block_signals(True)
+        first_item = QStandardItem("Select Jupyter kernel...")
+        models.python_kernel_model.appendRow(first_item)
+        deats = {"kernel_name": "python-kernel"}
+        models._add_python_kernel("python-kernel", "/kernel_dir", False, QIcon(), deats)
+        ow._block_signals(False)
+        with mock.patch("spine_items.tool.widgets.options_widgets.select_file_path") as mock_select_fpath:
+            mock_select_fpath.return_value = "new/python"
+            ow._add_python_interpreter()
+            mock_select_fpath.assert_called()
+        self.assertEqual("new/python", ow.get_executable())
+        options = {"kernel_spec_name": "python-kernel", "env": "", "use_jupyter_console": True, "executable": ""}
+        tool._options = options
+        ow.do_update_options(options)
+        self.assertTrue(ow.ui.radioButton_jupyter_console.isChecked())
+        self.assertEqual("python-kernel", ow.get_kernel_name())
+
+    def test_executable_options_widget(self):
+        models = ExecutableCompoundModels(mock.MagicMock())
+        models.load_python_system_interpreters([])
+        ow = ExecutableOptionsWidget(models)
+        tool = FakeTool(models)
+        ow.set_tool(tool)
+        options = {"cmd": "", "shell": ""}
+        tool._options = options
+        ow.do_update_options(options)
+        self.assertEqual("", ow.get_shell())
+        self.assertEqual("", ow.ui.lineEdit_command.text())
+        if sys.platform == "win32":
+            options = {"cmd": "dir", "shell": "cmd.exe"}
+            tool._options = options
+            ow.do_update_options(options)
+            self.assertEqual("cmd.exe", ow.get_shell())
+            self.assertEqual("dir", ow.ui.lineEdit_command.text())
+        else:
+            options = {"cmd": "ls", "shell": "bash"}
+            tool._options = options
+            ow.do_update_options(options)
+            self.assertEqual("bash", ow.get_shell())
+            self.assertEqual("ls", ow.ui.lineEdit_command.text())
 
 
-#     def test_change_python_tool_options(self):
-#         mock_logger = mock.MagicMock()
-#         script_file_name = "hello.py"
-#         file_path = Path(self._temp_dir.name, script_file_name)
-#         with open(file_path, "w") as h:
-#             h.writelines(["# hello.py"])  # Make hello.py
-#         python_tool_spec = PythonTool(
-#             "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
-#         )
-#         python_tool_spec.init_execution_settings()  # Sets defaults
-#         python_tool_spec.execution_settings["use_jupyter_console"] = True
-#         python_tool_spec.execution_settings["kernel_spec_name"] = "python310"
-#         with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
-#             self.make_tool_spec_editor(python_tool_spec)
-#             self.tool_specification_widget._push_change_args_command("-A -B")
-#             self.assertEqual(["-A", "-B"], self.tool_specification_widget.spec_dict["cmdline_args"])
-#
-#     def test_restore_unknown_saved_kernel_into_optional_widget(self):
-#         mock_logger = mock.MagicMock()
-#         script_file_name = "hello.py"
-#         file_path = Path(self._temp_dir.name, script_file_name)
-#         with open(file_path, "w") as h:
-#             h.writelines(["# hello.py"])  # Make hello.py
-#         python_tool_spec = PythonTool(
-#             "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
-#         )
-#         python_tool_spec.init_execution_settings()  # Sets defaults
-#         python_tool_spec.execution_settings["use_jupyter_console"] = True
-#         python_tool_spec.execution_settings["kernel_spec_name"] = "unknown_kernel"
-#         with (
-#             mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher),
-#             mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.Notification") as mock_notify,
-#         ):
-#             self.make_tool_spec_editor(python_tool_spec)
-#             opt_widget = self.tool_specification_widget.optional_widget
-#             self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())
-#             self.assertEqual(3, opt_widget.kernel_spec_model.rowCount())
-#             self.assertEqual(0, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-#             self.assertEqual("Select kernel spec...", opt_widget.ui.comboBox_kernel_specs.currentText())
-#             mock_notify.assert_called()
-#
-#     def test_set_cmd_for_executable_tool_spec(self):
-#         # Add command for executable tool spec
-#         self.tool_specification_widget.optional_widget.ui.lineEdit_command.setText("ls -a")
-#         self.tool_specification_widget.push_change_executable_command(
-#             self.tool_specification_widget.optional_widget.ui.lineEdit_command.text()
-#         )
-#         # Check that no shell is selected
-#         self.assertEqual("", self.tool_specification_widget.optional_widget.get_current_shell())
-#         self.assertEqual("No shell", self.tool_specification_widget.optional_widget.ui.comboBox_shell.currentText())
-#         # Change shell to cmd.exe on win32, bash for others
-#         if sys.platform == "win32":
-#             index_of_cmd_exe = self.tool_specification_widget.optional_widget.shells.index("cmd.exe")
-#             self.tool_specification_widget.push_change_shell_command(index_of_cmd_exe)
-#             self.assertEqual("cmd.exe", self.tool_specification_widget.optional_widget.get_current_shell())
-#         else:
-#             index_of_bash = self.tool_specification_widget.optional_widget.shells.index("bash")
-#             self.tool_specification_widget.push_change_shell_command(index_of_bash)
-#             self.assertEqual("bash", self.tool_specification_widget.optional_widget.get_current_shell())
-#
-#
-# class FakeSignal:
-#     def __init__(self):
-#         self.call_list = []  # List of slots
-#
-#     def connect(self, method):
-#         """Stores all slots connected to this FakeSignal into a list."""
-#         self.call_list.append(method)
-#
-#
-# class FakeKernelFetcher:
-#     """Class for replacing KernelFetcher in tests."""
-#
-#     kernel_found = FakeSignal()
-#     finished = FakeSignal()
-#
-#     def __init__(self, conda_path="", fetch_mode=0):
-#         self.conda_path = conda_path
-#         self.fetch_mode = fetch_mode
-#
-#     def isRunning(self):
-#         return False
-#
-#     def start(self):
-#         for m in self.kernel_found.call_list:
-#             # Calls SharedToolSpecOptionalWidget.add_kernel()
-#             m("python310", "", False, QIcon(), {})
-#             m("python311", "", False, QIcon(), {})
-#         for meth in self.finished.call_list:
-#             # Calls two methods:
-#             # 1. Either SharedToolSpecOptionalWidget._restore_saved_kernel() or
-#             # SharedToolSpecOptionalWidget._restore_selected_kernel()
-#             # 2. mock.restore_overrider_cursor()
-#             # Note: The order of connect() calls matters.
-#             meth()
-#         # Clear signal slots, so this can be used again
-#         self.kernel_found.call_list.clear()
-#         self.finished.call_list.clear()
+class FakeTool:
+    def __init__(self, models):
+        self.name = "testTool"
+        self.group_id = None
+        self._models = models
+        self._options = {}
+        self.project = mock.MagicMock()
+
+    @property
+    def models(self):
+        return self._models
+
+    def update_options(self, changed_option):
+        self._options.update(changed_option)
