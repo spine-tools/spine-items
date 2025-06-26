@@ -52,7 +52,7 @@ def do_work(process, cancel_on_error, logs_dir, from_server_urls, to_server_urls
                             all_errors.append(result["error"])
                         else:
                             logger.msg_success.emit(
-                                f"Merged {import_count} items with {len(import_errors)} errors"
+                                f"Merged {import_count} items with {len(import_errors)} errors "
                                 f"from {sanitized_from_url} into {sanitized_to_url}"
                             )
                     else:
