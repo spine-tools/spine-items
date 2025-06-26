@@ -45,13 +45,16 @@ def do_work(process, cancel_on_error, logs_dir, from_server_urls, to_server_urls
                     sanitized_from_url = remove_credentials_from_url(from_url)
                     sanitized_to_url = remove_credentials_from_url(to_client.get_db_url())
                     if data:
-                        to_client.call_method(
+                        result = to_client.call_method(
                             "commit_session", f"Import {import_count} items from {sanitized_from_url}"
                         )
-                        logger.msg_success.emit(
-                            f"Merged {import_count} items with {len(import_errors)} errors"
-                            f"from {sanitized_from_url} into {sanitized_to_url}"
-                        )
+                        if "error" in result:
+                            all_errors.append(result["error"])
+                        else:
+                            logger.msg_success.emit(
+                                f"Merged {import_count} items with {len(import_errors)} errors"
+                                f"from {sanitized_from_url} into {sanitized_to_url}"
+                            )
                     else:
                         logger.msg_warning.emit(f"No new data merged from {sanitized_from_url} into {sanitized_to_url}")
             finally:
