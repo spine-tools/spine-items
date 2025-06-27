@@ -153,7 +153,6 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
         self._tool.update_options({"use_jupyter_console": checked})
 
     def do_update_options(self, options):
-        print(f"[{self._tool.name}] restoring options:{options}")
         self._block_signals(True)
         self._enable_widgets(options["use_jupyter_console"])
         (
@@ -274,7 +273,6 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self._tool.update_options({"kernel_spec_name": self.get_kernel_name(), "env": self.is_conda()})
 
     def do_update_options(self, options):
-        print(f"[{self._tool.name}] restoring options:{options}")
         self.last_sysimage_path = options.get("julia_sysimage")
         self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
         self._block_signals(True)

@@ -51,7 +51,12 @@ class TestJuliaOptionsWidget(unittest.TestCase):
         ow._set_ui_at_rest()
         options = {
             "julia_sysimage": "/some/path",
-            "kernel_spec_name": "", "env": "", "use_jupyter_console": False, "executable": "", "project": ""}
+            "kernel_spec_name": "",
+            "env": "",
+            "use_jupyter_console": False,
+            "executable": "",
+            "project": "",
+        }
         tool._options = options
         ow.do_update_options(options)
         self.assertEqual("/some/path", ow.ui.lineEdit_sysimage.text())
@@ -76,7 +81,12 @@ class TestJuliaOptionsWidget(unittest.TestCase):
         self.assertEqual("julia/project", ow.get_project())
         options = {
             "julia_sysimage": "/some/path",
-            "kernel_spec_name": "julia-kernel", "env": "", "use_jupyter_console": True, "executable": "", "project": ""}
+            "kernel_spec_name": "julia-kernel",
+            "env": "",
+            "use_jupyter_console": True,
+            "executable": "",
+            "project": "",
+        }
         tool._options = options
         ow.do_update_options(options)
         self.assertTrue(ow.ui.radioButton_jupyter_console.isChecked())
