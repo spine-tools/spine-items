@@ -241,3 +241,63 @@ def escape_backward_slashes(string):
         str: escaped string
     """
     return string.replace("\\", "\\\\")
+
+
+def check_options(tooltype, current_options, logger):
+    """Returns the default options based on given tool type if options are
+    missing. If some but not all options are available, fills in the missing
+    key-value pairs with default values.
+
+    Args:
+        tooltype (str): Tool spec type
+        current_options (dict): Options dict to check
+        logger (LoggerInterface): For logging
+
+    Returns:
+        dict: Original or modified dict depending on if required key-values are present
+    """
+    if tooltype == "python":
+        defaults = default_python_execution_settings()
+    elif tooltype == "julia":
+        defaults = default_julia_execution_settings()
+    elif tooltype == "executable":
+        defaults = default_executable_execution_settings()
+    else:
+        logger.msg_error.emit(f"Default execution settings for {tooltype} do not exist")
+        return {}
+    if not current_options:
+        return defaults
+    # If key is missing, insert the key and the default value
+    for key in defaults.keys():
+        if key not in current_options.keys():
+            current_options[key] = defaults[key]
+    return current_options
+
+
+def default_python_execution_settings():
+    """Returns default Python Tool execution settings."""
+    d = dict()
+    d["kernel_spec_name"] = ""
+    d["env"] = ""
+    d["use_jupyter_console"] = False
+    d["executable"] = ""
+    return d
+
+
+def default_julia_execution_settings():
+    """Returns default Julia Tool execution settings."""
+    d = dict()
+    d["kernel_spec_name"] = ""
+    d["env"] = ""
+    d["use_jupyter_console"] = False
+    d["executable"] = ""
+    d["project"] = ""
+    return d
+
+
+def default_executable_execution_settings():
+    """Returns default Executable Tool execution settings."""
+    d = dict()
+    d["cmd"] = ""
+    d["shell"] = ""
+    return d

@@ -33,7 +33,6 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QToolButton, QTreeView, QVBoxLayout, QWidget)
 
 from ...widgets import ArgsTreeView
-from spinetoolbox.widgets.custom_qwidgets import ElidedLabel
 from spine_items import resources_icons_rc
 
 class Ui_Form(object):
@@ -234,11 +233,6 @@ class Ui_Form(object):
 
         self.verticalLayout_2.addWidget(self.lineEdit_group_id)
 
-        self.label_jupyter = ElidedLabel(self.frame)
-        self.label_jupyter.setObjectName(u"label_jupyter")
-
-        self.verticalLayout_2.addWidget(self.label_jupyter)
-
         self.kill_consoles_check_box = QCheckBox(self.frame)
         self.kill_consoles_check_box.setObjectName(u"kill_consoles_check_box")
 
@@ -331,7 +325,6 @@ class Ui_Form(object):
 #if QT_CONFIG(tooltip)
         self.lineEdit_group_id.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Enter an id for sharing a console with other Tools in this project. Leave empty to run this Tool in isolation.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label_jupyter.setText(QCoreApplication.translate("Form", u"Console info", None))
 #if QT_CONFIG(tooltip)
         self.kill_consoles_check_box.setToolTip(QCoreApplication.translate("Form", u"If checked, console processes will be killed automatically after execution finishes freeing memory and other resources.", None))
 #endif // QT_CONFIG(tooltip)

@@ -19,14 +19,8 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 import unittest
 from unittest import mock
 from PySide6.QtCore import QItemSelectionModel, Qt
-from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from spine_items.tool.tool_specifications import ExecutableTool, JuliaTool, PythonTool
-from spine_items.tool.widgets.tool_spec_optional_widgets import (
-    ExecutableToolSpecOptionalWidget,
-    JuliaToolSpecOptionalWidget,
-    PythonToolSpecOptionalWidget,
-)
 from spine_items.tool.widgets.tool_specification_editor_window import ToolSpecificationEditorWindow
 from tests.mock_helpers import MockQSettings, create_mock_toolbox_with_mock_qsettings
 
@@ -84,48 +78,14 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
                 mock_restore_ui.assert_called()
                 mock_impr.assert_called()
 
-    def test_change_tooltype(self):
-        self.make_tool_spec_editor()
-        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # julia
-        self.assertIsInstance(self.tool_specification_widget._get_optional_widget("julia"), JuliaToolSpecOptionalWidget)
-        sd = self.tool_specification_widget.spec_dict
-        exec_settings = sd.get("execution_settings")
-        self.assertEqual(sd["tooltype"], "julia")
-        self.assertEqual(len(exec_settings), 5)
-        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(1)  # python
-        self.assertIsInstance(
-            self.tool_specification_widget._get_optional_widget("python"), PythonToolSpecOptionalWidget
-        )
-        sd = self.tool_specification_widget.spec_dict
-        exec_settings = sd.get("execution_settings")
-        self.assertEqual(sd["tooltype"], "python")
-        self.assertEqual(len(exec_settings), 4)
-        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(2)  # gams
-        self.assertIsNone(self.tool_specification_widget._get_optional_widget("gams"))
-        sd = self.tool_specification_widget.spec_dict
-        exec_settings = sd.get("execution_settings")
-        self.assertEqual(sd["tooltype"], "gams")
-        self.assertIsNone(exec_settings)
-        self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(3)  # executable
-        self.assertIsInstance(
-            self.tool_specification_widget._get_optional_widget("executable"), ExecutableToolSpecOptionalWidget
-        )
-        sd = self.tool_specification_widget.spec_dict
-        exec_settings = sd.get("execution_settings")
-        self.assertEqual(sd["tooltype"], "executable")
-        self.assertEqual(len(exec_settings), 2)
-
     def test_make_new_specification(self):
         self.make_tool_spec_editor()
         self.tool_specification_widget._ui.comboBox_tooltype.setCurrentIndex(0)  # julia
-        self.assertIsInstance(self.tool_specification_widget.optional_widget, JuliaToolSpecOptionalWidget)
         self.tool_specification_widget._spec_toolbar._line_edit_name.setText("test_julia_tool")
         with NamedTemporaryFile(mode="r") as temp_file:
             self.tool_specification_widget._set_main_program_file(temp_file.name)
             spec = self.tool_specification_widget._make_new_specification("test_julia_tool")
-            self.tool_specification_widget._init_optional_widget(spec)
             self.assertIsInstance(spec, JuliaTool)
-            self.assertEqual(len(spec.execution_settings), 5)
         self._call_save()
 
     def _call_save(self):
@@ -158,10 +118,7 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             outputfiles=["results.txt"],
             cmdline_args=["-A", "-B"],
         )
-        julia_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
-        opt_widget = self.tool_specification_widget.optional_widget
-        self.assertIsInstance(opt_widget, JuliaToolSpecOptionalWidget)
         self.assertTrue(self.tool_specification_widget._ui.comboBox_tooltype.currentText() == "Julia")
         self.assertTrue(self.tool_specification_widget._ui.lineEdit_args.text() == "-A -B")
         # Program files dock widget should have 2 rows :'Main program file' and 'Additional program files'
@@ -196,12 +153,8 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         exec_tool_spec = ExecutableTool(
             "a", "executable", self._temp_dir.name, ["fake_main_program.bat"], MockQSettings(), mock_logger
         )
-        exec_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(exec_tool_spec)
-        opt_widget = self.tool_specification_widget._get_optional_widget("executable")
-        self.assertIsInstance(opt_widget, ExecutableToolSpecOptionalWidget)
-        self.assertFalse(opt_widget.ui.lineEdit_command.isEnabled())  # Command is disabled when a program file is set
-        # Program files dock widet should have 2 rows :'Main program file' and 'Additional program files'
+        # Program files dock widget should have 2 rows :'Main program file' and 'Additional program files'
         self.assertEqual(2, self.tool_specification_widget.programfiles_model.rowCount())
         # Get index of 'Main program file' item
         parent = self.tool_specification_widget.programfiles_model.index(0, 0)
@@ -222,7 +175,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         python_tool_spec = PythonTool(
             "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
         )
-        python_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(python_tool_spec)
         self.tool_specification_widget._ui.textEdit_program.appendPlainText("print('hi')")
         self.tool_specification_widget._save_program_file(
@@ -235,49 +187,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
             self.assertTrue(l[0].startswith("# hello"))  # Don't match the whole str to avoid problems with newline
             self.assertTrue(l[1].startswith("print('hi')"))
 
-    def test_change_python_spec_options(self):
-        mock_logger = mock.MagicMock()
-        script_file_name = "hello.py"
-        file_path = Path(self._temp_dir.name, script_file_name)
-        with open(file_path, "w") as h:
-            h.writelines(["# hello.py"])  # Make hello.py
-        python_tool_spec = PythonTool(
-            "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
-        )
-        python_tool_spec.init_execution_settings()  # Sets defaults
-        python_tool_spec.execution_settings["use_jupyter_console"] = True
-        python_tool_spec.execution_settings["kernel_spec_name"] = "python310"
-        with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
-            self.make_tool_spec_editor(python_tool_spec)
-            opt_widget = self.tool_specification_widget.optional_widget
-            self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())
-            self.assertEqual(3, opt_widget.kernel_spec_model.rowCount())
-            self.assertEqual(1, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-            self.assertEqual("python310", opt_widget.ui.comboBox_kernel_specs.currentText())
-            self.tool_specification_widget.push_change_kernel_spec_command(2)
-            self.assertEqual(
-                "python311", self.tool_specification_widget.spec_dict["execution_settings"]["kernel_spec_name"]
-            )
-            self.assertEqual(2, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-            self.assertEqual("python311", opt_widget.ui.comboBox_kernel_specs.currentText())
-            self.assertTrue(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
-            # Test SharedToolSpecOptionalWidget._restore_selected_kernel()
-            # Restore selected kernel after the kernel spec model has been reloaded
-            opt_widget.start_kernel_fetcher()
-            self.assertEqual(3, opt_widget.kernel_spec_model.rowCount())
-            self.assertEqual(2, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-            self.assertEqual("python311", opt_widget.ui.comboBox_kernel_specs.currentText())
-            # Test push_set_jupyter_console_mode()
-            self.tool_specification_widget.push_set_jupyter_console_mode(False)
-            self.assertFalse(self.tool_specification_widget.spec_dict["execution_settings"]["use_jupyter_console"])
-            opt_widget.set_executable("path/to/executable")
-            self.tool_specification_widget.push_change_executable(opt_widget.get_executable())
-            self.assertEqual(
-                "path/to/executable", self.tool_specification_widget.spec_dict["execution_settings"]["executable"]
-            )
-            self.tool_specification_widget._push_change_args_command("-A -B")
-            self.assertEqual(["-A", "-B"], self.tool_specification_widget.spec_dict["cmdline_args"])
-
     def test_change_executable_spec_options(self):
         mock_logger = mock.MagicMock()
         batch_file = "hello.bat"
@@ -285,7 +194,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         exec_tool_spec = ExecutableTool(
             "a", "executable", self._temp_dir.name, [batch_file, "data.file"], MockQSettings(), mock_logger
         )
-        exec_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(exec_tool_spec)
         file_path = Path(self._temp_dir.name, another_batch_file)
         parent_main = self.tool_specification_widget.programfiles_model.index(0, 0)  # Main program file item
@@ -326,61 +234,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         ) as m_notify:
             self.tool_specification_widget.remove_all_program_files()
             m_notify.assert_called()
-        # Add command for executable tool spec
-        self.tool_specification_widget.optional_widget.ui.lineEdit_command.setText("ls -a")
-        self.tool_specification_widget.push_change_executable_command(
-            self.tool_specification_widget.optional_widget.ui.lineEdit_command.text()
-        )
-        # Check that no shell is selected
-        self.assertEqual("", self.tool_specification_widget.optional_widget.get_current_shell())
-        self.assertEqual("No shell", self.tool_specification_widget.optional_widget.ui.comboBox_shell.currentText())
-        # Change shell to cmd.exe on win32, bash for others
-        if sys.platform == "win32":
-            index_of_cmd_exe = self.tool_specification_widget.optional_widget.shells.index("cmd.exe")
-            self.tool_specification_widget.push_change_shell_command(index_of_cmd_exe)
-            self.assertEqual("cmd.exe", self.tool_specification_widget.optional_widget.get_current_shell())
-        else:
-            index_of_bash = self.tool_specification_widget.optional_widget.shells.index("bash")
-            self.tool_specification_widget.push_change_shell_command(index_of_bash)
-            self.assertEqual("bash", self.tool_specification_widget.optional_widget.get_current_shell())
-
-    def test_change_julia_project(self):
-        mock_logger = mock.MagicMock()
-        julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, ["hello.jl"], MockQSettings(), mock_logger)
-        julia_tool_spec.init_execution_settings()  # Sets defaults
-        julia_tool_spec.execution_settings["use_jupyter_console"] = True
-        with mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher):
-            self.make_tool_spec_editor(julia_tool_spec)
-            self.assertEqual("", self.tool_specification_widget.spec_dict["execution_settings"]["project"])
-            self.tool_specification_widget.optional_widget.ui.lineEdit_julia_project.setText("path/to/julia_project")
-            self.tool_specification_widget.push_change_project()
-            self.assertEqual(
-                "path/to/julia_project", self.tool_specification_widget.spec_dict["execution_settings"]["project"]
-            )
-
-    def test_restore_unknown_saved_kernel_into_optional_widget(self):
-        mock_logger = mock.MagicMock()
-        script_file_name = "hello.py"
-        file_path = Path(self._temp_dir.name, script_file_name)
-        with open(file_path, "w") as h:
-            h.writelines(["# hello.py"])  # Make hello.py
-        python_tool_spec = PythonTool(
-            "a", "python", self._temp_dir.name, [script_file_name], MockQSettings(), mock_logger
-        )
-        python_tool_spec.init_execution_settings()  # Sets defaults
-        python_tool_spec.execution_settings["use_jupyter_console"] = True
-        python_tool_spec.execution_settings["kernel_spec_name"] = "unknown_kernel"
-        with (
-            mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.KernelFetcher", new=FakeKernelFetcher),
-            mock.patch("spine_items.tool.widgets.tool_spec_optional_widgets.Notification") as mock_notify,
-        ):
-            self.make_tool_spec_editor(python_tool_spec)
-            opt_widget = self.tool_specification_widget.optional_widget
-            self.assertTrue(opt_widget.ui.radioButton_jupyter_console.isChecked())
-            self.assertEqual(3, opt_widget.kernel_spec_model.rowCount())
-            self.assertEqual(0, opt_widget.ui.comboBox_kernel_specs.currentIndex())
-            self.assertEqual("Select kernel spec...", opt_widget.ui.comboBox_kernel_specs.currentText())
-            mock_notify.assert_called()
 
     def test_program_file_dialogs(self):
         mock_logger = mock.MagicMock()
@@ -402,7 +255,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         julia_tool_spec = JuliaTool(
             "a", "julia", self._temp_dir.name, [script_file_name, data_file_name], MockQSettings(), mock_logger
         )
-        julia_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
         self.assertEqual("hello.jl", os.path.split(self.tool_specification_widget._current_main_program_file())[1])
         # Test browse_main_program_file()
@@ -482,7 +334,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         with open(main_path, "w") as h:
             h.writelines(["println('Hello world')"])  # Make hello.jl
         julia_tool_spec = JuliaTool("a", "julia", self._temp_dir.name, [main_file], MockQSettings(), mock_logger)
-        julia_tool_spec.init_execution_settings()  # Sets defaults
         self.make_tool_spec_editor(julia_tool_spec)
         # INPUT FILES
         # Test add_input_files()
@@ -567,45 +418,6 @@ class TestToolSpecificationEditorWindow(unittest.TestCase):
         # Test remove_outputfiles()
         self.tool_specification_widget.remove_outputfiles()
         self.assertEqual(0, iofm.rowCount(output_files_root))
-
-
-class FakeSignal:
-    def __init__(self):
-        self.call_list = []  # List of slots
-
-    def connect(self, method):
-        """Stores all slots connected to this FakeSignal into a list."""
-        self.call_list.append(method)
-
-
-class FakeKernelFetcher:
-    """Class for replacing KernelFetcher in tests."""
-
-    kernel_found = FakeSignal()
-    finished = FakeSignal()
-
-    def __init__(self, conda_path="", fetch_mode=0):
-        self.conda_path = conda_path
-        self.fetch_mode = fetch_mode
-
-    def isRunning(self):
-        return False
-
-    def start(self):
-        for m in self.kernel_found.call_list:
-            # Calls SharedToolSpecOptionalWidget.add_kernel()
-            m("python310", "", False, QIcon(), {})
-            m("python311", "", False, QIcon(), {})
-        for meth in self.finished.call_list:
-            # Calls two methods:
-            # 1. Either SharedToolSpecOptionalWidget._restore_saved_kernel() or
-            # SharedToolSpecOptionalWidget._restore_selected_kernel()
-            # 2. mock.restore_overrider_cursor()
-            # Note: The order of connect() calls matters.
-            meth()
-        # Clear signal slots, so this can be used again
-        self.kernel_found.call_list.clear()
-        self.finished.call_list.clear()
 
 
 if __name__ == "__main__":

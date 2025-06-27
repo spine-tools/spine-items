@@ -15,18 +15,12 @@ In the former case it is presented empty, but in the latter it
 is filled with all the information from the specification being edited."""
 from copy import deepcopy
 from enum import IntEnum, unique
-import logging
 from operator import methodcaller
 import os
 from PySide6.QtCore import QFileInfo, QItemSelection, QItemSelectionModel, QModelIndex, Qt, Slot
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextDocument
 from PySide6.QtWidgets import QFileDialog, QFileIconProvider, QInputDialog, QLabel, QMessageBox
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spine_items.tool.widgets.tool_spec_optional_widgets import (
-    ExecutableToolSpecOptionalWidget,
-    JuliaToolSpecOptionalWidget,
-    PythonToolSpecOptionalWidget,
-)
 from spinetoolbox.config import STATUSBAR_SS
 from spinetoolbox.helpers import SealCommand, busy_effect, open_url, same_path
 from spinetoolbox.project_item.specification_editor_window import (
@@ -83,7 +77,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.treeView_io_files.setModel(self.io_files_model)
         self._ui.comboBox_tooltype.addItems(TOOL_TYPES)
         self._ui.comboBox_tooltype.setCurrentIndex(-1)
-        self.optional_widget = None
         # if a specification is given, fill the form with data from it
         if specification is not None:
             self._ui.lineEdit_args.setText(" ".join(specification.cmdline_args))
@@ -91,12 +84,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == tooltype), -1)
             self._ui.comboBox_tooltype.setCurrentIndex(index)
             self._ui.textEdit_program.set_lexer_name(tooltype.lower())
-            specification.init_execution_settings()  # Initialize execution settings
-            # spec dict needs to be set after setting the execution settings but before the
-            # optional widget is shown, in case the tooltype is Executable.
             self.spec_dict = deepcopy(specification.to_dict())
-            self._show_optional_widget(index)
-            self._init_optional_widget(specification)
         else:
             # If no specification is given, specification dict needs to be prepared
             self.spec_dict = {"item_type": ItemInfo.item_type()}
@@ -168,85 +156,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         clean = self._undo_stack.isClean() and not any(doc.isModified() for doc in self._programfile_documents.values())
         super()._update_window_modified(clean)
 
-    def _make_optional_widget(self, toolspectype):
-        """Returns an optional widget based on tool spec type.
-        Embedded to the main window in ``self._show_optional_widget()``.
-
-        Args:
-            toolspectype (str): Tool spec type
-
-        Returns:
-            Union[ToolSpecOptionalWidget, None]
-        """
-        if toolspectype.lower() == "python":
-            return PythonToolSpecOptionalWidget(self, self._toolbox)
-        if toolspectype.lower() == "julia":
-            return JuliaToolSpecOptionalWidget(self, self._toolbox)
-        if toolspectype.lower() == "executable":
-            return ExecutableToolSpecOptionalWidget(self, self._toolbox)
-        return None
-
-    def _get_optional_widget(self, toolspectype):
-        """Returns the current optional widget for given tool spec type or None if unavailable.
-
-        Args:
-            toolspectype (str): Tool spec type
-
-        Returns:
-            Union[ToolSpecOptionalWidget, None]
-        """
-        if toolspectype.lower() in ("python", "julia", "executable"):
-            optional_widget = self._ui.horizontalLayout_options_placeholder.itemAt(0)
-            return optional_widget.widget()
-        return None
-
-    @Slot(int)
-    def _show_optional_widget(self, row):
-        """Adds a ToolSpecOptionalWidget to UI and updates the widget based on specification.
-
-        Args:
-            row (int): Active row in tool type combobox
-        """
-        optional_widget = self._ui.horizontalLayout_options_placeholder.takeAt(0)
-        if optional_widget is not None:
-            optional_widget.widget().close()
-            self.optional_widget = None
-            self._set_tab_order()
-        tooltype = self._ui.comboBox_tooltype.itemText(row)
-        self.optional_widget = self._make_optional_widget(tooltype)
-        if self.optional_widget:
-            self._ui.horizontalLayout_options_placeholder.addWidget(self.optional_widget)
-            self.optional_widget.show()
-            self._set_tab_order()
-        if self.spec_dict.get("tooltype") == "executable":
-            self.optional_widget.set_command_and_shell_edit_disabled_state(bool(self._current_main_program_file()))
-
-    def _init_optional_widget(self, specification):
-        """Initializes optional widget UI based on specification.
-
-        Args:
-            specification (ToolSpecification): Specification that is opened in the editor window
-        """
-        toolspectype = specification.tooltype.lower()
-        opt_widget = self._get_optional_widget(toolspectype)
-        if opt_widget:
-            opt_widget.init_widget(specification)
-
-    def _set_tab_order(self):
-        self.setTabOrder(self._ui.comboBox_tooltype, self._ui.lineEdit_args)
-        before = self._ui.lineEdit_args
-        if self.optional_widget is not None:
-            for after in self.optional_widget.get_widgets_in_tab_order():
-                self.setTabOrder(before, after)
-                before = after
-        self.setTabOrder(before, self._ui.treeView_programfiles)
-        self.setTabOrder(self._ui.treeView_programfiles, self._ui.treeView_io_files)
-        self.setTabOrder(self._ui.treeView_io_files, self._ui.textEdit_program)
-
     def _make_new_specification(self, spec_name):
         """See base class."""
-        if self._ui.comboBox_tooltype.currentIndex() == -1:  # Check that a tool type is selected
-            self.show_error("Tool spec type not selected")
+        if self._ui.comboBox_tooltype.currentIndex() == -1:
+            self.show_error("Please select a Tool spec type")
             return None
         toolspectype = self._ui.comboBox_tooltype.currentText().lower()
         # Check that Tool Spec has a main program file except for Executable Tool Specs
@@ -278,31 +191,11 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         new_spec_dict["includes_main_path"] = (
             self.includes_main_path.replace(os.sep, "/") if self.includes_main_path else None
         )
-        try:
-            new_spec_dict = self.insert_execution_settings(new_spec_dict)
-        except NameError:
-            self.show_error(f"Creating a {self._ui.comboBox_tooltype.currentText().lower()} Tool spec failed")
-            return None
         tool_spec = make_specification(new_spec_dict, self._toolbox.qsettings(), self._toolbox)
         if not tool_spec:
             self.show_error("Creating Tool specification failed")
             return None
         return tool_spec
-
-    def insert_execution_settings(self, d):
-        """Insert execution mode settings to Tool spec dictionary.
-        For Python Tool specs, these settings give the kernel spec name, is_conda boolean
-        and whether to use Jupyter Console or not.
-
-        Args:
-            d (dict): Tool spec dictionary where the extra settings (if available) are included
-        """
-        toolspectype = d["tooltype"]
-        opt_widget = self._get_optional_widget(toolspectype)
-        if not opt_widget:
-            return d
-        d["execution_settings"] = opt_widget.add_execution_settings(toolspectype)
-        return d
 
     def _save(self, exiting=None):
         """Saves spec. If successful, also saves all modified program files."""
@@ -413,8 +306,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self._ui.treeView_programfiles.selectionModel().setCurrentIndex(
                 root_item.child(0).index(), QItemSelectionModel.SelectionFlag.Select
             )
-        if self.spec_dict.get("tooltype") == "executable":
-            self.optional_widget.set_command_and_shell_edit_disabled_state(bool(file_path))
 
     def populate_programfile_list(self, names):
         """Adds additional program files into the program files model.
@@ -564,7 +455,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.treeView_io_files.del_key_pressed.connect(self.remove_io_files_with_del)
         # Push undo commands
         self._ui.comboBox_tooltype.currentIndexChanged.connect(self._push_change_tooltype_command)
-        self._ui.comboBox_tooltype.currentIndexChanged.connect(self._show_optional_widget)
         self._ui.lineEdit_args.textEdited.connect(self._push_change_args_command)
         self._ui.lineEdit_args.editingFinished.connect(self._finish_changing_args)
         self.io_files_model.dataChanged.connect(self._push_io_file_renamed_command)
@@ -591,147 +481,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.textEdit_program.set_lexer_name(value)
         index = next(iter(k for k, t in enumerate(TOOL_TYPES) if t.lower() == value), -1)
         self._ui.comboBox_tooltype.setCurrentIndex(index)
-        self.clear_execution_settings(value)
-
-    def clear_execution_settings(self, spec_type):
-        """Updates the execution settings dict based on selected tool spec type.
-        Sets the default execution settings into self.spec_dict when a Python,
-        Julia, or Executable is selected as type. Removes execution settings from
-        self.spec_dict when any other Tool spec type is selected."""
-        if "execution_settings" in self.spec_dict:
-            self.spec_dict.pop("execution_settings")  # Clear execution settings
-        if spec_type == "python":
-            self.spec_dict["execution_settings"] = {
-                "use_jupyter_console": bool(
-                    int(self._toolbox.qsettings().value("appSettings/usePythonKernel", defaultValue="0"))
-                ),
-                "kernel_spec_name": self._toolbox.qsettings().value("appSettings/pythonKernel", defaultValue=""),
-                "env": "",
-                "executable": self._toolbox.qsettings().value("appSettings/pythonPath", defaultValue=""),
-            }
-        elif spec_type == "julia":
-            self.spec_dict["execution_settings"] = {
-                "use_jupyter_console": bool(
-                    int(self._toolbox.qsettings().value("appSettings/useJuliaKernel", defaultValue="0"))
-                ),
-                "kernel_spec_name": self._toolbox.qsettings().value("appSettings/juliaKernel", defaultValue=""),
-                "project": self._toolbox.qsettings().value("appSettings/juliaProjectPath", defaultValue=""),
-                "env": "",
-                "executable": self._toolbox.qsettings().value("appSettings/juliaPath", defaultValue=""),
-            }
-        elif spec_type == "executable":
-            self.spec_dict["execution_settings"] = {"cmd": "", "shell": ""}
-
-    @Slot(int)
-    def push_change_kernel_spec_command(self, index):
-        """Changes selected kernel name for Julia and Python Tool Specs."""
-        toolspectype = self.spec_dict.get("tooltype", "")
-        opt_widget = self._get_optional_widget(toolspectype)
-        item = opt_widget.kernel_spec_model.item(index)
-        if not item.data():
-            new_kernel_spec = ""
-        else:
-            new_kernel_spec = item.data()["kernel_spec_name"]
-        previous_kernel_spec = self.spec_dict["execution_settings"]["kernel_spec_name"]
-        if new_kernel_spec == previous_kernel_spec:
-            return
-        self._undo_stack.push(
-            ChangeSpecPropertyCommand(
-                self._set_kernel_spec, new_kernel_spec, previous_kernel_spec, "change kernel spec"
-            )
-        )
-
-    def _set_kernel_spec(self, value):
-        self.spec_dict["execution_settings"]["kernel_spec_name"] = value
-        opt_widget = self._get_optional_widget("python")  # TODO: BUG? "python" should be toolspectype?
-        row = opt_widget.find_index_by_data(value)  # Find row of item in combobox
-        if row == -1:
-            logging.error(f"Item '{value}' not found in any combobox item's data")
-        opt_widget.ui.comboBox_kernel_specs.setCurrentIndex(row)
-
-    @Slot(bool)
-    def push_set_jupyter_console_mode(self, new_value):
-        """Changes between Basic or Jupyter Console execution modes for Julia and Python Tool Specs."""
-        old_value = self.spec_dict["execution_settings"]["use_jupyter_console"]
-        if new_value == old_value:
-            return
-        self._undo_stack.push(
-            ChangeSpecPropertyCommand(self._set_jupyter_console_mode, new_value, old_value, "set Jupyter console mode")
-        )
-
-    def _set_jupyter_console_mode(self, value):
-        self.spec_dict["execution_settings"]["use_jupyter_console"] = value
-        toolspectype = self.spec_dict.get("tooltype", "")
-        opt_widget = self._get_optional_widget(toolspectype)
-        if value:
-            opt_widget.ui.radioButton_jupyter_console.setChecked(True)
-        else:
-            opt_widget.ui.radioButton_basic_console.setChecked(True)
-        opt_widget.set_ui_for_jupyter_console(value)
-
-    @Slot(str)
-    def push_change_executable(self, executable):
-        """Changes Julia or Python executable path for Julia and Python Tool Specs.
-
-        Args:
-            executable (str): path to executable
-        """
-        old_value = self.spec_dict["execution_settings"]["executable"]
-        new_value = executable.strip()
-        if new_value == old_value:
-            return
-        self._undo_stack.push(
-            ChangeSpecPropertyCommand(
-                self._set_executable, new_value, old_value, "change path of executable", CommandId.EXECUTABLE_UPDATE
-            )
-        )
-
-    @Slot()
-    def finish_changing_executable(self):
-        """Seals latest undo stack command."""
-        self._undo_stack.push(SealCommand(CommandId.EXECUTABLE_UPDATE.value))
-
-    def _set_executable(self, value):
-        self.spec_dict["execution_settings"]["executable"] = value
-        toolspectype = self.spec_dict.get("tooltype", "")
-        opt_widget = self._get_optional_widget(toolspectype)
-        opt_widget.set_executable(value)
-
-    @Slot()
-    def push_change_project(self):
-        """Changes Julia project path for Julia Tool Specs."""
-        old_value = self.spec_dict["execution_settings"]["project"]
-        toolspectype = self.spec_dict.get("tooltype", "")
-        opt_widget = self._get_optional_widget(toolspectype)
-        new_value = opt_widget.get_julia_project()
-        if new_value == old_value:
-            return
-        self._undo_stack.push(
-            ChangeSpecPropertyCommand(self._set_julia_project, new_value, old_value, "change Julia project")
-        )
-
-    def _set_julia_project(self, value):
-        self.spec_dict["execution_settings"]["project"] = value
-        toolspectype = self.spec_dict.get("tooltype", "")
-        opt_widget = self._get_optional_widget(toolspectype)
-        opt_widget.set_julia_project(value)
-
-    @Slot(int)
-    def push_change_shell_command(self, index):
-        """Changes shell for Executable Tool Specs."""
-        toolspectype = self.spec_dict.get("tooltype", "")
-        opt_widget = self._get_optional_widget(toolspectype)
-        new_shell = opt_widget.shells[index] if index != 0 else ""
-        old_shell = self.spec_dict["execution_settings"]["shell"]
-        if new_shell == old_shell:
-            return
-        self._undo_stack.push(ChangeSpecPropertyCommand(self._set_shell, new_shell, old_shell, "change shell"))
-
-    def _set_shell(self, value):
-        self.spec_dict["execution_settings"]["shell"] = value
-        opt_widget = self._get_optional_widget("executable")
-        index = next(iter(k for k, t in enumerate(opt_widget.shells) if t.lower() == value), 0)
-        opt_widget.ui.comboBox_shell.setCurrentIndex(index)
 
     @Slot(str)
     def _push_change_args_command(self, args):
@@ -764,31 +513,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             return
         self.spec_dict["cmdline_args"] = value
         self._ui.lineEdit_args.setText(" ".join(value))
-
-    @Slot(str)
-    def push_change_executable_command(self, command):
-        """Changes command for Executable Tool Specs.
-
-        Args:
-            command (str): new command
-        """
-        old_value = self.spec_dict["execution_settings"]["cmd"]
-        new_value = command.strip()
-        if new_value == old_value:
-            return
-        self._undo_stack.push(
-            ChangeSpecPropertyCommand(self._set_cmd, new_value, old_value, "change command", CommandId.COMMAND_UPDATE)
-        )
-
-    @Slot()
-    def finish_changing_command(self):
-        """Seals latest undo stack command."""
-        self._undo_stack.push(SealCommand(CommandId.COMMAND_UPDATE.value))
-
-    def _set_cmd(self, value):
-        self.spec_dict["execution_settings"]["cmd"] = value
-        opt_widget = self._get_optional_widget("executable")
-        opt_widget.ui.lineEdit_command.setText(value)
 
     def _push_change_main_program_file_command(self, new_value):
         """Pushes a command that changes the main program file to undo stack.
@@ -922,9 +646,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     @Slot(bool)
     def browse_main_program_file(self, _=False):
         """Opens a file dialog where user can select the path of the main program file."""
-        filter = self._get_filetype_filter()
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
-        answer = QFileDialog.getOpenFileName(self, "Select existing main program file", self._start_dir(), filter)
+        answer = QFileDialog.getOpenFileName(
+            self, "Select existing main program file", self._start_dir(), self._get_filetype_filter()
+        )
         file_path = answer[0]
         existing_file_paths = [
             os.path.join(self.includes_main_path, i)
@@ -950,9 +675,10 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
     @Slot(bool)
     def new_main_program_file(self, _=False):
         """Creates a new blank main program file."""
-        filter = self._get_filetype_filter()
         # noinspection PyCallByClass
-        answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._start_dir(), filter)
+        answer = QFileDialog.getSaveFileName(
+            self, "Create new main program file", self._start_dir(), self._get_filetype_filter()
+        )
         file_path = answer[0]
         existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if not file_path:  # Cancel button clicked

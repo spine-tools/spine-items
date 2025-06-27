@@ -374,13 +374,6 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
            </widget>
           </item>
           <item>
-           <widget class="ElidedLabel" name="label_jupyter">
-            <property name="text">
-             <string>Console info</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCheckBox" name="kill_consoles_check_box">
             <property name="toolTip">
              <string>If checked, console processes will be killed automatically after execution finishes freeing memory and other resources.</string>
@@ -461,11 +454,6 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
    <class>ArgsTreeView</class>
    <extends>QTreeView</extends>
    <header>../widgets.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ElidedLabel</class>
-   <extends>QLabel</extends>
-   <header>spinetoolbox/widgets/custom_qwidgets.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'specification_editor_widget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -102,19 +102,19 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_3.addWidget(self.filter_combo_box)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_2)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_3)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer)
 
         self.type_dock.setWidget(self.dockWidgetContents)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.type_dock)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.type_dock)
         self.load_database_dock = QDockWidget(MainWindow)
         self.load_database_dock.setObjectName(u"load_database_dock")
         self.load_database_dock.setFeatures(QDockWidget.DockWidgetMovable)
@@ -133,7 +133,7 @@ class Ui_MainWindow(object):
 
         self.database_url_combo_box = ElidedCombobox(self.dockWidgetContents_2)
         self.database_url_combo_box.setObjectName(u"database_url_combo_box")
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.database_url_combo_box.sizePolicy().hasHeightForWidth())
@@ -146,7 +146,7 @@ class Ui_MainWindow(object):
         self.load_url_from_fs_button = QToolButton(self.dockWidgetContents_2)
         self.load_url_from_fs_button.setObjectName(u"load_url_from_fs_button")
         icon = QIcon()
-        icon.addFile(u":/icons/file.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/file.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.load_url_from_fs_button.setIcon(icon)
 
         self.horizontalLayout_4.addWidget(self.load_url_from_fs_button)
@@ -156,7 +156,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_5 = QHBoxLayout()
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_5.addItem(self.horizontalSpacer_3)
 
@@ -169,12 +169,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_5)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 2, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 2, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_2.addItem(self.verticalSpacer_2)
 
         self.load_database_dock.setWidget(self.dockWidgetContents_2)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.load_database_dock)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.load_database_dock)
         self.possible_parameters_dock = QDockWidget(MainWindow)
         self.possible_parameters_dock.setObjectName(u"possible_parameters_dock")
         self.possible_parameters_dock.setFeatures(QDockWidget.DockWidgetMovable)
@@ -197,7 +197,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.addWidget(self.available_parameters_tree_view)
 
         self.possible_parameters_dock.setWidget(self.dockWidgetContents_3)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.possible_parameters_dock)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.possible_parameters_dock)
         self.parameter_rename_dock = QDockWidget(MainWindow)
         self.parameter_rename_dock.setObjectName(u"parameter_rename_dock")
         self.parameter_rename_dock.setFeatures(QDockWidget.DockWidgetMovable)
@@ -219,7 +219,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.remove_parameter_button)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
@@ -235,7 +235,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addWidget(self.parameter_rename_table_view)
 
         self.parameter_rename_dock.setWidget(self.dockWidgetContents_4)
-        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.parameter_rename_dock)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.parameter_rename_dock)
         self.value_transformation_dock = QDockWidget(MainWindow)
         self.value_transformation_dock.setObjectName(u"value_transformation_dock")
         self.value_transformation_dock.setFeatures(QDockWidget.DockWidgetMovable)
@@ -257,7 +257,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.remove_transformation_button)
 
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_4)
 
@@ -275,7 +275,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.addWidget(self.transformations_table_view)
 
         self.value_transformation_dock.setWidget(self.dockWidgetContents_5)
-        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.value_transformation_dock)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.value_transformation_dock)
         self.value_instructions_dock = QDockWidget(MainWindow)
         self.value_instructions_dock.setObjectName(u"value_instructions_dock")
         self.value_instructions_dock.setFeatures(QDockWidget.DockWidgetMovable)
@@ -299,7 +299,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_6.addWidget(self.remove_instruction_button)
 
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_6.addItem(self.horizontalSpacer_5)
 
@@ -328,7 +328,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.addLayout(self.instruction_options_layout)
 
         self.value_instructions_dock.setWidget(self.dockWidgetContents_6)
-        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.value_instructions_dock)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.value_instructions_dock)
         self.possible_classes_dock = QDockWidget(MainWindow)
         self.possible_classes_dock.setObjectName(u"possible_classes_dock")
         self.possible_classes_dock.setFeatures(QDockWidget.DockWidgetMovable)
@@ -352,7 +352,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.addWidget(self.available_classes_tree_widget)
 
         self.possible_classes_dock.setWidget(self.dockWidgetContents_7)
-        MainWindow.addDockWidget(Qt.LeftDockWidgetArea, self.possible_classes_dock)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.possible_classes_dock)
         self.class_rename_dock = QDockWidget(MainWindow)
         self.class_rename_dock.setObjectName(u"class_rename_dock")
         self.class_rename_dock.setFeatures(QDockWidget.DockWidgetMovable)
@@ -374,7 +374,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_7.addWidget(self.remove_class_button)
 
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_7.addItem(self.horizontalSpacer_6)
 
@@ -391,7 +391,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_8.addWidget(self.class_rename_table_view)
 
         self.class_rename_dock.setWidget(self.dockWidgetContents_8)
-        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.class_rename_dock)
+        MainWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.class_rename_dock)
 
         self.retranslateUi(MainWindow)
 
