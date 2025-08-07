@@ -138,25 +138,20 @@ class ConnectionManager(QObject):
             source (str): source file name or URL
             **source_extras: source specific additional connection settings
         """
-        # close existing thread
         self.close_connection()
-        # create new thread and worker
-        self._thread = QThread()
         self._worker = ConnectionWorker(self._connection, self._connection_settings, source, source_extras)
+        self._thread = QThread()
         self._worker.moveToThread(self._thread)
-        # connect worker signals
         self._worker.connectionReady.connect(self._handle_connection_ready)
         self._worker.tablesReady.connect(self._handle_tables_ready)
         self._worker.dataReady.connect(self.data_ready.emit)
         self._worker.defaultMappingReady.connect(self.default_mapping_ready.emit)
         self._worker.error.connect(self.error.emit)
         self._worker.connectionFailed.connect(self.connection_failed.emit)
-        # connect start working signals
         self.tables_requested.connect(self._worker.tables)
         self.data_requested.connect(self._worker.data)
         self.default_mapping_requested.connect(self._worker.default_mapping)
         self.connection_closed.connect(self._worker.close_connection, type=Qt.ConnectionType.BlockingQueuedConnection)
-        # when thread is started, connect worker to source
         self._thread.started.connect(self._worker.init_connection)
         self._thread.start()
 
