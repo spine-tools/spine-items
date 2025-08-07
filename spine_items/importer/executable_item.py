@@ -17,6 +17,7 @@ from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.project_item.project_item_resource import get_labelled_source_resources
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.utils.returning_process import ReturningProcess
+from spinedb_api.exception import ReaderError
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.csv_reader import CSVReader
 from spinedb_api.spine_io.importers.datapackage_reader import DatapackageReader
@@ -72,7 +73,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
         if not super().execute(forward_resources, backward_resources, lock):
             return ItemExecutionFinishState.FAILURE
         if not self._mapping:
-            self._logger.msg_warning.emit(f"<b>{self.name}</b>: No mappings configured. Skipping.")
+            self._logger.msg_warning.emit(f"No mappings configured. Skipping.")
             return ItemExecutionFinishState.SKIPPED
         labelled_resources = get_labelled_source_resources(forward_resources)
         selected_resources = []
@@ -86,7 +87,11 @@ class ExecutableItem(DBWriterExecutableItemBase):
             source_settings = {"gams_directory": self._gams_system_directory()}
         else:
             source_settings = None
-        connector = READER_NAME_TO_CLASS[source_type](source_settings)
+        try:
+            connector = READER_NAME_TO_CLASS[source_type](source_settings)
+        except ReaderError as error:
+            self._logger.msg_error.emit(f"Failed to create reader: {error}")
+            return ItemExecutionFinishState.FAILURE
         with ExitStack() as stack:
             to_server_urls = [stack.enter_context(resource.open()) for resource in to_resources]
             self._process = ReturningProcess(

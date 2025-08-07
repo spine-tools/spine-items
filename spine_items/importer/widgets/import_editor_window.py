@@ -17,6 +17,7 @@ from operator import attrgetter
 import os
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Signal, Slot
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QListWidget, QMessageBox, QVBoxLayout
+from spinedb_api.exception import ReaderError
 from spinedb_api.helpers import remove_credentials_from_url
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from spinedb_api.spine_io.importers.reader import Reader
@@ -318,7 +319,10 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._import_sources.set_connector(self._connection_manager, mapping)
         self._display_input_type(reader.DISPLAY_NAME)
         extras = self._input_extras if self._input_extras is not None else {}
-        self._connection_manager.init_connection(self._input, **extras)
+        try:
+            self._connection_manager.init_connection(self._input, **extras)
+        except ReaderError as error:
+            QMessageBox.warning(self, "Failed to read source", f"Couldn't read source: {error}")
 
     def _display_input_type(self, input_type):
         """Shows connector's name on the ui.
