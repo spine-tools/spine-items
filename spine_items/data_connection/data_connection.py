@@ -13,6 +13,7 @@
 """Module for data connection class."""
 import logging
 import os
+import pathlib
 import shutil
 from PySide6.QtCore import QFileInfo, QItemSelection, QModelIndex, Qt, QTimer, Slot
 from PySide6.QtGui import QBrush, QStandardItem, QStandardItemModel
@@ -43,7 +44,7 @@ class _Role:
     DB_URL_REFERENCE = Qt.ItemDataRole.UserRole + 4
 
 
-_MISSING_ITEM_FOREGROUND = QBrush(Qt.red)
+_MISSING_ITEM_FOREGROUND = QBrush(Qt.GlobalColor.red)
 
 
 class DataConnection(ProjectItem):
@@ -857,3 +858,6 @@ class DataConnection(ProjectItem):
             self._logger.msg.emit("Link established")
         else:
             super().notify_destination(source_item)
+
+    def temporary_paths_in_item_directory(self) -> list[pathlib.Path]:
+        return [path for path in pathlib.Path(self.data_dir).iterdir() if not path.is_file()]
