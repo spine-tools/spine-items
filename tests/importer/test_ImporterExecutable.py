@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for ImporterExecutable."""
+import gc
 from multiprocessing import Lock
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -28,6 +29,7 @@ class TestImporterExecutable(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
 
     def tearDown(self):
+        gc.collect()
         self._temp_dir.cleanup()
 
     def test_item_type(self):
@@ -114,6 +116,7 @@ class TestImporterExecutable(unittest.TestCase):
             entity_list = database_map.query(database_map.entity_sq).filter_by(class_id=class_list[0].id).all()
             self.assertEqual(len(entity_list), 1)
             self.assertEqual(entity_list[0].name, "entity")
+        database_map.close()
 
     def test_execute_skip_deselected_file(self):
         data_file = Path(self._temp_dir.name, "data.dat")
@@ -131,6 +134,7 @@ class TestImporterExecutable(unittest.TestCase):
         with DatabaseMapping(database_url) as database_map:
             class_list = database_map.query(database_map.entity_class_sq).all()
             self.assertEqual(len(class_list), 0)
+        database_map.close()
 
     @staticmethod
     def _write_simple_data(file_name):

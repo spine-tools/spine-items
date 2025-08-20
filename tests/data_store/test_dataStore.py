@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for DataStore class."""
+import gc
 import logging
 import os
 from pathlib import Path
@@ -28,6 +29,7 @@ from spine_items.utils import convert_to_sqlalchemy_url, database_label
 from spinedb_api import create_new_spine_database
 from spinetoolbox.helpers import signal_waiter
 from tests.mock_helpers import (
+    clean_up_toolbox,
     create_mock_project,
     create_mock_toolbox,
     create_toolboxui_with_project,
@@ -73,19 +75,20 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         """Overridden method. Runs after each test.
         Use this to free resources after a test if needed.
         """
+        clean_up_toolbox(self._toolbox)
         ds_db_path = os.path.join(self.ds.data_dir, "DS.sqlite")
-        temp_db_path = os.path.join(self.ds.data_dir, "temp_db.sqlite")
-        self.ds.tear_down()
         if os.path.exists(ds_db_path):
             try:
                 os.remove(ds_db_path)
             except OSError as os_e:
                 logging.error("Failed to remove %s. Error: %s", ds_db_path, os_e)
+        temp_db_path = os.path.join(self.ds.data_dir, "temp_db.sqlite")
         if os.path.exists(temp_db_path):
             try:
                 os.remove(temp_db_path)
             except OSError as os_e:
                 logging.error("Failed to remove %s. Error: %s", temp_db_path, os_e)
+        gc.collect()
         self._temp_dir.cleanup()
 
     def create_temp_db(self):
@@ -93,10 +96,11 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         temp_db_path = os.path.join(self.ds.data_dir, "temp_db.sqlite")
         sqlite_url = "sqlite:///" + temp_db_path
         create_new_spine_database(sqlite_url)
+        gc.collect()
         return temp_db_path
 
     def test_rename(self):
-        """Tests renaming a Data Store with an existing sqlite db in it's data_dir."""
+        """Tests renaming a Data Store with an existing sqlite db in its data_dir."""
         temp_path = self.create_temp_db()
         url = {"dialect": "sqlite", "database": temp_path}
         self.ds._url = self.ds.parse_url(url)
@@ -188,6 +192,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
                 os.remove(temp_db_path)
             except OSError as os_e:
                 logging.error("Failed to remove %s. Error: %s", temp_db_path, os_e)
+        gc.collect()
         self._temp_dir.cleanup()
 
     def create_temp_db(self):

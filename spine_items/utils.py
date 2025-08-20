@@ -184,7 +184,7 @@ def unsplit_url_credentials(url, credentials):
     connect_args = sa_url.translate_connect_args()
     connect_args["username"], connect_args["password"] = credentials
     new_sa_url = URL.create(sa_url.drivername, **connect_args)
-    return str(new_sa_url)
+    return new_sa_url.render_as_string(hide_password=False)
 
 
 def generate_filter_subdirectory_name(resources, filter_id_hash):

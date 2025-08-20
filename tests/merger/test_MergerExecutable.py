@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for MergerExecutable."""
+import gc
 from multiprocessing import Lock
 import os.path
 from pathlib import Path
@@ -30,6 +31,7 @@ class TestMergerExecutable(unittest.TestCase):
         self._temp_dir = TemporaryDirectory()
 
     def tearDown(self):
+        gc.collect()
         self._temp_dir.cleanup()
 
     def test_item_type(self):
@@ -64,6 +66,7 @@ class TestMergerExecutable(unittest.TestCase):
             import_functions.import_entity_classes(db1_map, [("a",)])
             import_functions.import_entities(db1_map, [("a", "a_1")])
             db1_map.commit_session("Add an object class 'a' and an object for unit tests.")
+        db1_map.close()
         db2_path = Path(self._temp_dir.name, "db2.sqlite")
         db2_url = "sqlite:///" + str(db2_path)
         # Add some data to db2
@@ -71,6 +74,7 @@ class TestMergerExecutable(unittest.TestCase):
             import_functions.import_entity_classes(db2_map, [("b",)])
             import_functions.import_entities(db2_map, [("b", "b_1")])
             db2_map.commit_session("Add an object class 'b' and an object for unit tests.")
+        db2_map.close()
         # Make an empty output db
         db3_path = Path(self._temp_dir.name, "db3.sqlite")
         db3_url = "sqlite:///" + str(db3_path)
@@ -96,6 +100,7 @@ class TestMergerExecutable(unittest.TestCase):
             entity_list_b = output_db_map.query(output_db_map.entity_sq).filter_by(class_id=class_list[1].id).all()
             self.assertEqual(len(entity_list_b), 1)
             self.assertEqual(entity_list_b[0].name, "b_1")
+        output_db_map.close()
 
     def test_write_order(self):
         db1_path = Path(self._temp_dir.name, "db1.sqlite")
@@ -104,12 +109,14 @@ class TestMergerExecutable(unittest.TestCase):
         with DatabaseMapping(db1_url, create=True) as db1_map:
             import_functions.import_data(db1_map, entity_classes=[("fish",)])
             db1_map.commit_session("Add test data.")
+        db1_map.close()
         db2_path = Path(self._temp_dir.name, "db2.sqlite")
         db2_url = "sqlite:///" + os.path.normcase(str(db2_path))
         # Add some data to db2
         with DatabaseMapping(db2_url, create=True) as db2_map:
             import_functions.import_data(db2_map, entity_classes=[("cat",)])
             db2_map.commit_session("Add test data.")
+        db2_map.close()
         # Make an empty output db
         db3_path = Path(self._temp_dir.name, "db3.sqlite")
         db3_url = "sqlite:///" + os.path.normcase(str(db3_path))
@@ -177,6 +184,7 @@ class TestMergerExecutable(unittest.TestCase):
             self.assertEqual(engine.state(), SpineEngineState.COMPLETED)
             with DatabaseMapping(db3_url, create=True) as db3_map:
                 commits = db3_map.query(db3_map.commit_sq).all()
+            db3_map.close()
             merger1_idx = next(iter(k for k, commit in enumerate(commits) if db1_url in commit.comment))
             merger2_idx = next(iter(k for k, commit in enumerate(commits) if db2_url in commit.comment))
             self.assertTrue(merger2_idx < merger1_idx)
