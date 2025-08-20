@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Data Connection project item."""
+import gc
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -53,6 +54,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
 
     def tearDown(self):
         clean_up_toolbox(self._toolbox)
+        gc.collect()
         self._temp_dir.cleanup()
 
     @classmethod
@@ -561,6 +563,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
                 }
             ],
         )
+        gc.collect()
         with signal_waiter(self._data_connection.file_system_watcher.file_renamed) as waiter:
             db_path.rename(db_path.parent / "renamed.sqlite")
             waiter.wait()
@@ -601,6 +604,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
                 }
             ],
         )
+        gc.collect()
         with signal_waiter(self._data_connection.file_system_watcher.file_renamed) as waiter:
             renamed_path = db_path.rename(db_path.parent / "renamed.sqlite")
             waiter.wait()

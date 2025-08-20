@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``database_validation`` module."""
+import gc
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -42,6 +43,7 @@ class TestDatabaseConnectionValidator(unittest.TestCase):
                 validator.wait_for_finish()
                 validator.deleteLater()
             self.assertTrue(listener.is_success)
+            gc.collect()
 
     def test_successful_validation_of_sqlite_database_with_str_url(self):
         with TemporaryDirectory() as temp_dir:
@@ -58,6 +60,7 @@ class TestDatabaseConnectionValidator(unittest.TestCase):
                 validator.wait_for_finish()
                 validator.deleteLater()
             self.assertTrue(listener.is_success)
+            gc.collect()
 
     def test_validation_failure_due_to_missing_sqlite_file(self):
         with TemporaryDirectory() as temp_dir:
@@ -74,6 +77,7 @@ class TestDatabaseConnectionValidator(unittest.TestCase):
                 validator.deleteLater()
             self.assertFalse(listener.is_success)
             self.assertEqual(listener.fail_message, "File does not exist. Check the Database field in the URL.")
+            gc.collect()
 
 
 class _Listener:

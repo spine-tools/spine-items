@@ -41,7 +41,7 @@ class TestScanForResources(unittest.TestCase):
             [
                 url_resource(
                     "test dc",
-                    "postgresql+psycopg2://superman:t0p s3cr3t@long.gone.url:5432/warehouse",
+                    "postgresql+psycopg2://superman:***@long.gone.url:5432/warehouse",
                     "<test dc>postgresql+psycopg2://long.gone.url:5432/warehous",
                 )
             ],

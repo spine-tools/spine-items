@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Exporter project item."""
+import gc
 import os.path
 from tempfile import TemporaryDirectory
 import unittest
@@ -149,6 +150,7 @@ class TestExporterWithToolbox(unittest.TestCase):
 
     def tearDown(self):
         clean_up_toolbox(self._toolbox)
+        gc.collect()
         self._temp_dir.cleanup()
 
     def test_notifications_when_not_configured(self):
