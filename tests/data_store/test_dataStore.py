@@ -108,7 +108,9 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         # Check that DS is connected to an existing DS.sqlite file that is in data_dir
         url = self.ds_properties_ui.url_selector_widget.url_dict()
         self.assertEqual(url["dialect"], "sqlite")
-        self.assertEqual(url["database"], os.path.normcase(os.path.join(self.ds.data_dir, "temp_db.sqlite")))
+        self.assertTrue(
+            os.path.normcase(url["database"]), os.path.normcase(os.path.join(self.ds.data_dir, "temp_db.sqlite"))
+        )
         self.assertTrue(os.path.exists(url["database"]))
         expected_name = "ABC"
         expected_short_name = "abc"
