@@ -104,14 +104,14 @@ class TestMergerExecutable(unittest.TestCase):
 
     def test_write_order(self):
         db1_path = Path(self._temp_dir.name, "db1.sqlite")
-        db1_url = "sqlite:///" + os.path.normcase(str(db1_path))
+        db1_url = "sqlite:///" + str(db1_path)
         # Add some data to db1
         with DatabaseMapping(db1_url, create=True) as db1_map:
             import_functions.import_data(db1_map, entity_classes=[("fish",)])
             db1_map.commit_session("Add test data.")
         db1_map.close()
         db2_path = Path(self._temp_dir.name, "db2.sqlite")
-        db2_url = "sqlite:///" + os.path.normcase(str(db2_path))
+        db2_url = "sqlite:///" + str(db2_path)
         # Add some data to db2
         with DatabaseMapping(db2_url, create=True) as db2_map:
             import_functions.import_data(db2_map, entity_classes=[("cat",)])
@@ -119,7 +119,7 @@ class TestMergerExecutable(unittest.TestCase):
         db2_map.close()
         # Make an empty output db
         db3_path = Path(self._temp_dir.name, "db3.sqlite")
-        db3_url = "sqlite:///" + os.path.normcase(str(db3_path))
+        db3_url = "sqlite:///" + str(db3_path)
         # Make two mergers
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())

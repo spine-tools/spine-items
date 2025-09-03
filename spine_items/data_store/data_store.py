@@ -102,7 +102,7 @@ class DataStore(ProjectItem):
         if isinstance(url, dict):
             if url.get("dialect") == "sqlite" and (database := url.get("database")):
                 # Convert relative database path back to absolute
-                url["database"] = os.path.normcase(os.path.abspath(os.path.join(self._project.project_dir, database)))
+                url["database"] = os.path.abspath(os.path.join(self._project.project_dir, database))
             for key, value in url.items():
                 if value is not None:
                     base_url[key] = value
