@@ -13,9 +13,9 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "spinedb_api>=0.35.0",
-    "spine_engine>=0.26.0",
-    # "spinetoolbox >=0.9.7",
+    "spinedb_api>=0.36.0",
+    "spine_engine>=0.26.1",
+    # "spinetoolbox >=0.10.2",
 ]
 
 [project.urls]
