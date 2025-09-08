@@ -72,13 +72,13 @@ def do_work(
         except ReaderError as error:
             logger.msg_error.emit(f"Failed to read fixed position data in {source_anchor}: {error}")
             return (False,)
-        table_mappings = {
+        table_mappings_with_fixed_positions = {
             table_name: [
                 unparse_named_mapping_spec(mapping_name, root_mapping) for mapping_name, root_mapping in mappings
             ]
             for table_name, mappings in parsed_table_mappings.items()
         }
-        for name, mappings in table_mappings.items():
+        for name, mappings in table_mappings_with_fixed_positions.items():
             logger.msg.emit(f"Processing table <b>{name}</b>")
             for spec in mappings:
                 mapping_name = next(iter(spec.keys()))
