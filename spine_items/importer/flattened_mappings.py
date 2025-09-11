@@ -37,6 +37,7 @@ from spinedb_api.import_mapping.import_mapping import (
     ScenarioMapping,
     check_validity,
 )
+from spinedb_api.incomplete_values import split_value_and_type
 from spinedb_api.mapping import (
     Position,
     is_pivoted,
@@ -44,7 +45,6 @@ from spinedb_api.mapping import (
     unflatten,
     unparse_fixed_position_value,
 )
-from spinedb_api.parameter_value import split_value_and_type
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.spine_db_manager import SpineDBManager
 
