@@ -578,7 +578,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             if not pattern:
                 # It's a directory -> skip
                 continue
-            found_files = _find_files_in_pattern(pattern, paths_in_resources)
+            found_files = _find_files_in_pattern(file_path, paths_in_resources)
             if not found_files:
                 self._logger.msg_warning.emit(f"\tNo files matching pattern <b>{pattern}</b> found")
             else:
