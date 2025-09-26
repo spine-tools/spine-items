@@ -18,9 +18,9 @@ from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg, make_cmd_line_arg
 from spine_engine.utils.helpers import ExecutionDirection, resolve_julia_executable, resolve_python_interpreter
 from spine_engine.utils.serialization import deserialize_path, serialize_path
-from spinetoolbox.helpers import open_url, select_root_directory, same_path
+from spinetoolbox.helpers import open_url, same_path, select_root_directory
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
-from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand, UpdateResultDirCommand
+from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateResultDirCommand, UpdateRootDirCommand
 from ..db_writer_item_base import DBWriterItemBase
 from ..models import ToolCommandLineArgsModel
 from .commands import (
@@ -252,8 +252,6 @@ class Tool(DBWriterItemBase):
     def _set_root_directory(self):
         """Pushes a command to update root directory whenever the user edits the line edit."""
         root_dir = self._properties_ui.lineEdit_root_directory.text()
-        if not root_dir:
-            root_dir = None
         if self._root_directory == root_dir:
             return
         self._toolbox.undo_stack.push(UpdateRootDirCommand(self.name, root_dir, self._project))
