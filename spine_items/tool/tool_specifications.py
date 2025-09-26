@@ -51,9 +51,7 @@ def make_specification(definition, app_settings, logger):
     if not definition["includes_main_path"]:
         path = None
     else:
-        definition["includes_main_path"] = path = definition.setdefault("includes_main_path", ".").replace(
-            "/", os.path.sep
-        )
+        definition["includes_main_path"] = path = definition["includes_main_path"].replace("/", os.path.sep)
         if not os.path.isabs(path):
             definition_file_path = definition["definition_file_path"]
             path = os.path.normpath(os.path.join(os.path.dirname(definition_file_path), path))
