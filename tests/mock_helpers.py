@@ -130,3 +130,11 @@ def parent_widget():
         yield parent
     finally:
         parent.deleteLater()
+
+
+@contextmanager
+def q_object(instance):
+    try:
+        yield instance
+    finally:
+        instance.deleteLater()
