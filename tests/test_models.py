@@ -15,8 +15,10 @@ from pathlib import Path
 import unittest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
-from spine_engine.project_item.project_item_resource import file_resource, file_resource_in_pack
-from spine_items.models import CheckableFileListModel
+from spine_engine.project_item.project_item_resource import CmdLineArg, file_resource, file_resource_in_pack
+from spine_items.models import CheckableFileListModel, ToolCommandLineArgsModel
+from spinetoolbox.mvcmodels.file_list_models import NewCommandLineArgItem
+from tests.mock_helpers import q_object
 
 
 class TestCheckableFileListModel(unittest.TestCase):
@@ -90,5 +92,61 @@ class TestCheckableFileListModel(unittest.TestCase):
         self.assertEqual(index.data(Qt.ItemDataRole.ToolTipRole), str(Path.cwd() / "path" / "to" / "pack_file_2"))
 
 
-if __name__ == "__main__":
-    unittest.main()
+_EMPTY_LINE_TEXT = "Type arg, or drag and drop from Available resources..."
+
+
+class TestToolCommandLineArgsModel:
+    def test_empty_model(self, application):
+        with q_object(ToolCommandLineArgsModel()) as model:
+            assert model.rowCount() == 2
+            assert model.columnCount() == 1
+            assert model.headerData(0, Qt.Orientation.Horizontal) == "Command line arguments"
+            specification_args_root = model.item(0, 0)
+            assert specification_args_root.rowCount() == 0
+            assert model.data(specification_args_root.index()) == "Specification arguments"
+            tool_args_root = model.item(1, 0)
+            assert tool_args_root.rowCount() == 1
+            assert model.data(tool_args_root.index()) == "Tool arguments"
+            empty_item = tool_args_root.child(0, 0)
+            assert (
+                model.data(empty_item.index(), Qt.ItemDataRole.ForegroundRole)
+                == NewCommandLineArgItem.text_color_hint()
+            )
+            assert model.data(empty_item.index(), Qt.ItemDataRole.FontRole) is None
+            assert empty_item.flags() & Qt.ItemFlag.ItemIsDropEnabled == Qt.ItemFlag.NoItemFlags
+            assert empty_item.flags() & Qt.ItemFlag.ItemIsEditable != Qt.ItemFlag.NoItemFlags
+            assert empty_item.rowCount() == 0
+
+    def test_reset_model_with_non_label_arg(self, application):
+        with q_object(ToolCommandLineArgsModel()) as model:
+            specification_args = [CmdLineArg("--version")]
+            tool_args = [CmdLineArg("--dry-run")]
+            model.reset_model(specification_args, tool_args)
+            assert model.rowCount() == 2
+            specification_arg_root = model.item(0, 0)
+            assert specification_arg_root.rowCount() == 1
+            specification_arg_item = specification_arg_root.child(0, 0)
+            assert model.data(specification_arg_item.index()) == "--version"
+            assert model.data(specification_arg_item.index(), Qt.ItemDataRole.ForegroundRole) is None
+            assert (
+                model.data(specification_arg_item.index(), Qt.ItemDataRole.FontRole)
+                == ToolCommandLineArgsModel.non_label_arg_font()
+            )
+            assert specification_arg_item.flags() & Qt.ItemFlag.ItemIsDropEnabled == Qt.ItemFlag.NoItemFlags
+            assert specification_arg_item.flags() & Qt.ItemFlag.ItemIsEditable != Qt.ItemFlag.NoItemFlags
+            assert specification_arg_item.rowCount() == 0
+            tool_arg_root = model.item(1, 0)
+            assert tool_arg_root.rowCount() == 2
+            tool_arg_item = tool_arg_root.child(0, 0)
+            assert model.data(tool_arg_item.index()) == "--dry-run"
+            assert model.data(tool_arg_item.index(), Qt.ItemDataRole.ForegroundRole) is None
+            assert (
+                model.data(tool_arg_item.index(), Qt.ItemDataRole.FontRole)
+                == ToolCommandLineArgsModel.non_label_arg_font()
+            )
+            assert tool_arg_item.flags() & Qt.ItemFlag.ItemIsDropEnabled == Qt.ItemFlag.NoItemFlags
+            assert tool_arg_item.flags() & Qt.ItemFlag.ItemIsEditable != Qt.ItemFlag.NoItemFlags
+            assert tool_arg_item.rowCount() == 0
+            empty_item = tool_arg_root.child(1, 0)
+            assert model.data(empty_item.index()) == _EMPTY_LINE_TEXT
+            assert empty_item.rowCount() == 0
