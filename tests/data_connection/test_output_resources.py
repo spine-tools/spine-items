@@ -25,6 +25,7 @@ class TestScanForResources(unittest.TestCase):
         project_dir_path = PurePath(__file__).parent
         data_connection.data_dir = str(project_dir_path / ".spinetoolbox" / "test_dc")
         file_paths = []
+        directories = []
         urls = [
             {
                 "dialect": "postgresql",
@@ -35,7 +36,7 @@ class TestScanForResources(unittest.TestCase):
                 "password": "t0p s3cr3t",
             }
         ]
-        resources = scan_for_resources(data_connection, file_paths, urls, str(project_dir_path))
+        resources = scan_for_resources(data_connection, file_paths, directories, urls, str(project_dir_path))
         self.assertEqual(
             resources,
             [

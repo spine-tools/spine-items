@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'data_connection_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.3
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -49,6 +49,9 @@ class Ui_Form(object):
         self.action_new_db_reference = QAction(Form)
         self.action_new_db_reference.setObjectName(u"action_new_db_reference")
         self.action_new_db_reference.setIcon(icon)
+        self.action_new_directory_reference = QAction(Form)
+        self.action_new_directory_reference.setObjectName(u"action_new_directory_reference")
+        self.action_new_directory_reference.setIcon(icon)
         self.verticalLayout_2 = QVBoxLayout(Form)
         self.verticalLayout_2.setSpacing(0)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
@@ -141,11 +144,15 @@ class Ui_Form(object):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.action_new_file_reference.setText(QCoreApplication.translate("Form", u"New...", None))
 #if QT_CONFIG(tooltip)
-        self.action_new_file_reference.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add file reference</p></body></html>", None))
+        self.action_new_file_reference.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add file reference.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.action_new_db_reference.setText(QCoreApplication.translate("Form", u"New...", None))
+        self.action_new_db_reference.setText(QCoreApplication.translate("Form", u"New URL...", None))
 #if QT_CONFIG(tooltip)
-        self.action_new_db_reference.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add DB reference</p></body></html>", None))
+        self.action_new_db_reference.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add database URL.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.action_new_directory_reference.setText(QCoreApplication.translate("Form", u"New directory reference...", None))
+#if QT_CONFIG(tooltip)
+        self.action_new_directory_reference.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Add directory reference.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.treeView_dc_references.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Drag-and-drop files here, they will be added as references.</p></body></html>", None))

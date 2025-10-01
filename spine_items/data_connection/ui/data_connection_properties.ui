@@ -218,7 +218,7 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
     <string>New...</string>
    </property>
    <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add file reference&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add file reference.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
   <action name="action_new_db_reference">
@@ -227,10 +227,22 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
      <normaloff>:/icons/plus.svg</normaloff>:/icons/plus.svg</iconset>
    </property>
    <property name="text">
-    <string>New...</string>
+    <string>New URL...</string>
    </property>
    <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add DB reference&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add database URL.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </action>
+  <action name="action_new_directory_reference">
+   <property name="icon">
+    <iconset resource="../../ui/resources/resources_icons.qrc">
+     <normaloff>:/icons/plus.svg</normaloff>:/icons/plus.svg</iconset>
+   </property>
+   <property name="text">
+    <string>New directory reference...</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add directory reference.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
  </widget>

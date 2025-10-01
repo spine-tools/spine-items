@@ -238,12 +238,14 @@ class Importer(DBWriterItemBase):
         self._toolbox.undo_stack.push(ChangeItemSelectionCommand(self.name, self._file_model, index, checked))
 
     def upstream_resources_updated(self, resources):
-        self._file_model.update(resources)
+        self._file_model.update([resource for resource in resources if resource.type_ != "directory"])
         self._check_notifications()
 
     def replace_resources_from_upstream(self, old, new):
         """See base class."""
         for old_resource, new_resource in zip(old, new):
+            if new_resource.type_ == "directory":
+                continue
             self._file_model.replace(old_resource, new_resource)
 
     @Slot(QModelIndex, QModelIndex, list)

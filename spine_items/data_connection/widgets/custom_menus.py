@@ -11,25 +11,29 @@
 ######################################################################################################################
 
 """Classes for custom context menus and pop-up menus."""
+from PySide6.QtCore import QModelIndex, QPoint
+from PySide6.QtWidgets import QWidget
+from spine_items.data_connection.data_connection import DataConnection
 from spinetoolbox.widgets.custom_menus import CustomContextMenu
 
 
 class DcRefContextMenu(CustomContextMenu):
     """Context menu class for references view in Data Connection properties."""
 
-    def __init__(self, parent, position, index, dc):
+    def __init__(self, parent: QWidget, position: QPoint, index: QModelIndex, dc: DataConnection):
         """
         Args:
-            parent (QWidget): Parent for menu widget (ToolboxUI)
-            position (QPoint): Position on screen
-            index (QModelIndex): Index of item that requested the context-menu
-            dc (DataConnection): Data connection item
+            parent: Parent for menu widget (ToolboxUI)
+            position: Position on screen
+            index: Index of item that requested the context-menu
+            dc: Data connection item
         """
         super().__init__(parent, position)
         self.add_action("Open...", enabled=dc.current_is_file_ref)
         self.add_action("Open containing directory...", enabled=dc.current_is_file_ref)
         self.addSeparator()
         self.add_action("Add file reference(s)...")
+        self.add_action("Add directory reference...")
         self.add_action("Add database reference...")
         self.add_action("Remove reference(s)", enabled=dc.any_refs_selected)
         self.add_action("Copy file reference(s) to project", enabled=dc.file_refs_selected)
@@ -40,13 +44,13 @@ class DcRefContextMenu(CustomContextMenu):
 class DcDataContextMenu(CustomContextMenu):
     """Context menu class for data view in Data Connection properties."""
 
-    def __init__(self, parent, position, index, dc):
+    def __init__(self, parent: QWidget, position: QPoint, index: QModelIndex, dc: DataConnection):
         """
         Args:
-            parent (QWidget): Parent for menu widget (ToolboxUI)
-            position (QPoint): Position on screen
-            index (QModelIndex): Index of item that requested the context-menu
-            dc (DataConnection): Data connection item
+            parent: Parent for menu widget (ToolboxUI)
+            position: Position on screen
+            index: Index of item that requested the context-menu
+            dc: Data connection item
         """
         super().__init__(parent, position)
         self.add_action("Open...", enabled=index.isValid())
