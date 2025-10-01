@@ -91,7 +91,7 @@ class DataConnection(ProjectItem):
         self._toolbox = toolbox
         self.reference_model = QStandardItemModel()  # References
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
-        self.file_system_watcher = None
+        self.file_system_watcher: CustomFileSystemWatcher | None = None
         self.file_references = list(file_references)
         self._file_ref_root = QStandardItem("File paths")
         self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemFlag.ItemIsEditable)
@@ -103,6 +103,7 @@ class DataConnection(ProjectItem):
         self.any_refs_selected = False
         self.any_data_selected = False
         self.current_is_file_ref = False
+        self.current_is_directory_ref = False
         self.populate_reference_list(directory_references, db_references)
         self.populate_data_list()
         self._database_validator = DatabaseConnectionValidator()
@@ -150,7 +151,9 @@ class DataConnection(ProjectItem):
         data_indexes = self._properties_ui.treeView_dc_data.selectionModel().selectedIndexes()
         self.file_refs_selected = any(ind.parent().row() == 0 for ind in ref_indexes)
         self.any_refs_selected = any(0 <= ind.parent().row() <= 2 for ind in ref_indexes)
-        self.current_is_file_ref = self._properties_ui.treeView_dc_references.currentIndex().parent().row() == 0
+        root_index_row = self._properties_ui.treeView_dc_references.currentIndex().parent().row()
+        self.current_is_file_ref = root_index_row == 0
+        self.current_is_directory_ref = root_index_row == 1
         self.any_data_selected = bool(data_indexes)
         self._properties_ui.toolButton_minus.setEnabled(self.any_refs_selected)
         self._properties_ui.toolButton_add.setEnabled(self.file_refs_selected)
@@ -649,13 +652,16 @@ class DataConnection(ProjectItem):
             logging.error("Index not valid")
             return
         parent_item = self.reference_model.itemFromIndex(index.parent())
-        if parent_item is not self._file_ref_root:
+        if parent_item is not self._file_ref_root and parent_item is not self._directory_ref_root:
             return
-        reference = self.file_references[index.row()]
+        if parent_item is self._file_ref_root:
+            reference = self.file_references[index.row()]
+        else:
+            reference = self.reference_model.itemFromIndex(index).data(_Role.DIRECTORY_REFERENCE)
         url = "file:///" + reference
         res = open_url(url)
         if not res:
-            self._logger.msg_error.emit(f"Failed to open reference:<b>{reference}</b>")
+            self._logger.msg_error.emit(f"Failed to open reference: <b>{reference}</b>")
 
     @Slot(QModelIndex)
     def open_data_file(self, index):
