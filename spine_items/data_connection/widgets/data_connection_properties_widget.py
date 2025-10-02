@@ -58,6 +58,8 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
             self._toolbox.open_anchor(QUrl(file_url, QUrl.ParsingMode.TolerantMode))
         elif option == "Open...":
             dc.open_reference(index)
+        elif option == "Select another...":
+            dc.select_another_target_for_reference(index)
         elif option == "Add file reference(s)...":
             dc.show_add_file_references_dialog()
         elif option == "Add directory reference...":

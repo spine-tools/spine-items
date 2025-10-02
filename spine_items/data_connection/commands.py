@@ -57,6 +57,60 @@ class AddDCReferencesCommand(SpineToolboxCommand):
         dc.do_remove_references(self._file_refs, self._directory_refs, self._db_refs)
 
 
+class UpdateFileReference(SpineToolboxCommand):
+    def __init__(self, dc_name: str, old_file_ref: str, new_file_ref: str, project: SpineToolboxProject):
+        super().__init__()
+        self._dc_name = dc_name
+        self._new_file_ref = new_file_ref
+        self._old_file_ref = old_file_ref
+        self._project = project
+        self.setText(f"update file reference in {dc_name}")
+
+    def redo(self):
+        dc: DataConnection = self._project.get_item(self._dc_name)
+        dc.do_update_file_reference(self._old_file_ref, self._new_file_ref)
+
+    def undo(self):
+        dc: DataConnection = self._project.get_item(self._dc_name)
+        dc.do_update_file_reference(self._new_file_ref, self._old_file_ref)
+
+
+class UpdateDirectoryReference(SpineToolboxCommand):
+    def __init__(self, dc_name: str, old_ref: str, new_ref: str, project: SpineToolboxProject):
+        super().__init__()
+        self._dc_name = dc_name
+        self._new_directory_ref = new_ref
+        self._old_directory_ref = old_ref
+        self._project = project
+        self.setText(f"update directory reference in {dc_name}")
+
+    def redo(self):
+        dc: DataConnection = self._project.get_item(self._dc_name)
+        dc.do_update_directory_reference(self._old_directory_ref, self._new_directory_ref)
+
+    def undo(self):
+        dc: DataConnection = self._project.get_item(self._dc_name)
+        dc.do_update_directory_reference(self._new_directory_ref, self._old_directory_ref)
+
+
+class UpdateDbUrlReference(SpineToolboxCommand):
+    def __init__(self, dc_name: str, old_ref: dict, new_ref: dict, project: SpineToolboxProject):
+        super().__init__()
+        self._dc_name = dc_name
+        self._new_ref = new_ref
+        self._old_ref = old_ref
+        self._project = project
+        self.setText(f"update URL reference in {dc_name}")
+
+    def redo(self):
+        dc: DataConnection = self._project.get_item(self._dc_name)
+        dc.do_update_db_url_reference(self._old_ref, self._new_ref)
+
+    def undo(self):
+        dc: DataConnection = self._project.get_item(self._dc_name)
+        dc.do_update_db_url_reference(self._new_ref, self._old_ref)
+
+
 class RemoveDCReferencesCommand(SpineToolboxCommand):
     """Command to remove DC references."""
 

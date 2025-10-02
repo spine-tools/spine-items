@@ -25,6 +25,8 @@ from spine_engine.utils.serialization import serialize_path
 from spine_items.data_connection.data_connection import DataConnection, _Role
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.data_connection.item_info import ItemInfo
+from spine_items.utils import convert_url_to_safe_string
+from spine_items.widgets import UrlSelectorDialog
 from spinedb_api import create_new_spine_database
 from spinetoolbox.helpers import signal_waiter
 from tests.mock_helpers import (
@@ -121,7 +123,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             mock_directory_dialog.assert_called_once()
             self.assertEqual(list(self._data_connection.directory_iter()), [])
 
-    def test_add_file_reference_via_dialog(self):
+    def test_add_directory_reference_via_dialog(self):
         temp_dir = Path(self._temp_dir.name, "target_dir")
         temp_dir.mkdir()
         with mock.patch(
@@ -190,6 +192,285 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self.assertEqual(3, url_selector_exec.call_count)
             self.assertEqual(1, len(list(self._data_connection.db_reference_iter())))
             self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(2, 0)))
+
+    def test_replace_file_reference_via_dialog(self):
+        temp_dir = Path(self._temp_dir.name, "data")
+        temp_dir.mkdir()
+        old_ref = temp_dir / "old.csv"
+        old_ref.touch()
+        new_ref = temp_dir / "new.csv"
+        new_ref.touch()
+        self._data_connection.do_add_references([str(old_ref)], [], [])
+        old_resources = self._data_connection.resources_for_direct_successors()
+        with (
+            mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileName") as mock_file_dialog,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_file_dialog.return_value = [new_ref.as_posix(), "*.*"]
+            index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_file_dialog.assert_called_once()
+            new_resources = self._data_connection.resources_for_direct_successors()
+            mock_replace_resources.assert_called_once_with(old_resources, new_resources)
+        self.assertEqual(self._data_connection.file_references, [str(new_ref)])
+
+    def test_cancel_replace_file_reference_dialog(self):
+        temp_dir = Path(self._temp_dir.name, "data")
+        temp_dir.mkdir()
+        old_ref = temp_dir / "old.csv"
+        old_ref.touch()
+        self._data_connection.do_add_references([str(old_ref)], [], [])
+        with (
+            mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileName") as mock_file_dialog,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_file_dialog.return_value = ["", "*.*"]
+            index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_file_dialog.assert_called_once()
+            mock_replace_resources.assert_not_called()
+        self.assertEqual(self._data_connection.file_references, [str(old_ref)])
+
+    def test_replacing_file_reference_with_same_reference_gives_warning(self):
+        temp_dir = Path(self._temp_dir.name, "data")
+        temp_dir.mkdir()
+        old_ref = temp_dir / "old.csv"
+        old_ref.touch()
+        self._data_connection.do_add_references([str(old_ref)], [], [])
+        with (
+            mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileName") as mock_file_dialog,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+            mock.patch.object(self._toolbox, "msg_warning") as mock_warning,
+        ):
+            mock_file_dialog.return_value = [old_ref.as_posix(), "*.*"]
+            mock_warning.emit = MagicMock()
+            index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_file_dialog.assert_called_once()
+            mock_replace_resources.assert_not_called()
+            mock_warning.emit.assert_called_once_with(f"Reference to <b>{old_ref}</b> already exists.")
+        self.assertEqual(self._data_connection.file_references, [str(old_ref)])
+
+    def test_undo_replace_file_reference(self):
+        temp_dir = Path(self._temp_dir.name, "data")
+        temp_dir.mkdir()
+        old_ref = temp_dir / "old.csv"
+        old_ref.touch()
+        new_ref = temp_dir / "new.csv"
+        new_ref.touch()
+        self._data_connection.do_add_references([str(old_ref)], [], [])
+        old_resources = self._data_connection.resources_for_direct_successors()
+        with (
+            mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileName") as mock_file_dialog,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_file_dialog.return_value = [new_ref.as_posix(), "*.*"]
+            index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            new_resources = self._data_connection.resources_for_direct_successors()
+            mock_replace_resources.assert_called_once_with(old_resources, new_resources)
+        self.assertEqual(self._data_connection.file_references, [str(new_ref)])
+        with mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources:
+            self._toolbox.undo_stack.undo()
+            mock_replace_resources.assert_called_once_with(new_resources, old_resources)
+        self.assertEqual(self._data_connection.file_references, [str(old_ref)])
+
+    def test_replace_directory_reference_via_dialog(self):
+        old_dir = Path(self._temp_dir.name, "old_target_dir")
+        old_dir.mkdir()
+        new_dir = Path(self._temp_dir.name, "new_target_dir")
+        new_dir.mkdir()
+        self._data_connection.do_add_references([], [str(old_dir)], [])
+        old_resources = self._data_connection.resources_for_direct_successors()
+        with (
+            mock.patch(
+                "spine_items.data_connection.data_connection.QFileDialog.getExistingDirectory"
+            ) as mock_directory_dialog,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_directory_dialog.return_value = new_dir.as_posix()
+            index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_directory_dialog.assert_called_once()
+            new_resources = self._data_connection.resources_for_direct_successors()
+            mock_replace_resources.assert_called_once_with(old_resources, new_resources)
+        directory_references = list(self._data_connection.directory_iter())
+        self.assertEqual(directory_references, [str(new_dir)])
+
+    def test_cancel_replace_directory_reference_dialog(self):
+        old_dir = Path(self._temp_dir.name, "old_target_dir")
+        old_dir.mkdir()
+        self._data_connection.do_add_references([], [str(old_dir)], [])
+        with (
+            mock.patch(
+                "spine_items.data_connection.data_connection.QFileDialog.getExistingDirectory"
+            ) as mock_directory_dialog,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_directory_dialog.return_value = ""
+            index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_directory_dialog.assert_called_once()
+            mock_replace_resources.assert_not_called()
+        directory_references = list(self._data_connection.directory_iter())
+        self.assertEqual(directory_references, [str(old_dir)])
+
+    def test_replace_directory_reference_with_same_directory_gives_warning(self):
+        old_dir = Path(self._temp_dir.name, "old_target_dir")
+        old_dir.mkdir()
+        self._data_connection.do_add_references([], [str(old_dir)], [])
+        with (
+            mock.patch(
+                "spine_items.data_connection.data_connection.QFileDialog.getExistingDirectory"
+            ) as mock_directory_dialog,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+            mock.patch.object(self._toolbox, "msg_warning") as mock_warning,
+        ):
+            mock_directory_dialog.return_value = old_dir.as_posix()
+            mock_warning.emit = mock.MagicMock()
+            index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_directory_dialog.assert_called_once()
+            mock_replace_resources.assert_not_called()
+            mock_warning.emit.assert_called_once_with(f"Reference to <b>{str(old_dir)}</b> already exists.")
+        directory_references = list(self._data_connection.directory_iter())
+        self.assertEqual(directory_references, [str(old_dir)])
+
+    def test_undo_replace_directory_reference(self):
+        old_dir = Path(self._temp_dir.name, "old_target_dir")
+        old_dir.mkdir()
+        new_dir = Path(self._temp_dir.name, "new_target_dir")
+        new_dir.mkdir()
+        self._data_connection.do_add_references([], [str(old_dir)], [])
+        old_resources = self._data_connection.resources_for_direct_successors()
+        with (
+            mock.patch(
+                "spine_items.data_connection.data_connection.QFileDialog.getExistingDirectory"
+            ) as mock_directory_dialog,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_directory_dialog.return_value = new_dir.as_posix()
+            index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            new_resources = self._data_connection.resources_for_direct_successors()
+            mock_replace_resources.assert_called_once_with(old_resources, new_resources)
+        directory_references = list(self._data_connection.directory_iter())
+        self.assertEqual(directory_references, [str(new_dir)])
+        with mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources:
+            self._toolbox.undo_stack.undo()
+            mock_replace_resources.assert_called_once_with(new_resources, old_resources)
+        directory_references = list(self._data_connection.directory_iter())
+        self.assertEqual(directory_references, [str(old_dir)])
+
+    def test_replace_URL_reference_via_dialog(self):
+        old_url = {
+            "dialect": "mysql",
+            "host": "example.com",
+            "port": 2323,
+            "database": "my_database",
+            "schema": "private",
+            "username": "julius",
+            "password": "caesar",
+        }
+        new_url = dict(old_url, username="gaius", password="octavius")
+        self._data_connection.do_add_references([], [], [old_url])
+        old_resources = self._data_connection.resources_for_direct_successors()
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as mock_dialog_exec,
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict") as mock_url_getter,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_dialog_exec.return_value = UrlSelectorDialog.DialogCode.Accepted
+            mock_url_getter.return_value = new_url
+            index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_dialog_exec.assert_called_once()
+            mock_url_getter.assert_called_once()
+            new_resources = self._data_connection.resources_for_direct_successors()
+            mock_replace_resources.assert_called_once_with(old_resources, new_resources)
+        self.assertEqual(list(self._data_connection.db_reference_iter()), [new_url])
+
+    def test_cancel_replace_URL_dialog(self):
+        old_url = {
+            "dialect": "mysql",
+            "host": "example.com",
+            "port": 2323,
+            "database": "my_database",
+            "schema": "private",
+            "username": "julius",
+            "password": "caesar",
+        }
+        self._data_connection.do_add_references([], [], [old_url])
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as mock_dialog_exec,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_dialog_exec.return_value = UrlSelectorDialog.DialogCode.Rejected
+            index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_dialog_exec.assert_called_once()
+            mock_replace_resources.assert_not_called()
+        self.assertEqual(list(self._data_connection.db_reference_iter()), [old_url])
+
+    def test_replace_URL_reference_with_same_reference_gives_warning(self):
+        old_url = {
+            "dialect": "mysql",
+            "host": "example.com",
+            "port": 2323,
+            "database": "my_database",
+            "schema": "private",
+            "username": "julius",
+            "password": "caesar",
+        }
+        self._data_connection.do_add_references([], [], [old_url])
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as mock_dialog_exec,
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict") as mock_url_getter,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+            mock.patch.object(self._toolbox, "msg_warning") as mock_warning,
+        ):
+            mock_dialog_exec.return_value = UrlSelectorDialog.DialogCode.Accepted
+            mock_url_getter.return_value = old_url
+            mock_warning.emit = mock.MagicMock()
+            index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_dialog_exec.assert_called_once()
+            mock_url_getter.assert_called_once()
+            mock_replace_resources.assert_not_called()
+            mock_warning.emit.assert_called_once_with(
+                f"Reference to <b>{convert_url_to_safe_string(old_url)}</b> already exists."
+            )
+        self.assertEqual(list(self._data_connection.db_reference_iter()), [old_url])
+
+    def test_undo_replace_URL_reference(self):
+        old_url = {
+            "dialect": "mysql",
+            "host": "example.com",
+            "port": 2323,
+            "database": "my_database",
+            "schema": "private",
+            "username": "julius",
+            "password": "caesar",
+        }
+        new_url = dict(old_url, username="gaius", password="octavius")
+        self._data_connection.do_add_references([], [], [old_url])
+        old_resources = self._data_connection.resources_for_direct_successors()
+        with (
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as mock_dialog_exec,
+            mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict") as mock_url_getter,
+            mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
+        ):
+            mock_dialog_exec.return_value = UrlSelectorDialog.DialogCode.Accepted
+            mock_url_getter.return_value = new_url
+            index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            new_resources = self._data_connection.resources_for_direct_successors()
+            mock_replace_resources.assert_called_once_with(old_resources, new_resources)
+        self.assertEqual(list(self._data_connection.db_reference_iter()), [new_url])
+        with mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources:
+            self._toolbox.undo_stack.undo()
+            mock_replace_resources.assert_called_once_with(new_resources, old_resources)
+        self.assertEqual(list(self._data_connection.db_reference_iter()), [old_url])
 
     def test_remove_references(self):
         temp_dir = Path(self._temp_dir.name, "references")

@@ -30,7 +30,14 @@ from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from ..database_validation import DatabaseConnectionValidator
 from ..utils import convert_to_sqlalchemy_url, convert_url_to_safe_string
 from ..widgets import UrlSelectorDialog
-from .commands import AddDCReferencesCommand, MoveReferenceToData, RemoveDCReferencesCommand
+from .commands import (
+    AddDCReferencesCommand,
+    MoveReferenceToData,
+    RemoveDCReferencesCommand,
+    UpdateDbUrlReference,
+    UpdateDirectoryReference,
+    UpdateFileReference,
+)
 from .custom_file_system_watcher import CustomFileSystemWatcher
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
@@ -272,7 +279,8 @@ class DataConnection(ProjectItem):
             return
         url = selector.url_dict()
         if self._has_db_reference(url):
-            self._logger.msg_warning.emit(f"Reference to database <b>{url}</b> already exists")
+            clean_url = convert_url_to_safe_string(url)
+            self._logger.msg_warning.emit(f"Reference to database <b>{clean_url}</b> already exists")
             return
         sa_url = convert_to_sqlalchemy_url(url, self.name, self._logger)
         self._database_validator.validate_url(
@@ -280,16 +288,16 @@ class DataConnection(ProjectItem):
         )
         self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, [], [], [url], self._project))
 
-    def _has_db_reference(self, url):
+    def _has_db_reference(self, url: dict) -> bool:
         """Checks if given database URL exists already.
 
         Ignores usernames and passwords.
 
         Args:
-            url (dict): URL to check
+            url: URL to check
 
         Returns:
-            bool: True if db reference exists, False otherwise
+            True if db reference exists, False otherwise
         """
         significant_keys = ("dialect", "host", "port", "database")
         for row in range(self._db_ref_root.rowCount()):
@@ -663,6 +671,106 @@ class DataConnection(ProjectItem):
         if not res:
             self._logger.msg_error.emit(f"Failed to open reference: <b>{reference}</b>")
 
+    def select_another_target_for_reference(self, index: QModelIndex | None) -> None:
+        if index is None or not index.isValid():
+            return
+        parent_item = self.reference_model.itemFromIndex(index.parent())
+        if parent_item is self._file_ref_root:
+            old_file_ref = self.reference_model.itemFromIndex(index).data(_Role.FILE_REFERENCE)
+            file_path, _ = QFileDialog.getOpenFileName(self._toolbox, "Select file", self._project.project_dir, "*.*")
+            if not file_path:
+                return
+            if any(
+                os.path.samefile(self._file_ref_root.child(i).data(_Role.FILE_REFERENCE), file_path)
+                for i in range(self._file_ref_root.rowCount())
+            ):
+                self._logger.msg_warning.emit(f"Reference to <b>{pathlib.Path(file_path)}</b> already exists.")
+                return
+            self._toolbox.undo_stack.push(
+                UpdateFileReference(self.name, old_file_ref, str(pathlib.Path(file_path)), self._project)
+            )
+            return
+        if parent_item is self._directory_ref_root:
+            old_directory_ref = self.reference_model.itemFromIndex(index).data(_Role.DIRECTORY_REFERENCE)
+            directory = QFileDialog.getExistingDirectory(self._toolbox, "Select directory", self._project.project_dir)
+            if not directory:
+                return
+            if any(
+                os.path.samefile(self._directory_ref_root.child(i).data(_Role.DIRECTORY_REFERENCE), directory)
+                for i in range(self._directory_ref_root.rowCount())
+            ):
+                self._logger.msg_warning.emit(f"Reference to <b>{pathlib.Path(directory)}</b> already exists.")
+                return
+            self._toolbox.undo_stack.push(
+                UpdateDirectoryReference(self.name, old_directory_ref, str(pathlib.Path(directory)), self._project)
+            )
+            return
+        if parent_item is self._db_ref_root:
+            old_url_ref = self.reference_model.itemFromIndex(index).data(_Role.DB_URL_REFERENCE)
+            selector = UrlSelectorDialog(self._toolbox.qsettings(), False, self._toolbox, self._toolbox)
+            result = selector.exec()
+            if result == UrlSelectorDialog.DialogCode.Rejected:
+                return
+            url = selector.url_dict()
+            if any(
+                self._db_ref_root.child(i).data(_Role.DB_URL_REFERENCE) == url
+                for i in range(self._db_ref_root.rowCount())
+            ):
+                clean_url = convert_url_to_safe_string(url)
+                self._logger.msg_warning.emit(f"Reference to <b>{clean_url}</b> already exists.")
+                return
+            self._toolbox.undo_stack.push(UpdateDbUrlReference(self.name, old_url_ref, url, self._project))
+            return
+
+    def do_update_file_reference(self, old_file_ref: str, new_file_ref: str) -> None:
+        old_resources = self.resources_for_direct_successors()
+        ref_i = self.file_references.index(old_file_ref)
+        self.file_references[ref_i] = new_file_ref
+        for row in range(self._file_ref_root.rowCount()):
+            ref_item = self._file_ref_root.child(row)
+            if ref_item.data(_Role.FILE_REFERENCE) == old_file_ref:
+                ref_item.setData(new_file_ref, Qt.ItemDataRole.DisplayRole)
+                ref_item.setData(new_file_ref, _Role.FILE_REFERENCE)
+                break
+        else:
+            raise RuntimeError("logic error: old file reference not found in references model")
+        new_resources = self.resources_for_direct_successors()
+        old_resources = [resource for resource in old_resources if os.path.samefile(resource.path, old_file_ref)]
+        new_resources = [resource for resource in new_resources if os.path.samefile(resource.path, new_file_ref)]
+        self._resources_to_successors_replaced(old_resources, new_resources)
+
+    def do_update_directory_reference(self, old_directory_ref: str, new_directory_ref: str) -> None:
+        old_resources = self.resources_for_direct_successors()
+        for row in range(self._directory_ref_root.rowCount()):
+            ref_item = self._directory_ref_root.child(row)
+            if ref_item.data(_Role.DIRECTORY_REFERENCE) == old_directory_ref:
+                ref_item.setData(new_directory_ref, Qt.ItemDataRole.DisplayRole)
+                ref_item.setData(new_directory_ref, _Role.DIRECTORY_REFERENCE)
+                break
+        else:
+            raise RuntimeError("logic error: old directory reference not found in references model")
+        new_resources = self.resources_for_direct_successors()
+        old_resources = [resource for resource in old_resources if os.path.samefile(resource.path, old_directory_ref)]
+        new_resources = [resource for resource in new_resources if os.path.samefile(resource.path, new_directory_ref)]
+        self._resources_to_successors_replaced(old_resources, new_resources)
+
+    def do_update_db_url_reference(self, old_ref: dict, new_ref: dict) -> None:
+        old_resources = self.resources_for_direct_successors()
+        for row in range(self._db_ref_root.rowCount()):
+            ref_item = self._db_ref_root.child(row)
+            if ref_item.data(_Role.DB_URL_REFERENCE) == old_ref:
+                ref_item.setData(convert_url_to_safe_string(new_ref), Qt.ItemDataRole.DisplayRole)
+                ref_item.setData(new_ref, _Role.DB_URL_REFERENCE)
+                break
+        else:
+            raise RuntimeError("logic error: old URL reference not found in references model")
+        new_resources = self.resources_for_direct_successors()
+        old_url = str(convert_to_sqlalchemy_url(old_ref))
+        old_resources = [resource for resource in old_resources if resource.url == old_url]
+        new_url = str(convert_to_sqlalchemy_url(new_ref))
+        new_resources = [resource for resource in new_resources if resource.url == new_url]
+        self._resources_to_successors_replaced(old_resources, new_resources)
+
     @Slot(QModelIndex)
     def open_data_file(self, index):
         """Open data file in default program."""
@@ -683,7 +791,10 @@ class DataConnection(ProjectItem):
         msg = "File name"
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QInputDialog.getText(
-            self._toolbox, "Create new file", msg, flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+            self._toolbox,
+            "Create new file",
+            msg,
+            flags=Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint,
         )
         file_name = answer[0]
         if not file_name.strip():
@@ -761,6 +872,7 @@ class DataConnection(ProjectItem):
         non_existent_paths = []
         for path in paths:
             item = QStandardItem(path)
+            item.setData(path, _Role.FILE_REFERENCE)
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             if not os.path.exists(path):
                 non_existent_paths.append(path)

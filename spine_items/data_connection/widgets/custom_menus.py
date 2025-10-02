@@ -31,6 +31,7 @@ class DcRefContextMenu(CustomContextMenu):
         super().__init__(parent, position)
         self.add_action("Open...", enabled=dc.current_is_file_ref or dc.current_is_directory_ref)
         self.add_action("Open containing directory...", enabled=dc.current_is_file_ref)
+        self.add_action("Select another...", enabled=dc.any_refs_selected)
         self.addSeparator()
         self.add_action("Add file reference(s)...")
         self.add_action("Add directory reference...")
