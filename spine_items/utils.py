@@ -11,42 +11,56 @@
 ######################################################################################################################
 
 """ Contains utilities shared between project items. """
-from contextlib import suppress
+from collections.abc import Iterable
 import os.path
+from typing import TypedDict
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL, make_url
+from typing_extensions import NotRequired
+from spine_engine.logger_interface import LoggerInterface
+from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.queue_logger import SuppressedMessage
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spinedb_api.helpers import SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS, remove_credentials_from_url
 
 
+class UrlDict(TypedDict):
+    dialect: NotRequired[str]
+    database: NotRequired[str]
+    host: NotRequired[str]
+    port: NotRequired[int | None]
+    schema: NotRequired[str]
+    username: NotRequired[str]
+    password: NotRequired[str]
+
+
 class URLError(Exception):
     """Exception for errors in URL dicts."""
 
 
-def database_label(provider_name):
+def database_label(provider_name: str) -> str:
     """Creates a standardized label for database resources.
 
     Args:
-        provider_name (str): resource provider's name
+        provider_name: resource provider's name
 
     Returns:
-        str: resource label
+        resource label
     """
     return "db_url@" + provider_name
 
 
-def convert_to_sqlalchemy_url(url, item_name="", logger=None):
+def convert_to_sqlalchemy_url(url: UrlDict, item_name: str = "", logger: LoggerInterface | None = None) -> URL | None:
     """Returns a sqlalchemy url from url dict or None if not valid.
 
     Args:
-        url (dict): URL to convert
-        item_name (str): project item name for logging
-        logger (LoggerInterface, optional): a logger
+        url: URL to convert
+        item_name: project item name for logging
+        logger: a logger
 
     Returns:
-        URL: SqlAlchemy URL
+        SqlAlchemy URL
     """
     selections = f"<b>{item_name}</b> selections" if item_name else "selections"
     if logger is None:
@@ -63,20 +77,18 @@ def convert_to_sqlalchemy_url(url, item_name="", logger=None):
         return None
 
 
-def _convert_url(url):
+def _convert_url(url: UrlDict) -> URL:
     """Converts URL dict to SqlAlchemy URL.
 
     Args:
-        url (dict): URL dictionary
+        url: URL dictionary
 
     Returns:
-        URL: SqlAlchemy URL
+        SqlAlchemy URL
     """
     try:
-        url = {key: value for key, value in url.items() if value}
-        dialect = url.pop("dialect", None)
-        with suppress(KeyError):
-            del url["schema"]
+        url = {key: value for key, value in url.items() if value and key != "schema"}
+        dialect = url.pop("dialect", "")
         if not dialect:
             raise URLError("missing dialect")
         if dialect not in set(SUPPORTED_DIALECTS) | set(UNSUPPORTED_DIALECTS):
@@ -95,12 +107,12 @@ def _convert_url(url):
         raise URLError(str(error)) from error
 
 
-def _validate_sa_url(sa_url, dialect):
+def _validate_sa_url(sa_url: URL, dialect: str) -> None:
     """Validates SqlAlchemy URL.
 
     Args:
-        sa_url (URL): SqlAlchemy URL to validate
-        dialect (str): dialect
+        sa_url: SqlAlchemy URL to validate
+        dialect: dialect
 
     Raises:
         URLError: raised if given URL is invalid
@@ -118,26 +130,26 @@ def _validate_sa_url(sa_url, dialect):
             raise URLError("missing password")
 
 
-def convert_url_to_safe_string(url):
+def convert_url_to_safe_string(url: UrlDict) -> str:
     """Converts dict-style database URL to string without credentials.
 
     Args:
-        url (dict): URL to convert
+        url: URL to convert
 
     Returns:
-        str: URL as string
+        URL as string
     """
     return remove_credentials_from_url(str(_convert_url(url)))
 
 
-def check_database_url(sa_url):
+def check_database_url(sa_url: URL) -> str | None:
     """Checks if URL points to a real database.
 
     Args:
-        sa_url (URL): SQLAlchemy URL
+        sa_url: SQLAlchemy URL
 
     Returns:
-        str: error message or None if URL works fine
+        error message or None if URL works fine
     """
     try:
         engine = create_engine(sa_url)
@@ -153,14 +165,14 @@ class _NoLogger:
         return SuppressedMessage()
 
 
-def split_url_credentials(url):
+def split_url_credentials(url: str) -> tuple[str, tuple[str | None, str | None]]:
     """Pops username and password information from URL.
 
     Args:
-        url (str): a URL
+        url: a URL
 
     Returns:
-        tuple: URL without credentials and a tuple containing username, password pair
+        URL without credentials and a tuple containing username, password pair
     """
     sa_url = make_url(url)
     connect_args = sa_url.translate_connect_args()
@@ -170,15 +182,15 @@ def split_url_credentials(url):
     return str(new_sa_url), (username, password)
 
 
-def unsplit_url_credentials(url, credentials):
+def unsplit_url_credentials(url: str, credentials: tuple[str | None, str | None]) -> str:
     """Inserts username and password into a URL.
 
     Args:
-        url (str): a URL
-        credentials (tuple of str): username, password pair
+        url: a URL
+        credentials: username, password pair
 
     Returns:
-        str: URL with credential information
+        URL with credential information
     """
     sa_url = make_url(url)
     connect_args = sa_url.translate_connect_args()
@@ -187,12 +199,12 @@ def unsplit_url_credentials(url, credentials):
     return new_sa_url.render_as_string(hide_password=False)
 
 
-def generate_filter_subdirectory_name(resources, filter_id_hash):
+def generate_filter_subdirectory_name(resources: Iterable[ProjectItemResource], filter_id_hash: str) -> str:
     """Generates an output directory name based on applied filters.
 
     Args:
-        resources (Iterable of ProjectItemResource): item's forward resources
-        filter_id_hash (str): hashed filter id string
+        resources: item's forward resources
+        filter_id_hash: hashed filter id string
 
     Returns:
         str: subdirectory name
@@ -205,14 +217,14 @@ def generate_filter_subdirectory_name(resources, filter_id_hash):
     return subdirectory
 
 
-def _single_scenario_name_or_none(resources):
+def _single_scenario_name_or_none(resources: Iterable[ProjectItemResource]) -> str | None:
     """Figures out if given resources have a single common scenario filter.
 
     Args:
-        resources (Iterable of ProjectItemResource): resources to investigate
+        resources: resources to investigate
 
     Returns:
-        str: scenario name or None
+        scenario name or None
     """
     scenario_name = None
     for resource in resources:
@@ -231,13 +243,13 @@ def _single_scenario_name_or_none(resources):
     return scenario_name
 
 
-def escape_backward_slashes(string):
+def escape_backward_slashes(string: str) -> str:
     """Escapes Windows directory separators.
 
     Args:
-        string (str): string to escape
+        string: string to escape
 
     Returns:
-        str: escaped string
+        escaped string
     """
     return string.replace("\\", "\\\\")

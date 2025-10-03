@@ -15,6 +15,7 @@ import os
 from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
+from ..utils import UrlDict
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from .utils import restore_database_references
@@ -28,7 +29,7 @@ class ExecutableItem(ExecutableItemBase):
         name: str,
         file_references: list[str],
         directory_references: list[str],
-        db_references: list[dict],
+        db_references: list[UrlDict],
         project_dir: str,
         logger: LoggerInterface,
     ):

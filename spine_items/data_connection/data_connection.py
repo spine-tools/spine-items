@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Iterator, Literal
 from PySide6.QtCore import QFileInfo, QItemSelection, QModelIndex, Qt, QTimer, Slot
 from PySide6.QtGui import QBrush, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QFileDialog, QFileIconProvider, QGraphicsItem, QInputDialog, QMessageBox
+from sqlalchemy import URL
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinedb_api.helpers import remove_credentials_from_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
@@ -28,7 +29,7 @@ from spinetoolbox.project import SpineToolboxProject
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from ..database_validation import DatabaseConnectionValidator
-from ..utils import convert_to_sqlalchemy_url, convert_url_to_safe_string
+from ..utils import UrlDict, convert_to_sqlalchemy_url, convert_url_to_safe_string
 from ..widgets import UrlSelectorDialog
 from .commands import (
     AddDCReferencesCommand,
@@ -74,7 +75,7 @@ class DataConnection(ProjectItem):
         project: SpineToolboxProject,
         file_references: list[str] | None = None,
         directory_references: list[str] | None = None,
-        db_references: list[dict] | None = None,
+        db_references: list[UrlDict] | None = None,
     ):
         """
         Args:
@@ -134,7 +135,7 @@ class DataConnection(ProjectItem):
         for row in range(self._directory_ref_root.rowCount()):
             yield self._directory_ref_root.child(row).data(_Role.DIRECTORY_REFERENCE)
 
-    def db_reference_iter(self) -> Iterator[dict]:
+    def db_reference_iter(self) -> Iterator[UrlDict]:
         """Iterates over database references.
 
         Yields:
@@ -288,7 +289,7 @@ class DataConnection(ProjectItem):
         )
         self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, [], [], [url], self._project))
 
-    def _has_db_reference(self, url: dict) -> bool:
+    def _has_db_reference(self, url: UrlDict) -> bool:
         """Checks if given database URL exists already.
 
         Ignores usernames and passwords.
@@ -307,12 +308,12 @@ class DataConnection(ProjectItem):
         return False
 
     @Slot(str, object)
-    def _log_database_reference_error(self, error, url):
+    def _log_database_reference_error(self, error: str, url: URL) -> None:
         """Logs final database validation error messages.
 
         Args:
-            error (str): message
-            url (URL): SqlAlchemy URL of the database
+            error: message
+            url: SqlAlchemy URL of the database
         """
         url_text = remove_credentials_from_url(str(url))
         for row in range(self._db_ref_root.rowCount()):
@@ -322,7 +323,7 @@ class DataConnection(ProjectItem):
                 break
         self._logger.msg_error.emit(f"<b>{self.name}</b>: invalid database URL: {error}")
 
-    def do_add_references(self, file_refs: list[str], directory_refs: list[str], db_refs: list[dict]) -> None:
+    def do_add_references(self, file_refs: list[str], directory_refs: list[str], db_refs: list[UrlDict]) -> None:
         """Adds file and databases references to DC and starts watching the files.
 
         Args:
@@ -368,7 +369,7 @@ class DataConnection(ProjectItem):
         )
         self._logger.msg.emit("Selected references removed")
 
-    def do_remove_references(self, file_refs: list[str], directory_refs: list[str], db_refs: list[dict]) -> None:
+    def do_remove_references(self, file_refs: list[str], directory_refs: list[str], db_refs: list[UrlDict]) -> None:
         """Removes given paths from references.
 
         Args:
@@ -402,7 +403,7 @@ class DataConnection(ProjectItem):
                 result = True
         return result
 
-    def _remove_db_references(self, refs: list[dict]) -> bool:
+    def _remove_db_references(self, refs: list[UrlDict]) -> bool:
         result = False
         matches = {convert_url_to_safe_string(url) for url in refs}
         for k in reversed(range(self._db_ref_root.rowCount())):
@@ -631,11 +632,11 @@ class DataConnection(ProjectItem):
         )
 
     @Slot(object)
-    def _revive_db_reference(self, url):
+    def _revive_db_reference(self, url: URL) -> None:
         """Colors the db reference back to black.
 
         Args:
-            url (URL): SqlAlchemy URL
+            url: SqlAlchemy URL
         """
         url_text = remove_credentials_from_url(str(url))
         for row in range(self._db_ref_root.rowCount()):
@@ -754,7 +755,7 @@ class DataConnection(ProjectItem):
         new_resources = [resource for resource in new_resources if os.path.samefile(resource.path, new_directory_ref)]
         self._resources_to_successors_replaced(old_resources, new_resources)
 
-    def do_update_db_url_reference(self, old_ref: dict, new_ref: dict) -> None:
+    def do_update_db_url_reference(self, old_ref: UrlDict, new_ref: UrlDict) -> None:
         old_resources = self.resources_for_direct_successors()
         for row in range(self._db_ref_root.rowCount()):
             ref_item = self._db_ref_root.child(row)
@@ -854,7 +855,7 @@ class DataConnection(ProjectItem):
             except OSError:
                 self._logger.msg_error.emit(f"Removing file {path_to_remove} failed.\nCheck permissions.")
 
-    def populate_reference_list(self, directory_references: list[str], db_references: list[dict]) -> None:
+    def populate_reference_list(self, directory_references: list[str], db_references: list[UrlDict]) -> None:
         """List references in QTreeView."""
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
@@ -930,7 +931,7 @@ class DataConnection(ProjectItem):
         item.setData(None, Qt.ItemDataRole.ForegroundRole)
         item.setData(False, _Role.MISSING)
 
-    def _append_db_references_to_model(self, urls: list[dict]) -> None:
+    def _append_db_references_to_model(self, urls: list[UrlDict]) -> None:
         """Appends given database URLs to the model.
 
         Args:
@@ -1026,7 +1027,7 @@ class DataConnection(ProjectItem):
         db_references = []
         db_credentials = {}
         for url in self.db_reference_iter():
-            serialized_url = dict(url)
+            serialized_url = url.copy()
             username = serialized_url.pop("username")
             password = serialized_url.pop("password")
             if username:

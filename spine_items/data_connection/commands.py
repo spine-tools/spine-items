@@ -15,6 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 from spine_items.commands import SpineToolboxCommand
+from spine_items.utils import UrlDict
 from spinetoolbox.project import SpineToolboxProject
 
 if TYPE_CHECKING:
@@ -29,7 +30,7 @@ class AddDCReferencesCommand(SpineToolboxCommand):
         dc_name: str,
         file_refs: list[str],
         directory_refs: list[str],
-        db_refs: list[dict],
+        db_refs: list[UrlDict],
         project: SpineToolboxProject,
     ):
         """
@@ -94,7 +95,7 @@ class UpdateDirectoryReference(SpineToolboxCommand):
 
 
 class UpdateDbUrlReference(SpineToolboxCommand):
-    def __init__(self, dc_name: str, old_ref: dict, new_ref: dict, project: SpineToolboxProject):
+    def __init__(self, dc_name: str, old_ref: UrlDict, new_ref: UrlDict, project: SpineToolboxProject):
         super().__init__()
         self._dc_name = dc_name
         self._new_ref = new_ref
@@ -119,7 +120,7 @@ class RemoveDCReferencesCommand(SpineToolboxCommand):
         dc_name: str,
         file_refs: list[str],
         directory_refs: list[str],
-        db_refs: list[dict],
+        db_refs: list[UrlDict],
         project: SpineToolboxProject,
     ):
         """

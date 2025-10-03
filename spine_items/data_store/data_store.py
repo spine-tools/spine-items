@@ -11,26 +11,33 @@
 ######################################################################################################################
 
 """ Module for data store class. """
+from __future__ import annotations
 from dataclasses import dataclass
 import os
 from shutil import copyfile
+from typing import TYPE_CHECKING
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QFileDialog, QMenu
+from sqlalchemy import URL
 from spine_engine.project_item.project_item_resource import ProjectItemResource, database_resource
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinedb_api.helpers import remove_credentials_from_url, vacuum
 from spinetoolbox.helpers import create_dir
+from spinetoolbox.project import SpineToolboxProject
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.spine_db_editor.editors import db_editor_registry
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import open_db_editor
 from spinetoolbox.widgets.custom_qwidgets import SelectDatabaseItemsDialog
 from ..database_validation import DatabaseConnectionValidator
-from ..utils import convert_to_sqlalchemy_url, database_label
+from ..utils import UrlDict, convert_to_sqlalchemy_url, database_label
 from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
+
+if TYPE_CHECKING:
+    from spinetoolbox.ui_main import ToolboxUI
 
 
 @dataclass(frozen=True)
@@ -40,17 +47,26 @@ class ReplaceableResource:
 
 
 class DataStore(ProjectItem):
-    def __init__(self, name, description, x, y, toolbox, project, url):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        x: float,
+        y: float,
+        toolbox: ToolboxUI,
+        project: SpineToolboxProject,
+        url: UrlDict | None,
+    ):
         """Data Store class.
 
         Args:
-            name (str): Object name
-            description (str): Object description
-            x (float): Initial X coordinate of item icon
-            y (float): Initial Y coordinate of item icon
-            toolbox (ToolboxUI): QMainWindow instance
-            project (SpineToolboxProject): the project this item belongs to
-            url (dict, optional): SQLAlchemy url
+            name: Object name
+            description: Object description
+            x: Initial X coordinate of item icon
+            y: Initial Y coordinate of item icon
+            toolbox: QMainWindow instance
+            project: the project this item belongs to
+            url: database url
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
@@ -61,16 +77,16 @@ class DataStore(ProjectItem):
             self._logger.msg_error.emit(f"[OSError] Creating directory {self.logs_dir} failed. Check permissions.")
         if url is None:
             url = {"dialect": "sqlite"}
-        self._url = self.parse_url(url)
+        self._url: UrlDict = self.parse_url(url)
         self._url_validated = False
-        self._resource_to_replace = None
+        self._resource_to_replace: ReplaceableResource | None = None
         self._multi_db_editors_open = {}
         self._open_url_menu = QMenu("Open URL in Spine DB editor", self._toolbox)
         self._open_url_action = QAction("Open URL in Spine DB editor")
         self._open_url_menu.triggered.connect(self._handle_open_url_menu_triggered)
         self._open_url_action.triggered.connect(self.open_url_in_spine_db_editor)
         self._purge_settings = None
-        self._purge_dialog = None
+        self._purge_dialog: SelectDatabaseItemsDialog | None = None
         self._database_validator = DatabaseConnectionValidator(self)
         self._toolbox.db_mngr.database_clean_changed.connect(self._set_database_clean)
 
@@ -96,10 +112,18 @@ class DataStore(ProjectItem):
         self._actions.clear()
         self._actions.append(self._open_url_action)
 
-    def parse_url(self, url):
-        """Return a complete url dictionary from the given dict or string"""
-        base_url = {"dialect": "", "username": "", "password": "", "host": "", "port": "", "database": "", "schema": ""}
-        if isinstance(url, dict):
+    def parse_url(self, url: UrlDict | None) -> UrlDict:
+        """Returns a complete url dictionary from the given dict."""
+        base_url: UrlDict = {
+            "dialect": "",
+            "username": "",
+            "password": "",
+            "host": "",
+            "port": None,
+            "database": "",
+            "schema": "",
+        }
+        if url is not None:
             if url.get("dialect") == "sqlite" and (database := url.get("database")):
                 # Convert relative database path back to absolute
                 url["database"] = os.path.abspath(os.path.join(self._project.project_dir, database))
@@ -124,11 +148,11 @@ class DataStore(ProjectItem):
         """Load url into selections."""
         self.load_url_into_selections(self._url)
 
-    def url(self):
+    def url(self) -> UrlDict:
         """Returns the url attribute."""
         return self._url
 
-    def sql_alchemy_url(self):
+    def sql_alchemy_url(self) -> URL | None:
         """Returns the URL as an SQLAlchemy URL object or None if no URL is set."""
         return convert_to_sqlalchemy_url(self._url, self.name, self._logger)
 
@@ -151,18 +175,18 @@ class DataStore(ProjectItem):
         if not file_path:  # Cancel button clicked
             return False
         abs_path = os.path.abspath(file_path)
-        url = dict(self._url)
+        url = self._url.copy()
         url["database"] = abs_path
         sa_url = convert_to_sqlalchemy_url(url, self.name)
         self._toolbox.db_mngr.create_new_spine_database(sa_url, self._logger, overwrite=True)
         self.update_url(dialect="sqlite", database=abs_path)
         return True
 
-    def load_url_into_selections(self, url):
+    def load_url_into_selections(self, url: UrlDict) -> None:
         """Load given url attribute into shared widget selections.
 
         Args:
-            url (dict): URL dict
+            url: URL dict
         """
         if not self._active or not url:
             return
@@ -201,7 +225,7 @@ class DataStore(ProjectItem):
             self._toolbox.db_mngr.name_registry.unregister(old_url, self.name)
         new_dialect = kwargs.get("dialect")
         if new_dialect == "sqlite":
-            kwargs.update({"username": "", "password": "", "host": "", "port": "", "schema": ""})
+            kwargs.update({"username": "", "password": "", "host": "", "port": None, "schema": ""})
         self._url.update(kwargs)
         new_url = convert_to_sqlalchemy_url(self._url, self.name)
         self.load_url_into_selections(self._url)
@@ -391,12 +415,12 @@ class DataStore(ProjectItem):
             self.remove_notification(f"{self.name} has uncommitted changes")
 
     @Slot(str, object)
-    def _set_invalid_url_notification(self, error_message, url):
+    def _set_invalid_url_notification(self, error_message: str, url: URL) -> None:
         """Sets a single notification that warns about broken URL.
 
         Args:
-            error_message (str): URL failure message
-            url (URL): SqlAlchemy URL
+            error_message: URL failure message
+            url: SqlAlchemy URL
         """
         self.clear_notifications()
         self.add_notification(
@@ -407,7 +431,7 @@ class DataStore(ProjectItem):
             self._resources_to_successors_changed()
 
     @Slot(object)
-    def _accept_url(self, url):
+    def _accept_url(self, url: URL) -> None:
         """Sets URL as validated and updates advertised resources."""
         db_map = self.get_db_map()
         if db_map:
@@ -442,7 +466,7 @@ class DataStore(ProjectItem):
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
         d = super().item_dict()
-        d["url"] = dict(self.url())
+        d["url"] = self._url.copy()
         # If database key is a file, change the path to relative
         if d["url"]["dialect"] == "sqlite" and d["url"]["database"]:
             d["url"]["database"] = serialize_path(d["url"]["database"], self._project.project_dir)
@@ -484,8 +508,14 @@ class DataStore(ProjectItem):
         """See base class."""
         description, x, y = ProjectItem.parse_item_dict(item_dict)
         url = item_dict["url"]
-        if url and not isinstance(url["database"], str):
-            url["database"] = deserialize_path(url["database"], project.project_dir)
+        if url:
+            if not isinstance(url["database"], str):
+                url["database"] = deserialize_path(url["database"], project.project_dir)
+            if "port" in url and not isinstance(url["port"], int):
+                try:
+                    url["port"] = int(url["port"])
+                except (ValueError, TypeError):
+                    url["port"] = None
         return DataStore(name, description, x, y, toolbox, project, url)
 
     def rename(self, new_name, rename_data_dir_message):

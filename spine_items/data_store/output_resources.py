@@ -11,21 +11,35 @@
 ######################################################################################################################
 
 """Contains utilities to scan for Data Store's output resources."""
-from spine_engine.project_item.project_item_resource import database_resource
+from __future__ import annotations
+from typing import TYPE_CHECKING
+from sqlalchemy import URL
+from spine_engine.project_item.project_item_resource import ProjectItemResource, database_resource
 from spine_items.utils import database_label
 
+if TYPE_CHECKING:
+    from spine_items.data_store.data_store import DataStore
+    from spine_items.data_store.executable_item import ExecutableItem
 
-def scan_for_resources(provider, url):
+
+def scan_for_resources(provider: DataStore | ExecutableItem, url: URL) -> list[ProjectItemResource]:
     """
     Creates db resources based on DS url.
 
     Args:
-        provider (ProjectItem or ExecutableItem): resource provider item
-        url (URL): sqlalchemy url
+        provider: resource provider item
+        url: sqlalchemy url
 
     Returns:
-        list of ProjectItemResource: output resources
+        output resources
     """
     if not url:
         return []
-    return [database_resource(provider.name, str(url), label=database_label(provider.name), filterable=True)]
+    return [
+        database_resource(
+            provider.name,
+            url.render_as_string(hide_password=False),
+            label=database_label(provider.name),
+            filterable=True,
+        )
+    ]

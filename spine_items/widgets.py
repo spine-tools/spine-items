@@ -11,8 +11,10 @@
 ######################################################################################################################
 
 """Contains common & shared (Q)widgets."""
+from collections.abc import Callable, Iterable, Sequence
 import os
-from PySide6.QtCore import Property, QMimeData, Qt, QUrl, Signal, Slot
+from typing import Any, Final
+from PySide6.QtCore import Property, QMimeData, QSettings, Qt, QUrl, Signal, Slot
 from PySide6.QtGui import QDrag, QIntValidator
 from PySide6.QtWidgets import (
     QApplication,
@@ -26,9 +28,10 @@ from PySide6.QtWidgets import (
     QTreeView,
     QWidget,
 )
+from spine_engine.logger_interface import LoggerInterface, NonImplementedSignal
 from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
-from .utils import convert_to_sqlalchemy_url
+from .utils import UrlDict, convert_to_sqlalchemy_url
 
 
 class ArgsTreeView(QTreeView):
@@ -43,14 +46,6 @@ class ReferencesTreeView(QTreeView):
     files_dropped = Signal(list)
     del_key_pressed = Signal()
 
-    def __init__(self, parent):
-        """Initializes the view.
-
-        Args:
-            parent (QWidget): The parent of this view
-        """
-        super().__init__(parent=parent)
-
     def dragEnterEvent(self, event):
         """Accepts file drops from the filesystem."""
         urls = event.mimeData().urls()
@@ -62,7 +57,7 @@ class ReferencesTreeView(QTreeView):
                 event.ignore()
                 return
         event.accept()
-        event.setDropAction(Qt.LinkAction)
+        event.setDropAction(Qt.DropAction.LinkAction)
 
     def dragMoveEvent(self, event):
         """Accepts event."""
@@ -75,7 +70,7 @@ class ReferencesTreeView(QTreeView):
     def keyPressEvent(self, event):
         """Overridden method to make the view support deleting items with a delete key."""
         super().keyPressEvent(event)
-        if event.key() == Qt.Key_Delete:
+        if event.key() == Qt.Key.Key_Delete:
             self.del_key_pressed.emit()
 
 
@@ -85,11 +80,10 @@ class DataTreeView(QTreeView):
     files_dropped = Signal(list)
     del_key_pressed = Signal()
 
-    def __init__(self, parent):
-        """Initializes the view.
-
+    def __init__(self, parent: QWidget | None):
+        """
         Args:
-            parent (QWidget): The parent of this view
+            parent: The parent of this view
         """
         super().__init__(parent=parent)
         self.drag_start_pos = None
@@ -106,7 +100,7 @@ class DataTreeView(QTreeView):
                 event.ignore()
                 return
         event.accept()
-        event.setDropAction(Qt.CopyAction)
+        event.setDropAction(Qt.DropAction.CopyAction)
 
     def dragMoveEvent(self, event):
         """Accepts event."""
@@ -118,14 +112,14 @@ class DataTreeView(QTreeView):
 
     def mousePressEvent(self, event):
         """Registers drag start position."""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.drag_start_pos = event.position().toPoint()
             self.drag_indexes = self.selectedIndexes()
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         """Starts dragging action if needed."""
-        if not event.buttons() & Qt.LeftButton:
+        if not event.buttons() & Qt.MouseButton.LeftButton:
             return
         if not self.drag_start_pos:
             return
@@ -158,7 +152,7 @@ class DataTreeView(QTreeView):
     def keyPressEvent(self, event):
         """Overridden method to make the view support deleting items with a delete key."""
         super().keyPressEvent(event)
-        if event.key() == Qt.Key_Delete:
+        if event.key() == Qt.Key.Key_Delete:
             self.del_key_pressed.emit()
 
 
@@ -180,11 +174,11 @@ class FilterEditDelegateBase(QStyledItemDelegate):
 class FilterEdit(QWidget):
     """Filter regular expression editor."""
 
-    def __init__(self, ui_form, parent):
+    def __init__(self, ui_form: Any, parent: QWidget | None):
         """
         Args:
-            ui_form (Any): an interface from created from a .ui file
-            parent (QWidget):
+            ui_form: an interface form created from a .ui file
+            parent: parent widget
         """
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Popup)
@@ -198,22 +192,22 @@ class FilterEdit(QWidget):
         super().focusInEvent(e)
 
     def keyPressEvent(self, event):
-        # Relay key press events to the regexp line edit. Otherwise we may lose the first letter.
+        # Relay key press events to the regexp line edit. Otherwise, we may lose the first letter.
         return self._ui.regexp_line_edit.keyPressEvent(event)
 
-    def regexp(self):
+    def regexp(self) -> str:
         """Returns the current regular expression.
 
         Returns:
-            str: regular expression
+            regular expression
         """
         return self._ui.regexp_line_edit.text()
 
-    def set_regexp(self, regexp):
+    def set_regexp(self, regexp: str) -> None:
         """Sets a regular expression for editing.
 
         Args:
-            regexp (str): new regular expression
+            regexp: new regular expression
         """
         self._ui.regexp_line_edit.setText(regexp)
 
@@ -238,7 +232,7 @@ class FileDropTargetLineEdit(QLineEdit):
             event.ignore()
             return
         event.accept()
-        event.setDropAction(Qt.LinkAction)
+        event.setDropAction(Qt.DropAction.LinkAction)
 
     def dragMoveEvent(self, event):
         """Accept event."""
@@ -250,21 +244,21 @@ class FileDropTargetLineEdit(QLineEdit):
         self.setText(url.toLocalFile())
 
 
-def _set_line_edit_text(edit, text):
+def _set_line_edit_text(edit: QLineEdit, text: str) -> None:
     """Sets QLineEdit's text only if it is changing.
 
     Avoids sudden jumps in cursors when e.g. the latest change goes through the
     undo stack
 
     Args:
-        edit (QLineEdit): line edit
-        text (str): new text to set for the edit
+        edit: line edit
+        text: new text to set for the edit
     """
     if text != edit.text():
         edit.setText(text)
 
 
-KNOWN_SQL_DIALECTS = ("mysql", "sqlite", "postgresql")
+KNOWN_SQL_DIALECTS: Final[tuple[str, ...]] = ("mysql", "sqlite", "postgresql")
 
 
 class UrlSelectorWidget(QWidget):
@@ -273,17 +267,17 @@ class UrlSelectorWidget(QWidget):
     url_changed = Signal()
     """Emitted whenever the URL changes."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         """
         Args:
-            parent (QWidget, optional): parent widget
+            parent: parent widget
         """
         from .ui.url_selector_widget import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(parent)
-        self._url = None
-        self._get_sqlite_file_path = None
-        self._logger = None
+        self._url: UrlDict | None = None
+        self._get_sqlite_file_path: Callable[[], str | None] | None = None
+        self._logger: LoggerInterface | None = None
         self._ui = Ui_Form()
         self._ui.setupUi(self)
         self._ui.comboBox_dialect.setCurrentIndex(-1)
@@ -297,14 +291,20 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_username.textChanged.connect(lambda: self.url_changed.emit())
         self._ui.lineEdit_password.textChanged.connect(lambda: self.url_changed.emit())
 
-    def setup(self, dialects, select_sqlite_file_callback, hide_schema, logger):
+    def setup(
+        self,
+        dialects: Sequence[str],
+        select_sqlite_file_callback: Callable[[], str | None],
+        hide_schema: bool,
+        logger: LoggerInterface,
+    ) -> None:
         """Sets the widget up for usage.
 
         Args:
-            dialects (Sequence of str): available SQL dialects
-            select_sqlite_file_callback (Callable): function that returns a path to SQLite file or None
-            hide_schema (bool): True to hide the Schema field
-            logger (LoggerInterface): logger
+            dialects: available SQL dialects
+            select_sqlite_file_callback: function that returns a path to SQLite file or None
+            hide_schema: True to hide the Schema field
+            logger: logger
         """
         self._get_sqlite_file_path = select_sqlite_file_callback
         self._logger = logger
@@ -313,15 +313,15 @@ class UrlSelectorWidget(QWidget):
             self._ui.schema_line_edit.setVisible(False)
             self._ui.schema_label.setVisible(False)
 
-    def set_url(self, url):
+    def set_url(self, url: UrlDict) -> None:
         """Sets the URL for the widget.
 
         Args:
-            url (dict): URL as dict
+            url: URL as dict
         """
         dialect = url.get("dialect", "")
         host = url.get("host", "")
-        port = url.get("port", "")
+        port = url.get("port")
         database = url.get("database", "")
         schema = url.get("schema", "")
         username = url.get("username", "")
@@ -332,23 +332,27 @@ class UrlSelectorWidget(QWidget):
         elif dialect != self._ui.comboBox_dialect.currentText():
             self._ui.comboBox_dialect.setCurrentText(dialect)
         _set_line_edit_text(self._ui.lineEdit_host, host)
-        _set_line_edit_text(self._ui.lineEdit_port, port)
+        _set_line_edit_text(self._ui.lineEdit_port, str(port) if port is not None else "")
         _set_line_edit_text(self._ui.lineEdit_database, database)
         _set_line_edit_text(self._ui.schema_line_edit, schema)
         _set_line_edit_text(self._ui.lineEdit_username, username)
         _set_line_edit_text(self._ui.lineEdit_password, password)
         self.blockSignals(False)
 
-    def url_dict(self):
+    def url_dict(self) -> UrlDict:
         """Returns the URL as dictionary.
 
         Returns:
-            dict: URL as dict
+            URL as dict
         """
+        try:
+            port = int(self._ui.lineEdit_port.text())
+        except ValueError:
+            port = None
         return {
             "dialect": self._ui.comboBox_dialect.currentText(),
             "host": self._ui.lineEdit_host.text(),
-            "port": self._ui.lineEdit_port.text(),
+            "port": port,
             "database": self._ui.lineEdit_database.text(),
             "schema": self._ui.schema_line_edit.text(),
             "username": self._ui.lineEdit_username.text(),
@@ -356,18 +360,20 @@ class UrlSelectorWidget(QWidget):
         }
 
     @Slot(bool)
-    def _select_sqlite_file(self, _=False):
+    def _select_sqlite_file(self, _=False) -> None:
         """Select SQLite file."""
+        if self._get_sqlite_file_path is None:
+            raise RuntimeError("logic error: setup() has not been called")
         file_path = self._get_sqlite_file_path()
         if file_path is not None:
             self._ui.lineEdit_database.setText(file_path)
 
     @Slot(str)
-    def _enable_dialect(self, dialect):
+    def _enable_dialect(self, dialect: str) -> None:
         """Enables the given dialect in the item controls.
 
         Args:
-            dialect (str): SQL dialect
+            dialect: SQL dialect
         """
         if dialect == "":
             self.enable_no_dialect()
@@ -376,7 +382,7 @@ class UrlSelectorWidget(QWidget):
         else:
             self.enable_common()
 
-    def enable_no_dialect(self):
+    def enable_no_dialect(self) -> None:
         """Adjusts widget enabled status to default when no dialect is selected."""
         self._ui.comboBox_dialect.setEnabled(True)
         self._ui.toolButton_select_sqlite_file.setEnabled(False)
@@ -387,7 +393,7 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_password.setEnabled(False)
         self._ui.schema_line_edit.setEnabled(False)
 
-    def enable_sqlite(self):
+    def enable_sqlite(self) -> None:
         """Adjusts controls to sqlite connection specification."""
         self._ui.toolButton_select_sqlite_file.setEnabled(True)
         self._ui.lineEdit_host.setEnabled(False)
@@ -401,7 +407,7 @@ class UrlSelectorWidget(QWidget):
         self._ui.lineEdit_username.clear()
         self._ui.lineEdit_password.clear()
 
-    def enable_common(self):
+    def enable_common(self) -> None:
         """Adjusts controls to 'common' connection specification."""
         self._ui.toolButton_select_sqlite_file.setEnabled(False)
         self._ui.lineEdit_host.setEnabled(True)
@@ -413,15 +419,24 @@ class UrlSelectorWidget(QWidget):
 
 
 class UrlSelectorDialog(QDialog):
+    msg = NonImplementedSignal()
+    msg_success = NonImplementedSignal()
+    msg_warning = NonImplementedSignal()
     msg_error = Signal(str)
+    msg_proc = NonImplementedSignal()
+    msg_proc_error = NonImplementedSignal()
+    information_box = NonImplementedSignal()
+    error_box = NonImplementedSignal()
 
-    def __init__(self, app_settings, hide_schema, logger, parent=None):
+    def __init__(
+        self, app_settings: QSettings, hide_schema: bool, logger: LoggerInterface, parent: QWidget | None = None
+    ):
         """
         Args:
-            app_settings (QSettings): Toolbox settings
-            hide_schema (bool): if True, hide the Schema field
-            logger (LoggerInterface): logger
-            parent (QWidget, optional): parent widget
+            app_settings: Toolbox settings
+            hide_schema: if True, hide the Schema field
+            logger: logger
+            parent: parent widget
         """
         from .ui.url_selector_dialog import Ui_Dialog  # pylint: disable=import-outside-toplevel
 
@@ -443,28 +458,28 @@ class UrlSelectorDialog(QDialog):
         self.msg_error.connect(self.statusbar.showMessage)
 
     @property
-    def url(self):
+    def url(self) -> str:
         if self._sa_url is None:
             return ""
         return str(self._sa_url)
 
-    def url_dict(self):
+    def url_dict(self) -> UrlDict:
         return self.ui.url_selector_widget.url_dict()
 
-    def set_url_dict(self, url):
+    def set_url_dict(self, url: UrlDict) -> None:
         """Sets the URL.
 
         Args:
-            url (dict): URL as dict
+            url: URL as dict
         """
         self.ui.url_selector_widget.set_url(url)
 
     @property
-    def dialect(self):
+    def dialect(self) -> str | None:
         return self.ui.url_selector_widget.url_dict().get("dialect")
 
     @Slot()
-    def _refresh_url(self):
+    def _refresh_url(self) -> None:
         """Updates the URL widget and status bar."""
         url = self.ui.url_selector_widget.url_dict()
         self._sa_url = convert_to_sqlalchemy_url(url, logger=self)
@@ -472,11 +487,11 @@ class UrlSelectorDialog(QDialog):
             self.statusbar.clearMessage()
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(self._sa_url is not None)
 
-    def _browse_sqlite_file(self):
+    def _browse_sqlite_file(self) -> str | None:
         """Opens a browser to select a SQLite file.
 
         Returns:
-            str: path to the file or None if operation was cancelled
+            path to the file or None if operation was cancelled
         """
         filter_ = "*.sqlite;;*.*"
         key = "selectImportSourceSQLiteFile"
@@ -486,15 +501,15 @@ class UrlSelectorDialog(QDialog):
         return filepath if filepath else None
 
 
-def combo_box_width(font_metric_widget, items):
+def combo_box_width(font_metric_widget: QWidget, items: Iterable[str]) -> int:
     """Returns section width.
 
     Args:
-        font_metric_widget (QWidget): Widget whose font metrics are used
-        items (Iterable of str): combo box items
+        font_metric_widget: Widget whose font metrics are used
+        items: combo box items
 
     Returns:
-        int: width of a combo box containing the given items
+        width of a combo box containing the given items
     """
     fm = font_metric_widget.fontMetrics()
     style = QApplication.instance().style()

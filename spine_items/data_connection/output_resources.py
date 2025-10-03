@@ -23,7 +23,7 @@ from spine_engine.project_item.project_item_resource import (
 )
 from spine_engine.utils.serialization import path_in_dir
 from spinedb_api.helpers import remove_credentials_from_url
-from ..utils import convert_to_sqlalchemy_url
+from ..utils import UrlDict, convert_to_sqlalchemy_url
 
 if TYPE_CHECKING:
     from .data_connection import DataConnection
@@ -34,7 +34,7 @@ def scan_for_resources(
     provider: DataConnection | ExecutableItem,
     file_paths: list[str],
     directories: list[str],
-    urls: list[dict],
+    urls: list[UrlDict],
     project_dir: str,
 ) -> list[ProjectItemResource]:
     """
