@@ -14,9 +14,10 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
-from spine_items.commands import SpineToolboxCommand
-from spine_items.utils import UrlDict
 from spinetoolbox.project import SpineToolboxProject
+from ..commands import SpineToolboxCommand
+from ..utils import UrlDict
+from .utils import FilePattern
 
 if TYPE_CHECKING:
     from spine_items.data_connection.data_connection import DataConnection
@@ -29,6 +30,7 @@ class AddDCReferencesCommand(SpineToolboxCommand):
         self,
         dc_name: str,
         file_refs: list[str],
+        file_patterns: list[FilePattern],
         directory_refs: list[str],
         db_refs: list[UrlDict],
         project: SpineToolboxProject,
@@ -37,6 +39,7 @@ class AddDCReferencesCommand(SpineToolboxCommand):
         Args:
             dc_name: DC name
             file_refs: list of file refs to add
+            file_patterns: list of file patterns to add
             directory_refs: list of directory refs to add
             db_refs: list of db refs to add
             project: project
@@ -44,6 +47,7 @@ class AddDCReferencesCommand(SpineToolboxCommand):
         super().__init__()
         self._dc_name = dc_name
         self._file_refs = file_refs
+        self._file_patterns = file_patterns
         self._directory_refs = directory_refs
         self._db_refs = db_refs
         self._project = project
@@ -51,11 +55,11 @@ class AddDCReferencesCommand(SpineToolboxCommand):
 
     def redo(self):
         dc: DataConnection = self._project.get_item(self._dc_name)
-        dc.do_add_references(self._file_refs, self._directory_refs, self._db_refs)
+        dc.do_add_references(self._file_refs, self._file_patterns, self._directory_refs, self._db_refs)
 
     def undo(self):
         dc: DataConnection = self._project.get_item(self._dc_name)
-        dc.do_remove_references(self._file_refs, self._directory_refs, self._db_refs)
+        dc.do_remove_references(self._file_refs, self._file_patterns, self._directory_refs, self._db_refs)
 
 
 class UpdateFileReference(SpineToolboxCommand):
@@ -74,6 +78,26 @@ class UpdateFileReference(SpineToolboxCommand):
     def undo(self):
         dc: DataConnection = self._project.get_item(self._dc_name)
         dc.do_update_file_reference(self._new_file_ref, self._old_file_ref)
+
+
+class UpdateFilePattern(SpineToolboxCommand):
+    def __init__(
+        self, dc_name: str, old_file_pattern: FilePattern, new_file_pattern: FilePattern, project: SpineToolboxProject
+    ):
+        super().__init__()
+        self._dc_name = dc_name
+        self._new_file_pattern = new_file_pattern
+        self._old_file_pattern = old_file_pattern
+        self._project = project
+        self.setText(f"update file pattern in {dc_name}")
+
+    def redo(self):
+        dc: DataConnection = self._project.get_item(self._dc_name)
+        dc.do_update_file_pattern(self._old_file_pattern, self._new_file_pattern)
+
+    def undo(self):
+        dc: DataConnection = self._project.get_item(self._dc_name)
+        dc.do_update_file_pattern(self._new_file_pattern, self._old_file_pattern)
 
 
 class UpdateDirectoryReference(SpineToolboxCommand):
@@ -119,6 +143,7 @@ class RemoveDCReferencesCommand(SpineToolboxCommand):
         self,
         dc_name: str,
         file_refs: list[str],
+        file_patterns: list[FilePattern],
         directory_refs: list[str],
         db_refs: list[UrlDict],
         project: SpineToolboxProject,
@@ -127,6 +152,7 @@ class RemoveDCReferencesCommand(SpineToolboxCommand):
         Args:
             dc_name: DC name
             file_refs: list of file refs to remove
+            file_patterns: list of file patterns to remove
             directory_refs: list of directory refs to remove
             db_refs: list of db refs to remove
             project: project
@@ -134,6 +160,7 @@ class RemoveDCReferencesCommand(SpineToolboxCommand):
         super().__init__()
         self._dc_name = dc_name
         self._file_refs = file_refs
+        self._file_patterns = file_patterns
         self._directory_refs = directory_refs
         self._db_refs = db_refs
         self._project = project
@@ -141,11 +168,11 @@ class RemoveDCReferencesCommand(SpineToolboxCommand):
 
     def redo(self):
         dc: DataConnection = self._project.get_item(self._dc_name)
-        dc.do_remove_references(self._file_refs, self._directory_refs, self._db_refs)
+        dc.do_remove_references(self._file_refs, self._file_patterns, self._directory_refs, self._db_refs)
 
     def undo(self):
         dc: DataConnection = self._project.get_item(self._dc_name)
-        dc.do_add_references(self._file_refs, self._directory_refs, self._db_refs)
+        dc.do_add_references(self._file_refs, self._file_patterns, self._directory_refs, self._db_refs)
 
 
 class MoveReferenceToData(SpineToolboxCommand):
@@ -167,9 +194,9 @@ class MoveReferenceToData(SpineToolboxCommand):
     def redo(self):
         dc: DataConnection = self._project.get_item(self._dc_name)
         dc.do_copy_to_project(self._paths)
-        dc.do_remove_references(self._paths, [], [])
+        dc.do_remove_references(self._paths, [], [], [])
 
     def undo(self):
         dc: DataConnection = self._project.get_item(self._dc_name)
         dc.delete_files_from_project([Path(p).name for p in self._paths])
-        dc.do_add_references(self._paths, [], [])
+        dc.do_add_references(self._paths, [], [], [])

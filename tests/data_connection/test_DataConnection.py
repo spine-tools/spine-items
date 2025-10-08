@@ -21,11 +21,13 @@ from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtCore import QItemSelectionModel
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
+from spine_engine.project_item.project_item_resource import file_resource_in_pack
 from spine_engine.utils.serialization import serialize_path
 from spine_items.data_connection.data_connection import DataConnection, _Role
 from spine_items.data_connection.data_connection_factory import DataConnectionFactory
 from spine_items.data_connection.item_info import ItemInfo
-from spine_items.utils import convert_url_to_safe_string
+from spine_items.data_connection.utils import FilePattern
+from spine_items.utils import UrlDict, convert_url_to_safe_string
 from spine_items.widgets import UrlSelectorDialog
 from spinedb_api import create_new_spine_database
 from spinetoolbox.helpers import signal_waiter
@@ -41,6 +43,12 @@ from tests.mock_helpers import (
 class TestDataConnection(unittest.TestCase):
     def test_item_type(self):
         self.assertEqual(DataConnection.item_type(), ItemInfo.item_type())
+
+
+FILE_REF_ROOT_ROW = 0
+FILE_PATTERN_ROOT_ROW = 1
+DIRECTORY_ROOT_ROW = 2
+URL_ROOT_ROW = 3
 
 
 class TestDataConnectionWithProject(unittest.TestCase):
@@ -74,27 +82,30 @@ class TestDataConnectionWithProject(unittest.TestCase):
             b = Path(temp_dir, "b.txt")
             b.touch()
             c = Path(temp_dir, "c.txt")  # Note. Does not exist
+            file_ref_root_index = self._ref_model.index(FILE_REF_ROOT_ROW, 0)
             # Add nothing
             mock_filenames.return_value = ([], "*.*")
             self._data_connection.show_add_file_references_dialog()
             self.assertEqual(1, mock_filenames.call_count)
             self.assertEqual(0, len(self._data_connection.file_references))
-            self.assertEqual(0, self._ref_model.rowCount(self._ref_model.index(0, 0)))
+            self.assertEqual(0, self._ref_model.rowCount(file_ref_root_index))
             # Add one file
             mock_filenames.return_value = ([str(a)], "*.*")
             self._data_connection.show_add_file_references_dialog()
             self.assertEqual(2, mock_filenames.call_count)
             self.assertEqual(1, len(self._data_connection.file_references))
-            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(0, 0)))
-            self.assertEqual(str(a), self._ref_model.index(0, 0, self._ref_model.index(0, 0)).data())
+            file_ref_root_index = self._ref_model.index(FILE_REF_ROOT_ROW, 0)
+            self.assertEqual(1, self._ref_model.rowCount(file_ref_root_index))
+            self.assertEqual(str(a), self._ref_model.index(0, 0, file_ref_root_index).data())
             # Try to add a path that has already been added
             self._data_connection.show_add_file_references_dialog()
             self.assertEqual(3, mock_filenames.call_count)
             self.assertEqual(1, len(self._data_connection.file_references))
-            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(0, 0)))
-            self.assertEqual(str(a), self._ref_model.index(0, 0, self._ref_model.index(0, 0)).data())
+            file_ref_root_index = self._ref_model.index(FILE_REF_ROOT_ROW, 0)
+            self.assertEqual(1, self._ref_model.rowCount(file_ref_root_index))
+            self.assertEqual(str(a), self._ref_model.index(0, 0, file_ref_root_index).data())
             self._data_connection.file_references = []
-            self._data_connection.populate_reference_list([], [])
+            self._data_connection.populate_reference_list([], [], [])
             # Add two references (the other one is non-existing)
             # Note: non-existing files cannot be added with the toolbox but this tests a situation when
             # project.json file has references to files that do not exist anymore and user tries to add a
@@ -103,16 +114,54 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection.show_add_file_references_dialog()
             self.assertEqual(4, mock_filenames.call_count)
             self.assertEqual(1, len(self._data_connection.file_references))
-            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(0, 0)))
-            self.assertEqual(str(b), self._ref_model.index(0, 0, self._ref_model.index(0, 0)).data())
+            file_ref_root_index = self._ref_model.index(FILE_REF_ROOT_ROW, 0)
+            self.assertEqual(1, self._ref_model.rowCount(file_ref_root_index))
+            self.assertEqual(str(b), self._ref_model.index(0, 0, file_ref_root_index).data())
             # Now add new reference
             mock_filenames.return_value = ([str(a)], "*.*")
             self._data_connection.show_add_file_references_dialog()
             self.assertEqual(5, mock_filenames.call_count)
             self.assertEqual(2, len(self._data_connection.file_references))
-            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(0, 0)))
-            self.assertEqual(str(b), self._ref_model.index(0, 0, self._ref_model.index(0, 0)).data())
-            self.assertEqual(str(a), self._ref_model.index(1, 0, self._ref_model.index(0, 0)).data())
+            self.assertEqual(2, self._ref_model.rowCount(file_ref_root_index))
+            file_ref_root_index = self._ref_model.index(FILE_REF_ROOT_ROW, 0)
+            self.assertEqual(str(b), self._ref_model.index(0, 0, file_ref_root_index).data())
+            self.assertEqual(str(a), self._ref_model.index(1, 0, file_ref_root_index).data())
+
+    def test_cancel_add_file_pattern_dialog(self):
+        with mock.patch("spine_items.data_connection.data_connection.FilePatternDialog") as mock_dialog_init:
+            mock_dialog = mock.MagicMock()
+            mock_dialog_init.return_value = mock_dialog
+            mock_dialog.exec_.return_value = QDialog.DialogCode.Rejected
+            self._data_connection.show_add_file_pattern_dialog()
+            mock_dialog.exec_.assert_called_once()
+        self.assertEqual(list(self._data_connection.file_pattern_iter()), [])
+
+    def test_add_file_pattern_via_dialog(self):
+        with mock.patch("spine_items.data_connection.data_connection.FilePatternDialog") as mock_dialog_init:
+            mock_dialog = mock.MagicMock()
+            mock_dialog_init.return_value = mock_dialog
+            mock_dialog.exec_.return_value = QDialog.DialogCode.Accepted
+            mock_dialog.file_pattern.return_value = FilePattern(Path(self._temp_dir.name, "pattern_dir"), "*.txt")
+            self._data_connection.show_add_file_pattern_dialog()
+            mock_dialog.exec_.assert_called_once()
+        self.assertEqual(
+            list(self._data_connection.file_pattern_iter()),
+            [FilePattern(Path(self._temp_dir.name, "pattern_dir"), "*.txt")],
+        )
+
+    def test_undo_adding_file_pattern(self):
+        with mock.patch("spine_items.data_connection.data_connection.FilePatternDialog") as mock_dialog_init:
+            mock_dialog = mock.MagicMock()
+            mock_dialog_init.return_value = mock_dialog
+            mock_dialog.exec_.return_value = QDialog.DialogCode.Accepted
+            mock_dialog.file_pattern.return_value = FilePattern(Path(self._temp_dir.name, "pattern_dir"), "*.txt")
+            self._data_connection.show_add_file_pattern_dialog()
+        self.assertEqual(
+            list(self._data_connection.file_pattern_iter()),
+            [FilePattern(Path(self._temp_dir.name, "pattern_dir"), "*.txt")],
+        )
+        self._toolbox.undo_stack.undo()
+        self.assertEqual(list(self._data_connection.file_pattern_iter()), [])
 
     def test_cancel_add_directory_reference_dialog(self):
         with mock.patch(
@@ -164,7 +213,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection.show_add_db_reference_dialog()
             self.assertEqual(1, url_selector_exec.call_count)
             self.assertFalse(self._data_connection.has_db_references())
-            self.assertEqual(0, self._ref_model.rowCount(self._ref_model.index(1, 0)))
+            self.assertEqual(0, self._ref_model.rowCount(self._ref_model.index(URL_ROOT_ROW, 0)))
             # Add one url
             url_selector_exec.return_value = QDialog.DialogCode.Accepted
             url_selector_url_dict.return_value = {
@@ -178,7 +227,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection.show_add_db_reference_dialog()
             self.assertEqual(2, url_selector_exec.call_count)
             self.assertEqual(1, len(list(self._data_connection.db_reference_iter())))
-            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(2, 0)))
+            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(URL_ROOT_ROW, 0)))
             # Add same url with different username and password (should not be added)
             url_selector_url_dict.return_value = {
                 "dialect": "mysql",
@@ -191,7 +240,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection.show_add_db_reference_dialog()
             self.assertEqual(3, url_selector_exec.call_count)
             self.assertEqual(1, len(list(self._data_connection.db_reference_iter())))
-            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(2, 0)))
+            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(URL_ROOT_ROW, 0)))
 
     def test_replace_file_reference_via_dialog(self):
         temp_dir = Path(self._temp_dir.name, "data")
@@ -200,14 +249,14 @@ class TestDataConnectionWithProject(unittest.TestCase):
         old_ref.touch()
         new_ref = temp_dir / "new.csv"
         new_ref.touch()
-        self._data_connection.do_add_references([str(old_ref)], [], [])
+        self._data_connection.do_add_references([str(old_ref)], [], [], [])
         old_resources = self._data_connection.resources_for_direct_successors()
         with (
             mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileName") as mock_file_dialog,
             mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
         ):
             mock_file_dialog.return_value = [new_ref.as_posix(), "*.*"]
-            index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(FILE_REF_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             mock_file_dialog.assert_called_once()
             new_resources = self._data_connection.resources_for_direct_successors()
@@ -219,7 +268,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         temp_dir.mkdir()
         old_ref = temp_dir / "old.csv"
         old_ref.touch()
-        self._data_connection.do_add_references([str(old_ref)], [], [])
+        self._data_connection.do_add_references([str(old_ref)], [], [], [])
         with (
             mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileName") as mock_file_dialog,
             mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
@@ -236,7 +285,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         temp_dir.mkdir()
         old_ref = temp_dir / "old.csv"
         old_ref.touch()
-        self._data_connection.do_add_references([str(old_ref)], [], [])
+        self._data_connection.do_add_references([str(old_ref)], [], [], [])
         with (
             mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileName") as mock_file_dialog,
             mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
@@ -244,7 +293,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         ):
             mock_file_dialog.return_value = [old_ref.as_posix(), "*.*"]
             mock_warning.emit = MagicMock()
-            index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(FILE_REF_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             mock_file_dialog.assert_called_once()
             mock_replace_resources.assert_not_called()
@@ -258,14 +307,14 @@ class TestDataConnectionWithProject(unittest.TestCase):
         old_ref.touch()
         new_ref = temp_dir / "new.csv"
         new_ref.touch()
-        self._data_connection.do_add_references([str(old_ref)], [], [])
+        self._data_connection.do_add_references([str(old_ref)], [], [], [])
         old_resources = self._data_connection.resources_for_direct_successors()
         with (
             mock.patch("spine_items.data_connection.data_connection.QFileDialog.getOpenFileName") as mock_file_dialog,
             mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
         ):
             mock_file_dialog.return_value = [new_ref.as_posix(), "*.*"]
-            index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(FILE_REF_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             new_resources = self._data_connection.resources_for_direct_successors()
             mock_replace_resources.assert_called_once_with(old_resources, new_resources)
@@ -275,12 +324,102 @@ class TestDataConnectionWithProject(unittest.TestCase):
             mock_replace_resources.assert_called_once_with(new_resources, old_resources)
         self.assertEqual(self._data_connection.file_references, [str(old_ref)])
 
+    def test_replace_file_pattern_via_dialog(self):
+        temp_dir = Path(self._temp_dir.name, "data")
+        temp_dir.mkdir()
+        self._data_connection.do_add_references([], [FilePattern(temp_dir, "*.json")], [], [])
+        with (
+            mock.patch("spine_items.data_connection.data_connection.FilePatternDialog") as mock_dialog_constructor,
+            mock.patch.object(self._data_connection, "_resources_to_successors_changed") as mock_replace_resources,
+        ):
+            mock_dialog = mock.MagicMock()
+            mock_dialog_constructor.return_value = mock_dialog
+            mock_dialog.exec_.return_value = QDialog.DialogCode.Accepted
+            mock_dialog.file_pattern.return_value = FilePattern(temp_dir, "*.txt")
+            index = self._ref_model.index(0, 0, self._ref_model.index(FILE_PATTERN_ROOT_ROW, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_dialog.exec_.assert_called_once()
+            mock_replace_resources.assert_called_once()
+        self.assertEqual(
+            self._data_connection.resources_for_direct_successors(),
+            [file_resource_in_pack("DC", str(FilePattern(temp_dir, "*.txt")))],
+        )
+
+    def test_cancel_replace_file_pattern_dialog(self):
+        temp_dir = Path(self._temp_dir.name, "data")
+        temp_dir.mkdir()
+        self._data_connection.do_add_references([], [FilePattern(temp_dir, "*.json")], [], [])
+        with (
+            mock.patch("spine_items.data_connection.data_connection.FilePatternDialog") as mock_dialog_constructor,
+            mock.patch.object(self._data_connection, "_resources_to_successors_changed") as mock_replace_resources,
+        ):
+            mock_dialog = mock.MagicMock()
+            mock_dialog_constructor.return_value = mock_dialog
+            mock_dialog.exec_.return_value = QDialog.DialogCode.Rejected
+            mock_dialog.file_pattern.return_value = FilePattern(temp_dir, "*.txt")
+            index = self._ref_model.index(0, 0, self._ref_model.index(FILE_PATTERN_ROOT_ROW, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_dialog.exec_.assert_called_once()
+            mock_replace_resources.assert_not_called()
+        self.assertEqual(
+            self._data_connection.resources_for_direct_successors(),
+            [file_resource_in_pack("DC", str(FilePattern(temp_dir, "*.json")))],
+        )
+
+    def test_replace_file_pattern_with_same_pattern_gives_warning(self):
+        temp_dir = Path(self._temp_dir.name, "data")
+        temp_dir.mkdir()
+        self._data_connection.do_add_references([], [FilePattern(temp_dir, "*.json")], [], [])
+        with (
+            mock.patch("spine_items.data_connection.data_connection.FilePatternDialog") as mock_dialog_constructor,
+            mock.patch.object(self._data_connection, "_resources_to_successors_changed") as mock_replace_resources,
+            mock.patch.object(self._toolbox, "msg_warning") as mock_warning,
+        ):
+            mock_dialog = mock.MagicMock()
+            mock_dialog_constructor.return_value = mock_dialog
+            mock_dialog.exec_.return_value = QDialog.DialogCode.Accepted
+            mock_dialog.file_pattern.return_value = FilePattern(temp_dir, "*.json")
+            index = self._ref_model.index(0, 0, self._ref_model.index(FILE_PATTERN_ROOT_ROW, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_dialog.exec_.assert_called_once()
+            mock_warning.emit.assert_called_once_with(
+                f"File pattern <b>{FilePattern(temp_dir, '*.json')}</b> already exists"
+            )
+            mock_replace_resources.assert_not_called()
+        self.assertEqual(
+            self._data_connection.resources_for_direct_successors(),
+            [file_resource_in_pack("DC", str(FilePattern(temp_dir, "*.json")))],
+        )
+
+    def test_undo_replace_file_pattern(self):
+        temp_dir = Path(self._temp_dir.name, "data")
+        temp_dir.mkdir()
+        self._data_connection.do_add_references([], [FilePattern(temp_dir, "*.json")], [], [])
+        with (mock.patch("spine_items.data_connection.data_connection.FilePatternDialog") as mock_dialog_constructor,):
+            mock_dialog = mock.MagicMock()
+            mock_dialog_constructor.return_value = mock_dialog
+            mock_dialog.exec_.return_value = QDialog.DialogCode.Accepted
+            mock_dialog.file_pattern.return_value = FilePattern(temp_dir, "*.txt")
+            index = self._ref_model.index(0, 0, self._ref_model.index(FILE_PATTERN_ROOT_ROW, 0))
+            self._data_connection.select_another_target_for_reference(index)
+            mock_dialog.exec_.assert_called_once()
+        with mock.patch.object(self._data_connection, "_resources_to_successors_changed") as mock_replace_resources:
+            self.assertEqual(
+                self._toolbox.undo_stack.text(self._toolbox.undo_stack.count() - 1), "update file pattern in DC"
+            )
+            self._toolbox.undo_stack.undo()
+            mock_replace_resources.assert_called_once()
+        self.assertEqual(
+            self._data_connection.resources_for_direct_successors(),
+            [file_resource_in_pack("DC", str(FilePattern(temp_dir, "*.json")))],
+        )
+
     def test_replace_directory_reference_via_dialog(self):
         old_dir = Path(self._temp_dir.name, "old_target_dir")
         old_dir.mkdir()
         new_dir = Path(self._temp_dir.name, "new_target_dir")
         new_dir.mkdir()
-        self._data_connection.do_add_references([], [str(old_dir)], [])
+        self._data_connection.do_add_references([], [], [str(old_dir)], [])
         old_resources = self._data_connection.resources_for_direct_successors()
         with (
             mock.patch(
@@ -289,7 +428,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
         ):
             mock_directory_dialog.return_value = new_dir.as_posix()
-            index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(DIRECTORY_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             mock_directory_dialog.assert_called_once()
             new_resources = self._data_connection.resources_for_direct_successors()
@@ -300,7 +439,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
     def test_cancel_replace_directory_reference_dialog(self):
         old_dir = Path(self._temp_dir.name, "old_target_dir")
         old_dir.mkdir()
-        self._data_connection.do_add_references([], [str(old_dir)], [])
+        self._data_connection.do_add_references([], [], [str(old_dir)], [])
         with (
             mock.patch(
                 "spine_items.data_connection.data_connection.QFileDialog.getExistingDirectory"
@@ -308,7 +447,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
         ):
             mock_directory_dialog.return_value = ""
-            index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(DIRECTORY_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             mock_directory_dialog.assert_called_once()
             mock_replace_resources.assert_not_called()
@@ -318,7 +457,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
     def test_replace_directory_reference_with_same_directory_gives_warning(self):
         old_dir = Path(self._temp_dir.name, "old_target_dir")
         old_dir.mkdir()
-        self._data_connection.do_add_references([], [str(old_dir)], [])
+        self._data_connection.do_add_references([], [], [str(old_dir)], [])
         with (
             mock.patch(
                 "spine_items.data_connection.data_connection.QFileDialog.getExistingDirectory"
@@ -328,7 +467,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         ):
             mock_directory_dialog.return_value = old_dir.as_posix()
             mock_warning.emit = mock.MagicMock()
-            index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(DIRECTORY_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             mock_directory_dialog.assert_called_once()
             mock_replace_resources.assert_not_called()
@@ -341,7 +480,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         old_dir.mkdir()
         new_dir = Path(self._temp_dir.name, "new_target_dir")
         new_dir.mkdir()
-        self._data_connection.do_add_references([], [str(old_dir)], [])
+        self._data_connection.do_add_references([], [], [str(old_dir)], [])
         old_resources = self._data_connection.resources_for_direct_successors()
         with (
             mock.patch(
@@ -350,7 +489,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
         ):
             mock_directory_dialog.return_value = new_dir.as_posix()
-            index = self._ref_model.index(0, 0, self._ref_model.index(1, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(DIRECTORY_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             new_resources = self._data_connection.resources_for_direct_successors()
             mock_replace_resources.assert_called_once_with(old_resources, new_resources)
@@ -363,7 +502,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self.assertEqual(directory_references, [str(old_dir)])
 
     def test_replace_URL_reference_via_dialog(self):
-        old_url = {
+        old_url: UrlDict = {
             "dialect": "mysql",
             "host": "example.com",
             "port": 2323,
@@ -373,7 +512,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             "password": "caesar",
         }
         new_url = dict(old_url, username="gaius", password="octavius")
-        self._data_connection.do_add_references([], [], [old_url])
+        self._data_connection.do_add_references([], [], [], [old_url])
         old_resources = self._data_connection.resources_for_direct_successors()
         with (
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as mock_dialog_exec,
@@ -382,7 +521,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         ):
             mock_dialog_exec.return_value = UrlSelectorDialog.DialogCode.Accepted
             mock_url_getter.return_value = new_url
-            index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(URL_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             mock_dialog_exec.assert_called_once()
             mock_url_getter.assert_called_once()
@@ -391,7 +530,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self.assertEqual(list(self._data_connection.db_reference_iter()), [new_url])
 
     def test_cancel_replace_URL_dialog(self):
-        old_url = {
+        old_url: UrlDict = {
             "dialect": "mysql",
             "host": "example.com",
             "port": 2323,
@@ -400,20 +539,20 @@ class TestDataConnectionWithProject(unittest.TestCase):
             "username": "julius",
             "password": "caesar",
         }
-        self._data_connection.do_add_references([], [], [old_url])
+        self._data_connection.do_add_references([], [], [], [old_url])
         with (
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as mock_dialog_exec,
             mock.patch.object(self._data_connection, "_resources_to_successors_replaced") as mock_replace_resources,
         ):
             mock_dialog_exec.return_value = UrlSelectorDialog.DialogCode.Rejected
-            index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(URL_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             mock_dialog_exec.assert_called_once()
             mock_replace_resources.assert_not_called()
         self.assertEqual(list(self._data_connection.db_reference_iter()), [old_url])
 
     def test_replace_URL_reference_with_same_reference_gives_warning(self):
-        old_url = {
+        old_url: UrlDict = {
             "dialect": "mysql",
             "host": "example.com",
             "port": 2323,
@@ -422,7 +561,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             "username": "julius",
             "password": "caesar",
         }
-        self._data_connection.do_add_references([], [], [old_url])
+        self._data_connection.do_add_references([], [], [], [old_url])
         with (
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as mock_dialog_exec,
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.url_dict") as mock_url_getter,
@@ -432,7 +571,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             mock_dialog_exec.return_value = UrlSelectorDialog.DialogCode.Accepted
             mock_url_getter.return_value = old_url
             mock_warning.emit = mock.MagicMock()
-            index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(URL_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             mock_dialog_exec.assert_called_once()
             mock_url_getter.assert_called_once()
@@ -443,7 +582,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self.assertEqual(list(self._data_connection.db_reference_iter()), [old_url])
 
     def test_undo_replace_URL_reference(self):
-        old_url = {
+        old_url: UrlDict = {
             "dialect": "mysql",
             "host": "example.com",
             "port": 2323,
@@ -453,7 +592,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             "password": "caesar",
         }
         new_url = dict(old_url, username="gaius", password="octavius")
-        self._data_connection.do_add_references([], [], [old_url])
+        self._data_connection.do_add_references([], [], [], [old_url])
         old_resources = self._data_connection.resources_for_direct_successors()
         with (
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as mock_dialog_exec,
@@ -462,7 +601,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         ):
             mock_dialog_exec.return_value = UrlSelectorDialog.DialogCode.Accepted
             mock_url_getter.return_value = new_url
-            index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            index = self._ref_model.index(0, 0, self._ref_model.index(URL_ROOT_ROW, 0))
             self._data_connection.select_another_target_for_reference(index)
             new_resources = self._data_connection.resources_for_direct_successors()
             mock_replace_resources.assert_called_once_with(old_resources, new_resources)
@@ -499,7 +638,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection.show_add_file_references_dialog()
             self.assertEqual(1, mock_filenames.call_count)
             self.assertEqual(2, len(self._data_connection.file_references))
-            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(0, 0)))
+            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(FILE_REF_ROOT_ROW, 0)))
             # Second add a couple of dbs as refs
             url_selector_exec.return_value = QDialog.DialogCode.Accepted
             url_selector_url_dict.return_value = {
@@ -522,38 +661,72 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection.show_add_db_reference_dialog()
             self.assertEqual(2, url_selector_exec.call_count)
             self.assertEqual(2, len(list(self._data_connection.db_reference_iter())))
-            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(2, 0)))
+            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(URL_ROOT_ROW, 0)))
             # Test with no indexes selected
             mock_selected_indexes.return_value = []
             self._data_connection.remove_references()
             self.assertEqual(1, mock_selected_indexes.call_count)
             self.assertEqual(2, len(self._data_connection.file_references))
-            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(0, 0)))
+            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(FILE_REF_ROOT_ROW, 0)))
             # Set one file selected and remove it
-            a_index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+            a_index = self._ref_model.index(0, 0, self._ref_model.index(FILE_REF_ROOT_ROW, 0))
             mock_selected_indexes.return_value = [a_index]
             self._data_connection.remove_references()
             self.assertEqual(2, mock_selected_indexes.call_count)
             self.assertEqual(1, len(self._data_connection.file_references))
-            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(0, 0)))
+            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(FILE_REF_ROOT_ROW, 0)))
             # Check that the remaining file is the one that's supposed to be there
             self.assertEqual([str(b)], self._data_connection.file_references)
-            self.assertEqual(str(b), self._ref_model.item(0).child(0).data(Qt.ItemDataRole.DisplayRole))
+            self.assertEqual(str(b), self._ref_model.item(FILE_REF_ROOT_ROW).child(0).data(Qt.ItemDataRole.DisplayRole))
             # Set one db selected and remove it
-            db1_index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            db1_index = self._ref_model.index(0, 0, self._ref_model.index(URL_ROOT_ROW, 0))
             mock_selected_indexes.return_value = [db1_index]
             self._data_connection.remove_references()
             self.assertEqual(3, mock_selected_indexes.call_count)
             self.assertEqual(1, len(list(self._data_connection.db_reference_iter())))
-            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(2, 0)))
+            self.assertEqual(1, self._ref_model.rowCount(self._ref_model.index(URL_ROOT_ROW, 0)))
+
+    def test_remove_file_pattern(self):
+        file_dir = Path(self._temp_dir.name, "files")
+        file_dir.mkdir()
+        self._data_connection.activate()
+        self._data_connection.do_add_references([], [FilePattern(file_dir, "*.dat")], [], [])
+        self.assertEqual(list(self._data_connection.file_pattern_iter()), [FilePattern(file_dir, "*.dat")])
+        root_index = self._ref_model.index(FILE_PATTERN_ROOT_ROW, 0)
+        self.assertEqual(self._ref_model.rowCount(root_index), 1)
+        pattern_index = self._ref_model.index(0, 0, root_index)
+        self._data_connection._properties_ui.treeView_dc_references.selectionModel().select(
+            pattern_index, QItemSelectionModel.SelectionFlag.ClearAndSelect
+        )
+        self._data_connection.remove_references()
+        self.assertEqual(list(self._data_connection.file_pattern_iter()), [])
+
+    def test_undo_removing_file_pattern(self):
+        file_dir = Path(self._temp_dir.name, "files")
+        file_dir.mkdir()
+        self._data_connection.activate()
+        self._data_connection.do_add_references([], [FilePattern(file_dir, "*.dat")], [], [])
+        root_index = self._ref_model.index(FILE_PATTERN_ROOT_ROW, 0)
+        self.assertEqual(self._ref_model.rowCount(root_index), 1)
+        pattern_index = self._ref_model.index(0, 0, root_index)
+        self._data_connection._properties_ui.treeView_dc_references.selectionModel().select(
+            pattern_index, QItemSelectionModel.SelectionFlag.ClearAndSelect
+        )
+        self._data_connection.remove_references()
+        self.assertEqual(list(self._data_connection.file_pattern_iter()), [])
+        self.assertEqual(
+            self._toolbox.undo_stack.text(self._toolbox.undo_stack.count() - 1), "remove references from DC"
+        )
+        self._toolbox.undo_stack.undo()
+        self.assertEqual(list(self._data_connection.file_pattern_iter()), [FilePattern(file_dir, "*.dat")])
 
     def test_remove_directory_reference(self):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
         self._data_connection.activate()
-        self._data_connection.do_add_references([], [str(temp_dir)], [])
+        self._data_connection.do_add_references([], [], [str(temp_dir)], [])
         self.assertEqual(list(self._data_connection.directory_iter()), [str(temp_dir)])
-        directory_root_index = self._ref_model.index(1, 0)
+        directory_root_index = self._ref_model.index(DIRECTORY_ROOT_ROW, 0)
         self.assertEqual(self._ref_model.rowCount(directory_root_index), 1)
         directory_ref_index = self._ref_model.index(0, 0, directory_root_index)
         self._data_connection._properties_ui.treeView_dc_references.selectionModel().select(
@@ -566,8 +739,8 @@ class TestDataConnectionWithProject(unittest.TestCase):
         temp_dir = Path(self._temp_dir.name, "references")
         temp_dir.mkdir()
         self._data_connection.activate()
-        self._data_connection.do_add_references([], [str(temp_dir)], [])
-        directory_root_index = self._ref_model.index(1, 0)
+        self._data_connection.do_add_references([], [], [str(temp_dir)], [])
+        directory_root_index = self._ref_model.index(DIRECTORY_ROOT_ROW, 0)
         self.assertEqual(self._ref_model.rowCount(directory_root_index), 1)
         directory_ref_index = self._ref_model.index(0, 0, directory_root_index)
         self._data_connection._properties_ui.treeView_dc_references.selectionModel().select(
@@ -603,14 +776,14 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection.show_add_file_references_dialog()
             self.assertEqual(1, mock_filenames.call_count)
             self.assertEqual(2, len(self._data_connection.file_references))
-            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(0, 0)))
+            self.assertEqual(2, self._ref_model.rowCount(self._ref_model.index(FILE_REF_ROOT_ROW, 0)))
             # Second add a couple of dbs as refs
             url_selector_url.return_value = "mysql://scott:tiger@host:3306/db"
             self._data_connection.show_add_db_reference_dialog()
             indexes = self._data_connection._properties_ui.treeView_dc_references.selectedIndexes()
             self.assertTrue(len(indexes) == 0)
             # Set index selected
-            file_ref_root_index = self._ref_model.index(0, 0)
+            file_ref_root_index = self._ref_model.index(FILE_REF_ROOT_ROW, 0)
             ref_index = self._ref_model.index(0, 0, file_ref_root_index)
             self._data_connection._properties_ui.treeView_dc_references.selectionModel().select(
                 ref_index, QItemSelectionModel.SelectionFlag.Select
@@ -620,8 +793,8 @@ class TestDataConnectionWithProject(unittest.TestCase):
             self._data_connection._properties_ui.treeView_dc_references.del_key_pressed.emit()
             self.assertEqual(1, len(self._data_connection.file_references))
             # Remove remaining two simultaneously by selecting bith and removing them with delete key
-            file_ref_index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
-            db_ref_index = self._ref_model.index(0, 0, self._ref_model.index(2, 0))
+            file_ref_index = self._ref_model.index(0, 0, self._ref_model.index(FILE_REF_ROOT_ROW, 0))
+            db_ref_index = self._ref_model.index(0, 0, self._ref_model.index(URL_ROOT_ROW, 0))
             self._data_connection._properties_ui.treeView_dc_references.selectionModel().select(
                 file_ref_index, QItemSelectionModel.SelectionFlag.Select
             )
@@ -645,7 +818,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         with signal_waiter(self._data_connection.file_system_watcher.file_renamed) as waiter:
             a.rename(renamed_file)
             waiter.wait()
-        index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+        index = self._ref_model.index(0, 0, self._ref_model.index(FILE_REF_ROOT_ROW, 0))
         self.assertEqual(index.data(), str(a))
         self.assertTrue(index.data(Qt.ItemDataRole.UserRole + 2))
         self.assertEqual(self._data_connection.file_references, [str(a)])
@@ -661,7 +834,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         with signal_waiter(self._data_connection.file_system_watcher.file_removed) as waiter:
             a.unlink()
             waiter.wait()
-        index = self._ref_model.index(0, 0, self._ref_model.index(0, 0))
+        index = self._ref_model.index(0, 0, self._ref_model.index(FILE_REF_ROOT_ROW, 0))
         self.assertEqual(index.data(), str(a))
         self.assertTrue(index.data(Qt.ItemDataRole.UserRole + 2))
         self.assertEqual(self._data_connection.file_references, [str(a)])
@@ -675,8 +848,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             mock_filenames.return_value = ([str(a)], "*.*")
             self._data_connection.show_add_file_references_dialog()
         self._data_connection.restore_selections()
-        ref_root_index = self._ref_model.index(0, 0)
-        ref_index = self._ref_model.index(0, 0, ref_root_index)
+        ref_index = self._ref_model.index(0, 0, self._ref_model.index(FILE_REF_ROOT_ROW, 0))
         properties_ui = self._toolbox.project_item_properties_ui(self._data_connection.item_type())
         properties_ui.treeView_dc_references.selectionModel().select(
             ref_index, QItemSelectionModel.SelectionFlag.ClearAndSelect
@@ -684,7 +856,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
         with signal_waiter(self._data_connection.file_system_watcher.file_added) as waiter:
             self._data_connection.copy_to_project()
             waiter.wait()
-        self.assertEqual(self._ref_model.rowCount(ref_root_index), 0)
+        self.assertEqual(self._ref_model.rowCount(self._ref_model.index(FILE_REF_ROOT_ROW, 0)), 0)
         self.assertTrue(Path(self._toolbox.project().items_dir, "dc", "a.txt").exists())
         self.assertEqual(self._data_connection.data_model.rowCount(), 1)
         index = self._data_connection.data_model.index(0, 0)
@@ -750,6 +922,7 @@ class TestDataConnectionWithProject(unittest.TestCase):
             "x",
             "y",
             "file_references",
+            "file_patterns",
             "directory_references",
             "db_references",
             "db_credentials",
@@ -922,15 +1095,15 @@ class TestDataConnectionWithProject(unittest.TestCase):
         self.assertTrue(self._data_connection._db_ref_root.child(0, 0).data(_Role.MISSING))
         self._data_connection.restore_selections()
         self._data_connection._connect_signals()
-        db_ref_root_index = self._ref_model.index(2, 0)
-        ref_index = self._ref_model.index(0, 0, db_ref_root_index)
+        db_ref_root_index = self._ref_model.index(URL_ROOT_ROW, 0)
+        ref_index = self._ref_model.index(FILE_REF_ROOT_ROW, 0, db_ref_root_index)
         self._data_connection._properties_ui.treeView_dc_references.selectionModel().select(
             ref_index, QItemSelectionModel.SelectionFlag.Select
         )
         self._data_connection.refresh_references()
         while self._data_connection._database_validator.is_busy():
             QApplication.processEvents()
-        self.assertFalse(self._data_connection._db_ref_root.child(0, 0).data(_Role.MISSING))
+        self.assertFalse(self._data_connection._db_ref_root.child(FILE_REF_ROOT_ROW, 0).data(_Role.MISSING))
 
     def test_broken_sqlite_url_marks_the_reference_missing(self):
         db_path = Path(self._temp_dir.name, "db.sqlite")
@@ -1008,6 +1181,70 @@ class TestDataConnectionWithProject(unittest.TestCase):
         watched_dirs = self._data_connection.file_system_watcher.directories()
         self.assertEqual(1, len(watched_dirs))
         self.assertEqual(self._data_connection.data_dir, watched_dirs[0])
+
+    def test_selection_states(self):
+        data_dir = Path(self._temp_dir.name, "data_dir")
+        data_dir.mkdir()
+        (data_dir / "data.dat").touch()
+        pattern_dir = Path(self._temp_dir.name, "pattern_dir")
+        pattern_dir.mkdir()
+        dir_dir = Path(self._temp_dir.name, "dir_dir")
+        dir_dir.mkdir()
+        url: UrlDict = {
+            "dialect": "mysql",
+            "host": "tools-for-energy-system-modelling.com",
+            "port": 555,
+            "database": "input",
+            "username": "albert",
+            "password": "zweistein",
+        }
+        self._data_connection.do_add_references(
+            [str(data_dir)], [FilePattern(pattern_dir, "*.gdx")], [str(dir_dir)], [url]
+        )
+        self._data_connection.activate()
+        self.assertFalse(self._data_connection.any_refs_selected)
+        self.assertFalse(self._data_connection.file_refs_selected)
+        self.assertFalse(self._data_connection.current_is_file_ref)
+        self.assertFalse(self._data_connection.current_is_file_pattern)
+        self.assertFalse(self._data_connection.current_is_directory_ref)
+        properties_ui = self._data_connection._properties_ui
+        selection_model = properties_ui.treeView_dc_references.selectionModel()
+        root_index = self._ref_model.index(FILE_REF_ROOT_ROW, 0)
+        selection_model.setCurrentIndex(
+            self._ref_model.index(0, 0, root_index), QItemSelectionModel.SelectionFlag.ClearAndSelect
+        )
+        self.assertTrue(self._data_connection.any_refs_selected)
+        self.assertTrue(self._data_connection.file_refs_selected)
+        self.assertTrue(self._data_connection.current_is_file_ref)
+        self.assertFalse(self._data_connection.current_is_file_pattern)
+        self.assertFalse(self._data_connection.current_is_directory_ref)
+        root_index = self._ref_model.index(FILE_PATTERN_ROOT_ROW, 0)
+        selection_model.setCurrentIndex(
+            self._ref_model.index(0, 0, root_index), QItemSelectionModel.SelectionFlag.ClearAndSelect
+        )
+        self.assertTrue(self._data_connection.any_refs_selected)
+        self.assertFalse(self._data_connection.file_refs_selected)
+        self.assertFalse(self._data_connection.current_is_file_ref)
+        self.assertTrue(self._data_connection.current_is_file_pattern)
+        self.assertFalse(self._data_connection.current_is_directory_ref)
+        root_index = self._ref_model.index(DIRECTORY_ROOT_ROW, 0)
+        selection_model.setCurrentIndex(
+            self._ref_model.index(0, 0, root_index), QItemSelectionModel.SelectionFlag.ClearAndSelect
+        )
+        self.assertTrue(self._data_connection.any_refs_selected)
+        self.assertFalse(self._data_connection.file_refs_selected)
+        self.assertFalse(self._data_connection.current_is_file_ref)
+        self.assertFalse(self._data_connection.current_is_file_pattern)
+        self.assertTrue(self._data_connection.current_is_directory_ref)
+        root_index = self._ref_model.index(URL_ROOT_ROW, 0)
+        selection_model.setCurrentIndex(
+            self._ref_model.index(0, 0, root_index), QItemSelectionModel.SelectionFlag.ClearAndSelect
+        )
+        self.assertTrue(self._data_connection.any_refs_selected)
+        self.assertFalse(self._data_connection.file_refs_selected)
+        self.assertFalse(self._data_connection.current_is_file_ref)
+        self.assertFalse(self._data_connection.current_is_file_pattern)
+        self.assertFalse(self._data_connection.current_is_directory_ref)
 
 
 class TestDataConnectionWithInitialDataFile(unittest.TestCase):
@@ -1106,12 +1343,14 @@ class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
             mock_filenames.return_value = ([str(a)], "*.*")
             self.data_connection.show_add_file_references_dialog()
             self.assertEqual(2, len(self.data_connection.file_references))
-            self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(0, 0)))
-            self.assertEqual(self._non_existent_path, self.ref_model.index(0, 0, self.ref_model.index(0, 0)).data())
-            self.assertEqual(str(a), self.ref_model.index(1, 0, self.ref_model.index(0, 0)).data())
+            self.assertEqual(2, self.ref_model.rowCount(self.ref_model.index(FILE_REF_ROOT_ROW, 0)))
+            self.assertEqual(
+                self._non_existent_path, self.ref_model.index(0, 0, self.ref_model.index(FILE_REF_ROOT_ROW, 0)).data()
+            )
+            self.assertEqual(str(a), self.ref_model.index(1, 0, self.ref_model.index(FILE_REF_ROOT_ROW, 0)).data())
 
     def test_refresh_file_reference(self):
-        root_index = self.ref_model.index(0, 0)
+        root_index = self.ref_model.index(FILE_REF_ROOT_ROW, 0)
         reference_index = self.ref_model.index(0, 0, root_index)
         self.assertEqual(reference_index.data(Qt.ItemDataRole.ToolTipRole), "The file is missing.")
         Path(self._non_existent_path).touch()
@@ -1122,6 +1361,31 @@ class TestDataConnectionWithInvalidFileReference(unittest.TestCase):
         self.data_connection.refresh_references()
         self.assertIsNone(reference_index.data(Qt.ItemDataRole.ToolTipRole), "The file is missing.")
         self.project.notify_resource_changes_to_successors.assert_called_once_with(self.data_connection)
+
+
+class TestDataConnectionWithInvalidFilePattern:
+    def test_invalid_reference_is_marked_in_model(self, spine_toolbox_with_project):
+        factory = DataConnectionFactory()
+        project = spine_toolbox_with_project.project()
+        non_existent_directory = Path(project.project_dir, "non_existent")
+        file_pattern = FilePattern(non_existent_directory, "data?.csv")
+        item_dict = {
+            "type": "Data Connection",
+            "description": "",
+            "file_patterns": [file_pattern.to_dict(project.project_dir)],
+            "x": 0,
+            "y": 0,
+        }
+        data_connection: DataConnection = factory.make_item("DC", item_dict, spine_toolbox_with_project, project)
+        project.add_item(data_connection)
+        ref_model = data_connection.reference_model
+        assert ref_model.rowCount() == 4
+        root_index = ref_model.index(FILE_PATTERN_ROOT_ROW, 0)
+        assert ref_model.rowCount(root_index) == 1
+        missing_pattern_index = ref_model.index(0, 0, root_index)
+        assert missing_pattern_index.data() == str(file_pattern)
+        assert missing_pattern_index.data(Qt.ItemDataRole.ForegroundRole) == Qt.GlobalColor.red
+        assert missing_pattern_index.data(Qt.ItemDataRole.ToolTipRole) == "The directory is missing."
 
 
 class TestDataConnectionWithInvalidDirectoryReference:
@@ -1139,8 +1403,8 @@ class TestDataConnectionWithInvalidDirectoryReference:
         data_connection: DataConnection = factory.make_item("DC", item_dict, spine_toolbox_with_project, project)
         project.add_item(data_connection)
         ref_model = data_connection.reference_model
-        assert ref_model.rowCount() == 3
-        directory_root_index = ref_model.index(1, 0)
+        assert ref_model.rowCount() == 4
+        directory_root_index = ref_model.index(DIRECTORY_ROOT_ROW, 0)
         assert ref_model.rowCount(directory_root_index) == 1
         missing_directory_index = ref_model.index(0, 0, directory_root_index)
         assert missing_directory_index.data() == str(non_existent_directory)

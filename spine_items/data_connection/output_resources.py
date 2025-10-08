@@ -18,12 +18,14 @@ from spine_engine.project_item.project_item_resource import (
     ProjectItemResource,
     directory_resource,
     file_resource,
+    file_resource_in_pack,
     transient_file_resource,
     url_resource,
 )
 from spine_engine.utils.serialization import path_in_dir
 from spinedb_api.helpers import remove_credentials_from_url
 from ..utils import UrlDict, convert_to_sqlalchemy_url
+from .utils import FilePattern
 
 if TYPE_CHECKING:
     from .data_connection import DataConnection
@@ -33,6 +35,7 @@ if TYPE_CHECKING:
 def scan_for_resources(
     provider: DataConnection | ExecutableItem,
     file_paths: list[str],
+    file_patterns: list[FilePattern],
     directories: list[str],
     urls: list[UrlDict],
     project_dir: str,
@@ -43,6 +46,7 @@ def scan_for_resources(
     Args:
         provider: resource provider item
         file_paths: file paths
+        file_patterns: file paths with wildcards
         directories: directory paths
         urls: urls
         project_dir: absolute path to project directory
@@ -72,6 +76,20 @@ def scan_for_resources(
         except PermissionError:
             continue
         resources.append(resource)
+    for pattern in file_patterns:
+        if path_in_dir(pattern.base_path, project_dir):
+            label = "<project>/" + (pattern.base_path.relative_to(project_dir) / pattern.pattern).as_posix()
+        else:
+            label = (pattern.base_path / pattern.pattern).as_posix()
+        pattern_resources = [
+            file_resource_in_pack(provider.name, label, str(path))
+            for path in pattern.base_path.glob(pattern.pattern)
+            if path.is_file()
+        ]
+        if pattern_resources:
+            resources += pattern_resources
+        else:
+            resources.append(file_resource_in_pack(provider.name, label, None))
     for directory in directories:
         if path_in_dir(directory, project_dir):
             label = "<project>/" + Path(directory).relative_to(project_dir).as_posix()

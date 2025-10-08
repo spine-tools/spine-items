@@ -28,7 +28,7 @@ class _ValidationTask(QRunnable):
         sa_url: URL,
         finish_slot: Callable[[], None],
         fail_slot: Callable[[str, URL], None],
-        success_slot: Callable[[URL], None],
+        success_slot: Callable[[URL], None] | None,
     ):
         """
         Args:
@@ -114,7 +114,11 @@ class DatabaseConnectionValidator(QObject):
         return self._busy
 
     def validate_url(
-        self, dialect: str, sa_url: URL, fail_slot: Callable[[str, URL], None], success_slot: Callable[[URL], None]
+        self,
+        dialect: str,
+        sa_url: URL,
+        fail_slot: Callable[[str, URL], None],
+        success_slot: Callable[[URL], None] | None,
     ) -> None:
         """Connects signals and starts a task to validate the given URL.
 

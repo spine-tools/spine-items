@@ -11,10 +11,29 @@
 ######################################################################################################################
 
 """This module contains utilities for Data Connection."""
+from __future__ import annotations
+from dataclasses import dataclass
+import pathlib
 import sys
 import urllib.parse
-from spine_engine.utils.serialization import deserialize_path
+from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spine_items.utils import UrlDict, convert_url_to_safe_string
+
+
+@dataclass(frozen=True)
+class FilePattern:
+    base_path: pathlib.Path
+    pattern: str
+
+    def __str__(self):
+        return (self.base_path / self.pattern).as_posix()
+
+    def to_dict(self, project_dir: str) -> dict:
+        return {"base_path": serialize_path(str(self.base_path), project_dir), "pattern": self.pattern}
+
+    @staticmethod
+    def from_dict(serialized: dict, project_dir: str) -> FilePattern:
+        return FilePattern(pathlib.Path(deserialize_path(serialized["base_path"], project_dir)), serialized["pattern"])
 
 
 def restore_database_references(
