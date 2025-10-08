@@ -11,47 +11,91 @@
 ######################################################################################################################
 
 """Contains utilities to scan for Data Connection's output resources."""
+from __future__ import annotations
 from pathlib import Path
-from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource, url_resource
+from typing import TYPE_CHECKING
+from spine_engine.project_item.project_item_resource import (
+    ProjectItemResource,
+    directory_resource,
+    file_resource,
+    file_resource_in_pack,
+    transient_file_resource,
+    url_resource,
+)
 from spine_engine.utils.serialization import path_in_dir
 from spinedb_api.helpers import remove_credentials_from_url
-from ..utils import convert_to_sqlalchemy_url
+from ..utils import UrlDict, convert_to_sqlalchemy_url
+from .utils import FilePattern
+
+if TYPE_CHECKING:
+    from .data_connection import DataConnection
+    from .executable_item import ExecutableItem
 
 
-def scan_for_resources(provider, file_paths, urls, project_dir):
+def scan_for_resources(
+    provider: DataConnection | ExecutableItem,
+    file_paths: list[str],
+    file_patterns: list[FilePattern],
+    directories: list[str],
+    urls: list[UrlDict],
+    project_dir: str,
+) -> list[ProjectItemResource]:
     """
     Creates file and URL resources based on DC's references and data.
 
     Args:
-        provider (ProjectItem or ExecutableItem): resource provider item
-        file_paths (list of str): file paths
-        urls (list of dict): urls
-        project_dir (str): absolute path to project directory
+        provider: resource provider item
+        file_paths: file paths
+        file_patterns: file paths with wildcards
+        directories: directory paths
+        urls: urls
+        project_dir: absolute path to project directory
 
     Returns:
-        list of ProjectItemResource: output resources
+        output resources
     """
     resources = []
     for fp in file_paths:
+        path = Path(fp)
         try:
             if path_in_dir(fp, provider.data_dir):
                 resource = file_resource(
-                    provider.name, fp, label=f"<{provider.name}>/" + Path(fp).relative_to(provider.data_dir).as_posix()
+                    provider.name, fp, label=f"<{provider.name}>/" + path.relative_to(provider.data_dir).as_posix()
                 )
             elif path_in_dir(fp, project_dir):
-                path = Path(fp)
-                label = "<project>/" + Path(fp).relative_to(project_dir).as_posix()
+                label = "<project>/" + path.relative_to(project_dir).as_posix()
                 if path.exists():
                     resource = file_resource(provider.name, fp, label=label)
                 else:
                     resource = transient_file_resource(provider.name, label)
             else:
-                if Path(fp).exists():
+                if path.exists():
                     resource = file_resource(provider.name, fp)
                 else:
                     resource = transient_file_resource(provider.name, fp)
         except PermissionError:
             continue
+        resources.append(resource)
+    for pattern in file_patterns:
+        if path_in_dir(pattern.base_path, project_dir):
+            label = "<project>/" + (pattern.base_path.relative_to(project_dir) / pattern.pattern).as_posix()
+        else:
+            label = (pattern.base_path / pattern.pattern).as_posix()
+        pattern_resources = [
+            file_resource_in_pack(provider.name, label, str(path))
+            for path in pattern.base_path.glob(pattern.pattern)
+            if path.is_file()
+        ]
+        if pattern_resources:
+            resources += pattern_resources
+        else:
+            resources.append(file_resource_in_pack(provider.name, label, None))
+    for directory in directories:
+        if path_in_dir(directory, project_dir):
+            label = "<project>/" + Path(directory).relative_to(project_dir).as_posix()
+            resource = directory_resource(provider.name, directory, label=label)
+        else:
+            resource = directory_resource(provider.name, directory)
         resources.append(resource)
     for url in urls:
         str_url = str(convert_to_sqlalchemy_url(url))

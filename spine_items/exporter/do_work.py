@@ -15,6 +15,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 from time import time
+from spine_engine.logger_interface import LoggerInterface
 from spine_engine.utils.helpers import write_filter_id_file
 from spinedb_api import DatabaseMapping, SpineDBAPIError
 from spinedb_api.spine_io.exporters.csv_writer import CsvWriter
@@ -22,7 +23,7 @@ from spinedb_api.spine_io.exporters.excel_writer import ExcelWriter
 from spinedb_api.spine_io.exporters.gdx_writer import GdxWriter
 from spinedb_api.spine_io.exporters.sql_writer import SqlWriter
 from spinedb_api.spine_io.exporters.writer import WriterException, write
-from ..utils import convert_to_sqlalchemy_url, split_url_credentials
+from ..utils import UrlDict, convert_to_sqlalchemy_url, split_url_credentials
 from .specification import OutputFormat, Specification
 
 
@@ -33,8 +34,8 @@ def do_work(
     cancel_on_error,
     gams_path,
     out_dir,
-    databases,
-    out_urls,
+    databases: dict[str, str],
+    out_urls: dict[str, UrlDict],
     filter_id,
     filter_subdirectory,
     logger,
@@ -50,7 +51,7 @@ def do_work(
         gams_path (str): path to GAMS installation
         out_dir (str): base output directory
         databases (dict): databases to export
-        out_urls (dict): output URLs
+        out_urls: output URLs
         filter_id (str): filter id
         filter_subdirectory (str): name of extra subdirectory used when filters have been applied
         logger (LoggerInterface): a logger
@@ -173,25 +174,32 @@ def _export_to_file(
     return True
 
 
-def _export_to_database(database_map, specification, out_url, successes, cancel_on_error, logger):
+def _export_to_database(
+    database_map: DatabaseMapping,
+    specification: Specification,
+    out_url: UrlDict,
+    successes: list[bool],
+    cancel_on_error: bool,
+    logger: LoggerInterface,
+) -> bool:
     """Exports into fixed output database.
 
     Args:
-        database_map (DatabaseMapping): source database map
-        specification (Specification): export specification dictionary
-        out_url (dict): output URL
-        successes (list of bool): history of success statuses
-        cancel_on_error (bool): if True, bails out on non-fatal errors
-        logger (LoggerInterface): a logger
+        database_map: source database map
+        specification: export specification dictionary
+        out_url: output URL
+        successes: history of success statuses
+        cancel_on_error: if True, bails out on non-fatal errors
+        logger: a logger
 
     Returns:
-        bool: True if operation was successful, False otherwise
+        True if operation was successful, False otherwise
     """
     url = convert_to_sqlalchemy_url(out_url, logger=logger)
     if url is None:
         return True
     try:
-        writer = SqlWriter(str(url), overwrite_existing=False)
+        writer = SqlWriter(url.render_as_string(hide_password=False), overwrite_existing=False)
         specifications = specification.enabled_specifications().values()
         mappings = (m.root for m in specifications)
         header_always = (m.always_export_header for m in specifications)

@@ -13,16 +13,18 @@
 """Unit tests for Importer project item."""
 import collections
 import os
+import pathlib
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMenu
-from spine_engine.project_item.project_item_resource import file_resource, transient_file_resource
+from spine_engine.project_item.project_item_resource import directory_resource, file_resource, transient_file_resource
 from spine_items.importer.importer import Importer
 from spine_items.importer.importer_factory import ImporterFactory
 from spine_items.importer.importer_specification import ImporterSpecification
 from spine_items.importer.item_info import ItemInfo
+from spinedb_api.import_mapping.import_mapping import default_import_mapping
 from tests.mock_helpers import create_mock_project, create_mock_toolbox, mock_finish_project_item_construction
 
 
@@ -174,5 +176,49 @@ class TestImporter(unittest.TestCase):
         self.assertEqual(selected, [False, True])
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestImporterInputResources:
+    def test_file_resources_get_added_to_list(self, spine_toolbox_with_project):
+        project = spine_toolbox_with_project.project()
+        mapping_root = default_import_mapping("EntityClass")
+        specification = ImporterSpecification("Import data", mapping_root.to_dict())
+        assert project.add_specification(specification, save_to_disk=False) is not None
+        item_dict = {
+            "type": "Importer",
+            "description": "Very best test importer",
+            "specification": "Import data",
+            "cancel_on_error": True,
+            "file_selection": [],
+            "x": 0,
+            "y": 0,
+        }
+        importer = ImporterFactory.make_item("I", item_dict, spine_toolbox_with_project, project)
+        mock_finish_project_item_construction(ImporterFactory, importer, spine_toolbox_with_project)
+        data_dir = pathlib.Path(project.project_dir, "_data_dir")
+        data_dir.mkdir()
+        data_file = data_dir / "file.csv"
+        data_file.touch()
+        upstream_resources = [file_resource("Data Connection", str(data_file))]
+        importer.upstream_resources_updated(upstream_resources)
+        assert importer._file_model.rowCount() == 1
+        assert importer._file_model.index(0, 0).data() == str(data_file)
+
+    def test_directory_resources_get_ignored(self, spine_toolbox_with_project):
+        project = spine_toolbox_with_project.project()
+        mapping_root = default_import_mapping("EntityClass")
+        specification = ImporterSpecification("Import data", mapping_root.to_dict())
+        assert project.add_specification(specification, save_to_disk=False) is not None
+        item_dict = {
+            "type": "Importer",
+            "description": "Very best test importer",
+            "specification": "Import data",
+            "cancel_on_error": True,
+            "file_selection": [],
+            "x": 0,
+            "y": 0,
+        }
+        importer = ImporterFactory.make_item("I", item_dict, spine_toolbox_with_project, project)
+        mock_finish_project_item_construction(ImporterFactory, importer, spine_toolbox_with_project)
+        data_dir = pathlib.Path(project.project_dir, "_data_dir")
+        upstream_resources = [directory_resource("Data Connection", str(data_dir))]
+        importer.upstream_resources_updated(upstream_resources)
+        assert importer._file_model.rowCount() == 0

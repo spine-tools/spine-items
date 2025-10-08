@@ -13,6 +13,7 @@
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 import pytest
+from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
 
 @pytest.fixture(scope="module")
@@ -23,3 +24,10 @@ def application():
     yield application_instance
     QTimer.singleShot(0, lambda: application_instance.quit())
     application_instance.exec()
+
+
+@pytest.fixture
+def spine_toolbox_with_project(application, tmp_path):
+    toolbox = create_toolboxui_with_project(str(tmp_path))
+    yield toolbox
+    clean_up_toolbox(toolbox)

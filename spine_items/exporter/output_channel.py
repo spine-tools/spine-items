@@ -14,6 +14,7 @@
 from contextlib import suppress
 from dataclasses import InitVar, dataclass
 from spine_engine.utils.serialization import deserialize_path, serialize_path
+from spine_items.utils import UrlDict
 
 
 @dataclass
@@ -24,9 +25,9 @@ class OutputChannel:
     """Label of input resource."""
     item_name: InitVar[str]
     """Exporter's name."""
-    out_label: str = None
+    out_label: str | None = None
     """Label of output resource. Output file name in case of single file export."""
-    out_url: dict = None
+    out_url: UrlDict | None = None
     """Optional URL for fixed output database."""
 
     def __post_init__(self, item_name):

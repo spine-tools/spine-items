@@ -9,37 +9,23 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""Contains utilities to scan for Data Store's output resources."""
-from __future__ import annotations
-from typing import TYPE_CHECKING
-from sqlalchemy import URL
-from spine_engine.project_item.project_item_resource import ProjectItemResource, database_resource
-from spine_items.utils import database_label
-
-if TYPE_CHECKING:
-    from spine_items.data_store.data_store import DataStore
-    from spine_items.data_store.executable_item import ExecutableItem
+import pathlib
+from spine_items.data_connection.utils import FilePattern
 
 
-def scan_for_resources(provider: DataStore | ExecutableItem, url: URL) -> list[ProjectItemResource]:
-    """
-    Creates db resources based on DS url.
+class TestFilePattern:
+    def test_serialization_outside_of_project_dir(self):
+        path = pathlib.Path(__file__).parent / "data_dir"
+        pattern = FilePattern(path, "*.py")
+        project_dir = str(pathlib.Path(__file__).parent / "project_dir")
+        serialized = pattern.to_dict(project_dir)
+        deserialized = FilePattern.from_dict(serialized, project_dir)
+        assert deserialized == pattern
 
-    Args:
-        provider: resource provider item
-        url: sqlalchemy url
-
-    Returns:
-        output resources
-    """
-    if not url:
-        return []
-    return [
-        database_resource(
-            provider.name,
-            url.render_as_string(hide_password=False),
-            label=database_label(provider.name),
-            filterable=True,
-        )
-    ]
+    def test_serialization_inside_project_dir(self):
+        project_dir = pathlib.Path(__file__).parent / "project_dir"
+        path = project_dir / "data_dir"
+        pattern = FilePattern(path, "*.py")
+        serialized = pattern.to_dict(str(project_dir))
+        deserialized = FilePattern.from_dict(serialized, str(project_dir))
+        assert deserialized == pattern

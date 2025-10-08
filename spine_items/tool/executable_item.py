@@ -23,6 +23,7 @@ import shutil
 import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
+from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.project_item_resource import (
     ProjectItemResource,
     expand_cmd_line_args,
@@ -37,7 +38,6 @@ from spine_engine.utils.helpers import (
     write_filter_id_file,
 )
 from spine_engine.utils.serialization import deserialize_path
-from spinetoolbox.logger_interface import LoggerInterface
 from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 from ..utils import generate_filter_subdirectory_name
 from .item_info import ItemInfo
@@ -707,14 +707,14 @@ class ExecutableItem(DBWriterExecutableItemBase):
         )
 
 
-def _count_files_and_dirs(paths):
+def _count_files_and_dirs(paths: list[str]) -> tuple[int, int]:
     """Counts the number of files and directories in given paths.
 
     Args:
-        paths (list): list of paths
+        paths: list of paths
 
     Returns:
-        tuple: Tuple containing the number of required files and directories.
+        Tuple containing the number of required files and directories.
     """
     n_dir = 0
     n_file = 0

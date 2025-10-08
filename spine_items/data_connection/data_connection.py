@@ -11,28 +11,44 @@
 ######################################################################################################################
 
 """Module for data connection class."""
+from __future__ import annotations
 import logging
 import os
 import pathlib
 import shutil
+from typing import TYPE_CHECKING, Iterator, Literal
 from PySide6.QtCore import QFileInfo, QItemSelection, QModelIndex, Qt, QTimer, Slot
 from PySide6.QtGui import QBrush, QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QFileDialog, QFileIconProvider, QGraphicsItem, QInputDialog, QMessageBox
+from PySide6.QtWidgets import QDialog, QFileDialog, QFileIconProvider, QGraphicsItem, QInputDialog, QMessageBox
+from sqlalchemy import URL
 from spine_engine.utils.serialization import deserialize_path, serialize_path
 from spinedb_api.helpers import remove_credentials_from_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from spinetoolbox.helpers import open_url, same_path
+from spinetoolbox.project import SpineToolboxProject
 from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.widgets.custom_qwidgets import ToolBarWidget
 from ..database_validation import DatabaseConnectionValidator
-from ..utils import convert_to_sqlalchemy_url, convert_url_to_safe_string
+from ..utils import UrlDict, convert_to_sqlalchemy_url, convert_url_to_safe_string
 from ..widgets import UrlSelectorDialog
-from .commands import AddDCReferencesCommand, MoveReferenceToData, RemoveDCReferencesCommand
+from .commands import (
+    AddDCReferencesCommand,
+    MoveReferenceToData,
+    RemoveDCReferencesCommand,
+    UpdateDbUrlReference,
+    UpdateDirectoryReference,
+    UpdateFilePattern,
+    UpdateFileReference,
+)
 from .custom_file_system_watcher import CustomFileSystemWatcher
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from .utils import restore_database_references
+from .utils import FilePattern, restore_database_references
+from .widgets.file_pattern_dialog import FilePatternDialog
+
+if TYPE_CHECKING:
+    from spinetoolbox.ui_main import ToolboxUI
 
 
 class _Role:
@@ -41,7 +57,9 @@ class _Role:
     DATA_FILE_PATH = Qt.ItemDataRole.UserRole + 1
     MISSING = Qt.ItemDataRole.UserRole + 2
     FILE_REFERENCE = Qt.ItemDataRole.UserRole + 3
-    DB_URL_REFERENCE = Qt.ItemDataRole.UserRole + 4
+    FILE_PATTERN = Qt.ItemDataRole.UserRole + 4
+    DIRECTORY_REFERENCE = Qt.ItemDataRole.UserRole + 5
+    DB_URL_REFERENCE = Qt.ItemDataRole.UserRole + 6
 
 
 _MISSING_ITEM_FOREGROUND = QBrush(Qt.GlobalColor.red)
@@ -50,37 +68,61 @@ _MISSING_ITEM_FOREGROUND = QBrush(Qt.GlobalColor.red)
 class DataConnection(ProjectItem):
     """Data connection project item."""
 
-    def __init__(self, name, description, x, y, toolbox, project, file_references=None, db_references=None):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        x: float,
+        y: float,
+        toolbox: ToolboxUI,
+        project: SpineToolboxProject,
+        file_references: list[str] | None = None,
+        file_patterns: list[FilePattern] | None = None,
+        directory_references: list[str] | None = None,
+        db_references: list[UrlDict] | None = None,
+    ):
         """
         Args:
-            name (str): Object name
-            description (str): Object description
-            x (float): Initial X coordinate of item icon
-            y (float): Initial Y coordinate of item icon
-            toolbox (ToolboxUI): QMainWindow instance
-            project (SpineToolboxProject): the project this item belongs to
-            file_references (list, optional): a list of file paths
-            db_references (list of dict, optional): a list of db urls
+            name: Data Connection's name
+            description: Data Connection's description
+            x: Initial X coordinate of item icon
+            y: Initial Y coordinate of item icon
+            toolbox: QMainWindow instance
+            project: the project this item belongs to
+            file_references: a list of file paths
+            file_patterns: a list of file patterns
+            directory_references: a list of directory paths
+            db_references: a list of db urls
         """
         super().__init__(name, description, x, y, project)
         if file_references is None:
             file_references = []
+        if file_patterns is None:
+            file_patterns = []
+        if directory_references is None:
+            directory_references = []
         if db_references is None:
             db_references = []
         self._toolbox = toolbox
         self.reference_model = QStandardItemModel()  # References
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
-        self.file_system_watcher = None
+        self.file_system_watcher: CustomFileSystemWatcher | None = None
         self.file_references = list(file_references)
         self._file_ref_root = QStandardItem("File paths")
-        self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
+        self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self._file_pattern_root = QStandardItem("File patterns")
+        self._file_pattern_root.setFlags(self._file_ref_root.flags())
+        self._directory_ref_root = QStandardItem("Directories")
+        self._directory_ref_root.setFlags(self._file_ref_root.flags())
         self._db_ref_root = QStandardItem("URLs")
-        self._db_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemIsEditable)
+        self._db_ref_root.setFlags(self._file_ref_root.flags())
         self.file_refs_selected = False
         self.any_refs_selected = False
         self.any_data_selected = False
         self.current_is_file_ref = False
-        self.populate_reference_list(db_references)
+        self.current_is_file_pattern = False
+        self.current_is_directory_ref = False
+        self.populate_reference_list(file_patterns, directory_references, db_references)
         self.populate_data_list()
         self._database_validator = DatabaseConnectionValidator()
 
@@ -99,16 +141,27 @@ class DataConnection(ProjectItem):
         """See base class."""
         return ItemInfo.item_type()
 
-    def db_reference_iter(self):
+    def file_pattern_iter(self) -> Iterator[FilePattern]:
+        for row in range(self._file_pattern_root.rowCount()):
+            yield self._file_pattern_root.child(row).data(_Role.FILE_PATTERN)
+
+    def directory_iter(self) -> Iterator[str]:
+        for row in range(self._directory_ref_root.rowCount()):
+            yield self._directory_ref_root.child(row).data(_Role.DIRECTORY_REFERENCE)
+
+    def db_reference_iter(self) -> Iterator[UrlDict]:
         """Iterates over database references.
 
         Yields:
-            dict: database URL
+            database URL
         """
         for row in range(self._db_ref_root.rowCount()):
             yield self._db_ref_root.child(row).data(_Role.DB_URL_REFERENCE)
 
-    def has_db_references(self):
+    def has_directory_references(self) -> bool:
+        return self._directory_ref_root.rowCount() != 0
+
+    def has_db_references(self) -> bool:
         return self._db_ref_root.rowCount() != 0
 
     @Slot(QItemSelection, QItemSelection)
@@ -119,8 +172,11 @@ class DataConnection(ProjectItem):
         ref_indexes = self._properties_ui.treeView_dc_references.selectionModel().selectedIndexes()
         data_indexes = self._properties_ui.treeView_dc_data.selectionModel().selectedIndexes()
         self.file_refs_selected = any(ind.parent().row() == 0 for ind in ref_indexes)
-        self.any_refs_selected = any(ind.parent().row() in (0, 1) for ind in ref_indexes)
-        self.current_is_file_ref = self._properties_ui.treeView_dc_references.currentIndex().parent().row() == 0
+        self.any_refs_selected = any(0 <= ind.parent().row() <= 3 for ind in ref_indexes)
+        root_index_row = self._properties_ui.treeView_dc_references.currentIndex().parent().row()
+        self.current_is_file_ref = root_index_row == 0
+        self.current_is_file_pattern = root_index_row == 1
+        self.current_is_directory_ref = root_index_row == 2
         self.any_data_selected = bool(data_indexes)
         self._properties_ui.toolButton_minus.setEnabled(self.any_refs_selected)
         self._properties_ui.toolButton_add.setEnabled(self.file_refs_selected)
@@ -141,6 +197,8 @@ class DataConnection(ProjectItem):
         s[self._properties_ui.treeView_dc_references.selectionModel().selectionChanged] = self._update_selection_state
         s[self._properties_ui.treeView_dc_data.selectionModel().selectionChanged] = self._update_selection_state
         s[self._properties_ui.action_new_file_reference.triggered] = self.show_add_file_references_dialog
+        s[self._properties_ui.action_new_file_pattern.triggered] = self.show_add_file_pattern_dialog
+        s[self._properties_ui.action_new_directory_reference.triggered] = self.show_add_directory_reference_dialog
         s[self._properties_ui.action_new_db_reference.triggered] = self.show_add_db_reference_dialog
         return s
 
@@ -151,17 +209,23 @@ class DataConnection(ProjectItem):
         self._do_update_selection_state()
         self._properties_ui.treeView_dc_references.expandAll()
         file_ref_root_widget = ToolBarWidget("File paths")
-        file_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        file_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         file_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_file_reference)
+        self._properties_ui.treeView_dc_references.setIndexWidget(self._file_ref_root.index(), file_ref_root_widget)
+        pattern_root_widget = ToolBarWidget("File patterns")
+        pattern_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        pattern_root_widget.tool_bar.addAction(self._properties_ui.action_new_file_pattern)
+        self._properties_ui.treeView_dc_references.setIndexWidget(self._file_pattern_root.index(), pattern_root_widget)
+        directory_ref_root_widget = ToolBarWidget("Directories")
+        directory_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        directory_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_directory_reference)
         self._properties_ui.treeView_dc_references.setIndexWidget(
-            self.reference_model.indexFromItem(self._file_ref_root), file_ref_root_widget
+            self._directory_ref_root.index(), directory_ref_root_widget
         )
         db_ref_root_widget = ToolBarWidget("URLs")
-        db_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        db_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         db_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_db_reference)
-        self._properties_ui.treeView_dc_references.setIndexWidget(
-            self.reference_model.indexFromItem(self._db_ref_root), db_ref_root_widget
-        )
+        self._properties_ui.treeView_dc_references.setIndexWidget(self._db_ref_root.index(), db_ref_root_widget)
 
     @Slot(QGraphicsItem, list)
     def receive_files_dropped_on_icon(self, icon, file_paths):
@@ -211,7 +275,35 @@ class DataConnection(ProjectItem):
         if repeated_paths:
             self._logger.msg_warning.emit(f"Reference to file(s) <b>{repeated_paths}</b> already exists")
         if new_paths:
-            self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, new_paths, [], self._project))
+            self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, new_paths, [], [], [], self._project))
+
+    @Slot(bool)
+    def show_add_file_pattern_dialog(self, _=False) -> None:
+        dialog = FilePatternDialog("New file pattern", None, pathlib.Path(self._project.project_dir), self._toolbox)
+        result = dialog.exec_()
+        dialog.deleteLater()
+        if result != QDialog.DialogCode.Accepted:
+            return
+        new_pattern = dialog.file_pattern()
+        existing_patterns = (pattern for pattern in self.file_pattern_iter())
+        if any(pattern == new_pattern for pattern in existing_patterns):
+            self._logger.msg_warning.emit(f"File pattern <b>{new_pattern}</b> already exists")
+            return
+        self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, [], [new_pattern], [], [], self._project))
+
+    @Slot(bool)
+    def show_add_directory_reference_dialog(self, _=False) -> None:
+        path = QFileDialog.getExistingDirectory(self._toolbox, "Add directory reference", self._project.project_dir)
+        if not path:
+            return
+        self._add_directory_reference(str(pathlib.Path(path)))
+
+    def _add_directory_reference(self, path: str) -> None:
+        existing_references = (reference for reference in self.directory_iter())
+        if any(os.path.samefile(path, ref) for ref in existing_references):
+            self._logger.msg_warning.emit(f"Reference to directory <b>{path}</b> already exists")
+            return
+        self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, [], [], [path], [], self._project))
 
     @Slot(bool)
     def show_add_db_reference_dialog(self, _=False):
@@ -222,24 +314,25 @@ class DataConnection(ProjectItem):
             return
         url = selector.url_dict()
         if self._has_db_reference(url):
-            self._logger.msg_warning.emit(f"Reference to database <b>{url}</b> already exists")
+            clean_url = convert_url_to_safe_string(url)
+            self._logger.msg_warning.emit(f"Reference to database <b>{clean_url}</b> already exists")
             return
         sa_url = convert_to_sqlalchemy_url(url, self.name, self._logger)
         self._database_validator.validate_url(
             url["dialect"], sa_url, self._log_database_reference_error, success_slot=None
         )
-        self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, [], [url], self._project))
+        self._toolbox.undo_stack.push(AddDCReferencesCommand(self.name, [], [], [], [url], self._project))
 
-    def _has_db_reference(self, url):
+    def _has_db_reference(self, url: UrlDict) -> bool:
         """Checks if given database URL exists already.
 
         Ignores usernames and passwords.
 
         Args:
-            url (dict): URL to check
+            url: URL to check
 
         Returns:
-            bool: True if db reference exists, False otherwise
+            True if db reference exists, False otherwise
         """
         significant_keys = ("dialect", "host", "port", "database")
         for row in range(self._db_ref_root.rowCount()):
@@ -249,34 +342,40 @@ class DataConnection(ProjectItem):
         return False
 
     @Slot(str, object)
-    def _log_database_reference_error(self, error, url):
+    def _log_database_reference_error(self, error: str, url: URL) -> None:
         """Logs final database validation error messages.
 
         Args:
-            error (str): message
-            url (URL): SqlAlchemy URL of the database
+            error: message
+            url: SqlAlchemy URL of the database
         """
         url_text = remove_credentials_from_url(str(url))
         for row in range(self._db_ref_root.rowCount()):
             item = self._db_ref_root.child(row)
             if url_text == item.text():
-                self._mark_as_missing(item)
+                self._mark_as_missing(item, "URL")
                 break
         self._logger.msg_error.emit(f"<b>{self.name}</b>: invalid database URL: {error}")
 
-    def do_add_references(self, file_refs, db_refs):
+    def do_add_references(
+        self, file_refs: list[str], file_patterns: list[FilePattern], directory_refs: list[str], db_refs: list[UrlDict]
+    ) -> None:
         """Adds file and databases references to DC and starts watching the files.
 
         Args:
-            file_refs (list of str): file reference paths
-            db_refs (list of dict): database reference URLs
+            file_refs: file reference paths
+            file_patterns: File patterns to add.
+            directory_refs: directory reference paths
+            db_refs: database reference URLs
         """
         file_refs = [os.path.abspath(ref) for ref in file_refs]
         self.file_references += file_refs
         self.file_system_watcher.add_persistent_file_paths(ref for ref in file_refs if os.path.exists(ref))
-        self._append_file_references_to_model(*file_refs)
+        self._append_file_references_to_model(file_refs)
+        self._append_file_patterns_to_model(file_patterns)
+        self._append_directory_references_to_model(directory_refs)
         self._watch_sqlite_file(*db_refs)
-        self._append_db_references_to_model(*db_refs)
+        self._append_db_references_to_model(db_refs)
         self._check_notifications()
         self._resources_to_successors_changed()
 
@@ -287,39 +386,55 @@ class DataConnection(ProjectItem):
         if not indexes:  # Nothing selected
             self._logger.msg.emit("Please select references to remove")
             return
-        file_ref_root_index = self.reference_model.indexFromItem(self._file_ref_root)
-        db_ref_root_index = self.reference_model.indexFromItem(self._db_ref_root)
+        file_ref_root_index = self._file_ref_root.index()
+        file_pattern_root_index = self._file_pattern_root.index()
+        directory_ref_root_index = self._directory_ref_root.index()
+        db_ref_root_index = self._db_ref_root.index()
         file_references = []
+        file_patterns = []
+        directory_references = []
         db_references = []
         for index in indexes:
             parent = index.parent()
             if not parent.isValid():
                 continue
             if parent == file_ref_root_index:
-                file_references.append(index.data(Qt.ItemDataRole.DisplayRole))
+                file_references.append(index.data(_Role.FILE_REFERENCE))
+            elif parent == file_pattern_root_index:
+                file_patterns.append(index.data(_Role.FILE_PATTERN))
+            elif parent == directory_ref_root_index:
+                directory_references.append(index.data(_Role.DIRECTORY_REFERENCE))
             elif parent == db_ref_root_index:
                 db_references.append(index.data(_Role.DB_URL_REFERENCE))
         self._toolbox.undo_stack.push(
-            RemoveDCReferencesCommand(self.name, file_references, db_references, self._project)
+            RemoveDCReferencesCommand(
+                self.name, file_references, file_patterns, directory_references, db_references, self._project
+            )
         )
         self._logger.msg.emit("Selected references removed")
 
-    def do_remove_references(self, file_refs, db_refs):
+    def do_remove_references(
+        self, file_refs: list[str], file_patterns: list[FilePattern], directory_refs: list[str], db_refs: list[UrlDict]
+    ) -> None:
         """Removes given paths from references.
 
         Args:
-            file_refs (list of str): List of removed file paths.
-            db_refs (list of dict): List of removed urls.
+            file_refs: List of removed file paths.
+            file_patterns: List of removed file patterns.
+            directory_refs: List of removed directories
+            db_refs: List of removed urls.
         """
         self.file_system_watcher.remove_persistent_file_paths(file_refs)
         self._unwatch_sqlite_file(*db_refs)
-        refs_removed = self._remove_file_references(*file_refs)
-        refs_removed |= self._remove_db_references(*db_refs)
+        refs_removed = self._remove_file_references(file_refs)
+        refs_removed |= self._remove_file_patterns(file_patterns)
+        refs_removed |= self._remove_directory_references(directory_refs)
+        refs_removed |= self._remove_db_references(db_refs)
         if refs_removed:
             self._check_notifications()
             self._resources_to_successors_changed()
 
-    def _remove_file_references(self, *refs):
+    def _remove_file_references(self, refs: list[str]) -> bool:
         result = False
         for k in reversed(range(self._file_ref_root.rowCount())):
             if any(same_path(self._file_ref_root.child(k).text(), ref) for ref in refs):
@@ -328,7 +443,23 @@ class DataConnection(ProjectItem):
                 result = True
         return result
 
-    def _remove_db_references(self, *refs):
+    def _remove_file_patterns(self, file_patterns: list[FilePattern]) -> bool:
+        result = False
+        for k in reversed(range(self._file_pattern_root.rowCount())):
+            if any(self._file_pattern_root.child(k).data(_Role.FILE_PATTERN) == ref for ref in file_patterns):
+                self._file_pattern_root.removeRow(k)
+                result = True
+        return result
+
+    def _remove_directory_references(self, refs: list[str]) -> bool:
+        result = False
+        for k in reversed(range(self._directory_ref_root.rowCount())):
+            if any(same_path(self._directory_ref_root.child(k).data(_Role.DIRECTORY_REFERENCE), ref) for ref in refs):
+                self._directory_ref_root.removeRow(k)
+                result = True
+        return result
+
+    def _remove_db_references(self, refs: list[UrlDict]) -> bool:
         result = False
         matches = {convert_url_to_safe_string(url) for url in refs}
         for k in reversed(range(self._db_ref_root.rowCount())):
@@ -402,7 +533,7 @@ class DataConnection(ProjectItem):
         for row in range(self._file_ref_root.rowCount()):
             item = self._file_ref_root.child(row)
             if same_path(item.text(), path):
-                self._mark_as_missing(item)
+                self._mark_as_missing(item, "file")
                 return True
         for row in range(self._db_ref_root.rowCount()):
             item = self._db_ref_root.child(row)
@@ -410,7 +541,7 @@ class DataConnection(ProjectItem):
             if url["dialect"] != "sqlite":
                 continue
             if same_path(url["database"], path):
-                self._mark_as_missing(item)
+                self._mark_as_missing(item, "file")
                 return True
         return False
 
@@ -441,12 +572,22 @@ class DataConnection(ProjectItem):
         file_refs = list(self.file_references)
         data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
         new_resources = scan_for_resources(
-            self, file_refs + data_files, list(self.db_reference_iter()), self._project.project_dir
+            self,
+            file_refs + data_files,
+            list(self.file_pattern_iter()),
+            list(self.directory_iter()),
+            list(self.db_reference_iter()),
+            self._project.project_dir,
         )
         if not replace_new_path(file_refs):
             replace_new_path(data_files)
         old_resources = scan_for_resources(
-            self, file_refs + data_files, list(self.db_reference_iter()), self._project.project_dir
+            self,
+            file_refs + data_files,
+            list(self.file_pattern_iter()),
+            list(self.directory_iter()),
+            list(self.db_reference_iter()),
+            self._project.project_dir,
         )
         self._resources_to_successors_replaced(old_resources, new_resources)
 
@@ -460,7 +601,7 @@ class DataConnection(ProjectItem):
         # Some software saves files by renaming them and then creating
         # a new file with the same name for safety reasons.
         # So, sometimes a file goes "missing" for a moment and then comes back.
-        # We'll try to refresh the file reference a couple times in this case.
+        # We'll try to refresh the file reference a couple of times in this case.
         def refresh(retry_count):
             if not os.path.exists(path):
                 if retry_count < 5:
@@ -529,7 +670,7 @@ class DataConnection(ProjectItem):
                 self.refresh_file_references(item)
 
     def refresh_file_references(self, item):
-        file_path = item.data(Qt.ItemDataRole.DisplayRole)
+        file_path = item.text()
         if item.data(_Role.MISSING) and os.path.exists(file_path):
             self._mark_as_found(item)
         else:
@@ -549,11 +690,11 @@ class DataConnection(ProjectItem):
         )
 
     @Slot(object)
-    def _revive_db_reference(self, url):
+    def _revive_db_reference(self, url: URL) -> None:
         """Colors the db reference back to black.
 
         Args:
-            url (URL): SqlAlchemy URL
+            url: SqlAlchemy URL
         """
         url_text = remove_credentials_from_url(str(url))
         for row in range(self._db_ref_root.rowCount()):
@@ -578,13 +719,161 @@ class DataConnection(ProjectItem):
             logging.error("Index not valid")
             return
         parent_item = self.reference_model.itemFromIndex(index.parent())
-        if parent_item is not self._file_ref_root:
+        if parent_item is self._file_ref_root:
+            reference = self.file_references[index.row()]
+        elif parent_item is self._file_pattern_root:
+            reference = str(self.reference_model.itemFromIndex(index).data(_Role.FILE_PATTERN).base_path)
+        elif parent_item is self._directory_ref_root:
+            reference = self.reference_model.itemFromIndex(index).data(_Role.DIRECTORY_REFERENCE)
+        else:
             return
-        reference = self.file_references[index.row()]
         url = "file:///" + reference
         res = open_url(url)
         if not res:
-            self._logger.msg_error.emit(f"Failed to open reference:<b>{reference}</b>")
+            self._logger.msg_error.emit(f"Failed to open reference: <b>{reference}</b>")
+
+    def open_containing_directory(self, index: QModelIndex) -> None:
+        parent_item = self.reference_model.itemFromIndex(index.parent())
+        if parent_item is self._file_ref_root:
+            path = index.data(_Role.FILE_REFERENCE)
+            ref_dir = os.path.split(path)[0]
+            path_url = "file:///" + ref_dir
+            if not open_url(path_url):
+                self._logger.msg_error.emit(f"Failed to open directory <b>{ref_dir}</b>")
+        elif parent_item is self._file_pattern_root:
+            path = index.data(_Role.FILE_PATTERN).base_path
+            path_url = "file:///" + str(path)
+            if not open_url(path_url):
+                self._logger.msg_error.emit(f"Failed to open directory <b>{path}</b>")
+
+    def select_another_target_for_reference(self, index: QModelIndex | None) -> None:
+        if index is None or not index.isValid():
+            return
+        parent_item = self.reference_model.itemFromIndex(index.parent())
+        if parent_item is self._file_ref_root:
+            old_file_ref = index.data(_Role.FILE_REFERENCE)
+            file_path, _ = QFileDialog.getOpenFileName(self._toolbox, "Select file", self._project.project_dir, "*.*")
+            if not file_path:
+                return
+            if any(
+                os.path.samefile(self._file_ref_root.child(i).data(_Role.FILE_REFERENCE), file_path)
+                for i in range(self._file_ref_root.rowCount())
+            ):
+                self._logger.msg_warning.emit(f"Reference to <b>{pathlib.Path(file_path)}</b> already exists.")
+                return
+            self._toolbox.undo_stack.push(
+                UpdateFileReference(self.name, old_file_ref, str(pathlib.Path(file_path)), self._project)
+            )
+            return
+        if parent_item is self._file_pattern_root:
+            old_file_pattern = index.data(_Role.FILE_PATTERN)
+            dialog = FilePatternDialog(
+                "Update file pattern", old_file_pattern, old_file_pattern.base_path, self._toolbox
+            )
+            status = dialog.exec_()
+            dialog.deleteLater()
+            if status != QDialog.DialogCode.Accepted:
+                return
+            new_file_pattern = dialog.file_pattern()
+            existing_patterns = (pattern for pattern in self.file_pattern_iter())
+            if any(pattern == new_file_pattern for pattern in existing_patterns):
+                self._logger.msg_warning.emit(f"File pattern <b>{new_file_pattern}</b> already exists")
+                return
+            self._toolbox.undo_stack.push(
+                UpdateFilePattern(self.name, old_file_pattern, new_file_pattern, self._project)
+            )
+            return
+        if parent_item is self._directory_ref_root:
+            old_directory_ref = index.data(_Role.DIRECTORY_REFERENCE)
+            directory = QFileDialog.getExistingDirectory(self._toolbox, "Select directory", self._project.project_dir)
+            if not directory:
+                return
+            if any(
+                os.path.samefile(self._directory_ref_root.child(i).data(_Role.DIRECTORY_REFERENCE), directory)
+                for i in range(self._directory_ref_root.rowCount())
+            ):
+                self._logger.msg_warning.emit(f"Reference to <b>{pathlib.Path(directory)}</b> already exists.")
+                return
+            self._toolbox.undo_stack.push(
+                UpdateDirectoryReference(self.name, old_directory_ref, str(pathlib.Path(directory)), self._project)
+            )
+            return
+        if parent_item is self._db_ref_root:
+            old_url_ref = index.data(_Role.DB_URL_REFERENCE)
+            selector = UrlSelectorDialog(self._toolbox.qsettings(), False, self._toolbox, self._toolbox)
+            result = selector.exec()
+            if result == UrlSelectorDialog.DialogCode.Rejected:
+                return
+            url = selector.url_dict()
+            if any(
+                self._db_ref_root.child(i).data(_Role.DB_URL_REFERENCE) == url
+                for i in range(self._db_ref_root.rowCount())
+            ):
+                clean_url = convert_url_to_safe_string(url)
+                self._logger.msg_warning.emit(f"Reference to <b>{clean_url}</b> already exists.")
+                return
+            self._toolbox.undo_stack.push(UpdateDbUrlReference(self.name, old_url_ref, url, self._project))
+            return
+
+    def do_update_file_reference(self, old_file_ref: str, new_file_ref: str) -> None:
+        old_resources = self.resources_for_direct_successors()
+        ref_i = self.file_references.index(old_file_ref)
+        self.file_references[ref_i] = new_file_ref
+        for row in range(self._file_ref_root.rowCount()):
+            ref_item = self._file_ref_root.child(row)
+            if ref_item.data(_Role.FILE_REFERENCE) == old_file_ref:
+                ref_item.setText(new_file_ref)
+                ref_item.setData(new_file_ref, _Role.FILE_REFERENCE)
+                break
+        else:
+            raise RuntimeError("logic error: old file reference not found in references model")
+        new_resources = self.resources_for_direct_successors()
+        old_resources = [resource for resource in old_resources if os.path.samefile(resource.path, old_file_ref)]
+        new_resources = [resource for resource in new_resources if os.path.samefile(resource.path, new_file_ref)]
+        self._resources_to_successors_replaced(old_resources, new_resources)
+
+    def do_update_file_pattern(self, old_file_pattern: FilePattern, new_file_pattern: FilePattern) -> None:
+        for row in range(self._file_pattern_root.rowCount()):
+            pattern_item = self._file_pattern_root.child(row)
+            if pattern_item.data(_Role.FILE_PATTERN) == old_file_pattern:
+                pattern_item.setText(str(new_file_pattern))
+                pattern_item.setData(new_file_pattern, _Role.FILE_PATTERN)
+                break
+        else:
+            raise RuntimeError("logic error: old file pattern not found in references model")
+        self._resources_to_successors_changed()
+
+    def do_update_directory_reference(self, old_directory_ref: str, new_directory_ref: str) -> None:
+        old_resources = self.resources_for_direct_successors()
+        for row in range(self._directory_ref_root.rowCount()):
+            ref_item = self._directory_ref_root.child(row)
+            if ref_item.data(_Role.DIRECTORY_REFERENCE) == old_directory_ref:
+                ref_item.setText(new_directory_ref)
+                ref_item.setData(new_directory_ref, _Role.DIRECTORY_REFERENCE)
+                break
+        else:
+            raise RuntimeError("logic error: old directory reference not found in references model")
+        new_resources = self.resources_for_direct_successors()
+        old_resources = [resource for resource in old_resources if os.path.samefile(resource.path, old_directory_ref)]
+        new_resources = [resource for resource in new_resources if os.path.samefile(resource.path, new_directory_ref)]
+        self._resources_to_successors_replaced(old_resources, new_resources)
+
+    def do_update_db_url_reference(self, old_ref: UrlDict, new_ref: UrlDict) -> None:
+        old_resources = self.resources_for_direct_successors()
+        for row in range(self._db_ref_root.rowCount()):
+            ref_item = self._db_ref_root.child(row)
+            if ref_item.data(_Role.DB_URL_REFERENCE) == old_ref:
+                ref_item.setText(convert_url_to_safe_string(new_ref))
+                ref_item.setData(new_ref, _Role.DB_URL_REFERENCE)
+                break
+        else:
+            raise RuntimeError("logic error: old URL reference not found in references model")
+        new_resources = self.resources_for_direct_successors()
+        old_url = str(convert_to_sqlalchemy_url(old_ref))
+        old_resources = [resource for resource in old_resources if resource.url == old_url]
+        new_url = str(convert_to_sqlalchemy_url(new_ref))
+        new_resources = [resource for resource in new_resources if resource.url == new_url]
+        self._resources_to_successors_replaced(old_resources, new_resources)
 
     @Slot(QModelIndex)
     def open_data_file(self, index):
@@ -606,7 +895,10 @@ class DataConnection(ProjectItem):
         msg = "File name"
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QInputDialog.getText(
-            self._toolbox, "Create new file", msg, flags=Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+            self._toolbox,
+            "Create new file",
+            msg,
+            flags=Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint,
         )
         file_name = answer[0]
         if not file_name.strip():
@@ -666,29 +958,34 @@ class DataConnection(ProjectItem):
             except OSError:
                 self._logger.msg_error.emit(f"Removing file {path_to_remove} failed.\nCheck permissions.")
 
-    def populate_reference_list(self, db_references):
-        """List references in QTreeView.
-
-        Args:
-            db_references (list of dict): database URLs
-        """
+    def populate_reference_list(
+        self, file_patterns: list[FilePattern], directory_references: list[str], db_references: list[UrlDict]
+    ) -> None:
+        """List references in QTreeView."""
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
         self._file_ref_root.removeRows(0, self._file_ref_root.rowCount())
         self.reference_model.appendRow(self._file_ref_root)
+        self._file_pattern_root.removeRows(0, self._file_pattern_root.rowCount())
+        self.reference_model.appendRow(self._file_pattern_root)
+        self._directory_ref_root.removeRows(0, self._directory_ref_root.rowCount())
+        self.reference_model.appendRow(self._directory_ref_root)
         self._db_ref_root.removeRows(0, self._db_ref_root.rowCount())
         self.reference_model.appendRow(self._db_ref_root)
-        self._append_file_references_to_model(*self.file_references)
-        self._append_db_references_to_model(*db_references)
+        self._append_file_references_to_model(self.file_references)
+        self._append_file_patterns_to_model(file_patterns)
+        self._append_directory_references_to_model(directory_references)
+        self._append_db_references_to_model(db_references)
 
-    def _append_file_references_to_model(self, *paths):
+    def _append_file_references_to_model(self, paths: list[str]) -> None:
         non_existent_paths = []
         for path in paths:
             item = QStandardItem(path)
-            item.setFlags(~Qt.ItemIsEditable)
+            item.setData(path, _Role.FILE_REFERENCE)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             if not os.path.exists(path):
                 non_existent_paths.append(path)
-                self._mark_as_missing(item)
+                self._mark_as_missing(item, "file")
             self._file_ref_root.appendRow(item)
         if non_existent_paths:
             msg = f"<b>{self.name}:</b> Could not find file references:"
@@ -696,38 +993,78 @@ class DataConnection(ProjectItem):
                 msg += f"<br><b>{os.path.basename(path)}</b>"
             self._logger.msg_error.emit(msg)
 
+    def _append_file_patterns_to_model(self, patterns: list[FilePattern]) -> None:
+        non_existent_paths = []
+        for pattern in patterns:
+            item = QStandardItem(str(pattern))
+            item.setData(pattern, _Role.FILE_PATTERN)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            if not os.path.exists(pattern.base_path):
+                non_existent_paths.append(pattern.base_path)
+                self._mark_as_missing(item, "pattern")
+            self._file_pattern_root.appendRow(item)
+        if non_existent_paths:
+            msg = f"<b>{self.name}:</b> Could not find directories:"
+            for path in non_existent_paths:
+                msg += f"<br><b>{path}</b>"
+            self._logger.msg_error.emit(msg)
+
+    def _append_directory_references_to_model(self, paths: list[str]) -> None:
+        non_existent_paths = []
+        for path in paths:
+            item = QStandardItem(path)
+            item.setData(path, _Role.DIRECTORY_REFERENCE)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            if not os.path.exists(path):
+                non_existent_paths.append(path)
+                self._mark_as_missing(item, "directory")
+            self._directory_ref_root.appendRow(item)
+        if non_existent_paths:
+            msg = f"<b>{self.name}:</b> Could not find directory references:"
+            for path in non_existent_paths:
+                msg += f"<br><b>{path}</b>"
+            self._logger.msg_error.emit(msg)
+
     @staticmethod
-    def _mark_as_missing(item):
+    def _mark_as_missing(item: QStandardItem, ref_type: Literal["file", "pattern", "directory", "URL"]) -> None:
         """Modifies given model item to appear as missing reference.
 
         Args:
-            item (QStandardItem): item to modify
+            item: item to modify
+            ref_type: the type of reference the item holds
         """
-        item.setData("The file is missing.", Qt.ItemDataRole.ToolTipRole)
+        match ref_type:
+            case "file":
+                message = "The file is missing."
+            case "directory" | "pattern":
+                message = "The directory is missing."
+            case "URL":
+                message = "The URL is broken."
+        item.setData(message, Qt.ItemDataRole.ToolTipRole)
         item.setData(_MISSING_ITEM_FOREGROUND, Qt.ItemDataRole.ForegroundRole)
         item.setData(True, _Role.MISSING)
 
     @staticmethod
-    def _mark_as_found(item):
+    def _mark_as_found(item: QStandardItem) -> None:
         """Modifies given model item to appear as existing reference.
 
         Args:
-            item (QStandardItem): item to modify
+            item: item to modify
         """
         item.setData(None, Qt.ItemDataRole.ToolTipRole)
         item.setData(None, Qt.ItemDataRole.ForegroundRole)
         item.setData(False, _Role.MISSING)
 
-    def _append_db_references_to_model(self, *urls):
+    def _append_db_references_to_model(self, urls: list[UrlDict]) -> None:
         """Appends given database URLs to the model.
 
         Args:
-            *urls: dict-style URLs to add
+            urls: dict-style URLs to add
         """
         for url in urls:
             item = QStandardItem(convert_url_to_safe_string(url))
             item.setData(url, _Role.DB_URL_REFERENCE)
-            item.setFlags(~Qt.ItemIsEditable)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self._db_ref_root.appendRow(item)
 
     def _watch_sqlite_file(self, *urls):
@@ -768,7 +1105,7 @@ class DataConnection(ProjectItem):
     def _append_data_files_to_model(self, *paths):
         for path in paths:
             item = QStandardItem(os.path.basename(path))
-            item.setFlags(~Qt.ItemIsEditable)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             icon = QFileIconProvider().icon(QFileInfo(path))
             item.setData(icon, Qt.ItemDataRole.DecorationRole)
             item.setData(path, _Role.DATA_FILE_PATH)
@@ -778,14 +1115,24 @@ class DataConnection(ProjectItem):
         """see base class"""
         data_files = [os.path.join(self.data_dir, f) for f in self.data_files()]
         resources = scan_for_resources(
-            self, self.file_references + data_files, list(self.db_reference_iter()), self._project.project_dir
+            self,
+            self.file_references + data_files,
+            list(self.file_pattern_iter()),
+            list(self.directory_iter()),
+            list(self.db_reference_iter()),
+            self._project.project_dir,
         )
         return resources
 
     def _check_notifications(self):
         """Sets or clears the exclamation mark icon."""
         self.clear_notifications()
-        if not self.file_references and not self.has_db_references() and not self.data_files():
+        if (
+            not self.file_references
+            and not self.has_directory_references()
+            and not self.has_db_references()
+            and not self.data_files()
+        ):
             self.add_notification(
                 "This Data Connection does not have any references or data. "
                 "Add some in the Data Connection Properties panel."
@@ -793,15 +1140,20 @@ class DataConnection(ProjectItem):
         missing_file_references = [ref for ref in self.file_references if not os.path.exists(ref)]
         if missing_file_references:
             self.add_notification("Cannot find some file references. Please, check that the files exist.")
+        missing_directory_references = [ref for ref in self.directory_iter() if not os.path.exists(ref)]
+        if missing_directory_references:
+            self.add_notification("Cannot find some directories. Please, check that the directories exist.")
 
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
         d = super().item_dict()
         d["file_references"] = [serialize_path(ref, self._project.project_dir) for ref in self.file_references]
+        d["file_patterns"] = [pattern.to_dict(self._project.project_dir) for pattern in self.file_pattern_iter()]
+        d["directory_references"] = [serialize_path(ref, self._project.project_dir) for ref in self.directory_iter()]
         db_references = []
         db_credentials = {}
         for url in self.db_reference_iter():
-            serialized_url = dict(url)
+            serialized_url = url.copy()
             username = serialized_url.pop("username")
             password = serialized_url.pop("password")
             if username:
@@ -821,13 +1173,30 @@ class DataConnection(ProjectItem):
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
         description, x, y = ProjectItem.parse_item_dict(item_dict)
-        # FIXME: Do we want to convert references to file_references via upgrade?
         file_references = item_dict.get("file_references", []) or item_dict.get("references", [])
         file_references = [deserialize_path(r, project.project_dir) for r in file_references]
+        file_patterns = [
+            FilePattern.from_dict(pattern_dict, project.project_dir)
+            for pattern_dict in item_dict.get("file_patterns", [])
+        ]
+        directory_references = [
+            deserialize_path(r, project.project_dir) for r in item_dict.get("directory_references", [])
+        ]
         db_references = restore_database_references(
             item_dict.get("db_references", []), item_dict.get("db_credentials", {}), project.project_dir
         )
-        return DataConnection(name, description, x, y, toolbox, project, file_references, db_references)
+        return DataConnection(
+            name,
+            description,
+            x,
+            y,
+            toolbox,
+            project,
+            file_references,
+            file_patterns,
+            directory_references,
+            db_references,
+        )
 
     def rename(self, new_name, rename_data_dir_message):
         """See base class."""

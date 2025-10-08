@@ -75,7 +75,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
         if not self._mapping:
             self._logger.msg_warning.emit(f"No mappings configured. Skipping.")
             return ItemExecutionFinishState.SKIPPED
-        labelled_resources = get_labelled_source_resources(forward_resources)
+        labelled_resources = get_labelled_source_resources(
+            [resource for resource in forward_resources if resource.type_ != "directory"]
+        )
         selected_resources = []
         for label in self._selected_files:
             selected_resources += labelled_resources.get(label, [])

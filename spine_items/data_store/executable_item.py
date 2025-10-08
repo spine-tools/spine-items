@@ -12,6 +12,8 @@
 
 """Contains Data Store's executable item as well as support utilities."""
 from pathlib import Path
+from sqlalchemy import URL
+from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import DatabaseMapping
@@ -22,13 +24,13 @@ from .output_resources import scan_for_resources
 
 
 class ExecutableItem(ExecutableItemBase):
-    def __init__(self, name, url, project_dir, logger):
+    def __init__(self, name: str, url: URL, project_dir: str, logger: LoggerInterface):
         """
         Args:
-            name (str): item's name
-            url (URL): database's URL
-            project_dir (str): absolute path to project directory
-            logger (LoggerInterface): a logger
+            name: item's name
+            url: database's URL
+            project_dir: absolute path to project directory
+            logger: a logger
         """
         super().__init__(name, project_dir, logger)
         self._url = url

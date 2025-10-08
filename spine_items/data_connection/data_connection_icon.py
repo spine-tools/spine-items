@@ -52,7 +52,7 @@ class DataConnectionIcon(ProjectItemIcon):
                 event.ignore()
                 return
         event.accept()
-        event.setDropAction(Qt.CopyAction)
+        event.setDropAction(Qt.DropAction.CopyAction)
         if self._drag_over:
             return
         self._drag_over = True
