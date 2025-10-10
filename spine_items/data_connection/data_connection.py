@@ -21,7 +21,7 @@ from PySide6.QtCore import QFileInfo, QItemSelection, QModelIndex, Qt, QTimer, S
 from PySide6.QtGui import QBrush, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QDialog, QFileDialog, QFileIconProvider, QGraphicsItem, QInputDialog, QMessageBox
 from sqlalchemy import URL
-from spine_engine.utils.serialization import deserialize_path, serialize_path
+from spine_engine.utils.serialization import deserialize_path
 from spinedb_api.helpers import remove_credentials_from_url
 from spinetoolbox.config import INVALID_FILENAME_CHARS
 from spinetoolbox.helpers import open_url, same_path
@@ -1147,9 +1147,9 @@ class DataConnection(ProjectItem):
     def item_dict(self):
         """Returns a dictionary corresponding to this item."""
         d = super().item_dict()
-        d["file_references"] = [serialize_path(ref, self._project.project_dir) for ref in self.file_references]
-        d["file_patterns"] = [pattern.to_dict(self._project.project_dir) for pattern in self.file_pattern_iter()]
-        d["directory_references"] = [serialize_path(ref, self._project.project_dir) for ref in self.directory_iter()]
+        d["file_references"] = [self._project.serialize_path(ref) for ref in self.file_references]
+        d["file_patterns"] = [pattern.to_dict(self._project) for pattern in self.file_pattern_iter()]
+        d["directory_references"] = [self._project.serialize_path(ref) for ref in self.directory_iter()]
         db_references = []
         db_credentials = {}
         for url in self.db_reference_iter():
@@ -1159,7 +1159,7 @@ class DataConnection(ProjectItem):
             if username:
                 db_credentials[convert_url_to_safe_string(serialized_url)] = username, password
             if serialized_url["dialect"] == "sqlite":
-                serialized_url["database"] = serialize_path(serialized_url["database"], self._project.project_dir)
+                serialized_url["database"] = self._project.serialize_path(serialized_url["database"])
             db_references.append(serialized_url)
         d["db_references"] = db_references
         d["db_credentials"] = db_credentials

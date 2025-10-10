@@ -381,7 +381,7 @@ class Exporter(ProjectItem):
         serialized["output_time_stamps"] = self._append_output_time_stamps
         serialized["cancel_on_error"] = self._cancel_on_error
         serialized["output_labels"] = sorted(
-            [c.to_dict(self._project.project_dir) for c in self._output_channels], key=itemgetter("in_label")
+            [c.to_dict(self._project) for c in self._output_channels], key=itemgetter("in_label")
         )
         if self._specification is not None and self._specification.output_format == OutputFormat.SQL:
             for channel in self._output_channels:

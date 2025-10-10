@@ -14,6 +14,7 @@
 from pathlib import Path
 import unittest
 from spine_items.exporter.output_channel import OutputChannel
+from tests.mock_helpers import ProjectForSerialization
 
 
 class TestOutputChannel(unittest.TestCase):
@@ -29,7 +30,7 @@ class TestOutputChannel(unittest.TestCase):
 
     def test_serialization(self):
         channel = OutputChannel("In label", "Exporter 1", "Out label")
-        channel_dict = channel.to_dict("/project/path/")
+        channel_dict = channel.to_dict(ProjectForSerialization("/project/path/"))
         restored = OutputChannel.from_dict(channel_dict, "Exporter 1", "/project/path/")
         self.assertEqual(restored.in_label, "In label")
         self.assertEqual(restored.out_label, "Out label")
@@ -48,7 +49,7 @@ class TestOutputChannel(unittest.TestCase):
                 "password": "s3cr3t",
             },
         )
-        channel_dict = channel.to_dict("/project/path/")
+        channel_dict = channel.to_dict(ProjectForSerialization("/project/path/"))
         self.assertNotIn("username", channel_dict["out_url"])
         self.assertNotIn("password", channel_dict["out_url"])
         restored = OutputChannel.from_dict(channel_dict, "Exporter 1", "/project/path/")
@@ -67,7 +68,7 @@ class TestOutputChannel(unittest.TestCase):
             "Out label",
             {"dialect": "sqlite", "database": str(initial_project_dir / relative_database_path)},
         )
-        channel_dict = channel.to_dict(str(initial_project_dir))
+        channel_dict = channel.to_dict(ProjectForSerialization(initial_project_dir))
         self.assertNotIn("username", channel_dict["out_url"])
         self.assertNotIn("password", channel_dict["out_url"])
         new_project_dir = Path("project_2")

@@ -1372,7 +1372,7 @@ class TestDataConnectionWithInvalidFilePattern:
         item_dict = {
             "type": "Data Connection",
             "description": "",
-            "file_patterns": [file_pattern.to_dict(project.project_dir)],
+            "file_patterns": [file_pattern.to_dict(project)],
             "x": 0,
             "y": 0,
         }

@@ -11,6 +11,7 @@
 ######################################################################################################################
 import pathlib
 from spine_items.data_connection.utils import FilePattern
+from tests.mock_helpers import ProjectForSerialization
 
 
 class TestFilePattern:
@@ -18,7 +19,7 @@ class TestFilePattern:
         path = pathlib.Path(__file__).parent / "data_dir"
         pattern = FilePattern(path, "*.py")
         project_dir = str(pathlib.Path(__file__).parent / "project_dir")
-        serialized = pattern.to_dict(project_dir)
+        serialized = pattern.to_dict(ProjectForSerialization(project_dir))
         deserialized = FilePattern.from_dict(serialized, project_dir)
         assert deserialized == pattern
 
@@ -26,6 +27,6 @@ class TestFilePattern:
         project_dir = pathlib.Path(__file__).parent / "project_dir"
         path = project_dir / "data_dir"
         pattern = FilePattern(path, "*.py")
-        serialized = pattern.to_dict(str(project_dir))
+        serialized = pattern.to_dict(ProjectForSerialization(project_dir))
         deserialized = FilePattern.from_dict(serialized, str(project_dir))
         assert deserialized == pattern
