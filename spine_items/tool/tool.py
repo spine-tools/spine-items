@@ -17,7 +17,7 @@ from PySide6.QtGui import QAction
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg, make_cmd_line_arg
 from spine_engine.utils.helpers import ExecutionDirection, resolve_julia_executable, resolve_python_interpreter
-from spine_engine.utils.serialization import deserialize_path, serialize_path
+from spine_engine.utils.serialization import deserialize_path
 from spinetoolbox.helpers import open_url, same_path, select_root_directory
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateResultDirCommand, UpdateRootDirCommand
@@ -282,7 +282,7 @@ class Tool(DBWriterItemBase):
     def do_set_result_directory(self, result_dir):
         """Sets results directory."""
         self._output_dir = self.default_output_dir if not result_dir else result_dir
-        self._options["output_directory"] = serialize_path(self._output_dir, self._project.project_dir)
+        self._options["output_directory"] = self._project.serialize_path(self._output_dir)
         if self._active:
             output_dir_displayed = self._output_dir.replace("/", os.sep)
             if not result_dir:
@@ -656,7 +656,7 @@ class Tool(DBWriterItemBase):
         d["execute_in_work"] = self.execute_in_work
         d["cmd_line_args"] = [arg.to_dict() for arg in self.cmd_line_args]
         if not same_path(self._output_dir, self.default_output_dir):
-            self._options["output_directory"] = serialize_path(self._output_dir, self._project.project_dir)
+            self._options["output_directory"] = self._project.serialize_path(self._output_dir)
         else:
             self._options.pop("output_directory", None)
         if self._options:
@@ -666,7 +666,7 @@ class Tool(DBWriterItemBase):
         if self._group_id:
             d["group_id"] = self._group_id
         if self._root_directory:
-            d["root_directory"] = serialize_path(self._root_directory, self._project.project_dir)
+            d["root_directory"] = self._project.serialize_path(self._root_directory)
         return d
 
     @staticmethod

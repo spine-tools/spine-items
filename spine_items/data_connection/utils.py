@@ -15,9 +15,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 import pathlib
 import sys
+from typing import TYPE_CHECKING
 import urllib.parse
-from spine_engine.utils.serialization import deserialize_path, serialize_path
+from spine_engine.utils.serialization import deserialize_path
 from spine_items.utils import UrlDict, convert_url_to_safe_string
+
+if TYPE_CHECKING:
+    from spinetoolbox.project import SpineToolboxProject
 
 
 @dataclass(frozen=True)
@@ -28,8 +32,8 @@ class FilePattern:
     def __str__(self):
         return (self.base_path / self.pattern).as_posix()
 
-    def to_dict(self, project_dir: str) -> dict:
-        return {"base_path": serialize_path(str(self.base_path), project_dir), "pattern": self.pattern}
+    def to_dict(self, project: SpineToolboxProject) -> dict:
+        return {"base_path": project.serialize_path(str(self.base_path)), "pattern": self.pattern}
 
     @staticmethod
     def from_dict(serialized: dict, project_dir: str) -> FilePattern:

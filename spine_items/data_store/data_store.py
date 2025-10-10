@@ -21,7 +21,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QFileDialog, QMenu
 from sqlalchemy import URL
 from spine_engine.project_item.project_item_resource import ProjectItemResource, database_resource
-from spine_engine.utils.serialization import deserialize_path, serialize_path
+from spine_engine.utils.serialization import deserialize_path
 from spinedb_api.helpers import remove_credentials_from_url, vacuum
 from spinetoolbox.helpers import create_dir
 from spinetoolbox.project import SpineToolboxProject
@@ -469,7 +469,7 @@ class DataStore(ProjectItem):
         d["url"] = self._url.copy()
         # If database key is a file, change the path to relative
         if d["url"]["dialect"] == "sqlite" and d["url"]["database"]:
-            d["url"]["database"] = serialize_path(d["url"]["database"], self._project.project_dir)
+            d["url"]["database"] = self._project.serialize_path(d["url"]["database"])
         return d
 
     @staticmethod
