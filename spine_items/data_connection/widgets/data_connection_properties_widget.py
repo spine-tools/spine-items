@@ -22,7 +22,6 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
 
     def __init__(self, toolbox):
         """
-
         Args:
             toolbox (ToolboxUI): The toolbox instance where this widget should be embedded
         """
@@ -31,7 +30,6 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         super().__init__(toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        # Class attributes
         self.connect_signals()
 
     def connect_signals(self):
@@ -54,14 +52,17 @@ class DataConnectionPropertiesWidget(PropertiesWidgetBase):
         option = dc_ref_context_menu.get_action()
         dc_ref_context_menu.deleteLater()
         if option == "Open containing directory...":
-            ref_path = self.ui.treeView_dc_references.model().itemFromIndex(index).data(Qt.ItemDataRole.DisplayRole)
-            ref_dir = os.path.split(ref_path)[0]
-            file_url = "file:///" + ref_dir
-            self._toolbox.open_anchor(QUrl(file_url, QUrl.TolerantMode))
+            dc.open_containing_directory(index)
         elif option == "Open...":
             dc.open_reference(index)
+        elif option == "Select another...":
+            dc.select_another_target_for_reference(index)
         elif option == "Add file reference(s)...":
             dc.show_add_file_references_dialog()
+        elif option == "Add file pattern...":
+            dc.show_add_file_pattern_dialog()
+        elif option == "Add directory reference...":
+            dc.show_add_directory_reference_dialog()
         elif option == "Add database reference...":
             dc.show_add_db_reference_dialog()
         elif option == "Remove reference(s)":

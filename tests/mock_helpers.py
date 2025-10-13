@@ -16,6 +16,7 @@ import os.path
 from unittest.mock import MagicMock, patch
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
+from spine_engine.utils.serialization import serialize_path
 from spinetoolbox.ui_main import ToolboxUI
 
 
@@ -130,3 +131,19 @@ def parent_widget():
         yield parent
     finally:
         parent.deleteLater()
+
+
+@contextmanager
+def q_object(instance):
+    try:
+        yield instance
+    finally:
+        instance.deleteLater()
+
+
+class ProjectForSerialization:
+    def __init__(self, project_dir):
+        self._project_dir = project_dir
+
+    def serialize_path(self, path):
+        return serialize_path(path, self._project_dir)

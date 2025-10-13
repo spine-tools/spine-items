@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'url_selector_widget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.3
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -37,35 +37,35 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(386, 184)
+        Form.resize(386, 186)
         self.formLayout = QFormLayout(Form)
         self.formLayout.setObjectName(u"formLayout")
         self.label_dialect = QLabel(Form)
         self.label_dialect.setObjectName(u"label_dialect")
 
-        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.label_dialect)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_dialect)
 
         self.comboBox_dialect = QComboBox(Form)
         self.comboBox_dialect.setObjectName(u"comboBox_dialect")
 
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.comboBox_dialect)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.comboBox_dialect)
 
         self.label_username = QLabel(Form)
         self.label_username.setObjectName(u"label_username")
 
-        self.formLayout.setWidget(1, QFormLayout.LabelRole, self.label_username)
+        self.formLayout.setWidget(1, QFormLayout.ItemRole.LabelRole, self.label_username)
 
         self.lineEdit_username = QLineEdit(Form)
         self.lineEdit_username.setObjectName(u"lineEdit_username")
         self.lineEdit_username.setEnabled(False)
         self.lineEdit_username.setClearButtonEnabled(True)
 
-        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.lineEdit_username)
+        self.formLayout.setWidget(1, QFormLayout.ItemRole.FieldRole, self.lineEdit_username)
 
         self.label_password = QLabel(Form)
         self.label_password.setObjectName(u"label_password")
 
-        self.formLayout.setWidget(2, QFormLayout.LabelRole, self.label_password)
+        self.formLayout.setWidget(2, QFormLayout.ItemRole.LabelRole, self.label_password)
 
         self.lineEdit_password = QLineEdit(Form)
         self.lineEdit_password.setObjectName(u"lineEdit_password")
@@ -73,12 +73,12 @@ class Ui_Form(object):
         self.lineEdit_password.setEchoMode(QLineEdit.EchoMode.Password)
         self.lineEdit_password.setClearButtonEnabled(True)
 
-        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.lineEdit_password)
+        self.formLayout.setWidget(2, QFormLayout.ItemRole.FieldRole, self.lineEdit_password)
 
         self.label_host = QLabel(Form)
         self.label_host.setObjectName(u"label_host")
 
-        self.formLayout.setWidget(3, QFormLayout.LabelRole, self.label_host)
+        self.formLayout.setWidget(3, QFormLayout.ItemRole.LabelRole, self.label_host)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
@@ -102,29 +102,28 @@ class Ui_Form(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.lineEdit_port.sizePolicy().hasHeightForWidth())
         self.lineEdit_port.setSizePolicy(sizePolicy)
-        self.lineEdit_port.setInputMethodHints(Qt.InputMethodHint.ImhNone)
 
         self.horizontalLayout.addWidget(self.lineEdit_port)
 
 
-        self.formLayout.setLayout(3, QFormLayout.FieldRole, self.horizontalLayout)
+        self.formLayout.setLayout(3, QFormLayout.ItemRole.FieldRole, self.horizontalLayout)
 
         self.schema_label = QLabel(Form)
         self.schema_label.setObjectName(u"schema_label")
 
-        self.formLayout.setWidget(4, QFormLayout.LabelRole, self.schema_label)
+        self.formLayout.setWidget(4, QFormLayout.ItemRole.LabelRole, self.schema_label)
 
         self.schema_line_edit = QLineEdit(Form)
         self.schema_line_edit.setObjectName(u"schema_line_edit")
         self.schema_line_edit.setEnabled(False)
         self.schema_line_edit.setClearButtonEnabled(True)
 
-        self.formLayout.setWidget(4, QFormLayout.FieldRole, self.schema_line_edit)
+        self.formLayout.setWidget(4, QFormLayout.ItemRole.FieldRole, self.schema_line_edit)
 
         self.label_database = QLabel(Form)
         self.label_database.setObjectName(u"label_database")
 
-        self.formLayout.setWidget(5, QFormLayout.LabelRole, self.label_database)
+        self.formLayout.setWidget(5, QFormLayout.ItemRole.LabelRole, self.label_database)
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
@@ -153,7 +152,7 @@ class Ui_Form(object):
         self.horizontalLayout_4.addWidget(self.toolButton_select_sqlite_file)
 
 
-        self.formLayout.setLayout(5, QFormLayout.FieldRole, self.horizontalLayout_4)
+        self.formLayout.setLayout(5, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_4)
 
         QWidget.setTabOrder(self.comboBox_dialect, self.lineEdit_username)
         QWidget.setTabOrder(self.lineEdit_username, self.lineEdit_password)

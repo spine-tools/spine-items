@@ -23,7 +23,9 @@ import shutil
 import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
+from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.project_item_resource import (
+    ProjectItemResource,
     expand_cmd_line_args,
     labelled_resource_args,
     make_cmd_line_arg,
@@ -491,7 +493,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     return ItemExecutionFinishState.FAILURE
         if self._tool_specification.inputfiles_opt:
             self._logger.msg.emit("*** Searching for optional input files ***")
-            optional_file_paths = self._find_optional_input_files(forward_resources)
+            optional_file_paths = _find_optional_input_files(
+                forward_resources, self._tool_specification.inputfiles_opt, self._logger
+            )
             for k, v in optional_file_paths.items():
                 self._logger.msg.emit(f"\tFound <b>{len(v)}</b> files matching pattern <b>{k}</b>")
             optional_file_copy_paths = self._optional_output_destination_paths(optional_file_paths, execution_dir)
@@ -559,30 +563,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 # It's a directory
                 continue
             file_paths[required_path] = find_file(filename, resources)
-        return file_paths
-
-    def _find_optional_input_files(self, resources):
-        """Tries to find optional input files from previous project items in the DAG.
-
-        Args:
-            resources (list): resources available
-
-        Returns:
-            dict: Dictionary of optional input file paths or an empty dictionary if no files found. Key is the
-                optional input item and value is a list of paths that matches the item.
-        """
-        file_paths = {}
-        paths_in_resources = file_paths_from_resources(resources)
-        for file_path in self._tool_specification.inputfiles_opt:
-            _, pattern = os.path.split(file_path)
-            if not pattern:
-                # It's a directory -> skip
-                continue
-            found_files = _find_files_in_pattern(pattern, paths_in_resources)
-            if not found_files:
-                self._logger.msg_warning.emit(f"\tNo files matching pattern <b>{pattern}</b> found")
-            else:
-                file_paths[file_path] = found_files
         return file_paths
 
     def _handle_output_files(self, return_code, filter_id, forward_resources, execution_dir):
@@ -727,14 +707,14 @@ class ExecutableItem(DBWriterExecutableItemBase):
         )
 
 
-def _count_files_and_dirs(paths):
+def _count_files_and_dirs(paths: list[str]) -> tuple[int, int]:
     """Counts the number of files and directories in given paths.
 
     Args:
-        paths (list): list of paths
+        paths: list of paths
 
     Returns:
-        tuple: Tuple containing the number of required files and directories.
+        Tuple containing the number of required files and directories.
     """
     n_dir = 0
     n_file = 0
@@ -794,15 +774,44 @@ def _execution_directory(work_dir, tool_specification):
     return tool_specification.path
 
 
-def _find_files_in_pattern(pattern, available_file_paths):
+def _find_optional_input_files(
+    resources: list[ProjectItemResource], optional_input_files: list[str], logger: LoggerInterface
+) -> dict[str, list[str]]:
+    """Tries to find optional input files from previous project items in the DAG.
+
+    Args:
+        resources: resources available
+        optional_input_files: List of optional input files or file patterns
+        logger: logger instance
+
+    Returns:
+        Dictionary of optional input file paths or an empty dictionary if no files found. Key is the
+            optional input item and value is a list of paths that matches the item.
+    """
+    file_paths = {}
+    paths_in_resources = file_paths_from_resources(resources)
+    for file_path in optional_input_files:
+        _, pattern = os.path.split(file_path)
+        if not pattern:
+            # It's a directory -> skip
+            continue
+        found_files = _find_files_in_pattern(file_path, paths_in_resources)
+        if not found_files:
+            logger.msg_warning.emit(f"\tNo files matching pattern <b>{pattern}</b> found")
+        else:
+            file_paths[file_path] = found_files
+    return file_paths
+
+
+def _find_files_in_pattern(pattern: str, available_file_paths: list[str]) -> list[str]:
     """Returns a list of files that match the given pattern.
 
     Args:
-        pattern (str): File pattern
-        available_file_paths (list): List of available file paths from upstream items
+        pattern: File pattern
+        available_file_paths: List of available file paths from upstream items
 
     Returns:
-        list: List of (full) paths
+        List of (full) paths
     """
     extended_pattern = os.path.join("*", pattern)  # Match all absolute paths.
     return fnmatch.filter(available_file_paths, extended_pattern)

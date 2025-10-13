@@ -25,7 +25,7 @@ from spine_items.data_store.data_store import DataStore
 from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.item_info import ItemInfo
 import spine_items.resources_icons_rc  # pylint: disable=unused-import
-from spine_items.utils import convert_to_sqlalchemy_url, database_label
+from spine_items.utils import UrlDict, convert_to_sqlalchemy_url, database_label
 from spinedb_api import create_new_spine_database
 from spinetoolbox.helpers import signal_waiter
 from tests.mock_helpers import (
@@ -46,17 +46,8 @@ class TestDataStore(unittest.TestCase):
 class TestDataStoreWithToolbox(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        """Overridden method. Runs once before all tests in this class."""
-        try:
-            cls.app = QApplication().processEvents()
-        except RuntimeError:
-            pass
-        logging.basicConfig(
-            stream=sys.stderr,
-            level=logging.DEBUG,
-            format="%(asctime)s %(levelname)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
+        if not QApplication.instance():
+            QApplication()
 
     def setUp(self):
         """Set up."""
@@ -145,6 +136,16 @@ class TestDataStoreWithToolbox(unittest.TestCase):
         # Check that the warning disappears after committing the changes
         self._toolbox.db_mngr.commit_session("Added entity classes", db_map)
         self.assertEqual([], self.ds.get_icon().exclamation_icon._notifications)
+
+    def test_sqlite_url_deserialization(self):
+        url: UrlDict = {
+            "dialect": "sqlite",
+            "database": self.create_temp_db(),
+        }
+        self.assertTrue(self.ds.update_url(**url))
+        serialized = self.ds.item_dict()
+        deserialized = DataStore.from_dict("deserialized DS", serialized, self._toolbox, self._project)
+        self.assertEqual(deserialized.url(), self.ds.url())
 
 
 # noinspection PyUnusedLocal
@@ -316,7 +317,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
             {
                 "dialect": "mysql",
                 "host": "localhost",
-                "port": "8080",
+                "port": 8080,
                 "database": "foo",
                 "username": "bar",
                 "password": "s3cr3t",
@@ -328,7 +329,7 @@ class TestDataStoreWithMockToolbox(unittest.TestCase):
         url = self.ds_properties_ui.url_selector_widget.url_dict()
         self.assertEqual(url["dialect"], "mysql")
         self.assertEqual(url["host"], "localhost")
-        self.assertEqual(url["port"], "8080")
+        self.assertEqual(url["port"], 8080)
         self.assertEqual(url["database"], "foo")
         self.assertEqual(url["username"], "bar")
         self.assertEqual(url["password"], "s3cr3t")

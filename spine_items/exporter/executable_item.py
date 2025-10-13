@@ -11,18 +11,19 @@
 ######################################################################################################################
 
 """Contains Exporter's executable item as well as support utilities."""
+from collections.abc import Iterable
 import json
 from json import dump
 import os
 from pathlib import Path
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
-from spine_engine.project_item.project_item_resource import file_resource_in_pack
+from spine_engine.project_item.project_item_resource import ProjectItemResource, file_resource_in_pack
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.utils.returning_process import ReturningProcess
 from spine_engine.utils.serialization import deserialize_path
 from spinedb_api import clear_filter_configs
 from spinedb_api.spine_io import gdx_utils
-from ..utils import generate_filter_subdirectory_name
+from ..utils import UrlDict, generate_filter_subdirectory_name
 from .do_work import do_work
 from .item_info import ItemInfo
 from .output_channel import OutputChannel
@@ -104,14 +105,14 @@ class ExecutableItem(ExecutableItemBase):
             channel.in_label = resource.label
         return channel
 
-    def _out_urls(self, resources):
+    def _out_urls(self, resources: Iterable[ProjectItemResource]) -> dict[str, UrlDict]:
         """Returns output URLs for given input databases.
 
         Args:
-            resources (Iterable of ProjectItemResource): forward database resources
+            resources: forward database resources
 
         Returns:
-            dict: a mapping from full database URL to output URL
+            a mapping from full database URL to output URL
         """
         out_urls = {}
         for resource in resources:

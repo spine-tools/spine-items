@@ -10,36 +10,24 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-"""Contains utilities to scan for Data Store's output resources."""
-from __future__ import annotations
-from typing import TYPE_CHECKING
-from sqlalchemy import URL
-from spine_engine.project_item.project_item_resource import ProjectItemResource, database_resource
-from spine_items.utils import database_label
-
-if TYPE_CHECKING:
-    from spine_items.data_store.data_store import DataStore
-    from spine_items.data_store.executable_item import ExecutableItem
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
+import pytest
+from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
 
 
-def scan_for_resources(provider: DataStore | ExecutableItem, url: URL) -> list[ProjectItemResource]:
-    """
-    Creates db resources based on DS url.
+@pytest.fixture(scope="module")
+def application():
+    if QApplication.instance() is None:
+        QApplication()
+    application_instance = QApplication.instance()
+    yield application_instance
+    QTimer.singleShot(0, lambda: application_instance.quit())
+    application_instance.exec()
 
-    Args:
-        provider: resource provider item
-        url: sqlalchemy url
 
-    Returns:
-        output resources
-    """
-    if not url:
-        return []
-    return [
-        database_resource(
-            provider.name,
-            url.render_as_string(hide_password=False),
-            label=database_label(provider.name),
-            filterable=True,
-        )
-    ]
+@pytest.fixture
+def spine_toolbox_with_project(application, tmp_path):
+    toolbox = create_toolboxui_with_project(str(tmp_path))
+    yield toolbox
+    clean_up_toolbox(toolbox)

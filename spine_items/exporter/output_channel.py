@@ -11,9 +11,15 @@
 ######################################################################################################################
 
 """Contains :class:`OutputChannel` class."""
+from __future__ import annotations
 from contextlib import suppress
 from dataclasses import InitVar, dataclass
-from spine_engine.utils.serialization import deserialize_path, serialize_path
+from typing import TYPE_CHECKING
+from spine_engine.utils.serialization import deserialize_path
+from spine_items.utils import UrlDict
+
+if TYPE_CHECKING:
+    from spinetoolbox.project import SpineToolboxProject
 
 
 @dataclass
@@ -24,9 +30,9 @@ class OutputChannel:
     """Label of input resource."""
     item_name: InitVar[str]
     """Exporter's name."""
-    out_label: str = None
+    out_label: str | None = None
     """Label of output resource. Output file name in case of single file export."""
-    out_url: dict = None
+    out_url: UrlDict | None = None
     """Optional URL for fixed output database."""
 
     def __post_init__(self, item_name):
@@ -37,15 +43,15 @@ class OutputChannel:
             else:
                 self.out_label = f"{self.in_label}_exported@{item_name}"
 
-    def to_dict(self, project_dir):
+    def to_dict(self, project: SpineToolboxProject) -> dict:
         """
         Serializes :class:`OutputChannel` into a dictionary.
 
         Args:
-            project_dir (str): project directory
+            project: Toolbox project
 
         Returns:
-            dict: serialized :class:`OutputChannel`
+            serialized :class:`OutputChannel`
         """
         channel_dict = {"in_label": self.in_label, "out_label": self.out_label}
         if self.out_url is not None:
@@ -55,22 +61,22 @@ class OutputChannel:
             with suppress(KeyError):
                 del url["password"]
             if url["dialect"] == "sqlite" and url["database"]:
-                url["database"] = serialize_path(url["database"], project_dir)
+                url["database"] = project.serialize_path(url["database"])
             channel_dict["out_url"] = url
         return channel_dict
 
     @staticmethod
-    def from_dict(channel_dict, item_name, project_dir):
+    def from_dict(channel_dict: dict, item_name: str, project_dir: str) -> OutputChannel:
         """
         Deserializes :class:`OutputChannel` from a dictionary.
 
         Args:
-            channel_dict (dict): serialized :class:`OutputChannel`
-            item_name (str): Exporter's name
-            project_dir (str): project directory
+            channel_dict: serialized :class:`OutputChannel`
+            item_name: Exporter's name
+            project_dir: project directory
 
         Returns:
-            OutputChannel: deserialized instance
+            deserialized instance
         """
         channel = OutputChannel(
             channel_dict["in_label"], item_name, channel_dict["out_label"], channel_dict.get("out_url")

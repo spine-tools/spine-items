@@ -145,9 +145,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return Ui_MainWindow()
 
     def has_root_directory(self):
-        if self.item is not None and self.item.root_dir != "":
-            return True
-        return False
+        return self.item is not None and self.item.root_dir != ""
 
     @property
     def settings_group(self):
@@ -926,13 +924,13 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # noinspection PyCallByClass, PyTypeChecker, PyArgumentList
         answer = QFileDialog.getOpenFileName(self, "Select existing main program file", self._start_dir(), filter)
         file_path = answer[0]
-        existing_file_paths = [
+        if not file_path:  # Cancel button clicked
+            return
+        existing_file_paths = (
             os.path.join(self.includes_main_path, i)
             for i in self.spec_dict.get("includes", [])
             if os.path.exists(os.path.join(self.includes_main_path, i))
-        ]
-        if not file_path:  # Cancel button clicked
-            return
+        )
         for i, existing_file in enumerate(existing_file_paths):
             if not existing_file:
                 continue
@@ -954,7 +952,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         # noinspection PyCallByClass
         answer = QFileDialog.getSaveFileName(self, "Create new main program file", self._start_dir(), filter)
         file_path = answer[0]
-        existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if not file_path:  # Cancel button clicked
             return
         # Remove file if it exists. getSaveFileName has asked confirmation for us.
@@ -970,7 +967,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             # noinspection PyTypeChecker, PyArgumentList, PyCallByClass
             QMessageBox.information(self, "Creating file failed", msg)
             return
-        for i in existing_file_paths:
+        for i in (os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])):
             if not i:
                 continue
             if os.path.samefile(file_path, i):

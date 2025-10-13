@@ -11,23 +11,32 @@
 ######################################################################################################################
 
 """Utilities to validate that a database exists."""
+from collections.abc import Callable
 from pathlib import Path
 from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, QTimer, Signal, Slot
 from PySide6.QtWidgets import QApplication
+from sqlalchemy import URL
 from spine_items.utils import check_database_url
 
 
 class _ValidationTask(QRunnable):
     """Runnable that performs the actual validation in a worker thread."""
 
-    def __init__(self, dialect, sa_url, finish_slot, fail_slot, success_slot):
+    def __init__(
+        self,
+        dialect: str,
+        sa_url: URL,
+        finish_slot: Callable[[], None],
+        fail_slot: Callable[[str, URL], None],
+        success_slot: Callable[[URL], None] | None,
+    ):
         """
         Args:
-            dialect (str): database dialect
-            sa_url (URL): SQLAlchemy URL
-            finish_slot (Callable): a Qt slot to connect to the finished signal
-            fail_slot (Callable): a Qt slot to connect to the fail signal
-            success_slot (Callable, optional): a Qt slot to connect to the success signal
+            dialect: database dialect
+            sa_url: SQLAlchemy URL
+            finish_slot: a Qt slot to connect to the finished signal
+            fail_slot: a Qt slot to connect to the fail signal
+            success_slot: a Qt slot to connect to the success signal
         """
         super().__init__()
         self._dialect = dialect
@@ -89,10 +98,10 @@ class DatabaseConnectionValidator(QObject):
     While the thread is busy, queues the latest validation request.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QObject | None = None):
         """
         Args:
-            parent (QObject): parent object
+            parent: parent object
         """
         super().__init__(parent)
         self._threadpool = QThreadPool.globalInstance()
@@ -100,24 +109,30 @@ class DatabaseConnectionValidator(QObject):
         self._deferred_task = None
         self._closed = False
 
-    def is_busy(self):
+    def is_busy(self) -> bool:
         """Tests if there is a validator task running."""
         return self._busy
 
-    def validate_url(self, dialect, sa_url, fail_slot, success_slot):
+    def validate_url(
+        self,
+        dialect: str,
+        sa_url: URL,
+        fail_slot: Callable[[str, URL], None],
+        success_slot: Callable[[URL], None] | None,
+    ) -> None:
         """Connects signals and starts a task to validate the given URL.
 
         If validation task is running, puts a new task to a queue.
         If there is a task in the queue, it is replaced by a new one.
 
-        If validation succeeds, success_slot will be called with no arguments.
-        If validation fails, fail_slot will be called with an error string parameter.
+        If validation succeeds, success_slot will be called with validated URL parameter.
+        If validation fails, fail_slot will be called with an error string parameter and failed URL.
 
         Args:
-            dialect (str): database dialect
-            sa_url (URL): SQLAlchemy URL
-            fail_slot (Callable): a Qt slot that is invoked if validation fails
-            success_slot (Callable, optional): a Qt Slot that is invoked if validation succeeds
+            dialect: database dialect
+            sa_url: SQLAlchemy URL
+            fail_slot: a Qt slot that is invoked if validation fails
+            success_slot: a Qt Slot that is invoked if validation succeeds
         """
         if self._closed:
             return
@@ -130,7 +145,7 @@ class DatabaseConnectionValidator(QObject):
             if not queued:
                 QTimer.singleShot(500, self._start_from_queue)
 
-    def _start_from_queue(self):
+    def _start_from_queue(self) -> None:
         """Tries to start a deferred task from the queue."""
         if self._closed:
             return
@@ -142,11 +157,11 @@ class DatabaseConnectionValidator(QObject):
         self._deferred_task = None
 
     @Slot()
-    def _set_non_busy(self):
+    def _set_non_busy(self) -> None:
         """Sets the machine not busy."""
         self._busy = False
 
-    def wait_for_finish(self):
+    def wait_for_finish(self) -> None:
         """Waits for the thread to finish."""
         self._closed = True
         while self._busy:

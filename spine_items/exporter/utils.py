@@ -10,8 +10,11 @@
 ######################################################################################################################
 
 """Contains utilities for Exporter."""
+from __future__ import annotations
+from collections.abc import Iterable
 from dataclasses import dataclass
-from spine_engine.project_item.project_item_resource import url_resource
+from spine_engine.project_item.project_item_resource import ProjectItemResource, url_resource
+from spine_items.exporter.output_channel import OutputChannel
 from spine_items.utils import convert_to_sqlalchemy_url
 
 EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX = ".export-manifest"
@@ -28,35 +31,35 @@ class Database:
     """Output file name; relative to item's data dir."""
 
     @staticmethod
-    def from_dict(database_dict):
+    def from_dict(database_dict: dict) -> Database:
         """
         Deserializes :class:`Database` from a dictionary.
 
         Args:
-            database_dict (dict): serialized :class:`Database`
+            database_dict: serialized :class:`Database`
 
         Returns:
-            Database: deserialized instance
+            deserialized instance
         """
         db = Database()
         db.output_file_name = database_dict["output_file_name"]
         return db
 
 
-def output_database_resources(item_name, output_channels):
+def output_database_resources(item_name: str, output_channels: Iterable[OutputChannel]) -> list[ProjectItemResource]:
     """Gathers output database resources from output channels that have an out URL set.
 
     Args
-        item_name (str): exporter's name
-        output_channels (Iterable of OutputChannel): output channels
+        item_name : exporter's name
+        output_channels: output channels
 
     Returns:
-        list of ProjectItemResource: database resources
+        database resources
     """
     resources = []
     for channel in output_channels:
         if channel.out_url is None:
             continue
-        url = str(convert_to_sqlalchemy_url(channel.out_url))
+        url = convert_to_sqlalchemy_url(channel.out_url).render_as_string(hide_password=False)
         resources.append(url_resource(item_name, url, channel.out_label))
     return resources

@@ -11,19 +11,44 @@
 ######################################################################################################################
 
 """This module contains utilities for Data Connection."""
+from __future__ import annotations
+from dataclasses import dataclass
+import pathlib
 import sys
+from typing import TYPE_CHECKING
 import urllib.parse
 from spine_engine.utils.serialization import deserialize_path
-from spine_items.utils import convert_url_to_safe_string
+from spine_items.utils import UrlDict, convert_url_to_safe_string
+
+if TYPE_CHECKING:
+    from spinetoolbox.project import SpineToolboxProject
 
 
-def restore_database_references(references_list, credentials_dict, project_dir):
+@dataclass(frozen=True)
+class FilePattern:
+    base_path: pathlib.Path
+    pattern: str
+
+    def __str__(self):
+        return (self.base_path / self.pattern).as_posix()
+
+    def to_dict(self, project: SpineToolboxProject) -> dict:
+        return {"base_path": project.serialize_path(str(self.base_path)), "pattern": self.pattern}
+
+    @staticmethod
+    def from_dict(serialized: dict, project_dir: str) -> FilePattern:
+        return FilePattern(pathlib.Path(deserialize_path(serialized["base_path"], project_dir)), serialized["pattern"])
+
+
+def restore_database_references(
+    references_list: list[UrlDict | str], credentials_dict: dict[str, tuple[str, str]], project_dir: str
+) -> list[UrlDict]:
     """Restores data from serialized database references.
 
     Args:
-        references_list (list of dict): serialized database references
-        credentials_dict (dict): mapping from safe URL to (username, password) tuple
-        project_dir (str): path to project directory
+        references_list: serialized database references
+        credentials_dict: mapping from safe URL to (username, password) tuple
+        project_dir: path to project directory
 
     Returns:
         list of dict: deserialized database references
@@ -38,14 +63,19 @@ def restore_database_references(references_list, credentials_dict, project_dir):
             if dialect == "sqlite" and sys.platform == "win32":
                 # Remove extra '/' from file path on Windows.
                 path = path[1:]
-            db_reference = {
+            db_reference: UrlDict = {
                 "dialect": dialect,
-                "host": url.hostname,
+                "host": url.hostname if url.hostname is not None else "",
                 "port": url.port,
                 "database": path,
             }
         else:
-            db_reference = dict(reference_dict)
+            db_reference: UrlDict = dict(reference_dict)
+            if "port" in db_reference and isinstance(db_reference["port"], str):
+                try:
+                    db_reference["port"] = int(db_reference["port"])
+                except ValueError:
+                    db_reference["port"] = None
         if db_reference["dialect"] == "sqlite":
             db_reference["database"] = deserialize_path(db_reference["database"], project_dir)
         db_reference["username"], db_reference["password"] = credentials_dict.get(
@@ -55,13 +85,13 @@ def restore_database_references(references_list, credentials_dict, project_dir):
     return db_references
 
 
-def _dialect_from_scheme(scheme):
+def _dialect_from_scheme(scheme: str) -> str:
     """Parses dialect from URL scheme.
 
     Args:
-        scheme (str): URL scheme
+        scheme: URL scheme
 
     Returns:
-        str: dialect name
+        dialect name
     """
     return scheme.split("+")[0]
