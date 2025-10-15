@@ -234,13 +234,8 @@ class Tool(DBWriterItemBase):
         self._do_update_remove_args_button_enabled()
         self._properties_ui.lineEdit_group_id.setText(self._group_id)
         self._properties_ui.lineEdit_root_directory.setText(self._root_directory)
-        output_dir_displayed = self._output_dir.replace("/", os.sep)
-        if same_path(self._output_dir, self.default_output_dir):
-            self._properties_ui.lineEdit_result_directory.clear()
-        else:  # Set text only if results directory is not default
-            self._properties_ui.lineEdit_result_directory.setText(output_dir_displayed)
-        self._properties_ui.lineEdit_result_directory.setPlaceholderText(output_dir_displayed)
-        self._properties_ui.lineEdit_result_directory.setToolTip(output_dir_displayed)
+        self._properties_ui.lineEdit_result_directory.setPlaceholderText(self.default_output_dir)
+        self._update_result_directory_line_edit()
 
     @Slot(bool)
     def _browse_root_directory(self, _=False):
@@ -284,13 +279,15 @@ class Tool(DBWriterItemBase):
         self._output_dir = self.default_output_dir if not result_dir else result_dir
         self._options["output_directory"] = self._project.serialize_path(self._output_dir)
         if self._active:
+            self._update_result_directory_line_edit()
+
+    def _update_result_directory_line_edit(self) -> None:
+        if same_path(self._output_dir, self.default_output_dir):
+            self._properties_ui.lineEdit_result_directory.clear()
+            self._properties_ui.lineEdit_result_directory.setToolTip(self.default_output_dir)
+        else:
             output_dir_displayed = self._output_dir.replace("/", os.sep)
-            if not result_dir:
-                self._properties_ui.lineEdit_result_directory.clear()
-                self._properties_ui.lineEdit_result_directory.setPlaceholderText(output_dir_displayed)
-            else:
-                self._properties_ui.lineEdit_result_directory.setText(output_dir_displayed)
-                self._properties_ui.lineEdit_result_directory.setToolTip(output_dir_displayed)
+            self._properties_ui.lineEdit_result_directory.setText(output_dir_displayed)
             self._properties_ui.lineEdit_result_directory.setToolTip(output_dir_displayed)
 
     @Slot(bool)
