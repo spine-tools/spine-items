@@ -17,7 +17,15 @@ import json
 import os.path
 from pathlib import Path
 import re
+from typing import TypedDict
+from typing_extensions import NotRequired
 from spine_engine.utils.helpers import custom_find_kernel_specs, resolve_julia_executable, resolve_julia_project
+
+
+class OptionsDict(TypedDict):
+    """Additional tool type specific options."""
+
+    julia_sysimage: NotRequired[str]
 
 
 def get_julia_path_and_project(exec_settings, settings):

@@ -298,7 +298,7 @@ class PythonToolSpecOptionalWidget(SharedToolSpecOptionalWidget):
         env = ""
         if use_jupyter_cons:
             # Check if the kernel is a Conda kernel by matching the name with the one that is in kernel_spec_model
-            # Find k_name in kernel_spec_model and check it's data
+            # Find k_name in kernel_spec_model and check its data
             row = self.find_index_by_data(k_name)
             if row == -1:
                 pass  # kernel not found
