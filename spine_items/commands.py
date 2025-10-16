@@ -11,17 +11,22 @@
 ######################################################################################################################
 
 """Undo/redo commands that can be used by multiple project items."""
+from typing import ClassVar
+from PySide6.QtCore import QModelIndex
+from spine_engine.project_item.project_item_resource import CmdLineArg
+from spinetoolbox.project import SpineToolboxProject
 from spinetoolbox.project_commands import SpineToolboxCommand
+from .models import CheckableFileListModel
 
 
 class UpdateCancelOnErrorCommand(SpineToolboxCommand):
-    def __init__(self, item_name, cancel_on_error, project):
+    def __init__(self, item_name: str, cancel_on_error: bool, project: SpineToolboxProject):
         """Command to update Importer, Exporter, and Merger cancel on error setting.
 
         Args:
-            item_name (str): Item's name
-            cancel_on_error (bool): New setting
-            project (SpineToolboxProject): project
+            item_name: Item's name
+            cancel_on_error: New setting
+            project: project
         """
         super().__init__()
         self._item_name = item_name
@@ -40,13 +45,13 @@ class UpdateCancelOnErrorCommand(SpineToolboxCommand):
 
 
 class UpdateOnConflictCommand(SpineToolboxCommand):
-    def __init__(self, item_name, on_conflict, project):
+    def __init__(self, item_name: str, on_conflict: str, project: SpineToolboxProject):
         """Command to update Importer and Merger 'on conflict' setting.
 
         Args:
-            item_name (str): Item's name
-            on_conflict (str): New setting
-            project (SpineToolboxProject): project
+            item_name: Item's name
+            on_conflict: New setting
+            project: project
         """
         super().__init__()
         self._item_name = item_name
@@ -66,14 +71,14 @@ class UpdateOnConflictCommand(SpineToolboxCommand):
 
 
 class ChangeItemSelectionCommand(SpineToolboxCommand):
-    def __init__(self, item_name, model, index, selected):
+    def __init__(self, item_name: str, model: CheckableFileListModel, index: QModelIndex, selected: bool):
         """Command to change file item's selection status.
 
         Args:
-            item_name (str): project item's name
-            model (FileListModel): File model
-            index (QModelIndex): Index to file model
-            selected (bool): True if the item is selected, False otherwise
+            item_name: project item's name
+            model: File model
+            index : Index to file model
+            selected: True if the item is selected, False otherwise
         """
         super().__init__()
         self._model = model
@@ -89,13 +94,13 @@ class ChangeItemSelectionCommand(SpineToolboxCommand):
 
 
 class UpdateCmdLineArgsCommand(SpineToolboxCommand):
-    def __init__(self, item_name, cmd_line_args, project):
+    def __init__(self, item_name: str, cmd_line_args: list[CmdLineArg], project: SpineToolboxProject):
         """Command to update Tool command line args.
 
         Args:
-            item_name (str): item's name
-            cmd_line_args (list): list of command line args
-            project (SpineToolboxProject): project
+            item_name: item's name
+            cmd_line_args: list of command line args
+            project: project
         """
         super().__init__()
         self._item_name = item_name
@@ -114,79 +119,67 @@ class UpdateCmdLineArgsCommand(SpineToolboxCommand):
         item.update_cmd_line_args(self._undo_cmd_line_args)
 
 
-class UpdateGroupIdCommand(SpineToolboxCommand):
-    def __init__(self, item_name, group_id, project):
-        """Command to update item group identifier.
+class UpdateText(SpineToolboxCommand):
+    _next_id: ClassVar[int] = 1
+
+    def __init__(
+        self,
+        item_name: str,
+        new: str,
+        old: str,
+        command_text: str,
+        command_id: int,
+        update_callback_name: str,
+        project: SpineToolboxProject,
+    ):
+        """Command to update a textual setting.
 
         Args:
-            item_name (str): item's name
-            group_id (str): group identifier
-            project (SpineToolboxProject): project
+            item_name: Item's name.
+            new: Updated text.
+            old: Previous text.
+            command_text: Undo command's text.
+            command_id: Command's id.
+            update_callback_name: Name of the callback to call on the item to update the text.
+            project: Project instance.
         """
         super().__init__()
         self._item_name = item_name
-        self._redo_group_id = group_id
-        item = project.get_item(item_name)
-        self._undo_group_id = item.group_id
+        self._is_sealed = False
+        self._new = new
+        self._old = old
+        self._id = command_id
+        self._update_callback_name = update_callback_name
         self._project = project
-        self.setText(f"change group identifier of {item_name}")
+        self.setText(command_text)
+
+    @classmethod
+    def generate_unique_id(cls) -> int:
+        unique_id = cls._next_id
+        cls._next_id += 1
+        return unique_id
+
+    def id(self):
+        return self._id
+
+    def mergeWith(self, other):
+        if not isinstance(other, UpdateText):
+            self._is_sealed = True
+            return False
+        if self._is_sealed or self._id != other._id:
+            return False
+        if self._old == other._new:
+            self.setObsolete(True)
+        else:
+            self._new = other._new
+        return True
 
     def redo(self):
         item = self._project.get_item(self._item_name)
-        item.do_set_group_id(self._redo_group_id)
+        set_text = getattr(item, self._update_callback_name)
+        set_text(self._new)
 
     def undo(self):
         item = self._project.get_item(self._item_name)
-        item.do_set_group_id(self._undo_group_id)
-
-
-class UpdateRootDirCommand(SpineToolboxCommand):
-    def __init__(self, item_name, root_dir, project):
-        """Command to update Tool root directory.
-
-        Args:
-            item_name (str): Item's name
-            root_dir (str): Root directory
-            project (SpineToolboxProject): Project
-        """
-        super().__init__()
-        self._item_name = item_name
-        self._redo_root_dir = root_dir
-        item = project.get_item(item_name)
-        self._undo_root_dir = item.root_dir
-        self._project = project
-        self.setText(f"change root directory of {item_name}")
-
-    def redo(self):
-        item = self._project.get_item(self._item_name)
-        item.do_set_root_directory(self._redo_root_dir)
-
-    def undo(self):
-        item = self._project.get_item(self._item_name)
-        item.do_set_root_directory(self._undo_root_dir)
-
-
-class UpdateResultDirCommand(SpineToolboxCommand):
-    def __init__(self, item_name, result_dir, project):
-        """Command to update Tool result directory.
-
-        Args:
-            item_name (str): Item's name
-            result_dir (str): Result directory
-            project (SpineToolboxProject): Project
-        """
-        super().__init__()
-        self._item_name = item_name
-        self._redo_result_dir = result_dir
-        item = project.get_item(item_name)
-        self._undo_result_dir = item._options.get("output_directory")
-        self._project = project
-        self.setText(f"change result directory of {item_name}")
-
-    def redo(self):
-        item = self._project.get_item(self._item_name)
-        item.do_set_result_directory(self._redo_result_dir)
-
-    def undo(self):
-        item = self._project.get_item(self._item_name)
-        item.do_set_result_directory(self._undo_result_dir)
+        set_text = getattr(item, self._update_callback_name)
+        set_text(self._old)

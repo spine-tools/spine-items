@@ -17,7 +17,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spine_engine.utils.helpers import AppSettings
-from spine_items.tool.utils import find_last_output_files, get_julia_path_and_project
+from spine_items.tool.utils import find_last_output_files, get_julia_path_and_project, make_dir_if_necessary
 
 
 class TestFindLastOutputFiles(unittest.TestCase):
@@ -183,5 +183,20 @@ class TestGetJuliaPathAndProject(unittest.TestCase):
             self.assertTrue(julia_args[1] == "--project=/path/to/someotherjuliaproject")
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestMakeDirIfNecessary:
+    def test_makes_dir(self, tmp_path):
+        path = tmp_path / "my_dir"
+        assert make_dir_if_necessary({"key": "value"}, path)
+        assert path.exists()
+
+    def test_does_not_make_dir_if_dict_is_empty(self, tmp_path):
+        path = tmp_path / "my_dir"
+        assert make_dir_if_necessary({}, path)
+        assert not path.exists()
+
+    def test_returns_false_if_mkdir_failed(self, tmp_path):
+        path = tmp_path / "my_dir"
+        with mock.patch("spine_items.tool.utils.os.makedirs") as mock_makedirs:
+            mock_makedirs.side_effect = OSError()
+            assert not make_dir_if_necessary({"key": "value"}, path)
+        assert not path.exists()

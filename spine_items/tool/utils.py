@@ -17,18 +17,33 @@ import json
 import os.path
 from pathlib import Path
 import re
-from spine_engine.utils.helpers import custom_find_kernel_specs, resolve_julia_executable, resolve_julia_project
+from typing import TypedDict
+from typing_extensions import NotRequired
+from spine_engine.logger_interface import LoggerInterface
+from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.utils.helpers import (
+    AppSettings,
+    custom_find_kernel_specs,
+    resolve_julia_executable,
+    resolve_julia_project,
+)
 
 
-def get_julia_path_and_project(exec_settings, settings):
+class OptionsDict(TypedDict):
+    """Additional tool type specific options."""
+
+    julia_sysimage: NotRequired[str]
+
+
+def get_julia_path_and_project(exec_settings: dict, settings: AppSettings) -> list[str] | None:
     """Returns path to Julia and --project=path/to/project in a list based on Tool specs execution settings.
 
     Args:
-        exec_settings (dict): Execution settings
-        settings (AppSettings): application settings
+        exec_settings: Execution settings.
+        settings: Application settings.
 
     Returns:
-        list of str: e.g. ["path/to/julia", "--project=path/to/project/"] or None if kernel does not exist.
+        E.g. ["path/to/julia", "--project=path/to/project/"] or None if kernel does not exist.
     """
     use_jupyter_console = exec_settings["use_jupyter_console"]
     if use_jupyter_console:
@@ -61,7 +76,9 @@ def get_julia_path_and_project(exec_settings, settings):
     return retval
 
 
-def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):
+def flatten_file_path_duplicates(
+    file_paths: dict[str, list[str]], logger: LoggerInterface, log_duplicates: bool = False
+) -> dict[str, str | None]:
     """Flattens the extra duplicate dimension in file_paths."""
     flattened = {}
     for required_file, paths in file_paths.items():
@@ -75,12 +92,12 @@ def flatten_file_path_duplicates(file_paths, logger, log_duplicates=False):
     return flattened
 
 
-def file_paths_from_resources(resources):
+def file_paths_from_resources(resources: list[ProjectItemResource]) -> list[str]:
     """
     Returns file paths from given resources.
 
     Args:
-        resources (list): resources available
+        resources: resources available
 
     Returns:
         a list of file paths, possibly including patterns
@@ -99,14 +116,14 @@ def file_paths_from_resources(resources):
     return file_paths
 
 
-def find_file(filename, resources, one_file=None):
+def find_file(filename: str, resources: list[ProjectItemResource], one_file: bool = False) -> list[str] | None:
     """
     Returns all occurrences of full paths to given file name in resources available.
 
     Args:
-        filename (str): Searched file name (no path)
-        resources (list): list of resources available from upstream items
-        one_file (bool): If True, a list containing only the first found matching file is returned
+        filename: Searched file name (no path)
+        resources: list of resources available from upstream items
+        one_file: If True, a list containing only the first found matching file is returned
 
     Returns:
         list: Full paths to file if found, None if not found
@@ -122,16 +139,16 @@ def find_file(filename, resources, one_file=None):
     return found_file_paths if found_file_paths else None
 
 
-def find_last_output_files(output_files, output_dir):
+def find_last_output_files(output_files: list[str], output_dir: str | Path) -> dict[str, str]:
     """
     Returns latest output files.
 
     Args:
-        output_files (list): output file patterns from tool specification
-        output_dir (str): path to the execution output directory
+        output_files: output file patterns from tool specification
+        output_dir: path to the execution output directory
 
     Returns:
-        dict: a mapping from a file name pattern to the path of the most recent files in the results archive.
+        a mapping from a file name pattern to the path of the most recent files in the results archive.
     """
     if not os.path.exists(output_dir):
         return {}
@@ -156,15 +173,15 @@ def find_last_output_files(output_files, output_dir):
     return recent_output_files
 
 
-def _find_last_output_dir(output_dir, depth=0):
+def _find_last_output_dir(output_dir: str | Path, depth: int = 0) -> tuple[datetime, Path] | None:
     """Searches for the latest output archive directory recursively.
 
     Args:
-        output_dir (str):  path to the execution output directory
-        depth (int): current recursion depth
+        output_dir:  path to the execution output directory
+        depth: current recursion depth
 
     Returns:
-        tuple: creation datetime and directory path
+        creation datetime and directory path or None if no archive was found
     """
     latest = None
     result_directory_pattern = re.compile(r"^\d\d\d\d-\d\d-\d\dT\d\d.\d\d.\d\d")
@@ -178,7 +195,7 @@ def _find_last_output_dir(output_dir, depth=0):
             elif latest[0] < time_stamp:
                 latest = (time_stamp, path)
         elif depth < 1:
-            subdir_latest = _find_last_output_dir(str(path), depth + 1)
+            subdir_latest = _find_last_output_dir(path, depth + 1)
             if latest is None:
                 latest = subdir_latest
             elif subdir_latest is not None and latest[0] < subdir_latest[0]:
@@ -186,23 +203,23 @@ def _find_last_output_dir(output_dir, depth=0):
     return latest
 
 
-def is_pattern(file_name):
+def is_pattern(file_name: str) -> bool:
     """Returns True if file_name is actually a file pattern."""
     return "*" in file_name or "?" in file_name
 
 
-def make_dir_if_necessary(d, directory):
+def make_dir_if_necessary(d: dict, directory: str | Path) -> bool:
     """Creates a directory if given dictionary contains any items.
 
     Args:
-        d (dict): Dictionary to check
-        directory (str): Absolute path to directory that shall be created if necessary
+        d: Dictionary to check
+        directory: Absolute path to directory that shall be created if necessary
 
     Returns:
-        bool: True if directory was created successfully or dictionary is empty,
+        True if directory was created successfully or dictionary is empty,
         False if creating the directory failed.
     """
-    if len(d.items()) > 0:
+    if d:
         try:
             os.makedirs(directory, exist_ok=True)
         except OSError:
