@@ -11,8 +11,7 @@
 ######################################################################################################################
 
 """Undo/redo commands that can be used by multiple project items."""
-from collections.abc import Callable
-from enum import IntEnum
+from typing import ClassVar
 from PySide6.QtCore import QModelIndex
 from spine_engine.project_item.project_item_resource import CmdLineArg
 from spinetoolbox.project import SpineToolboxProject
@@ -120,59 +119,9 @@ class UpdateCmdLineArgsCommand(SpineToolboxCommand):
         item.update_cmd_line_args(self._undo_cmd_line_args)
 
 
-class UpdateGroupIdCommand(SpineToolboxCommand):
-    def __init__(self, item_name: str, group_id: str, project: SpineToolboxProject):
-        """Command to update item group identifier.
-
-        Args:
-            item_name: item's name
-            group_id: group identifier
-            project: project
-        """
-        super().__init__()
-        self._item_name = item_name
-        self._redo_group_id = group_id
-        item = project.get_item(item_name)
-        self._undo_group_id = item.group_id
-        self._project = project
-        self.setText(f"change group identifier of {item_name}")
-
-    def redo(self):
-        item = self._project.get_item(self._item_name)
-        item.do_set_group_id(self._redo_group_id)
-
-    def undo(self):
-        item = self._project.get_item(self._item_name)
-        item.do_set_group_id(self._undo_group_id)
-
-
-class UpdateRootDirCommand(SpineToolboxCommand):
-    def __init__(self, item_name: str, root_dir: str, project: SpineToolboxProject):
-        """Command to update Tool root directory.
-
-        Args:
-            item_name: Item's name
-            root_dir: Root directory
-            project: Project
-        """
-        super().__init__()
-        self._item_name = item_name
-        self._redo_root_dir = root_dir
-        item = project.get_item(item_name)
-        self._undo_root_dir = item.root_dir
-        self._project = project
-        self.setText(f"change root directory of {item_name}")
-
-    def redo(self):
-        item = self._project.get_item(self._item_name)
-        item.do_set_root_directory(self._redo_root_dir)
-
-    def undo(self):
-        item = self._project.get_item(self._item_name)
-        item.do_set_root_directory(self._undo_root_dir)
-
-
 class UpdateText(SpineToolboxCommand):
+    _next_id: ClassVar[int] = 1
+
     def __init__(
         self,
         item_name: str,
@@ -203,6 +152,12 @@ class UpdateText(SpineToolboxCommand):
         self._update_callback_name = update_callback_name
         self._project = project
         self.setText(command_text)
+
+    @classmethod
+    def generate_unique_id(cls) -> int:
+        unique_id = cls._next_id
+        cls._next_id += 1
+        return unique_id
 
     def id(self):
         return self._id

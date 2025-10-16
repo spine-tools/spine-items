@@ -13,7 +13,7 @@
 """Contains the Tool project item class."""
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 from PySide6.QtCore import QItemSelection, Qt, Slot
 from PySide6.QtGui import QAction
 from spine_engine.config import TOOL_OUTPUT_DIR
@@ -23,7 +23,7 @@ from spine_engine.utils.serialization import deserialize_path
 from spinetoolbox.helpers import SealCommand, open_url, same_path, select_directory_with_dialog
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from spinetoolbox.project import SpineToolboxProject
-from ..commands import UpdateCmdLineArgsCommand, UpdateGroupIdCommand, UpdateRootDirCommand, UpdateText
+from ..commands import UpdateCmdLineArgsCommand, UpdateText
 from ..db_writer_item_base import DBWriterItemBase
 from ..models import ToolCommandLineArgsModel
 from .commands import (
@@ -42,8 +42,9 @@ from .widgets.options_widgets import JuliaOptionsWidget
 if TYPE_CHECKING:
     from spinetoolbox.ui_main import ToolboxUI
 
-COMMAND_ID_NONE: Literal[-1] = -1
-COMMAND_ID_UPDATE_RESULT_DIR: Literal[1] = 1
+COMMAND_ID_UPDATE_RESULT_DIR = UpdateText.generate_unique_id()
+COMMAND_ID_UPDATE_GROUP_ID = UpdateText.generate_unique_id()
+COMMAND_ID_UPDATE_ROOT_DIR = UpdateText.generate_unique_id()
 
 
 class Tool(DBWriterItemBase):
@@ -189,8 +190,10 @@ class Tool(DBWriterItemBase):
         s[self._properties_ui.treeView_cmdline_args.selectionModel().selectionChanged] = (
             self._update_remove_args_button_enabled
         )
-        s[self._properties_ui.lineEdit_group_id.editingFinished] = self._set_group_id
-        s[self._properties_ui.lineEdit_root_directory.editingFinished] = self._set_root_directory
+        s[self._properties_ui.lineEdit_group_id.textChanged] = self._update_group_id
+        s[self._properties_ui.lineEdit_group_id.editingFinished] = self._finish_updating_group_id
+        s[self._properties_ui.lineEdit_root_directory.textChanged] = self._update_root_directory
+        s[self._properties_ui.lineEdit_root_directory.editingFinished] = self._finish_updating_root_directory
         s[self._properties_ui.toolButton_browse_root_directory.clicked] = self._browse_root_directory
         s[self._properties_ui.lineEdit_result_directory.textChanged] = self._update_result_directory
         s[self._properties_ui.lineEdit_result_directory.editingFinished] = self._finish_updating_result_directory
@@ -199,19 +202,31 @@ class Tool(DBWriterItemBase):
         s[self._properties_ui.log_process_output_check_box.clicked] = self._set_log_process_output
         return s
 
-    @Slot()
-    def _set_group_id(self):
-        """Pushes a command to update group id whenever the user edits the line edit."""
-        group_id = self._properties_ui.lineEdit_group_id.text()
-        if not group_id:
-            group_id = None
-        if self._group_id == group_id:
+    @Slot(str)
+    def _update_group_id(self, text: str) -> None:
+        if text == self._group_id or (not text and self._group_id is None):
             return
-        self._toolbox.undo_stack.push(UpdateGroupIdCommand(self.name, group_id, self._project))
+        command_text = f"change group identifier of {self.name}"
+        self._toolbox.undo_stack.push(
+            UpdateText(
+                self.name,
+                text,
+                self._group_id if self._group_id else "",
+                command_text,
+                COMMAND_ID_UPDATE_GROUP_ID,
+                self.do_set_group_id.__name__,
+                self._project,
+            )
+        )
 
-    def do_set_group_id(self, group_id):
+    @Slot()
+    def _finish_updating_group_id(self) -> None:
+        """Pushes a command to update group id whenever the user edits the line edit."""
+        self._toolbox.undo_stack.push(SealCommand(COMMAND_ID_UPDATE_GROUP_ID))
+
+    def do_set_group_id(self, group_id: str) -> None:
         """Sets group id."""
-        self._group_id = group_id
+        self._group_id = group_id if group_id else None
         if self._active:
             self._properties_ui.lineEdit_group_id.setText(group_id)
 
@@ -261,17 +276,30 @@ class Tool(DBWriterItemBase):
             self._properties_ui.lineEdit_root_directory,
             self._project.project_dir,
         )
-        self._set_root_directory()
+
+    @Slot(str)
+    def _update_root_directory(self, new_dir: str) -> None:
+        if same_path(new_dir, self._root_directory):
+            return
+        command_text = f"change root directory of {self.name}"
+        self._toolbox.undo_stack.push(
+            UpdateText(
+                self.name,
+                new_dir,
+                self._root_directory,
+                command_text,
+                COMMAND_ID_UPDATE_ROOT_DIR,
+                self.do_set_root_directory.__name__,
+                self._project,
+            )
+        )
 
     @Slot()
-    def _set_root_directory(self):
-        """Pushes a command to update root directory whenever the user edits the line edit."""
-        root_dir = self._properties_ui.lineEdit_root_directory.text()
-        if self._root_directory == root_dir:
-            return
-        self._toolbox.undo_stack.push(UpdateRootDirCommand(self.name, root_dir, self._project))
+    def _finish_updating_root_directory(self):
+        """Seals any related update commands on the undo stack."""
+        self._toolbox.undo_stack.push(SealCommand(COMMAND_ID_UPDATE_ROOT_DIR))
 
-    def do_set_root_directory(self, root_dir):
+    def do_set_root_directory(self, root_dir: str) -> None:
         """Sets root directory."""
         self._root_directory = root_dir
         if self._active:
