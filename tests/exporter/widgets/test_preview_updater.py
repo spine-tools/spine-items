@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``preview_updater`` module."""
+import gc
 from multiprocessing import Process, Queue
 import pathlib
 from tempfile import TemporaryDirectory
@@ -80,6 +81,7 @@ class TestWriteTaskLoop(unittest.TestCase):
                 db_map.add_alternative_item(name="alt2")
                 db_map.commit_session("Add test data.")
             db_map.close()
+            gc.collect()
             sender = Queue()
             receiver = Queue()
             sender.put(WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
