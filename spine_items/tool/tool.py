@@ -595,6 +595,7 @@ class Tool(DBWriterItemBase):
             )
         resources = self._resources_from_upstream + self._resources_from_downstream
         resources_changed = resources != self._available_resources
+        required_files = set()
         req_files_changed = False
         if self.specification():
             required_files = self.specification().inputfiles
@@ -605,6 +606,8 @@ class Tool(DBWriterItemBase):
                 file_paths = self._find_input_files(resources)
                 file_paths = flatten_file_path_duplicates(file_paths, self._logger)
                 self._input_files_not_found = [k for k, v in file_paths.items() if v is None]
+            elif not required_files:
+                self._input_files_not_found = []
             # Check that main program file exists. If not, log a message with an anchor to find it
             if len(self.specification().includes) > 0:
                 filename = self.specification().includes[0]
