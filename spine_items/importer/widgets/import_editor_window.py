@@ -16,7 +16,7 @@ import fnmatch
 import json
 from operator import attrgetter
 import os
-from typing import TYPE_CHECKING, ClassVar, Type, TypeGuard
+from typing import TYPE_CHECKING, ClassVar, Type
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Signal, Slot
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QListWidget, QMessageBox, QVBoxLayout
 from spine_engine.project_item.project_item_resource import SourceExtras
@@ -27,6 +27,7 @@ from spinedb_api.spine_io.importers.reader import Reader
 from spinedb_api.spine_io.importers.sqlalchemy_reader import SQLAlchemyReader
 from spinetoolbox.config import APPLICATION_PATH
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
+from spinetoolbox.logger import QtLogger
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from ...utils import UrlDict, convert_to_sqlalchemy_url
 from ...widgets import UrlSelectorDialog
@@ -100,6 +101,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             input_extras: Additional input settings such as database schema
         """
         super().__init__(toolbox, specification, item)
+        self._logger = QtLogger(self)
+        self._logger.msg_error.connect(self._show_error_log)
         self._input = input if input is not None else self._FILE_LESS
         self._input_extras: SourceExtras = input_extras if input_extras is not None else {}
         self._mappings_model = MappingsModel(self._undo_stack, self)
@@ -139,6 +142,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if super()._save(exiting):
             self._import_mappings.specification_saved()
             return True
+        return False
 
     @property
     def _duplicate_kwargs(self):
@@ -178,7 +182,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             url = self._get_input_url()
             if url is None:
                 return
-            self._input = str(convert_to_sqlalchemy_url(url, logger=self))
+            self._input = str(convert_to_sqlalchemy_url(url, logger=self._toolbox))
             schema = url["schema"]
             self._input_extras = {"schema": schema if schema else None}
         else:
@@ -209,6 +213,10 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
             filter_=filter_,
         )
         return filepath
+
+    @Slot(str)
+    def _show_error_log(self, message: str) -> None:
+        QMessageBox.warning(self, "Error", message)
 
     @staticmethod
     def _is_database_reader(reader: Type[Reader]) -> bool:
