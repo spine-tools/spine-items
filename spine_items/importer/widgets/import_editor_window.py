@@ -37,6 +37,7 @@ from ..executable_item import READER_NAME_TO_CLASS
 from ..importer_specification import ImporterSpecification
 from ..mvcmodels.mappings_model import MappingsModel
 from ..mvcmodels.source_list_selection_model import SourceListSelectionModel
+from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
 from .import_sources import ImportSources
@@ -57,7 +58,7 @@ class _ReaderProblemInMapping(Exception):
         self.reader_in_mapping = reader_in_mapping
 
 
-class ImportEditorWindow(SpecificationEditorWindowBase):
+class ImportEditorWindow(SpecificationEditorWindowBase[Ui_MainWindow]):
     """A QMainWindow to let users define Mappings for an Importer item."""
 
     connection_failed = Signal(str)
@@ -149,8 +150,6 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         return {"input": self._input}
 
     def _make_ui(self):
-        from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
-
         return Ui_MainWindow()
 
     def _make_new_specification(self, spec_name):

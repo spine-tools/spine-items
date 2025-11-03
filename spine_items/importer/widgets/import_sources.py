@@ -467,22 +467,26 @@ class ImportSources(QObject):
         self._ui.source_data_table.verticalHeader().sections_with_buttons = pivoted_rows
 
     @Slot(QPoint)
-    def show_source_list_context_menu(self, pos):
+    def show_source_list_context_menu(self, pos: QPoint) -> None:
         """
         Shows context menu for source tables.
 
         Args:
-            pos (QPoint): Mouse position
+            pos: Mouse position
         """
         global_pos = self._ui.source_list.mapToGlobal(pos)
         index = self._ui.source_list.indexAt(pos)
         clipboard = QApplication.clipboard()
         mime_data = clipboard.mimeData()
+        deletable_rows = _deletable_source_table_rows(
+            self._ui.source_list.selectedIndexes(), self.parent().is_file_less()
+        )
         source_list_menu = SourceListMenu(
             self._ui.source_list,
             global_pos,
             mime_data.hasFormat(TABLE_OPTIONS_MIME_TYPE),
             mime_data.hasFormat(MAPPING_LIST_MIME_TYPE),
+            bool(deletable_rows),
         )
         option = source_list_menu.get_action()
         source_list_menu.deleteLater()
@@ -506,6 +510,15 @@ class ImportSources(QObject):
             self._paste_mapping_list_from_clipboard()
             self._paste_table_options_from_clipboard()
             self._undo_stack.endMacro()
+        if option == "Delete":
+            table_list_model = index.model()
+            if len(deletable_rows) == 1:
+                self._undo_stack.push(DeleteSourceTableRow(table_list_model, deletable_rows[0]))
+            else:
+                self._undo_stack.beginMacro("remove source tables")
+                for row in sorted(deletable_rows, reverse=True):
+                    self._undo_stack.push(DeleteSourceTableRow(table_list_model, row))
+                self._undo_stack.endMacro()
 
     def _copy_mapping_list_to_clipboard(self, table_index):
         """
@@ -609,6 +622,15 @@ class ImportSources(QObject):
         mime_data.setData(TABLE_OPTIONS_MIME_TYPE, self._pickle_table_options(table_index))
         clipboard = QApplication.clipboard()
         clipboard.setMimeData(mime_data)
+
+
+def _deletable_source_table_rows(indexes: list[QModelIndex], is_file_less: bool) -> list[int]:
+    deletable_rows = []
+    for index in indexes:
+        item = index.data(Role.ITEM)
+        if item.real == is_file_less:
+            deletable_rows.append(index.row())
+    return deletable_rows
 
 
 def _sanitize_data(data, header):

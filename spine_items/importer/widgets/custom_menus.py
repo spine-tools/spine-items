@@ -12,7 +12,7 @@
 
 """Classes for context menus used alongside the Importer project item."""
 from PySide6.QtCore import QPoint, Signal, Slot
-from PySide6.QtWidgets import QMenu
+from PySide6.QtWidgets import QMenu, QWidget
 from spinetoolbox.mvcmodels.filter_checkbox_list_model import DataToValueFilterCheckboxListModel
 from spinetoolbox.widgets.custom_menus import CustomContextMenu, FilterMenuBase, ItemSpecificationMenu
 from ..mvcmodels.mappings_model_roles import Role
@@ -42,11 +42,11 @@ class SpecificationMenu(ItemSpecificationMenu):
 
 
 class SourceListMenu(CustomContextMenu):
-    """
-    Menu for source list.
-    """
+    """Menu for source list."""
 
-    def __init__(self, parent, position, can_paste_option, can_paste_mapping):
+    def __init__(
+        self, parent: QWidget, position: QPoint, can_paste_option: bool, can_paste_mapping: bool, can_delete: bool
+    ):
         super().__init__(parent, position)
         self.add_action("Copy options")
         self.add_action("Copy mappings")
@@ -55,6 +55,8 @@ class SourceListMenu(CustomContextMenu):
         self.add_action("Paste options", enabled=can_paste_option)
         self.add_action("Paste mappings", enabled=can_paste_mapping)
         self.add_action("Paste options and mappings", enabled=can_paste_mapping & can_paste_option)
+        self.addSeparator()
+        self.add_action("Delete", enabled=can_delete)
 
 
 class MappingListMenu(CustomContextMenu):
