@@ -315,6 +315,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
                 self._undo_stack.resetClean()
         if self._input == self._FILE_LESS:
             self._FileLessReader.__name__ = reader.__name__
+            self._FileLessReader.DISPLAY_NAME = reader.DISPLAY_NAME
             self._FileLessReader.FILE_EXTENSIONS = reader.FILE_EXTENSIONS
             self._FileLessReader.OPTIONS = reader.OPTIONS
             reader = self._FileLessReader
