@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains base classes for items that write to db."""
+from collections.abc import Iterator
 from PySide6.QtCore import Slot
 from spine_engine.utils.helpers import ExecutionDirection
 from spinetoolbox.project_item.project_item import ProjectItem
@@ -19,14 +20,13 @@ from spinetoolbox.project_item.project_item import ProjectItem
 class DBWriterItemBase(ProjectItem):
     """Base class for items that might write to a Spine DB."""
 
-    def successor_data_stores(self):
+    def successor_data_stores(self) -> Iterator[ProjectItem]:
         for name in self._project.successor_names(self.name):
             item = self._project.get_item(name)
             if item.item_type() == "Data Store":
                 yield item
 
-    @Slot(object, object)
-    def handle_execution_successful(self, execution_direction):
+    def handle_execution_successful(self, execution_direction: ExecutionDirection) -> None:
         """Notifies Toolbox of successful database import."""
         if execution_direction != ExecutionDirection.FORWARD:
             return
@@ -39,7 +39,7 @@ class DBWriterItemBase(ProjectItem):
         if committed_db_maps:
             self._toolbox.db_mngr.notify_session_committed(self, *committed_db_maps)
 
-    def _check_write_index(self):
+    def _check_write_index(self) -> None:
         """Checks if write index is valid."""
         conflicting = {}
         descendants = set(self._project.descendant_names(self.name))

@@ -11,11 +11,95 @@
 ######################################################################################################################
 
 """Animation class for importers and exporters."""
+from __future__ import annotations
+from typing import ClassVar, Type
 from PySide6.QtCore import QLineF, QObject, QPointF, QRectF, Qt, QTimeLine, Signal, Slot
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainterPath
 from PySide6.QtWidgets import QGraphicsPathItem
 from spinetoolbox.font import TOOLBOX_FONT
 from spinetoolbox.helpers import color_from_index
+from spinetoolbox.project_item_icon import ProjectItemIcon
+
+
+class _PaperPlane(QGraphicsPathItem):
+    def __init__(
+        self,
+        parent: ProjectItemIcon,
+        font: QFont,
+        trajectory_path: QPainterPath,
+        percent: float,
+        step: float,
+        loop_rect: QRectF,
+    ):
+        super().__init__(parent)
+        self._trajectory_path = trajectory_path
+        self._percent = percent
+        self._step = step
+        self._loop_rect = loop_rect
+        self._icon_code = "\uf1d8"
+        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
+        self.setZValue(parent.svg_item.zValue())
+        path = QPainterPath()
+        path.addText(0, (1 - 0.14) * QFontMetrics(font).height(), font, self._icon_code)  # 14% baseline for FA
+        self.setPath(path)
+        self.setTransformOriginPoint(self.boundingRect().center())
+        border_pen = self.pen()
+        border_pen.setWidthF(0.5)
+        self.setPen(border_pen)
+        self.color = QColor(Qt.GlobalColor.white)
+        self.hide()
+
+    def advance(self, phase):
+        self._percent = self._percent + self._step
+        if self._percent > 1:
+            self._percent = -0.8
+        if self._percent < 0:
+            self.hide()
+            return
+        self.show()
+        pos = self._trajectory_path.pointAtPercent(self._percent)  #
+        self.setPos(pos - self.boundingRect().center())
+        if pos.y() > self._loop_rect.center().y():
+            self.parentItem().svg_item.stackBefore(self)
+            scale = 1
+        else:
+            self.stackBefore(self.parentItem().svg_item)
+            scale = 1 - 0.5 * (self._loop_rect.center().y() - pos.y()) / (self._loop_rect.height() / 2)
+        self.setScale(scale)
+        angle = self._trajectory_path.angleAtPercent(self._percent)
+        self.resetTransform()
+        if 90 < angle < 270:
+            self.flip_vertical()
+            self.setRotation(45 + angle)
+        else:
+            self.setRotation(45 - angle)
+        h, s, _, _ = self.color.getHslF()
+        self.color.setHslF(h, s, self._lightness())
+        self.setBrush(self.color)
+
+    def _lightness(self) -> float:
+        raise NotImplementedError()
+
+    def flip_vertical(self) -> None:
+        transform = self.transform()
+        m11 = transform.m11()
+        m12 = transform.m12()
+        m13 = transform.m13()
+        m21 = transform.m21()
+        m22 = transform.m22()
+        m23 = transform.m23()
+        m31 = transform.m31()
+        m32 = super().boundingRect().height() * m22
+        m33 = transform.m33()
+        m22 = -m22
+        transform.setMatrix(m11, m12, m13, m21, m22, m23, m31, m32, m33)
+        self.setTransform(transform)
+
+    def wipe_out(self) -> None:
+        scene = self.scene()
+        if scene is None:
+            return
+        scene.removeItem(self)
 
 
 class AnimationSignaller(QObject):
@@ -24,11 +108,25 @@ class AnimationSignaller(QObject):
 
 
 class ImporterExporterAnimation:
-    def __init__(self, item, duration=1800, plane_count=4, pixel_size=12, loop_width=30, loop_aspect_ratio=3):
-        """Initializes animation stuff.
+    _PaperPlane: ClassVar[Type[_PaperPlane]] = _PaperPlane
 
+    def __init__(
+        self,
+        item: ProjectItemIcon,
+        duration: int = 1800,
+        plane_count: int = 4,
+        pixel_size: int = 12,
+        loop_width: int = 30,
+        loop_aspect_ratio: int = 3,
+    ):
+        """
         Args:
-            item (QGraphicsItem): The item on top of which the animation should play.
+            item: The item on top of which the animation should play.
+            duration: Animation duration in milliseconds.
+            plane_count: Number of paper planes.
+            pixel_size: Plane font size in pixels.
+            loop_width: Animation width in pixels.
+            loop_aspect_ratio: Animation width-to-height ratio.
         """
         self._item = item
         self._planes = []
@@ -46,12 +144,12 @@ class ImporterExporterAnimation:
         self._step = self.time_line.updateInterval() / duration
 
     @Slot(float)
-    def _handle_time_line_value_changed(self, value):
+    def _handle_time_line_value_changed(self, value: float) -> None:
         for plane in self._planes:
             plane.advance(value)
 
     @Slot(QTimeLine.State)
-    def _handle_time_line_state_changed(self, new_state):
+    def _handle_time_line_state_changed(self, new_state: QTimeLine.State) -> None:
         sources = [conn.rect().center() for conn in self._item.connectors.values() if conn.incoming_links()]
         sinks = [conn.rect().center() for conn in self._item.connectors.values() if conn.outgoing_links()]
         center = self._item.rect().center()
@@ -111,106 +209,29 @@ class ImporterExporterAnimation:
             self._planes.clear()
 
     @Slot()
-    def start(self):
+    def start(self) -> None:
         """Starts the animation."""
         if self.time_line.state() == QTimeLine.State.Running:
             return
         self.time_line.start()
 
-    @staticmethod
-    def percent(value):
-        raise NotImplementedError()
-
     @Slot()
-    def stop(self):
+    def stop(self) -> None:
         """Stops the animation"""
         self.time_line.stop()
 
 
-class _PaperPlane(QGraphicsPathItem):
-    def __init__(self, parent, font, trajectory_path, percent, step, loop_rect):
-        super().__init__(parent)
-        self._parent = parent
-        self._trajectory_path = trajectory_path
-        self._percent = percent
-        self._step = step
-        self._loop_rect = loop_rect
-        self._icon_code = "\uf1d8"
-        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
-        self.setZValue(self._parent.svg_item.zValue())
-        path = QPainterPath()
-        path.addText(0, (1 - 0.14) * QFontMetrics(font).height(), font, self._icon_code)  # 14% baseline for FA
-        self.setPath(path)
-        self.setTransformOriginPoint(self.boundingRect().center())
-        border_pen = self.pen()
-        border_pen.setWidthF(0.5)
-        self.setPen(border_pen)
-        self.color = QColor(Qt.GlobalColor.white)
-        self.hide()
-
-    def advance(self, phase):
-        self._percent = self._percent + self._step
-        if self._percent > 1:
-            self._percent = -0.8
-        if self._percent < 0:
-            self.hide()
-            return
-        self.show()
-        pos = self._trajectory_path.pointAtPercent(self._percent)  #
-        self.setPos(pos - self.boundingRect().center())
-        if pos.y() > self._loop_rect.center().y():
-            self._parent.svg_item.stackBefore(self)
-            scale = 1
-        else:
-            self.stackBefore(self._parent.svg_item)
-            scale = 1 - 0.5 * (self._loop_rect.center().y() - pos.y()) / (self._loop_rect.height() / 2)
-        self.setScale(scale)
-        angle = self._trajectory_path.angleAtPercent(self._percent)
-        self.resetTransform()
-        if 90 < angle < 270:
-            self.flip_vertical()
-            self.setRotation(45 + angle)
-        else:
-            self.setRotation(45 - angle)
-        h, s, _, _ = self.color.getHslF()
-        self.color.setHslF(h, s, self._lightness())
-        self.setBrush(self.color)
-
-    def _lightness(self):
-        raise NotImplementedError()
-
-    def flip_vertical(self):
-        transform = self.transform()
-        m11 = transform.m11()
-        m12 = transform.m12()
-        m13 = transform.m13()
-        m21 = transform.m21()
-        m22 = transform.m22()
-        m23 = transform.m23()
-        m31 = transform.m31()
-        m32 = super().boundingRect().height() * m22
-        m33 = transform.m33()
-        m22 = -m22
-        transform.setMatrix(m11, m12, m13, m21, m22, m23, m31, m32, m33)
-        self.setTransform(transform)
-
-    def wipe_out(self):
-        scene = self.scene()
-        if scene is None:
-            return
-        scene.removeItem(self)
-
-
-def _point_at_angle(rect, angle):
+def _point_at_angle(rect: QRectF, angle: float) -> QPointF:
     if angle == 0:
         return QPointF(rect.right(), rect.center().y())
     if angle == 180:
         return QPointF(rect.left(), rect.center().y())
     if angle == 270:
         return QPointF(rect.center().x(), rect.bottom())
+    raise RuntimeError("logic error: unknown angle")
 
 
-def _nice_ctrl_point(p1, p2):
+def _nice_ctrl_point(p1: QPointF, p2: QPointF) -> QPointF:
     if p1.x() > p2.x():
         p1, p2 = p2, p1
     line = QLineF(p1, p2)
@@ -227,7 +248,7 @@ class _ImporterPaperPlane(_PaperPlane):
     def _lightness(self):
         threshold = 0.66
         max_darkness = 0.5
-        darkness = max(0, max_darkness * (self._percent - threshold) / (1 - threshold))
+        darkness = max(0.0, max_darkness * (self._percent - threshold) / (1 - threshold))
         return 1 - darkness
 
 
@@ -235,7 +256,7 @@ class _ExporterPaperPlane(_PaperPlane):
     def _lightness(self):
         threshold = 0.66
         max_darkness = 0.5
-        darkness = max(0, max_darkness * (threshold - self._percent) / threshold)
+        darkness = max(0.0, max_darkness * (threshold - self._percent) / threshold)
         return 1 - darkness
 
 
