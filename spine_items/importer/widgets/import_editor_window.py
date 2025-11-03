@@ -90,7 +90,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase[Ui_MainWindow]):
         toolbox: ToolboxUI,
         specification: ImporterSpecification,
         item: Importer | None = None,
-        input: str | None = None,
+        input_source: str | None = None,
         input_extras: SourceExtras | None = None,
     ):
         """
@@ -98,13 +98,13 @@ class ImportEditorWindow(SpecificationEditorWindowBase[Ui_MainWindow]):
             toolbox: ToolboxUI class
             specification: Importer specification
             item: Linked Importer item
-            input: Importee file path or URL; if None, work in file-less mode
+            input_source: Importee file path or URL; if None, work in file-less mode
             input_extras: Additional input settings such as database schema
         """
         super().__init__(toolbox, specification, item)
         self._logger = QtLogger(self)
         self._logger.msg_error.connect(self._show_error_log)
-        self._input = input if input is not None else self._FILE_LESS
+        self._input = input_source if input_source is not None else self._FILE_LESS
         self._input_extras: SourceExtras = input_extras if input_extras is not None else {}
         self._mappings_model = MappingsModel(self._undo_stack, self)
         self._mappings_model.rowsInserted.connect(self._reselect_source_table)
