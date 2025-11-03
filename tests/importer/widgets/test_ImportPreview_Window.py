@@ -49,8 +49,8 @@ class TestImportEditorWindow(unittest.TestCase):
             "windowState",
             "windowMaximized",
             "n_screens",
-            "splitter_source_listState",
-            "splitter_source_data_mappingsState",
+            "source_list_splitterState",
+            "source_data_mappings_splitterState",
             "splitterState",
         ):
             with self.subTest(key=key):

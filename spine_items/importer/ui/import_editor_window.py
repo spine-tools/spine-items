@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'import_editor_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.2
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -43,7 +43,6 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(929, 732)
-        MainWindow.setDockNestingEnabled(True)
         self.export_mappings_action = QAction(MainWindow)
         self.export_mappings_action.setObjectName(u"export_mappings_action")
         self.export_mappings_action.setEnabled(False)
@@ -55,8 +54,8 @@ class Ui_MainWindow(object):
         self.switch_input_type_action.setEnabled(False)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayout_6 = QVBoxLayout(self.centralwidget)
-        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
+        self.verticalLayout_7 = QVBoxLayout(self.centralwidget)
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.input_path_label = QLabel(self.centralwidget)
@@ -95,12 +94,18 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.input_type_line_edit)
 
 
-        self.verticalLayout_6.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_7.addLayout(self.horizontalLayout_2)
 
-        self.splitter_source_list = QSplitter(self.centralwidget)
-        self.splitter_source_list.setObjectName(u"splitter_source_list")
-        self.splitter_source_list.setOrientation(Qt.Orientation.Horizontal)
-        self.source_list = MultiCheckableListView(self.splitter_source_list)
+        self.source_list_splitter = QSplitter(self.centralwidget)
+        self.source_list_splitter.setObjectName(u"source_list_splitter")
+        self.source_list_splitter.setOrientation(Qt.Orientation.Horizontal)
+        self.widget = QWidget(self.source_list_splitter)
+        self.widget.setObjectName(u"widget")
+        self.verticalLayout_6 = QVBoxLayout(self.widget)
+        self.verticalLayout_6.setSpacing(0)
+        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
+        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.source_list = MultiCheckableListView(self.widget)
         self.source_list.setObjectName(u"source_list")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy1.setHorizontalStretch(1)
@@ -114,16 +119,33 @@ class Ui_MainWindow(object):
         self.source_list.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.source_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.source_list.setTextElideMode(Qt.TextElideMode.ElideLeft)
-        self.splitter_source_list.addWidget(self.source_list)
-        self.splitter_source_data_mappings = QSplitter(self.splitter_source_list)
-        self.splitter_source_data_mappings.setObjectName(u"splitter_source_data_mappings")
+
+        self.verticalLayout_6.addWidget(self.source_list)
+
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_4.addItem(self.horizontalSpacer_3)
+
+        self.remove_unavailable_sources_button = QPushButton(self.widget)
+        self.remove_unavailable_sources_button.setObjectName(u"remove_unavailable_sources_button")
+
+        self.horizontalLayout_4.addWidget(self.remove_unavailable_sources_button)
+
+
+        self.verticalLayout_6.addLayout(self.horizontalLayout_4)
+
+        self.source_list_splitter.addWidget(self.widget)
+        self.source_data_mappings_splitter = QSplitter(self.source_list_splitter)
+        self.source_data_mappings_splitter.setObjectName(u"source_data_mappings_splitter")
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(5)
         sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.splitter_source_data_mappings.sizePolicy().hasHeightForWidth())
-        self.splitter_source_data_mappings.setSizePolicy(sizePolicy2)
-        self.splitter_source_data_mappings.setOrientation(Qt.Orientation.Horizontal)
-        self.frame_source_data = QFrame(self.splitter_source_data_mappings)
+        sizePolicy2.setHeightForWidth(self.source_data_mappings_splitter.sizePolicy().hasHeightForWidth())
+        self.source_data_mappings_splitter.setSizePolicy(sizePolicy2)
+        self.source_data_mappings_splitter.setOrientation(Qt.Orientation.Horizontal)
+        self.frame_source_data = QFrame(self.source_data_mappings_splitter)
         self.frame_source_data.setObjectName(u"frame_source_data")
         sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy3.setHorizontalStretch(1)
@@ -175,8 +197,8 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.splitter_source_data_mappings.addWidget(self.frame_source_data)
-        self.splitter = QSplitter(self.splitter_source_data_mappings)
+        self.source_data_mappings_splitter.addWidget(self.frame_source_data)
+        self.splitter = QSplitter(self.source_data_mappings_splitter)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Orientation.Vertical)
         self.verticalLayoutWidget_2 = QWidget(self.splitter)
@@ -357,10 +379,10 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addLayout(self.verticalLayout_3)
 
         self.splitter.addWidget(self.frame_2)
-        self.splitter_source_data_mappings.addWidget(self.splitter)
-        self.splitter_source_list.addWidget(self.splitter_source_data_mappings)
+        self.source_data_mappings_splitter.addWidget(self.splitter)
+        self.source_list_splitter.addWidget(self.source_data_mappings_splitter)
 
-        self.verticalLayout_6.addWidget(self.splitter_source_list)
+        self.verticalLayout_7.addWidget(self.source_list_splitter)
 
         MainWindow.setCentralWidget(self.centralwidget)
         QWidget.setTabOrder(self.input_path_line_edit, self.browse_inputs_button)
@@ -401,6 +423,10 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.browse_inputs_button.setText(QCoreApplication.translate("MainWindow", u"...", None))
         self.input_type_label.setText(QCoreApplication.translate("MainWindow", u"Input type:", None))
+#if QT_CONFIG(tooltip)
+        self.remove_unavailable_sources_button.setToolTip(QCoreApplication.translate("MainWindow", u"Removes tables that are not in input source.", None))
+#endif // QT_CONFIG(tooltip)
+        self.remove_unavailable_sources_button.setText(QCoreApplication.translate("MainWindow", u"Remove unavailable tables", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Surplus column data type:", None))
 #if QT_CONFIG(tooltip)
         self.default_column_type_combo_box.setToolTip(QCoreApplication.translate("MainWindow", u"Select data type for additional columns in variable-length pivoted source data.", None))

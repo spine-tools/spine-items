@@ -177,21 +177,13 @@ class TestTableList(unittest.TestCase):
             item = self._model.index(row, 0).data(Role.ITEM)
             self.assertTrue(item.in_specification)
 
-    def test_remove_tables_not_in_source_and_specification(self):
-        self._model.append_new_table_with_mapping("table that gets removed", None)
-        self._model.append_new_table_with_mapping("table that is only in source", None)
-        root_mapping = import_mapping_from_dict({"map_type": "ObjectClass", "name": None, "object": None})
-        self._model.append_new_table_with_mapping("table that is in source and specification", root_mapping)
-        self.assertEqual(self._model.rowCount(), 4)
-        self._model.cross_check_source_table_names(
-            {"table that is only in source", "table that is in source and specification"}
-        )
-        self._model.remove_tables_not_in_source_and_specification()
+    def test_table_rows_not_in_source_and_specification(self):
+        self._model.append_new_table_with_mapping("table that is not in source", None)
+        self._model.append_new_table_with_mapping("table that is in source", None)
         self.assertEqual(self._model.rowCount(), 3)
-        expected_names = ["Select all", "table that is only in source", "table that is in source and specification"]
-        for row, expected_name in zip(range(self._model.rowCount()), expected_names):
-            item = self._model.index(row, 0).data(Role.ITEM)
-            self.assertEqual(item.name, expected_name)
+        self._model.cross_check_source_table_names({"table that is in source"})
+        rows = self._model.table_rows_not_in_source_and_specification()
+        self.assertEqual(rows, [1])
 
     def test_cross_check_source_table_names(self):
         self._model.append_new_table_with_mapping("initially in source", None)

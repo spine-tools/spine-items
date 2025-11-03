@@ -11,8 +11,10 @@
 ######################################################################################################################
 
 """Contains ImportSources widget and SourceDataTableMenu."""
+from __future__ import annotations
 from operator import itemgetter
 import pickle
+from typing import TYPE_CHECKING
 from PySide6.QtCore import (
     QItemSelection,
     QItemSelectionModel,
@@ -24,7 +26,7 @@ from PySide6.QtCore import (
     Signal,
     Slot,
 )
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QUndoStack
 from PySide6.QtWidgets import QApplication
 from spinedb_api.exception import InvalidMappingComponent
 from spinedb_api.import_mapping.type_conversion import (
@@ -33,13 +35,26 @@ from spinedb_api.import_mapping.type_conversion import (
     value_to_convert_spec,
 )
 from spinetoolbox.helpers import CharIconEngine
-from ..commands import DeleteMapping, PasteMappings, PasteOptions, RestoreMappingsFromDict, SetColumnDefaultType
-from ..mvcmodels.mappings_model import Role
+from ..commands import (
+    DeleteMapping,
+    DeleteSourceTableRow,
+    PasteMappings,
+    PasteOptions,
+    RestoreMappingsFromDict,
+    SetColumnDefaultType,
+)
+from ..connection_manager import ConnectionManager
+from ..mvcmodels.mappings_model import MappingsModel, Role
 from ..mvcmodels.source_data_table_model import SourceDataTableModel
+from ..ui.import_editor_window import Ui_MainWindow
 from .custom_menus import SourceDataTableMenu, SourceListMenu
 from .mime_types import MAPPING_LIST_MIME_TYPE, TABLE_OPTIONS_MIME_TYPE
 from .options_widget import OptionsWidget
 from .table_view_with_button_header import TYPE_TO_FONT_AWESOME_ICON
+
+if TYPE_CHECKING:
+    from .import_editor_window import ImportEditorWindow
+
 
 _EMPTY_DEFAULT_COLUMN_TYPE = "undefined"
 
@@ -52,13 +67,15 @@ class ImportSources(QObject):
 
     preview_data_updated = Signal(int)
 
-    def __init__(self, mappings_model, ui, undo_stack, parent):
+    def __init__(
+        self, mappings_model: MappingsModel, ui: Ui_MainWindow, undo_stack: QUndoStack, parent: ImportEditorWindow
+    ):
         """
         Args:
-            mappings_model (MappingsModel): mappings model
-            ui (Any): import editor window's UI
-            undo_stack (QUndoStack): undo stack
-            parent (ImportEditorWindow): import editor window
+            mappings_model: mappings model
+            ui: import editor window's UI
+            undo_stack: undo stack
+            parent: import editor window
         """
         super().__init__(parent)
         self._mappings_model = mappings_model
@@ -91,6 +108,7 @@ class ImportSources(QObject):
         self._ui.source_list.selectionModel().currentChanged.connect(self._change_selected_table)
         self._ui.mapping_list.selectionModel().currentChanged.connect(self._change_selected_mapping)
         self._ui.source_data_table.customContextMenuRequested.connect(self._ui_source_data_table_menu.request_menu)
+        self._ui.remove_unavailable_sources_button.clicked.connect(self._remove_unavailable_sources)
         self._ui.default_column_type_combo_box.currentTextChanged.connect(self._set_default_column_type)
 
         self._source_data_model.mapping_data_changed.connect(self._update_display_row_types)
@@ -112,13 +130,8 @@ class ImportSources(QObject):
                 self.parent().show_error(msg)
                 return
 
-    def set_connector(self, connector, mapping):
-        """Sets connector.
-
-        Args:
-            connector (ConnectionManager): connector
-            mapping (dict)
-        """
+    def set_connector(self, connector: ConnectionManager, mapping: dict) -> None:
+        """Sets connector."""
         self._ui.source_list.selectionModel().clearCurrentIndex()
         self._connector = connector
         self._connector.connection_ready.connect(self.request_new_tables_from_connector)
@@ -126,7 +139,7 @@ class ImportSources(QObject):
         self._connector.tables_ready.connect(self.update_tables)
         self._connector.default_mapping_ready.connect(self._set_default_mapping)
         self._ui_options_widget.set_connector(self._connector)
-        self._source_data_model.more_data_needed.connect(self.fetch_more_data, Qt.UniqueConnection)
+        self._source_data_model.more_data_needed.connect(self.fetch_more_data, Qt.ConnectionType.UniqueConnection)
         self.restore_connectors(mapping)
 
     def _fill_default_column_type_combo_box_items(self):
@@ -157,18 +170,16 @@ class ImportSources(QObject):
                 self.parent().show_error(str(error))
 
     @Slot(str)
-    def _select_table_for_undo(self, table_name):
-        """Selects source table to load correct values to different widgets.
-
-        Args:
-            table_name (str): table name
-        """
+    def _select_table_for_undo(self, table_name: str) -> None:
+        """Selects source table to load correct values to different widgets."""
         if table_name == self._connector.current_table:
             return
         for row in range(self._mappings_model.rowCount()):
             table_index = self._mappings_model.index(row, 0)
             if table_index.data() == table_name:
-                self._ui.source_list.selectionModel().setCurrentIndex(table_index, QItemSelectionModel.ClearAndSelect)
+                self._ui.source_list.selectionModel().setCurrentIndex(
+                    table_index, QItemSelectionModel.SelectionFlag.ClearAndSelect
+                )
                 break
 
     @Slot()
@@ -285,14 +296,14 @@ class ImportSources(QObject):
     def _select_table_row(self, row):
         selection_model = self._ui.source_list.selectionModel()
         index = self._mappings_model.index(row, 0)
-        selection_model.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+        selection_model.setCurrentIndex(index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
 
     @Slot(list)
-    def update_tables(self, tables):
+    def update_tables(self, tables: list[str]) -> None:
         """Updates list of tables.
 
         Args:
-            tables (list of str): updated source tables
+            tables: updated source tables
         """
         if self.parent().is_file_less():
             self._mappings_model.add_empty_row()
@@ -300,17 +311,26 @@ class ImportSources(QObject):
         selection_model = self._ui.source_list.selectionModel()
         current_row = selection_model.currentIndex().row()
         self._mappings_model.cross_check_source_table_names(set(tables))
-        self._mappings_model.remove_tables_not_in_source_and_specification()
         table_names = set(self._mappings_model.real_table_names())
         for t_name in tables:
             if t_name not in table_names:
                 self._mappings_model.append_new_table_with_mapping(t_name, None)
         # reselect current table if existing otherwise select first table
-        selection_model.setCurrentIndex(QModelIndex(), QItemSelectionModel.ClearAndSelect)
+        selection_model.setCurrentIndex(QModelIndex(), QItemSelectionModel.SelectionFlag.ClearAndSelect)
         if current_row >= 0:
             self._select_table_row(min(current_row, self._mappings_model.rowCount() - 1))
         else:
             self._select_table_row(1 if self._mappings_model.rowCount() > 1 else 0)
+
+    @Slot(bool)
+    def _remove_unavailable_sources(self, _: bool = False) -> None:
+        rows_to_remove = self._mappings_model.table_rows_not_in_source_and_specification()
+        if not rows_to_remove:
+            return
+        self._undo_stack.beginMacro("remove unavailable sources")
+        for row in sorted(rows_to_remove, reverse=True):
+            self._undo_stack.push(DeleteSourceTableRow(self._mappings_model, row))
+        self._undo_stack.endMacro()
 
     @Slot(list, list)
     def _update_source_data(self, data, header):
@@ -382,7 +402,7 @@ class ImportSources(QObject):
         """Restores source table list's current index."""
         row = min(self._stored_source_list_row, self._mappings_model.rowCount() - 1)
         current = self._mappings_model.index(row, 0)
-        self._ui.source_list.selectionModel().setCurrentIndex(current, QItemSelectionModel.ClearAndSelect)
+        self._ui.source_list.selectionModel().setCurrentIndex(current, QItemSelectionModel.SelectionFlag.ClearAndSelect)
 
     def store_connectors(self):
         """Returns a dictionary with type of connector and connector options for tables.

@@ -346,7 +346,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         """Shows connector's name on the ui.
 
         Args:
-            input_type: readers's display name
+            input_type: reader's display name
         """
         self._ui.input_type_line_edit.setText(input_type)
 
@@ -354,6 +354,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
     def _handle_connection_ready(self) -> None:
         self._ui.export_mappings_action.setEnabled(True)
         self._ui.import_mappings_action.setEnabled(True)
+        self._ui.remove_unavailable_sources_button.setEnabled(self._input != self._FILE_LESS)
 
     def _get_reader(self, input_path: str) -> Type[Reader] | None:
         """Shows a QDialog to select a reader for the given data input.
