@@ -163,7 +163,7 @@ class MappingsModel(QAbstractItemModel):
         """
         super().__init__(parent)
         self._undo_stack = undo_stack
-        self._mappings = [self._make_select_all_tables_item()]
+        self._mappings: list[SourceTableItem] = [self._make_select_all_tables_item()]
         self._add_table_row_font = QFont()
         self._add_table_row_font.setItalic(True)
 
@@ -399,8 +399,8 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             int: flags
         """
-        non_editable = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        editable = non_editable | Qt.ItemIsEditable
+        non_editable = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+        editable = non_editable | Qt.ItemFlag.ItemIsEditable
         column = index.column()
         if column == FlattenedColumn.NAME:
             return non_editable
@@ -600,6 +600,11 @@ class MappingsModel(QAbstractItemModel):
             flattened_mappings = FlattenedMappings(import_mapping_from_dict(mapping_data.mapping_dict))
             mapping_item.set_flattened_mappings(flattened_mappings)
             source_table.insert_to_mapping_list(list_row + i, mapping_item)
+        self.endInsertRows()
+
+    def insert_mapping_item(self, table_row: int, item: SourceTableItem) -> None:
+        self.beginInsertRows(QModelIndex(), table_row, table_row)
+        self._mappings.insert(table_row, item)
         self.endInsertRows()
 
     def index(self, row, column, parent=QModelIndex()):
@@ -1650,18 +1655,16 @@ class MappingsModel(QAbstractItemModel):
             bottom_right = self.index(bottom, 0)
             self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole])
 
-    def remove_tables_not_in_source_and_specification(self):
-        """Removes source table items that are not in source or saved in specification."""
+    def table_rows_not_in_source_and_specification(self) -> list[int]:
+        """Lists source table items that are not in source or saved in specification."""
         start = 1
-        for row, table_item in reversed(list(enumerate(self._mappings[start:], start))):
-            if not table_item.in_source and not table_item.in_specification:
-                self.removeRow(row)
+        return [row for row, item in enumerate(self._mappings[start:], start) if not item.in_source]
 
-    def cross_check_source_table_names(self, table_names):
+    def cross_check_source_table_names(self, table_names: set[str]) -> None:
         """Sets the in_source flag for all appropriate source table items.
 
         Args:
-            table_names (set of str): existing source table names
+            table_names: existing source table names
         """
         changed_rows = []
         start = 1
