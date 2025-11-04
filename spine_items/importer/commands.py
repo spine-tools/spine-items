@@ -11,13 +11,18 @@
 ######################################################################################################################
 
 """Contains undo and redo commands for Importer specification editor."""
+from __future__ import annotations
 from enum import IntEnum, auto, unique
 import pickle
+from typing import TYPE_CHECKING
 from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtGui import QUndoCommand
 from spine_items.importer.mvcmodels.mappings_model_roles import Role
 from spinedb_api import import_mapping_from_dict
 from spinedb_api.import_mapping.import_mapping import from_dict as mapping_from_dict
+
+if TYPE_CHECKING:
+    from spine_items.importer.mvcmodels.mappings_model import MappingsModel
 
 
 @unique
@@ -191,6 +196,29 @@ class UpdateTableItem(QUndoCommand):
 
     def undo(self):
         self._model.update_table_item(self._row, self._old_data, remove_empty_row=self._is_empty_row)
+
+
+class DeleteSourceTableRow(QUndoCommand):
+    """Command to remove a source table."""
+
+    def __init__(self, model: MappingsModel, row: int):
+        """
+        Args:
+            model: model
+            row: table row on the list
+        """
+        index = model.index(row, 0)
+        text = f"remove source table {index.data()}"
+        super().__init__(text)
+        self._model = model
+        self._row = row
+        self._deleted_item = pickle.dumps(index.data(Role.ITEM))
+
+    def redo(self):
+        self._model.removeRow(self._row)
+
+    def undo(self):
+        self._model.insert_mapping_item(self._row, pickle.loads(self._deleted_item))
 
 
 class SetMappingPositionType(QUndoCommand):

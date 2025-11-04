@@ -25,6 +25,7 @@ import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.project_item_resource import (
+    CmdLineArg,
     ProjectItemResource,
     expand_cmd_line_args,
     labelled_resource_args,
@@ -42,7 +43,15 @@ from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 from ..utils import generate_filter_subdirectory_name
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
+from .tool_specifications import ToolSpecification
+from .utils import (
+    OptionsDict,
+    file_paths_from_resources,
+    find_file,
+    flatten_file_path_duplicates,
+    is_pattern,
+    make_dir_if_necessary,
+)
 
 _ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
@@ -54,34 +63,35 @@ class ExecutableItem(DBWriterExecutableItemBase):
 
     def __init__(
         self,
-        name,
-        work_dir,
-        tool_specification,
-        cmd_line_args,
-        options,
-        kill_completed_processes,
-        log_process_output,
-        group_id,
-        project_dir,
-        logger,
+        name: str,
+        *,
+        work_dir: str | None,
+        output_dir: str,
+        tool_specification: ToolSpecification | None,
+        cmd_line_args: list[CmdLineArg],
+        options: OptionsDict,
+        kill_completed_processes: bool,
+        log_process_output: bool,
+        group_id: str | None,
+        project_dir: str,
+        logger: LoggerInterface,
     ):
         """
         Args:
-            name (str): item's name
-            work_dir (str): an absolute path to Spine Toolbox work directory
+            name: item's name
+            work_dir: an absolute path to Spine Toolbox work directory
                 or None if the Tool should not execute in work directory
-            tool_specification (ToolSpecification): a tool specification
-            cmd_line_args (list): a list of command line argument to pass to the tool instance
-            options (dict): misc tool options. See ``Tool`` for details.
-            kill_completed_processes (bool): whether to kill completed persistent processes after execution
-            log_process_output (bool): whether to log process output to a file
-            group_id (str or None): execution group identifier
-            project_dir (str): absolute path to project directory
-            logger (LoggerInterface): a logger
+            tool_specification: a tool specification
+            cmd_line_args: a list of command line argument to pass to the tool instance
+            options: misc tool options. See ``Tool`` for details.
+            kill_completed_processes: whether to kill completed persistent processes after execution
+            log_process_output: whether to log process output to a file
+            group_id: execution group identifier
+            project_dir: absolute path to project directory
+            logger: a logger
         """
         super().__init__(name, project_dir, logger, group_id=group_id)
         self._work_dir = work_dir
-        output_dir = deserialize_path(options.get("output_directory"), project_dir)
         self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR)) if not output_dir else output_dir
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
@@ -690,20 +700,25 @@ class ExecutableItem(DBWriterExecutableItemBase):
         )
         cmd_line_args = [make_cmd_line_arg(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
+        if "output_directory" in options:
+            output_dir = deserialize_path(options.get("output_directory", ""), project_dir)
+        else:
+            output_dir = deserialize_path(item_dict.get("output_directory", ""), project_dir)
         kill_completed_processes = item_dict.get("kill_completed_processes", False)
         log_process_output = item_dict.get("log_process_output", False)
         group_id = item_dict.get("group_id")
         return cls(
             name,
-            work_dir,
-            specification,
-            cmd_line_args,
-            options,
-            kill_completed_processes,
-            log_process_output,
-            group_id,
-            project_dir,
-            logger,
+            work_dir=work_dir,
+            output_dir=output_dir,
+            tool_specification=specification,
+            cmd_line_args=cmd_line_args,
+            options=options,
+            kill_completed_processes=kill_completed_processes,
+            log_process_output=log_process_output,
+            group_id=group_id,
+            project_dir=project_dir,
+            logger=logger,
         )
 
 

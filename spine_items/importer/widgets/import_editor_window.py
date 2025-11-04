@@ -11,12 +11,15 @@
 ######################################################################################################################
 
 """ Contains ImportPreviewWindow class. """
+from __future__ import annotations
 import fnmatch
 import json
 from operator import attrgetter
 import os
+from typing import TYPE_CHECKING, ClassVar, Type
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Signal, Slot
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QListWidget, QMessageBox, QVBoxLayout
+from spine_engine.project_item.project_item_resource import SourceExtras
 from spinedb_api.exception import ReaderError
 from spinedb_api.helpers import remove_credentials_from_url
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
@@ -24,8 +27,9 @@ from spinedb_api.spine_io.importers.reader import Reader
 from spinedb_api.spine_io.importers.sqlalchemy_reader import SQLAlchemyReader
 from spinetoolbox.config import APPLICATION_PATH
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
+from spinetoolbox.logger import QtLogger
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
-from ...utils import convert_to_sqlalchemy_url
+from ...utils import UrlDict, convert_to_sqlalchemy_url
 from ...widgets import UrlSelectorDialog
 from ..commands import RestoreMappingsFromDict
 from ..connection_manager import ConnectionManager
@@ -33,28 +37,33 @@ from ..executable_item import READER_NAME_TO_CLASS
 from ..importer_specification import ImporterSpecification
 from ..mvcmodels.mappings_model import MappingsModel
 from ..mvcmodels.source_list_selection_model import SourceListSelectionModel
+from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
 from .import_mapping_options import ImportMappingOptions
 from .import_mappings import ImportMappings
 from .import_sources import ImportSources
+
+if TYPE_CHECKING:
+    from spinetoolbox.ui_main import ToolboxUI
+    from ..importer import Importer
 
 
 class _ReaderProblemInMapping(Exception):
     """Raised when mapping has no reader or the reader looks different to file type."""
 
-    def __init__(self, reader_in_mapping):
+    def __init__(self, reader_in_mapping: Type[Reader] | None):
         """
         Args:
-            reader_in_mapping (type, optional): reader class defined in mapping
+            reader_in_mapping: reader class defined in mapping
         """
         self.reader_in_mapping = reader_in_mapping
 
 
-class ImportEditorWindow(SpecificationEditorWindowBase):
+class ImportEditorWindow(SpecificationEditorWindowBase[Ui_MainWindow]):
     """A QMainWindow to let users define Mappings for an Importer item."""
 
     connection_failed = Signal(str)
 
-    _FILE_LESS = "anonymous"
+    _FILE_LESS: ClassVar[str] = "anonymous"
     """Name of the 'file-less' input."""
 
     class _FileLessReader(Reader):
@@ -76,18 +85,27 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         def get_data_iterator(self, table, options, max_rows=-1):
             return iter([]), ()
 
-    def __init__(self, toolbox, specification, item=None, input=None, input_extras=None):
+    def __init__(
+        self,
+        toolbox: ToolboxUI,
+        specification: ImporterSpecification,
+        item: Importer | None = None,
+        input_source: str | None = None,
+        input_extras: SourceExtras | None = None,
+    ):
         """
         Args:
-            toolbox (QMainWindow): ToolboxUI class
-            specification (ImporterSpecification, optional): Importer specification
-            item (Importer, optional): Linked Importer item
-            input (str, optional): Importee file path or URL; if None, work in file-less mode
-            input_extras (dict, optional): Additional input settings such as database schema
+            toolbox: ToolboxUI class
+            specification: Importer specification
+            item: Linked Importer item
+            input_source: Importee file path or URL; if None, work in file-less mode
+            input_extras: Additional input settings such as database schema
         """
         super().__init__(toolbox, specification, item)
-        self._input = input if input is not None else self._FILE_LESS
-        self._input_extras = input_extras if input_extras is not None else {}
+        self._logger = QtLogger(self)
+        self._logger.msg_error.connect(self._show_error_log)
+        self._input = input_source if input_source is not None else self._FILE_LESS
+        self._input_extras: SourceExtras = input_extras if input_extras is not None else {}
         self._mappings_model = MappingsModel(self._undo_stack, self)
         self._mappings_model.rowsInserted.connect(self._reselect_source_table)
         self._ui.source_list.setModel(self._mappings_model)
@@ -96,8 +114,8 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.mapping_list.setRootIndex(self._mappings_model.dummy_parent())
         self._ui.mapping_spec_table.setModel(self._mappings_model)
         self._ui.mapping_spec_table.setRootIndex(self._mappings_model.dummy_parent())
-        self._connection_manager = None
-        self._memoized_reader = None
+        self._connection_manager: ConnectionManager | None = None
+        self._memoized_reader: Type[Reader] | None = None
         self._import_mappings = ImportMappings(self._mappings_model, self._ui, self._undo_stack, self)
         self._import_mapping_options = ImportMappingOptions(self._mappings_model, self._ui, self._undo_stack)
         self._import_sources = ImportSources(self._mappings_model, self._ui, self._undo_stack, self)
@@ -113,7 +131,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._mappings_model.restore(self.specification.mapping if self.specification is not None else {})
         QTimer.singleShot(0, self.start_ui)
 
-    def is_file_less(self):
+    def is_file_less(self) -> bool:
         return not self._ui.input_path_line_edit.text()
 
     @property
@@ -125,14 +143,13 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         if super()._save(exiting):
             self._import_mappings.specification_saved()
             return True
+        return False
 
     @property
     def _duplicate_kwargs(self):
         return {"input": self._input}
 
     def _make_ui(self):
-        from ..ui.import_editor_window import Ui_MainWindow  # pylint: disable=import-outside-toplevel
-
         return Ui_MainWindow()
 
     def _make_new_specification(self, spec_name):
@@ -150,7 +167,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         menu.insertActions(before, [self._ui.import_mappings_action, self._ui.export_mappings_action])
         menu.insertSeparator(before)
 
-    def _set_input_text(self):
+    def _set_input_text(self) -> None:
         """Sets input path/URL to the input line edit cleaning credentials from URLs."""
         if self._input == self._FILE_LESS:
             self._ui.input_path_line_edit.clear()
@@ -159,12 +176,12 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.input_path_line_edit.setText(label)
 
     @Slot(bool)
-    def _show_open_file_dialog(self, _=False):
+    def _show_open_file_dialog(self, _: bool = False) -> None:
         if self._is_database_reader(self._connection_manager.connection):
             url = self._get_input_url()
             if url is None:
                 return
-            self._input = str(convert_to_sqlalchemy_url(url, logger=self))
+            self._input = str(convert_to_sqlalchemy_url(url, logger=self._toolbox))
             schema = url["schema"]
             self._input_extras = {"schema": schema if schema else None}
         else:
@@ -176,14 +193,14 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._set_input_text()
         self.start_ui()
 
-    def _get_input_url(self):
+    def _get_input_url(self) -> UrlDict | None:
         selector = UrlSelectorDialog(self._toolbox.qsettings(), False, self._toolbox, parent=self)
         selector.exec()
         if selector.result() != QDialog.DialogCode.Accepted:
             return None
         return selector.url_dict()
 
-    def _get_input_file_path(self):
+    def _get_input_file_path(self) -> str:
         filter_ = ";;".join(["*.*"] + [conn.FILE_EXTENSIONS for conn in READER_NAME_TO_CLASS.values()])
         key = f"selectInputDataFileFor{self.specification.name if self.specification else None}"
         filepath, _ = get_open_file_name_in_last_dir(
@@ -196,30 +213,34 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         )
         return filepath
 
+    @Slot(str)
+    def _show_error_log(self, message: str) -> None:
+        QMessageBox.warning(self, "Error", message)
+
     @staticmethod
-    def _is_database_reader(reader):
+    def _is_database_reader(reader: Type[Reader]) -> bool:
         """Tests if reader class works with database URLs.
 
         Args:
-            reader (type): reader class to test
+            reader: reader class to test
         """
         return reader.__name__ == SQLAlchemyReader.__name__
 
     @Slot(bool)
-    def _switch_input_type(self, _=False):
+    def _switch_input_type(self, _: bool = False) -> None:
         if self.specification:
             self.specification.mapping.pop("source_type", None)
         self._memoized_reader = None
         self.start_ui()
 
-    def _get_reader_from_mapping(self, input_path):
+    def _get_reader_from_mapping(self, input_path: str) -> Type[Reader]:
         """Reads reader for given input from mapping.
 
         Args:
-            input_path (str): importee file path or URL
+            input_path: importee file path or URL
 
         Returns:
-            type: reader class
+            reader class
         """
         if not self.specification:
             raise _ReaderProblemInMapping(None)
@@ -236,7 +257,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         return reader
 
     @Slot()
-    def _read_input_path_from_line(self):
+    def _read_input_path_from_line(self) -> None:
         """Sets input from input path line edit."""
         label = self._ui.input_path_line_edit.text()
         if self._input == self._FILE_LESS:
@@ -254,19 +275,15 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self.start_ui()
 
     @Slot(str)
-    def _maybe_switch_to_file_less_mode(self, text):
-        """Switches to file-less mode if text has been cleared.
-
-        Args:
-            text (str): text
-        """
+    def _maybe_switch_to_file_less_mode(self, text: str) -> None:
+        """Switches to file-less mode if text has been cleared."""
         if text or self._input == self._FILE_LESS:
             return
         self._input = self._FILE_LESS
         self._input_extras = None
         self.start_ui()
 
-    def start_ui(self):
+    def start_ui(self) -> None:
         """Connects to input and fills the tables and lists with data."""
         try:
             reader = self._get_reader_from_mapping(self._input)
@@ -297,6 +314,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
                 self._undo_stack.resetClean()
         if self._input == self._FILE_LESS:
             self._FileLessReader.__name__ = reader.__name__
+            self._FileLessReader.DISPLAY_NAME = reader.DISPLAY_NAME
             self._FileLessReader.FILE_EXTENSIONS = reader.FILE_EXTENSIONS
             self._FileLessReader.OPTIONS = reader.OPTIONS
             reader = self._FileLessReader
@@ -324,24 +342,25 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         except ReaderError as error:
             QMessageBox.warning(self, "Failed to read source", f"Couldn't read source: {error}")
 
-    def _display_input_type(self, input_type):
+    def _display_input_type(self, input_type: str) -> None:
         """Shows connector's name on the ui.
 
         Args:
-            input_type (str): readers's display name
+            input_type: reader's display name
         """
         self._ui.input_type_line_edit.setText(input_type)
 
     @Slot()
-    def _handle_connection_ready(self):
+    def _handle_connection_ready(self) -> None:
         self._ui.export_mappings_action.setEnabled(True)
         self._ui.import_mappings_action.setEnabled(True)
+        self._ui.remove_unavailable_sources_button.setEnabled(self._input != self._FILE_LESS)
 
-    def _get_reader(self, input_path):
+    def _get_reader(self, input_path: str) -> Type[Reader] | None:
         """Shows a QDialog to select a reader for the given data input.
 
         Args:
-            input_path (str): Path of the file acting as an importee
+            input_path: Path of the file acting as an importee
 
         Returns:
             Asynchronous data reader class for the given importee
@@ -382,11 +401,11 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         row = reader_list_wg.currentIndex().row()
         if row < 0:
             return None
-        connector = self._memoized_reader = reader_list[row]
-        return connector
+        reader = self._memoized_reader = reader_list[row]
+        return reader
 
     @Slot()
-    def import_mapping_from_file(self):
+    def import_mapping_from_file(self) -> None:
         """Imports mapping spec from a user selected .json file to the preview window."""
         start_dir = self._toolbox.project().project_dir
         # noinspection PyCallByClass
@@ -408,7 +427,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._show_status_bar_msg(f"Mapping loaded from {filename[0]}")
 
     @Slot()
-    def export_mapping_to_file(self):
+    def export_mapping_to_file(self) -> None:
         """Exports all mapping specs in current preview window to .json file."""
         start_dir = self._toolbox.project().project_dir
         # noinspection PyCallByClass
@@ -424,16 +443,16 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._show_status_bar_msg(f"Mapping saved to: {filename[0]}")
 
     @Slot(QModelIndex, int, int)
-    def _reselect_source_table(self, parent, first, last):
+    def _reselect_source_table(self, parent: QModelIndex, first: int, last: int) -> None:
         """Selects added source table.
 
         This is a workaround to get the correct source table selected after a new one has been added
         since the source table view doesn't seem to update the current index correctly in this case.
 
         Args:
-            parent (QModelIndex): parent index
-            first (int): first new row
-            last (int): last new row
+            parent: parent index
+            first: first new row
+            last: last new row
         """
         if parent.isValid():
             return
@@ -441,18 +460,18 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         self._ui.source_list.selectionModel().setCurrentIndex(index, QItemSelectionModel.SelectionFlag.ClearAndSelect)
 
     @staticmethod
-    def _is_url(string):
+    def _is_url(string: str) -> bool:
         """Tests if given string looks like a URL.
 
         Args:
-            string (str): string to test
+            string: string to test
 
         Returns:
-            bool: True if string looks like a URL, False otherwise
+            True if string looks like a URL, False otherwise
         """
         return "://" in string
 
-    def tear_down(self):
+    def tear_down(self) -> bool:
         if not super().tear_down():
             return False
         if self._import_sources:
@@ -460,7 +479,7 @@ class ImportEditorWindow(SpecificationEditorWindowBase):
         return True
 
 
-def _gams_system_directory(toolbox):
+def _gams_system_directory(toolbox: ToolboxUI) -> str:
     """Returns GAMS system path from Toolbox settings or None if GAMS default is to be used."""
     path = toolbox.qsettings().value("appSettings/gamsPath", defaultValue=None)
     if not path:

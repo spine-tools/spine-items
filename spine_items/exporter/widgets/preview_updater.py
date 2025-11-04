@@ -53,6 +53,7 @@ class PreviewUpdater:
         self._url_model.rowsInserted.connect(self._enable_controls_after_url_insertion)
         self._url_model.modelReset.connect(self._enable_controls)
         self._url_model.destroyed.connect(self._forget_url_model)
+        self._ui.database_url_combo_box.destroyed.connect(self._nullify_url_combo_box)
         self._ui.database_url_combo_box.setModel(self._url_model)
         self._mappings_table_model = mappings_table_model
         self._set_expect_removals_and_inserts(False)
@@ -493,12 +494,18 @@ class PreviewUpdater:
     @Slot()
     def _forget_url_model(self):
         """Replaces current URL model with a mock one."""
+        if self._ui.database_url_combo_box is None:
+            return
         self._url_model = FullUrlListModel(self._ui.database_url_combo_box)
         self._url_model.rowsInserted.connect(self._enable_controls_after_url_insertion)
         self._url_model.modelReset.connect(self._enable_controls)
         self._url_model.destroyed.connect(self._forget_url_model)
         self._ui.database_url_combo_box.setModel(self._url_model)
         self._reload_preview()
+
+    @Slot()
+    def _nullify_url_combo_box(self) -> None:
+        self._ui.database_url_combo_box = None
 
     def tear_down(self):
         """Stops the writer process and cleans up."""

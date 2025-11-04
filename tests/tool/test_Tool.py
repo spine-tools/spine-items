@@ -136,7 +136,7 @@ class TestTool(unittest.TestCase):
         self.assertEqual(expected_data_dir, tool.data_dir)  # Check data dir
         # Check that output_dir has been updated
         expected_output_dir = os.path.join(tool.data_dir, TOOL_OUTPUT_DIR)
-        self.assertEqual(expected_output_dir, tool._output_dir)
+        self.assertEqual(expected_output_dir, tool.resolve_output_dir())
 
     def test_load_tool_specification(self):
         """Test that specification is loaded into selections on Tool creation,
