@@ -30,9 +30,9 @@ from spinedb_api.import_mapping.import_mapping_compat import (
     unparse_named_mapping_spec,
 )
 from spinedb_api.import_mapping.type_conversion import DateTimeConvertSpec, FloatConvertSpec, StringConvertSpec
+from spinedb_api.incomplete_values import join_value_and_type, split_value_and_type
 from spinedb_api.mapping import Position
 from spinedb_api.mapping import to_dict as import_mapping_to_dict
-from spinedb_api.parameter_value import join_value_and_type, split_value_and_type
 from spinetoolbox.helpers import list_to_rich_text, plain_to_rich, unique_name
 from spinetoolbox.mvcmodels.shared import PARSED_ROLE
 from ..commands import (
