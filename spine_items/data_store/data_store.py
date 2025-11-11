@@ -29,6 +29,7 @@ from spinetoolbox.project_item.project_item import ProjectItem
 from spinetoolbox.spine_db_editor.editors import db_editor_registry
 from spinetoolbox.spine_db_editor.widgets.multi_spine_db_editor import open_db_editor
 from spinetoolbox.widgets.custom_qwidgets import SelectDatabaseItemsDialog
+from . import models
 from ..database_validation import DatabaseConnectionValidator
 from ..utils import UrlDict, convert_to_sqlalchemy_url, database_label
 from .commands import UpdateDSURLCommand
@@ -471,6 +472,20 @@ class DataStore(ProjectItem):
         if d["url"]["dialect"] == "sqlite" and d["url"]["database"]:
             d["url"]["database"] = self._project.serialize_path(d["url"]["database"])
         return d
+
+    def to_model(self) -> models.DataStore:
+        if self._url["dialect"] == "sqlite":
+            database_path = self._url["database"]
+            url = models.SQLiteUrl(database=self._project.path_to_model(database_path) if database_path else None)
+        else:
+            url = models.RemoteUrl.model_validate(self._url)
+        return models.DataStore(description=self.description, x=self.x, y=self.y, url=url)
+
+    @classmethod
+    def from_model(
+        cls, name: str, model: models.DataStore, toolbox: ToolboxUI, project: SpineToolboxProject
+    ) -> DataStore:
+        return cls(name, model.description, model.x, model.y, toolbox, project, model.url.as_url_dict())
 
     @staticmethod
     def item_dict_local_entries():
