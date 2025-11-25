@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Unit tests for :literal:`utils` module. """
+"""Unit tests for :literal:`utils` module."""
 from hashlib import sha1
 from pathlib import Path
 from tempfile import TemporaryDirectory

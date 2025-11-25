@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Contains utilities shared between project items. """
+"""Contains utilities shared between project items."""
 from collections.abc import Iterable
 import os.path
 from typing import TypedDict

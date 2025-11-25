@@ -25,8 +25,10 @@ from spinedb_api.export_mapping.export_mapping import (
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
 )
+from spinedb_api.export_mapping.export_mapping import (
+    legacy_group_fn_from_dict,
+)
 from spinedb_api.export_mapping.export_mapping import from_dict as mapping_from_dict
-from spinedb_api.export_mapping.export_mapping import legacy_group_fn_from_dict
 from spinedb_api.mapping import Position
 from spinedb_api.mapping import to_dict as mapping_to_dict
 from spinedb_api.mapping import unflatten

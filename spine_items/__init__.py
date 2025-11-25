@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Spine items. """
+"""Spine items."""
 from .version import __version__
 
 

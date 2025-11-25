@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Contains unit tests for the ImportEditorWindow class. """
+"""Contains unit tests for the ImportEditorWindow class."""
 import csv
 from unittest import mock
 from frictionless import Package, Resource

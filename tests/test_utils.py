@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Unit tests for the ``utils`` module. """
+"""Unit tests for the ``utils`` module."""
 import sys
 import unittest
 from unittest import mock

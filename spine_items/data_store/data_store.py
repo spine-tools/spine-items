@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Module for data store class. """
+"""Module for data store class."""
 from __future__ import annotations
 from dataclasses import dataclass
 import os

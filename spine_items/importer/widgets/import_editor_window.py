@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Contains ImportPreviewWindow class. """
+"""Contains ImportPreviewWindow class."""
 from __future__ import annotations
 import fnmatch
 import json
