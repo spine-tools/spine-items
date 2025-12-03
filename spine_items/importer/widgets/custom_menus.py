@@ -134,15 +134,12 @@ class SourceDataTableMenu(QMenu):
 
 
 class SimpleFilterMenu(FilterMenuBase):
-    filterChanged = Signal(set)
+    filter_changed = Signal(set)
 
-    def __init__(self, parent, show_empty=True):
-        """
-        Args:
-            parent (SpineDBEditor)
-        """
+    def __init__(self, parent: QWidget | None, show_empty: bool = True):
         super().__init__(parent)
-        self._set_up(DataToValueFilterCheckboxListModel, self, str, show_empty=show_empty)
+        filter_model = DataToValueFilterCheckboxListModel(self, str, show_empty=show_empty)
+        self._set_up(filter_model)
 
     def emit_filter_changed(self, valid_values):
-        self.filterChanged.emit(valid_values)
+        self.filter_changed.emit(valid_values)

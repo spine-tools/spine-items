@@ -59,7 +59,7 @@ class ImportMappingOptions:
         self._ui.parameter_type_combo_box.currentTextChanged.connect(self._change_parameter_type)
         self._ui.value_type_combo_box.currentTextChanged.connect(self._change_value_type)
         self._ui.import_entities_check_box.stateChanged.connect(self._change_import_entities)
-        self._ui_ignore_columns_filtermenu.filterChanged.connect(self._change_skip_columns)
+        self._ui_ignore_columns_filtermenu.filter_changed.connect(self._change_skip_columns)
         self._ui.start_read_row_spin_box.valueChanged.connect(self._change_read_start_row)
         self._ui.import_entity_alternatives_check_box.stateChanged.connect(self._change_import_entity_alternatives)
         self._ui.time_series_repeat_check_box.stateChanged.connect(self._change_time_series_repeat_flag)
@@ -75,7 +75,7 @@ class ImportMappingOptions:
         else:
             selected = []
         # The filter menu is 1-based
-        self._ui_ignore_columns_filtermenu._filter._filter_model.set_list(set(range(1, num + 1)))
+        self._ui_ignore_columns_filtermenu.filter.model().set_list(list(range(1, num + 1)))
         self._update_ignore_columns_button(selected)
 
     def _has_current_mappings(self):
@@ -199,8 +199,8 @@ class ImportMappingOptions:
             skip_cols (list of int): 0-based list of ignored columns
         """
         # NOTE: We go from 0-based to 1-based, for visualization
-        skip_cols = [c + 1 for c in skip_cols]
-        self._ui_ignore_columns_filtermenu._filter._filter_model.set_selected(skip_cols)
+        skip_cols = {c + 1 for c in skip_cols}
+        self._ui_ignore_columns_filtermenu.filter.model().set_selected(skip_cols)
         skip_button_text = ", ".join(str(c) for c in skip_cols)
         if len(skip_button_text) > 20:
             skip_button_text = skip_button_text[:20] + "..."
