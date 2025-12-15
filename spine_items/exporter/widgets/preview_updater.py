@@ -20,7 +20,6 @@ from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Slot
 from PySide6.QtWidgets import QFileDialog
 from spinedb_api import DatabaseMapping, SpineDBAPIError, SpineDBVersionError
 from spinedb_api.export_mapping.export_mapping import ExportMapping
-from spinedb_api.export_mapping.group_functions import GroupFunction
 from spinedb_api.spine_io.exporters.writer import write
 from ..mvcmodels.full_url_list_model import FullUrlListModel
 from ..mvcmodels.mappings_table_model import MappingsTableModel
@@ -533,7 +532,7 @@ class WriteTableTask:
     always_export_header: bool
     max_tables: int
     max_rows: int
-    group_fn: GroupFunction
+    group_fn: str
 
 
 def write_task_loop(sender, receiver):
