@@ -15,6 +15,7 @@ from operator import itemgetter
 import os
 from PySide6.QtCore import QModelIndex, Qt, Slot
 from spinetoolbox.helpers import create_dir
+from spinetoolbox.project_upgrader import make_unique_importer_specification_name
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 from ..commands import ChangeItemSelectionCommand, UpdateCancelOnErrorCommand, UpdateOnConflictCommand
 from ..db_writer_item_base import DBWriterItemBase
@@ -349,7 +350,7 @@ class Importer(DBWriterItemBase):
         return item_dict
 
     @staticmethod
-    def upgrade_v2_to_v3(item_name, item_dict, project_upgrader):
+    def upgrade_v2_to_v3(item_name, item_dict):
         """
         Upgrades item's dictionary from v2 to v3.
 
@@ -360,7 +361,6 @@ class Importer(DBWriterItemBase):
         Args:
             item_name (str): item's name
             item_dict (dict): Version 1 item dictionary
-            project_upgrader (ProjectUpgrader)
 
         Returns:
             dict: Version 2 item dictionary
@@ -371,7 +371,7 @@ class Importer(DBWriterItemBase):
             specification_name = ""
         else:
             label, _ = mapping
-            specification_name = project_upgrader.make_unique_importer_specification_name(item_name, label, 0)
+            specification_name = make_unique_importer_specification_name(item_name, label, 0)
         new_item_dict = {k: v for k, v in item_dict.items() if k != "mappings"}
         new_item_dict["specification"] = specification_name
         new_item_dict["file_selection"] = item_dict.pop("mapping_selection")
