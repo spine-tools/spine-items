@@ -143,11 +143,8 @@ class TestSourceDataTableModel(unittest.TestCase):
         )
         self._model.set_mapping_list_index(list_index)
         entity_color = self._find_color(list_index, "Entity names")
-        metadata_color = self._find_color(list_index, "Entity metadata")
         self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), entity_color)
         self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
-        self.assertEqual(self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), metadata_color)
-        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.ItemDataRole.BackgroundRole), metadata_color)
         # column not showing color if the columns is skipped
         list_index = self._add_mapping(
             mappings_model,
@@ -171,13 +168,11 @@ class TestSourceDataTableModel(unittest.TestCase):
         self._model.set_mapping_list_index(list_index)
         entity_class_color = self._find_color(list_index, "Entity class names")
         entity_color = self._find_color(list_index, "Entity names")
-        metadata_color = self._find_color(list_index, "Entity metadata")
         self.assertEqual(self._model.data(self._model.index(0, 0), role=Qt.ItemDataRole.BackgroundRole), None)
         self.assertEqual(self._model.data(self._model.index(0, 1), role=Qt.ItemDataRole.BackgroundRole), entity_color)
         self.assertEqual(
             self._model.data(self._model.index(1, 0), role=Qt.ItemDataRole.BackgroundRole), entity_class_color
         )
-        self.assertEqual(self._model.data(self._model.index(1, 1), role=Qt.ItemDataRole.BackgroundRole), metadata_color)
         mappings_model.deleteLater()
 
     def test_mapping_column_and_pivot_colors_with_value_mapping_position_set_to_random_column(self):
@@ -274,7 +269,3 @@ class TestSourceDataTableModel(unittest.TestCase):
         mappings_model.append_new_table_with_mapping(f"source table {mappings_model.rowCount()}", mapping)
         table_index = mappings_model.index(mappings_model.rowCount() - 1, 0)
         return mappings_model.index(0, 0, table_index)
-
-
-if __name__ == "__main__":
-    unittest.main()

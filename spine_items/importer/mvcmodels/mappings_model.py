@@ -20,7 +20,18 @@ import uuid
 from PySide6.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor, QFont
 from spinedb_api import ParameterValueFormatError, from_database
-from spinedb_api.import_mapping.import_mapping import default_import_mapping
+from spinedb_api.import_mapping.import_mapping import (
+    AlternativeMapping,
+    EntityClassMapping,
+    EntityGroupMapping,
+    EntityMetadataNameMapping,
+    MetadataNameMapping,
+    ParameterValueListMapping,
+    ParameterValueMetadataNameMapping,
+    ScenarioAlternativeMapping,
+    ScenarioMapping,
+    default_import_mapping,
+)
 from spinedb_api.import_mapping.import_mapping_compat import (
     import_mapping_from_dict,
     parameter_default_value_mapping_from_dict,
@@ -129,15 +140,15 @@ class MappingListItem:
     """An item in mappings list."""
 
     name: str
-    flattened_mappings: FlattenedMappings = field(init=False)
+    flattened_mappings: FlattenedMappings | None = field(init=False)
     source_table_item: SourceTableItem = field(init=False)
     id: uuid.UUID = field(init=False, default_factory=uuid.uuid4)
 
-    def set_flattened_mappings(self, flattened_mappings):
+    def set_flattened_mappings(self, flattened_mappings: FlattenedMappings) -> None:
         """Sets flattened mappings for this item.
 
         Args:
-            flattened_mappings (FlattenedMappings): mappings
+            flattened_mappings: mappings
         """
         flattened_mappings.mapping_list_item = self
         self.flattened_mappings = flattened_mappings
@@ -974,22 +985,25 @@ class MappingsModel(QAbstractItemModel):
         self.endInsertRows()
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
 
-    def set_mappings_type(self, table_row, list_row, new_type):
+    def set_mappings_type(self, table_row: int, list_row: int, new_type: str) -> None:
         """
         Sets the type for mappings.
 
         Args:
-            table_row (int): source table row index
-            list_row (int): mapping list row index
-            new_type (str): name of the type
+            table_row: source table row index
+            list_row: mapping list row index
+            new_type: name of the type
         """
         map_type = {
-            "Entity class": "EntityClass",
-            "Entity group": "EntityGroup",
-            "Alternative": "Alternative",
-            "Scenario": "Scenario",
-            "Scenario alternative": "ScenarioAlternative",
-            "Parameter value list": "ParameterValueList",
+            "Entity class": EntityClassMapping.MAP_TYPE,
+            "Entity group": EntityGroupMapping.MAP_TYPE,
+            "Alternative": AlternativeMapping.MAP_TYPE,
+            "Scenario": ScenarioMapping.MAP_TYPE,
+            "Scenario alternative": ScenarioAlternativeMapping.MAP_TYPE,
+            "Parameter value list": ParameterValueListMapping.MAP_TYPE,
+            "Metadata": MetadataNameMapping.MAP_TYPE,
+            "Entity metadata": EntityMetadataNameMapping.MAP_TYPE,
+            "Parameter value metadata": ParameterValueMetadataNameMapping.MAP_TYPE,
         }[new_type]
         root_mapping = default_import_mapping(map_type)
         self.set_root_mapping(table_row, list_row, root_mapping)
