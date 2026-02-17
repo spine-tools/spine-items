@@ -36,12 +36,16 @@ from spinedb_api.export_mapping.group_functions import (
     group_function_name_from_display,
 )
 from spinedb_api.export_mapping.settings import (
+    entity_metadata_export,
+    metadata_export,
+    parameter_value_metadata_export,
     set_entity_dimensions,
+    set_entity_elements,
     set_parameter_default_value_dimensions,
     set_parameter_dimensions,
 )
 from spinedb_api.mapping import unflatten
-from spinetoolbox.helpers import SealCommand
+from spinetoolbox.helpers import SealCommand, disconnect
 from spinetoolbox.project_item.specification_editor_window import SpecificationEditorWindowBase
 from ...widgets import combo_box_width
 from ..commands import (
@@ -74,12 +78,15 @@ from .preview_updater import PreviewUpdater
 mapping_type_to_combo_box_label = {
     MappingType.alternatives: "Alternative",
     MappingType.entities: "Entity class",
-    MappingType.entity_groups: "Entity group",
-    MappingType.entity_parameter_default_values: "Entity class",
-    MappingType.entity_parameter_values: "Entity class",
-    MappingType.parameter_value_lists: "Parameter value list",
     MappingType.entity_dimension_parameter_default_values: "Entity class with dimension parameter",
     MappingType.entity_dimension_parameter_values: "Entity class with dimension parameter",
+    MappingType.entity_groups: "Entity group",
+    MappingType.entity_metadata: "Entity metadata",
+    MappingType.entity_parameter_default_values: "Entity class",
+    MappingType.entity_parameter_values: "Entity class",
+    MappingType.metadata: "Metadata",
+    MappingType.parameter_value_lists: "Parameter value list",
+    MappingType.parameter_value_metadata: "Parameter value metadata",
     MappingType.scenario_alternatives: "Scenario alternative",
     MappingType.scenarios: "Scenario",
 }
@@ -87,12 +94,15 @@ mapping_type_to_combo_box_label = {
 mapping_type_to_parameter_type_label = {
     MappingType.alternatives: "None",
     MappingType.entities: "None",
-    MappingType.entity_groups: "None",
-    MappingType.entity_parameter_default_values: "Default value",
-    MappingType.entity_parameter_values: "Value",
     MappingType.entity_dimension_parameter_default_values: "Default value",
     MappingType.entity_dimension_parameter_values: "Value",
+    MappingType.entity_groups: "None",
+    MappingType.entity_metadata: "None",
+    MappingType.entity_parameter_default_values: "Default value",
+    MappingType.entity_parameter_values: "Value",
+    MappingType.metadata: "None",
     MappingType.parameter_value_lists: "None",
+    MappingType.parameter_value_metadata: "None",
     MappingType.scenario_alternatives: "None",
     MappingType.scenarios: "None",
 }
@@ -313,6 +323,8 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             MappingType.entity_parameter_default_values,
             MappingType.entity_dimension_parameter_values,
             MappingType.entity_dimension_parameter_default_values,
+            MappingType.entity_metadata,
+            MappingType.parameter_value_metadata,
         }:
             self._ui.entity_dimensions_spin_box.setMinimum(0)
             self._set_entity_dimensions_silently(current.data(MappingsTableModel.ENTITY_DIMENSIONS_ROLE))
@@ -403,9 +415,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 MappingType.entity_dimension_parameter_default_values,
                 MappingType.entity_dimension_parameter_values,
             ):
-                self._ui.entity_dimensions_spin_box.setMinimum(1)
+                self._set_minimum_entity_dimensions_silently(1)
             else:
-                self._ui.entity_dimensions_spin_box.setMinimum(0)
+                self._set_minimum_entity_dimensions_silently(0)
             enable_controls = True
         if MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE in roles:
             self._set_always_export_header_silently(top_left.data(MappingsTableModel.ALWAYS_EXPORT_HEADER_ROLE))
@@ -663,6 +675,9 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         else:
             mapping_type = {
                 "Alternative": MappingType.alternatives,
+                "Entity metadata": MappingType.entity_metadata,
+                "Metadata": MappingType.metadata,
+                "Parameter value metadata": MappingType.parameter_value_metadata,
                 "Scenario": MappingType.scenarios,
                 "Scenario alternative": MappingType.scenario_alternatives,
                 "Parameter value list": MappingType.parameter_value_lists,
@@ -961,8 +976,11 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         index = self._sort_mappings_table_model.mapToSource(self._ui.mappings_table.currentIndex())
         mapping = self._mappings_table_model.data(index, MappingsTableModel.MAPPING_ROOT_ROLE)
         modified = deepcopy(mapping)
-        set_entity_dimensions(modified, dimensions)
         current_mapping_type = self._ui.item_type_combo_box.currentText()
+        if current_mapping_type.startswith("Entity class"):
+            set_entity_dimensions(modified, dimensions)
+        else:
+            set_entity_elements(modified, dimensions)
         self._undo_stack.beginMacro("change entity dimensions")
         self._undo_stack.push(SetMapping(self._ui.mappings_table.currentIndex(), modified))
         if current_mapping_type == "Entity class with dimension parameter":
@@ -986,6 +1004,10 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         self._ui.entity_dimensions_spin_box.valueChanged.connect(self._change_entity_dimensions)
         self._ui.highlight_dimension_spin_box.setMaximum(max(dimensions, 1))
 
+    def _set_minimum_entity_dimensions_silently(self, minimum_dimensions: int) -> None:
+        with disconnect(self._ui.entity_dimensions_spin_box.valueChanged, self._change_entity_dimensions):
+            self._ui.entity_dimensions_spin_box.setMinimum(minimum_dimensions)
+
     def _enable_mapping_specification_editing(self):
         """Enables and disables mapping specification editing controls."""
         have_mappings = self._mappings_table_model.rowCount() > 0
@@ -996,7 +1018,11 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
     def _enable_entity_controls(self):
         """Enables and disables controls related to entity export."""
         current_mapping_type = self._ui.item_type_combo_box.currentText()
-        self._ui.entity_dimensions_spin_box.setEnabled(current_mapping_type.startswith("Entity class"))
+        entity_dimensions_enabled = current_mapping_type.startswith("Entity class") or current_mapping_type in {
+            "Entity metadata",
+            "Parameter value metadata",
+        }
+        self._ui.entity_dimensions_spin_box.setEnabled(entity_dimensions_enabled)
         self._ui.highlight_dimension_spin_box.setEnabled(
             current_mapping_type == "Entity class with dimension parameter"
         )
@@ -1098,6 +1124,16 @@ def _new_mapping_specification(mapping_type):
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_alternative_export(0, 1))
     if mapping_type == MappingType.scenarios:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, scenario_export(0))
+    if mapping_type == MappingType.metadata:
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, metadata_export(0, 1))
+    if mapping_type == MappingType.entity_metadata:
+        return MappingSpecification(
+            mapping_type, True, True, NoGroup.NAME, False, entity_metadata_export(0, 1, None, 2, 3)
+        )
+    if mapping_type == MappingType.parameter_value_metadata:
+        return MappingSpecification(
+            mapping_type, True, True, NoGroup.NAME, False, parameter_value_metadata_export(0, 1, None, 2, 3, 4, 5)
+        )
     raise NotImplementedError()
 
 

@@ -140,6 +140,9 @@ class ImportMappingOptions:
                 MappingType.Scenario,
                 MappingType.ScenarioAlternative,
                 MappingType.ParameterValueList,
+                MappingType.Metadata,
+                MappingType.EntityMetadata,
+                MappingType.ParameterValueMetadata,
             ].index(flattened_mappings.map_type)
         except ValueError:
             class_type_index = -1

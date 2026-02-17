@@ -16,13 +16,17 @@ import pathlib
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QApplication, QMessageBox
 from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
 from spine_items.exporter.widgets.specification_editor_window import SpecificationEditorWindow
 from spinedb_api.export_mapping.export_mapping import EntityClassMapping, FixedValueMapping
 from spinedb_api.export_mapping.export_mapping import from_dict as mappings_from_dict
+from spinedb_api.export_mapping.settings import entity_metadata_export, metadata_export
 from spinedb_api.mapping import Position, unflatten
-from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
+from spinetoolbox.helpers import color_from_index
+from tests.mock_helpers import assert_table_model_data, clean_up_toolbox, create_toolboxui_with_project
 
 
 class TestSpecificationEditorWindow(unittest.TestCase):
@@ -43,7 +47,8 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         editor = SpecificationEditorWindow(self._toolbox)
         self.assertEqual(editor._ui.mappings_table.model().rowCount(), 1)
         self.assertEqual(editor._ui.mappings_table.model().index(0, 0).data(), "Mapping (1)")
-        editor.tear_down()
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"):
+            editor.tear_down()
 
     def test_mapping_in_table_name_position_disables_fixed_table_name_widgets(self):
         editor = SpecificationEditorWindow(self._toolbox)
@@ -75,7 +80,8 @@ class TestSpecificationEditorWindow(unittest.TestCase):
         self.assertTrue(editor._ui.fix_table_name_check_box.isChecked())
         self.assertTrue(editor._ui.fix_table_name_line_edit.isEnabled())
         self.assertEqual(editor._ui.fix_table_name_line_edit.text(), "nice table name")
-        editor.tear_down()
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"):
+            editor.tear_down()
 
     def test_duplicate_specification(self):
         flattened_mappings = [FixedValueMapping(Position.table_name, "nice table name"), EntityClassMapping(0)]
@@ -155,8 +161,259 @@ class TestSpecificationEditorWindow(unittest.TestCase):
             {"map_type": "ParameterValue", "position": 5},
         ]
         self.assertEqual(loaded_specification.mapping_specifications()["my mappings"].to_dict()["root"], expected_dicts)
-        editor.tear_down()
+        with mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"):
+            editor.tear_down()
 
+    def test_set_item_type_to_metadata(self):
+        editor = SpecificationEditorWindow(self._toolbox)
+        editor._ui.item_type_combo_box.setCurrentText("Metadata")
+        self.assertFalse(editor._ui.entity_dimensions_spin_box.isEnabled())
+        self.assertFalse(editor._ui.highlight_dimension_spin_box.isEnabled())
+        self.assertFalse(editor._ui.parameter_type_combo_box.isEnabled())
+        self.assertFalse(editor._ui.parameter_dimensions_spin_box.isEnabled())
+        expected = [
+            ["Metadata names", "1", None, None, "", ""],
+            ["Metadata values", "2", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.CheckStateRole)
+        expected = [
+            [color_from_index(0, 2).lighter(), None, None, None, None, None],
+            [color_from_index(1, 2).lighter(), None, None, None, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.BackgroundRole)
+        with (
+            mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.QMessageBox.exec"
+            ) as mock_save_dialog_exec,
+            mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"),
+        ):
+            mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
+            editor.tear_down()
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_set_item_type_to_entity_metadata(self):
+        editor = SpecificationEditorWindow(self._toolbox)
+        editor._ui.item_type_combo_box.setCurrentText("Entity metadata")
+        self.assertTrue(editor._ui.entity_dimensions_spin_box.isEnabled())
+        self.assertFalse(editor._ui.highlight_dimension_spin_box.isEnabled())
+        self.assertFalse(editor._ui.parameter_type_combo_box.isEnabled())
+        self.assertFalse(editor._ui.parameter_dimensions_spin_box.isEnabled())
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Entities", "2", None, None, "", ""],
+            ["Metadata names", "3", None, None, "", ""],
+            ["Metadata values", "4", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.CheckStateRole)
+        expected = [
+            [color_from_index(0, 4).lighter(), None, None, None, None, None],
+            [color_from_index(1, 4).lighter(), None, None, None, None, None],
+            [color_from_index(2, 4).lighter(), None, None, None, None, None],
+            [color_from_index(3, 4).lighter(), None, None, None, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.BackgroundRole)
+        with (
+            mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.QMessageBox.exec"
+            ) as mock_save_dialog_exec,
+            mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"),
+        ):
+            mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
+            editor.tear_down()
+
+    def test_set_item_type_to_parameter_value_metadata(self):
+        editor = SpecificationEditorWindow(self._toolbox)
+        editor._ui.item_type_combo_box.setCurrentText("Parameter value metadata")
+        self.assertTrue(editor._ui.entity_dimensions_spin_box.isEnabled())
+        self.assertFalse(editor._ui.highlight_dimension_spin_box.isEnabled())
+        self.assertFalse(editor._ui.parameter_type_combo_box.isEnabled())
+        self.assertFalse(editor._ui.parameter_dimensions_spin_box.isEnabled())
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Entities", "2", None, None, "", ""],
+            ["Parameter definitions", "3", None, None, "", ""],
+            ["Alternatives", "4", None, None, "", ""],
+            ["Metadata names", "5", None, None, "", ""],
+            ["Metadata values", "6", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.CheckStateRole)
+        expected = [
+            [color_from_index(0, 6).lighter(), None, None, None, None, None],
+            [color_from_index(1, 6).lighter(), None, None, None, None, None],
+            [color_from_index(2, 6).lighter(), None, None, None, None, None],
+            [color_from_index(3, 6).lighter(), None, None, None, None, None],
+            [color_from_index(4, 6).lighter(), None, None, None, None, None],
+            [color_from_index(5, 6).lighter(), None, None, None, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.BackgroundRole)
+        with (
+            mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.QMessageBox.exec"
+            ) as mock_save_dialog_exec,
+            mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"),
+        ):
+            mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
+            editor.tear_down()
+
+    def test_change_item_type_from_metadata_to_entity_class_with_dimension_parameter(self):
+        mapping_specification = MappingSpecification(MappingType.metadata, True, True, "", True, metadata_export(0, 1))
+        specification = Specification("spec name", mapping_specifications={"my mappings": mapping_specification})
+        editor = SpecificationEditorWindow(self._toolbox, specification)
+        self.assertEqual(editor._ui.item_type_combo_box.currentText(), "Metadata")
+        editor._ui.item_type_combo_box.setCurrentText("Entity class with dimension parameter")
+        self.assertTrue(editor._ui.entity_dimensions_spin_box.isEnabled())
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.minimum(), 1)
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.value(), 1)
+        self.assertTrue(editor._ui.highlight_dimension_spin_box.isEnabled())
+        self.assertEqual(editor._ui.highlight_dimension_spin_box.value(), 1)
+        self.assertTrue(editor._ui.parameter_type_combo_box.isEnabled())
+        self.assertTrue(editor._ui.parameter_dimensions_spin_box.isEnabled())
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Dimensions", "2", None, None, "", ""],
+            ["Parameter definitions", "4", None, None, "", ""],
+            ["Value lists", "hidden", None, None, "", ""],
+            ["Entities", "hidden", None, None, "", ""],
+            ["Elements", "3", None, None, "", ""],
+            ["Alternatives", "5", None, None, "", ""],
+            ["Value types", "hidden", None, None, "", ""],
+            ["Parameter values", "6", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Checked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.CheckStateRole)
+        expected = [
+            [color_from_index(0, 6).lighter(), None, None, None, None, None],
+            [color_from_index(1, 6).lighter(), None, None, None, None, None],
+            [color_from_index(2, 6).lighter(), None, None, None, None, None],
+            [QColor(Qt.GlobalColor.gray).lighter(), None, None, None, None, None],
+            [QColor(Qt.GlobalColor.gray).lighter(), None, None, None, None, None],
+            [color_from_index(3, 6).lighter(), None, None, None, None, None],
+            [color_from_index(4, 6).lighter(), None, None, None, None, None],
+            [QColor(Qt.GlobalColor.gray).lighter(), None, None, None, None, None],
+            [color_from_index(5, 6).lighter(), None, None, None, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.BackgroundRole)
+        with (
+            mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.QMessageBox.exec"
+            ) as mock_save_dialog_exec,
+            mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"),
+        ):
+            mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
+            editor.tear_down()
+
+    def test_increase_dimensions_in_entity_metadata_mapping(self):
+        mapping_specification = MappingSpecification(
+            MappingType.entity_metadata, True, True, "", True, entity_metadata_export(0, 1, [], 2, 3)
+        )
+        specification = Specification("spec name", mapping_specifications={"my mappings": mapping_specification})
+        editor = SpecificationEditorWindow(self._toolbox, specification)
+        self.assertEqual(editor._ui.item_type_combo_box.currentText(), "Entity metadata")
+        self.assertTrue(editor._ui.entity_dimensions_spin_box.isEnabled())
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.minimum(), 0)
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.value(), 0)
+        editor._ui.entity_dimensions_spin_box.setValue(1)
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Entities", "2", None, None, "", ""],
+            ["Elements", "hidden", None, None, "", ""],
+            ["Metadata names", "3", None, None, "", ""],
+            ["Metadata values", "4", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.CheckStateRole)
+        expected = [
+            [color_from_index(0, 4).lighter(), None, None, None, None, None],
+            [color_from_index(1, 4).lighter(), None, None, None, None, None],
+            [QColor(Qt.GlobalColor.gray).lighter(), None, None, None, None, None],
+            [color_from_index(2, 4).lighter(), None, None, None, None, None],
+            [color_from_index(3, 4).lighter(), None, None, None, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.BackgroundRole)
+        with (
+            mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.QMessageBox.exec"
+            ) as mock_save_dialog_exec,
+            mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"),
+        ):
+            mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
+            editor.tear_down()
+
+    def test_decrease_dimensions_in_entity_metadata_mapping(self):
+        mapping_specification = MappingSpecification(
+            MappingType.entity_metadata, True, True, "", True, entity_metadata_export(0, 1, [2], 3, 4)
+        )
+        specification = Specification("spec name", mapping_specifications={"my mappings": mapping_specification})
+        editor = SpecificationEditorWindow(self._toolbox, specification)
+        self.assertEqual(editor._ui.item_type_combo_box.currentText(), "Entity metadata")
+        self.assertTrue(editor._ui.entity_dimensions_spin_box.isEnabled())
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.minimum(), 0)
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.value(), 1)
+        editor._ui.entity_dimensions_spin_box.setValue(0)
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Entities", "2", None, None, "", ""],
+            ["Metadata names", "4", None, None, "", ""],
+            ["Metadata values", "5", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.CheckStateRole)
+        expected = [
+            [color_from_index(0, 4).lighter(), None, None, None, None, None],
+            [color_from_index(1, 4).lighter(), None, None, None, None, None],
+            [color_from_index(2, 4).lighter(), None, None, None, None, None],
+            [color_from_index(3, 4).lighter(), None, None, None, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.BackgroundRole)
+        with (
+            mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.QMessageBox.exec"
+            ) as mock_save_dialog_exec,
+            mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"),
+        ):
+            mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
+            editor.tear_down()

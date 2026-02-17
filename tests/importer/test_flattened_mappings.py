@@ -44,7 +44,7 @@ class TestFlattenedMappings(unittest.TestCase):
         root_mapping = default_import_mapping("EntityClass")
         flattened_mappings = FlattenedMappings(root_mapping)
         self.assertEqual(flattened_mappings.map_type, MappingType.EntityClass)
-        self.assertEqual(flattened_mappings.display_names, ["Entity class names", "Entity names", "Entity metadata"])
+        self.assertEqual(flattened_mappings.display_names, ["Entity class names", "Entity names"])
         self.assertIs(flattened_mappings.root_mapping, root_mapping)
         self.assertIsNone(flattened_mappings.value_type)
         self.assertFalse(flattened_mappings.is_time_series_value())
@@ -78,7 +78,7 @@ class TestFlattenedMappings(unittest.TestCase):
         self.assertEqual(flattened_mappings.dimension_count(), 1)
         self.assertEqual(
             flattened_mappings.display_names,
-            ["Entity class names", "Dimension names", "Element names", "Entity metadata"],
+            ["Entity class names", "Dimension names", "Element names"],
         )
         self.assertTrue(flattened_mappings.may_import_entities())
         self.assertFalse(flattened_mappings.import_entities())
@@ -93,7 +93,6 @@ class TestFlattenedMappings(unittest.TestCase):
                 "Dimension names 2",
                 "Element names 1",
                 "Element names 2",
-                "Entity metadata",
             ],
         )
         self.assertTrue(flattened_mappings.may_import_entities())
@@ -101,7 +100,7 @@ class TestFlattenedMappings(unittest.TestCase):
         flattened_mappings.set_dimension_count(0)
         self.assertFalse(flattened_mappings.has_dimensions())
         self.assertEqual(flattened_mappings.dimension_count(), 0)
-        self.assertEqual(flattened_mappings.display_names, ["Entity class names", "Entity names", "Entity metadata"])
+        self.assertEqual(flattened_mappings.display_names, ["Entity class names", "Entity names"])
         self.assertFalse(flattened_mappings.may_import_entities())
         self.assertFalse(flattened_mappings.import_entities())
 
@@ -121,7 +120,6 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
                 "Parameter names",
                 "Value list names",
                 "Parameter default values",
@@ -142,7 +140,6 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
             ],
         )
 
@@ -162,10 +159,8 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
                 "Alternative names",
                 "Parameter names",
-                "Parameter value metadata",
                 "Parameter values",
             ],
         )
@@ -184,7 +179,6 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
             ],
         )
 
@@ -199,7 +193,6 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
                 "Alternative names",
                 "Entity activities",
             ],
@@ -216,7 +209,6 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
             ],
         )
 
@@ -235,11 +227,9 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
                 "Alternative names",
                 "Entity activities",
                 "Parameter names",
-                "Parameter value metadata",
                 "Parameter values",
             ],
         )
@@ -259,11 +249,9 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
                 "Alternative names",
                 "Entity activities",
                 "Parameter names",
-                "Parameter value metadata",
                 "Parameter values",
             ],
         )
@@ -284,7 +272,6 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
                 "Alternative names",
                 "Entity activities",
             ],
@@ -306,10 +293,8 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
                 "Alternative names",
                 "Parameter names",
-                "Parameter value metadata",
                 "Parameter values",
             ],
         )
@@ -331,7 +316,6 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
             ],
         )
 
@@ -352,10 +336,227 @@ class TestFlattenedMappings(unittest.TestCase):
             [
                 "Entity class names",
                 "Entity names",
-                "Entity metadata",
             ],
         )
 
+    def test_default_metadata_mapping(self):
+        root_mapping = default_import_mapping("MetadataName")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        self.assertEqual(flattened_mappings.map_type, MappingType.Metadata)
+        self.assertEqual(flattened_mappings.display_names, ["Metadata names", "Metadata values"])
+        self.assertIs(flattened_mappings.root_mapping, root_mapping)
+        self.assertIsNone(flattened_mappings.value_type)
+        self.assertFalse(flattened_mappings.is_time_series_value())
+        self.assertFalse(flattened_mappings.is_map_value())
+        self.assertEqual(flattened_mappings.map_dimension_count(), 1)
+        self.assertEqual(flattened_mappings.read_start_row(), 0)
+        self.assertEqual(flattened_mappings.skip_columns(), [])
+        for row in range(len(flattened_mappings.display_names)):
+            with self.subTest(row=row):
+                self.assertEqual(flattened_mappings.display_position_type(row), "None")
+                self.assertIsNone(flattened_mappings.display_position(row))
+                self.assertEqual(flattened_mappings.display_row_issues(row), [])
+        self.assertFalse(flattened_mappings.can_have_dimensions())
+        self.assertFalse(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 0)
+        self.assertFalse(flattened_mappings.may_import_entity_alternatives())
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        self.assertFalse(flattened_mappings.may_import_entities())
+        self.assertFalse(flattened_mappings.import_entities())
+        self.assertFalse(flattened_mappings.has_parameters())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_default_entity_metadata_mapping(self):
+        root_mapping = default_import_mapping("EntityMetadataName")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        self.assertEqual(flattened_mappings.map_type, MappingType.EntityMetadata)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Entity names", "Metadata names", "Metadata values"],
+        )
+        self.assertIs(flattened_mappings.root_mapping, root_mapping)
+        self.assertIsNone(flattened_mappings.value_type)
+        self.assertFalse(flattened_mappings.is_time_series_value())
+        self.assertFalse(flattened_mappings.is_map_value())
+        self.assertEqual(flattened_mappings.map_dimension_count(), 1)
+        self.assertEqual(flattened_mappings.read_start_row(), 0)
+        self.assertEqual(flattened_mappings.skip_columns(), [])
+        for row in range(len(flattened_mappings.display_names)):
+            with self.subTest(row=row):
+                self.assertEqual(flattened_mappings.display_position_type(row), "None")
+                self.assertIsNone(flattened_mappings.display_position(row))
+                self.assertEqual(flattened_mappings.display_row_issues(row), [])
+        self.assertTrue(flattened_mappings.can_have_dimensions())
+        self.assertFalse(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 0)
+        self.assertFalse(flattened_mappings.may_import_entity_alternatives())
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        self.assertFalse(flattened_mappings.may_import_entities())
+        self.assertFalse(flattened_mappings.import_entities())
+        self.assertFalse(flattened_mappings.has_parameters())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+
+    def test_add_elements_to_entity_metadata_mapping(self):
+        root_mapping = default_import_mapping("EntityMetadataName")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        flattened_mappings.set_dimension_count(1)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 1)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Element names", "Metadata names", "Metadata values"],
+        )
+        flattened_mappings.set_dimension_count(2)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 2)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Element names 1", "Element names 2", "Metadata names", "Metadata values"],
+        )
+
+    def test_remove_elements_from_entity_metadata_mapping(self):
+        root_mapping = default_import_mapping("EntityMetadataName")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        flattened_mappings.set_dimension_count(3)
+        flattened_mappings.set_dimension_count(2)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 2)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Element names 1", "Element names 2", "Metadata names", "Metadata values"],
+        )
+        flattened_mappings.set_dimension_count(1)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 1)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Element names", "Metadata names", "Metadata values"],
+        )
+        flattened_mappings.set_dimension_count(0)
+        self.assertFalse(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 0)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Entity names", "Metadata names", "Metadata values"],
+        )
+
+    def test_default_parameter_value_metadata_mapping(self):
+        root_mapping = default_import_mapping("ParameterValueMetadataName")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        self.assertEqual(flattened_mappings.map_type, MappingType.ParameterValueMetadata)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Parameter names",
+                "Alternative names",
+                "Metadata names",
+                "Metadata values",
+            ],
+        )
+        self.assertIs(flattened_mappings.root_mapping, root_mapping)
+        self.assertIsNone(flattened_mappings.value_type)
+        self.assertFalse(flattened_mappings.is_time_series_value())
+        self.assertFalse(flattened_mappings.is_map_value())
+        self.assertEqual(flattened_mappings.map_dimension_count(), 1)
+        self.assertEqual(flattened_mappings.read_start_row(), 0)
+        self.assertEqual(flattened_mappings.skip_columns(), [])
+        for row in range(len(flattened_mappings.display_names)):
+            with self.subTest(row=row):
+                self.assertEqual(flattened_mappings.display_position_type(row), "None")
+                self.assertIsNone(flattened_mappings.display_position(row))
+                self.assertEqual(flattened_mappings.display_row_issues(row), [])
+        self.assertTrue(flattened_mappings.can_have_dimensions())
+        self.assertFalse(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 0)
+        self.assertFalse(flattened_mappings.may_import_entity_alternatives())
+        self.assertFalse(flattened_mappings.import_entity_alternatives())
+        self.assertFalse(flattened_mappings.may_import_entities())
+        self.assertFalse(flattened_mappings.import_entities())
+        self.assertFalse(flattened_mappings.has_parameters())
+        self.assertEqual(flattened_mappings.display_parameter_type(), "None")
+        self.assertFalse(flattened_mappings.has_value_component())
+
+    def test_add_elements_to_parameter_value_metadata_mapping(self):
+        root_mapping = default_import_mapping("ParameterValueMetadataName")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        flattened_mappings.set_dimension_count(1)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 1)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Element names",
+                "Parameter names",
+                "Alternative names",
+                "Metadata names",
+                "Metadata values",
+            ],
+        )
+        flattened_mappings.set_dimension_count(2)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 2)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Element names 1",
+                "Element names 2",
+                "Parameter names",
+                "Alternative names",
+                "Metadata names",
+                "Metadata values",
+            ],
+        )
+
+    def test_remove_elements_from_parameter_value_metadata_mapping(self):
+        root_mapping = default_import_mapping("ParameterValueMetadataName")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        flattened_mappings.set_dimension_count(3)
+        flattened_mappings.set_dimension_count(2)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 2)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Element names 1",
+                "Element names 2",
+                "Parameter names",
+                "Alternative names",
+                "Metadata names",
+                "Metadata values",
+            ],
+        )
+        flattened_mappings.set_dimension_count(1)
+        self.assertTrue(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 1)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Element names",
+                "Parameter names",
+                "Alternative names",
+                "Metadata names",
+                "Metadata values",
+            ],
+        )
+        flattened_mappings.set_dimension_count(0)
+        self.assertFalse(flattened_mappings.has_dimensions())
+        self.assertEqual(flattened_mappings.dimension_count(), 0)
+        self.assertEqual(
+            flattened_mappings.display_names,
+            [
+                "Entity class names",
+                "Entity names",
+                "Parameter names",
+                "Alternative names",
+                "Metadata names",
+                "Metadata values",
+            ],
+        )

@@ -67,7 +67,3 @@ class TestMappingTableModel(unittest.TestCase):
         self.assertEqual(model.index(0, 1).data(), "1")
         self.assertEqual(model.index(1, 0).data(), "Entities")
         self.assertEqual(model.index(1, 1).data(), "table name")
-
-
-if __name__ == "__main__":
-    unittest.main()

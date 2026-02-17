@@ -23,8 +23,10 @@ from spinedb_api.import_mapping.import_mapping import (
     EntityClassMapping,
     EntityGroupMapping,
     EntityMapping,
-    EntityMetadataMapping,
+    EntityMetadataValueMapping,
+    ImportMapping,
     IndexNameMapping,
+    MetadataNameMapping,
     ParameterDefaultValueIndexMapping,
     ParameterDefaultValueMapping,
     ParameterDefaultValueTypeMapping,
@@ -32,6 +34,7 @@ from spinedb_api.import_mapping.import_mapping import (
     ParameterValueIndexMapping,
     ParameterValueListMapping,
     ParameterValueMapping,
+    ParameterValueMetadataValueMapping,
     ParameterValueTypeMapping,
     ScenarioAlternativeMapping,
     ScenarioMapping,
@@ -57,6 +60,9 @@ class MappingType(Enum):
     Scenario = "Scenario"
     ScenarioAlternative = "Scenario alternative"
     ParameterValueList = "Parameter value list"
+    Metadata = "Metadata"
+    EntityMetadata = "Entity metadata"
+    ParameterValueMetadata = "Parameter value metadata"
 
 
 VALUE_TYPES = {
@@ -71,7 +77,8 @@ DISPLAY_VALUE_TYPES = {v: k for k, v in VALUE_TYPES.items()}
 DISPLAY_MAPPING_NAMES = {
     "EntityClass": "Entity class names",
     "Entity": "Entity names",
-    "EntityMetadata": "Entity metadata",
+    "EntityMetadataName": "Metadata names",
+    "EntityMetadataValue": "Metadata values",
     "EntityGroup": "Member names",
     "Dimension": "Dimension names",
     "Element": "Element names",
@@ -86,7 +93,8 @@ DISPLAY_MAPPING_NAMES = {
     "ParameterDefinition": "Parameter names",
     "ParameterValue": "Parameter values",
     "ParameterValueType": None,
-    "ParameterValueMetadata": "Parameter value metadata",
+    "ParameterValueMetadataName": "Metadata names",
+    "ParameterValueMetadataValue": "Metadata values",
     "IndexName": "Parameter index names",
     "ParameterValueIndex": "Parameter indexes",
     "ExpandedValue": "Parameter values",
@@ -95,6 +103,8 @@ DISPLAY_MAPPING_NAMES = {
     "DefaultValueIndexName": "Parameter index names",
     "ParameterDefaultValueIndex": "Parameter indexes",
     "ExpandedDefaultValue": "Parameter default values",
+    "MetadataName": "Metadata names",
+    "MetadataValue": "Metadata values",
 }
 
 
@@ -457,7 +467,7 @@ class FlattenedMappings:
             return "Group names"
         if self._value_type == "Array" and component_type in ("ParameterValueIndex", "ParameterDefaultValueIndex"):
             return None
-        if self._map_type == MappingType.EntityClass and component_type == "Entity" and self.has_dimensions():
+        if self.can_have_dimensions() and component_type == "Entity" and self.has_dimensions():
             return None
         return DISPLAY_MAPPING_NAMES[component_type]
 
@@ -481,14 +491,14 @@ class FlattenedMappings:
         return display_names, display_row_to_flattened_index
 
     @staticmethod
-    def _resolve_map_type(flattened):
+    def _resolve_map_type(flattened: list[ImportMapping]) -> MappingType | None:
         """Computes general map type for given flattened mappings.
 
         Args:
-            flattened (list of ImportMapping): flattened mappings
+            flattened: flattened mappings
 
         Returns:
-            MappingType: map type
+            map type
         """
         if not flattened:
             return None
@@ -496,6 +506,10 @@ class FlattenedMappings:
         if isinstance(head_mapping, EntityClassMapping):
             if any(isinstance(m, EntityGroupMapping) for m in flattened[1:]):
                 return MappingType.EntityGroup
+            if isinstance(flattened[-1], EntityMetadataValueMapping):
+                return MappingType.EntityMetadata
+            if isinstance(flattened[-1], ParameterValueMetadataValueMapping):
+                return MappingType.ParameterValueMetadata
             return MappingType.EntityClass
         if isinstance(head_mapping, AlternativeMapping):
             return MappingType.Alternative
@@ -505,6 +519,9 @@ class FlattenedMappings:
             return MappingType.Scenario
         if isinstance(head_mapping, ParameterValueListMapping):
             return MappingType.ParameterValueList
+        if isinstance(head_mapping, MetadataNameMapping):
+            return MappingType.Metadata
+        raise RuntimeError("logic error: unknown mapping type")
 
     def _resolve_value_type(self):
         """Computes display name for value type.
@@ -519,38 +536,50 @@ class FlattenedMappings:
             return DISPLAY_VALUE_TYPES.get(m.value, "Single value")
         return "Single value"
 
-    def can_have_dimensions(self):
+    def can_have_dimensions(self) -> bool:
         """Returns True if the mappings can have dimensions.
 
         Returns:
-            bool: True if mappings have dimensions, False otherwise
+            True if mappings have dimensions, False otherwise
         """
-        return self._map_type == MappingType.EntityClass
+        return self._map_type in {
+            MappingType.EntityClass,
+            MappingType.EntityMetadata,
+            MappingType.ParameterValueMetadata,
+        }
 
-    def has_dimensions(self):
+    def has_dimensions(self) -> bool:
         """Returns True if the mappings have dimensions.
 
         Returns:
-            bool: True if mappings have dimensions, False otherwise
+            True if mappings have dimensions, False otherwise
         """
         return self.dimension_count() > 0
 
-    def dimension_count(self):
+    def dimension_count(self) -> int:
         """Counts entity dimensions.
 
         Returns:
-            int: entity dimensions
+            entity dimensions
         """
-        return len([m for m in self._components if isinstance(m, DimensionMapping)])
+        if self.map_type == MappingType.EntityClass:
+            return len([m for m in self._components if isinstance(m, DimensionMapping)])
+        elif self.map_type in {MappingType.EntityMetadata, MappingType.ParameterValueMetadata}:
+            return len([m for m in self._components if isinstance(m, ElementMapping)])
+        return 0
 
-    def set_dimension_count(self, dimension_count):
+    def set_dimension_count(self, dimension_count: int) -> None:
         """Sets the numbers of entity dimensions.
 
         Args:
-            dimension_count (int): new dimension count
+            dimension_count: new dimension count
         """
-        if not self.can_have_dimensions():
-            return
+        if self.map_type == MappingType.EntityClass:
+            self._set_full_dimension_count(dimension_count)
+        elif self.map_type in {MappingType.EntityMetadata, MappingType.ParameterValueMetadata}:
+            self._set_element_count_only(dimension_count)
+
+    def _set_full_dimension_count(self, dimension_count: int) -> None:
         current_dimension_count = self.dimension_count()
         last_dim_mapping = next(
             m for m in reversed(self._components) if isinstance(m, (DimensionMapping, EntityClassMapping))
@@ -573,19 +602,34 @@ class FlattenedMappings:
         self.set_root_mapping(self._components[0])
         self._ensure_consistent_import_entities()
 
-    def may_import_entity_alternatives(self):
+    def _set_element_count_only(self, dimension_count: int) -> None:
+        current_dimension_count = self.dimension_count()
+        last_el_mapping = next(m for m in reversed(self._components) if isinstance(m, (ElementMapping, EntityMapping)))
+        last_el_mapping_child = last_el_mapping.child
+        if dimension_count > current_dimension_count:
+            for _ in range(current_dimension_count, dimension_count):
+                last_el_mapping.child = ElementMapping(Position.hidden)
+                last_el_mapping = last_el_mapping.child
+        else:
+            for _ in range(dimension_count, current_dimension_count):
+                last_el_mapping = last_el_mapping.parent
+        last_el_mapping.child = last_el_mapping_child
+        self.set_root_mapping(self._components[0])
+        self._ensure_consistent_import_entities()
+
+    def may_import_entity_alternatives(self) -> bool:
         """Checks if the mappings can optionally import entity alternatives.
 
         Returns:
-            bool: True if mappings can import entity alternatives, False otherwise
+            True if mappings can import entity alternatives, False otherwise
         """
         return self._map_type == MappingType.EntityClass
 
-    def import_entity_alternatives(self):
+    def import_entity_alternatives(self) -> bool:
         """Returns the import entity alternatives flag.
 
         Returns:
-            bool: True if import entity alternatives is set, False otherwise
+            True if import entity alternatives is set, False otherwise
         """
         return any(isinstance(m, EntityAlternativeActivityMapping) for m in self._components)
 
@@ -608,11 +652,11 @@ class FlattenedMappings:
             else:
                 alternative_mapping = AlternativeMapping(Position.hidden)
             for i, m in enumerate(self._components):
-                if isinstance(m, EntityMetadataMapping):
+                if isinstance(m, EntityMapping):
                     insertion_point = i
                     break
             else:
-                raise RuntimeError("Logic error: expected to find EntityMetadataMapping")
+                raise RuntimeError("Logic error: expected to find EntityMetadataValueMapping")
             new_mappings = []
             for i, m in enumerate(self._components):
                 new_mappings.append(m)
@@ -630,11 +674,11 @@ class FlattenedMappings:
                 new_mappings.append(m)
         self.set_root_mapping(unflatten(new_mappings))
 
-    def may_import_entities(self):
+    def may_import_entities(self) -> bool:
         """Checks if the mappings can optionally import entities.
 
         Returns:
-            bool: True if mappings can import entities, False otherwise
+            True if mappings can import entities, False otherwise
         """
         if self._map_type == MappingType.EntityGroup:
             return True
@@ -675,11 +719,11 @@ class FlattenedMappings:
             for m in mappings:
                 m.import_entities = True
 
-    def has_parameters(self):
+    def has_parameters(self) -> bool:
         """Returns True if the mappings have parameters.
 
         Returns:
-            bool: True if mapping has parameter, False otherwise
+            True if mapping has parameter, False otherwise
         """
         return self._map_type == MappingType.EntityClass
 
@@ -720,6 +764,8 @@ class FlattenedMappings:
         Returns:
             str: parameter type
         """
+        if any(isinstance(m, ParameterValueMetadataValueMapping) for m in self._components):
+            return "None"
         if any(isinstance(m, (ParameterValueMapping, ParameterValueTypeMapping)) for m in self._components):
             return "Value"
         if any(isinstance(m, ParameterDefinitionMapping) for m in self._components):
