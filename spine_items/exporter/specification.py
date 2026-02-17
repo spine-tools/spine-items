@@ -39,12 +39,15 @@ from .item_info import ItemInfo
 class MappingType(Enum):
     alternatives = "alternatives"
     entities = "entities"
-    entity_groups = "entity_groups"
-    entity_parameter_default_values = "entity_parameter_default_values"
-    entity_parameter_values = "entity_parameter_values"
     entity_dimension_parameter_default_values = "entity_dimension_parameter_default_values"
     entity_dimension_parameter_values = "entity_dimension_parameter_values"
+    entity_groups = "entity_groups"
+    entity_metadata = "entity_metadata"
+    entity_parameter_default_values = "entity_parameter_default_values"
+    entity_parameter_values = "entity_parameter_values"
+    metadata = "metadata"
     parameter_value_lists = "parameter_value_lists"
+    parameter_value_metadata = "parameter_value_metadata"
     scenario_alternatives = "scenario_alternatives"
     scenarios = "scenarios"
 

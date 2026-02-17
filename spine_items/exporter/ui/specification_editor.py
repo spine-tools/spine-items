@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'specification_editor.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.3
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -226,7 +226,7 @@ class Ui_MainWindow(object):
         self.label_4 = QLabel(self.mapping_options_contents)
         self.label_4.setObjectName(u"label_4")
 
-        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.label_4)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_4)
 
         self.item_type_combo_box = QComboBox(self.mapping_options_contents)
         self.item_type_combo_box.addItem("")
@@ -236,36 +236,39 @@ class Ui_MainWindow(object):
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
         self.item_type_combo_box.addItem("")
+        self.item_type_combo_box.addItem("")
+        self.item_type_combo_box.addItem("")
+        self.item_type_combo_box.addItem("")
         self.item_type_combo_box.setObjectName(u"item_type_combo_box")
 
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.item_type_combo_box)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.item_type_combo_box)
 
         self.label_8 = QLabel(self.mapping_options_contents)
         self.label_8.setObjectName(u"label_8")
 
-        self.formLayout.setWidget(2, QFormLayout.LabelRole, self.label_8)
+        self.formLayout.setWidget(2, QFormLayout.ItemRole.LabelRole, self.label_8)
 
         self.entity_dimensions_spin_box = QSpinBox(self.mapping_options_contents)
         self.entity_dimensions_spin_box.setObjectName(u"entity_dimensions_spin_box")
         self.entity_dimensions_spin_box.setMinimum(0)
 
-        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.entity_dimensions_spin_box)
+        self.formLayout.setWidget(2, QFormLayout.ItemRole.FieldRole, self.entity_dimensions_spin_box)
 
         self.label_7 = QLabel(self.mapping_options_contents)
         self.label_7.setObjectName(u"label_7")
 
-        self.formLayout.setWidget(3, QFormLayout.LabelRole, self.label_7)
+        self.formLayout.setWidget(3, QFormLayout.ItemRole.LabelRole, self.label_7)
 
         self.highlight_dimension_spin_box = QSpinBox(self.mapping_options_contents)
         self.highlight_dimension_spin_box.setObjectName(u"highlight_dimension_spin_box")
         self.highlight_dimension_spin_box.setMinimum(1)
 
-        self.formLayout.setWidget(3, QFormLayout.FieldRole, self.highlight_dimension_spin_box)
+        self.formLayout.setWidget(3, QFormLayout.ItemRole.FieldRole, self.highlight_dimension_spin_box)
 
         self.label_5 = QLabel(self.mapping_options_contents)
         self.label_5.setObjectName(u"label_5")
 
-        self.formLayout.setWidget(4, QFormLayout.LabelRole, self.label_5)
+        self.formLayout.setWidget(4, QFormLayout.ItemRole.LabelRole, self.label_5)
 
         self.parameter_type_combo_box = QComboBox(self.mapping_options_contents)
         self.parameter_type_combo_box.addItem("")
@@ -273,47 +276,47 @@ class Ui_MainWindow(object):
         self.parameter_type_combo_box.addItem("")
         self.parameter_type_combo_box.setObjectName(u"parameter_type_combo_box")
 
-        self.formLayout.setWidget(4, QFormLayout.FieldRole, self.parameter_type_combo_box)
+        self.formLayout.setWidget(4, QFormLayout.ItemRole.FieldRole, self.parameter_type_combo_box)
 
         self.label_10 = QLabel(self.mapping_options_contents)
         self.label_10.setObjectName(u"label_10")
 
-        self.formLayout.setWidget(5, QFormLayout.LabelRole, self.label_10)
+        self.formLayout.setWidget(5, QFormLayout.ItemRole.LabelRole, self.label_10)
 
         self.parameter_dimensions_spin_box = QSpinBox(self.mapping_options_contents)
         self.parameter_dimensions_spin_box.setObjectName(u"parameter_dimensions_spin_box")
 
-        self.formLayout.setWidget(5, QFormLayout.FieldRole, self.parameter_dimensions_spin_box)
+        self.formLayout.setWidget(5, QFormLayout.ItemRole.FieldRole, self.parameter_dimensions_spin_box)
 
         self.fix_table_name_check_box = QCheckBox(self.mapping_options_contents)
         self.fix_table_name_check_box.setObjectName(u"fix_table_name_check_box")
 
-        self.formLayout.setWidget(7, QFormLayout.LabelRole, self.fix_table_name_check_box)
+        self.formLayout.setWidget(7, QFormLayout.ItemRole.LabelRole, self.fix_table_name_check_box)
 
         self.fix_table_name_line_edit = QLineEdit(self.mapping_options_contents)
         self.fix_table_name_line_edit.setObjectName(u"fix_table_name_line_edit")
 
-        self.formLayout.setWidget(7, QFormLayout.FieldRole, self.fix_table_name_line_edit)
+        self.formLayout.setWidget(7, QFormLayout.ItemRole.FieldRole, self.fix_table_name_line_edit)
 
         self.always_export_header_check_box = QCheckBox(self.mapping_options_contents)
         self.always_export_header_check_box.setObjectName(u"always_export_header_check_box")
 
-        self.formLayout.setWidget(10, QFormLayout.LabelRole, self.always_export_header_check_box)
+        self.formLayout.setWidget(10, QFormLayout.ItemRole.LabelRole, self.always_export_header_check_box)
 
         self.compact_button = QPushButton(self.mapping_options_contents)
         self.compact_button.setObjectName(u"compact_button")
 
-        self.formLayout.setWidget(10, QFormLayout.FieldRole, self.compact_button)
+        self.formLayout.setWidget(10, QFormLayout.ItemRole.FieldRole, self.compact_button)
 
         self.label_6 = QLabel(self.mapping_options_contents)
         self.label_6.setObjectName(u"label_6")
 
-        self.formLayout.setWidget(6, QFormLayout.LabelRole, self.label_6)
+        self.formLayout.setWidget(6, QFormLayout.ItemRole.LabelRole, self.label_6)
 
         self.group_fn_combo_box = QComboBox(self.mapping_options_contents)
         self.group_fn_combo_box.setObjectName(u"group_fn_combo_box")
 
-        self.formLayout.setWidget(6, QFormLayout.FieldRole, self.group_fn_combo_box)
+        self.formLayout.setWidget(6, QFormLayout.ItemRole.FieldRole, self.group_fn_combo_box)
 
 
         self.verticalLayout_8.addWidget(self.mapping_options_contents)
@@ -417,6 +420,9 @@ class Ui_MainWindow(object):
         self.item_type_combo_box.setItemText(4, QCoreApplication.translate("MainWindow", u"Scenario", None))
         self.item_type_combo_box.setItemText(5, QCoreApplication.translate("MainWindow", u"Scenario alternative", None))
         self.item_type_combo_box.setItemText(6, QCoreApplication.translate("MainWindow", u"Parameter value list", None))
+        self.item_type_combo_box.setItemText(7, QCoreApplication.translate("MainWindow", u"Metadata", None))
+        self.item_type_combo_box.setItemText(8, QCoreApplication.translate("MainWindow", u"Entity metadata", None))
+        self.item_type_combo_box.setItemText(9, QCoreApplication.translate("MainWindow", u"Parameter value metadata", None))
 
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Entity dimensions:", None))
 #if QT_CONFIG(tooltip)

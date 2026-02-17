@@ -14,6 +14,7 @@
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from spinedb_api.export_mapping.export_mapping import (
     DimensionMapping,
+    ElementMapping,
     EntityClassMapping,
     ParameterDefaultValueIndexMapping,
     ParameterValueIndexMapping,
@@ -116,7 +117,7 @@ class MappingsTableModel(QAbstractTableModel):
             if role == self.ALWAYS_EXPORT_HEADER_ROLE:
                 return spec.always_export_header
             if role == self.ENTITY_DIMENSIONS_ROLE:
-                return _instance_occurrences(spec.root, DimensionMapping)
+                return _instance_occurrences(spec.root, ElementMapping)
             if role == self.USE_FIXED_TABLE_NAME_FLAG_ROLE:
                 return spec.use_fixed_table_name_flag
             if role == self.FIXED_TABLE_NAME_ROLE:
