@@ -15,6 +15,7 @@ from copy import copy, deepcopy
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt  # pylint: disable=unused-import
 from PySide6.QtGui import QUndoCommand
+from spinedb_api.export_mapping.export_mapping import ExportMapping
 from spinetoolbox.helpers import SealCommand
 from spinetoolbox.project_commands import SpineToolboxCommand
 from .mvcmodels.mappings_table_model import MappingsTableModel
@@ -251,11 +252,11 @@ class ChangeWriteOrder(QUndoCommand):
 
 
 class SetMapping(QUndoCommand):
-    def __init__(self, index, mapping):
+    def __init__(self, index: QModelIndex, mapping: ExportMapping):
         """
         Args:
-            index (QModelIndex): mapping's row index
-            mapping (Mapping): mapping root
+            index: mapping's row index
+            mapping: mapping root
         """
         super().__init__("mapping change")
         self._index = index
@@ -384,12 +385,12 @@ class SetGroupFunction(QUndoCommand):
 
 
 class SetHighlightDimension(QUndoCommand):
-    def __init__(self, index, old_dimension, new_dimension):
+    def __init__(self, index: QModelIndex, old_dimension: int | None, new_dimension: int | None):
         """
         Args
-            index (QModelIndex): mapping's row index
-            old_dimension (int): old highlight dimension
-            new_dimension (int): new highlight dimension
+            index: mapping's row index
+            old_dimension: old highlight dimension
+            new_dimension: new highlight dimension
         """
         super().__init__("change selected relationship dimension")
         self._index = index

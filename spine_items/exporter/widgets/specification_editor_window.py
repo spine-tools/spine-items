@@ -425,7 +425,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
             self._set_use_fixed_table_name_flag_silently(
                 top_left.data(MappingsTableModel.USE_FIXED_TABLE_NAME_FLAG_ROLE)
             )
-        if {MappingsTableModel.MAPPING_ROOT_ROLE, MappingsTableModel.FIXED_TABLE_NAME_ROLE} & set(roles):
+        if not {MappingsTableModel.MAPPING_ROOT_ROLE, MappingsTableModel.FIXED_TABLE_NAME_ROLE}.isdisjoint(roles):
             self._set_fixed_table_name_silently(top_left.data(MappingsTableModel.FIXED_TABLE_NAME_ROLE))
         if MappingsTableModel.GROUP_FN_ROLE in roles:
             self._set_group_fn_silently(
