@@ -11,59 +11,123 @@
 ######################################################################################################################
 
 """Unit tests for export mapping setup table."""
-import unittest
-from unittest.mock import MagicMock
+from unittest import mock
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QUndoStack
-from PySide6.QtWidgets import QApplication
+import pytest
 from spine_items.exporter.mvcmodels.mapping_editor_table_model import MappingEditorTableModel
 from spinedb_api.export_mapping import entity_export
 from spinedb_api.mapping import Position
+from spinetoolbox.helpers import signal_waiter
+from tests.mock_helpers import assert_table_model_data
 
 
-class TestMappingTableModel(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        if not QApplication.instance():
-            QApplication()
+@pytest.fixture
+def undo_stack(parent_object):
+    undo_stack = QUndoStack(parent_object)
+    yield undo_stack
 
-    def setUp(self):
-        self._undo_stack = QUndoStack()
 
-    def test_columnCount(self):
+class TestMappingEditorTableModel:
+    def test_column_count(self, undo_stack, parent_object):
+        model = MappingEditorTableModel("mapping", entity_export(), undo_stack, mock.MagicMock(), parent_object)
+        assert model.rowCount() == 4
+
+    def test_row_count(self, undo_stack, parent_object):
+        mapping_root = entity_export()
+        model = MappingEditorTableModel("mapping", mapping_root, undo_stack, mock.MagicMock(), parent_object)
+        assert model.rowCount() == mapping_root.count_mappings()
+
+    def test_data(self, undo_stack, parent_object):
         model = MappingEditorTableModel(
-            "mapping", entity_export(Position.hidden, Position.hidden), self._undo_stack, MagicMock()
+            "mapping", entity_export(1, Position.hidden, 2), undo_stack, mock.MagicMock(), parent_object
         )
-        self.assertEqual(model.rowCount(), 2)
+        expected = [
+            ["Entity classes", "2", None, None, "", ""],
+            ["Class descriptions", "hidden", None, None, "", ""],
+            ["Entities", "3", None, None, "", ""],
+            ["Entity descriptions", "hidden", None, None, "", ""],
+        ]
+        assert_table_model_data(model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Checked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Checked, None, None],
+        ]
+        assert_table_model_data(model, expected, Qt.ItemDataRole.CheckStateRole)
 
-    def test_rowCount(self):
-        mapping_root = entity_export(Position.hidden, Position.hidden)
-        model = MappingEditorTableModel("mapping", mapping_root, self._undo_stack, MagicMock())
-        self.assertEqual(model.rowCount(), mapping_root.count_mappings())
+    def test_set_data_column_number(self, undo_stack, parent_object):
+        model = MappingEditorTableModel("mapping", entity_export(), undo_stack, mock.MagicMock(), parent_object)
+        assert model.setData(model.index(0, 1), "23")
+        assert model.index(0, 1).data() == "23"
 
-    def test_data(self):
-        model = MappingEditorTableModel("mapping", entity_export(1, 2), self._undo_stack, MagicMock())
-        self.assertEqual(model.rowCount(), 2)
-        self.assertEqual(model.index(0, 0).data(), "Entity classes")
-        self.assertEqual(model.index(0, 1).data(), "2")
-        self.assertEqual(model.index(1, 0).data(), "Entities")
-        self.assertEqual(model.index(1, 1).data(), "3")
-
-    def test_setData_column_number(self):
+    def test_set_data_prevents_duplicate_table_name_positions(self, undo_stack, parent_object):
         model = MappingEditorTableModel(
-            "mapping", entity_export(Position.hidden, Position.hidden), self._undo_stack, MagicMock()
+            "mapping",
+            entity_export(Position.table_name, Position.hidden, 0),
+            undo_stack,
+            mock.MagicMock(),
+            parent_object,
         )
-        self.assertTrue(model.setData(model.index(0, 1), "23"))
-        self.assertEqual(model.index(0, 1).data(), "23")
+        expected = [
+            ["Entity classes", "table name", None, None, "", ""],
+            ["Class descriptions", "hidden", None, None, "", ""],
+            ["Entities", "1", None, None, "", ""],
+            ["Entity descriptions", "hidden", None, None, "", ""],
+        ]
+        assert_table_model_data(model, expected)
+        with signal_waiter(model.dataChanged) as waiter:
+            model.setData(model.index(2, 1), "table name")
+            waiter.wait()
+            assert waiter.args == (model.index(0, 1), model.index(2, 1), [Qt.ItemDataRole.DisplayRole])
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Class descriptions", "hidden", None, None, "", ""],
+            ["Entities", "table name", None, None, "", ""],
+            ["Entity descriptions", "hidden", None, None, "", ""],
+        ]
+        assert_table_model_data(model, expected)
 
-    def test_setData_prevents_duplicate_table_name_positions(self):
-        model = MappingEditorTableModel("mapping", entity_export(Position.table_name, 0), self._undo_stack, MagicMock())
-        self.assertEqual(model.rowCount(), 2)
-        self.assertEqual(model.index(0, 0).data(), "Entity classes")
-        self.assertEqual(model.index(0, 1).data(), "table name")
-        self.assertEqual(model.index(1, 0).data(), "Entities")
-        self.assertEqual(model.index(1, 1).data(), "1")
-        model.setData(model.index(1, 1), "table name")
-        self.assertEqual(model.index(0, 0).data(), "Entity classes")
-        self.assertEqual(model.index(0, 1).data(), "1")
-        self.assertEqual(model.index(1, 0).data(), "Entities")
-        self.assertEqual(model.index(1, 1).data(), "table name")
+    def test_set_data_emits_data_changed_correctly_in_pivoted_mode(self, undo_stack, parent_object):
+        model = MappingEditorTableModel("mapping", entity_export(-1), undo_stack, mock.MagicMock(), parent_object)
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Class descriptions", "hidden", None, None, "", ""],
+            ["Entities", "hidden", None, None, "", ""],
+            ["Entity descriptions", "hidden", None, None, "", ""],
+        ]
+        assert_table_model_data(model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Checked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Checked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Checked, None, None],
+        ]
+        assert_table_model_data(model, expected, Qt.ItemDataRole.CheckStateRole)
+        data_changed_listener = mock.MagicMock()
+        model.dataChanged.connect(data_changed_listener)
+        with signal_waiter(model.dataChanged) as waiter:
+            model.setData(model.index(0, 1), "2")
+            waiter.wait()
+        data_changed_listener.assert_has_calls(
+            [
+                mock.call(model.index(0, 1), model.index(0, 1), [Qt.ItemDataRole.DisplayRole]),
+                mock.call(model.index(0, 2), model.index(0, 2), [Qt.ItemDataRole.CheckStateRole]),
+                mock.call(model.index(0, 0), model.index(3, 0), [Qt.ItemDataRole.BackgroundRole]),
+            ]
+        )
+        expected = [
+            ["Entity classes", "2", None, None, "", ""],
+            ["Class descriptions", "hidden", None, None, "", ""],
+            ["Entities", "hidden", None, None, "", ""],
+            ["Entity descriptions", "hidden", None, None, "", ""],
+        ]
+        assert_table_model_data(model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Checked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Checked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Checked, None, None],
+        ]
+        assert_table_model_data(model, expected, Qt.ItemDataRole.CheckStateRole)

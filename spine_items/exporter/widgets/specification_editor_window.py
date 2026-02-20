@@ -1075,7 +1075,7 @@ def _new_mapping_specification(mapping_type):
         MappingSpecification: an export mapping specification
     """
     if mapping_type == MappingType.entities:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, Position.hidden, 1))
     if mapping_type == MappingType.entity_groups:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_group_export(0, 1, 2))
     if mapping_type == MappingType.entity_parameter_default_values:

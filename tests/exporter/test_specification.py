@@ -19,14 +19,14 @@ from spinedb_api.mapping import Position
 
 class TestSpecification(unittest.TestCase):
     def test_is_exporting_multiple_files_is_false_when_exporting_single_file(self):
-        mapping_root = entity_export(0, 1)
+        mapping_root = entity_export(0, Position.hidden, 1)
         mapping_specification = MappingSpecification(MappingType.entities, True, False, "", False, mapping_root)
         mapping_specifications = {"Only mapping": mapping_specification}
         specification = Specification(mapping_specifications=mapping_specifications, output_format=OutputFormat.CSV)
         self.assertFalse(specification.is_exporting_multiple_files())
 
     def test_is_exporting_multiple_files_is_false_when_exporting_csv_with_named_tables(self):
-        mapping_root = entity_export(Position.table_name, 0)
+        mapping_root = entity_export(Position.table_name, Position.hidden, 0)
         mapping_specification = MappingSpecification(MappingType.entities, True, False, "", False, mapping_root)
         mapping_specifications = {"Only mapping": mapping_specification}
         specification = Specification(mapping_specifications=mapping_specifications, output_format=OutputFormat.CSV)
