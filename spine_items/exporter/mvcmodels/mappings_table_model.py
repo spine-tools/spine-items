@@ -117,7 +117,9 @@ class MappingsTableModel(QAbstractTableModel):
             if role == self.ALWAYS_EXPORT_HEADER_ROLE:
                 return spec.always_export_header
             if role == self.ENTITY_DIMENSIONS_ROLE:
-                return _instance_occurrences(spec.root, ElementMapping)
+                return max(
+                    _instance_occurrences(spec.root, DimensionMapping), _instance_occurrences(spec.root, ElementMapping)
+                )
             if role == self.USE_FIXED_TABLE_NAME_FLAG_ROLE:
                 return spec.use_fixed_table_name_flag
             if role == self.FIXED_TABLE_NAME_ROLE:
