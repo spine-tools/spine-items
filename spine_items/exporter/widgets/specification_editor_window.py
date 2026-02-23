@@ -992,12 +992,13 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
                 self._undo_stack.push(SetHighlightDimension(index, highlight_dimension, new_highlight_dimension))
         self._undo_stack.endMacro()
 
-    def _set_entity_dimensions_silently(self, dimensions):
+    @Slot(int)
+    def _set_entity_dimensions_silently(self, dimensions: int) -> None:
         """
         Sets entity dimensions spin box without emitting signals.
 
         Args:
-            dimensions (int): dimensions
+            dimensions: dimensions
         """
         self._ui.entity_dimensions_spin_box.valueChanged.disconnect(self._change_entity_dimensions)
         self._ui.entity_dimensions_spin_box.setValue(dimensions)
@@ -1075,7 +1076,7 @@ def _new_mapping_specification(mapping_type):
         MappingSpecification: an export mapping specification
     """
     if mapping_type == MappingType.entities:
-        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, 1))
+        return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_export(0, Position.hidden, 1))
     if mapping_type == MappingType.entity_groups:
         return MappingSpecification(mapping_type, True, True, NoGroup.NAME, False, entity_group_export(0, 1, 2))
     if mapping_type == MappingType.entity_parameter_default_values:
@@ -1085,7 +1086,7 @@ def _new_mapping_specification(mapping_type):
             True,
             NoGroup.NAME,
             False,
-            entity_parameter_default_value_export(0, 1, Position.hidden, 2, None, None),
+            entity_parameter_default_value_export(0, 1, Position.hidden, Position.hidden, 2, None, None),
         )
     if mapping_type == MappingType.entity_parameter_values:
         return MappingSpecification(

@@ -195,6 +195,105 @@ class TestSpecificationEditorWindow(unittest.TestCase):
             mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
             editor.tear_down()
 
+    def test_set_item_type_to_entity_class_with_default_value(self):
+        editor = SpecificationEditorWindow(self._toolbox)
+        editor._ui.item_type_combo_box.setCurrentText("Entity class")
+        self.assertTrue(editor._ui.entity_dimensions_spin_box.isEnabled())
+        self.assertFalse(editor._ui.highlight_dimension_spin_box.isEnabled())
+        self.assertTrue(editor._ui.parameter_type_combo_box.isEnabled())
+        self.assertFalse(editor._ui.parameter_dimensions_spin_box.isEnabled())
+        editor._ui.parameter_type_combo_box.setCurrentText("Default value")
+        self.assertTrue(editor._ui.parameter_dimensions_spin_box.isEnabled())
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Parameter definitions", "2", None, None, "", ""],
+            ["Parameter descriptions", "hidden", None, None, "", ""],
+            ["Default value types", "hidden", None, None, "", ""],
+            ["Default values", "3", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        expected = [
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Checked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+            [None, None, Qt.CheckState.Unchecked, Qt.CheckState.Unchecked, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.CheckStateRole)
+        expected = [
+            [color_from_index(0, 2).lighter(), None, None, None, None, None],
+            [color_from_index(1, 3).lighter(), None, None, None, None, None],
+            [QColor(Qt.GlobalColor.gray).lighter(), None, None, None, None, None],
+            [QColor(Qt.GlobalColor.gray).lighter(), None, None, None, None, None],
+            [color_from_index(2, 3).lighter(), None, None, None, None, None],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected, Qt.ItemDataRole.BackgroundRole)
+        with (
+            mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.QMessageBox.exec"
+            ) as mock_save_dialog_exec,
+            mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"),
+        ):
+            mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
+            editor.tear_down()
+
+    def test_change_entity_dimensions_with_entity_class_with_default_value(self):
+        editor = SpecificationEditorWindow(self._toolbox)
+        editor._ui.item_type_combo_box.setCurrentText("Entity class")
+        editor._ui.parameter_type_combo_box.setCurrentText("Default value")
+        editor._ui.entity_dimensions_spin_box.setValue(1)
+        self.assertEqual(editor._ui.entity_dimensions_spin_box.value(), 1)
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Dimensions", "hidden", None, None, "", ""],
+            ["Parameter definitions", "2", None, None, "", ""],
+            ["Parameter descriptions", "hidden", None, None, "", ""],
+            ["Default value types", "hidden", None, None, "", ""],
+            ["Default values", "3", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        editor._ui.entity_dimensions_spin_box.setValue(0)
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Parameter definitions", "2", None, None, "", ""],
+            ["Parameter descriptions", "hidden", None, None, "", ""],
+            ["Default value types", "hidden", None, None, "", ""],
+            ["Default values", "3", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+        with (
+            mock.patch(
+                "spinetoolbox.project_item.specification_editor_window.QMessageBox.exec"
+            ) as mock_save_dialog_exec,
+            mock.patch("spinetoolbox.project_item.specification_editor_window.save_ui"),
+        ):
+            mock_save_dialog_exec.return_value = QMessageBox.StandardButton.No
+            editor.tear_down()
+
+    def test_change_parameter_dimensions_with_entity_class_with_default_value(self):
+        editor = SpecificationEditorWindow(self._toolbox)
+        editor._ui.item_type_combo_box.setCurrentText("Entity class")
+        editor._ui.parameter_type_combo_box.setCurrentText("Default value")
+        editor._ui.parameter_dimensions_spin_box.setValue(1)
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Parameter definitions", "2", None, None, "", ""],
+            ["Parameter descriptions", "hidden", None, None, "", ""],
+            ["Default value types", "hidden", None, None, "", ""],
+            ["Default value index names", "hidden", None, None, "", ""],
+            ["Default value indexes", "hidden", None, None, "", ""],
+            ["Default values", "3", None, None, "", ""],
+        ]
+        editor._ui.parameter_dimensions_spin_box.setValue(0)
+        expected = [
+            ["Entity classes", "1", None, None, "", ""],
+            ["Parameter definitions", "2", None, None, "", ""],
+            ["Parameter descriptions", "hidden", None, None, "", ""],
+            ["Default value types", "hidden", None, None, "", ""],
+            ["Default values", "3", None, None, "", ""],
+        ]
+        assert_table_model_data(editor._mapping_editor_model, expected)
+
     def test_set_item_type_to_entity_metadata(self):
         editor = SpecificationEditorWindow(self._toolbox)
         editor._ui.item_type_combo_box.setCurrentText("Entity metadata")

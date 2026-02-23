@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QObject, QTimer
 from PySide6.QtWidgets import QApplication
 import pytest
 from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
@@ -24,6 +24,13 @@ def application():
     yield application_instance
     QTimer.singleShot(0, lambda: application_instance.quit())
     application_instance.exec()
+
+
+@pytest.fixture
+def parent_object(application):
+    parent = QObject()
+    yield parent
+    parent.deleteLater()
 
 
 @pytest.fixture
