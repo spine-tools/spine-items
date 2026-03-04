@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_properties.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -113,6 +113,7 @@ class Ui_Form(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.treeView_cmdline_args.sizePolicy().hasHeightForWidth())
         self.treeView_cmdline_args.setSizePolicy(sizePolicy2)
+        self.treeView_cmdline_args.setMinimumSize(QSize(0, 150))
         self.treeView_cmdline_args.setAcceptDrops(True)
         self.treeView_cmdline_args.setEditTriggers(QAbstractItemView.EditTrigger.AnyKeyPressed|QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
         self.treeView_cmdline_args.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
@@ -150,6 +151,7 @@ class Ui_Form(object):
         self.treeView_input_files.setObjectName(u"treeView_input_files")
         sizePolicy2.setHeightForWidth(self.treeView_input_files.sizePolicy().hasHeightForWidth())
         self.treeView_input_files.setSizePolicy(sizePolicy2)
+        self.treeView_input_files.setMinimumSize(QSize(0, 100))
         self.treeView_input_files.setDragEnabled(False)
         self.treeView_input_files.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
         self.treeView_input_files.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
