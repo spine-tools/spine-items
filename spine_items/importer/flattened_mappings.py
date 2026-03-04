@@ -20,7 +20,9 @@ from spinedb_api.import_mapping.import_mapping import (
     DimensionMapping,
     ElementMapping,
     EntityAlternativeActivityMapping,
+    EntityClassDescriptionMapping,
     EntityClassMapping,
+    EntityDescriptionMapping,
     EntityGroupMapping,
     EntityMapping,
     EntityMetadataValueMapping,
@@ -76,7 +78,9 @@ DISPLAY_VALUE_TYPES = {v: k for k, v in VALUE_TYPES.items()}
 
 DISPLAY_MAPPING_NAMES = {
     "EntityClass": "Entity class names",
+    "EntityClassDescription": "Class descriptions",
     "Entity": "Entity names",
+    "EntityDescription": "Entity descriptions",
     "EntityMetadataName": "Metadata names",
     "EntityMetadataValue": "Metadata values",
     "EntityGroup": "Member names",
@@ -84,13 +88,16 @@ DISPLAY_MAPPING_NAMES = {
     "Element": "Element names",
     "EntityAlternativeActivity": "Entity activities",
     "Alternative": "Alternative names",
+    "AlternativeDescription": "Alternative descriptions",
     "Scenario": "Scenario names",
+    "ScenarioDescription": "Scenario descriptions",
     "ScenarioActiveFlag": "Scenario active flags",
     "ScenarioAlternative": "Alternative names",
     "ScenarioBeforeAlternative": "Before alternative names",
     "ParameterValueList": "Value list names",
     "ParameterValueListValue": "Parameter values",
     "ParameterDefinition": "Parameter names",
+    "ParameterDefinitionDescription": "Parameter descriptions",
     "ParameterValue": "Parameter values",
     "ParameterValueType": None,
     "ParameterValueMetadataName": "Metadata names",
@@ -633,14 +640,14 @@ class FlattenedMappings:
         """
         return any(isinstance(m, EntityAlternativeActivityMapping) for m in self._components)
 
-    def set_import_entity_alternatives(self, import_entity_alternatives):
+    def set_import_entity_alternatives(self, import_entity_alternatives: bool) -> None:
         """Adds or removes AlternativeMapping and EntityAlternativeActivityMapping.
 
         Legacy mappings may already have AlternativeMapping as part of parameter value mappings;
         in this case we move the AlternativeMapping before EntityAlternativeActivityMapping.
 
         Args:
-            import_entity_alternatives (bool): if True, mappings will be added; if False they will be removed
+            import_entity_alternatives: if True, mappings will be added; if False they will be removed
         """
         if not self.may_import_entity_alternatives():
             return
@@ -651,8 +658,14 @@ class FlattenedMappings:
                     break
             else:
                 alternative_mapping = AlternativeMapping(Position.hidden)
+            if any(isinstance(m, EntityDescriptionMapping) for m in self._components):
+                insertion_parent_type = EntityDescriptionMapping
+            elif any(isinstance(m, ElementMapping) for m in self._components):
+                insertion_parent_type = ElementMapping
+            else:
+                insertion_parent_type = EntityMapping
             for i, m in enumerate(self._components):
-                if isinstance(m, EntityMapping):
+                if isinstance(m, insertion_parent_type):
                     insertion_point = i
                     break
             else:
@@ -735,19 +748,27 @@ class FlattenedMappings:
         """
         return next((m for m in self._components if isinstance(m, ParameterDefinitionMapping)), None)
 
-    def set_parameter_components(self, parameter_definition_component):
+    def set_parameter_components(self, parameter_definition_component: ImportMapping | None) -> None:
         """Changes parameter type.
 
         Args:
-            parameter_definition_component (ImportMapping, optional): root of parameter mappings;
+            parameter_definition_component: root of parameter mappings;
                 None removes the mappings
         """
-        if parameter_definition_component is not None and any(
-            isinstance(m, AlternativeMapping) for m in self._components
-        ):
-            parameter_definition_component = unflatten(
-                filter(lambda m: not isinstance(m, AlternativeMapping), parameter_definition_component.flatten())
+        if parameter_definition_component is not None:
+            descriptionless = list(
+                m
+                for m in self._components
+                if not isinstance(m, EntityClassDescriptionMapping) and not isinstance(m, EntityDescriptionMapping)
             )
+            self.set_root_mapping(unflatten(descriptionless))
+            if any(isinstance(m, AlternativeMapping) for m in self._components):
+                parameter_definition_component = unflatten(
+                    filter(lambda m: not isinstance(m, AlternativeMapping), parameter_definition_component.flatten())
+                )
+        else:
+            new_components = _add_description_mappings_to_entity_mapping(self._components)
+            self.set_root_mapping(unflatten(new_components))
         m = self._parameter_definition_component()
         parent = m.parent if m is not None else self._components[-1]
         parent.child = parameter_definition_component
@@ -815,3 +836,28 @@ class FlattenedMappings:
         """
         component_count = len(self._display_names)
         return [color_from_index(i, component_count).lighter() for i in range(component_count)]
+
+
+def _add_description_mappings_to_entity_mapping(components: list[ImportMapping]) -> list[ImportMapping]:
+    if any(isinstance(m, DimensionMapping) for m in components):
+        class_description_parent_type = DimensionMapping
+    else:
+        class_description_parent_type = EntityClassMapping
+    if any(isinstance(m, ElementMapping) for m in components):
+        entity_description_parent_type = ElementMapping
+    else:
+        entity_description_parent_type = EntityMapping
+    intermediate_components = []
+    for m in reversed(components):
+        if class_description_parent_type is not None and isinstance(m, class_description_parent_type):
+            intermediate_components.append(EntityClassDescriptionMapping(Position.hidden))
+            class_description_parent_type = None
+        intermediate_components.append(m)
+    final_components = []
+    for m in intermediate_components:
+        if entity_description_parent_type is not None and isinstance(m, entity_description_parent_type):
+            final_components.append(EntityDescriptionMapping(Position.hidden))
+            entity_description_parent_type = None
+        final_components.append(m)
+    final_components.reverse()
+    return final_components
