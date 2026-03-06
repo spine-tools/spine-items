@@ -44,7 +44,10 @@ class TestFlattenedMappings(unittest.TestCase):
         root_mapping = default_import_mapping("EntityClass")
         flattened_mappings = FlattenedMappings(root_mapping)
         self.assertEqual(flattened_mappings.map_type, MappingType.EntityClass)
-        self.assertEqual(flattened_mappings.display_names, ["Entity class names", "Entity names"])
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Class descriptions", "Entity names", "Entity descriptions"],
+        )
         self.assertIs(flattened_mappings.root_mapping, root_mapping)
         self.assertIsNone(flattened_mappings.value_type)
         self.assertFalse(flattened_mappings.is_time_series_value())
@@ -78,7 +81,7 @@ class TestFlattenedMappings(unittest.TestCase):
         self.assertEqual(flattened_mappings.dimension_count(), 1)
         self.assertEqual(
             flattened_mappings.display_names,
-            ["Entity class names", "Dimension names", "Element names"],
+            ["Entity class names", "Dimension names", "Class descriptions", "Element names", "Entity descriptions"],
         )
         self.assertTrue(flattened_mappings.may_import_entities())
         self.assertFalse(flattened_mappings.import_entities())
@@ -91,8 +94,10 @@ class TestFlattenedMappings(unittest.TestCase):
                 "Entity class names",
                 "Dimension names 1",
                 "Dimension names 2",
+                "Class descriptions",
                 "Element names 1",
                 "Element names 2",
+                "Entity descriptions",
             ],
         )
         self.assertTrue(flattened_mappings.may_import_entities())
@@ -100,7 +105,10 @@ class TestFlattenedMappings(unittest.TestCase):
         flattened_mappings.set_dimension_count(0)
         self.assertFalse(flattened_mappings.has_dimensions())
         self.assertEqual(flattened_mappings.dimension_count(), 0)
-        self.assertEqual(flattened_mappings.display_names, ["Entity class names", "Entity names"])
+        self.assertEqual(
+            flattened_mappings.display_names,
+            ["Entity class names", "Class descriptions", "Entity names", "Entity descriptions"],
+        )
         self.assertFalse(flattened_mappings.may_import_entities())
         self.assertFalse(flattened_mappings.import_entities())
 
@@ -121,6 +129,7 @@ class TestFlattenedMappings(unittest.TestCase):
                 "Entity class names",
                 "Entity names",
                 "Parameter names",
+                "Parameter descriptions",
                 "Value list names",
                 "Parameter default values",
             ],
@@ -139,7 +148,9 @@ class TestFlattenedMappings(unittest.TestCase):
             flattened_mappings.display_names,
             [
                 "Entity class names",
+                "Class descriptions",
                 "Entity names",
+                "Entity descriptions",
             ],
         )
 
@@ -178,7 +189,9 @@ class TestFlattenedMappings(unittest.TestCase):
             flattened_mappings.display_names,
             [
                 "Entity class names",
+                "Class descriptions",
                 "Entity names",
+                "Entity descriptions",
             ],
         )
 
@@ -192,7 +205,9 @@ class TestFlattenedMappings(unittest.TestCase):
             flattened_mappings.display_names,
             [
                 "Entity class names",
+                "Class descriptions",
                 "Entity names",
+                "Entity descriptions",
                 "Alternative names",
                 "Entity activities",
             ],
@@ -208,7 +223,9 @@ class TestFlattenedMappings(unittest.TestCase):
             flattened_mappings.display_names,
             [
                 "Entity class names",
+                "Class descriptions",
                 "Entity names",
+                "Entity descriptions",
             ],
         )
 
@@ -271,7 +288,9 @@ class TestFlattenedMappings(unittest.TestCase):
             flattened_mappings.display_names,
             [
                 "Entity class names",
+                "Class descriptions",
                 "Entity names",
+                "Entity descriptions",
                 "Alternative names",
                 "Entity activities",
             ],
@@ -315,7 +334,9 @@ class TestFlattenedMappings(unittest.TestCase):
             flattened_mappings.display_names,
             [
                 "Entity class names",
+                "Class descriptions",
                 "Entity names",
+                "Entity descriptions",
             ],
         )
 
@@ -335,7 +356,9 @@ class TestFlattenedMappings(unittest.TestCase):
             flattened_mappings.display_names,
             [
                 "Entity class names",
+                "Class descriptions",
                 "Entity names",
+                "Entity descriptions",
             ],
         )
 
