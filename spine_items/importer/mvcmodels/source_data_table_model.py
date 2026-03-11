@@ -16,7 +16,7 @@ from spinedb_api import ParameterValueFormatError
 from spinedb_api.import_mapping.type_conversion import ConvertSpec
 from spinedb_api.mapping import Position
 from spinetoolbox.mvcmodels.minimal_table_model import MinimalTableModel
-from ..mapping_colors import ERROR_COLOR
+from ..mapping_colors import ERROR_COLOR, TEXT_ON_COLOR_BACKGROUND
 from .mappings_model import Role
 
 
@@ -234,6 +234,9 @@ class SourceDataTableModel(MinimalTableModel):
 
         if role == Qt.ItemDataRole.BackgroundRole and self._mapping_list_index.isValid():
             return self.data_color(index)
+        if role == Qt.ItemDataRole.ForegroundRole and self._mapping_list_index.isValid():
+            if self.data_color(index) is not None:
+                return TEXT_ON_COLOR_BACKGROUND
         if role == Qt.ItemDataRole.DisplayRole:
             converted_data = self._converted_data.get((index.row(), index.column()))
             if converted_data is not None:
