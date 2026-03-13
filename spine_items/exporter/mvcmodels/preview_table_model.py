@@ -12,6 +12,7 @@
 
 """Contains model for a single export preview table."""
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtGui import QColor
 
 
 class PreviewTableModel(QAbstractTableModel):
@@ -56,6 +57,10 @@ class PreviewTableModel(QAbstractTableModel):
             color_column = self._column_to_map_color.get(index.column())
             if color_column is not None and index.row() > self._max_mapping_row:
                 return color_column
+        if role == Qt.ItemDataRole.ForegroundRole:
+            bg = self.data(index, Qt.ItemDataRole.BackgroundRole)
+            if bg is not None:
+                return QColor(Qt.GlobalColor.black)
         return None
 
     def _index_in_pivot(self, index):
