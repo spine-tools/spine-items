@@ -157,6 +157,8 @@ def check_database_url(sa_url: URL) -> str | None:
             pass
     except Exception as error:  # pylint: disable=broad-except
         return str(error)
+    else:
+        engine.dispose()
     return None
 
 
