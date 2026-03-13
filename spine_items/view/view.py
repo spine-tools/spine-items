@@ -364,7 +364,7 @@ def _format_pinned_values(values):
         <head>
         <style>
             table, th, td {
-              border: 1px solid gray;
+              border: 1px solid black;
               border-collapse: collapse;
               padding: 5px;
             }

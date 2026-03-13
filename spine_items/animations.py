@@ -14,8 +14,8 @@
 from __future__ import annotations
 from typing import ClassVar, Type
 from PySide6.QtCore import QLineF, QObject, QPointF, QRectF, Qt, QTimeLine, Signal, Slot
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainterPath, QPalette
-from PySide6.QtWidgets import QApplication, QGraphicsPathItem
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainterPath
+from PySide6.QtWidgets import QGraphicsPathItem
 from spinetoolbox.font import TOOLBOX_FONT
 from spinetoolbox.helpers import color_from_index
 from spinetoolbox.project_item_icon import ProjectItemIcon
@@ -46,7 +46,7 @@ class _PaperPlane(QGraphicsPathItem):
         border_pen = self.pen()
         border_pen.setWidthF(0.5)
         self.setPen(border_pen)
-        self.color = QApplication.palette().color(QPalette.ColorRole.WindowText)
+        self.color = QColor(Qt.GlobalColor.white)
         self.hide()
 
     def advance(self, phase):
