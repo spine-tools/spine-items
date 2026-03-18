@@ -16,7 +16,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtGui import QIcon, QStandardItem, QStandardItemModel, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 from spine_engine.utils.helpers import resolve_default_julia_executable, resolve_python_interpreter
-from spinetoolbox.helpers import file_is_valid, select_julia_executable, select_julia_project, select_python_interpreter
+from spinetoolbox.helpers import file_is_valid, make_icons_theme_aware, select_julia_executable, select_julia_project, select_python_interpreter
 from spinetoolbox.kernel_fetcher import KernelFetcher
 from spinetoolbox.widgets.notification import Notification
 
@@ -70,6 +70,7 @@ class SharedToolSpecOptionalWidget(OptionalWidget):
         super().__init__(specification_editor, toolbox)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
+        make_icons_theme_aware(self)
         self.fetch_mode = fetch_mode
         self.conda_path = self._toolbox.qsettings().value("appSettings/condaPath", defaultValue="")
         self.kernel_spec_model = QStandardItemModel(self)
