@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'default_filter_editor.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -59,6 +59,6 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.regexp_line_edit.setPlaceholderText(QCoreApplication.translate("Form", u"Type regular expression here...", None))
-        self.label_2.setText(QCoreApplication.translate("Form", u"<html><head/><body><p><a href=\"https://docs.python.org/3/library/re.html#regular-expression-syntax\"><span style=\" text-decoration: underline; color:#0000ff;\">Link</span></a> to regular expression syntax.</p></body></html>", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"<html><head/><body><p><a href=\"https://docs.python.org/3/library/re.html#regular-expression-syntax\"><span style=\" text-decoration: underline;\">Link</span></a> to regular expression syntax.</p></body></html>", None))
     # retranslateUi
 

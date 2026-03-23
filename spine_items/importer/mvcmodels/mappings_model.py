@@ -58,7 +58,7 @@ from ..commands import (
     UpdateTableItem,
 )
 from ..flattened_mappings import VALUE_TYPES, FlattenedMappings
-from ..mapping_colors import ERROR_COLOR
+from ..mapping_colors import ERROR_COLOR, TEXT_ON_COLOR_BACKGROUND
 from ..widgets.mime_types import MAPPING_LIST_MIME_TYPE, SOURCE_TABLE_LIST_MIME_TYPE
 from .mappings_model_roles import Role
 
@@ -338,6 +338,9 @@ class MappingsModel(QAbstractItemModel):
                 if issues:
                     return ERROR_COLOR
                 return None
+        if role == Qt.ItemDataRole.ForegroundRole:
+            if column == FlattenedColumn.NAME:
+                return TEXT_ON_COLOR_BACKGROUND
         if role == Qt.ItemDataRole.ToolTipRole:
             if column == FlattenedColumn.POSITION:
                 issues = flattened_mappings.display_row_issues(index.row())

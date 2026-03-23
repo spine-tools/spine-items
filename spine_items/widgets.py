@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from spine_engine.logger_interface import LoggerInterface, NonImplementedSignal
-from spinetoolbox.config import APPLICATION_PATH, STATUSBAR_SS
+from spinetoolbox.config import APPLICATION_PATH
 from spinetoolbox.helpers import get_open_file_name_in_last_dir
 from .utils import UrlDict, convert_to_sqlalchemy_url
 
@@ -452,7 +452,6 @@ class UrlSelectorDialog(QDialog):
         self.statusbar = QStatusBar(self)
         self.statusbar.setFixedHeight(20)
         self.statusbar.setSizeGripEnabled(False)
-        self.statusbar.setStyleSheet(STATUSBAR_SS)
         self.ui.horizontalLayout_statusbar_ph.addWidget(self.statusbar)
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self.msg_error.connect(self.statusbar.showMessage)

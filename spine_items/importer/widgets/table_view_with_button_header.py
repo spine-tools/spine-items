@@ -528,8 +528,7 @@ def _create_allowed_types_menu(parent, trigger_slot):
     menu = QMenu(parent)
     for at in _ALLOWED_TYPES:
         icon_char = TYPE_TO_FONT_AWESOME_ICON[at]
-        engine = CharIconEngine(icon_char, 0)
-        icon = QIcon(engine.pixmap())
+        icon = QIcon(CharIconEngine(icon_char))
         menu.addAction(icon, at)
     menu.triggered.connect(trigger_slot)
     return menu
