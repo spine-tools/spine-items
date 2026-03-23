@@ -11,10 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``database_validation`` module."""
-import gc
 from pathlib import Path
-from tempfile import TemporaryDirectory
-import unittest
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QApplication
 from sqlalchemy.engine.url import make_url
@@ -22,62 +19,51 @@ from spine_items.database_validation import DatabaseConnectionValidator
 from spinedb_api import create_new_spine_database
 
 
-class TestDatabaseConnectionValidator(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        if not QApplication.instance():
-            QApplication()
+class TestDatabaseConnectionValidator:
+    def test_successful_validation_of_sqlite_database(self, application, tmp_path):
+        url = "sqlite:///" + str(Path(tmp_path, "db.sqlite"))
+        create_new_spine_database(url)
+        listener = _Listener()
+        validator = DatabaseConnectionValidator()
+        try:
+            sa_url = make_url(url)
+            validator.validate_url("sqlite", sa_url, listener.failure, listener.success)
+            while not listener.is_done:
+                QApplication.processEvents()
+        finally:
+            validator.wait_for_finish()
+            validator.deleteLater()
+        assert listener.is_success
 
-    def test_successful_validation_of_sqlite_database(self):
-        with TemporaryDirectory() as temp_dir:
-            url = "sqlite:///" + str(Path(temp_dir, "db.sqlite"))
-            create_new_spine_database(url)
-            listener = _Listener()
-            validator = DatabaseConnectionValidator()
-            try:
-                sa_url = make_url(url)
-                validator.validate_url("sqlite", sa_url, listener.failure, listener.success)
-                while not listener.is_done:
-                    QApplication.processEvents()
-            finally:
-                validator.wait_for_finish()
-                validator.deleteLater()
-            self.assertTrue(listener.is_success)
-            gc.collect()
+    def test_successful_validation_of_sqlite_database_with_str_url(self, application, tmp_path):
+        url = "sqlite:///" + str(Path(tmp_path, "db.sqlite"))
+        create_new_spine_database(url)
+        listener = _Listener()
+        validator = DatabaseConnectionValidator()
+        try:
+            sa_url = make_url(url)
+            validator.validate_url("sqlite", sa_url, listener.failure, listener.success)
+            while not listener.is_done:
+                QApplication.processEvents()
+        finally:
+            validator.wait_for_finish()
+            validator.deleteLater()
+        assert listener.is_success
 
-    def test_successful_validation_of_sqlite_database_with_str_url(self):
-        with TemporaryDirectory() as temp_dir:
-            url = "sqlite:///" + str(Path(temp_dir, "db.sqlite"))
-            create_new_spine_database(url)
-            listener = _Listener()
-            validator = DatabaseConnectionValidator()
-            try:
-                sa_url = make_url(url)
-                validator.validate_url("sqlite", sa_url, listener.failure, listener.success)
-                while not listener.is_done:
-                    QApplication.processEvents()
-            finally:
-                validator.wait_for_finish()
-                validator.deleteLater()
-            self.assertTrue(listener.is_success)
-            gc.collect()
-
-    def test_validation_failure_due_to_missing_sqlite_file(self):
-        with TemporaryDirectory() as temp_dir:
-            url = "sqlite:///" + str(Path(temp_dir, "db.sqlite"))
-            listener = _Listener()
-            validator = DatabaseConnectionValidator()
-            try:
-                sa_url = make_url(url)
-                validator.validate_url("sqlite", sa_url, listener.failure, listener.success)
-                while not listener.is_done:
-                    QApplication.processEvents()
-            finally:
-                validator.wait_for_finish()
-                validator.deleteLater()
-            self.assertFalse(listener.is_success)
-            self.assertEqual(listener.fail_message, "File does not exist. Check the Database field in the URL.")
-            gc.collect()
+    def test_validation_failure_due_to_missing_sqlite_file(self, application, tmp_path):
+        url = "sqlite:///" + str(Path(tmp_path, "db.sqlite"))
+        listener = _Listener()
+        validator = DatabaseConnectionValidator()
+        try:
+            sa_url = make_url(url)
+            validator.validate_url("sqlite", sa_url, listener.failure, listener.success)
+            while not listener.is_done:
+                QApplication.processEvents()
+        finally:
+            validator.wait_for_finish()
+            validator.deleteLater()
+        assert not listener.is_success
+        assert listener.fail_message, "File does not exist. Check the Database field in the URL."
 
 
 class _Listener:
@@ -103,7 +89,3 @@ class _Listener:
     @Slot()
     def success(self):
         self._is_done = True
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -11,11 +11,8 @@
 ######################################################################################################################
 
 """Unit tests for ImporterExecutable."""
-import gc
 from multiprocessing import Lock
 from pathlib import Path
-from tempfile import TemporaryDirectory
-import unittest
 from unittest import mock
 from spine_engine.project_item.project_item_resource import database_resource, file_resource
 from spine_items.importer.executable_item import ExecutableItem
@@ -24,18 +21,11 @@ from spinedb_api import DatabaseMapping, create_new_spine_database
 from spinedb_api.spine_db_server import db_server_manager
 
 
-class TestImporterExecutable(unittest.TestCase):
-    def setUp(self):
-        self._temp_dir = TemporaryDirectory()
-
-    def tearDown(self):
-        gc.collect()
-        self._temp_dir.cleanup()
-
+class TestImporterExecutable:
     def test_item_type(self):
-        self.assertEqual(ExecutableItem.item_type(), "Importer")
+        assert ExecutableItem.item_type() == "Importer"
 
-    def test_from_dict(self):
+    def test_from_dict(self, tmp_path):
         item_dict = {
             "type": "Importer",
             "description": "",
@@ -73,67 +63,65 @@ class TestImporterExecutable(unittest.TestCase):
         }
         logger = mock.MagicMock()
         specs = {"Importer": {"importer_spec": ImporterSpecification.from_dict(spec_dict, logger)}}
-        item = ExecutableItem.from_dict(item_dict, "name", self._temp_dir.name, _MockSettings(), specs, logger)
-        self.assertIsInstance(item, ExecutableItem)
-        self.assertEqual("Importer", item.item_type())
+        item = ExecutableItem.from_dict(item_dict, "name", str(tmp_path), _MockSettings(), specs, logger)
+        assert isinstance(item, ExecutableItem)
+        assert "Importer" == item.item_type()
 
-    def test_stop_execution(self):
-        executable = ExecutableItem("name", {}, [], "", True, "merge", self._temp_dir.name, mock.MagicMock())
+    def test_stop_execution(self, tmp_path):
+        executable = ExecutableItem("name", {}, [], "", True, "merge", str(tmp_path), mock.MagicMock())
         executable.stop_execution()
-        self.assertIsNone(executable._process)
+        assert executable._process is None
 
-    def test_execute_simplest_case(self):
-        executable = ExecutableItem("name", {}, [], "", True, "merge", self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], [], Lock()))
+    def test_execute_simplest_case(self, tmp_path):
+        executable = ExecutableItem("name", {}, [], "", True, "merge", str(tmp_path), mock.MagicMock())
+        assert executable.execute([], [], Lock())
         # Check that _process is None after execution
-        self.assertIsNone(executable._process)
+        assert executable._process is None
 
-    def test_execute_import_small_file(self):
-        data_file = Path(self._temp_dir.name, "data.dat")
+    def test_execute_import_small_file(self, tmp_path):
+        data_file = Path(str(tmp_path), "data.dat")
         self._write_simple_data(data_file)
         mapping = self._simple_input_data_mapping()
-        database_path = Path(self._temp_dir.name, "database.sqlite")
+        database_path = Path(str(tmp_path), "database.sqlite")
         database_url = "sqlite:///" + str(database_path)
         create_new_spine_database(database_url)
         gams_path = ""
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
-        executable = ExecutableItem(
-            "name", mapping, [str(data_file)], gams_path, True, "merge", self._temp_dir.name, logger
-        )
+        executable = ExecutableItem("name", mapping, [str(data_file)], gams_path, True, "merge", str(tmp_path), logger)
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
         with db_server_manager() as mngr_queue:
             for r in database_resources:
                 r.metadata["db_server_manager_queue"] = mngr_queue
-            self.assertTrue(executable.execute(file_resources, database_resources, Lock()))
+            assert executable.execute(file_resources, database_resources, Lock())
         # Check that _process is None after execution
-        self.assertIsNone(executable._process)
+        assert executable._process is None
         with DatabaseMapping(database_url) as database_map:
             class_list = database_map.query(database_map.entity_class_sq).all()
-            self.assertEqual(len(class_list), 1)
-            self.assertEqual(class_list[0].name, "class")
+            assert len(class_list) == 1
+            assert class_list[0].name == "class"
             entity_list = database_map.query(database_map.entity_sq).filter_by(class_id=class_list[0].id).all()
-            self.assertEqual(len(entity_list), 1)
-            self.assertEqual(entity_list[0].name, "entity")
+            assert len(entity_list) == 1
+            assert entity_list[0].name == "entity"
         database_map.close()
 
-    def test_execute_skip_deselected_file(self):
-        data_file = Path(self._temp_dir.name, "data.dat")
+    def test_execute_skip_deselected_file(self, tmp_path):
+        data_file = Path(str(tmp_path), "data.dat")
         self._write_simple_data(data_file)
-        database_path = Path(self._temp_dir.name, "database.sqlite")
+        database_path = Path(str(tmp_path), "database.sqlite")
         database_url = "sqlite:///" + str(database_path)
         create_new_spine_database(database_url)
         gams_path = ""
-        executable = ExecutableItem("name", {}, [], gams_path, True, "merge", self._temp_dir.name, mock.MagicMock())
+        executable = ExecutableItem("name", {}, [], gams_path, True, "merge", str(tmp_path), mock.MagicMock())
         database_resources = [database_resource("provider", database_url)]
         file_resources = [file_resource("provider", str(data_file))]
-        self.assertTrue(executable.execute(file_resources, database_resources, Lock()))
+        assert executable.execute(file_resources, database_resources, Lock())
         # Check that _process is None after execution
-        self.assertIsNone(executable._process)
+        assert executable._process is None
         with DatabaseMapping(database_url) as database_map:
             class_list = database_map.query(database_map.entity_class_sq).all()
-            self.assertEqual(len(class_list), 0)
+            assert len(class_list) == 0
         database_map.close()
 
     @staticmethod
@@ -177,7 +165,3 @@ class _MockSettings:
     @staticmethod
     def value(key, defaultValue=None):
         return {"appSettings/gamsPath": ""}.get(key, defaultValue)
-
-
-if __name__ == "__main__":
-    unittest.main()

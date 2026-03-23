@@ -11,12 +11,8 @@
 ######################################################################################################################
 
 """Unit tests for MergerExecutable."""
-import gc
 from multiprocessing import Lock
-import os.path
 from pathlib import Path
-from tempfile import TemporaryDirectory
-import unittest
 from unittest import mock
 from spine_engine.project_item.connection import Connection
 from spine_engine.project_item.project_item_resource import database_resource
@@ -26,40 +22,33 @@ from spinedb_api import DatabaseMapping, create_new_spine_database, import_funct
 from spinedb_api.spine_db_server import db_server_manager
 
 
-class TestMergerExecutable(unittest.TestCase):
-    def setUp(self):
-        self._temp_dir = TemporaryDirectory()
-
-    def tearDown(self):
-        gc.collect()
-        self._temp_dir.cleanup()
-
+class TestMergerExecutable:
     def test_item_type(self):
-        self.assertEqual(ExecutableItem.item_type(), "Merger")
+        assert ExecutableItem.item_type() == "Merger"
 
-    def test_from_dict(self):
+    def test_from_dict(self, tmp_path):
         name = "Output Data Store"
         item_dict = {"type": "Data Store", "description": "", "x": 0, "y": 0, "cancel_on_error": True}
         logger = mock.MagicMock()
-        item = ExecutableItem.from_dict(item_dict, name, self._temp_dir.name, None, {}, logger)
-        self.assertIsInstance(item, ExecutableItem)
-        self.assertEqual("Merger", item.item_type())
+        item = ExecutableItem.from_dict(item_dict, name, str(tmp_path), None, {}, logger)
+        assert isinstance(item, ExecutableItem)
+        assert "Merger" == item.item_type()
 
-    def test_stop_execution(self):
-        executable = ExecutableItem("name", True, self._temp_dir.name, mock.MagicMock())
+    def test_stop_execution(self, tmp_path):
+        executable = ExecutableItem("name", True, str(tmp_path), mock.MagicMock())
         with mock.patch(
             "spine_engine.project_item.executable_item_base.ExecutableItemBase.stop_execution"
         ) as mock_stop_execution:
             executable.stop_execution()
             mock_stop_execution.assert_called_once()
 
-    def test_execute(self):
-        executable = ExecutableItem("name", True, self._temp_dir.name, mock.MagicMock())
-        self.assertTrue(executable.execute([], [], Lock()))
+    def test_execute(self, tmp_path):
+        executable = ExecutableItem("name", True, str(tmp_path), mock.MagicMock())
+        assert executable.execute([], [], Lock())
 
-    def test_execute_merge_two_dbs(self):
+    def test_execute_merge_two_dbs(self, tmp_path):
         """Creates two db's with some data and merges them to a third db."""
-        db1_path = Path(self._temp_dir.name, "db1.sqlite")
+        db1_path = Path(str(tmp_path), "db1.sqlite")
         db1_url = "sqlite:///" + str(db1_path)
         # Add some data to db1
         with DatabaseMapping(db1_url, create=True) as db1_map:
@@ -67,7 +56,7 @@ class TestMergerExecutable(unittest.TestCase):
             import_functions.import_entities(db1_map, [("a", "a_1")])
             db1_map.commit_session("Add an object class 'a' and an object for unit tests.")
         db1_map.close()
-        db2_path = Path(self._temp_dir.name, "db2.sqlite")
+        db2_path = Path(str(tmp_path), "db2.sqlite")
         db2_url = "sqlite:///" + str(db2_path)
         # Add some data to db2
         with DatabaseMapping(db2_url, create=True) as db2_map:
@@ -76,41 +65,41 @@ class TestMergerExecutable(unittest.TestCase):
             db2_map.commit_session("Add an object class 'b' and an object for unit tests.")
         db2_map.close()
         # Make an empty output db
-        db3_path = Path(self._temp_dir.name, "db3.sqlite")
+        db3_path = Path(str(tmp_path), "db3.sqlite")
         db3_url = "sqlite:///" + str(db3_path)
         create_new_spine_database(db3_url)
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
-        executable = ExecutableItem("name", True, self._temp_dir.name, logger)
+        executable = ExecutableItem("name", True, str(tmp_path), logger)
         input_db_resources = [database_resource("provider", db1_url), database_resource("provider", db2_url)]
         output_db_resources = [database_resource("receiver", db3_url)]
         with db_server_manager() as mngr_queue:
             for r in input_db_resources + output_db_resources:
                 r.metadata["db_server_manager_queue"] = mngr_queue
-            self.assertTrue(executable.execute(input_db_resources, output_db_resources, Lock()))
+            assert executable.execute(input_db_resources, output_db_resources, Lock())
         # Check output db
         with DatabaseMapping(db3_url) as output_db_map:
             class_list = output_db_map.query(output_db_map.entity_class_sq).all()
-            self.assertEqual(len(class_list), 2)
-            self.assertEqual(class_list[0].name, "a")
-            self.assertEqual(class_list[1].name, "b")
+            assert len(class_list) == 2
+            assert class_list[0].name == "a"
+            assert class_list[1].name == "b"
             entity_list_a = output_db_map.query(output_db_map.entity_sq).filter_by(class_id=class_list[0].id).all()
-            self.assertEqual(len(entity_list_a), 1)
-            self.assertEqual(entity_list_a[0].name, "a_1")
+            assert len(entity_list_a) == 1
+            assert entity_list_a[0].name == "a_1"
             entity_list_b = output_db_map.query(output_db_map.entity_sq).filter_by(class_id=class_list[1].id).all()
-            self.assertEqual(len(entity_list_b), 1)
-            self.assertEqual(entity_list_b[0].name, "b_1")
+            assert len(entity_list_b) == 1
+            assert entity_list_b[0].name == "b_1"
         output_db_map.close()
 
-    def test_write_order(self):
-        db1_path = Path(self._temp_dir.name, "db1.sqlite")
+    def test_write_order(self, tmp_path):
+        db1_path = Path(str(tmp_path), "db1.sqlite")
         db1_url = "sqlite:///" + str(db1_path)
         # Add some data to db1
         with DatabaseMapping(db1_url, create=True) as db1_map:
             import_functions.import_data(db1_map, entity_classes=[("fish",)])
             db1_map.commit_session("Add test data.")
         db1_map.close()
-        db2_path = Path(self._temp_dir.name, "db2.sqlite")
+        db2_path = Path(str(tmp_path), "db2.sqlite")
         db2_url = "sqlite:///" + str(db2_path)
         # Add some data to db2
         with DatabaseMapping(db2_url, create=True) as db2_map:
@@ -118,7 +107,7 @@ class TestMergerExecutable(unittest.TestCase):
             db2_map.commit_session("Add test data.")
         db2_map.close()
         # Make an empty output db
-        db3_path = Path(self._temp_dir.name, "db3.sqlite")
+        db3_path = Path(str(tmp_path), "db3.sqlite")
         db3_url = "sqlite:///" + str(db3_path)
         # Make two mergers
         logger = mock.MagicMock()
@@ -177,18 +166,14 @@ class TestMergerExecutable(unittest.TestCase):
                 items=items,
                 connections=[x.to_dict() for x in (conn1in, conn2in, conn1out, conn2out)],
                 execution_permits=execution_permits,
-                project_dir=self._temp_dir.name,
+                project_dir=str(tmp_path),
             )
             create_new_spine_database(db3_url)
             engine.run()
-            self.assertEqual(engine.state(), SpineEngineState.COMPLETED)
+            assert engine.state() == SpineEngineState.COMPLETED
             with DatabaseMapping(db3_url, create=True) as db3_map:
                 commits = db3_map.query(db3_map.commit_sq).all()
             db3_map.close()
             merger1_idx = next(iter(k for k, commit in enumerate(commits) if db1_url in commit.comment))
             merger2_idx = next(iter(k for k, commit in enumerate(commits) if db2_url in commit.comment))
-            self.assertTrue(merger2_idx < merger1_idx)
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert merger2_idx < merger1_idx
