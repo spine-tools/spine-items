@@ -15,11 +15,11 @@ import unittest
 from spine_items.importer.flattened_mappings import FlattenedMappings, MappingType
 from spinedb_api import import_mapping_from_dict
 from spinedb_api.import_mapping.import_mapping import (
-    default_import_mapping,
     DimensionMapping,
     ElementMapping,
     EntityClassMapping,
     EntityMapping,
+    default_import_mapping,
 )
 from spinedb_api.import_mapping.import_mapping_compat import parameter_mapping_from_dict
 from spinedb_api.mapping import Position
@@ -609,7 +609,7 @@ class TestFlattenedMappings(unittest.TestCase):
     def test_adding_dimensions_to_minimal_mapping_hides_entity(self):
         """Entity mapping in a tree without description mappings must become hidden."""
         ec = EntityClassMapping(Position.hidden, "unit__outputNode")
-        em = ec.child = EntityMapping(0)
+        ec.child = EntityMapping(0)
         flattened_mappings = FlattenedMappings(ec)
         flattened_mappings.set_dimension_count(2)
         entity = self._find_entity_mapping(flattened_mappings)
