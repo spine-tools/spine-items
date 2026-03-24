@@ -68,6 +68,6 @@ def do_work(process, cancel_on_error, logs_dir, from_server_urls, to_server_urls
             for err in all_errors:
                 f.write(f"{err}\n")
         # Make error log file anchor with path as tooltip
-        logfile_anchor = f"<a style='color:#BB99FF;' title='{logfilepath}' href='file:///{logfilepath}'>error log</a>"
+        logfile_anchor = f"<a title='{logfilepath}' href='file:///{logfilepath}'>error log</a>"
         logger.msg_error.emit(f"Import errors. Logfile: {logfile_anchor}")
     return (True,)

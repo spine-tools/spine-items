@@ -53,7 +53,7 @@ def do_work(
     for resource in source_resources:
         src = get_source(resource)
         if resource.hasfilepath:
-            source_anchor = f"<a style='color:#BB99FF;' title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
+            source_anchor = f"<a title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
         else:
             safe_url = remove_credentials_from_url(src)
             source_anchor = f"<p style='color:#BB99FF;'>{safe_url}</p>"
@@ -129,9 +129,7 @@ def do_work(
             for err in all_errors:
                 f.write(f"{err}\n")
         # Make error log file anchor with path as tooltip
-        logfile_anchor = (
-            "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
-        )
+        logfile_anchor = "<a title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
         logger.msg_error.emit(logfile_anchor)
         if cancel_on_error:
             logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
@@ -177,9 +175,7 @@ def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client
             for err in all_import_errors:
                 f.write(str(err) + "\n")
         # Make error log file anchor with path as tooltip
-        logfile_anchor = (
-            "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
-        )
+        logfile_anchor = "<a title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
         logger.msg_error.emit(logfile_anchor)
         return False
     return True
