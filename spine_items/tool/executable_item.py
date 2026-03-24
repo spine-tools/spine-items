@@ -179,10 +179,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._logger.msg_error.emit(f"Creating directory <b>{execution_dir}</b> failed")
             return False
         for dst, src_path in paths.items():
-            file_anchor = (
-                f"<a style='color:#BB99FF;' title='{src_path}' href='file:///{src_path}'>"
-                + f"{os.path.basename(src_path)}</a>"
-            )
+            file_anchor = f"<a title='{src_path}' href='file:///{src_path}'>" + f"{os.path.basename(src_path)}</a>"
             if not os.path.exists(src_path):
                 self._logger.msg_error.emit(f"\tFile <b>{file_anchor}</b> does not exist")
                 return False
@@ -465,10 +462,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             return ItemExecutionFinishState.FAILURE
         work_or_source = "work" if self._work_dir is not None else "source"
         # Make work/source directory anchor with path as tooltip
-        anchor = (
-            f"<a style='color:#99CCFF;' title='{execution_dir}'"
-            f"href='file:///{execution_dir}'>{work_or_source} directory</a>"
-        )
+        anchor = f"<a title='{execution_dir}'" f"href='file:///{execution_dir}'>{work_or_source} directory</a>"
         self._logger.msg.emit(
             f"*** Executing Tool specification <b>{self._tool_specification.name}</b> in {anchor} ***"
         )
@@ -609,9 +603,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 )
                 return
             # Make link to output folder
-            result_anchor = (
-                f"<a style='color:#BB99FF;' title='{result_path}' href='file:///{result_path}'>results directory</a>"
-            )
+            result_anchor = f"<a title='{result_path}' href='file:///{result_path}'>results directory</a>"
             if filter_id:
                 write_filter_id_file(filter_id, os.path.dirname(result_path))
             self._logger.msg.emit(f"*** Archiving output files to {result_anchor} ***")
@@ -627,13 +619,11 @@ class ExecutableItem(DBWriterExecutableItemBase):
             if failed_files:
                 # If saving some or all files failed
                 f_str = "\n".join(failed_files)
-                failed_files_anchor = (
-                    f"<a style='color:#ff0000;' title='{f_str}' href='#'>Some output files were not found</a>"
-                )
+                failed_files_anchor = f"<a title='{f_str}' href='#'>Some output files were not found</a>"
                 self._logger.msg.emit(f"\t<b>{failed_files_anchor}")
         else:
             tip_anchor = (
-                "<a style='color:#99CCFF;' title='By adding <b>output files</b> to the Tool specification,\n "
+                "<a title='By adding <b>output files</b> to the Tool specification,\n "
                 "they will be archived into the results directory. In addition, <b>output files</b> will be \n"
                 "passed to subsequent project items.' href='#'>Tip</a>"
             )

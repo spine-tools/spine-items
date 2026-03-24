@@ -79,7 +79,7 @@ class ToolFactory(ProjectItemFactory):
             toolbox.msg_error.emit(
                 f"Tool spec <b>{specification.name}</b> won't work because "
                 f"main program file <b>{full_path}</b> doesn't exist. "
-                f"<a style='color:white;' href='{url}'><b>[find it]</b></a>"
+                f"<a href='{url}'><b>[find it]</b></a>"
             )
 
 
