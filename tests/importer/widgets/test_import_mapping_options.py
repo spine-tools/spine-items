@@ -87,7 +87,3 @@ class TestImportMappingOptions(unittest.TestCase):
             "table_row_types": {},
             "source_type": "ExcelConnector",
         }
-
-
-if __name__ == "__main__":
-    unittest.main()
