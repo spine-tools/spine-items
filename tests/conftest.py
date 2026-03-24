@@ -10,7 +10,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-from PySide6.QtCore import QObject, QTimer
+from PySide6.QtCore import QMimeData, QObject, QTimer
 from PySide6.QtGui import QClipboard
 from PySide6.QtWidgets import QApplication
 import pytest
@@ -46,6 +46,10 @@ def clipboard():
     class Clipboard:
         def __init__(self):
             self._text = {QClipboard.Mode.Clipboard: "", QClipboard.Mode.Selection: "", QClipboard.Mode.FindBuffer: ""}
+            self._mime_data = QMimeData()
+
+        def mimeData(self):
+            return self._mime_data
 
         def setText(self, text, mode=QClipboard.Mode.Clipboard):
             self._text[mode] = text

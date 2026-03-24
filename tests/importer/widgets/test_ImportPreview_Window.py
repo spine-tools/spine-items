@@ -126,7 +126,7 @@ class TestImportEditorWindow:
         assert_list_model(source_list_model, expected)
         tear_down_editor(editor)
 
-    def test_delete_selected_source_tables(self, spine_toolbox_with_project, tmp_path):
+    def test_delete_selected_source_tables(self, spine_toolbox_with_project, clipboard, tmp_path, monkeypatch):
         csv_path = tmp_path / "table_2.csv"
         with csv_path.open("wt", newline="") as out_file:
             data_writer = csv.writer(out_file)
@@ -161,7 +161,9 @@ class TestImportEditorWindow:
         editor._ui.source_list.selectionModel().select(selection, QItemSelectionModel.SelectionFlag.ClearAndSelect)
         with mock.patch("spine_items.importer.widgets.custom_menus.SourceListMenu.get_action") as get_action:
             get_action.return_value = "Delete"
-            editor._import_sources.show_source_list_context_menu(QPoint())
+            with monkeypatch.context() as m:
+                m.setattr("PySide6.QtGui.QGuiApplication.clipboard", lambda: clipboard)
+                editor._import_sources.show_source_list_context_menu(QPoint())
         expected = ["Select all", "table_2"]
         assert_list_model(source_list_model, expected)
         tear_down_editor(editor)
