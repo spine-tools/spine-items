@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 from PySide6.QtCore import QObject, QTimer
+from PySide6.QtGui import QClipboard
 from PySide6.QtWidgets import QApplication
 import pytest
 from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
@@ -38,3 +39,18 @@ def spine_toolbox_with_project(application, tmp_path):
     toolbox = create_toolboxui_with_project(str(tmp_path))
     yield toolbox
     clean_up_toolbox(toolbox)
+
+
+@pytest.fixture
+def clipboard():
+    class Clipboard:
+        def __init__(self):
+            self._text = {QClipboard.Mode.Clipboard: "", QClipboard.Mode.Selection: "", QClipboard.Mode.FindBuffer: ""}
+
+        def setText(self, text, mode=QClipboard.Mode.Clipboard):
+            self._text[mode] = text
+
+        def text(self, mode=QClipboard.Mode.Clipboard):
+            return self._text[mode]
+
+    return Clipboard()

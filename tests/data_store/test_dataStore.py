@@ -12,7 +12,6 @@
 
 """Unit tests for DataStore class."""
 import os
-from pathlib import Path
 import sys
 from unittest import mock
 from PySide6.QtWidgets import QApplication
@@ -25,8 +24,6 @@ from spine_items.utils import UrlDict, convert_to_sqlalchemy_url, database_label
 from spinedb_api import create_new_spine_database
 from spinetoolbox.helpers import signal_waiter
 from tests.mock_helpers import (
-    create_mock_project,
-    create_mock_toolbox,
     mock_finish_project_item_construction,
 )
 
@@ -271,16 +268,17 @@ class TestDataStoreWithMockToolbox:
         assert url["username"] == "bar"
         assert url["password"] == "s3cr3t"
 
-    def test_copy_db_url_to_clipboard(self, ds, ds_properties_ui):
+    def test_copy_db_url_to_clipboard(self, ds, ds_properties_ui, clipboard, monkeypatch):
         """Test that the database url from current selections is copied to clipboard."""
-        QApplication.clipboard().clear()
         temp_path = create_temp_db(ds)
         url = {"dialect": "sqlite", "database": temp_path}
         ds._url = ds.parse_url(url)
         ds.activate()  # This loads the url into properties UI widgets
-        ds_properties_ui.toolButton_copy_url.click()
+        with monkeypatch.context() as m:
+            m.setattr("PySide6.QtWidgets.QApplication.clipboard", lambda: clipboard)
+            ds_properties_ui.toolButton_copy_url.click()
         # noinspection PyArgumentList
-        clipboard_text = QApplication.clipboard().text()
+        clipboard_text = clipboard.text()
         expected_url = "sqlite:///" + os.path.join(ds.data_dir, "temp_db.sqlite")
         if sys.platform == "win32":
             assert expected_url.casefold() == clipboard_text.strip().casefold()
