@@ -606,6 +606,13 @@ class FlattenedMappings:
                 last_el_mapping = last_el_mapping.parent
         last_dim_mapping.child = last_dim_mapping_child
         last_el_mapping.child = last_el_mapping_child
+        entity_mapping = next((m for m in self._components if isinstance(m, EntityMapping)), None)
+        if entity_mapping is not None:
+            if dimension_count > 0 and entity_mapping.position != Position.hidden:
+                entity_mapping.position = Position.hidden
+                entity_mapping.value = "relationship"
+            elif dimension_count == 0 and entity_mapping.value == "relationship":
+                entity_mapping.value = None
         self.set_root_mapping(self._components[0])
         self._ensure_consistent_import_entities()
 
