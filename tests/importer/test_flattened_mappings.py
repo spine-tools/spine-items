@@ -14,8 +14,15 @@
 import unittest
 from spine_items.importer.flattened_mappings import FlattenedMappings, MappingType
 from spinedb_api import import_mapping_from_dict
-from spinedb_api.import_mapping.import_mapping import default_import_mapping
+from spinedb_api.import_mapping.import_mapping import (
+    default_import_mapping,
+    DimensionMapping,
+    ElementMapping,
+    EntityClassMapping,
+    EntityMapping,
+)
 from spinedb_api.import_mapping.import_mapping_compat import parameter_mapping_from_dict
+from spinedb_api.mapping import Position
 
 
 class TestFlattenedMappings(unittest.TestCase):
@@ -583,3 +590,85 @@ class TestFlattenedMappings(unittest.TestCase):
                 "Metadata values",
             ],
         )
+
+    def _find_entity_mapping(self, flattened_mappings):
+        """Helper to find the EntityMapping in _components."""
+        return next(m for m in flattened_mappings._components if isinstance(m, EntityMapping))
+
+    def test_adding_dimensions_hides_entity_mapping_with_column_position(self):
+        """Entity mapping with a column position must become hidden when dimensions are added."""
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        entity = self._find_entity_mapping(flattened_mappings)
+        entity.position = 1
+        flattened_mappings.set_dimension_count(2)
+        entity = self._find_entity_mapping(flattened_mappings)
+        self.assertEqual(entity.position, Position.hidden)
+        self.assertEqual(entity.value, "relationship")
+
+    def test_adding_dimensions_to_minimal_mapping_hides_entity(self):
+        """Entity mapping in a tree without description mappings must become hidden."""
+        ec = EntityClassMapping(Position.hidden, "unit__outputNode")
+        em = ec.child = EntityMapping(0)
+        flattened_mappings = FlattenedMappings(ec)
+        flattened_mappings.set_dimension_count(2)
+        entity = self._find_entity_mapping(flattened_mappings)
+        self.assertEqual(entity.position, Position.hidden)
+        self.assertEqual(entity.value, "relationship")
+
+    def test_increasing_dimensions_fixes_broken_entity_position(self):
+        """Loading a broken mapping (Entity pos=1 with dims) and adding more dims should fix it."""
+        ec = EntityClassMapping(Position.hidden, "unit__outputNode")
+        d1 = ec.child = DimensionMapping(Position.hidden, "unit")
+        d2 = d1.child = DimensionMapping(Position.hidden, "node")
+        em = d2.child = EntityMapping(1)
+        el1 = em.child = ElementMapping(1)
+        el1.child = ElementMapping(3)
+        flattened_mappings = FlattenedMappings(ec)
+        flattened_mappings.set_dimension_count(3)
+        entity = self._find_entity_mapping(flattened_mappings)
+        self.assertEqual(entity.position, Position.hidden)
+        self.assertEqual(entity.value, "relationship")
+
+    def test_reducing_dimensions_to_zero_clears_relationship_value(self):
+        """Removing all dimensions should clear the 'relationship' value from Entity mapping."""
+        ec = EntityClassMapping(Position.hidden, "unit__outputNode")
+        d1 = ec.child = DimensionMapping(Position.hidden, "unit")
+        d2 = d1.child = DimensionMapping(Position.hidden, "node")
+        em = d2.child = EntityMapping(Position.hidden, "relationship")
+        el1 = em.child = ElementMapping(1)
+        el1.child = ElementMapping(3)
+        flattened_mappings = FlattenedMappings(ec)
+        flattened_mappings.set_dimension_count(0)
+        entity = self._find_entity_mapping(flattened_mappings)
+        self.assertEqual(entity.position, Position.hidden)
+        self.assertIsNone(entity.value)
+
+    def test_correct_multi_dim_mapping_stays_correct_when_adding_dimensions(self):
+        """A correctly configured multi-dim mapping should stay correct when adding more dims."""
+        ec = EntityClassMapping(Position.hidden, "unit__outputNode")
+        d1 = ec.child = DimensionMapping(Position.hidden, "unit")
+        d2 = d1.child = DimensionMapping(Position.hidden, "node")
+        em = d2.child = EntityMapping(Position.hidden, "relationship")
+        el1 = em.child = ElementMapping(1)
+        el1.child = ElementMapping(3)
+        flattened_mappings = FlattenedMappings(ec)
+        flattened_mappings.set_dimension_count(3)
+        entity = self._find_entity_mapping(flattened_mappings)
+        self.assertEqual(entity.position, Position.hidden)
+        self.assertEqual(entity.value, "relationship")
+
+    def test_adding_dimensions_incrementally_keeps_entity_hidden(self):
+        """Adding dimensions one at a time should hide Entity on first add and keep it hidden."""
+        root_mapping = default_import_mapping("EntityClass")
+        flattened_mappings = FlattenedMappings(root_mapping)
+        entity = self._find_entity_mapping(flattened_mappings)
+        entity.position = 1
+        flattened_mappings.set_dimension_count(1)
+        entity = self._find_entity_mapping(flattened_mappings)
+        self.assertEqual(entity.position, Position.hidden)
+        self.assertEqual(entity.value, "relationship")
+        flattened_mappings.set_dimension_count(2)
+        entity = self._find_entity_mapping(flattened_mappings)
+        self.assertEqual(entity.position, Position.hidden)
+        self.assertEqual(entity.value, "relationship")
