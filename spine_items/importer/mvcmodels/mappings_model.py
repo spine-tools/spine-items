@@ -628,6 +628,8 @@ class MappingsModel(QAbstractItemModel):
             return self.createIndex(row, 0, self._mappings[row])
         parent_item = parent.internalPointer()
         if isinstance(parent_item, SourceTableItem):
+            if parent_item.select_all:
+                return QModelIndex()
             return self.createIndex(row, 0, parent_item.mapping_list[row])
         if isinstance(parent_item, MappingListItem):
             return self.createIndex(row, column, parent_item.flattened_mappings)
