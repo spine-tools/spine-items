@@ -56,7 +56,7 @@ def do_work(
             source_anchor = f"<a title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
         else:
             safe_url = remove_credentials_from_url(src)
-            source_anchor = f"<p style='color:#BB99FF;'>{safe_url}</p>"
+            source_anchor = safe_url
         logger.msg.emit("Importing " + source_anchor)
         extras = get_source_extras(resource)
         try:
