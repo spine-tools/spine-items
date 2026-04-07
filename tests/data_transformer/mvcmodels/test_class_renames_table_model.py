@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for :class:`ClassRenamesTableModel`."""
+
 import unittest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QUndoStack

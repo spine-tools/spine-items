@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Module for data connection icon class."""
+
 import os
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtWidgets import QGraphicsItem

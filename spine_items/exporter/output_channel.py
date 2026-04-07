@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`OutputChannel` class."""
+
 from __future__ import annotations
 from contextlib import suppress
 from dataclasses import InitVar, dataclass

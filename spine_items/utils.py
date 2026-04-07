@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains utilities shared between project items."""
+
 from collections.abc import Iterable
 import os.path
 from typing import TypedDict

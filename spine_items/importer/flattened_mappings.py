@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains a model to handle source tables and import mapping."""
+
 from enum import Enum, unique
 from spinedb_api import InvalidMapping, ParameterValueFormatError, from_database
 from spinedb_api.helpers import fix_name_ambiguity

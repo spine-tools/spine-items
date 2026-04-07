@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for DataConnectionExecutable."""
+
 from multiprocessing import Lock
 import pathlib
 import tempfile

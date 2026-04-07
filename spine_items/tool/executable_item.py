@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Tool's executable item and support functionality."""
+
 from contextlib import ExitStack
 import datetime
 import fnmatch

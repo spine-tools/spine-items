@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for ImporterExecutable."""
+
 from multiprocessing import Lock
 from pathlib import Path
 from unittest import mock

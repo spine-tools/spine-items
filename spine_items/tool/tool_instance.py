@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains ToolInstance classes."""
+
 import os
 import sys
 from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager

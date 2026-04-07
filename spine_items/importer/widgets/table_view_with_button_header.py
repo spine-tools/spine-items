@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Classes for handling models in PySide6's model/view framework."""
+
 from collections import namedtuple
 from collections.abc import Iterable
 from PySide6.QtCore import QModelIndex, QPoint, Qt, Signal, Slot

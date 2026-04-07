@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains mapping filter editor delegate."""
+
 from spine_items.ui import default_filter_editor
 from spine_items.widgets import FilterEdit, FilterEditDelegateBase
 from spinedb_api.export_mapping.export_mapping import ParameterValueTypeMapping

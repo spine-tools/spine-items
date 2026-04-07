@@ -13,6 +13,7 @@
 """QWidget that is used to create or edit Tool specifications.
 In the former case it is presented empty, but in the latter it
 is filled with all the information from the specification being edited."""
+
 from copy import deepcopy
 from enum import IntEnum, unique
 import logging

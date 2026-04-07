@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`SpecificationEditorWindow`."""
+
 from copy import deepcopy
 import json
 from PySide6.QtCore import QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt, Signal, Slot

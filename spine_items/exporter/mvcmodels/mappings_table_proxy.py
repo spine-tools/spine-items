@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains the :class:`MappingsTableProxy` model."""
+
 from itertools import takewhile
 from PySide6.QtCore import QSortFilterProxyModel
 

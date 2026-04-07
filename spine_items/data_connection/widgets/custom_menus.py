@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Classes for custom context menus and pop-up menus."""
+
 from PySide6.QtCore import QModelIndex, QPoint
 from PySide6.QtWidgets import QWidget
 from spine_items.data_connection.data_connection import DataConnection

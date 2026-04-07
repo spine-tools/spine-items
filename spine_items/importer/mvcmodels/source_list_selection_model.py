@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains SourceListSelectionModel."""
+
 from PySide6.QtCore import QItemSelectionModel, Qt
 
 

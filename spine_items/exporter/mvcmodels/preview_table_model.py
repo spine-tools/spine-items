@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains model for a single export preview table."""
+
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QColor
 

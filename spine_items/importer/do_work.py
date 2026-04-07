@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Importer's execute kernel (do_work), as target for a multiprocess.Process"""
+
 import os
 from spine_engine.project_item.project_item_resource import get_source, get_source_extras
 from spine_engine.utils.helpers import create_log_file_timestamp

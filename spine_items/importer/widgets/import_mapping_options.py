@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """ImportMappingOptions widget."""
+
 from PySide6.QtCore import QModelIndex, Qt, Slot
 from ..commands import (
     SetImportEntitiesFlag,

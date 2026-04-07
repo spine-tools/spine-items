@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains base classes for items that write to db."""
+
 from collections.abc import Iterator
 from PySide6.QtCore import Slot
 from spine_engine.utils.helpers import ExecutionDirection

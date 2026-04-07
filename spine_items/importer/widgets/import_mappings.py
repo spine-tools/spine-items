@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """ImportMappings widget."""
+
 import pickle
 from PySide6.QtCore import QItemSelection, QItemSelectionModel, QModelIndex, QPoint, Slot
 from PySide6.QtWidgets import QApplication, QHeaderView, QStyledItemDelegate

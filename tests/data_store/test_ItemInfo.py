@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Data Store's ItemInfo class."""
+
 import unittest
 from spine_items.data_store.item_info import ItemInfo
 

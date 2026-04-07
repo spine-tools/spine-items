@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for ``output_resources`` module."""
+
 import pathlib
 from tempfile import TemporaryDirectory
 import unittest

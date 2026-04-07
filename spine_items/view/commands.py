@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Undo/redo commands for the View project item."""
+
 from copy import deepcopy
 from spine_items.commands import SpineToolboxCommand
 

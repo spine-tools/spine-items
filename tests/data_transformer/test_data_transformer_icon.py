@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for DataTransformerIcon class."""
+
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Classes for custom context menus and pop-up menus."""
+
 import os
 from PySide6.QtCore import QUrl, Slot
 from spinetoolbox.helpers import open_url

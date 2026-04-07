@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Exporter project item."""
+
 import os.path
 from unittest.mock import MagicMock, NonCallableMagicMock
 from PySide6.QtWidgets import QApplication

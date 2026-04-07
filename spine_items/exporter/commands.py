@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Exporter's undo commands."""
+
 from copy import copy, deepcopy
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt  # pylint: disable=unused-import

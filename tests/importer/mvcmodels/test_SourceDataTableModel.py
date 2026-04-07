@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for Import editor's SourceDataTableModel."""
+
 import unittest
 from unittest.mock import MagicMock
 from PySide6.QtCore import Qt

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Data transformer's specification factory."""
+
 from spine_engine.project_item.project_item_specification_factory import ProjectItemSpecificationFactory
 from .importer_specification import ImporterSpecification
 from .item_info import ItemInfo

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """This module contains utilities for Data Connection."""
+
 from __future__ import annotations
 from dataclasses import dataclass
 import pathlib

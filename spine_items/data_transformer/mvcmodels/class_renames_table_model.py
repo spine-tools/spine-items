@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains the :class:`ClassRenamesTableModel` class."""
+
 from enum import IntEnum, unique
 import pickle
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`SpecificationEditorWindow`."""
+
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QFileDialog, QHeaderView
 from spinetoolbox.helpers import disconnect

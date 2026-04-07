@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains controller that manages value transformations editor."""
+
 from PySide6.QtCore import QModelIndex, QObject, Slot
 from PySide6.QtWidgets import QFormLayout, QLineEdit
 from ..commands import AppendInstruction, ChangeInstructionParameter, ChangeOperation, RemoveInstruction

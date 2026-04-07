@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains the source data table model."""
+
 from PySide6.QtCore import QModelIndex, Qt, Signal, Slot
 from spinedb_api import ParameterValueFormatError
 from spinedb_api.import_mapping.type_conversion import ConvertSpec

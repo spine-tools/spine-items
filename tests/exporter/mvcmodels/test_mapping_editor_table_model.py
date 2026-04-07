@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for export mapping setup table."""
+
 from unittest import mock
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QUndoStack

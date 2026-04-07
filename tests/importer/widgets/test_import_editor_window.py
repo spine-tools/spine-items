@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``import_editor_window`` module."""
+
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock

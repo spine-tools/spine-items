@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Classes for custom context menus and pop-up menus."""
+
 from spinetoolbox.widgets.custom_menus import CustomContextMenu
 
 

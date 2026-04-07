@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``preview_updater`` module."""
+
 import gc
 from multiprocessing import Process, Queue
 import pathlib

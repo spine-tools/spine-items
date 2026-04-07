@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Utilities to validate that a database exists."""
+
 from collections.abc import Callable
 from pathlib import Path
 from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, QTimer, Signal, Slot

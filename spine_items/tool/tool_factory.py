@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """The ToolFactory class."""
+
 import os
 import uuid
 from PySide6.QtGui import QColor
