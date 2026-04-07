@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains classes to manage entity class renaming."""
+
 from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.class_renames_table_model import ClassRenamesTableModel

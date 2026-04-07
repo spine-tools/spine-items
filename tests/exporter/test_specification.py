@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ''specification'' module"""
+
 import unittest
 from spine_items.exporter.specification import MappingSpecification, MappingType, OutputFormat, Specification
 from spinedb_api.export_mapping import entity_export

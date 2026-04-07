@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Undo/redo commands for the Tool project item."""
+
 import copy
 from spine_items.commands import SpineToolboxCommand
 

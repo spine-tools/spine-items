@@ -11,12 +11,19 @@
 ######################################################################################################################
 
 """Provides an optional widget for Tool Specification Editor when editing Julia, Python, or Executable Tool Specs."""
+
 import sys
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QIcon, QStandardItem, QStandardItemModel, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 from spine_engine.utils.helpers import resolve_default_julia_executable, resolve_python_interpreter
-from spinetoolbox.helpers import file_is_valid, make_icons_theme_aware, select_julia_executable, select_julia_project, select_python_interpreter
+from spinetoolbox.helpers import (
+    file_is_valid,
+    make_icons_theme_aware,
+    select_julia_executable,
+    select_julia_project,
+    select_python_interpreter,
+)
 from spinetoolbox.kernel_fetcher import KernelFetcher
 from spinetoolbox.widgets.notification import Notification
 

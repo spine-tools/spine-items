@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Importer properties widget."""
+
 from PySide6.QtCore import QPoint, Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from ..item_info import ItemInfo

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains classes to manage parameter value transformation."""
+
 from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.value_transformations_table_model import (

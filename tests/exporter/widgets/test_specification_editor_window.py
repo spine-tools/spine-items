@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``specification_editor_window`` module."""
+
 import json
 import pathlib
 from tempfile import TemporaryDirectory

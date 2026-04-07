@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for Import editor's :class:`MappingsModel`."""
+
 import unittest
 from PySide6.QtCore import QModelIndex, QObject, Qt
 from PySide6.QtGui import QUndoStack

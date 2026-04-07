@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains the :class:`DataTransformer` project item."""
+
 from json import dump
 from PySide6.QtCore import Slot
 from spinetoolbox.project_item.project_item import ProjectItem

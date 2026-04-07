@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains utilities to scan for Tool's output resources."""
+
 from spine_engine.project_item.project_item_resource import (
     file_resource,
     file_resource_in_pack,

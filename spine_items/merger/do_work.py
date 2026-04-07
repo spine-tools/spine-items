@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Merger's execute kernel (do_work), as target for a multiprocess.Process"""
+
 import os
 from spine_engine.utils.helpers import create_log_file_timestamp
 from spinedb_api.helpers import remove_credentials_from_url

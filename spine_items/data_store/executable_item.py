@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Data Store's executable item as well as support utilities."""
+
 from pathlib import Path
 from sqlalchemy import URL
 from spine_engine.logger_interface import LoggerInterface

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains ImportSources widget and SourceDataTableMenu."""
+
 from __future__ import annotations
 from operator import itemgetter
 import pickle

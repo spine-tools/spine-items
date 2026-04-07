@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for the ImportEditorWindow class."""
+
 import csv
 from unittest import mock
 from frictionless import Package, Resource

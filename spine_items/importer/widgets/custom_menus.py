@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Classes for context menus used alongside the Importer project item."""
+
 from PySide6.QtCore import QPoint, Signal, Slot
 from PySide6.QtWidgets import QMenu, QWidget
 from spinetoolbox.mvcmodels.filter_checkbox_list_model import DataToValueFilterCheckboxListModel

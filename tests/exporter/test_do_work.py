@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Exporter's :func:`do_work` function."""
+
 from csv import reader
 import os.path
 import sqlite3

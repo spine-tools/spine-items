@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for the ``import_mapping_options`` module."""
+
 import unittest
 from PySide6.QtCore import QItemSelectionModel, Qt
 from PySide6.QtGui import QUndoStack

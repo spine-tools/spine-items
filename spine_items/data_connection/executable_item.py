@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Data Connection's executable item as well as support utilities."""
+
 import os
 from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.executable_item_base import ExecutableItemBase

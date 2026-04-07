@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Animation class for importers and exporters."""
+
 from __future__ import annotations
 from typing import ClassVar, Type
 from PySide6.QtCore import QLineF, QObject, QPointF, QRectF, Qt, QTimeLine, Signal, Slot

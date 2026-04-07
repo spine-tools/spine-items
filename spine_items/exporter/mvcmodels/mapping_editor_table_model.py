@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains model for export mapping setup table."""
+
 from enum import IntEnum, unique
 from operator import itemgetter
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Importer project item class."""
+
 from operator import itemgetter
 import os
 from PySide6.QtCore import QModelIndex, Qt, Slot

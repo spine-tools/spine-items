@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``database_validation`` module."""
+
 from pathlib import Path
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QApplication

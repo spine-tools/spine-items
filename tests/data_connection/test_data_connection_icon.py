@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for DataConnectionIcon class."""
+
 from tempfile import TemporaryDirectory
 import unittest
 from PySide6.QtWidgets import QApplication

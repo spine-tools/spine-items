@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Tool specification classes."""
+
 from collections import OrderedDict
 import copy
 import os.path

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for :literal:`utils` module."""
+
 from hashlib import sha1
 from pathlib import Path
 from tempfile import TemporaryDirectory

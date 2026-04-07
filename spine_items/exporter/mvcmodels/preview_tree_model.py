@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains model for export preview tables."""
+
 from itertools import takewhile
 from operator import methodcaller
 from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt

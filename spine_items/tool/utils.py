@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Utility functions for the Tool project item."""
+
 from datetime import datetime
 import glob
 import json

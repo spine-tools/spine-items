@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`PreviewUpdater`."""
+
 from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Process, Queue

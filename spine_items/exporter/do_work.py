@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Exporter's execute kernel (do_work), as target for a multiprocess.Process"""
+
 from datetime import datetime
 import os
 from pathlib import Path

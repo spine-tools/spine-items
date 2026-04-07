@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains a model to handle source tables and import mapping."""
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum, unique

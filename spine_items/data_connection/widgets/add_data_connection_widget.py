@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Widget shown to user when a new Data Connection is created."""
+
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..data_connection import DataConnection
 from ..item_info import ItemInfo

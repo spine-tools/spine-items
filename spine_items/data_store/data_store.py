@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Module for data store class."""
+
 from __future__ import annotations
 from dataclasses import dataclass
 import os

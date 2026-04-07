@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Data store properties widget."""
+
 from spinedb_api import SUPPORTED_DIALECTS
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 

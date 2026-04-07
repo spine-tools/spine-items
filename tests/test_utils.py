@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``utils`` module."""
+
 import sys
 import unittest
 from unittest import mock

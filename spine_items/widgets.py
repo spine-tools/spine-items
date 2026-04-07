@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains common & shared (Q)widgets."""
+
 from collections.abc import Callable, Iterable, Sequence
 import os
 from typing import Any, Final

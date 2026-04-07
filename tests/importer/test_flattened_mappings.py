@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for ``flattened_mappings`` module."""
+
 import unittest
 from spine_items.importer.flattened_mappings import FlattenedMappings, MappingType
 from spinedb_api import import_mapping_from_dict

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Module for view class."""
+
 import os
 from PySide6.QtCore import QObject, Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QIcon, QPixmap, QStandardItem, QStandardItemModel

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Data Connection project item."""
+
 import os
 from pathlib import Path
 from unittest import mock

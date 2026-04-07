@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for DataStore class."""
+
 import os
 import sys
 from unittest import mock

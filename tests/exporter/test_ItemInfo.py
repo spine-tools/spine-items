@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Exporter's :class:`ItemInfo`."""
+
 import unittest
 from spine_items.exporter.item_info import ItemInfo
 
