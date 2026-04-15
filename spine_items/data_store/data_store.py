@@ -164,13 +164,15 @@ class DataStore(ProjectItem):
         file_path = answer[0]
         return file_path if file_path else None
 
-    def _new_sqlite_file(self):
+    def _new_sqlite_file(self) -> bool:
         """Shows a file dialog and creates a new sqlite file at the chosen path.
 
         Returns:
-            bool: True if the file was created successfully, False otherwise
+            True if the file was created successfully, False otherwise
         """
-        candidate_path = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
+        candidate_path = self._url["database"]
+        if not candidate_path or not os.path.exists(candidate_path):
+            candidate_path = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
         answer = QFileDialog.getSaveFileName(self._toolbox, "Create SQLite file", candidate_path)
         file_path = answer[0]
         if not file_path:  # Cancel button clicked
