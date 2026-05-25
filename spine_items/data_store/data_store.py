@@ -171,7 +171,7 @@ class DataStore(ProjectItem):
             True if the file was created successfully, False otherwise
         """
         candidate_path = self._url["database"]
-        if not candidate_path or not os.path.exists(candidate_path):
+        if not candidate_path or not os.path.exists(os.path.dirname(candidate_path)):
             candidate_path = os.path.abspath(os.path.join(self.data_dir, self.name + ".sqlite"))
         answer = QFileDialog.getSaveFileName(self._toolbox, "Create SQLite file", candidate_path)
         file_path = answer[0]
