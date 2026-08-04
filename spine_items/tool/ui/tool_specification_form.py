@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'tool_specification_form.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.11.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -169,7 +169,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.dockWidget_program_files = QDockWidget(MainWindow)
         self.dockWidget_program_files.setObjectName(u"dockWidget_program_files")
-        self.dockWidget_program_files.setAllowedAreas(Qt.BottomDockWidgetArea)
+        self.dockWidget_program_files.setAllowedAreas(Qt.DockWidgetArea.BottomDockWidgetArea)
         self.dockWidgetContents_4 = QWidget()
         self.dockWidgetContents_4.setObjectName(u"dockWidgetContents_4")
         self.verticalLayout = QVBoxLayout(self.dockWidgetContents_4)
@@ -186,12 +186,12 @@ class Ui_MainWindow(object):
         font = QFont()
         font.setPointSize(11)
         self.treeView_programfiles.setFont(font)
-        self.treeView_programfiles.setFocusPolicy(Qt.StrongFocus)
+        self.treeView_programfiles.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.treeView_programfiles.setAcceptDrops(True)
         self.treeView_programfiles.setLineWidth(1)
-        self.treeView_programfiles.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.treeView_programfiles.setTextElideMode(Qt.ElideLeft)
-        self.treeView_programfiles.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.treeView_programfiles.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.treeView_programfiles.setTextElideMode(Qt.TextElideMode.ElideLeft)
+        self.treeView_programfiles.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.treeView_programfiles.header().setVisible(False)
 
         self.verticalLayout.addWidget(self.treeView_programfiles)
@@ -200,7 +200,7 @@ class Ui_MainWindow(object):
         MainWindow.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.dockWidget_program_files)
         self.dockWidget_io_files = QDockWidget(MainWindow)
         self.dockWidget_io_files.setObjectName(u"dockWidget_io_files")
-        self.dockWidget_io_files.setAllowedAreas(Qt.BottomDockWidgetArea)
+        self.dockWidget_io_files.setAllowedAreas(Qt.DockWidgetArea.BottomDockWidgetArea)
         self.dockWidgetContents_2 = QWidget()
         self.dockWidgetContents_2.setObjectName(u"dockWidgetContents_2")
         self.verticalLayout_7 = QVBoxLayout(self.dockWidgetContents_2)
@@ -209,9 +209,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.setContentsMargins(3, 3, 3, 3)
         self.treeView_io_files = CustomTreeView(self.dockWidgetContents_2)
         self.treeView_io_files.setObjectName(u"treeView_io_files")
-        self.treeView_io_files.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.treeView_io_files.setTextElideMode(Qt.ElideLeft)
-        self.treeView_io_files.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.treeView_io_files.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.treeView_io_files.setTextElideMode(Qt.TextElideMode.ElideLeft)
+        self.treeView_io_files.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.treeView_io_files.header().setVisible(False)
 
         self.verticalLayout_7.addWidget(self.treeView_io_files)
@@ -220,8 +220,8 @@ class Ui_MainWindow(object):
         MainWindow.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.dockWidget_io_files)
         self.dockWidget_program = QDockWidget(MainWindow)
         self.dockWidget_program.setObjectName(u"dockWidget_program")
-        self.dockWidget_program.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
-        self.dockWidget_program.setAllowedAreas(Qt.BottomDockWidgetArea)
+        self.dockWidget_program.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.dockWidget_program.setAllowedAreas(Qt.DockWidgetArea.BottomDockWidgetArea)
         self.dockWidgetContents = QWidget()
         self.dockWidgetContents.setObjectName(u"dockWidgetContents")
         self.verticalLayout_8 = QVBoxLayout(self.dockWidgetContents)
