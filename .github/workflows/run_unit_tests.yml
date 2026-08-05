@@ -58,6 +58,8 @@ jobs:
       run:
         pip list
     - name: Run tests
+      env:
+        PYTHONTRACEMALLOC: 20
       run: |
         if [ "$RUNNER_OS" != "Windows" ]; then
           export QT_QPA_PLATFORM=offscreen
