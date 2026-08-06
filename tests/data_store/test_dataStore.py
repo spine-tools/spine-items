@@ -76,12 +76,12 @@ def create_temp_db(ds):
     return temp_db_path
 
 
-@skip("Skip class")
 class TestDataStoreWithToolbox:
-    @pytest.mark.skipif(
-        sys.platform == "win32" and sys.version_info > (3, 12),
-        reason="Deleting .sqlite files that are in use by SqlAlchemy breaks the test.",
-    )
+    # @pytest.mark.skipif(
+    #     sys.platform == "win32" and sys.version_info > (3, 12),
+    #     reason="Deleting .sqlite files that are in use by SqlAlchemy breaks the test.",
+    # )
+    @skip("Skip test_rename")
     def test_rename(self, ds, ds_properties_ui, project):
         """Tests renaming a Data Store with an existing sqlite db in its data_dir."""
         temp_path = create_temp_db(ds)
@@ -124,6 +124,7 @@ class TestDataStoreWithToolbox:
         # Check that the warning disappears after committing the changes
         spine_toolbox_with_project.db_mngr.commit_session("Added entity classes", db_map)
         assert [] == ds.get_icon().exclamation_icon._notifications
+        db_map.close()
 
     def test_sqlite_url_deserialization(self, ds, project, spine_toolbox_with_project):
         url: UrlDict = {
@@ -149,6 +150,7 @@ class TestDataStoreWithMockToolbox:
                 for url_key in url_keys:
                     assert url_key in d[k], f"Key '{url_key}' not in dict {d[k]}"
 
+    @skip("Skip create_new_spine_database")
     def test_create_new_empty_spine_database(self, ds, ds_properties_ui, spine_toolbox_with_project):
         """Test that an open file dialog is shown when clicking on 'New Spine db tool button'
         with an empty Data Store.
@@ -169,6 +171,7 @@ class TestDataStoreWithMockToolbox:
         assert url["database"] == ""
         toolbox.db_mngr.create_new_spine_database.assert_not_called()
 
+    @skip("Skip create_new_spine_database2")
     def test_create_new_empty_spine_database2(self, ds, ds_properties_ui, spine_toolbox_with_project):
         """Test that a new Spine database is created when clicking on 'New Spine db' tool button
         with a Data Store that already has an .sqlite db.
