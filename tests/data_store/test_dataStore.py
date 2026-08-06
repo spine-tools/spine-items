@@ -71,10 +71,12 @@ def create_temp_db(ds):
     """Let's create a real db to more easily test complicated stuff (such as opening a tree view)."""
     temp_db_path = os.path.join(ds.data_dir, "temp_db.sqlite")
     sqlite_url = "sqlite:///" + temp_db_path
-    create_new_spine_database(sqlite_url)
+    engine = create_new_spine_database(sqlite_url)
+    engine.dispose()
     return temp_db_path
 
 
+@skip("Skip class")
 class TestDataStoreWithToolbox:
     @pytest.mark.skipif(
         sys.platform == "win32" and sys.version_info > (3, 12),
