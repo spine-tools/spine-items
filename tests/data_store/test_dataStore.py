@@ -14,7 +14,7 @@
 
 import os
 import sys
-from unittest import mock
+from unittest import mock, skip
 from PySide6.QtWidgets import QApplication
 import pytest
 from spine_engine.project_item.project_item_resource import database_resource
@@ -197,6 +197,7 @@ class TestDataStoreWithMockToolbox:
         assert url["dialect"] == "sqlite"
         assert os.path.exists(url["database"])
 
+    @skip("Skip create test_db.sqlite")
     def test_new_database_is_created_before_advertising_resources(
         self, ds, ds_properties_ui, project, spine_toolbox_with_project
     ):

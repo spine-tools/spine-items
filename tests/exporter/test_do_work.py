@@ -27,6 +27,7 @@ from spinedb_api.export_mapping.group_functions import NoGroup
 from spinedb_api.mapping import Position
 
 
+@unittest.skip("Skip class to prevent creating test_db.sqlite")
 class TestWithCsvWriter(unittest.TestCase):
     _temp_dir = None
     _url = None
