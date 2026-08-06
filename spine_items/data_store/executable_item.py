@@ -67,13 +67,14 @@ class ExecutableItem(ExecutableItemBase):
             else:
                 kwargs = {}
             try:
-                DatabaseMapping.create_engine(self._url, create=True, **kwargs)
+                engine = DatabaseMapping.create_engine(self._url, create=True, **kwargs)
                 return self._url
             except SpineDBAPIError as err:
                 self._logger.msg_error.emit(str(err))
                 return None
             finally:
                 self._validated = True
+                engine.dispose()
         return self._url
 
     def _check_sqlite_file_exists(self):

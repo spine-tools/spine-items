@@ -14,7 +14,7 @@
 
 import os
 import sys
-from unittest import mock, skip
+from unittest import mock
 from PySide6.QtWidgets import QApplication
 import pytest
 from spine_engine.project_item.project_item_resource import database_resource
@@ -77,11 +77,6 @@ def create_temp_db(ds):
 
 
 class TestDataStoreWithToolbox:
-    # @pytest.mark.skipif(
-    #     sys.platform == "win32" and sys.version_info > (3, 12),
-    #     reason="Deleting .sqlite files that are in use by SqlAlchemy breaks the test.",
-    # )
-    @skip("Skip test_rename")
     def test_rename(self, ds, ds_properties_ui, project):
         """Tests renaming a Data Store with an existing sqlite db in its data_dir."""
         temp_path = create_temp_db(ds)
@@ -109,7 +104,6 @@ class TestDataStoreWithToolbox:
         # Check that the db file has actually been moved
         assert os.path.exists(url["database"])
 
-    @skip("Skip test_dirty_db")
     def test_dirty_db_notification(self, ds, ds_properties_ui, spine_toolbox_with_project):
         temp_path = create_temp_db(ds)
         url = {"dialect": "sqlite", "database": temp_path}
@@ -126,7 +120,6 @@ class TestDataStoreWithToolbox:
         spine_toolbox_with_project.db_mngr.commit_session("Added entity classes", db_map)
         assert [] == ds.get_icon().exclamation_icon._notifications
 
-    @skip("Skip test_sqlite_url")
     def test_sqlite_url_deserialization(self, ds, project, spine_toolbox_with_project):
         url: UrlDict = {
             "dialect": "sqlite",
@@ -151,7 +144,6 @@ class TestDataStoreWithMockToolbox:
                 for url_key in url_keys:
                     assert url_key in d[k], f"Key '{url_key}' not in dict {d[k]}"
 
-    @skip("Skip create_new_spine_database")
     def test_create_new_empty_spine_database(self, ds, ds_properties_ui, spine_toolbox_with_project):
         """Test that an open file dialog is shown when clicking on 'New Spine db tool button'
         with an empty Data Store.
@@ -172,7 +164,6 @@ class TestDataStoreWithMockToolbox:
         assert url["database"] == ""
         toolbox.db_mngr.create_new_spine_database.assert_not_called()
 
-    @skip("Skip create_new_spine_database2")
     def test_create_new_empty_spine_database2(self, ds, ds_properties_ui, spine_toolbox_with_project):
         """Test that a new Spine database is created when clicking on 'New Spine db' tool button
         with a Data Store that already has an .sqlite db.
@@ -203,7 +194,6 @@ class TestDataStoreWithMockToolbox:
         assert url["dialect"] == "sqlite"
         assert os.path.exists(url["database"])
 
-    @skip("Skip create test_db.sqlite")
     def test_new_database_is_created_before_advertising_resources(
         self, ds, ds_properties_ui, project, spine_toolbox_with_project
     ):
@@ -234,7 +224,8 @@ class TestDataStoreWithMockToolbox:
             mock.patch.object(project, "notify_resource_changes_to_successors") as mock_successor_notifier,
             mock.patch.object(project, "notify_resource_changes_to_predecessors") as mock_predecessor_notifier,
         ):
-            create_new_spine_database("sqlite:///" + database_file_path)
+            engine = create_new_spine_database("sqlite:///" + database_file_path)
+            engine.dispose()
             file_dialog.getSaveFileName.return_value = (database_file_path,)
             mock_successor_notifier.side_effect = lambda item: check_database_exists(
                 item, True, calls_with_non_empty_resources
@@ -276,7 +267,6 @@ class TestDataStoreWithMockToolbox:
         assert url["username"] == "bar"
         assert url["password"] == "s3cr3t"
 
-    @skip("skipskip")
     def test_copy_db_url_to_clipboard(self, ds, ds_properties_ui, clipboard, monkeypatch):
         """Test that the database url from current selections is copied to clipboard."""
         temp_path = create_temp_db(ds)
@@ -294,7 +284,6 @@ class TestDataStoreWithMockToolbox:
         else:
             assert expected_url == clipboard_text.strip()
 
-    @skip("skipskip")
     def test_open_db_editor1(self, ds, ds_properties_ui, spine_toolbox_with_project):
         """Test that selecting the 'sqlite' dialect, browsing to an existing db file,
         and pressing open form works as expected.
@@ -314,7 +303,6 @@ class TestDataStoreWithMockToolbox:
             assert sa_url is not None
             open_db_editor.assert_called_with([sa_url], toolbox.db_mngr, True)
 
-    @skip("skipskip")
     def test_open_db_editor2(self, ds, ds_properties_ui, spine_toolbox_with_project):
         """Test that selecting the 'sqlite' dialect, typing the path to an existing db file,
         and pressing open form works as expected.
@@ -375,12 +363,14 @@ class TestDataStoreWithMockToolbox:
             project.notify_resource_changes_to_predecessors.assert_called_once_with(ds)
             project.notify_resource_changes_to_successors.assert_called_once_with(ds)
             while not ds.is_url_validated():
+                # TODO: Mock DatabaseMapping.get_upgrade_db_prompt_data in SpineDBManager.get_db_map
                 QApplication.processEvents()
             database_2 = os.path.normcase(os.path.join(project.project_dir, "db2.sqlite"))
             engine2 = create_new_spine_database("sqlite:///" + database_2)
             engine2.dispose()
             ds.do_update_url(dialect="sqlite", database=database_2)
             while not ds.is_url_validated():
+                # TODO: Mock DatabaseMapping.get_upgrade_db_prompt_data in SpineDBManager.get_db_map
                 QApplication.processEvents()
             expected_old_resources = [
                 database_resource(ds.name, "sqlite:///" + database_1, label=database_label(ds.name), filterable=True)
