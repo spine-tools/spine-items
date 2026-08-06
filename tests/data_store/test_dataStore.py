@@ -363,7 +363,8 @@ class TestDataStoreWithMockToolbox:
 
     def test_do_update_url_uses_filterable_resources_when_replacing_them(self, ds, project):
         database_1 = os.path.normcase(os.path.join(project.project_dir, "db1.sqlite"))
-        create_new_spine_database("sqlite:///" + database_1)
+        engine = create_new_spine_database("sqlite:///" + database_1)
+        engine.dispose()
         with (
             mock.patch.object(project, "notify_resource_changes_to_predecessors"),
             mock.patch.object(project, "notify_resource_changes_to_successors"),
@@ -376,7 +377,8 @@ class TestDataStoreWithMockToolbox:
             while not ds.is_url_validated():
                 QApplication.processEvents()
             database_2 = os.path.normcase(os.path.join(project.project_dir, "db2.sqlite"))
-            create_new_spine_database("sqlite:///" + database_2)
+            engine2 = create_new_spine_database("sqlite:///" + database_2)
+            engine2.dispose()
             ds.do_update_url(dialect="sqlite", database=database_2)
             while not ds.is_url_validated():
                 QApplication.processEvents()
