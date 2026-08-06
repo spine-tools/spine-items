@@ -124,7 +124,6 @@ class TestDataStoreWithToolbox:
         # Check that the warning disappears after committing the changes
         spine_toolbox_with_project.db_mngr.commit_session("Added entity classes", db_map)
         assert [] == ds.get_icon().exclamation_icon._notifications
-        db_map.close()
 
     def test_sqlite_url_deserialization(self, ds, project, spine_toolbox_with_project):
         url: UrlDict = {
