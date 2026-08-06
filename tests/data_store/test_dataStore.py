@@ -27,6 +27,8 @@ from spinetoolbox.helpers import signal_waiter
 from tests.mock_helpers import (
     mock_finish_project_item_construction,
 )
+import warnings
+warnings.simplefilter("error", ResourceWarning)
 
 
 class TestDataStore:

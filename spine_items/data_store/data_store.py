@@ -36,8 +36,6 @@ from .commands import UpdateDSURLCommand
 from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-import warnings
-warnings.simplefilter("error", ResourceWarning)
 
 if TYPE_CHECKING:
     from spinetoolbox.ui_main import ToolboxUI
