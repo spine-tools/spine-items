@@ -156,7 +156,8 @@ class TestExporter:
         toolbox = spine_toolbox_with_project
         project = toolbox.project()
         url = "sqlite:///" + str(tmp_path / "db.sqlite")
-        create_new_spine_database(url)
+        engine = create_new_spine_database(url)
+        engine.dispose()
         url_dict: UrlDict = {"dialect": "sqlite", "database": str(tmp_path / "db.sqlite")}
         data_store = DataStore("Dummy data store", "", 0.0, 0.0, toolbox, project, url_dict)
         project.add_item(data_store)

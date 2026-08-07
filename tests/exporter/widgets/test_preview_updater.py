@@ -12,7 +12,6 @@
 
 """Unit tests for the ``preview_updater`` module."""
 
-import gc
 from multiprocessing import Process, Queue
 import pathlib
 from tempfile import TemporaryDirectory
@@ -74,7 +73,6 @@ class TestWriteTaskLoop(unittest.TestCase):
         write_task_loop(receiver, sender)
         self.assertTrue(receiver.get(), "finished")
 
-    @unittest.skip("Sus")
     def test_quitting_takes_precedence_over_writing(self):
         with TemporaryDirectory() as temp_dir:
             url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db.sqlite")
@@ -89,7 +87,6 @@ class TestWriteTaskLoop(unittest.TestCase):
             sender.put("quit")
             write_task_loop(receiver, sender)
             self.assertTrue(receiver.get(), "finished")
-            gc.collect()
 
     def test_writing(self):
         sender = Queue()

@@ -85,7 +85,8 @@ class TestImporterExecutable:
         mapping = self._simple_input_data_mapping()
         database_path = Path(str(tmp_path), "database.sqlite")
         database_url = "sqlite:///" + str(database_path)
-        create_new_spine_database(database_url)
+        engine = create_new_spine_database(database_url)
+        engine.dispose()
         gams_path = ""
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
@@ -112,7 +113,8 @@ class TestImporterExecutable:
         self._write_simple_data(data_file)
         database_path = Path(str(tmp_path), "database.sqlite")
         database_url = "sqlite:///" + str(database_path)
-        create_new_spine_database(database_url)
+        engine = create_new_spine_database(database_url)
+        engine.dispose()
         gams_path = ""
         executable = ExecutableItem("name", {}, [], gams_path, True, "merge", str(tmp_path), mock.MagicMock())
         database_resources = [database_resource("provider", database_url)]
