@@ -363,14 +363,12 @@ class TestDataStoreWithMockToolbox:
             project.notify_resource_changes_to_predecessors.assert_called_once_with(ds)
             project.notify_resource_changes_to_successors.assert_called_once_with(ds)
             while not ds.is_url_validated():
-                # TODO: Mock DatabaseMapping.get_upgrade_db_prompt_data in SpineDBManager.get_db_map
                 QApplication.processEvents()
             database_2 = os.path.normcase(os.path.join(project.project_dir, "db2.sqlite"))
             engine2 = create_new_spine_database("sqlite:///" + database_2)
             engine2.dispose()
             ds.do_update_url(dialect="sqlite", database=database_2)
             while not ds.is_url_validated():
-                # TODO: Mock DatabaseMapping.get_upgrade_db_prompt_data in SpineDBManager.get_db_map
                 QApplication.processEvents()
             expected_old_resources = [
                 database_resource(ds.name, "sqlite:///" + database_1, label=database_label(ds.name), filterable=True)
