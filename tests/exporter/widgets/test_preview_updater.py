@@ -12,7 +12,8 @@
 
 """Unit tests for the ``preview_updater`` module."""
 
-from multiprocessing import Process, Queue
+import multiprocessing as mp
+from multiprocessing import Queue
 import pathlib
 from tempfile import TemporaryDirectory
 import unittest
@@ -24,6 +25,8 @@ from spinedb_api import DatabaseMapping
 from spinedb_api.export_mapping.export_mapping import AlternativeMapping
 from spinedb_api.export_mapping.group_functions import NoGroup
 from tests.mock_helpers import parent_widget
+
+MP_CTX = mp.get_context("spawn")
 
 
 class TestPreviewUpdater(unittest.TestCase):
@@ -89,9 +92,9 @@ class TestWriteTaskLoop(unittest.TestCase):
             self.assertTrue(receiver.get(), "finished")
 
     def test_writing(self):
-        sender = Queue()
-        receiver = Queue()
-        process = Process(target=write_task_loop, args=(receiver, sender))
+        sender = MP_CTX.Queue()
+        receiver = MP_CTX.Queue()
+        process = MP_CTX.Process(target=write_task_loop, args=(receiver, sender))
         process.start()
         with TemporaryDirectory() as temp_dir:
             url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db.sqlite")
@@ -108,9 +111,9 @@ class TestWriteTaskLoop(unittest.TestCase):
             process.join()
 
     def test_change_database_between_writes(self):
-        sender = Queue()
-        receiver = Queue()
-        process = Process(target=write_task_loop, args=(receiver, sender))
+        sender = MP_CTX.Queue()
+        receiver = MP_CTX.Queue()
+        process = MP_CTX.Process(target=write_task_loop, args=(receiver, sender))
         process.start()
         with TemporaryDirectory() as temp_dir:
             url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db1.sqlite")
