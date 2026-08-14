@@ -13,7 +13,6 @@
 """Unit tests for ImporterExecutable."""
 
 from multiprocessing import Lock
-import multiprocessing as mp
 from pathlib import Path
 from unittest import mock
 from spine_engine.project_item.project_item_resource import database_resource, file_resource
@@ -21,8 +20,6 @@ from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.importer_specification import ImporterSpecification
 from spinedb_api import DatabaseMapping, create_new_spine_database
 from spinedb_api.spine_db_server import db_server_manager
-
-MP_CTX = mp.get_context("spawn")
 
 
 class TestImporterExecutable:
@@ -99,7 +96,7 @@ class TestImporterExecutable:
         with db_server_manager() as mngr_queue:
             for r in database_resources:
                 r.metadata["db_server_manager_queue"] = mngr_queue
-            assert executable.execute(file_resources, database_resources, MP_CTX.Lock())
+            assert executable.execute(file_resources, database_resources, Lock())
         # Check that _process is None after execution
         assert executable._process is None
         with DatabaseMapping(database_url) as database_map:
