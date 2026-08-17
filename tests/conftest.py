@@ -10,11 +10,16 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
+import multiprocessing
+import pytest
 from PySide6.QtCore import QMimeData, QObject, QTimer
 from PySide6.QtGui import QClipboard
 from PySide6.QtWidgets import QApplication
-import pytest
 from tests.mock_helpers import clean_up_toolbox, create_toolboxui_with_project
+
+
+def pytest_sessionstart(session):
+    multiprocessing.set_start_method("spawn", force=True)
 
 
 @pytest.fixture(scope="module")

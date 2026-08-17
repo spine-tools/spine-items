@@ -163,20 +163,20 @@ class TestMergerExecutable:
         execution_permits = {name: True for name in items}
         # We can't easily enforce merger1 to execute before merger2 so the write index matters...
         # So for the moment, let's run 5 times and hope
-        for _ in range(5):
+        for i in range(5):
+            print(f"Running engine #{i}")
             engine = SpineEngine(
                 items=items,
                 connections=[x.to_dict() for x in (conn1in, conn2in, conn1out, conn2out)],
                 execution_permits=execution_permits,
                 project_dir=str(tmp_path),
             )
-            db_engine = create_new_spine_database(db3_url)
             engine.run()
             assert engine.state() == SpineEngineState.COMPLETED
             with DatabaseMapping(db3_url, create=True) as db3_map:
                 commits = db3_map.query(db3_map.commit_sq).all()
             db3_map.close()
-            db_engine.dispose()
+            print(f"commits:{commits}")
             merger1_idx = next(iter(k for k, commit in enumerate(commits) if db1_url in commit.comment))
             merger2_idx = next(iter(k for k, commit in enumerate(commits) if db2_url in commit.comment))
             assert merger2_idx < merger1_idx

@@ -59,6 +59,13 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 target=do_work,
                 args=(self._cancel_on_error, self._logs_dir, from_server_urls, to_server_urls, lock, self._logger),
             )
+            import pickle
+            for name, value in vars(self._process).items():
+                try:
+                    pickle.dumps(value)
+                except Exception as e:
+                    print(name, type(value), e)
+
             return_value = self._process.run_until_complete()
             self._process = None
             if return_value[0]:
