@@ -23,7 +23,8 @@ from spinedb_api import create_new_spine_database
 class TestDatabaseConnectionValidator:
     def test_successful_validation_of_sqlite_database(self, application, tmp_path):
         url = "sqlite:///" + str(Path(tmp_path, "db.sqlite"))
-        create_new_spine_database(url)
+        engine = create_new_spine_database(url)
+        engine.dispose()
         listener = _Listener()
         validator = DatabaseConnectionValidator()
         try:
@@ -38,7 +39,8 @@ class TestDatabaseConnectionValidator:
 
     def test_successful_validation_of_sqlite_database_with_str_url(self, application, tmp_path):
         url = "sqlite:///" + str(Path(tmp_path, "db.sqlite"))
-        create_new_spine_database(url)
+        engine = create_new_spine_database(url)
+        engine.dispose()
         listener = _Listener()
         validator = DatabaseConnectionValidator()
         try:

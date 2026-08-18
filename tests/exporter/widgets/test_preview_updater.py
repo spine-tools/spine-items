@@ -12,7 +12,6 @@
 
 """Unit tests for the ``preview_updater`` module."""
 
-import gc
 from multiprocessing import Process, Queue
 import pathlib
 from tempfile import TemporaryDirectory
@@ -88,7 +87,6 @@ class TestWriteTaskLoop(unittest.TestCase):
             sender.put("quit")
             write_task_loop(receiver, sender)
             self.assertTrue(receiver.get(), "finished")
-            gc.collect()
 
     def test_writing(self):
         sender = Queue()

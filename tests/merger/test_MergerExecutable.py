@@ -68,7 +68,8 @@ class TestMergerExecutable:
         # Make an empty output db
         db3_path = Path(str(tmp_path), "db3.sqlite")
         db3_url = "sqlite:///" + str(db3_path)
-        create_new_spine_database(db3_url)
+        engine = create_new_spine_database(db3_url)
+        engine.dispose()
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())
         executable = ExecutableItem("name", True, str(tmp_path), logger)
@@ -169,12 +170,13 @@ class TestMergerExecutable:
                 execution_permits=execution_permits,
                 project_dir=str(tmp_path),
             )
-            create_new_spine_database(db3_url)
+            db_engine = create_new_spine_database(db3_url)
             engine.run()
             assert engine.state() == SpineEngineState.COMPLETED
             with DatabaseMapping(db3_url, create=True) as db3_map:
                 commits = db3_map.query(db3_map.commit_sq).all()
             db3_map.close()
+            db_engine.dispose()
             merger1_idx = next(iter(k for k, commit in enumerate(commits) if db1_url in commit.comment))
             merger2_idx = next(iter(k for k, commit in enumerate(commits) if db2_url in commit.comment))
             assert merger2_idx < merger1_idx

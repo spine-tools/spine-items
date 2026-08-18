@@ -994,7 +994,8 @@ class TestDataConnection:
     ):
         toolbox = spine_toolbox_with_project
         db_path = Path(tmp_path, "db.sqlite")
-        create_new_spine_database("sqlite:///" + str(db_path))
+        engine = create_new_spine_database("sqlite:///" + str(db_path))
+        engine.dispose()
         with (
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
             mock.patch(

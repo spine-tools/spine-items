@@ -71,15 +71,12 @@ def create_temp_db(ds):
     """Let's create a real db to more easily test complicated stuff (such as opening a tree view)."""
     temp_db_path = os.path.join(ds.data_dir, "temp_db.sqlite")
     sqlite_url = "sqlite:///" + temp_db_path
-    create_new_spine_database(sqlite_url)
+    engine = create_new_spine_database(sqlite_url)
+    engine.dispose()
     return temp_db_path
 
 
 class TestDataStoreWithToolbox:
-    @pytest.mark.skipif(
-        sys.platform == "win32" and sys.version_info > (3, 12),
-        reason="Deleting .sqlite files that are in use by SqlAlchemy breaks the test.",
-    )
     def test_rename(self, ds, ds_properties_ui, project):
         """Tests renaming a Data Store with an existing sqlite db in its data_dir."""
         temp_path = create_temp_db(ds)
@@ -227,7 +224,8 @@ class TestDataStoreWithMockToolbox:
             mock.patch.object(project, "notify_resource_changes_to_successors") as mock_successor_notifier,
             mock.patch.object(project, "notify_resource_changes_to_predecessors") as mock_predecessor_notifier,
         ):
-            create_new_spine_database("sqlite:///" + database_file_path)
+            engine = create_new_spine_database("sqlite:///" + database_file_path)
+            engine.dispose()
             file_dialog.getSaveFileName.return_value = (database_file_path,)
             mock_successor_notifier.side_effect = lambda item: check_database_exists(
                 item, True, calls_with_non_empty_resources
@@ -353,7 +351,8 @@ class TestDataStoreWithMockToolbox:
 
     def test_do_update_url_uses_filterable_resources_when_replacing_them(self, ds, project):
         database_1 = os.path.normcase(os.path.join(project.project_dir, "db1.sqlite"))
-        create_new_spine_database("sqlite:///" + database_1)
+        engine = create_new_spine_database("sqlite:///" + database_1)
+        engine.dispose()
         with (
             mock.patch.object(project, "notify_resource_changes_to_predecessors"),
             mock.patch.object(project, "notify_resource_changes_to_successors"),
@@ -366,7 +365,8 @@ class TestDataStoreWithMockToolbox:
             while not ds.is_url_validated():
                 QApplication.processEvents()
             database_2 = os.path.normcase(os.path.join(project.project_dir, "db2.sqlite"))
-            create_new_spine_database("sqlite:///" + database_2)
+            engine2 = create_new_spine_database("sqlite:///" + database_2)
+            engine2.dispose()
             ds.do_update_url(dialect="sqlite", database=database_2)
             while not ds.is_url_validated():
                 QApplication.processEvents()

@@ -40,6 +40,7 @@ class TestWithCsvWriter(unittest.TestCase):
             import_object_classes(db_map, ("oc1", "oc2"))
             import_objects(db_map, (("oc1", "o11"), ("oc1", "o12"), ("oc2", "o21"), ("oc2", "o22"), ("oc2", "o23")))
             db_map.commit_session("Add test data.")
+        db_map.close()
 
     def test_export_database(self):
         root_mapping = entity_export(entity_class_position=0, entity_position=1)
