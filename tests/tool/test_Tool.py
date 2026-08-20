@@ -182,12 +182,12 @@ class TestTool(unittest.TestCase):
         when required input files and available resources are updated."""
         item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
         tool = self._add_tool(item_dict)
-        url1 = os.path.join(self._temp_dir.name, "more_files", "input1.csv")
-        url2 = os.path.join(self._temp_dir.name, "more_files", "data.csv")
-        url3 = os.path.join(self._temp_dir.name, "more filess", "input1.csv")
-        url4 = os.path.join(self._temp_dir.name, "other.csv")
-        url5 = os.path.join(self._temp_dir.name, "other", "input2.csv")
-        url6 = os.path.join(self._temp_dir.name, "input3.csv")
+        url1 = os.path.realpath(os.path.join(self._temp_dir.name, "more_files", "input1.csv"))
+        url2 = os.path.realpath(os.path.join(self._temp_dir.name, "more_files", "data.csv"))
+        url3 = os.path.realpath(os.path.join(self._temp_dir.name, "more filess", "input1.csv"))
+        url4 = os.path.realpath(os.path.join(self._temp_dir.name, "other.csv"))
+        url5 = os.path.realpath(os.path.join(self._temp_dir.name, "other", "input2.csv"))
+        url6 = os.path.realpath(os.path.join(self._temp_dir.name, "input3.csv"))
         expected_urls = {"url1": url1, "url2": url2, "url3": url3, "url4": url4, "url5": url5, "url6": url6}
         resources = [
             file_resource("Exporter", url1, "first"),
@@ -198,7 +198,7 @@ class TestTool(unittest.TestCase):
         # Give two resources for input1.csv and no resource for input2.csv
         result = tool._find_input_files(resources)
         # Normalize paths (for tests on Mac)
-        result = {key: ([os.path.realpath(p) for p in value] if value is not None else None) for key, value in result.items()}
+        # result = {key: ([os.path.realpath(p) for p in value] if value is not None else None) for key, value in result.items()}
         expected = {"input1.csv": [expected_urls["url1"]], "input2.csv": None}
         print(f"result:{result}")
         print(f"expected:{expected}")
@@ -211,7 +211,7 @@ class TestTool(unittest.TestCase):
         resources.append(file_resource("Exporter", url5, "fifth"))
         result = tool._find_input_files(resources)
         # Normalize paths
-        result = {key: ([os.path.realpath(p) for p in value] if value is not None else None) for key, value in result.items()}
+        # result = {key: ([os.path.realpath(p) for p in value] if value is not None else None) for key, value in result.items()}
         expected = {"input2.csv": [expected_urls["url5"]], "input1.csv": [expected_urls["url3"]]}
         self.assertEqual(expected, result)
         # Set required input files to input2.csv and a full path to input3.csv
@@ -219,7 +219,7 @@ class TestTool(unittest.TestCase):
         tool.specification().inputfiles = set(["input2.csv", os.path.join(self._temp_dir.name, "input3.csv")])
         result = tool._find_input_files(resources)
         # Normalize paths
-        result = {key: ([os.path.realpath(p) for p in value] if value is not None else None) for key, value in result.items()}
+        # result = {key: ([os.path.realpath(p) for p in value] if value is not None else None) for key, value in result.items()}
         expected = {
             os.path.join(self._temp_dir.name, "input3.csv"): [expected_urls["url6"]],
             "input2.csv": [expected_urls["url5"]],
