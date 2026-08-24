@@ -174,13 +174,13 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
 
     def _restore_dock_widgets(self):
         docks = {
-            Qt.LeftDockWidgetArea: (
+            Qt.DockWidgetArea.LeftDockWidgetArea: (
                 self._ui.type_dock,
                 self._ui.possible_classes_dock,
                 self._ui.possible_parameters_dock,
                 self._ui.load_database_dock,
             ),
-            Qt.RightDockWidgetArea: (
+            Qt.DockWidgetArea.RightDockWidgetArea: (
                 self._ui.parameter_rename_dock,
                 self._ui.class_rename_dock,
                 self._ui.value_transformation_dock,
