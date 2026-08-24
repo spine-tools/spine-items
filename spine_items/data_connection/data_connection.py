@@ -192,7 +192,6 @@ class DataConnection(ProjectItem):
         s[self._properties_ui.treeView_dc_data.doubleClicked] = self.open_data_file
         s[self._properties_ui.treeView_dc_references.files_dropped] = self._add_file_references
         s[self._properties_ui.treeView_dc_data.files_dropped] = self.add_data_files
-        s[self.get_icon().files_dropped_on_icon] = self.receive_files_dropped_on_icon
         s[self._properties_ui.treeView_dc_references.del_key_pressed] = lambda b=False: self.remove_references(b)
         s[self._properties_ui.treeView_dc_data.del_key_pressed] = self.remove_files
         s[self._properties_ui.treeView_dc_references.selectionModel().selectionChanged] = self._update_selection_state
@@ -227,13 +226,6 @@ class DataConnection(ProjectItem):
         db_ref_root_widget.tool_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         db_ref_root_widget.tool_bar.addAction(self._properties_ui.action_new_db_reference)
         self._properties_ui.treeView_dc_references.setIndexWidget(self._db_ref_root.index(), db_ref_root_widget)
-
-    @Slot(QGraphicsItem, list)
-    def receive_files_dropped_on_icon(self, icon, file_paths):
-        """Called when files are dropped onto a data connection graphics item.
-        If the item is this Data Connection's graphics item, add the files to data."""
-        if icon == self.get_icon():
-            self.add_data_files(file_paths)
 
     @Slot(list)
     def add_data_files(self, file_paths):
