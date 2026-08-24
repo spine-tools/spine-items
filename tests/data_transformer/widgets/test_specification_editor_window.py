@@ -12,7 +12,6 @@
 
 """Unit tests for the ``specification_editor_window`` module."""
 
-from tempfile import TemporaryDirectory
 import pytest
 from unittest import mock
 from PySide6.QtWidgets import QApplication
@@ -79,8 +78,12 @@ class TestSpecificationEditorWindow:
             editor = SpecificationEditorWindow(mock_toolbox, dt_spec)
             mock_restore_ui.assert_called_once()
         with (
-            mock.patch("spine_items.data_transformer.widgets.specification_editor_window.QFileDialog.getOpenFileName") as mock_fd_gofn,
-            mock.patch("spine_items.data_transformer.widgets.value_transformation.ValueTransformation.load_data") as mock_load_data,
+            mock.patch(
+                "spine_items.data_transformer.widgets.specification_editor_window.QFileDialog.getOpenFileName"
+            ) as mock_fd_gofn,
+            mock.patch(
+                "spine_items.data_transformer.widgets.value_transformation.ValueTransformation.load_data"
+            ) as mock_load_data,
         ):
             mock_fd_gofn.return_value = ["/fake/path/db.sqlite"]
             mock_load_data.return_value = True
