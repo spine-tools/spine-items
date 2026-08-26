@@ -135,6 +135,59 @@ class TestWriteTaskLoop(unittest.TestCase):
             self.assertTrue(receiver.get(), "finished")
             process.join()
 
+    def test_processed_database_mappings_are_closed(self):
+        opened = []
+        real_mapping = DatabaseMapping
+
+        def spy(*args, **kwargs):
+            db_map = real_mapping(*args, **kwargs)
+            db_map.close = mock.Mock(wraps=db_map.close)
+            opened.append(db_map)
+            return db_map
+
+        with TemporaryDirectory() as temp_dir:
+            urls = []
+            for name in ("db1.sqlite", "db2.sqlite"):
+                url = "sqlite:///" + str(pathlib.Path(temp_dir) / name)
+                with DatabaseMapping(url, create=True) as db_map:
+                    db_map.add_alternative_item(name="alt1")
+                    db_map.commit_session("Add test data.")
+                db_map.close()
+                urls.append(url)
+            tasks = _DripQueue(
+                [
+                    WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME)
+                    for url in urls
+                ]
+                + ["quit"]
+            )
+            results = _DripQueue([])
+            with mock.patch("spine_items.exporter.widgets.preview_updater.DatabaseMapping", side_effect=spy):
+                write_task_loop(results, tasks)
+        self.assertEqual(len(opened), 2)
+        for db_map in opened:
+            db_map.close.assert_called()
+
+
+class _DripQueue:
+    """A minimal queue stand-in that always reports empty so write_task_loop processes one task at a time."""
+
+    def __init__(self, items):
+        self._items = list(items)
+        self.sent = []
+
+    def get(self):
+        return self._items.pop(0)
+
+    def empty(self):
+        return True
+
+    def put(self, item):
+        self.sent.append(item)
+
+    def put_nowait(self, item):
+        self.sent.append(item)
+
 
 if __name__ == "__main__":
     unittest.main()

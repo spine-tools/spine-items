@@ -558,6 +558,8 @@ def write_task_loop(sender, receiver):
             next_task = tasks.pop(0)
             try:
                 if db_map is None or next_task.url != db_map.db_url:
+                    if db_map is not None:
+                        db_map.close()
                     db_map = DatabaseMapping(next_task.url)
                 tables = _write_tables(db_map, next_task)
             except SpineDBVersionError:
@@ -566,6 +568,8 @@ def write_task_loop(sender, receiver):
                 tables = {"error": [[str(error)]]}
             sender.put(((next_task.url, next_task.mapping_name), next_task.mapping_name, tables, next_task.stamp))
     finally:
+        if db_map is not None:
+            db_map.close()
         sender.put_nowait("finished")
 
 
