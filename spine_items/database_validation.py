@@ -14,7 +14,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, QTimer, Signal, Slot
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, QTimer, Signal, Slot
 from PySide6.QtWidgets import QApplication
 from sqlalchemy import URL
 from spine_items.utils import check_database_url
@@ -43,7 +43,6 @@ class _ValidationTask(QRunnable):
         self._dialect = dialect
         self._sa_url = sa_url
         self._signals = _TaskSignals()
-        self._signals.moveToThread(None)
         self._signals.validation_failed.connect(fail_slot)
         if success_slot is not None:
             self._signals.validation_succeeded.connect(success_slot)
@@ -52,7 +51,6 @@ class _ValidationTask(QRunnable):
     def run(self):
         """Checks if it is possible to establish an SQLAlchemy connection to the given URL."""
         try:
-            self._signals.moveToThread(QThread.currentThread())
             if self._dialect == "sqlite":
                 database_path = Path(self._sa_url.database)
                 if not database_path.exists():
@@ -79,8 +77,6 @@ class _ValidationTask(QRunnable):
             self._signals.validation_succeeded.emit(self._sa_url)
         finally:
             self._signals.finished.emit()
-            application = QApplication.instance()
-            self._signals.moveToThread(application.thread())
             self._signals.deleteLater()
 
 
