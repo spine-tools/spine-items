@@ -22,11 +22,6 @@ from PySide6.QtCore import QFileInfo, QItemSelection, QItemSelectionModel, QMode
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextDocument
 from PySide6.QtWidgets import QFileDialog, QFileIconProvider, QInputDialog, QLabel, QMessageBox
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spine_items.tool.widgets.tool_spec_optional_widgets import (
-    ExecutableToolSpecOptionalWidget,
-    JuliaToolSpecOptionalWidget,
-    PythonToolSpecOptionalWidget,
-)
 from spinetoolbox.helpers import SealCommand, busy_effect, open_url, same_path
 from spinetoolbox.project_item.specification_editor_window import (
     ChangeSpecPropertyCommand,
