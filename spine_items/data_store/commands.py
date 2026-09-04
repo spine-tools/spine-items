@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Undo/redo commands for the DataStore project item."""
+
 from enum import IntEnum, unique
 from spine_items.commands import SpineToolboxCommand
 

@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'specification_editor_widget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.3
+## Created by: Qt User Interface Compiler version 6.11.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -186,7 +186,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setContentsMargins(3, 3, 3, 3)
         self.available_parameters_tree_view = ParameterTreeWidget(self.dockWidgetContents_3)
         __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setText(0, u"1");
+        __qtreewidgetitem.setText(0, u"1")
         self.available_parameters_tree_view.setHeaderItem(__qtreewidgetitem)
         self.available_parameters_tree_view.setObjectName(u"available_parameters_tree_view")
         self.available_parameters_tree_view.setDragEnabled(True)
@@ -317,12 +317,12 @@ class Ui_MainWindow(object):
         self.label_2 = QLabel(self.dockWidgetContents_6)
         self.label_2.setObjectName(u"label_2")
 
-        self.instruction_options_layout.setWidget(0, QFormLayout.LabelRole, self.label_2)
+        self.instruction_options_layout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_2)
 
         self.operation_combo_box = QComboBox(self.dockWidgetContents_6)
         self.operation_combo_box.setObjectName(u"operation_combo_box")
 
-        self.instruction_options_layout.setWidget(0, QFormLayout.FieldRole, self.operation_combo_box)
+        self.instruction_options_layout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.operation_combo_box)
 
 
         self.verticalLayout_6.addLayout(self.instruction_options_layout)
@@ -340,7 +340,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.setContentsMargins(3, 3, 3, 3)
         self.available_classes_tree_widget = ClassTreeWidget(self.dockWidgetContents_7)
         __qtreewidgetitem1 = QTreeWidgetItem()
-        __qtreewidgetitem1.setText(0, u"1");
+        __qtreewidgetitem1.setText(0, u"1")
         self.available_classes_tree_widget.setHeaderItem(__qtreewidgetitem1)
         self.available_classes_tree_widget.setObjectName(u"available_classes_tree_widget")
         self.available_classes_tree_widget.setDragEnabled(True)

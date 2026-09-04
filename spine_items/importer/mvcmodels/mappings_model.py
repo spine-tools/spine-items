@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains a model to handle source tables and import mapping."""
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum, unique
@@ -20,7 +21,18 @@ import uuid
 from PySide6.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt, Signal
 from PySide6.QtGui import QColor, QFont
 from spinedb_api import ParameterValueFormatError, from_database
-from spinedb_api.import_mapping.import_mapping import default_import_mapping
+from spinedb_api.import_mapping.import_mapping import (
+    AlternativeMapping,
+    EntityClassMapping,
+    EntityGroupMapping,
+    EntityMetadataNameMapping,
+    MetadataNameMapping,
+    ParameterValueListMapping,
+    ParameterValueMetadataNameMapping,
+    ScenarioAlternativeMapping,
+    ScenarioMapping,
+    default_import_mapping,
+)
 from spinedb_api.import_mapping.import_mapping_compat import (
     import_mapping_from_dict,
     parameter_default_value_mapping_from_dict,
@@ -47,7 +59,7 @@ from ..commands import (
     UpdateTableItem,
 )
 from ..flattened_mappings import VALUE_TYPES, FlattenedMappings
-from ..mapping_colors import ERROR_COLOR
+from ..mapping_colors import ERROR_COLOR, TEXT_ON_COLOR_BACKGROUND
 from ..widgets.mime_types import MAPPING_LIST_MIME_TYPE, SOURCE_TABLE_LIST_MIME_TYPE
 from .mappings_model_roles import Role
 
@@ -129,15 +141,15 @@ class MappingListItem:
     """An item in mappings list."""
 
     name: str
-    flattened_mappings: FlattenedMappings = field(init=False)
+    flattened_mappings: FlattenedMappings | None = field(init=False)
     source_table_item: SourceTableItem = field(init=False)
     id: uuid.UUID = field(init=False, default_factory=uuid.uuid4)
 
-    def set_flattened_mappings(self, flattened_mappings):
+    def set_flattened_mappings(self, flattened_mappings: FlattenedMappings) -> None:
         """Sets flattened mappings for this item.
 
         Args:
-            flattened_mappings (FlattenedMappings): mappings
+            flattened_mappings: mappings
         """
         flattened_mappings.mapping_list_item = self
         self.flattened_mappings = flattened_mappings
@@ -163,7 +175,7 @@ class MappingsModel(QAbstractItemModel):
         """
         super().__init__(parent)
         self._undo_stack = undo_stack
-        self._mappings = [self._make_select_all_tables_item()]
+        self._mappings: list[SourceTableItem] = [self._make_select_all_tables_item()]
         self._add_table_row_font = QFont()
         self._add_table_row_font.setItalic(True)
 
@@ -327,6 +339,9 @@ class MappingsModel(QAbstractItemModel):
                 if issues:
                     return ERROR_COLOR
                 return None
+        if role == Qt.ItemDataRole.ForegroundRole:
+            if column == FlattenedColumn.NAME:
+                return TEXT_ON_COLOR_BACKGROUND
         if role == Qt.ItemDataRole.ToolTipRole:
             if column == FlattenedColumn.POSITION:
                 issues = flattened_mappings.display_row_issues(index.row())
@@ -399,8 +414,8 @@ class MappingsModel(QAbstractItemModel):
         Returns:
             int: flags
         """
-        non_editable = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        editable = non_editable | Qt.ItemIsEditable
+        non_editable = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+        editable = non_editable | Qt.ItemFlag.ItemIsEditable
         column = index.column()
         if column == FlattenedColumn.NAME:
             return non_editable
@@ -602,6 +617,11 @@ class MappingsModel(QAbstractItemModel):
             source_table.insert_to_mapping_list(list_row + i, mapping_item)
         self.endInsertRows()
 
+    def insert_mapping_item(self, table_row: int, item: SourceTableItem) -> None:
+        self.beginInsertRows(QModelIndex(), table_row, table_row)
+        self._mappings.insert(table_row, item)
+        self.endInsertRows()
+
     def index(self, row, column, parent=QModelIndex()):
         if row < 0 or column < 0:
             return QModelIndex()
@@ -609,9 +629,13 @@ class MappingsModel(QAbstractItemModel):
             return self.createIndex(row, 0, self._mappings[row])
         parent_item = parent.internalPointer()
         if isinstance(parent_item, SourceTableItem):
+            if parent_item.select_all:
+                return QModelIndex()
             return self.createIndex(row, 0, parent_item.mapping_list[row])
         if isinstance(parent_item, MappingListItem):
             return self.createIndex(row, column, parent_item.flattened_mappings)
+        if parent_item is _dummy:
+            return QModelIndex()
         raise RuntimeError("Cannot create index.")
 
     @staticmethod
@@ -969,22 +993,25 @@ class MappingsModel(QAbstractItemModel):
         self.endInsertRows()
         self.dataChanged.emit(list_index, list_index, [Role.FLATTENED_MAPPINGS])
 
-    def set_mappings_type(self, table_row, list_row, new_type):
+    def set_mappings_type(self, table_row: int, list_row: int, new_type: str) -> None:
         """
         Sets the type for mappings.
 
         Args:
-            table_row (int): source table row index
-            list_row (int): mapping list row index
-            new_type (str): name of the type
+            table_row: source table row index
+            list_row: mapping list row index
+            new_type: name of the type
         """
         map_type = {
-            "Entity class": "EntityClass",
-            "Entity group": "EntityGroup",
-            "Alternative": "Alternative",
-            "Scenario": "Scenario",
-            "Scenario alternative": "ScenarioAlternative",
-            "Parameter value list": "ParameterValueList",
+            "Entity class": EntityClassMapping.MAP_TYPE,
+            "Entity group": EntityGroupMapping.MAP_TYPE,
+            "Alternative": AlternativeMapping.MAP_TYPE,
+            "Scenario": ScenarioMapping.MAP_TYPE,
+            "Scenario alternative": ScenarioAlternativeMapping.MAP_TYPE,
+            "Parameter value list": ParameterValueListMapping.MAP_TYPE,
+            "Metadata": MetadataNameMapping.MAP_TYPE,
+            "Entity metadata": EntityMetadataNameMapping.MAP_TYPE,
+            "Parameter value metadata": ParameterValueMetadataNameMapping.MAP_TYPE,
         }[new_type]
         root_mapping = default_import_mapping(map_type)
         self.set_root_mapping(table_row, list_row, root_mapping)
@@ -1650,18 +1677,16 @@ class MappingsModel(QAbstractItemModel):
             bottom_right = self.index(bottom, 0)
             self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole])
 
-    def remove_tables_not_in_source_and_specification(self):
-        """Removes source table items that are not in source or saved in specification."""
+    def table_rows_not_in_source_and_specification(self) -> list[int]:
+        """Lists source table items that are not in source or saved in specification."""
         start = 1
-        for row, table_item in reversed(list(enumerate(self._mappings[start:], start))):
-            if not table_item.in_source and not table_item.in_specification:
-                self.removeRow(row)
+        return [row for row, item in enumerate(self._mappings[start:], start) if not item.in_source]
 
-    def cross_check_source_table_names(self, table_names):
+    def cross_check_source_table_names(self, table_names: set[str]) -> None:
         """Sets the in_source flag for all appropriate source table items.
 
         Args:
-            table_names (set of str): existing source table names
+            table_names: existing source table names
         """
         changed_rows = []
         start = 1

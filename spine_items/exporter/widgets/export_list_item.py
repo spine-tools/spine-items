@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """A small widget to set up an output in Exporter properties tab."""
+
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import QWidget
 from spine_items.utils import convert_to_sqlalchemy_url

@@ -163,6 +163,12 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>150</height>
+           </size>
+          </property>
           <property name="acceptDrops">
            <bool>true</bool>
           </property>
@@ -235,6 +241,12 @@ QScrollArea &gt; QWidget &gt; QWidget { background: transparent; }</string>
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>100</height>
+              </size>
              </property>
              <property name="dragEnabled">
               <bool>false</bool>

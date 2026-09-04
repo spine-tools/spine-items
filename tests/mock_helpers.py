@@ -11,11 +11,15 @@
 ######################################################################################################################
 
 """Classes and functions that can be shared among unit test modules."""
+
 from contextlib import contextmanager
 import os.path
 from unittest import mock
+from typing import Any
+from PySide6.QtCore import QAbstractTableModel, Qt
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication, QMainWindow
+from spine_engine.utils.serialization import serialize_path
 from spinetoolbox.ui_main import ToolboxUI
 
 
@@ -87,7 +91,7 @@ def create_toolboxui():
 
 def create_project(toolbox, project_dir):
     """Creates a project for the given ToolboxUI."""
-    with (patch("spinetoolbox.ui_main.ToolboxUI.update_recent_projects"),):
+    with (mock.patch("spinetoolbox.ui_main.ToolboxUI.update_recent_projects"),):
         toolbox.create_project(project_dir)
 
 
@@ -136,3 +140,33 @@ def parent_widget():
         yield parent
     finally:
         parent.deleteLater()
+
+
+@contextmanager
+def q_object(instance):
+    try:
+        yield instance
+    finally:
+        instance.deleteLater()
+
+
+class ProjectForSerialization:
+    def __init__(self, project_dir):
+        self._project_dir = project_dir
+
+    def serialize_path(self, path):
+        return serialize_path(path, self._project_dir)
+
+
+def assert_table_model_data(
+    model: QAbstractTableModel,
+    expected: list[list[Any]],
+    role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole,
+) -> None:
+    assert model.rowCount() == len(expected), f"{model.rowCount()} != {len(expected)}"
+    for row in range(model.rowCount()):
+        assert model.columnCount() == len(expected[row]), f"{model.columnCount()} != {len(expected[row])}"
+        for column in range(model.columnCount()):
+            data = model.index(row, column).data(role)
+            expected_data = expected[row][column]
+            assert data == expected_data, f"{data} != {expected_data} on row {row} column {column}"

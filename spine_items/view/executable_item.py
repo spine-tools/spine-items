@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains View's executable item as well as support utilities."""
+
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from .item_info import ItemInfo
 

@@ -354,6 +354,21 @@
                 <string>Parameter value list</string>
                </property>
               </item>
+              <item>
+               <property name="text">
+                <string>Metadata</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Entity metadata</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Parameter value metadata</string>
+               </property>
+              </item>
              </widget>
             </item>
             <item row="2" column="0">

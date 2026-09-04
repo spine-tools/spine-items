@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Tool's executable item and support functionality."""
+
 from contextlib import ExitStack
 import datetime
 import fnmatch
@@ -23,7 +24,10 @@ import shutil
 import time
 import uuid
 from spine_engine.config import TOOL_OUTPUT_DIR
+from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.project_item_resource import (
+    CmdLineArg,
+    ProjectItemResource,
     expand_cmd_line_args,
     labelled_resource_args,
     make_cmd_line_arg,
@@ -40,7 +44,15 @@ from ..db_writer_executable_item_base import DBWriterExecutableItemBase
 from ..utils import generate_filter_subdirectory_name
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
-from .utils import file_paths_from_resources, find_file, flatten_file_path_duplicates, is_pattern, make_dir_if_necessary
+from .tool_specifications import ToolSpecification
+from .utils import (
+    OptionsDict,
+    file_paths_from_resources,
+    find_file,
+    flatten_file_path_duplicates,
+    is_pattern,
+    make_dir_if_necessary,
+)
 
 _ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
@@ -52,34 +64,35 @@ class ExecutableItem(DBWriterExecutableItemBase):
 
     def __init__(
         self,
-        name,
-        work_dir,
-        tool_specification,
-        cmd_line_args,
-        options,
-        kill_completed_processes,
-        log_process_output,
-        group_id,
-        project_dir,
-        logger,
+        name: str,
+        *,
+        work_dir: str | None,
+        output_dir: str,
+        tool_specification: ToolSpecification | None,
+        cmd_line_args: list[CmdLineArg],
+        options: OptionsDict,
+        kill_completed_processes: bool,
+        log_process_output: bool,
+        group_id: str | None,
+        project_dir: str,
+        logger: LoggerInterface,
     ):
         """
         Args:
-            name (str): item's name
-            work_dir (str): an absolute path to Spine Toolbox work directory
+            name: item's name
+            work_dir: an absolute path to Spine Toolbox work directory
                 or None if the Tool should not execute in work directory
-            tool_specification (ToolSpecification): a tool specification
-            cmd_line_args (list): a list of command line argument to pass to the tool instance
-            options (dict): misc tool options. See ``Tool`` for details.
-            kill_completed_processes (bool): whether to kill completed persistent processes after execution
-            log_process_output (bool): whether to log process output to a file
-            group_id (str or None): execution group identifier
-            project_dir (str): absolute path to project directory
-            logger (LoggerInterface): a logger
+            tool_specification: a tool specification
+            cmd_line_args: a list of command line argument to pass to the tool instance
+            options: misc tool options. See ``Tool`` for details.
+            kill_completed_processes: whether to kill completed persistent processes after execution
+            log_process_output: whether to log process output to a file
+            group_id: execution group identifier
+            project_dir: absolute path to project directory
+            logger: a logger
         """
         super().__init__(name, project_dir, logger, group_id=group_id)
         self._work_dir = work_dir
-        output_dir = deserialize_path(options.get("output_directory"), project_dir)
         self._output_dir = str(pathlib.Path(self._data_dir, TOOL_OUTPUT_DIR)) if not output_dir else output_dir
         self._tool_specification = tool_specification
         self._cmd_line_args = cmd_line_args
@@ -167,10 +180,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             self._logger.msg_error.emit(f"Creating directory <b>{execution_dir}</b> failed")
             return False
         for dst, src_path in paths.items():
-            file_anchor = (
-                f"<a style='color:#BB99FF;' title='{src_path}' href='file:///{src_path}'>"
-                + f"{os.path.basename(src_path)}</a>"
-            )
+            file_anchor = f"<a title='{src_path}' href='file:///{src_path}'>" + f"{os.path.basename(src_path)}</a>"
             if not os.path.exists(src_path):
                 self._logger.msg_error.emit(f"\tFile <b>{file_anchor}</b> does not exist")
                 return False
@@ -453,10 +463,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             return ItemExecutionFinishState.FAILURE
         work_or_source = "work" if self._work_dir is not None else "source"
         # Make work/source directory anchor with path as tooltip
-        anchor = (
-            f"<a style='color:#99CCFF;' title='{execution_dir}'"
-            f"href='file:///{execution_dir}'>{work_or_source} directory</a>"
-        )
+        anchor = f"<a title='{execution_dir}'" f"href='file:///{execution_dir}'>{work_or_source} directory</a>"
         self._logger.msg.emit(
             f"*** Executing Tool specification <b>{self._tool_specification.name}</b> in {anchor} ***"
         )
@@ -491,7 +498,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
                     return ItemExecutionFinishState.FAILURE
         if self._tool_specification.inputfiles_opt:
             self._logger.msg.emit("*** Searching for optional input files ***")
-            optional_file_paths = self._find_optional_input_files(forward_resources)
+            optional_file_paths = _find_optional_input_files(
+                forward_resources, self._tool_specification.inputfiles_opt, self._logger
+            )
             for k, v in optional_file_paths.items():
                 self._logger.msg.emit(f"\tFound <b>{len(v)}</b> files matching pattern <b>{k}</b>")
             optional_file_copy_paths = self._optional_output_destination_paths(optional_file_paths, execution_dir)
@@ -561,30 +570,6 @@ class ExecutableItem(DBWriterExecutableItemBase):
             file_paths[required_path] = find_file(filename, resources)
         return file_paths
 
-    def _find_optional_input_files(self, resources):
-        """Tries to find optional input files from previous project items in the DAG.
-
-        Args:
-            resources (list): resources available
-
-        Returns:
-            dict: Dictionary of optional input file paths or an empty dictionary if no files found. Key is the
-                optional input item and value is a list of paths that matches the item.
-        """
-        file_paths = {}
-        paths_in_resources = file_paths_from_resources(resources)
-        for file_path in self._tool_specification.inputfiles_opt:
-            _, pattern = os.path.split(file_path)
-            if not pattern:
-                # It's a directory -> skip
-                continue
-            found_files = _find_files_in_pattern(pattern, paths_in_resources)
-            if not found_files:
-                self._logger.msg_warning.emit(f"\tNo files matching pattern <b>{pattern}</b> found")
-            else:
-                file_paths[file_path] = found_files
-        return file_paths
-
     def _handle_output_files(self, return_code, filter_id, forward_resources, execution_dir):
         """Copies Tool specification output files from work directory to result directory.
 
@@ -619,9 +604,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 )
                 return
             # Make link to output folder
-            result_anchor = (
-                f"<a style='color:#BB99FF;' title='{result_path}' href='file:///{result_path}'>results directory</a>"
-            )
+            result_anchor = f"<a title='{result_path}' href='file:///{result_path}'>results directory</a>"
             if filter_id:
                 write_filter_id_file(filter_id, os.path.dirname(result_path))
             self._logger.msg.emit(f"*** Archiving output files to {result_anchor} ***")
@@ -637,13 +620,11 @@ class ExecutableItem(DBWriterExecutableItemBase):
             if failed_files:
                 # If saving some or all files failed
                 f_str = "\n".join(failed_files)
-                failed_files_anchor = (
-                    f"<a style='color:#ff0000;' title='{f_str}' href='#'>Some output files were not found</a>"
-                )
+                failed_files_anchor = f"<a title='{f_str}' href='#'>Some output files were not found</a>"
                 self._logger.msg.emit(f"\t<b>{failed_files_anchor}")
         else:
             tip_anchor = (
-                "<a style='color:#99CCFF;' title='By adding <b>output files</b> to the Tool specification,\n "
+                "<a title='By adding <b>output files</b> to the Tool specification,\n "
                 "they will be archived into the results directory. In addition, <b>output files</b> will be \n"
                 "passed to subsequent project items.' href='#'>Tip</a>"
             )
@@ -710,31 +691,36 @@ class ExecutableItem(DBWriterExecutableItemBase):
         )
         cmd_line_args = [make_cmd_line_arg(arg) for arg in item_dict["cmd_line_args"]]
         options = item_dict.get("options", {})
+        if "output_directory" in options:
+            output_dir = deserialize_path(options.get("output_directory", ""), project_dir)
+        else:
+            output_dir = deserialize_path(item_dict.get("output_directory", ""), project_dir)
         kill_completed_processes = item_dict.get("kill_completed_processes", False)
         log_process_output = item_dict.get("log_process_output", False)
         group_id = item_dict.get("group_id")
         return cls(
             name,
-            work_dir,
-            specification,
-            cmd_line_args,
-            options,
-            kill_completed_processes,
-            log_process_output,
-            group_id,
-            project_dir,
-            logger,
+            work_dir=work_dir,
+            output_dir=output_dir,
+            tool_specification=specification,
+            cmd_line_args=cmd_line_args,
+            options=options,
+            kill_completed_processes=kill_completed_processes,
+            log_process_output=log_process_output,
+            group_id=group_id,
+            project_dir=project_dir,
+            logger=logger,
         )
 
 
-def _count_files_and_dirs(paths):
+def _count_files_and_dirs(paths: list[str]) -> tuple[int, int]:
     """Counts the number of files and directories in given paths.
 
     Args:
-        paths (list): list of paths
+        paths: list of paths
 
     Returns:
-        tuple: Tuple containing the number of required files and directories.
+        Tuple containing the number of required files and directories.
     """
     n_dir = 0
     n_file = 0
@@ -794,15 +780,44 @@ def _execution_directory(work_dir, tool_specification):
     return tool_specification.path
 
 
-def _find_files_in_pattern(pattern, available_file_paths):
+def _find_optional_input_files(
+    resources: list[ProjectItemResource], optional_input_files: list[str], logger: LoggerInterface
+) -> dict[str, list[str]]:
+    """Tries to find optional input files from previous project items in the DAG.
+
+    Args:
+        resources: resources available
+        optional_input_files: List of optional input files or file patterns
+        logger: logger instance
+
+    Returns:
+        Dictionary of optional input file paths or an empty dictionary if no files found. Key is the
+            optional input item and value is a list of paths that matches the item.
+    """
+    file_paths = {}
+    paths_in_resources = file_paths_from_resources(resources)
+    for file_path in optional_input_files:
+        _, pattern = os.path.split(file_path)
+        if not pattern:
+            # It's a directory -> skip
+            continue
+        found_files = _find_files_in_pattern(file_path, paths_in_resources)
+        if not found_files:
+            logger.msg_warning.emit(f"\tNo files matching pattern <b>{pattern}</b> found")
+        else:
+            file_paths[file_path] = found_files
+    return file_paths
+
+
+def _find_files_in_pattern(pattern: str, available_file_paths: list[str]) -> list[str]:
     """Returns a list of files that match the given pattern.
 
     Args:
-        pattern (str): File pattern
-        available_file_paths (list): List of available file paths from upstream items
+        pattern: File pattern
+        available_file_paths: List of available file paths from upstream items
 
     Returns:
-        list: List of (full) paths
+        List of (full) paths
     """
     extended_pattern = os.path.join("*", pattern)  # Match all absolute paths.
     return fnmatch.filter(available_file_paths, extended_pattern)

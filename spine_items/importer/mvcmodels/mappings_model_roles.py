@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains user data roles for :class:`MappingsModel`."""
+
 from enum import IntEnum, unique
 from PySide6.QtCore import Qt
 

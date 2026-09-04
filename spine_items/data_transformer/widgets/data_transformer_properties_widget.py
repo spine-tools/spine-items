@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Data transformer properties widget."""
+
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 from ..item_info import ItemInfo
 

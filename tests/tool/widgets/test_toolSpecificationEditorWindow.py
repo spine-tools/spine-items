@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for ToolSpecificationEditorWindow class and tool_spec_optional_widgets module."""
+
 import logging
 import os
 from pathlib import Path

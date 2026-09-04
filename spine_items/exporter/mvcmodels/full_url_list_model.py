@@ -10,6 +10,7 @@
 ######################################################################################################################
 
 """Exporter's ``FullUrlListModel``."""
+
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt
 
 

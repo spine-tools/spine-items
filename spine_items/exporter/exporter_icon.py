@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`ExporterIcon`."""
+
 from spinetoolbox.project_item_icon import ProjectItemIcon
 from ..animations import AnimationSignaller, ExporterAnimation
 

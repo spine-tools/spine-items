@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Module for Merger class."""
+
 import os
 from PySide6.QtCore import Qt, Slot
 from spinetoolbox.helpers import create_dir

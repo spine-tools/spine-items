@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains a table model that can be used as drop target."""
+
 import pickle
 from PySide6.QtCore import QAbstractTableModel
 from ..commands import InsertRow

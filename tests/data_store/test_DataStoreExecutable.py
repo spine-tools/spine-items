@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for DataStoreExecutable."""
+
 from multiprocessing import Lock
 import os.path
 from pathlib import Path
@@ -18,6 +19,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spine_engine import ExecutionDirection
+from spine_engine.utils.helpers import urls_equal
 from spine_items.data_store.executable_item import ExecutableItem
 from spine_items.utils import convert_to_sqlalchemy_url
 
@@ -83,7 +85,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         self.assertEqual(len(resources), 1)
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
-        self.assertEqual(resource.url, "sqlite:///" + os.path.normcase(str(db_file_path)))
+        self.assertTrue(urls_equal(resource.url, "sqlite:///" + os.path.normcase(str(db_file_path))))
         self.assertEqual(resource.label, "db_url@name")
 
     def test_output_resources_forward(self):
@@ -96,7 +98,7 @@ class TestDataStoreExecutable(unittest.TestCase):
         self.assertEqual(len(resources), 1)
         resource = resources[0]
         self.assertEqual(resource.type_, "database")
-        self.assertEqual(resource.url, "sqlite:///" + os.path.normcase(str(db_file_path)))
+        self.assertTrue(urls_equal(resource.url, "sqlite:///" + os.path.normcase(str(db_file_path))))
         self.assertEqual(resource.label, "db_url@name")
 
 

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains a table view that can accept drops."""
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTableView
 

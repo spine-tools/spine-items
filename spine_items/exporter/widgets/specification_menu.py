@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`SpecificationMenu`."""
+
 from spinetoolbox.widgets.custom_menus import ItemSpecificationMenu
 
 

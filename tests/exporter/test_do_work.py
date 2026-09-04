@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Exporter's :func:`do_work` function."""
+
 from csv import reader
 import os.path
 import sqlite3
@@ -39,6 +40,7 @@ class TestWithCsvWriter(unittest.TestCase):
             import_object_classes(db_map, ("oc1", "oc2"))
             import_objects(db_map, (("oc1", "o11"), ("oc1", "o12"), ("oc2", "o21"), ("oc2", "o22"), ("oc2", "o23")))
             db_map.commit_session("Add test data.")
+        db_map.close()
 
     def test_export_database(self):
         root_mapping = entity_export(entity_class_position=0, entity_position=1)
@@ -62,7 +64,7 @@ class TestWithCsvWriter(unittest.TestCase):
     def test_export_to_output_database(self):
         object_root = entity_export(entity_class_position=0, entity_position=1)
         object_root.header = "object_class"
-        object_root.child.header = "object"
+        object_root.child.child.header = "object"
         root_mapping = FixedValueMapping(Position.table_name, "data_table")
         root_mapping.child = object_root
         mapping_specification = MappingSpecification(
@@ -94,7 +96,3 @@ class TestWithCsvWriter(unittest.TestCase):
         expected = [("oc1", "o11"), ("oc1", "o12"), ("oc2", "o21"), ("oc2", "o22"), ("oc2", "o23")]
         self.assertEqual(cursor.execute("SELECT * FROM data_table").fetchall(), expected)
         connection.close()
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for View's ItemInfo class."""
+
 import unittest
 from spine_items.view.item_info import ItemInfo
 

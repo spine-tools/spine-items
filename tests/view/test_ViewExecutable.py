@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for ViewExecutable."""
+
 from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Tool's ItemInfo class."""
+
 import unittest
 from spine_items.tool.item_info import ItemInfo
 

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains model for export mapping setup table."""
+
 from enum import IntEnum, unique
 from operator import itemgetter
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
@@ -21,22 +22,31 @@ from spinedb_api.export_mapping.export_mapping import (
     DefaultValueIndexNameMapping,
     DimensionMapping,
     ElementMapping,
+    EntityClassDescriptionMapping,
     EntityClassMapping,
+    EntityDescriptionMapping,
     EntityGroupEntityMapping,
     EntityGroupMapping,
     EntityMapping,
+    EntityMetadataNameMapping,
+    EntityMetadataValueMapping,
     ExpandedParameterDefaultValueMapping,
     ExpandedParameterValueMapping,
     FixedValueMapping,
     IndexNameMapping,
+    MetadataNameMapping,
+    MetadataValueMapping,
     ParameterDefaultValueIndexMapping,
     ParameterDefaultValueMapping,
     ParameterDefaultValueTypeMapping,
+    ParameterDefinitionDescriptionMapping,
     ParameterDefinitionMapping,
     ParameterValueIndexMapping,
     ParameterValueListMapping,
     ParameterValueListValueMapping,
     ParameterValueMapping,
+    ParameterValueMetadataNameMapping,
+    ParameterValueMetadataValueMapping,
     ParameterValueTypeMapping,
     ScenarioAlternativeMapping,
     ScenarioBeforeAlternativeMapping,
@@ -104,8 +114,8 @@ class MappingEditorTableModel(QAbstractTableModel):
         positions = [m.position for m in self._mappings if isinstance(m.position, int)]
         self._mapping_colors = {p: color_from_index(i, len(positions)).lighter() for i, p in enumerate(positions)}
         if emit_data_changed:
-            top_left = self.index(0, EditorColumn.POSITION)
-            bottom_right = self.index(len(self._mappings), EditorColumn.POSITION)
+            top_left = self.index(0, EditorColumn.ROW_LABEL)
+            bottom_right = self.index(len(self._mappings) - 1, EditorColumn.ROW_LABEL)
             self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
 
     def mapping_colors(self):
@@ -148,6 +158,8 @@ class MappingEditorTableModel(QAbstractTableModel):
         elif role == Qt.ItemDataRole.BackgroundRole and column == EditorColumn.ROW_LABEL:
             m = self._mappings[index.row()]
             return self._mapping_colors.get(m.position, QColor(Qt.GlobalColor.gray).lighter())
+        elif role == Qt.ItemDataRole.ForegroundRole and column == EditorColumn.ROW_LABEL:
+            return QColor(Qt.GlobalColor.black)
         elif role == Qt.ItemDataRole.ToolTipRole:
             if column == EditorColumn.FILTER:
                 return plain_to_rich("Regular expression to filter database items.")
@@ -301,22 +313,22 @@ class MappingEditorTableModel(QAbstractTableModel):
         """
         if mapping_name != self._mapping_name:
             self._mapping_provider.show_on_table(mapping_name)
-        top = -1
+        top = len(self._mappings)
         pivot_top = top
-        bottom = len(self._mappings)
+        bottom = -1
         pivot_bottom = bottom
         for row, (mapping, position) in enumerate(zip(self._mappings, positions)):
             if position != mapping.position:
-                top = row
-                bottom = min(bottom, row)
+                top = min(top, row)
+                bottom = row
                 if is_pivoted(position) or is_pivoted(mapping.position):
-                    pivot_top = row
-                    pivot_bottom = min(pivot_bottom, row)
+                    pivot_top = min(pivot_top, row)
+                    pivot_bottom = row
                 mapping.position = position
         top_left = self.index(top, EditorColumn.POSITION)
         bottom_right = self.index(bottom, EditorColumn.POSITION)
         self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole])
-        if pivot_bottom <= pivot_top:
+        if pivot_bottom >= pivot_top:
             top_left = self.index(pivot_top, EditorColumn.PIVOTED)
             bottom_right = self.index(pivot_bottom, EditorColumn.PIVOTED)
             self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
@@ -432,18 +444,27 @@ _names = {
     ExpandedParameterValueMapping: "Parameter values",
     IndexNameMapping: "Parameter index names",
     EntityClassMapping: "Entity classes",
+    EntityClassDescriptionMapping: "Class descriptions",
     EntityGroupMapping: "Entity groups",
     EntityGroupEntityMapping: "Entities",
     EntityMapping: "Entities",
+    EntityDescriptionMapping: "Entity descriptions",
+    EntityMetadataNameMapping: "Metadata names",
+    EntityMetadataValueMapping: "Metadata values",
     ElementMapping: "Elements",
+    MetadataNameMapping: "Metadata names",
+    MetadataValueMapping: "Metadata values",
     ParameterDefaultValueMapping: "Default values",
     ParameterDefaultValueIndexMapping: "Default value indexes",
     ParameterDefaultValueTypeMapping: "Default value types",
+    ParameterDefinitionDescriptionMapping: "Parameter descriptions",
     ParameterDefinitionMapping: "Parameter definitions",
     ParameterValueIndexMapping: "Parameter indexes",
     ParameterValueListMapping: "Value lists",
     ParameterValueListValueMapping: "Value list values",
     ParameterValueMapping: "Parameter values",
+    ParameterValueMetadataNameMapping: "Metadata names",
+    ParameterValueMetadataValueMapping: "Metadata values",
     ParameterValueTypeMapping: "Value types",
     DimensionMapping: "Dimensions",
     ScenarioAlternativeMapping: "Alternatives",

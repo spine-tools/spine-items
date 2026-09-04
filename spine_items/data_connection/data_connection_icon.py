@@ -11,77 +11,9 @@
 ######################################################################################################################
 
 """Module for data connection icon class."""
-import os
-from PySide6.QtCore import QObject, Qt, QTimer, Signal
-from PySide6.QtWidgets import QGraphicsItem
+
 from spinetoolbox.project_item_icon import ProjectItemIcon
 
 
 class DataConnectionIcon(ProjectItemIcon):
-    class _SignalHolder(QObject):
-        files_dropped_on_icon = Signal(QGraphicsItem, list)
-        """A signal that it triggered when files are dragged and dropped on the item."""
-
-    def __init__(self, toolbox, icon, icon_color):
-        """Data Connection icon for the Design View.
-
-        Args:
-            toolbox (ToolboxUI): main window instance
-            icon (str): icon resource path
-            icon_color (QColor): Icon's color
-        """
-        super().__init__(toolbox, icon, icon_color)
-        self.setAcceptDrops(True)
-        self._drag_over = False
-        self._signal_holder = DataConnectionIcon._SignalHolder()
-        self.files_dropped_on_icon = self._signal_holder.files_dropped_on_icon
-
-    def dragEnterEvent(self, event):
-        """Drag and drop action enters.
-        Accept file drops from the filesystem.
-
-        Args:
-            event (QGraphicsSceneDragDropEvent): Event
-        """
-        urls = event.mimeData().urls()
-        for url in urls:
-            if not url.isLocalFile():
-                event.ignore()
-                return
-            if not os.path.isfile(url.toLocalFile()):
-                event.ignore()
-                return
-        event.accept()
-        event.setDropAction(Qt.CopyAction)
-        if self._drag_over:
-            return
-        self._drag_over = True
-        QTimer.singleShot(100, self.select_on_drag_over)
-
-    def dragLeaveEvent(self, event):
-        """Drag and drop action leaves.
-
-        Args:
-            event (QGraphicsSceneDragDropEvent): Event
-        """
-        event.accept()
-        self._drag_over = False
-
-    def dragMoveEvent(self, event):
-        """Accept event."""
-        event.accept()
-
-    def dropEvent(self, event):
-        """Emit files_dropped_on_dc signal from scene,
-        with this instance, and a list of files for each dropped url."""
-        self.files_dropped_on_icon.emit(self, [url.toLocalFile() for url in event.mimeData().urls()])
-
-    def select_on_drag_over(self):
-        """Called when the timer started in drag_enter_event is elapsed.
-        Select this item if the drag action is still over it.
-        """
-        if not self._drag_over:
-            return
-        self._drag_over = False
-        self._toolbox.ui.graphicsView.scene().clearSelection()
-        self.setSelected(True)
+    """Data Connection icon for the Design View."""

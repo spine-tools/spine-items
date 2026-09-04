@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`ValueTransformTableModel`."""
+
 from enum import IntEnum, unique
 from PySide6.QtCore import QModelIndex, Qt
 from ..commands import SetData

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for the OptionsWidget class."""
+
 import unittest
 from unittest.mock import MagicMock
 from PySide6.QtGui import QUndoStack
@@ -32,6 +33,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
+        connector.current_table = "My table"
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         changed_options = {}
@@ -46,6 +48,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
+        connector.current_table = "My table"
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         changed_options = {}
@@ -62,6 +65,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
+        connector.current_table = "My table"
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         changed_options = {}
@@ -76,6 +80,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {}
         connector.connection.OPTIONS = option_template
+        connector.current_table = "My table"
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         changed_options = {}
@@ -90,6 +95,7 @@ class TestOptionsWidget(unittest.TestCase):
         connector = MagicMock()
         connector.connection.BASE_OPTIONS = {"text": {"label": "text value", "type": str, "default": ""}}
         connector.connection.OPTIONS = option_template
+        connector.current_table = "My table"
         widget = OptionsWidget(self._undo_stack)
         widget.set_connector(connector)
         self.assertEqual(

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Tool project item."""
+
 import os
 from tempfile import TemporaryDirectory
 import unittest
@@ -18,7 +19,7 @@ from unittest import mock
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QApplication, QMenu
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.project_item.project_item_resource import ProjectItemResource
+from spine_engine.project_item.project_item_resource import ProjectItemResource, file_resource
 from spine_items.tool.item_info import ItemInfo
 from spine_items.tool.tool import Tool
 from spine_items.tool.tool_factory import ToolFactory
@@ -136,7 +137,7 @@ class TestTool(unittest.TestCase):
         self.assertEqual(expected_data_dir, tool.data_dir)  # Check data dir
         # Check that output_dir has been updated
         expected_output_dir = os.path.join(tool.data_dir, TOOL_OUTPUT_DIR)
-        self.assertEqual(expected_output_dir, tool._output_dir)
+        self.assertEqual(expected_output_dir, tool.resolve_output_dir())
 
     def test_load_tool_specification(self):
         """Test that specification is loaded into selections on Tool creation,
@@ -176,44 +177,39 @@ class TestTool(unittest.TestCase):
             tool.activate()
             self._assert_is_simple_exec_tool(tool, expected_result_dir)
 
-    @unittest.skip("Test doesn't work on Python 3.12 on Windows")
     def test_find_input_files(self):
         """Test that input files are correctly found in resources
-        when required input files and available resources are updated"""
-        separator = os.sep
+        when required input files and available resources are updated."""
         item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
         tool = self._add_tool(item_dict)
-        url1 = os.path.join(self._temp_dir.name, "more_files", "input1.csv")
-        url2 = os.path.join(self._temp_dir.name, "more_files", "data.csv")
-        url3 = os.path.join(self._temp_dir.name, "more filess", "input1.csv")
-        url4 = os.path.join(self._temp_dir.name, "other.csv")
-        url5 = os.path.join(self._temp_dir.name, "other", "input2.csv")
-        url6 = os.path.join(self._temp_dir.name, "input3.csv")
+        # realpath() is normalizing the paths for tests on Mac
+        url1 = os.path.realpath(os.path.join(self._temp_dir.name, "more_files", "input1.csv"))
+        url2 = os.path.realpath(os.path.join(self._temp_dir.name, "more_files", "data.csv"))
+        url3 = os.path.realpath(os.path.join(self._temp_dir.name, "more filess", "input1.csv"))
+        url4 = os.path.realpath(os.path.join(self._temp_dir.name, "other.csv"))
+        url5 = os.path.realpath(os.path.join(self._temp_dir.name, "other", "input2.csv"))
+        url6 = os.path.realpath(os.path.join(self._temp_dir.name, "input3.csv"))
         expected_urls = {"url1": url1, "url2": url2, "url3": url3, "url4": url4, "url5": url5, "url6": url6}
-        for key, url in expected_urls.items():
-            i = url.find(separator)
-            expected_urls[key] = url[:i] + separator + url[i:]
         resources = [
-            ProjectItemResource("Exporter", "file", "first", url="file:///" + url1, metadata={}, filterable=False),
-            ProjectItemResource("Exporter", "url", "second", url="file:///" + url2, metadata={}, filterable=False),
-            ProjectItemResource("Exporter", "file", "third", url="file:///" + url3, metadata={}, filterable=False),
-            ProjectItemResource("Exporter", "url", "fourth", url="file:///" + url4, metadata={}, filterable=False),
+            file_resource("Exporter", url1, "first"),
+            file_resource("Exporter", url2, "second"),
+            file_resource("Exporter", url3, "third"),
+            file_resource("Exporter", url4, "fourth"),
         ]
+        # Give two resources for input1.csv and no resource for input2.csv
         result = tool._find_input_files(resources)
-        expected = {"input1.csv": [expected_urls["url1"], expected_urls["url3"]], "input2.csv": None}
+        expected = {"input1.csv": [expected_urls["url1"]], "input2.csv": None}
         self.assertEqual(2, len(result))
+        self.assertEqual(expected["input1.csv"], result["input1.csv"])
         self.assertEqual(expected["input2.csv"], result["input2.csv"])
-        self.assertTrue(expected_urls["url3"] in result["input1.csv"] or expected_urls["url1"] in result["input1.csv"])
+        # Remove first input1.csv resource and add a resource for input2.csv
         resources.pop(0)
-        resources.append(
-            ProjectItemResource("Exporter", "file", "fifth", url="file:///" + url5, metadata={}, filterable=False)
-        )
+        resources.append(file_resource("Exporter", url5, "fifth"))
         result = tool._find_input_files(resources)
         expected = {"input2.csv": [expected_urls["url5"]], "input1.csv": [expected_urls["url3"]]}
         self.assertEqual(expected, result)
-        resources.append(
-            ProjectItemResource("Exporter", "file", "sixth", url="file:///" + url6, metadata={}, filterable=False)
-        )
+        # Set required input files to input2.csv and a full path to input3.csv
+        resources.append(file_resource("Exporter", url6, "sixth"))
         tool.specification().inputfiles = set(["input2.csv", os.path.join(self._temp_dir.name, "input3.csv")])
         result = tool._find_input_files(resources)
         expected = {

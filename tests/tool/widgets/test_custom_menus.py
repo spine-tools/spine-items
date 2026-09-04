@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the custom_menus.py module."""
+
 import logging
 from pathlib import Path
 import sys

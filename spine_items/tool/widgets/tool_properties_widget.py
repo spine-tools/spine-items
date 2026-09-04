@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Tool properties widget."""
+
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 
 

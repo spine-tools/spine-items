@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Functions to write export preview tables."""
+
 import numpy
 from spinedb_api.spine_io.exporters.writer import Writer
 

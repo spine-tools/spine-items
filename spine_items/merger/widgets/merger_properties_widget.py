@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """MergerPropertiesWidget widget."""
+
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase
 
 

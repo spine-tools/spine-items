@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Data transformer's :class:`ItemInfo`."""
+
 import unittest
 from spine_items.data_transformer.item_info import ItemInfo
 

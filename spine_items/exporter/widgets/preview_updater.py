@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`PreviewUpdater`."""
+
 from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
@@ -20,7 +21,6 @@ from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Slot
 from PySide6.QtWidgets import QFileDialog
 from spinedb_api import DatabaseMapping, SpineDBAPIError, SpineDBVersionError
 from spinedb_api.export_mapping.export_mapping import ExportMapping
-from spinedb_api.export_mapping.group_functions import GroupFunction
 from spinedb_api.spine_io.exporters.writer import write
 from ..mvcmodels.full_url_list_model import FullUrlListModel
 from ..mvcmodels.mappings_table_model import MappingsTableModel
@@ -53,6 +53,7 @@ class PreviewUpdater:
         self._url_model.rowsInserted.connect(self._enable_controls_after_url_insertion)
         self._url_model.modelReset.connect(self._enable_controls)
         self._url_model.destroyed.connect(self._forget_url_model)
+        self._ui.database_url_combo_box.destroyed.connect(self._nullify_url_combo_box)
         self._ui.database_url_combo_box.setModel(self._url_model)
         self._mappings_table_model = mappings_table_model
         self._set_expect_removals_and_inserts(False)
@@ -493,12 +494,18 @@ class PreviewUpdater:
     @Slot()
     def _forget_url_model(self):
         """Replaces current URL model with a mock one."""
+        if self._ui.database_url_combo_box is None:
+            return
         self._url_model = FullUrlListModel(self._ui.database_url_combo_box)
         self._url_model.rowsInserted.connect(self._enable_controls_after_url_insertion)
         self._url_model.modelReset.connect(self._enable_controls)
         self._url_model.destroyed.connect(self._forget_url_model)
         self._ui.database_url_combo_box.setModel(self._url_model)
         self._reload_preview()
+
+    @Slot()
+    def _nullify_url_combo_box(self) -> None:
+        self._ui.database_url_combo_box = None
 
     def tear_down(self):
         """Stops the writer process and cleans up."""
@@ -526,7 +533,7 @@ class WriteTableTask:
     always_export_header: bool
     max_tables: int
     max_rows: int
-    group_fn: GroupFunction
+    group_fn: str
 
 
 def write_task_loop(sender, receiver):
@@ -551,6 +558,8 @@ def write_task_loop(sender, receiver):
             next_task = tasks.pop(0)
             try:
                 if db_map is None or next_task.url != db_map.db_url:
+                    if db_map is not None:
+                        db_map.close()
                     db_map = DatabaseMapping(next_task.url)
                 tables = _write_tables(db_map, next_task)
             except SpineDBVersionError:
@@ -559,6 +568,8 @@ def write_task_loop(sender, receiver):
                 tables = {"error": [[str(error)]]}
             sender.put(((next_task.url, next_task.mapping_name), next_task.mapping_name, tables, next_task.stamp))
     finally:
+        if db_map is not None:
+            db_map.close()
         sender.put_nowait("finished")
 
 

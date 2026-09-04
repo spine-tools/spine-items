@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for View project item."""
+
 import os
 from tempfile import TemporaryDirectory
 import unittest

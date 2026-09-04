@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """The ImporterFactory class."""
+
 from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .importer import Importer

@@ -13,6 +13,7 @@
 """QWidget that is used to create or edit Tool specifications.
 In the former case it is presented empty, but in the latter it
 is filled with all the information from the specification being edited."""
+
 from copy import deepcopy
 from enum import IntEnum, unique
 from operator import methodcaller
@@ -21,7 +22,11 @@ from PySide6.QtCore import QFileInfo, QItemSelection, QItemSelectionModel, QMode
 from PySide6.QtGui import QFont, QStandardItem, QStandardItemModel, QTextDocument
 from PySide6.QtWidgets import QFileDialog, QFileIconProvider, QInputDialog, QLabel, QMessageBox
 from spine_engine.utils.command_line_arguments import split_cmdline_args
-from spinetoolbox.config import STATUSBAR_SS
+from spine_items.tool.widgets.tool_spec_optional_widgets import (
+    ExecutableToolSpecOptionalWidget,
+    JuliaToolSpecOptionalWidget,
+    PythonToolSpecOptionalWidget,
+)
 from spinetoolbox.helpers import SealCommand, busy_effect, open_url, same_path
 from spinetoolbox.project_item.specification_editor_window import (
     ChangeSpecPropertyCommand,
@@ -68,7 +73,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._label_main_path.setFont(font)
         self._ui.statusbar.addPermanentWidget(label)
         self._ui.statusbar.addPermanentWidget(self._label_main_path)
-        self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         # init models
         self.programfiles_model = QStandardItemModel(self)
         self.io_files_model = QStandardItemModel(self)
@@ -133,9 +137,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         return Ui_MainWindow()
 
     def has_root_directory(self):
-        if self.item is not None and self.item.root_dir != "":
-            return True
-        return False
+        return self.item is not None and self.item.root_dir != ""
 
     @property
     def settings_group(self):
@@ -651,13 +653,13 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self, "Select existing main program file", self._start_dir(), self._get_filetype_filter()
         )
         file_path = answer[0]
-        existing_file_paths = [
+        if not file_path:  # Cancel button clicked
+            return
+        existing_file_paths = (
             os.path.join(self.includes_main_path, i)
             for i in self.spec_dict.get("includes", [])
             if os.path.exists(os.path.join(self.includes_main_path, i))
-        ]
-        if not file_path:  # Cancel button clicked
-            return
+        )
         for i, existing_file in enumerate(existing_file_paths):
             if not existing_file:
                 continue
@@ -680,7 +682,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             self, "Create new main program file", self._start_dir(), self._get_filetype_filter()
         )
         file_path = answer[0]
-        existing_file_paths = [os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])]
         if not file_path:  # Cancel button clicked
             return
         # Remove file if it exists. getSaveFileName has asked confirmation for us.
@@ -696,7 +697,7 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
             # noinspection PyTypeChecker, PyArgumentList, PyCallByClass
             QMessageBox.information(self, "Creating file failed", msg)
             return
-        for i in existing_file_paths:
+        for i in (os.path.join(self.includes_main_path, i) for i in self.spec_dict.get("includes", [])):
             if not i:
                 continue
             if os.path.samefile(file_path, i):

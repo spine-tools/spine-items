@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains CustomFileSystemWatcher."""
+
 import os
 from PySide6.QtCore import QFileSystemWatcher, Signal, Slot
 

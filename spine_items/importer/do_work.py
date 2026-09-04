@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Importer's execute kernel (do_work), as target for a multiprocess.Process"""
+
 import os
 from spine_engine.project_item.project_item_resource import get_source, get_source_extras
 from spine_engine.utils.helpers import create_log_file_timestamp
@@ -53,10 +54,10 @@ def do_work(
     for resource in source_resources:
         src = get_source(resource)
         if resource.hasfilepath:
-            source_anchor = f"<a style='color:#BB99FF;' title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
+            source_anchor = f"<a title='{src}' href='file:///{src}'>{os.path.basename(src)}</a>"
         else:
             safe_url = remove_credentials_from_url(src)
-            source_anchor = f"<p style='color:#BB99FF;'>{safe_url}</p>"
+            source_anchor = safe_url
         logger.msg.emit("Importing " + source_anchor)
         extras = get_source_extras(resource)
         try:
@@ -72,13 +73,13 @@ def do_work(
         except ReaderError as error:
             logger.msg_error.emit(f"Failed to read fixed position data in {source_anchor}: {error}")
             return (False,)
-        table_mappings = {
+        table_mappings_with_fixed_positions = {
             table_name: [
                 unparse_named_mapping_spec(mapping_name, root_mapping) for mapping_name, root_mapping in mappings
             ]
             for table_name, mappings in parsed_table_mappings.items()
         }
-        for name, mappings in table_mappings.items():
+        for name, mappings in table_mappings_with_fixed_positions.items():
             logger.msg.emit(f"Processing table <b>{name}</b>")
             for spec in mappings:
                 mapping_name = next(iter(spec.keys()))
@@ -129,9 +130,7 @@ def do_work(
             for err in all_errors:
                 f.write(f"{err}\n")
         # Make error log file anchor with path as tooltip
-        logfile_anchor = (
-            "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
-        )
+        logfile_anchor = "<a title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
         logger.msg_error.emit(logfile_anchor)
         if cancel_on_error:
             logger.msg_error.emit("Cancel import on error has been set. Bailing out.")
@@ -177,9 +176,7 @@ def _import_data_to_url(cancel_on_error, on_conflict, logs_dir, all_data, client
             for err in all_import_errors:
                 f.write(str(err) + "\n")
         # Make error log file anchor with path as tooltip
-        logfile_anchor = (
-            "<a style='color:#BB99FF;' title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
-        )
+        logfile_anchor = "<a title='" + logfilepath + "' href='file:///" + logfilepath + "'>Error log</a>"
         logger.msg_error.emit(logfile_anchor)
         return False
     return True
