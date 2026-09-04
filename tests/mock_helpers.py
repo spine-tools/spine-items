@@ -14,8 +14,8 @@
 
 from contextlib import contextmanager
 import os.path
+from unittest import mock
 from typing import Any
-from unittest.mock import MagicMock, patch
 from PySide6.QtCore import QAbstractTableModel, Qt
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QApplication, QMainWindow
@@ -39,11 +39,11 @@ class MockQSettings:
 
 
 def create_mock_toolbox():
-    mock_toolbox = MagicMock()
-    mock_toolbox.msg = MagicMock()
-    mock_toolbox.msg.attach_mock(MagicMock(), "emit")
-    mock_toolbox.msg_warning = MagicMock()
-    mock_toolbox.msg_warning.attach_mock(MagicMock(), "emit")
+    mock_toolbox = mock.MagicMock()
+    mock_toolbox.msg = mock.MagicMock()
+    mock_toolbox.msg.attach_mock(mock.MagicMock(), "emit")
+    mock_toolbox.msg_warning = mock.MagicMock()
+    mock_toolbox.msg_warning.attach_mock(mock.MagicMock(), "emit")
     mock_toolbox.undo_stack.push.side_effect = lambda cmd: cmd.redo()
     mock_toolbox.filtered_spec_factory_models.__getitem__.return_value = QStandardItemModel()
     return mock_toolbox
@@ -56,7 +56,7 @@ def create_mock_toolbox_with_mock_qsettings():
 
 
 def create_mock_project(project_dir):
-    mock_project = MagicMock()
+    mock_project = mock.MagicMock()
     mock_project.project_dir = project_dir
     mock_project.items_dir = os.path.join(project_dir, ".spinetoolbox", "items")
     mock_project.get_specification.side_effect = lambda x: None
@@ -75,20 +75,23 @@ def mock_finish_project_item_construction(factory, project_item, mock_toolbox):
 def create_toolboxui():
     """Returns ToolboxUI for tests."""
     with (
-        patch("spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style,
-        patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"),
+        mock.patch("spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style,
+        mock.patch("spinetoolbox.ui_main.ExecutableCompoundModels.load_all") as mock_load_all,
+        mock.patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"),
     ):
         mock_set_app_style.return_value = True
         toolbox = ToolboxUI()
-        toolbox._qsettings = MagicMock()
-        toolbox._qsettings.value = MagicMock()
+        toolbox._qsettings = mock.MagicMock()
+        toolbox._qsettings.value = mock.MagicMock()
         toolbox._qsettings.value.side_effect = return_default_value
+        mock_set_app_style.assert_called()
+        mock_load_all.assert_called()
     return toolbox
 
 
 def create_project(toolbox, project_dir):
     """Creates a project for the given ToolboxUI."""
-    with (patch("spinetoolbox.ui_main.ToolboxUI.update_recent_projects"),):
+    with (mock.patch("spinetoolbox.ui_main.ToolboxUI.update_recent_projects"),):
         toolbox.create_project(project_dir)
 
 
@@ -96,16 +99,19 @@ def create_toolboxui_with_project(project_dir):
     """Returns ToolboxUI with a project instance where
     QSettings among others has been mocked."""
     with (
-        patch("spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style,
-        patch("spinetoolbox.ui_main.ToolboxUI.save_project"),
-        patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"),
+        mock.patch("spinetoolbox.ui_main.ToolboxUI.set_app_style") as mock_set_app_style,
+        mock.patch("spinetoolbox.ui_main.ExecutableCompoundModels.load_all") as mock_load_all,
+        mock.patch("spinetoolbox.ui_main.ToolboxUI.save_project"),
+        mock.patch("spinetoolbox.plugin_manager.PluginManager.load_installed_plugins"),
     ):
         mock_set_app_style.return_value = True
         toolbox = ToolboxUI()
-        toolbox._qsettings = MagicMock()
-        toolbox._qsettings.value = MagicMock()
+        toolbox._qsettings = mock.MagicMock()
+        toolbox._qsettings.value = mock.MagicMock()
         toolbox._qsettings.value.side_effect = return_default_value
         toolbox.create_project(project_dir)
+        mock_set_app_style.assert_called()
+        mock_load_all.assert_called()
     return toolbox
 
 
