@@ -11,19 +11,20 @@
 ######################################################################################################################
 
 """Contains the Tool project item class."""
-
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
-from PySide6.QtCore import QItemSelection, Qt, Slot
+from typing import Optional, TYPE_CHECKING
+from PySide6.QtCore import QItemSelection, Slot
 from PySide6.QtGui import QAction
 from spine_engine.config import TOOL_OUTPUT_DIR
 from spine_engine.project_item.project_item_resource import CmdLineArg, LabelArg, make_cmd_line_arg
-from spine_engine.utils.helpers import ExecutionDirection, resolve_julia_executable, resolve_python_interpreter
+from spine_engine.utils.helpers import ExecutionDirection
 from spine_engine.utils.serialization import deserialize_path
+from spinetoolbox.project import SpineToolboxProject
 from spinetoolbox.helpers import SealCommand, open_url, same_path, select_directory_with_dialog
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
-from spinetoolbox.project import SpineToolboxProject
+from .tool_specifications import ToolSpecification
+from ..utils import check_options
 from ..commands import UpdateCmdLineArgsCommand, UpdateText
 from ..db_writer_item_base import DBWriterItemBase
 from ..models import ToolCommandLineArgsModel
@@ -38,7 +39,10 @@ from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from .utils import OptionsDict, find_file, flatten_file_path_duplicates
 from .widgets.custom_menus import ToolSpecificationMenu
-from .widgets.options_widgets import JuliaOptionsWidget
+from .widgets.options_widgets import JuliaOptionsWidget, PythonOptionsWidget, ExecutableOptionsWidget
+
+if TYPE_CHECKING:
+    from spinetoolbox.ui_main import ToolboxUI
 
 if TYPE_CHECKING:
     from spinetoolbox.ui_main import ToolboxUI
@@ -88,6 +92,7 @@ class Tool(DBWriterItemBase):
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
+        self._models = self._toolbox.exec_compound_models
         self.execute_in_work = execute_in_work
         if cmd_line_args is None:
             cmd_line_args = []
@@ -114,6 +119,30 @@ class Tool(DBWriterItemBase):
         self._available_resources = []
         self._req_file_paths = set()
         self._input_files_not_found = None
+
+    @property
+    def group_id(self):
+        return self._group_id
+
+    @property
+    def root_dir(self):
+        return self._root_directory
+
+    @property
+    def models(self):
+        return self._models
+
+    @property
+    def options(self):
+        return self._options
+
+    @property
+    def executable_class(self):
+        return ExecutableItem
+
+    @property
+    def default_output_dir(self):
+        return os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
 
     def set_up(self):
         execute_in_work = self.execute_in_work
@@ -151,24 +180,27 @@ class Tool(DBWriterItemBase):
         return self._output_dir if self._output_dir else self.default_output_dir
 
     def _get_options_widget(self):
-        """Returns a widget to specify the options for this tool.
+        """Returns a widget to specify extra options for this tool depending on specification type.
         It is embedded in the ui in ``self._update_tool_ui()``.
 
         Returns:
-            OptionsWidget
+            OptionsWidget: Options widget or None
         """
-        # At the moment only Julia has options, but the code is made generic
-        constructors = {"julia": JuliaOptionsWidget}  # Add others as needed
+        constructors = {
+            "julia": JuliaOptionsWidget,
+            "python": PythonOptionsWidget,
+            "executable": ExecutableOptionsWidget,
+        }
         tooltype = self.specification().tooltype
         constructor = constructors.get(tooltype)
         if constructor is None:
             return None
+        self._options = check_options(tooltype, self._options, self._logger)
         if tooltype not in self._properties_ui.options_widgets:
-            self._properties_ui.options_widgets[tooltype] = constructor()
-        options_widget = self._properties_ui.options_widgets[tooltype]
-        options_widget.set_tool(self)
-        options_widget.do_update_options(self._options)
-        return options_widget
+            self._properties_ui.options_widgets[tooltype] = constructor(self.models)
+        self._properties_ui.options_widgets[tooltype].set_tool(self)
+        self._properties_ui.options_widgets[tooltype].do_update_options(self._options)
+        return self._properties_ui.options_widgets[tooltype]
 
     @staticmethod
     def item_type():
@@ -258,8 +290,6 @@ class Tool(DBWriterItemBase):
         self._properties_ui.treeView_cmdline_args.setModel(self._cmdline_args_model)
         self._properties_ui.treeView_cmdline_args.expandAll()
         self.update_execute_in_work_button()
-        self._properties_ui.label_jupyter.elided_mode = Qt.TextElideMode.ElideMiddle
-        self._properties_ui.label_jupyter.hide()
         self._update_tool_ui()
         self._do_update_add_args_button_enabled()
         self._do_update_remove_args_button_enabled()
@@ -388,6 +418,7 @@ class Tool(DBWriterItemBase):
             text (str): Tool specification name in the comboBox
         """
         spec = self._project.get_specification(text)
+        self._options = {}
         self.set_specification(spec)
 
     @Slot(bool)
@@ -455,6 +486,7 @@ class Tool(DBWriterItemBase):
         self._options = options
         if self._active:
             _ = self._get_options_widget()
+            self._check_notifications()
 
     @Slot(bool)
     def _set_kill_completed_processes(self, kill_completed_processes):
@@ -495,7 +527,7 @@ class Tool(DBWriterItemBase):
             self._properties_ui.log_process_output_check_box.setChecked(log_process_output)
 
     def _update_tool_ui(self):
-        """Updates Tool properties UI. Used when Tool specification is changed."""
+        """Updates Tool properties UI."""
         options_widget = self._properties_ui.horizontalLayout_options.takeAt(0)
         if options_widget:
             options_widget.widget().hide()
@@ -511,30 +543,9 @@ class Tool(DBWriterItemBase):
         if options_widget:
             self._properties_ui.horizontalLayout_options.addWidget(options_widget)
             options_widget.show()
-        self._show_execution_settings()
         self._properties_ui.kill_consoles_check_box.setChecked(self._kill_completed_processes)
         self._update_kill_consoles_check_box_enabled()
         self._properties_ui.log_process_output_check_box.setChecked(self._log_process_output)
-
-    def _show_execution_settings(self):
-        """Updates the label in Tool properties to show the selected execution settings for this Tool."""
-        tstype = self._specification.tooltype
-        if tstype in {"python", "julia"}:
-            self.specification().init_execution_settings()
-            k_spec_name = self.specification().execution_settings["kernel_spec_name"]
-            env = self.specification().execution_settings["env"]
-            use_console = self.specification().execution_settings["use_jupyter_console"]
-            self._properties_ui.label_jupyter.show()
-            if not use_console:
-                exe = self.specification().execution_settings["executable"]
-                if tstype == "python":
-                    path = exe if exe else resolve_python_interpreter(self._project.app_settings)
-                else:
-                    path = exe if exe else resolve_julia_executable(self._project.app_settings)
-                self._properties_ui.label_jupyter.setText(f"[Basic console] {path}")
-            else:
-                env = "" if not env else f"[{env}]"
-                self._properties_ui.label_jupyter.setText(f"[Jupyter Console] {k_spec_name} {env}")
 
     def _update_specification_menu(self):
         spec_model_index = self._toolbox.specification_model.specification_index(self.specification().name)
@@ -554,7 +565,7 @@ class Tool(DBWriterItemBase):
         if not res:
             self._logger.msg_error.emit(f"Failed to open directory: {output_dir}")
 
-    def specification(self):
+    def specification(self) -> Optional[ToolSpecification]:
         """Returns Tool specification."""
         return self._specification
 
@@ -618,6 +629,45 @@ class Tool(DBWriterItemBase):
                         f"Tool spec <b>{self.specification().name}</b> won't work because "
                         f"main program file <b>{full_path}</b> doesn't exist."
                     )
+            if self.specification().tooltype == "python":
+                if self.options.get("kernel_spec_name") is not None:
+                    kernel_index = self.models.find_python_kernel_index(self.options["kernel_spec_name"])
+                    if not kernel_index.isValid():
+                        self.add_notification(
+                            f"Python kernel {self.options['kernel_spec_name']} does not "
+                            f"exist. Install the kernel or select another one in Tool Properties."
+                        )
+                if self.options.get("executable") is not None:
+                    exec_index = self.models.find_python_interpreter_index(self.options["executable"])
+                    if not exec_index.isValid():
+                        self.add_notification(
+                            f"Python interpreter {self.options['executable']} does not "
+                            f"exist. Install it or select another one in Tool Properties."
+                        )
+            elif self.specification().tooltype == "julia":
+                if self.options.get("kernel_spec_name") is not None:
+                    kernel_index = self.models.find_julia_kernel_index(self.options["kernel_spec_name"])
+                    if not kernel_index.isValid():
+                        self.add_notification(
+                            f"Julia kernel {self.options['kernel_spec_name']} does not "
+                            f"exist. Please check execution settings in Tool Properties."
+                        )
+                if self.options.get("executable") is not None:
+                    exec_index = self.models.find_julia_executable_index(self.options["executable"])
+                    if not exec_index.isValid():
+                        self.add_notification(
+                            f"Julia executable {self.options['executable']} does not "
+                            f"exist. Install it or select another one in Tool Properties."
+                        )
+                if self.options.get("project") is not None and self.options.get("project") != "":
+                    exec_index = self.models.find_julia_project_index(self.options["project"])
+                    if not exec_index.isValid():
+                        self.add_notification(
+                            f"Julia project {self.options['project']} does not "
+                            f"exist. Make the project or select another one in Tool Properties."
+                        )
+            # TODO: What to do when local options (execution settings) are missing because this is a shared project?
+
         if self._input_files_not_found:
             self.add_notification(
                 f"File(s) {', '.join(self._input_files_not_found)} needed to execute this Tool are not provided"
