@@ -258,7 +258,7 @@ def escape_backward_slashes(string: str) -> str:
     return string.replace("\\", "\\\\")
 
 
-def check_options(tooltype, current_options, logger):
+def check_options(tooltype, current_options, logger, qsettings):
     """Returns the default options based on given tool type if options are
     missing. If some but not all options are available, fills in the missing
     key-value pairs with default values.
@@ -267,16 +267,17 @@ def check_options(tooltype, current_options, logger):
         tooltype (str): Tool spec type
         current_options (dict): Options dict to check
         logger (LoggerInterface): For logging
+        qsettings (QSettings): Toolbox settings
 
     Returns:
         dict: Original or modified dict depending on if required key-values are present
     """
     if tooltype == "python":
-        defaults = default_python_execution_settings()
+        defaults = default_python_execution_settings(qsettings)
     elif tooltype == "julia":
-        defaults = default_julia_execution_settings()
+        defaults = default_julia_execution_settings(qsettings)
     elif tooltype == "executable":
-        defaults = default_executable_execution_settings()
+        defaults = default_executable_execution_settings(qsettings)
     else:
         logger.msg_error.emit(f"Default execution settings for {tooltype} do not exist")
         return {}
@@ -289,13 +290,15 @@ def check_options(tooltype, current_options, logger):
     return current_options
 
 
-def default_python_execution_settings():
+def default_python_execution_settings(qsettings):
     """Returns default Python Tool execution settings."""
     d = dict()
-    d["kernel_spec_name"] = ""
-    d["env"] = ""
-    d["use_jupyter_console"] = False
-    d["executable"] = ""
+    is_conda = qsettings.value("appSettings/pythonCondaKernel", defaultValue="0")
+    use_jupyter_console = False if qsettings.value("appSettings/usePythonKernel", defaultValue="0") == "0" else True
+    d["kernel_spec_name"] = qsettings.value("appSettings/pythonKernel", defaultValue="")
+    d["env"] = "" if is_conda == "0" else "conda"
+    d["use_jupyter_console"] = use_jupyter_console
+    d["executable"] = qsettings.value("appSettings/pythonPath", defaultValue="")
     return d
 
 

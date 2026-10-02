@@ -44,9 +44,6 @@ from .widgets.options_widgets import JuliaOptionsWidget, PythonOptionsWidget, Ex
 if TYPE_CHECKING:
     from spinetoolbox.ui_main import ToolboxUI
 
-if TYPE_CHECKING:
-    from spinetoolbox.ui_main import ToolboxUI
-
 COMMAND_ID_UPDATE_RESULT_DIR = UpdateText.generate_unique_id()
 COMMAND_ID_UPDATE_GROUP_ID = UpdateText.generate_unique_id()
 COMMAND_ID_UPDATE_ROOT_DIR = UpdateText.generate_unique_id()
@@ -164,18 +161,6 @@ class Tool(DBWriterItemBase):
         spec_icon = ItemInfo.specification_icon(self.specification())
         self.setup_specification_icon(spec_icon)
 
-    @property
-    def group_id(self):
-        return self._group_id
-
-    @property
-    def root_dir(self):
-        return self._root_directory
-
-    @property
-    def default_output_dir(self):
-        return os.path.join(self.data_dir, TOOL_OUTPUT_DIR)
-
     def resolve_output_dir(self) -> str:
         return self._output_dir if self._output_dir else self.default_output_dir
 
@@ -193,13 +178,12 @@ class Tool(DBWriterItemBase):
         }
         tooltype = self.specification().tooltype
         constructor = constructors.get(tooltype)
-        if constructor is None:
+        if not constructor:
             return None
-        self._options = check_options(tooltype, self._options, self._logger)
         if tooltype not in self._properties_ui.options_widgets:
             self._properties_ui.options_widgets[tooltype] = constructor(self.models)
-        self._properties_ui.options_widgets[tooltype].set_tool(self)
-        self._properties_ui.options_widgets[tooltype].do_update_options(self._options)
+        self._properties_ui.options_widgets[tooltype].tool = self
+        self._properties_ui.options_widgets[tooltype].do_update_options_ui(self._options)
         return self._properties_ui.options_widgets[tooltype]
 
     @staticmethod
@@ -473,9 +457,19 @@ class Tool(DBWriterItemBase):
         self.update_specification_icon()
         return True
 
-    def update_options(self, options):
+    def update_options(self, options=None, remove_keys=None):
         """Pushes a new UpdateToolOptionsCommand to the toolbox undo stack."""
-        self._toolbox.undo_stack.push(UpdateToolOptionsCommand(self.name, options, self._options, self._project))
+        if options is None:
+            options = {}
+        if remove_keys is None:
+            remove_keys = []
+        self._toolbox.undo_stack.push(UpdateToolOptionsCommand(
+            self.name,
+            options,
+            self._options,
+            self._project,
+            remove_keys,
+        ))
 
     def do_set_options(self, options):
         """Sets options for this tool.

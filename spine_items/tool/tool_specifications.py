@@ -130,6 +130,10 @@ class ToolSpecification(ProjectItemSpecification):
         self.outputfiles = set(outputfiles) if outputfiles else set()
         self.return_codes = {}
 
+    @property
+    def qsettings(self):
+        return self._settings
+
     def _includes_main_path_relative(self):
         return os.path.relpath(self.path, os.path.dirname(self.definition_file_path)).replace(os.path.sep, "/")
 

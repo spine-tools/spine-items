@@ -305,7 +305,7 @@ class PythonToolInstance(ToolInstance):
     def prepare(self, args):
         """See base class."""
         cmdline_args = self.tool_specification.cmdline_args + args
-        options = check_options("python", self.options, self._logger)
+        options = check_options("python", self.options, self._logger, self.tool_specification.qsettings)
         if options["use_jupyter_console"]:
             server_ip = "127.0.0.1"
             if self._settings.value("engineSettings/remoteExecutionEnabled", defaultValue="false") == "true":
