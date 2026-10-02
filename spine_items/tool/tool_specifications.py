@@ -274,7 +274,6 @@ class GAMSTool(ToolSpecification):
         self.lst_file = os.path.splitext(main_file)[0] + ".lst"
         self.outputfiles.add(self.lst_file)
         self.main_prgm = main_file_path
-        self.gams_options = OrderedDict()
         self.return_codes = {
             0: "Normal return",
             1: "Solver is to be called the system should never return this number",  # ??
@@ -408,7 +407,6 @@ class JuliaTool(ToolSpecification):
             cmdline_args,
         )
         self.main_prgm = includes[0]
-        self.julia_options = OrderedDict()
         self.return_codes = {0: "Normal return", -1: "Failure"}
 
     @staticmethod
@@ -484,7 +482,6 @@ class PythonTool(ToolSpecification):
             cmdline_args,
         )
         self.main_prgm = includes[0]
-        self.python_options = OrderedDict()
         self.return_codes = {0: "Normal return", -1: "Failure"}  # Not official
 
     @staticmethod
@@ -574,7 +571,6 @@ class ExecutableTool(ToolSpecification):
             # Note: When a Tool Spec is saved in Tool Spec Editor, definition_file_path == None
             # Default execution dir is the directory of the definition file path
             self.default_execution_dir, _ = os.path.split(definition_file_path)
-        self.options = OrderedDict()
         self.return_codes = {0: "Normal exit", 1: "Error happened"}
 
     def _includes_main_path_relative(self):
