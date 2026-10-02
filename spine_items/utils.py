@@ -21,6 +21,7 @@ from typing_extensions import NotRequired
 from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.queue_logger import SuppressedMessage
+from spine_engine.utils.helpers import resolve_current_python_interpreter
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spinedb_api.helpers import SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS, remove_credentials_from_url
@@ -287,6 +288,12 @@ def check_options(tooltype, current_options, logger, qsettings):
     for key in defaults.keys():
         if key not in current_options.keys():
             current_options[key] = defaults[key]
+    # Check python executable consistency
+    # If default Python interpreter (in Settings->Tools) is not the current Python interpreter, selecting the
+    # current Python interpreter in Tool properties and executing doesn't work as expected.
+    if tooltype == "python":
+        if current_options["executable"] == "" and defaults["executable"] != "":
+            current_options["executable"] = resolve_current_python_interpreter()
     return current_options
 
 

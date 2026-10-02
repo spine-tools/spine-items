@@ -24,7 +24,6 @@ from spinetoolbox.project import SpineToolboxProject
 from spinetoolbox.helpers import SealCommand, open_url, same_path, select_directory_with_dialog
 from spinetoolbox.mvcmodels.file_list_models import FileListModel
 from .tool_specifications import ToolSpecification
-from ..utils import check_options
 from ..commands import UpdateCmdLineArgsCommand, UpdateText
 from ..db_writer_item_base import DBWriterItemBase
 from ..models import ToolCommandLineArgsModel
@@ -625,6 +624,8 @@ class Tool(DBWriterItemBase):
                     )
             if self.specification().tooltype == "python":
                 if self.options.get("kernel_spec_name") is not None:
+                    # TODO: This appears if the saved kernel is a conda kernel maybe because this is processed before
+                    # TODO: all conda kernels have been loaded
                     kernel_index = self.models.find_python_kernel_index(self.options["kernel_spec_name"])
                     if not kernel_index.isValid():
                         self.add_notification(
@@ -632,12 +633,12 @@ class Tool(DBWriterItemBase):
                             f"exist. Install the kernel or select another one in Tool Properties."
                         )
                 if self.options.get("executable") is not None:
-                    exec_index = self.models.find_python_interpreter_index(self.options["executable"])
-                    if not exec_index.isValid():
-                        self.add_notification(
-                            f"Python interpreter {self.options['executable']} does not "
-                            f"exist. Install it or select another one in Tool Properties."
-                        )
+                    if self.options.get("executable") != "":
+                        if not os.path.exists(self.options.get("executable")):
+                            self.add_notification(
+                                f"Python interpreter {self.options['executable']} does not "
+                                f"exist. Install it or select another one in Tool Properties."
+                            )
             elif self.specification().tooltype == "julia":
                 if self.options.get("kernel_spec_name") is not None:
                     kernel_index = self.models.find_julia_kernel_index(self.options["kernel_spec_name"])
@@ -647,6 +648,7 @@ class Tool(DBWriterItemBase):
                             f"exist. Please check execution settings in Tool Properties."
                         )
                 if self.options.get("executable") is not None:
+                    # TODO: Maybe just check if the 'executable' path exists
                     exec_index = self.models.find_julia_executable_index(self.options["executable"])
                     if not exec_index.isValid():
                         self.add_notification(

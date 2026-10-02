@@ -245,7 +245,10 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
                 self.ui.label_interpreter_or_kernel.setText(options["kernel_spec_name"])
             else:
                 self.ui.label_execution_method.setText("Python interpreter")
-                self.ui.label_interpreter_or_kernel.setText(options["executable"])
+                executable = options["executable"]
+                if executable == "":
+                    executable = resolve_current_python_interpreter()
+                self.ui.label_interpreter_or_kernel.setText(executable)
             self._block_signals(False)
             return
         if options["use_jupyter_console"]:

@@ -424,7 +424,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
             use_jupyter_console = self.options.get("use_jupyter_console", False)
             kernel_name = self.options.get("kernel_spec_name", "")
             if use_jupyter_console and not kernel_name:
-                self._logger.msg_error.emit("Python kernel missing. Please select it in Tool Specification Editor.")
+                self._logger.msg_error.emit("Python kernel missing. Please select one in Tool Properties.")
                 return False
             # Note: no check for python path == "" because this should never happen
         elif self._tool_specification.tooltype.lower() == "julia":
@@ -434,11 +434,11 @@ class ExecutableItem(DBWriterExecutableItemBase):
             if not julia_path:
                 julia_path = resolve_julia_executable(settings)
             if use_jupyter_console and not kernel_name:
-                self._logger.msg_error.emit("Julia kernel missing. Please select it in Tool Specification Editor.")
+                self._logger.msg_error.emit("Julia kernel missing. Please select one in Tool Properties.")
                 return False
             if not use_jupyter_console and not julia_path:
                 self._logger.msg_error.emit(
-                    "Julia executable path missing. Please set it in Tool Specification Editor."
+                    "Julia executable path missing. Please select it in Tool Properties."
                 )
                 return False
         elif self._tool_specification.tooltype.lower() == "gams":
