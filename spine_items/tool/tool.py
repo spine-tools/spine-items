@@ -163,7 +163,7 @@ class Tool(DBWriterItemBase):
     def resolve_output_dir(self) -> str:
         return self._output_dir if self._output_dir else self.default_output_dir
 
-    def _get_options_widget(self):
+    def update_options_widget(self):
         """Returns a widget to specify extra options for this tool depending on specification type.
         It is embedded in the ui in ``self._update_tool_ui()``.
 
@@ -182,7 +182,7 @@ class Tool(DBWriterItemBase):
         if tooltype not in self._properties_ui.options_widgets:
             self._properties_ui.options_widgets[tooltype] = constructor(self.models)
         self._properties_ui.options_widgets[tooltype].tool = self
-        self._properties_ui.options_widgets[tooltype].do_update_options_ui(self._options)
+        self._properties_ui.options_widgets[tooltype].do_update_options_widget(self._options)
         return self._properties_ui.options_widgets[tooltype]
 
     @staticmethod
@@ -478,7 +478,7 @@ class Tool(DBWriterItemBase):
         """
         self._options = options
         if self._active:
-            _ = self._get_options_widget()
+            _ = self.update_options_widget()
             self._check_notifications()
 
     @Slot(bool)
@@ -532,7 +532,7 @@ class Tool(DBWriterItemBase):
         self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
         self._update_specification_menu()
         self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
-        options_widget = self._get_options_widget()
+        options_widget = self.update_options_widget()
         if options_widget:
             self._properties_ui.horizontalLayout_options.addWidget(options_widget)
             options_widget.show()
@@ -624,8 +624,6 @@ class Tool(DBWriterItemBase):
                     )
             if self.specification().tooltype == "python":
                 if self.options.get("kernel_spec_name") is not None:
-                    # TODO: This appears if the saved kernel is a conda kernel maybe because this is processed before
-                    # TODO: all conda kernels have been loaded
                     kernel_index = self.models.find_python_kernel_index(self.options["kernel_spec_name"])
                     if not kernel_index.isValid():
                         self.add_notification(
@@ -633,12 +631,12 @@ class Tool(DBWriterItemBase):
                             f"exist. Install the kernel or select another one in Tool Properties."
                         )
                 if self.options.get("executable") is not None:
-                    if self.options.get("executable") != "":
-                        if not os.path.exists(self.options.get("executable")):
-                            self.add_notification(
-                                f"Python interpreter {self.options['executable']} does not "
-                                f"exist. Install it or select another one in Tool Properties."
-                            )
+                    exec_index = self.models.find_python_interpreter_index(self.options["executable"])
+                    if not exec_index.isValid():
+                        self.add_notification(
+                            f"Python interpreter {self.options['executable']} does not "
+                            f"exist. Please install it or select another one in Tool Properties."
+                        )
             elif self.specification().tooltype == "julia":
                 if self.options.get("kernel_spec_name") is not None:
                     kernel_index = self.models.find_julia_kernel_index(self.options["kernel_spec_name"])
@@ -653,7 +651,7 @@ class Tool(DBWriterItemBase):
                     if not exec_index.isValid():
                         self.add_notification(
                             f"Julia executable {self.options['executable']} does not "
-                            f"exist. Install it or select another one in Tool Properties."
+                            f"exist. Please install it or select another one in Tool Properties."
                         )
                 if self.options.get("project") is not None and self.options.get("project") != "":
                     exec_index = self.models.find_julia_project_index(self.options["project"])

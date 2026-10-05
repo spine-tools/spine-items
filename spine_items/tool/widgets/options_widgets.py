@@ -134,7 +134,7 @@ class SharedToolOptionsWidget(OptionsWidget):
         if one key is missing, then the other keys are missing as well."""
         return True if "use_jupyter_console" not in options.keys() else False
 
-    def do_update_options_ui(self, options):
+    def do_update_options_widget(self, options):
         raise NotImplementedError()
 
     def get_executable(self):
@@ -233,10 +233,11 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
         keys_to_remove = ["kernel_spec_name", "env", "use_jupyter_console", "executable"]
         self.tool.update_options(remove_keys=keys_to_remove)
 
-    def do_update_options_ui(self, options: dict):
-        """Updates the ui widgets according to given options."""
+    def do_update_options_widget(self, options: dict):
+        """Updates the options widgets according to given options."""
         self._block_signals(True)
         print(f"options:{options.items()}")
+        # Update Default page
         if self.is_default_options(options):
             options = default_python_execution_settings(self.tool.specification().qsettings)
             self._set_python_execution_method_ui(ToolExecutionMethod.DEFAULT)
@@ -251,6 +252,7 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
                 self.ui.label_interpreter_or_kernel.setText(executable)
             self._block_signals(False)
             return
+        # Update Jupyter kernel & Python interpreter pages
         if options["use_jupyter_console"]:
             self._set_python_execution_method_ui(ToolExecutionMethod.JUPYTER)
             kernel_index = self.models.find_python_kernel_index(options["kernel_spec_name"])
@@ -258,6 +260,7 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
                 kernel_index = self.models.python_kernel_model.index(0, 0)
             self.ui.comboBox_kernel_specs.setCurrentIndex(kernel_index.row())
         else:
+            # Python interpreter page
             self._set_python_execution_method_ui(ToolExecutionMethod.DIRECT)
             exec_index = self._models.find_python_interpreter_index(options["executable"])
             if not exec_index.isValid():
@@ -353,7 +356,7 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
     def _update_julia_kernel(self, _row):
         self.tool.update_options({"kernel_spec_name": self.get_kernel_name(), "env": self.is_conda()})
 
-    def do_update_options_ui(self, options):
+    def do_update_options_widget(self, options):
         self._update_ui()
         self.last_sysimage_path = options.get("julia_sysimage")
         self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
@@ -814,7 +817,7 @@ class ExecutableOptionsWidget(OptionsWidget):
         # self.ui.lineEdit_command.editingFinished.connect(self._specification_editor._finish_updating_command)
         self.ui.comboBox_shell.activated.connect(self._update_shell)
 
-    def do_update_options_ui(self, options):
+    def do_update_options_widget(self, options):
         print(f"[{self.tool.name}] restoring options:{options}")
         self._block_signals(True)
         self.ui.lineEdit_command.setText(options["cmd"])
@@ -851,7 +854,7 @@ class ExecutableOptionsWidget(OptionsWidget):
 
     def set_command_and_shell_edit_disabled_state(self, enabled):
         """Sets the enabled state for the Command line edit and the Shell combobox.
-        # TODO: Use this when tool spec does have or does not have a main file. (In do_update_options_ui())
+        # TODO: Use this when tool spec does have or does not have a main file. (In do_update_options_widget())
         """
         self.ui.comboBox_shell.setDisabled(enabled)
         self.ui.lineEdit_command.setDisabled(enabled)

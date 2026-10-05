@@ -59,7 +59,7 @@ class TestJuliaOptionsWidget(unittest.TestCase):
             "project": "",
         }
         tool._options = options
-        ow.do_update_options_ui(options)
+        ow.do_update_options_widget(options)
         self.assertEqual("/some/path", ow.ui.lineEdit_sysimage.text())
         self.assertEqual("", ow.get_executable())
         self.assertEqual("", ow.get_project())
@@ -89,7 +89,7 @@ class TestJuliaOptionsWidget(unittest.TestCase):
             "project": "",
         }
         tool._options = options
-        ow.do_update_options_ui(options)
+        ow.do_update_options_widget(options)
         self.assertTrue(ow.ui.radioButton_jupyter_console.isChecked())
         self.assertEqual("julia-kernel", ow.get_kernel_name())
 
@@ -101,7 +101,7 @@ class TestJuliaOptionsWidget(unittest.TestCase):
         ow.set_tool(tool)
         options = {"kernel_spec_name": "", "env": "", "use_jupyter_console": False, "executable": ""}
         tool._options = options
-        ow.do_update_options_ui(options)
+        ow.do_update_options_widget(options)
         self.assertEqual("", ow.get_executable())
         self.assertTrue(ow.ui.radioButton_basic_console.isChecked())
         ow._block_signals(True)
@@ -117,7 +117,7 @@ class TestJuliaOptionsWidget(unittest.TestCase):
         self.assertEqual("new/python", ow.get_executable())
         options = {"kernel_spec_name": "python-kernel", "env": "", "use_jupyter_console": True, "executable": ""}
         tool._options = options
-        ow.do_update_options_ui(options)
+        ow.do_update_options_widget(options)
         self.assertTrue(ow.ui.radioButton_jupyter_console.isChecked())
         self.assertEqual("python-kernel", ow.get_kernel_name())
 
@@ -129,19 +129,19 @@ class TestJuliaOptionsWidget(unittest.TestCase):
         ow.set_tool(tool)
         options = {"cmd": "", "shell": ""}
         tool._options = options
-        ow.do_update_options_ui(options)
+        ow.do_update_options_widget(options)
         self.assertEqual("", ow.get_shell())
         self.assertEqual("", ow.ui.lineEdit_command.text())
         if sys.platform == "win32":
             options = {"cmd": "dir", "shell": "cmd.exe"}
             tool._options = options
-            ow.do_update_options_ui(options)
+            ow.do_update_options_widget(options)
             self.assertEqual("cmd.exe", ow.get_shell())
             self.assertEqual("dir", ow.ui.lineEdit_command.text())
         else:
             options = {"cmd": "ls", "shell": "bash"}
             tool._options = options
-            ow.do_update_options_ui(options)
+            ow.do_update_options_widget(options)
             self.assertEqual("bash", ow.get_shell())
             self.assertEqual("ls", ow.ui.lineEdit_command.text())
 
