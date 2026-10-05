@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Module for MergerIcon class."""
+
 import random
 from PySide6.QtCore import QPointF, QTimeLine, Slot
 from spinetoolbox.project_item_icon import ProjectItemIcon

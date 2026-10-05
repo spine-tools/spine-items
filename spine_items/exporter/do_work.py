@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Exporter's execute kernel (do_work), as target for a multiprocess.Process"""
+
 from datetime import datetime
 import os
 from pathlib import Path
@@ -160,13 +161,11 @@ def _export_to_file(
         if len(files) > 1:
             anchors = []
             for path in (Path(f) for f in files):
-                anchors.append(f"\t<a style='color:#BB99FF;' title='{path}' href='file:///{path}'>{path.name}</a>")
+                anchors.append(f"\t<a title='{path}' href='file:///{path}'>{path.name}</a>")
             logger.msg_success.emit(f"Wrote multiple files:<br>{'<br>'.join(anchors)}")
         else:
             only_file = Path(next(iter(files)))
-            file_anchor = (
-                f"<a style='color:#BB99FF;' title='{only_file}' href='file:///{only_file}'>{only_file.name}</a>"
-            )
+            file_anchor = f"<a title='{only_file}' href='file:///{only_file}'>{only_file.name}</a>"
             logger.msg_success.emit(f"Wrote {file_anchor}")
         if filter_id:
             write_filter_id_file(filter_id, Path(out_path).parent)

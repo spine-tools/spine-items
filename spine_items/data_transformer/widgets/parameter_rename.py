@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains classes to manage parameter renaming."""
+
 from PySide6.QtCore import QObject, QSortFilterProxyModel, Qt, Slot
 from ..commands import InsertRow, RemoveRow
 from ..mvcmodels.parameter_renames_table_model import ParameterRenamesTableModel, RenamesTableColumn

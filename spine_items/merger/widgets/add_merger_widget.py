@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Widget shown to user when a new Merger is created."""
+
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..item_info import ItemInfo
 from ..merger import Merger

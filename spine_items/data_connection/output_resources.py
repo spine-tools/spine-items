@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains utilities to scan for Data Connection's output resources."""
+
 from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING

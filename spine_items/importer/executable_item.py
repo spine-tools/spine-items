@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Importer's executable item as well as support utilities."""
+
 from contextlib import ExitStack
 import os
 from spine_engine.project_item.executable_item_base import ExecutableItemBase

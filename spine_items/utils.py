@@ -10,7 +10,8 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Contains utilities shared between project items. """
+"""Contains utilities shared between project items."""
+
 from collections.abc import Iterable
 import os.path
 from typing import TypedDict
@@ -157,6 +158,8 @@ def check_database_url(sa_url: URL) -> str | None:
             pass
     except Exception as error:  # pylint: disable=broad-except
         return str(error)
+    else:
+        engine.dispose()
     return None
 
 

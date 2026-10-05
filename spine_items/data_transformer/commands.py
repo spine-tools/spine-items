@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Data transformer's undo commands."""
+
 from PySide6.QtGui import QUndoCommand
 
 

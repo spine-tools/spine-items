@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`ExporterFactory`."""
+
 from PySide6.QtGui import QColor
 from spinetoolbox.project_item.project_item_factory import ProjectItemFactory
 from .exporter import Exporter

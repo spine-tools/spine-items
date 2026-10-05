@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains base classes for items that write to db."""
+
 from spine_engine.project_item.executable_item_base import ExecutableItemBase
 from spinedb_api.spine_db_client import SpineDBClient
 

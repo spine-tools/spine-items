@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for Data Connection's ItemInfo class."""
+
 import unittest
 from spine_items.data_connection.item_info import ItemInfo
 

@@ -144,7 +144,7 @@
     <item>
      <widget class="Line" name="line_2">
       <property name="orientation">
-       <enum>Qt::Vertical</enum>
+       <enum>Qt::Orientation::Vertical</enum>
       </property>
      </widget>
     </item>
@@ -153,7 +153,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget_program_files">
    <property name="allowedAreas">
-    <set>Qt::BottomDockWidgetArea</set>
+    <set>Qt::DockWidgetArea::BottomDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Program files</string>
@@ -192,7 +192,7 @@
         </font>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::StrongFocus</enum>
+        <enum>Qt::FocusPolicy::StrongFocus</enum>
        </property>
        <property name="acceptDrops">
         <bool>true</bool>
@@ -201,13 +201,13 @@
         <number>1</number>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::ExtendedSelection</enum>
+        <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
        </property>
        <property name="textElideMode">
-        <enum>Qt::ElideLeft</enum>
+        <enum>Qt::TextElideMode::ElideLeft</enum>
        </property>
        <property name="verticalScrollMode">
-        <enum>QAbstractItemView::ScrollPerPixel</enum>
+        <enum>QAbstractItemView::ScrollMode::ScrollPerPixel</enum>
        </property>
        <attribute name="headerVisible">
         <bool>false</bool>
@@ -219,7 +219,7 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_io_files">
    <property name="allowedAreas">
-    <set>Qt::BottomDockWidgetArea</set>
+    <set>Qt::DockWidgetArea::BottomDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Input &amp;&amp; output files</string>
@@ -247,13 +247,13 @@
      <item>
       <widget class="CustomTreeView" name="treeView_io_files">
        <property name="selectionMode">
-        <enum>QAbstractItemView::ExtendedSelection</enum>
+        <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
        </property>
        <property name="textElideMode">
-        <enum>Qt::ElideLeft</enum>
+        <enum>Qt::TextElideMode::ElideLeft</enum>
        </property>
        <property name="verticalScrollMode">
-        <enum>QAbstractItemView::ScrollPerPixel</enum>
+        <enum>QAbstractItemView::ScrollMode::ScrollPerPixel</enum>
        </property>
        <attribute name="headerVisible">
         <bool>false</bool>
@@ -265,10 +265,10 @@
   </widget>
   <widget class="QDockWidget" name="dockWidget_program">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="allowedAreas">
-    <set>Qt::BottomDockWidgetArea</set>
+    <set>Qt::DockWidgetArea::BottomDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string/>

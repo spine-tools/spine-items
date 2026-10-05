@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for Exporter's ``utils`` module."""
+
 import os.path
 import unittest
 from spine_engine.project_item.project_item_resource import url_resource

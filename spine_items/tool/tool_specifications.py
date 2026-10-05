@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Tool specification classes."""
+
 from collections import OrderedDict
 import copy
 import os.path
@@ -304,11 +305,7 @@ class GAMSTool(ToolSpecification):
         except OSError:
             return None
         anchor = (
-            "<a style='color:#99CCFF;' title='"
-            + prj_file_path
-            + "' href='file:///"
-            + prj_file_path
-            + "'>Click here to debug in GAMSIDE</a>"
+            "<a title='" + prj_file_path + "' href='file:///" + prj_file_path + "'>Click here to debug in GAMSIDE</a>"
         )
         return anchor
 

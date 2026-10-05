@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for :class:`IntegerSequenceDateTimeConvertSpecDialog`."""
+
 import unittest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication

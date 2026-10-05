@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Widget shown to user when a new Importer is created."""
+
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..importer import Importer
 from ..item_info import ItemInfo

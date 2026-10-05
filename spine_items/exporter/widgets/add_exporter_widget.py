@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Widget shown to user when a new Exporter is created."""
+
 from spinetoolbox.widgets.add_project_item_widget import AddProjectItemWidget
 from ..exporter import Exporter
 from ..item_info import ItemInfo

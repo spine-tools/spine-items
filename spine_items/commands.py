@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Undo/redo commands that can be used by multiple project items."""
+
 from typing import ClassVar
 from PySide6.QtCore import QModelIndex
 from spine_engine.project_item.project_item_resource import CmdLineArg

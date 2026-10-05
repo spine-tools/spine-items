@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Undo/redo commands for the DataConnection project item."""
+
 from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING

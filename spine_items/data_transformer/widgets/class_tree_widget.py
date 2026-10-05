@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`ClassTreeWidget`."""
+
 import pickle
 from PySide6.QtCore import QMimeData
 from PySide6.QtWidgets import QMessageBox, QTreeWidget, QTreeWidgetItem

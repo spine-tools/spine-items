@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains ImportSources widget and SourceDataTableMenu."""
+
 from __future__ import annotations
 from operator import itemgetter
 import pickle
@@ -150,8 +151,7 @@ class ImportSources(QObject):
             if data_type_label == IntegerSequenceDateTimeConvertSpec.DISPLAY_NAME:
                 # Skipping the more complicated conversion for now.
                 continue
-            engine = CharIconEngine(icon_character, 0)
-            icon = QIcon(engine.pixmap())
+            icon = QIcon(CharIconEngine(icon_character))
             self._ui.default_column_type_combo_box.addItem(icon, data_type_label)
         self._ui.default_column_type_combo_box.setCurrentText(_EMPTY_DEFAULT_COLUMN_TYPE)
 

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for the ``import_sources`` module."""
+
 import unittest
 from unittest import mock
 from PySide6.QtCore import QModelIndex

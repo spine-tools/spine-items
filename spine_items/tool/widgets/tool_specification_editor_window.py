@@ -13,6 +13,7 @@
 """QWidget that is used to create or edit Tool specifications.
 In the former case it is presented empty, but in the latter it
 is filled with all the information from the specification being edited."""
+
 from copy import deepcopy
 from enum import IntEnum, unique
 import logging
@@ -27,7 +28,6 @@ from spine_items.tool.widgets.tool_spec_optional_widgets import (
     JuliaToolSpecOptionalWidget,
     PythonToolSpecOptionalWidget,
 )
-from spinetoolbox.config import STATUSBAR_SS
 from spinetoolbox.helpers import SealCommand, busy_effect, open_url, same_path
 from spinetoolbox.project_item.specification_editor_window import (
     ChangeSpecPropertyCommand,
@@ -74,7 +74,6 @@ class ToolSpecificationEditorWindow(SpecificationEditorWindowBase):
         self._label_main_path.setFont(font)
         self._ui.statusbar.addPermanentWidget(label)
         self._ui.statusbar.addPermanentWidget(self._label_main_path)
-        self._ui.statusbar.setStyleSheet(STATUSBAR_SS)
         # init models
         self.programfiles_model = QStandardItemModel(self)
         self.io_files_model = QStandardItemModel(self)

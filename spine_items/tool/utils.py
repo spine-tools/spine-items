@@ -10,7 +10,8 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
 
-""" Utility functions for the Tool project item. """
+"""Utility functions for the Tool project item."""
+
 from datetime import datetime
 import glob
 import json

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``import_editor_window`` module."""
+
 from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
@@ -55,7 +56,3 @@ class TestImportEditorWindow(unittest.TestCase):
             exec_dialog.assert_called_once()
             editor.close()
         self.assertIs(reader, SQLAlchemyReader)
-
-
-if __name__ == "__main__":
-    unittest.main()

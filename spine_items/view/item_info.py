@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """View project item info."""
+
 from spine_engine.project_item.project_item_info import ProjectItemInfo
 
 

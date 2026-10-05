@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`DataTransformerIcon`."""
+
 from spinetoolbox.project_item_icon import ProjectItemIcon
 
 

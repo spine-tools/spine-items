@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains :class:`PreviewUpdater`."""
+
 from copy import deepcopy
 from dataclasses import dataclass
 from multiprocessing import Process, Queue
@@ -20,7 +21,6 @@ from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Slot
 from PySide6.QtWidgets import QFileDialog
 from spinedb_api import DatabaseMapping, SpineDBAPIError, SpineDBVersionError
 from spinedb_api.export_mapping.export_mapping import ExportMapping
-from spinedb_api.export_mapping.group_functions import GroupFunction
 from spinedb_api.spine_io.exporters.writer import write
 from ..mvcmodels.full_url_list_model import FullUrlListModel
 from ..mvcmodels.mappings_table_model import MappingsTableModel
@@ -533,7 +533,7 @@ class WriteTableTask:
     always_export_header: bool
     max_tables: int
     max_rows: int
-    group_fn: GroupFunction
+    group_fn: str
 
 
 def write_task_loop(sender, receiver):
@@ -558,6 +558,8 @@ def write_task_loop(sender, receiver):
             next_task = tasks.pop(0)
             try:
                 if db_map is None or next_task.url != db_map.db_url:
+                    if db_map is not None:
+                        db_map.close()
                     db_map = DatabaseMapping(next_task.url)
                 tables = _write_tables(db_map, next_task)
             except SpineDBVersionError:
@@ -566,6 +568,8 @@ def write_task_loop(sender, receiver):
                 tables = {"error": [[str(error)]]}
             sender.put(((next_task.url, next_task.mapping_name), next_task.mapping_name, tables, next_task.stamp))
     finally:
+        if db_map is not None:
+            db_map.close()
         sender.put_nowait("finished")
 
 

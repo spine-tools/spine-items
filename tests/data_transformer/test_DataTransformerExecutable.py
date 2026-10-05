@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for :class:`DataTransformerExecutable`."""
+
 from multiprocessing import Lock
 from tempfile import TemporaryDirectory
 import unittest

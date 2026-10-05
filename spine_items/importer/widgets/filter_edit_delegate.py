@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains regular expression filter editor delegate."""
+
 from spine_items.ui import default_filter_editor
 from spine_items.widgets import FilterEdit, FilterEditDelegateBase
 

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains utilities to scan for Data Transformer's output resources."""
+
 from spine_engine.project_item.project_item_resource import database_resource
 from spine_items.utils import database_label
 from spinedb_api import append_filter_config

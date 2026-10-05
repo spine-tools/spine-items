@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Module for view class."""
+
 import os
 from PySide6.QtCore import QObject, Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QIcon, QPixmap, QStandardItem, QStandardItemModel
@@ -364,7 +365,7 @@ def _format_pinned_values(values):
         <head>
         <style>
             table, th, td {
-              border: 1px solid black;
+              border: 1px solid gray;
               border-collapse: collapse;
               padding: 5px;
             }

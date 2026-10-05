@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Data connection properties widget."""
+
 import os
 from PySide6.QtCore import QPoint, Qt, QUrl, Slot
 from spinetoolbox.widgets.properties_widget import PropertiesWidgetBase

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains shared functions that provide copy-paste functionality."""
+
 import pickle
 from PySide6.QtCore import QMimeData
 from PySide6.QtWidgets import QApplication

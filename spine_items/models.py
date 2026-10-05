@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains a generic File list model and an Item for that model."""
+
 from collections import namedtuple
 from PySide6.QtCore import QModelIndex, Qt, Signal
 from spine_engine.project_item.project_item_resource import extract_packs

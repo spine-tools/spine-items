@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the options_widgets.py module."""
+
 import logging
 import sys
 import unittest

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Unit tests for the ``models`` module."""
+
 from pathlib import Path
 import unittest
 from PySide6.QtCore import Qt

@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains unit tests for the OptionsWidget class."""
+
 import unittest
 from unittest.mock import MagicMock
 from PySide6.QtGui import QUndoStack

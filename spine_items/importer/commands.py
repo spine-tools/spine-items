@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains undo and redo commands for Importer specification editor."""
+
 from __future__ import annotations
 from enum import IntEnum, auto, unique
 import pickle

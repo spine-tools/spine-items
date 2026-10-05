@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains Merger's executable item as well as support utilities."""
+
 from contextlib import ExitStack
 from spine_engine.spine_engine import ItemExecutionFinishState
 from spine_engine.utils.returning_process import ReturningProcess

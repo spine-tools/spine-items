@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains ConnectionManager class."""
+
 from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
 from spinetoolbox.helpers import busy_effect
 
