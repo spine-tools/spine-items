@@ -19,11 +19,11 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>536</width>
-    <height>171</height>
+    <width>547</width>
+    <height>190</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout_4">
    <property name="spacing">
     <number>4</number>
    </property>
@@ -118,104 +118,131 @@
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <property name="spacing">
-      <number>4</number>
-     </property>
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QRadioButton" name="radioButton_basic_console">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>Use Julia executable / Julia project</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
+        <string>Execution method</string>
        </property>
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <property name="spacing">
-        <number>4</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QComboBox" name="comboBox_executable"/>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_browse_julia">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pick a Julia executable using a file browser&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="icon">
-          <iconset resource="../../ui/resources/resources_icons.qrc">
-           <normaloff>:/icons/item_icons/julia-logo.svg</normaloff>:/icons/item_icons/julia-logo.svg</iconset>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <property name="spacing">
-        <number>4</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QComboBox" name="comboBox_julia_project"/>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_browse_julia_project">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pick a Julia project using a file browser&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="icon">
-          <iconset resource="../../ui/resources/resources_icons.qrc">
-           <normaloff>:/icons/folder.svg</normaloff>:/icons/folder.svg</iconset>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QRadioButton" name="radioButton_jupyter_console">
-       <property name="text">
-        <string>Use Jupyter kernel</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="comboBox_kernel_specs">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>100</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a Julia kernel for &lt;span style=&quot; font-weight:700;&quot;&gt;Jupyter Console&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
+      <widget class="QComboBox" name="comboBox_julia_execution_method"/>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget_julia_options">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="page_0">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="label_execution_method">
+         <property name="text">
+          <string>Execution mode placeholder</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_executable_or_kernel">
+         <property name="text">
+          <string>executable or kernel name placeholder</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_environment">
+         <property name="text">
+          <string>environment placeholder</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_1">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="comboBox_executable"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButton_browse_julia">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pick a Julia executable using a file browser&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../../ui/resources/resources_icons.qrc">
+             <normaloff>:/icons/item_icons/julia-logo.svg</normaloff>:/icons/item_icons/julia-logo.svg</iconset>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="comboBox_julia_project"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButton_browse_julia_project">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pick a Julia project using a file browser&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../../ui/resources/resources_icons.qrc">
+             <normaloff>:/icons/folder.svg</normaloff>:/icons/folder.svg</iconset>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_2">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QComboBox" name="comboBox_kernel_specs">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>24</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>24</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a Julia kernel for &lt;span style=&quot; font-weight:700;&quot;&gt;Jupyter Console&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
    <item>
     <widget class="Line" name="line">
@@ -234,10 +261,16 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>radioButton_basic_console</tabstop>
-  <tabstop>radioButton_jupyter_console</tabstop>
+  <tabstop>lineEdit_sysimage</tabstop>
+  <tabstop>toolButton_abort_sysimage</tabstop>
+  <tabstop>toolButton_new_sysimage</tabstop>
+  <tabstop>toolButton_open_sysimage</tabstop>
+  <tabstop>comboBox_julia_execution_method</tabstop>
+  <tabstop>comboBox_executable</tabstop>
   <tabstop>toolButton_browse_julia</tabstop>
+  <tabstop>comboBox_julia_project</tabstop>
   <tabstop>toolButton_browse_julia_project</tabstop>
+  <tabstop>comboBox_kernel_specs</tabstop>
  </tabstops>
  <resources>
   <include location="../../ui/resources/resources_icons.qrc"/>

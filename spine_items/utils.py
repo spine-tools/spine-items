@@ -278,7 +278,7 @@ def check_options(tooltype, current_options, logger, qsettings):
     elif tooltype == "julia":
         defaults = default_julia_execution_settings(qsettings)
     elif tooltype == "executable":
-        defaults = default_executable_execution_settings(qsettings)
+        defaults = default_executable_execution_settings()
     else:
         logger.msg_error.emit(f"Default execution settings for {tooltype} do not exist")
         return {}
@@ -309,14 +309,16 @@ def default_python_execution_settings(qsettings):
     return d
 
 
-def default_julia_execution_settings():
+def default_julia_execution_settings(qsettings):
     """Returns default Julia Tool execution settings."""
     d = dict()
-    d["kernel_spec_name"] = ""
-    d["env"] = ""
-    d["use_jupyter_console"] = False
-    d["executable"] = ""
-    d["project"] = ""
+    is_conda = qsettings.value("appSettings/juliaCondaKernel", defaultValue="0")
+    use_jupyter_console = False if qsettings.value("appSettings/useJuliaKernel", defaultValue="0") == "0" else True
+    d["kernel_spec_name"] = qsettings.value("appSettings/juliaKernel", defaultValue="")
+    d["env"] = "" if is_conda == "0" else "conda"
+    d["use_jupyter_console"] = use_jupyter_console
+    d["executable"] = qsettings.value("appSettings/juliaPath", defaultValue="")
+    d["project"] = qsettings.value("appSettings/juliaProjectPath", defaultValue="")
     return d
 
 

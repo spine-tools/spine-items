@@ -83,11 +83,6 @@ class Ui_Form(object):
         self.page_1.setObjectName(u"page_1")
         self.verticalLayout = QVBoxLayout(self.page_1)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.label_3 = QLabel(self.page_1)
-        self.label_3.setObjectName(u"label_3")
-
-        self.verticalLayout.addWidget(self.label_3)
-
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setSpacing(4)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -113,11 +108,6 @@ class Ui_Form(object):
         self.page_2.setObjectName(u"page_2")
         self.verticalLayout_2 = QVBoxLayout(self.page_2)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.label_2 = QLabel(self.page_2)
-        self.label_2.setObjectName(u"label_2")
-
-        self.verticalLayout_2.addWidget(self.label_2)
-
         self.comboBox_kernel_specs = QComboBox(self.page_2)
         self.comboBox_kernel_specs.setObjectName(u"comboBox_kernel_specs")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -154,11 +144,9 @@ class Ui_Form(object):
         self.label.setText(QCoreApplication.translate("Form", u"Execution method", None))
         self.label_execution_method.setText(QCoreApplication.translate("Form", u"execution mode placeholder", None))
         self.label_interpreter_or_kernel.setText(QCoreApplication.translate("Form", u"interpreter or kernel name placeholder", None))
-        self.label_3.setText(QCoreApplication.translate("Form", u"Python interpreter", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_python.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Python interpreter using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label_2.setText(QCoreApplication.translate("Form", u"Jupyter kernel", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Python kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

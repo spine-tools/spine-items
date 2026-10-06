@@ -27,7 +27,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout,
-    QLabel, QRadioButton, QSizePolicy, QToolButton,
+    QLabel, QSizePolicy, QStackedWidget, QToolButton,
     QVBoxLayout, QWidget)
 
 from spinetoolbox.widgets.custom_qlineedits import PropertyQLineEdit
@@ -37,17 +37,17 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(536, 171)
-        self.verticalLayout_2 = QVBoxLayout(Form)
-        self.verticalLayout_2.setSpacing(4)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+        Form.resize(547, 190)
+        self.verticalLayout_4 = QVBoxLayout(Form)
+        self.verticalLayout_4.setSpacing(4)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.line_3 = QFrame(Form)
         self.line_3.setObjectName(u"line_3")
         self.line_3.setFrameShape(QFrame.Shape.HLine)
         self.line_3.setFrameShadow(QFrame.Shadow.Sunken)
 
-        self.verticalLayout_2.addWidget(self.line_3)
+        self.verticalLayout_4.addWidget(self.line_3)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setSpacing(4)
@@ -88,28 +88,59 @@ class Ui_Form(object):
         self.horizontalLayout_3.addWidget(self.toolButton_open_sysimage)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_3)
 
-        self.verticalLayout = QVBoxLayout()
-        self.verticalLayout.setSpacing(4)
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.label = QLabel(Form)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout.addWidget(self.label)
+
+        self.comboBox_julia_execution_method = QComboBox(Form)
+        self.comboBox_julia_execution_method.setObjectName(u"comboBox_julia_execution_method")
+
+        self.horizontalLayout.addWidget(self.comboBox_julia_execution_method)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout)
+
+        self.stackedWidget_julia_options = QStackedWidget(Form)
+        self.stackedWidget_julia_options.setObjectName(u"stackedWidget_julia_options")
+        self.page_0 = QWidget()
+        self.page_0.setObjectName(u"page_0")
+        self.verticalLayout = QVBoxLayout(self.page_0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, -1, -1, -1)
-        self.radioButton_basic_console = QRadioButton(Form)
-        self.radioButton_basic_console.setObjectName(u"radioButton_basic_console")
-        self.radioButton_basic_console.setChecked(True)
+        self.label_execution_method = QLabel(self.page_0)
+        self.label_execution_method.setObjectName(u"label_execution_method")
 
-        self.verticalLayout.addWidget(self.radioButton_basic_console)
+        self.verticalLayout.addWidget(self.label_execution_method)
 
+        self.label_executable_or_kernel = QLabel(self.page_0)
+        self.label_executable_or_kernel.setObjectName(u"label_executable_or_kernel")
+
+        self.verticalLayout.addWidget(self.label_executable_or_kernel)
+
+        self.label_environment = QLabel(self.page_0)
+        self.label_environment.setObjectName(u"label_environment")
+
+        self.verticalLayout.addWidget(self.label_environment)
+
+        self.stackedWidget_julia_options.addWidget(self.page_0)
+        self.page_1 = QWidget()
+        self.page_1.setObjectName(u"page_1")
+        self.verticalLayout_2 = QVBoxLayout(self.page_1)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setSpacing(4)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(0, -1, -1, -1)
-        self.comboBox_executable = QComboBox(Form)
+        self.comboBox_executable = QComboBox(self.page_1)
         self.comboBox_executable.setObjectName(u"comboBox_executable")
 
         self.horizontalLayout_2.addWidget(self.comboBox_executable)
 
-        self.toolButton_browse_julia = QToolButton(Form)
+        self.toolButton_browse_julia = QToolButton(self.page_1)
         self.toolButton_browse_julia.setObjectName(u"toolButton_browse_julia")
         icon2 = QIcon()
         icon2.addFile(u":/icons/item_icons/julia-logo.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
@@ -118,18 +149,18 @@ class Ui_Form(object):
         self.horizontalLayout_2.addWidget(self.toolButton_browse_julia)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setSpacing(4)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.horizontalLayout_4.setContentsMargins(0, -1, -1, -1)
-        self.comboBox_julia_project = QComboBox(Form)
+        self.comboBox_julia_project = QComboBox(self.page_1)
         self.comboBox_julia_project.setObjectName(u"comboBox_julia_project")
 
         self.horizontalLayout_4.addWidget(self.comboBox_julia_project)
 
-        self.toolButton_browse_julia_project = QToolButton(Form)
+        self.toolButton_browse_julia_project = QToolButton(self.page_1)
         self.toolButton_browse_julia_project.setObjectName(u"toolButton_browse_julia_project")
         icon3 = QIcon()
         icon3.addFile(u":/icons/folder.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
@@ -138,14 +169,14 @@ class Ui_Form(object):
         self.horizontalLayout_4.addWidget(self.toolButton_browse_julia_project)
 
 
-        self.verticalLayout.addLayout(self.horizontalLayout_4)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_4)
 
-        self.radioButton_jupyter_console = QRadioButton(Form)
-        self.radioButton_jupyter_console.setObjectName(u"radioButton_jupyter_console")
-
-        self.verticalLayout.addWidget(self.radioButton_jupyter_console)
-
-        self.comboBox_kernel_specs = QComboBox(Form)
+        self.stackedWidget_julia_options.addWidget(self.page_1)
+        self.page_2 = QWidget()
+        self.page_2.setObjectName(u"page_2")
+        self.verticalLayout_3 = QVBoxLayout(self.page_2)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.comboBox_kernel_specs = QComboBox(self.page_2)
         self.comboBox_kernel_specs.setObjectName(u"comboBox_kernel_specs")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -155,23 +186,33 @@ class Ui_Form(object):
         self.comboBox_kernel_specs.setMinimumSize(QSize(100, 24))
         self.comboBox_kernel_specs.setMaximumSize(QSize(16777215, 24))
 
-        self.verticalLayout.addWidget(self.comboBox_kernel_specs)
+        self.verticalLayout_3.addWidget(self.comboBox_kernel_specs)
 
+        self.stackedWidget_julia_options.addWidget(self.page_2)
 
-        self.verticalLayout_2.addLayout(self.verticalLayout)
+        self.verticalLayout_4.addWidget(self.stackedWidget_julia_options)
 
         self.line = QFrame(Form)
         self.line.setObjectName(u"line")
         self.line.setFrameShape(QFrame.Shape.HLine)
         self.line.setFrameShadow(QFrame.Shadow.Sunken)
 
-        self.verticalLayout_2.addWidget(self.line)
+        self.verticalLayout_4.addWidget(self.line)
 
-        QWidget.setTabOrder(self.radioButton_basic_console, self.radioButton_jupyter_console)
-        QWidget.setTabOrder(self.radioButton_jupyter_console, self.toolButton_browse_julia)
-        QWidget.setTabOrder(self.toolButton_browse_julia, self.toolButton_browse_julia_project)
+        QWidget.setTabOrder(self.lineEdit_sysimage, self.toolButton_abort_sysimage)
+        QWidget.setTabOrder(self.toolButton_abort_sysimage, self.toolButton_new_sysimage)
+        QWidget.setTabOrder(self.toolButton_new_sysimage, self.toolButton_open_sysimage)
+        QWidget.setTabOrder(self.toolButton_open_sysimage, self.comboBox_julia_execution_method)
+        QWidget.setTabOrder(self.comboBox_julia_execution_method, self.comboBox_executable)
+        QWidget.setTabOrder(self.comboBox_executable, self.toolButton_browse_julia)
+        QWidget.setTabOrder(self.toolButton_browse_julia, self.comboBox_julia_project)
+        QWidget.setTabOrder(self.comboBox_julia_project, self.toolButton_browse_julia_project)
+        QWidget.setTabOrder(self.toolButton_browse_julia_project, self.comboBox_kernel_specs)
 
         self.retranslateUi(Form)
+
+        self.stackedWidget_julia_options.setCurrentIndex(0)
+
 
         QMetaObject.connectSlotsByName(Form)
     # setupUi
@@ -190,14 +231,16 @@ class Ui_Form(object):
         self.toolButton_open_sysimage.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Open Julia sysimage</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.toolButton_open_sysimage.setText(QCoreApplication.translate("Form", u"...", None))
-        self.radioButton_basic_console.setText(QCoreApplication.translate("Form", u"Use Julia executable / Julia project", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Execution method", None))
+        self.label_execution_method.setText(QCoreApplication.translate("Form", u"Execution mode placeholder", None))
+        self.label_executable_or_kernel.setText(QCoreApplication.translate("Form", u"executable or kernel name placeholder", None))
+        self.label_environment.setText(QCoreApplication.translate("Form", u"environment placeholder", None))
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_julia.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Julia executable using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.toolButton_browse_julia_project.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Pick a Julia project using a file browser</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.radioButton_jupyter_console.setText(QCoreApplication.translate("Form", u"Use Jupyter kernel", None))
 #if QT_CONFIG(tooltip)
         self.comboBox_kernel_specs.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a Julia kernel for <span style=\" font-weight:700;\">Jupyter Console</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
