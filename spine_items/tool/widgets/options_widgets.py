@@ -41,6 +41,7 @@ from spine_engine.utils.helpers import resolve_current_python_interpreter, resol
 from spinetoolbox.config import PYTHON_TOOL_EXECUTION_MODES, JULIA_TOOL_EXECUTION_MODES
 
 if TYPE_CHECKING:
+    from PySide6.QtGui import QStandardItemModel
     from spine_items.tool.tool import Tool
 
 
@@ -132,10 +133,16 @@ class SharedToolOptionsWidget(OptionsWidget):
     def do_update_options_widget(self, options):
         raise NotImplementedError()
 
-    def get_executable(self):
-        raise NotImplementedError()
+    def get_current_kernel_item_data(self, model: QStandardItemModel) -> dict[str, Any] | None:
+        """Returns the item data from the currently selected kernel in the kernel combobox.
+        Note: Make sure that both Python and Julia OptionsWidgets use the same name for the kernel combobox."""
+        current_index = model.index(self.ui.comboBox_kernel_specs.currentIndex(), 0)
+        if not current_index.isValid():
+            return None
+        item = model.itemFromIndex(current_index)
+        return item.data()
 
-    def get_current_kernel_item_data(self):
+    def get_executable(self):
         raise NotImplementedError()
 
     def get_kernel_name(self):
@@ -231,7 +238,7 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
     def do_update_options_widget(self, options: dict):
         """Updates the options widgets according to given options."""
         self._block_signals(True)
-        print(f"options:{options.items()}")
+        print(f"[{self.tool.name}] options:{options.items()}")
         # Update Default page
         if self.is_default_options(options):
             options = default_python_execution_settings(self.tool.specification().qsettings)
@@ -278,25 +285,21 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
     def get_executable(self) -> str:
         """Returns the Python executable path of the currently selected item in the combobox."""
         current_index = self.models.python_interpreters_model.index(self.ui.comboBox_executable.currentIndex(), 0)
+        if not current_index.isValid():
+            return ""
         item = self.models.python_interpreters_model.itemFromIndex(current_index)
         return item.data()["exe"]
 
-    def get_current_kernel_item_data(self) -> dict[str, Any] | None:
-        """Returns the data of the currently selected kernel item."""
-        current_index = self.models.python_kernel_model.index(self.ui.comboBox_kernel_specs.currentIndex(), 0)
-        item = self.models.python_kernel_model.itemFromIndex(current_index)
-        return item.data()
-
     def get_kernel_name(self) -> str:
         """Returns the selected Python kernel name in the combobox."""
-        data = self.get_current_kernel_item_data()
+        data = self.get_current_kernel_item_data(self.models.python_kernel_model)
         if not data:
             return ""
         return data["kernel_name"]
 
     def is_conda(self) -> str:
         """Returns 'conda' if currently selected kernel item is a conda kernel. Returns an empty string otherwise."""
-        data = self.get_current_kernel_item_data()
+        data = self.get_current_kernel_item_data(self.models.python_kernel_model)
         if not data:
             return ""
         return "conda" if data["is_conda"] else ""
@@ -339,6 +342,38 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self.ui.comboBox_julia_project.currentIndexChanged.connect(self._update_project)
         self.ui.comboBox_kernel_specs.currentIndexChanged.connect(self._update_julia_kernel)
         self.ui.comboBox_julia_execution_method.currentIndexChanged.connect(self.activate_execution_method)
+
+    @Slot(bool)
+    def _add_julia_executable(self, _=False):
+        """Calls static method that shows a file browser for selecting a Julia path."""
+        current_path = self.ui.comboBox_executable.currentText()
+        if not current_path:
+            current_path = resolve_default_julia_executable()
+        init_dir, _ = os.path.split(current_path)
+        fpath = select_file_path(self, "Add Julia Executable...", init_dir, "julia")
+        if not fpath:
+            return
+        self._block_signals(True)
+        ind = self.models.add_julia_executable(fpath)
+        self._block_signals(False)
+        if not ind.isValid():
+            self._logger.msg_error.emit(f"Adding Julia executable {fpath} failed")
+            ind = self.models.julia_executables_model.index(0, 0)
+        self.ui.comboBox_executable.setCurrentIndex(ind.row())
+
+    @Slot(bool)
+    def _add_julia_project(self, _=False):
+        """Calls static method that shows a folder browser for adding a Julia project."""
+        dpath = select_dir(self, "Add Julia project directory...")
+        if not dpath:
+            return
+        self._block_signals(True)
+        ind = self.models.add_julia_project(dpath)
+        self._block_signals(False)
+        if not ind.isValid():
+            self._logger.msg_error.emit(f"Adding Julia Project {dpath} failed")
+            ind = self.models.julia_projects_model.index(0, 0)
+        self.ui.comboBox_julia_project.setCurrentIndex(ind.row())
 
     @Slot(int)
     def _update_executable(self, _row):
@@ -394,7 +429,7 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self.last_sysimage_path = options.get("julia_sysimage")
         self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
         self._block_signals(True)
-        print(f"options:{options.items()}")
+        print(f"[{self.tool.name}] options:{options.items()}")
         # Update Default page
         if self.is_default_options(options):
             options = default_julia_execution_settings(self.tool.specification().qsettings)
@@ -412,7 +447,9 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
                 self.ui.label_executable_or_kernel.setText(executable)
                 project = options["project"]
                 if not project:
-                    project = "Home"
+                    project = "Default Julia environment (@v1.x)"
+                elif project == "@.":
+                    project = "Current project environment (@.)"
                 self.ui.label_environment.setText(project)
             self._block_signals(False)
             return
@@ -451,6 +488,8 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
     def get_executable(self) -> str:
         """Returns the Julia executable path of the currently selected item in the combobox."""
         current_index = self.models.julia_executables_model.index(self.ui.comboBox_executable.currentIndex(), 0)
+        if not current_index.isValid():
+            return ""
         item = self.models.julia_executables_model.itemFromIndex(current_index)
         if not item.data():  # Happens when Julia is not in PATH and the julia_executables_model is empty
             return ""
@@ -459,59 +498,24 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
     def get_project(self) -> str:
         """Returns the Julia project path of the currently selected item in the combobox."""
         current_index = self.models.julia_projects_model.index(self.ui.comboBox_julia_project.currentIndex(), 0)
+        if not current_index.isValid():
+            return ""
         item = self.models.julia_projects_model.itemFromIndex(current_index)
         return item.data()["path"]
 
     def get_kernel_name(self) -> str:
         """Returns the selected Julia kernel name in the combobox."""
-        data = self.get_current_kernel_item_data()
+        data = self.get_current_kernel_item_data(self.models.julia_kernel_model)
         if not data:
             return ""
         return data["kernel_name"]
 
     def is_conda(self):
         """Returns 'conda' if currently selected kernel item is a conda kernel. Returns an empty string otherwise."""
-        data = self.get_current_kernel_item_data()
+        data = self.get_current_kernel_item_data(self.models.julia_kernel_model)
         if not data:
             return ""
         return "conda" if data["is_conda"] else ""
-
-    def get_current_kernel_item_data(self) -> dict[str, Any] | None:
-        current_index = self.models.julia_kernel_model.index(self.ui.comboBox_kernel_specs.currentIndex(), 0)
-        item = self.models.julia_kernel_model.itemFromIndex(current_index)
-        return item.data()
-
-    @Slot(bool)
-    def _add_julia_executable(self, _=False):
-        """Calls static method that shows a file browser for selecting a Julia path."""
-        current_path = self.ui.comboBox_executable.currentText()
-        if not current_path:
-            current_path = resolve_default_julia_executable()
-        init_dir, _ = os.path.split(current_path)
-        fpath = select_file_path(self, "Add Julia Executable...", init_dir, "julia")
-        if not fpath:
-            return
-        self._block_signals(True)
-        ind = self.models.add_julia_executable(fpath)
-        self._block_signals(False)
-        if not ind.isValid():
-            self._logger.msg_error.emit(f"Adding Julia executable {fpath} failed")
-            ind = self.models.julia_executables_model.index(0, 0)
-        self.ui.comboBox_executable.setCurrentIndex(ind.row())
-
-    @Slot(bool)
-    def _add_julia_project(self, _=False):
-        """Calls static method that shows a folder browser for adding a Julia project."""
-        dpath = select_dir(self, "Add Julia project directory...")
-        if not dpath:
-            return
-        self._block_signals(True)
-        ind = self.models.add_julia_project(dpath)
-        self._block_signals(False)
-        if not ind.isValid():
-            self._logger.msg_error.emit(f"Adding Julia Project {dpath} failed")
-            ind = self.models.julia_projects_model.index(0, 0)
-        self.ui.comboBox_julia_project.setCurrentIndex(ind.row())
 
     def _make_work_animation(self):
         """

@@ -163,7 +163,7 @@ class Tool(DBWriterItemBase):
     def resolve_output_dir(self) -> str:
         return self._output_dir if self._output_dir else self.default_output_dir
 
-    def refresh_options_widget(self):
+    def make_options_widget(self):
         """Returns a widget to specify extra options for this tool depending on specification type.
         It is embedded in the ui in ``self._update_tool_ui()``.
 
@@ -478,7 +478,7 @@ class Tool(DBWriterItemBase):
         """
         self._options = options
         if self._active:
-            _ = self.refresh_options_widget()
+            _ = self.make_options_widget()
             self._check_notifications()
 
     @Slot(bool)
@@ -532,7 +532,7 @@ class Tool(DBWriterItemBase):
         self._properties_ui.comboBox_tool.setCurrentText(self.specification().name)
         self._update_specification_menu()
         self._properties_ui.toolButton_tool_specification.setMenu(self._specification_menu)
-        options_widget = self.refresh_options_widget()
+        options_widget = self.make_options_widget()
         if options_widget:
             self._properties_ui.horizontalLayout_options.addWidget(options_widget)
             options_widget.show()
