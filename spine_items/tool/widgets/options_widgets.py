@@ -172,9 +172,9 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
         """Connects signals to slots."""
         super().connect_signals()
         self.ui.toolButton_browse_python.clicked.connect(self._add_python_interpreter)
-        self.ui.comboBox_executable.currentIndexChanged.connect(self._update_executable)
-        self.ui.comboBox_kernel_specs.currentIndexChanged.connect(self._update_python_kernel)
-        self.ui.comboBox_python_execution_method.currentIndexChanged.connect(self.activate_execution_method)
+        self.ui.comboBox_executable.activated.connect(self._update_executable)
+        self.ui.comboBox_kernel_specs.activated.connect(self._update_python_kernel)
+        self.ui.comboBox_python_execution_method.activated.connect(self.activate_execution_method)
 
     @Slot(bool)
     def _add_python_interpreter(self, _=False):
@@ -338,10 +338,10 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         super().connect_signals()
         self.ui.toolButton_browse_julia.clicked.connect(self._add_julia_executable)
         self.ui.toolButton_browse_julia_project.clicked.connect(self._add_julia_project)
-        self.ui.comboBox_executable.currentIndexChanged.connect(self._update_executable)
-        self.ui.comboBox_julia_project.currentIndexChanged.connect(self._update_project)
-        self.ui.comboBox_kernel_specs.currentIndexChanged.connect(self._update_julia_kernel)
-        self.ui.comboBox_julia_execution_method.currentIndexChanged.connect(self.activate_execution_method)
+        self.ui.comboBox_executable.activated.connect(self._update_executable)
+        self.ui.comboBox_julia_project.activated.connect(self._update_project)
+        self.ui.comboBox_kernel_specs.activated.connect(self._update_julia_kernel)
+        self.ui.comboBox_julia_execution_method.activated.connect(self.activate_execution_method)
 
     @Slot(bool)
     def _add_julia_executable(self, _=False):
