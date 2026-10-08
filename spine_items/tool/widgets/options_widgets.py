@@ -12,63 +12,510 @@
 
 """Provides OptionsWidget and subclasses for each tool type (julia, python, executable, gams)."""
 
+from __future__ import annotations
 import os
 import sys
 import uuid
+from enum import Enum
+from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import QPointF, Qt, QVariantAnimation, Slot
 from PySide6.QtGui import QBrush, QIcon, QLinearGradient, QPalette
-from PySide6.QtWidgets import QFileDialog, QWidget
+from PySide6.QtWidgets import QFileDialog, QWidget, QApplication
 from spine_items.tool.utils import get_julia_path_and_project
-from spine_items.utils import escape_backward_slashes
+from spine_items.utils import (
+    escape_backward_slashes,
+    default_python_execution_settings,
+    default_julia_execution_settings
+)
 from spinetoolbox.execution_managers import QProcessExecutionManager
-from spinetoolbox.helpers import CharIconEngine, get_open_file_name_in_last_dir, make_settings_dict_for_engine
+from spinetoolbox.helpers import (
+    CharIconEngine,
+    get_open_file_name_in_last_dir,
+    make_settings_dict_for_engine,
+    file_is_valid,
+    select_file_path,
+    select_dir,
+)
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
+from spine_engine.utils.helpers import resolve_current_python_interpreter, resolve_default_julia_executable
+from spinetoolbox.config import PYTHON_TOOL_EXECUTION_MODES, JULIA_TOOL_EXECUTION_MODES
+
+if TYPE_CHECKING:
+    from PySide6.QtGui import QStandardItemModel
+    from spine_items.tool.tool import Tool
+
+
+class ToolExecutionMethod(Enum):
+    DEFAULT = "default"
+    DIRECT = "direct"
+    JUPYTER = "jupyter"
 
 
 class OptionsWidget(QWidget):
-    def __init__(self):
+    def __init__(self, Ui_Form, models):
         super().__init__()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
+        self._models = models  # Models containing saved Pythons and Julias
         self._tool = None
 
-    def set_tool(self, tool):
-        """Init class.
+    @property
+    def tool(self):
+        return self._tool
 
-        Args:
-            tool (Tool)
-        """
+    @tool.setter
+    def tool(self, tool: Tool):
+        """tool property setter."""
         self._tool = tool
 
     @property
     def _project(self):
-        return self._tool.project
+        return self.tool.project
 
     @property
-    def _settings(self):
+    def settings(self):
         return self._project.app_settings
 
     @property
     def _logger(self):
-        return self._tool.logger
+        return self.tool.logger
+
+    @property
+    def models(self):
+        return self._models
 
 
-class JuliaOptionsWidget(OptionsWidget):
-    def __init__(self):
-        from ..ui.julia_options import Ui_Form  # pylint: disable=import-outside-toplevel
+class SharedToolOptionsWidget(OptionsWidget):
+    """Superclass for Python and Julia Tool optional widgets."""
 
-        super().__init__()
-        self.ui = Ui_Form()
-        self.ui.setupUi(self)
+    def __init__(self, Ui_Form, models):
+        """
+        Args:
+            Ui_Form (Form): Optional widget UI form
+        """
+        super().__init__(Ui_Form, models)
+
+    def connect_signals(self):
+        """Connects signals."""
+
+    def validate_executable(self, p, tool_spec_type):
+        """Check that given Python or Julia path is a file, it exists, and the
+        file name starts with either 'python' or 'julia'.
+
+        Args:
+            p (str): Abs. path to check
+            tool_spec_type (str): 'python' or 'julia'
+
+        Raises:
+            NameError: If the python path in the line edit is not valid
+        """
+        if not file_is_valid(
+            self,
+            p,
+            f"Invalid {tool_spec_type.capitalize()} Interpreter",
+            extra_check=tool_spec_type,
+        ):
+            raise NameError
+
+    @staticmethod
+    def _set_execution_method_combobox(combo, execution_method):
+        """Sets given combobox selection according to given execution method."""
+        index = combo.findData(execution_method)
+        if index >= 0:
+            combo.setCurrentIndex(index)
+
+    @staticmethod
+    def is_default_options(options):
+        """Checks if given options dictionary is blank (default). Assumes that
+        if one key is missing, then the other keys are missing as well."""
+        return True if "use_jupyter_console" not in options.keys() else False
+
+    def do_update_options_widget(self, options):
+        raise NotImplementedError()
+
+    def get_current_kernel_item_data(self, model: QStandardItemModel) -> dict[str, Any] | None:
+        """Returns the item data from the currently selected kernel in the kernel combobox.
+        Note: Make sure that both Python and Julia OptionsWidgets use the same name for the kernel combobox."""
+        current_index = model.index(self.ui.comboBox_kernel_specs.currentIndex(), 0)
+        if not current_index.isValid():
+            return None
+        item = model.itemFromIndex(current_index)
+        return item.data()
+
+    def get_executable(self):
+        raise NotImplementedError()
+
+    def get_kernel_name(self):
+        raise NotImplementedError()
+
+    def is_conda(self):
+        raise NotImplementedError()
+
+
+class PythonOptionsWidget(SharedToolOptionsWidget):
+    def __init__(self, models):
+        from ..ui.python_tool_options import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__(Ui_Form, models)
+        self.populate_execution_method_comboboxes()
+        self.ui.comboBox_executable.setModel(self._models.python_interpreters_model)
+        self.ui.comboBox_kernel_specs.setModel(self._models.python_kernel_model)
+        self.connect_signals()
+
+    def populate_execution_method_comboboxes(self):
+        """Adds items to the Python execution method combobox."""
+        self.ui.comboBox_python_execution_method.addItem(PYTHON_TOOL_EXECUTION_MODES[0], ToolExecutionMethod.DEFAULT)
+        self.ui.comboBox_python_execution_method.addItem(PYTHON_TOOL_EXECUTION_MODES[1], ToolExecutionMethod.DIRECT)
+        self.ui.comboBox_python_execution_method.addItem(PYTHON_TOOL_EXECUTION_MODES[2], ToolExecutionMethod.JUPYTER)
+
+    def connect_signals(self):
+        """Connects signals to slots."""
+        super().connect_signals()
+        self.ui.toolButton_browse_python.clicked.connect(self._add_python_interpreter)
+        self.ui.comboBox_executable.activated.connect(self._update_executable)
+        self.ui.comboBox_kernel_specs.activated.connect(self._update_python_kernel)
+        self.ui.comboBox_python_execution_method.activated.connect(self.activate_execution_method)
+
+    @Slot(bool)
+    def _add_python_interpreter(self, _=False):
+        """Calls static method that shows a file browser for selecting a Python interpreter."""
+        current_path = self.ui.comboBox_executable.currentText()
+        if not current_path:
+            current_path = resolve_current_python_interpreter()
+        init_dir, _ = os.path.split(current_path)
+        new_python = select_file_path(self._project.toolbox(), "Add Python Interpreter...", init_dir, "python")
+        if not new_python:
+            return
+        self._block_signals(True)
+        ind = self.models.add_python_interpreter(new_python)
+        self._block_signals(False)
+        if not ind.isValid():
+            self._logger.msg_error.emit(f"Adding Python {new_python} failed")
+            ind = self.models.python_interpreters_model.index(0, 0)
+        self.ui.comboBox_executable.setCurrentIndex(ind.row())
+
+    @Slot(int)
+    def _update_executable(self, _row):
+        self.tool.update_options({"executable": self.get_executable()})
+
+    @Slot(int)
+    def _update_python_kernel(self, _row):
+        self.tool.update_options({"kernel_spec_name": self.get_kernel_name(), "env": self.is_conda()})
+
+    @Slot(int)
+    def activate_execution_method(self, ind):
+        self.ui.stackedWidget_python_options.setCurrentIndex(ind)
+        method = self.ui.comboBox_python_execution_method.currentData()
+        if method == ToolExecutionMethod.DEFAULT:
+            self._set_default_execution_options()
+        elif method == ToolExecutionMethod.DIRECT:
+            self.tool.update_options(
+                {
+                    "use_jupyter_console": False,
+                    "executable": self.get_executable(),
+                    "kernel_spec_name": self.get_kernel_name(),
+                    "env": self.is_conda(),
+                }
+            )
+        elif method == ToolExecutionMethod.JUPYTER:
+            self.tool.update_options(
+                {
+                    "use_jupyter_console": True,
+                    "executable": self.get_executable(),
+                    "kernel_spec_name": self.get_kernel_name(),
+                    "env": self.is_conda(),
+                }
+            )
+        else:
+            raise RuntimeError(f"Unknown Python execution method [{method}]")
+
+    def _set_default_execution_options(self):
+        """Removes execution settings from tool options. The whole thing is not cleared because tool options
+        may contain other keys that are still needed. Eg. Julia options has the 'julia_sysimage' key."""
+        keys_to_remove = ["kernel_spec_name", "env", "use_jupyter_console", "executable"]
+        self.tool.update_options(remove_keys=keys_to_remove)
+
+    def do_update_options_widget(self, options: dict):
+        """Updates the options widgets according to given options."""
+        self._block_signals(True)
+        print(f"[{self.tool.name}] options:{options.items()}")
+        # Update Default page
+        if self.is_default_options(options):
+            options = default_python_execution_settings(self.tool.specification().qsettings)
+            self._set_python_execution_method_ui(ToolExecutionMethod.DEFAULT)
+            if options["use_jupyter_console"]:
+                self.ui.label_execution_method.setText("Jupyter kernel")
+                self.ui.label_interpreter_or_kernel.setText(options["kernel_spec_name"])
+            else:
+                self.ui.label_execution_method.setText("Python interpreter")
+                executable = options["executable"]
+                if executable == "":
+                    executable = resolve_current_python_interpreter()
+                self.ui.label_interpreter_or_kernel.setText(executable)
+            self._block_signals(False)
+            return
+        # Update Jupyter kernel & Python interpreter pages
+        if options["use_jupyter_console"]:
+            self._set_python_execution_method_ui(ToolExecutionMethod.JUPYTER)
+            kernel_index = self.models.find_python_kernel_index(options["kernel_spec_name"])
+            if not kernel_index.isValid():
+                kernel_index = self.models.python_kernel_model.index(0, 0)
+            self.ui.comboBox_kernel_specs.setCurrentIndex(kernel_index.row())
+        else:
+            # Python interpreter page
+            self._set_python_execution_method_ui(ToolExecutionMethod.DIRECT)
+            exec_index = self._models.find_python_interpreter_index(options["executable"])
+            if not exec_index.isValid():
+                exec_index = self.models.python_interpreters_model.index(0, 0)
+            self.ui.comboBox_executable.setCurrentIndex(exec_index.row())
+        self._block_signals(False)
+
+    def _block_signals(self, block: bool):
+        self.ui.comboBox_python_execution_method.blockSignals(block)
+        self.ui.comboBox_executable.blockSignals(block)
+        self.ui.comboBox_kernel_specs.blockSignals(block)
+
+    def _set_python_execution_method_ui(self, method: ToolExecutionMethod):
+        """Sets comboBox selection and stackedWidget page according to given method.
+        Keeps comboBox selection and shown stackedWidget page synchronized."""
+        self._set_execution_method_combobox(self.ui.comboBox_python_execution_method, method)
+        index = self.ui.comboBox_python_execution_method.findData(method)
+        self.ui.stackedWidget_python_options.setCurrentIndex(index)
+
+    def get_executable(self) -> str:
+        """Returns the Python executable path of the currently selected item in the combobox."""
+        current_index = self.models.python_interpreters_model.index(self.ui.comboBox_executable.currentIndex(), 0)
+        if not current_index.isValid():
+            return ""
+        item = self.models.python_interpreters_model.itemFromIndex(current_index)
+        return item.data()["exe"]
+
+    def get_kernel_name(self) -> str:
+        """Returns the selected Python kernel name in the combobox."""
+        data = self.get_current_kernel_item_data(self.models.python_kernel_model)
+        if not data:
+            return ""
+        return data["kernel_name"]
+
+    def is_conda(self) -> str:
+        """Returns 'conda' if currently selected kernel item is a conda kernel. Returns an empty string otherwise."""
+        data = self.get_current_kernel_item_data(self.models.python_kernel_model)
+        if not data:
+            return ""
+        return "conda" if data["is_conda"] else ""
+
+
+class JuliaOptionsWidget(SharedToolOptionsWidget):
+    def __init__(self, models):
+        from ..ui.julia_tool_options import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__(Ui_Form, models)
         self._last_sysimage_paths = {}
         self._sysimage_paths = {}
         self._sysimage_workers = {}
         self._work_animation = self._make_work_animation()
-        icon_abort = QIcon(CharIconEngine("\uf057", Qt.red))
+        icon_abort = QIcon(CharIconEngine("\uf057", Qt.GlobalColor.red))
         self.ui.toolButton_abort_sysimage.setIcon(icon_abort)
         self.ui.toolButton_new_sysimage.clicked.connect(self._create_sysimage)
         self.ui.toolButton_open_sysimage.clicked.connect(self._open_sysimage)
         self.ui.toolButton_abort_sysimage.clicked.connect(self._abort_sysimage)
         self.ui.toolButton_abort_sysimage.setVisible(False)
         self.ui.lineEdit_sysimage.editingFinished.connect(self._handle_sysimage_editing_finished)
+        self.populate_execution_method_combobox()
+        self.ui.comboBox_executable.setModel(self.models.julia_executables_model)
+        self.ui.comboBox_julia_project.setModel(self.models.julia_projects_model)
+        self.ui.comboBox_kernel_specs.setModel(self.models.julia_kernel_model)
+        self.connect_signals()
+
+    def populate_execution_method_combobox(self):
+        """Adds items to the Python execution method combobox."""
+        self.ui.comboBox_julia_execution_method.addItem(JULIA_TOOL_EXECUTION_MODES[0], ToolExecutionMethod.DEFAULT)
+        self.ui.comboBox_julia_execution_method.addItem(JULIA_TOOL_EXECUTION_MODES[1], ToolExecutionMethod.DIRECT)
+        self.ui.comboBox_julia_execution_method.addItem(JULIA_TOOL_EXECUTION_MODES[2], ToolExecutionMethod.JUPYTER)
+
+    def connect_signals(self):
+        """Connects signals to slots."""
+        super().connect_signals()
+        self.ui.toolButton_browse_julia.clicked.connect(self._add_julia_executable)
+        self.ui.toolButton_browse_julia_project.clicked.connect(self._add_julia_project)
+        self.ui.comboBox_executable.activated.connect(self._update_executable)
+        self.ui.comboBox_julia_project.activated.connect(self._update_project)
+        self.ui.comboBox_kernel_specs.activated.connect(self._update_julia_kernel)
+        self.ui.comboBox_julia_execution_method.activated.connect(self.activate_execution_method)
+
+    @Slot(bool)
+    def _add_julia_executable(self, _=False):
+        """Calls static method that shows a file browser for selecting a Julia path."""
+        current_path = self.ui.comboBox_executable.currentText()
+        if not current_path:
+            current_path = resolve_default_julia_executable()
+        init_dir, _ = os.path.split(current_path)
+        fpath = select_file_path(self, "Add Julia Executable...", init_dir, "julia")
+        if not fpath:
+            return
+        self._block_signals(True)
+        ind = self.models.add_julia_executable(fpath)
+        self._block_signals(False)
+        if not ind.isValid():
+            self._logger.msg_error.emit(f"Adding Julia executable {fpath} failed")
+            ind = self.models.julia_executables_model.index(0, 0)
+        self.ui.comboBox_executable.setCurrentIndex(ind.row())
+
+    @Slot(bool)
+    def _add_julia_project(self, _=False):
+        """Calls static method that shows a folder browser for adding a Julia project."""
+        dpath = select_dir(self, "Add Julia project directory...")
+        if not dpath:
+            return
+        self._block_signals(True)
+        ind = self.models.add_julia_project(dpath)
+        self._block_signals(False)
+        if not ind.isValid():
+            self._logger.msg_error.emit(f"Adding Julia Project {dpath} failed")
+            ind = self.models.julia_projects_model.index(0, 0)
+        self.ui.comboBox_julia_project.setCurrentIndex(ind.row())
+
+    @Slot(int)
+    def _update_executable(self, _row):
+        """Updates Julia executable."""
+        self.tool.update_options({"executable": self.get_executable()})
+
+    @Slot(int)
+    def _update_project(self, _row):
+        """Updates Julia project."""
+        self.tool.update_options({"project": self.get_project()})
+
+    @Slot(int)
+    def _update_julia_kernel(self, _row):
+        self.tool.update_options({"kernel_spec_name": self.get_kernel_name(), "env": self.is_conda()})
+
+    @Slot(int)
+    def activate_execution_method(self, ind):
+        self.ui.stackedWidget_julia_options.setCurrentIndex(ind)
+        method = self.ui.comboBox_julia_execution_method.currentData()
+        if method == ToolExecutionMethod.DEFAULT:
+            self._set_default_execution_options()
+        elif method == ToolExecutionMethod.DIRECT:
+            self.tool.update_options(
+                {
+                    "use_jupyter_console": False,
+                    "executable": self.get_executable(),
+                    "project": self.get_project(),
+                    "kernel_spec_name": self.get_kernel_name(),
+                    "env": self.is_conda(),
+                }
+            )
+        elif method == ToolExecutionMethod.JUPYTER:
+            self.tool.update_options(
+                {
+                    "use_jupyter_console": True,
+                    "executable": self.get_executable(),
+                    "project": self.get_project(),
+                    "kernel_spec_name": self.get_kernel_name(),
+                    "env": self.is_conda(),
+                }
+            )
+        else:
+            raise RuntimeError(f"Unknown Python execution method [{method}]")
+
+    def _set_default_execution_options(self):
+        """Removes execution settings from tool options. The whole dict is not cleared because tool._options
+        may contain other keys that are still needed. Eg. Julia options has the 'julia_sysimage' key."""
+        keys_to_remove = ["use_jupyter_console", "executable", "project", "kernel_spec_name", "env"]
+        self.tool.update_options(remove_keys=keys_to_remove)
+
+    def do_update_options_widget(self, options):
+        self._update_ui()
+        self.last_sysimage_path = options.get("julia_sysimage")
+        self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
+        self._block_signals(True)
+        print(f"[{self.tool.name}] options:{options.items()}")
+        # Update Default page
+        if self.is_default_options(options):
+            options = default_julia_execution_settings(self.tool.specification().qsettings)
+            self._set_julia_execution_method_ui(ToolExecutionMethod.DEFAULT)
+            if options["use_jupyter_console"]:
+                self.ui.label_execution_method.setText("Jupyter kernel")
+                self.ui.label_executable_or_kernel.setText(options["kernel_spec_name"])
+                self.ui.label_environment.setText("")
+            else:
+                self.ui.label_execution_method.setText("Julia executable & environment")
+                executable = options["executable"]
+                # TODO: Check what happens if executable is empty
+                if executable == "":
+                    executable = resolve_default_julia_executable()
+                self.ui.label_executable_or_kernel.setText(executable)
+                project = options["project"]
+                if not project:
+                    project = "Default Julia environment (@v1.x)"
+                elif project == "@.":
+                    project = "Current project environment (@.)"
+                self.ui.label_environment.setText(project)
+            self._block_signals(False)
+            return
+        # Update Jupyter kernel & Julia executable/environment pages
+        if options["use_jupyter_console"]:
+            self._set_julia_execution_method_ui(ToolExecutionMethod.JUPYTER)
+            kernel_index = self.models.find_julia_kernel_index(options["kernel_spec_name"])
+            if not kernel_index.isValid():
+                kernel_index = self.models.julia_kernel_model.index(0, 0)
+            self.ui.comboBox_kernel_specs.setCurrentIndex(kernel_index.row())
+        else:
+            self._set_julia_execution_method_ui(ToolExecutionMethod.DIRECT)
+            exec_index = self._models.find_julia_executable_index(options["executable"])
+            if not exec_index.isValid():
+                exec_index = self.models.julia_executables_model.index(0, 0)
+            self.ui.comboBox_executable.setCurrentIndex(exec_index.row())
+            env_index = self._models.find_julia_project_index(options["project"])
+            if not env_index.isValid():
+                env_index = self.models.julia_projects_model.index(0, 0)
+            self.ui.comboBox_julia_project.setCurrentIndex(env_index.row())
+        self._block_signals(False)
+
+    def _block_signals(self, block):
+        self.ui.comboBox_julia_execution_method.blockSignals(block)
+        self.ui.comboBox_executable.blockSignals(block)
+        self.ui.comboBox_julia_project.blockSignals(block)
+        self.ui.comboBox_kernel_specs.blockSignals(block)
+
+    def _set_julia_execution_method_ui(self, method: ToolExecutionMethod):
+        """Sets comboBox selection and stackedWidget page according to given method.
+        Keeps comboBox selection and shown stackedWidget page synchronized."""
+        self._set_execution_method_combobox(self.ui.comboBox_julia_execution_method, method)
+        index = self.ui.comboBox_julia_execution_method.findData(method)
+        self.ui.stackedWidget_julia_options.setCurrentIndex(index)
+
+    def get_executable(self) -> str:
+        """Returns the Julia executable path of the currently selected item in the combobox."""
+        current_index = self.models.julia_executables_model.index(self.ui.comboBox_executable.currentIndex(), 0)
+        if not current_index.isValid():
+            return ""
+        item = self.models.julia_executables_model.itemFromIndex(current_index)
+        if not item.data():  # Happens when Julia is not in PATH and the julia_executables_model is empty
+            return ""
+        return item.data()["exe"]
+
+    def get_project(self) -> str:
+        """Returns the Julia project path of the currently selected item in the combobox."""
+        current_index = self.models.julia_projects_model.index(self.ui.comboBox_julia_project.currentIndex(), 0)
+        if not current_index.isValid():
+            return ""
+        item = self.models.julia_projects_model.itemFromIndex(current_index)
+        return item.data()["path"]
+
+    def get_kernel_name(self) -> str:
+        """Returns the selected Julia kernel name in the combobox."""
+        data = self.get_current_kernel_item_data(self.models.julia_kernel_model)
+        if not data:
+            return ""
+        return data["kernel_name"]
+
+    def is_conda(self):
+        """Returns 'conda' if currently selected kernel item is a conda kernel. Returns an empty string otherwise."""
+        data = self.get_current_kernel_item_data(self.models.julia_kernel_model)
+        if not data:
+            return ""
+        return "conda" if data["is_conda"] else ""
 
     def _make_work_animation(self):
         """
@@ -86,27 +533,27 @@ class JuliaOptionsWidget(OptionsWidget):
 
     @property
     def sysimage_path(self):
-        return self._sysimage_paths.get(self._tool)
+        return self._sysimage_paths.get(self.tool)
 
     @sysimage_path.setter
     def sysimage_path(self, sysimage_path):
-        self._sysimage_paths[self._tool] = sysimage_path
+        self._sysimage_paths[self.tool] = sysimage_path
 
     @property
     def sysimage_worker(self):
-        return self._sysimage_workers.get(self._tool)
+        return self._sysimage_workers.get(self.tool)
 
     @sysimage_worker.setter
     def sysimage_worker(self, sysimage_worker):
-        self._sysimage_workers[self._tool] = sysimage_worker
+        self._sysimage_workers[self.tool] = sysimage_worker
 
     @property
     def last_sysimage_path(self):
-        return self._last_sysimage_paths.get(self._tool)
+        return self._last_sysimage_paths.get(self.tool)
 
     @last_sysimage_path.setter
     def last_sysimage_path(self, last_sysimage_path):
-        self._last_sysimage_paths[self._tool] = last_sysimage_path
+        self._last_sysimage_paths[self.tool] = last_sysimage_path
 
     @property
     def sysimage_basename(self):
@@ -115,7 +562,7 @@ class JuliaOptionsWidget(OptionsWidget):
     @Slot()
     def _handle_work_animation_finished(self):
         # pylint: disable=undefined-variable
-        self.ui.lineEdit_sysimage.setPalette(qApp.palette())
+        self.ui.lineEdit_sysimage.setPalette(QApplication.palette())
 
     @Slot(object)
     def _handle_work_animation_value_changed(self, step):
@@ -124,20 +571,16 @@ class JuliaOptionsWidget(OptionsWidget):
         stop = QPointF(3 * width, 0)
         gradient = QLinearGradient(start, stop)
         # pylint: disable=undefined-variable
-        highlight_color = qApp.palette().highlight().color()
-        base_color = qApp.palette().base().color()
+        highlight_color = QApplication.palette().highlight().color()
+        base_color = QApplication.palette().base().color()
         gradient.setColorAt((step + 0) % 1, base_color)
         gradient.setColorAt((step + 0.2) % 1, base_color)
         gradient.setColorAt((step + 0.5) % 1, highlight_color)
         gradient.setColorAt((step + 0.8) % 1, highlight_color)
         gradient.setColorAt((step + 1) % 1, base_color)
         palette = QPalette()
-        palette.setBrush(QPalette.Base, QBrush(gradient))
+        palette.setBrush(QPalette.ColorRole.Base, QBrush(gradient))
         self.ui.lineEdit_sysimage.setPalette(palette)
-
-    def set_tool(self, tool):
-        super().set_tool(tool)
-        self._update_ui()
 
     def _update_ui(self):
         if self.sysimage_worker is not None:
@@ -162,21 +605,17 @@ class JuliaOptionsWidget(OptionsWidget):
         if self.sysimage_path is None:
             self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
 
-    def do_update_options(self, options):
-        self.last_sysimage_path = options.get("julia_sysimage")
-        self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
-
     @Slot()
     def _handle_sysimage_editing_finished(self):
         sysimage_path = self.ui.lineEdit_sysimage.text()
-        self._tool.update_options({"julia_sysimage": sysimage_path})
+        self.tool.update_options({"julia_sysimage": sysimage_path})
 
     @Slot(bool)
     def _open_sysimage(self, _checked=False):
         """Shows a file dialog where the user can select a julia sysimage."""
         ext = "dll" if sys.platform == "win32" else "so"
         sysimage_path, _ = get_open_file_name_in_last_dir(
-            self._settings,
+            self.settings,
             "openJuliaSysimage",
             self,
             "Select Julia Sysimage file",
@@ -185,7 +624,7 @@ class JuliaOptionsWidget(OptionsWidget):
         )
         if not sysimage_path:
             return
-        self._tool.update_options({"julia_sysimage": sysimage_path})
+        self.tool.update_options({"julia_sysimage": sysimage_path})
 
     @Slot(bool)
     def _abort_sysimage(self, _checked=False):
@@ -196,7 +635,7 @@ class JuliaOptionsWidget(OptionsWidget):
 
     def _get_sysimage_path(self):
         ext = "dll" if sys.platform == "win32" else "so"
-        spec_name = self._tool.specification().name
+        spec_name = self.tool.specification().name
         suggested_file_path = os.path.join(self._project.project_dir, f"{spec_name}_JuliaSysimage.{ext}")
         file_path, _ = QFileDialog.getSaveFileName(
             self, "Create Julia Sysimage file", suggested_file_path, f"Library (*.{ext})"
@@ -214,21 +653,21 @@ class JuliaOptionsWidget(OptionsWidget):
 
         The results of the workflow are used by ``self._do_create_sysimage()` to finally create the sysimage.
         """
-        if self._tool.specification() is None or self._tool.specification().tooltype.lower() != "julia":
+        if self.tool.specification() is None or self.tool.specification().tooltype.lower() != "julia":
             self._logger.msg_error.emit(
-                f"No Julia specification set for Tool <b>{self._tool.name}</b>. Can't create sysimage."
+                f"No Julia specification set for Tool <b>{self.tool.name}</b>. Can't create sysimage."
             )
             return
-        dag = self._project.dag_with_node(self._tool.name)
+        dag = self._project.dag_with_node(self.tool.name)
         if not dag:
             return
         self.sysimage_path = self._get_sysimage_path()
         if self.sysimage_path is None:
             return
-        execution_permits = {item_name: item_name == self._tool.name for item_name in dag.nodes}
-        settings = make_settings_dict_for_engine(self._settings)
+        execution_permits = {item_name: item_name == self.tool.name for item_name in dag.nodes}
+        settings = make_settings_dict_for_engine(self.settings)
         settings["appSettings/makeSysImage"] = "true"  # See JuliaToolInstance.prepare()
-        dag_identifier = f"containing {self._tool.name}"
+        dag_identifier = f"containing {self.tool.name}"
         job_id = self._project.LOCAL_EXECUTION_JOB_ID
         self.sysimage_worker = self._project.create_engine_worker(
             dag, execution_permits, dag_identifier, settings, job_id
@@ -237,16 +676,16 @@ class JuliaOptionsWidget(OptionsWidget):
         engine_data = self.sysimage_worker.get_engine_data()
         spec_names = {spec["name"] for type_specs in engine_data["specifications"].values() for spec in type_specs}
         spec = self._make_sysimage_spec(spec_names)
-        item_dict = engine_data["items"][self._tool.name]
+        item_dict = engine_data["items"][self.tool.name]
         item_dict["specification"] = spec.name
         options = item_dict.get("options")
         if options:
             options["julia_sysimage"] = ""  # Don't use any previous sysimages
         spec_dict = spec.to_dict()
         spec_dict["definition_file_path"] = spec.definition_file_path
-        engine_data["specifications"].setdefault(self._tool.item_type(), []).append(spec_dict)
+        engine_data["specifications"].setdefault(self.tool.item_type(), []).append(spec_dict)
         self.sysimage_worker.set_engine_data(engine_data)
-        self.sysimage_worker.finished.connect(lambda tool=self._tool: self._do_create_sysimage(tool))
+        self.sysimage_worker.finished.connect(lambda tool=self.tool: self._do_create_sysimage(tool))
         self._update_ui()
         self.sysimage_worker.start(silent=True)
         self._logger.msg_success.emit(
@@ -255,10 +694,10 @@ class JuliaOptionsWidget(OptionsWidget):
         )
 
     def _get_precompile_statements_filepath(self):
-        return os.path.join(self._tool.data_dir, "precompile_statements_file.jl")
+        return os.path.join(self.tool.data_dir, "precompile_statements_file.jl")
 
     def _get_loaded_modules_filepath(self):
-        return os.path.join(self._tool.data_dir, "loaded_modules.txt")
+        return os.path.join(self.tool.data_dir, "loaded_modules.txt")
 
     def _make_sysimage_spec(self, spec_names):
         """Returns a modified version of this tool specification that collects necessary information
@@ -271,7 +710,7 @@ class JuliaOptionsWidget(OptionsWidget):
         Returns:
             ToolSpecification
         """
-        spec = self._tool.specification().clone()
+        spec = self.tool.specification().clone()
         original_program_file = os.path.join(spec.path, spec.includes.pop(0))
         loaded_modules_file = self._get_loaded_modules_filepath()
         precompile_statements_file = self._get_precompile_statements_filepath()
@@ -309,9 +748,9 @@ end"""
             tool (Tool): The Tool that started the sysimage creation process.
                 It may be different from the Tool currently using the widget.
         """
-        # Replace self._tool while we run this method
-        current_tool = self._tool
-        self._tool = tool
+        # Replace self.tool while we run this method
+        current_tool = self.tool
+        self.tool = tool
         self.sysimage_worker.clean_up()
         state = self.sysimage_worker.engine_final_state()
         if state != "COMPLETED":
@@ -369,13 +808,13 @@ finally
     cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
     cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
 end"""
-        julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings, self._settings)
+        julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings, self.settings)
         args += ["-e", code]
         self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=False)
         self.sysimage_worker.execution_finished.connect(lambda ret: self._handle_sysimage_process_finished(ret, tool))
-        self.sysimage_worker.start_execution(workdir=self._tool.specification().path)
-        # Restore the current self._tool
-        self._tool = current_tool
+        self.sysimage_worker.start_execution(workdir=self.tool.specification().path)
+        # Restore the current self.tool
+        self.tool = current_tool
 
     def _handle_sysimage_process_finished(self, ret, tool):
         """Runs when the Julia process started by ``self._do_create_sysimage()`` finishes.
@@ -386,8 +825,8 @@ end"""
             tool (Tool): The Tool that started the sysimage creation process.
                 It may be different from the Tool currently using the widget.
         """
-        # Replace self._tool while we run this method
-        self._tool, current_tool = tool, self._tool
+        # Replace self.tool while we run this method
+        self.tool, current_tool = tool, self.tool
         user_stopped = self.sysimage_worker.user_stopped
         error = self.sysimage_worker.process_error
         self.sysimage_worker.deleteLater()
@@ -397,12 +836,12 @@ end"""
             self._logger.msg_error.emit(msg)
             self.sysimage_path = None
         else:
-            self._tool.update_options({"julia_sysimage": self.sysimage_path})
+            self.tool.update_options({"julia_sysimage": self.sysimage_path})
             self._logger.msg_success.emit(f"<b>{self.sysimage_basename}</b> created successfully.\n")
         if tool is current_tool:
             self._update_ui()
-        # Restore the current self._tool
-        self._tool = current_tool
+        # Restore the current self.tool
+        self.tool = current_tool
 
     def _make_failure_message(self, user_stopped, errors):
         msg = f"Process to create <b>{self.sysimage_basename}</b> "
@@ -413,3 +852,72 @@ end"""
             if errors:
                 msg += f" with the following error(s):\n{errors}"
         return msg
+
+
+class ExecutableOptionsWidget(OptionsWidget):
+    def __init__(self, models):
+        from ..ui.executable_tool_options import Ui_Form  # pylint: disable=import-outside-toplevel
+
+        super().__init__(Ui_Form, models)
+        self.shells = ["No shell", "cmd.exe", "powershell.exe", "bash"]
+        self.ui.comboBox_shell.addItems(self.shells)
+        # Disable shell selections that are not compatible with the os running toolbox
+        msg = f"<p>Selection not available for platform {sys.platform}</p>"
+        if sys.platform == "win32":
+            # No bash for windows
+            self.ui.comboBox_shell.model().item(3).setEnabled(False)
+            self.ui.comboBox_shell.model().item(3).setToolTip(msg)
+        else:
+            # For other systems no cmd or powershell
+            self.ui.comboBox_shell.model().item(1).setEnabled(False)
+            self.ui.comboBox_shell.model().item(1).setToolTip(msg)
+            self.ui.comboBox_shell.model().item(2).setEnabled(False)
+            self.ui.comboBox_shell.model().item(2).setToolTip(msg)
+        self.connect_signals()
+
+    def connect_signals(self):
+        self.ui.lineEdit_command.textEdited.connect(self._update_command)
+        # self.ui.lineEdit_command.editingFinished.connect(self._specification_editor._finish_updating_command)
+        self.ui.comboBox_shell.activated.connect(self._update_shell)
+
+    def do_update_options_widget(self, options):
+        print(f"[{self.tool.name}] restoring options:{options}")
+        self._block_signals(True)
+        self.ui.lineEdit_command.setText(options["cmd"])
+        shell = options["shell"]
+        ind = next(iter(k for k, t in enumerate(self.shells) if t.lower() == shell), 0)
+        self.ui.comboBox_shell.setCurrentIndex(ind)
+        self._block_signals(False)
+
+    def _block_signals(self, block):
+        self.ui.lineEdit_command.blockSignals(block)
+        self.ui.comboBox_shell.blockSignals(block)
+
+    def get_shell(self):
+        """Returns the selected shell in the shell combo box."""
+        ind = self.ui.comboBox_shell.currentIndex()
+        if ind < 1:
+            return ""
+        return self.ui.comboBox_shell.currentText()
+
+    @Slot(str)
+    def _update_command(self, cmd):
+        """Updates command."""
+        self.tool.update_options({"cmd": cmd})
+
+    # @Slot()
+    # def _finish_updating_command(self):
+    #     """Seals latest undo stack command."""
+    #     self._undo_stack.push(SealCommand(CommandId.COMMAND_UPDATE.value))
+
+    @Slot(int)
+    def _update_shell(self, _row):
+        """Updates shell."""
+        self.tool.update_options({"shell": self.get_shell()})
+
+    def set_command_and_shell_edit_disabled_state(self, enabled):
+        """Sets the enabled state for the Command line edit and the Shell combobox.
+        # TODO: Use this when tool spec does have or does not have a main file. (In do_update_options_widget())
+        """
+        self.ui.comboBox_shell.setDisabled(enabled)
+        self.ui.lineEdit_command.setDisabled(enabled)

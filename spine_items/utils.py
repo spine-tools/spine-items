@@ -21,6 +21,7 @@ from typing_extensions import NotRequired
 from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.queue_logger import SuppressedMessage
+from spine_engine.utils.helpers import resolve_current_python_interpreter
 import spinedb_api
 from spinedb_api.filters.scenario_filter import scenario_name_from_dict
 from spinedb_api.helpers import SUPPORTED_DIALECTS, UNSUPPORTED_DIALECTS, remove_credentials_from_url
@@ -256,3 +257,74 @@ def escape_backward_slashes(string: str) -> str:
         escaped string
     """
     return string.replace("\\", "\\\\")
+
+
+def check_options(tooltype, current_options, logger, qsettings):
+    """Returns the default options based on given tool type if options are
+    missing. If some but not all options are available, fills in the missing
+    key-value pairs with default values.
+
+    Args:
+        tooltype (str): Tool spec type
+        current_options (dict): Options dict to check
+        logger (LoggerInterface): For logging
+        qsettings (QSettings): Toolbox settings
+
+    Returns:
+        dict: Original or modified dict depending on if required key-values are present
+    """
+    if tooltype == "python":
+        defaults = default_python_execution_settings(qsettings)
+    elif tooltype == "julia":
+        defaults = default_julia_execution_settings(qsettings)
+    elif tooltype == "executable":
+        defaults = default_executable_execution_settings()
+    else:
+        logger.msg_error.emit(f"Default execution settings for {tooltype} do not exist")
+        return {}
+    if not current_options:
+        return defaults
+    # If key is missing, insert the key and the default value
+    for key in defaults.keys():
+        if key not in current_options.keys():
+            current_options[key] = defaults[key]
+    # Check python executable consistency
+    # If default Python interpreter (in Settings->Tools) is not the current Python interpreter, selecting the
+    # current Python interpreter in Tool properties and executing doesn't work as expected.
+    if tooltype == "python":
+        if current_options["executable"] == "" and defaults["executable"] != "":
+            current_options["executable"] = resolve_current_python_interpreter()
+    return current_options
+
+
+def default_python_execution_settings(qsettings):
+    """Returns default Python Tool execution settings."""
+    d = dict()
+    is_conda = qsettings.value("appSettings/pythonCondaKernel", defaultValue="0")
+    use_jupyter_console = False if qsettings.value("appSettings/usePythonKernel", defaultValue="0") == "0" else True
+    d["kernel_spec_name"] = qsettings.value("appSettings/pythonKernel", defaultValue="")
+    d["env"] = "" if is_conda == "0" else "conda"
+    d["use_jupyter_console"] = use_jupyter_console
+    d["executable"] = qsettings.value("appSettings/pythonPath", defaultValue="")
+    return d
+
+
+def default_julia_execution_settings(qsettings):
+    """Returns default Julia Tool execution settings."""
+    d = dict()
+    is_conda = qsettings.value("appSettings/juliaCondaKernel", defaultValue="0")
+    use_jupyter_console = False if qsettings.value("appSettings/useJuliaKernel", defaultValue="0") == "0" else True
+    d["kernel_spec_name"] = qsettings.value("appSettings/juliaKernel", defaultValue="")
+    d["env"] = "" if is_conda == "0" else "conda"
+    d["use_jupyter_console"] = use_jupyter_console
+    d["executable"] = qsettings.value("appSettings/juliaPath", defaultValue="")
+    d["project"] = qsettings.value("appSettings/juliaProjectPath", defaultValue="")
+    return d
+
+
+def default_executable_execution_settings():
+    """Returns default Executable Tool execution settings."""
+    d = dict()
+    d["cmd"] = ""
+    d["shell"] = ""
+    return d
