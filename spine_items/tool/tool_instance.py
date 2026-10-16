@@ -196,7 +196,7 @@ class JuliaToolInstance(ToolInstance):
 
     def prepare(self, args):
         """See base class."""
-        options = check_options("julia", self.options, self._logger)
+        options = check_options("julia", self.options, self._logger, self.tool_specification.qsettings)
         exec_settings = {
             "kernel_spec_name": options["kernel_spec_name"],
             "env": options["env"],

@@ -442,13 +442,13 @@ class FakeQSettings:
 class FakeTool:
     def __init__(self, tooltype, use_jupyter_console, shell=None, cmd=None):
         if tooltype == "python":
-            options = default_python_execution_settings()
+            options = default_python_execution_settings(MockQSettings())
             if use_jupyter_console:
                 options["use_jupyter_console"] = True
                 options["kernel_spec_name"] = "some_kernel"
             self.options = options
         elif tooltype == "julia":
-            options = default_julia_execution_settings()
+            options = default_julia_execution_settings(MockQSettings())
             if use_jupyter_console:
                 options["use_jupyter_console"] = True
                 options["kernel_spec_name"] = "some_julia_kernel"

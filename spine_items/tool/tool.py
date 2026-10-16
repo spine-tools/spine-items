@@ -11,6 +11,7 @@
 ######################################################################################################################
 
 """Contains the Tool project item class."""
+
 from __future__ import annotations
 import os
 from typing import Optional, TYPE_CHECKING
@@ -462,13 +463,15 @@ class Tool(DBWriterItemBase):
             options = {}
         if remove_keys is None:
             remove_keys = []
-        self._toolbox.undo_stack.push(UpdateToolOptionsCommand(
-            self.name,
-            options,
-            self._options,
-            self._project,
-            remove_keys,
-        ))
+        self._toolbox.undo_stack.push(
+            UpdateToolOptionsCommand(
+                self.name,
+                options,
+                self._options,
+                self._project,
+                remove_keys,
+            )
+        )
 
     def do_set_options(self, options):
         """Sets options for this tool.

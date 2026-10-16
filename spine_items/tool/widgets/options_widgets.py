@@ -25,7 +25,8 @@ from spine_items.tool.utils import get_julia_path_and_project
 from spine_items.utils import (
     escape_backward_slashes,
     default_python_execution_settings,
-    default_julia_execution_settings
+    default_julia_execution_settings,
+    default_executable_execution_settings,
 )
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spinetoolbox.helpers import (
@@ -49,6 +50,15 @@ class ToolExecutionMethod(Enum):
     DEFAULT = "default"
     DIRECT = "direct"
     JUPYTER = "jupyter"
+
+
+class ShellOptions(Enum):
+    """The values here are what's stored into the json file."""
+
+    DIRECT = ""
+    CMD = "cmd.exe"
+    POWERSHELL = "powershell.exe"
+    BASH = "bash"
 
 
 class OptionsWidget(QWidget):
@@ -859,61 +869,72 @@ class ExecutableOptionsWidget(OptionsWidget):
         from ..ui.executable_tool_options import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(Ui_Form, models)
-        self.shells = ["No shell", "cmd.exe", "powershell.exe", "bash"]
-        self.ui.comboBox_shell.addItems(self.shells)
-        # Disable shell selections that are not compatible with the os running toolbox
-        msg = f"<p>Selection not available for platform {sys.platform}</p>"
-        if sys.platform == "win32":
-            # No bash for windows
-            self.ui.comboBox_shell.model().item(3).setEnabled(False)
-            self.ui.comboBox_shell.model().item(3).setToolTip(msg)
-        else:
-            # For other systems no cmd or powershell
-            self.ui.comboBox_shell.model().item(1).setEnabled(False)
-            self.ui.comboBox_shell.model().item(1).setToolTip(msg)
-            self.ui.comboBox_shell.model().item(2).setEnabled(False)
-            self.ui.comboBox_shell.model().item(2).setToolTip(msg)
+        self._init_shell_combobox()
         self.connect_signals()
+
+    def _init_shell_combobox(self):
+        for shell in ShellOptions:
+            if shell == ShellOptions.DIRECT:
+                self.ui.comboBox_shell.addItem("No shell", shell)
+            else:
+                self.ui.comboBox_shell.addItem(shell.value, shell)
+        # Disable shell selections that are not compatible with the os running toolbox
+        supported_shells = (
+            {ShellOptions.DIRECT, ShellOptions.CMD, ShellOptions.POWERSHELL}
+            if sys.platform == "win32"
+            else {ShellOptions.DIRECT, ShellOptions.BASH}
+        )
+        model = self.ui.comboBox_shell.model()
+        for row in range(model.rowCount()):
+            shell = self.ui.comboBox_shell.itemData(row)
+            if shell not in supported_shells:
+                item = model.item(row)
+                item.setEnabled(False)
+                name = "No shell" if shell == ShellOptions.DIRECT else shell.value
+                item.setToolTip(f"<p>{name} is not available for platform {sys.platform}</p>")
 
     def connect_signals(self):
         self.ui.lineEdit_command.textEdited.connect(self._update_command)
         # self.ui.lineEdit_command.editingFinished.connect(self._specification_editor._finish_updating_command)
         self.ui.comboBox_shell.activated.connect(self._update_shell)
 
-    def do_update_options_widget(self, options):
+    def do_update_options_widget(self, options: dict):
         print(f"[{self.tool.name}] restoring options:{options}")
         self._block_signals(True)
+        if not options:
+            options = default_executable_execution_settings()
+        self._set_combobox_shell_index(options["shell"])
         self.ui.lineEdit_command.setText(options["cmd"])
-        shell = options["shell"]
-        ind = next(iter(k for k, t in enumerate(self.shells) if t.lower() == shell), 0)
-        self.ui.comboBox_shell.setCurrentIndex(ind)
         self._block_signals(False)
 
-    def _block_signals(self, block):
-        self.ui.lineEdit_command.blockSignals(block)
+    def _block_signals(self, block: bool):
         self.ui.comboBox_shell.blockSignals(block)
+        self.ui.lineEdit_command.blockSignals(block)
 
-    def get_shell(self):
-        """Returns the selected shell in the shell combo box."""
-        ind = self.ui.comboBox_shell.currentIndex()
-        if ind < 1:
-            return ""
-        return self.ui.comboBox_shell.currentText()
+    def _set_combobox_shell_index(self, shell: str):
+        """Sets active index to shell comboBox based on given string."""
+        index = self.ui.comboBox_shell.findData(ShellOptions(shell))
+        if index >= 0:
+            self.ui.comboBox_shell.setCurrentIndex(index)
+
+    def get_shell(self) -> str:
+        """Returns the current selected shell in the shell combo box."""
+        return self.ui.comboBox_shell.currentData().value
 
     @Slot(str)
     def _update_command(self, cmd):
         """Updates command."""
         self.tool.update_options({"cmd": cmd})
 
-    # @Slot()
-    # def _finish_updating_command(self):
-    #     """Seals latest undo stack command."""
-    #     self._undo_stack.push(SealCommand(CommandId.COMMAND_UPDATE.value))
-
     @Slot(int)
     def _update_shell(self, _row):
         """Updates shell."""
         self.tool.update_options({"shell": self.get_shell()})
+
+    # @Slot()
+    # def _finish_updating_command(self):
+    #     """Seals latest undo stack command."""
+    #     self._undo_stack.push(SealCommand(CommandId.COMMAND_UPDATE.value))
 
     def set_command_and_shell_edit_disabled_state(self, enabled):
         """Sets the enabled state for the Command line edit and the Shell combobox.

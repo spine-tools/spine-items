@@ -437,9 +437,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 self._logger.msg_error.emit("Julia kernel missing. Please select one in Tool Properties.")
                 return False
             if not use_jupyter_console and not julia_path:
-                self._logger.msg_error.emit(
-                    "Julia executable path missing. Please select it in Tool Properties."
-                )
+                self._logger.msg_error.emit("Julia executable path missing. Please select it in Tool Properties.")
                 return False
         elif self._tool_specification.tooltype.lower() == "gams":
             gams_path = resolve_gams_executable(settings.value("appSettings/gamsPath", defaultValue=""))

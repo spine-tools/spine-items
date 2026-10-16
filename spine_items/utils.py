@@ -259,7 +259,7 @@ def escape_backward_slashes(string: str) -> str:
     return string.replace("\\", "\\\\")
 
 
-def check_options(tooltype, current_options, logger, qsettings):
+def check_options(tooltype, current_options, logger, qsettings=None):
     """Returns the default options based on given tool type if options are
     missing. If some but not all options are available, fills in the missing
     key-value pairs with default values.
