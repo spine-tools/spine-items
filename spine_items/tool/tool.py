@@ -33,7 +33,6 @@ from .commands import (
     UpdateToolExecuteInWorkCommand,
     UpdateToolOptionsCommand,
 )
-from .executable_item import ExecutableItem
 from .item_info import ItemInfo
 from .output_resources import scan_for_resources
 from .utils import OptionsDict, find_file, flatten_file_path_duplicates
