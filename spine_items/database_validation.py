@@ -161,5 +161,5 @@ class DatabaseConnectionValidator(QObject):
     def wait_for_finish(self) -> None:
         """Waits for the thread to finish."""
         self._closed = True
-        while self._busy:
-            QApplication.processEvents()
+        self._threadpool.waitForDone()
+        QApplication.processEvents()
