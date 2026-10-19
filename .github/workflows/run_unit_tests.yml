@@ -62,7 +62,8 @@ jobs:
         if [ "$RUNNER_OS" != "Windows" ]; then
           export QT_QPA_PLATFORM=offscreen
         fi
-        pytest tests/ --cov --verbose
+        pytest tests/ --cov --verbose -s
+        env: PYTHONFAULTHANDLER: 1
       shell: bash
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@v7
