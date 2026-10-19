@@ -106,17 +106,13 @@ class DataConnection(ProjectItem):
             db_references = []
         self._toolbox = toolbox
         self.reference_model = QStandardItemModel()  # References
+        self._file_ref_root: QStandardItem | None = None
+        self._file_pattern_root: QStandardItem | None = None
+        self._directory_ref_root: QStandardItem | None = None
+        self._db_ref_root: QStandardItem | None = None
         self.data_model = QStandardItemModel()  # Paths of project internal files. These are found in DC data directory
         self.file_system_watcher: CustomFileSystemWatcher | None = None
         self.file_references = list(file_references)
-        self._file_ref_root = QStandardItem("File paths")
-        self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        self._file_pattern_root = QStandardItem("File patterns")
-        self._file_pattern_root.setFlags(self._file_ref_root.flags())
-        self._directory_ref_root = QStandardItem("Directories")
-        self._directory_ref_root.setFlags(self._file_ref_root.flags())
-        self._db_ref_root = QStandardItem("URLs")
-        self._db_ref_root.setFlags(self._file_ref_root.flags())
         self.file_refs_selected = False
         self.any_refs_selected = False
         self.any_data_selected = False
@@ -957,13 +953,18 @@ class DataConnection(ProjectItem):
         """List references in QTreeView."""
         self.reference_model.clear()
         self.reference_model.setHorizontalHeaderItem(0, QStandardItem("References"))  # Add header
-        self._file_ref_root.removeRows(0, self._file_ref_root.rowCount())
+        # Make root items for the reference model
+        self._file_ref_root = QStandardItem("File paths")
+        self._file_ref_root.setFlags(self._file_ref_root.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self._file_pattern_root = QStandardItem("File patterns")
+        self._file_pattern_root.setFlags(self._file_ref_root.flags())
+        self._directory_ref_root = QStandardItem("Directories")
+        self._directory_ref_root.setFlags(self._file_ref_root.flags())
+        self._db_ref_root = QStandardItem("URLs")
+        self._db_ref_root.setFlags(self._file_ref_root.flags())
         self.reference_model.appendRow(self._file_ref_root)
-        self._file_pattern_root.removeRows(0, self._file_pattern_root.rowCount())
         self.reference_model.appendRow(self._file_pattern_root)
-        self._directory_ref_root.removeRows(0, self._directory_ref_root.rowCount())
         self.reference_model.appendRow(self._directory_ref_root)
-        self._db_ref_root.removeRows(0, self._db_ref_root.rowCount())
         self.reference_model.appendRow(self._db_ref_root)
         self._append_file_references_to_model(self.file_references)
         self._append_file_patterns_to_model(file_patterns)
@@ -1026,6 +1027,7 @@ class DataConnection(ProjectItem):
             item: item to modify
             ref_type: the type of reference the item holds
         """
+        message = ""
         match ref_type:
             case "file":
                 message = "The file is missing."
