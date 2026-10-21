@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'executable_tool_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.11.1
+## Created by: Qt User Interface Compiler version 6.12.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -110,7 +110,13 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         self.label.setText(QCoreApplication.translate("Form", u"Shell", None))
+#if QT_CONFIG(tooltip)
+        self.comboBox_shell.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select how the command is executed. Use Direct execution to run a program directly, or choose a shell such as Command Prompt, PowerShell, or Bash to execute shell commands and scripts.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.label_2.setText(QCoreApplication.translate("Form", u"Command", None))
+#if QT_CONFIG(tooltip)
+        self.lineEdit_command.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Enter the command to run. Direct execution can launch any executable program. When a shell is selected, the command is executed by that shell and may use shell-specific syntax.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.lineEdit_command.setPlaceholderText(QCoreApplication.translate("Form", u"Type command here...", None))
         pass
     # retranslateUi

@@ -12,14 +12,15 @@
 
 """Utility functions for the Tool project item."""
 
-from datetime import datetime
 import glob
 import json
 import os.path
-from pathlib import Path
 import re
+from pathlib import Path
+from datetime import datetime
 from typing import TypedDict
 from typing_extensions import NotRequired
+from enum import Enum
 from spine_engine.logger_interface import LoggerInterface
 from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import (
@@ -28,6 +29,14 @@ from spine_engine.utils.helpers import (
     resolve_julia_executable,
     resolve_julia_project,
 )
+
+
+class ShellOptions(Enum):
+    """Contains the Shell Options for Executable Tool types. The values here are stored into the json file."""
+    DIRECT = ""
+    CMD = "cmd.exe"
+    POWERSHELL = "powershell.exe"
+    BASH = "bash"
 
 
 class OptionsDict(TypedDict):

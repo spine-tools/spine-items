@@ -14,6 +14,7 @@
 
 import os
 import sys
+import shlex
 from spine_engine.execution_managers.kernel_execution_manager import KernelExecutionManager
 from spine_engine.execution_managers.persistent_execution_manager import (
     JuliaPersistentExecutionManager,
@@ -21,7 +22,7 @@ from spine_engine.execution_managers.persistent_execution_manager import (
 )
 from spine_engine.execution_managers.process_execution_manager import ProcessExecutionManager
 from spine_engine.utils.helpers import resolve_conda_executable, resolve_gams_executable, resolve_python_interpreter
-from spine_items.tool.utils import get_julia_path_and_project
+from spine_items.tool.utils import get_julia_path_and_project, ShellOptions
 from spine_items.utils import escape_backward_slashes, check_options
 
 
@@ -207,8 +208,7 @@ class JuliaToolInstance(ToolInstance):
         julia_args = get_julia_path_and_project(exec_settings, self._settings)
         if not julia_args:
             k_name = exec_settings["kernel_spec_name"]
-            self._logger.msg_error.emit(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
-            raise RuntimeError()
+            raise RuntimeError(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
         cmdline_args = self.tool_specification.cmdline_args + args
         if self.prepare_sysimg_maker(julia_args, cmdline_args):
             return
@@ -373,27 +373,30 @@ class ExecutableToolInstance(ToolInstance):
         """See base class."""
         options = check_options("executable", self.options, self._logger)
         if not self.tool_specification.main_prgm:  # Run command
-            cmd = options["cmd"].split()  # Convert str to list
+            command = options["cmd"].strip()
+            if not command:
+                raise RuntimeError("Command missing")
             shell = options["shell"]
-            if not shell:
-                # If shell is not given (empty str), The first item in cmd list will be considered as self.program.
-                # The rest of the cmd list will be considered as cmd line args
+            cmd = []
+            if shell == ShellOptions.DIRECT.value:
+                cmd = shlex.split(command, posix=(sys.platform != "win32"))
                 self.program = cmd.pop(0)
+            elif shell == ShellOptions.BASH.value:
+                self.program = "sh"
+                cmd.extend(["-c", command])
+            elif shell == ShellOptions.CMD.value:
+                self.program = shell
+                cmd.extend(["/C", command])
+            elif shell == ShellOptions.POWERSHELL.value:
+                self.program = shell
+                cmd.extend(["-NoProfile", "-NonInteractive", "-Command", command])
             else:
-                # If shell is given, the shell will be set as self.program and the cmd list will be considered
-                # as cmd line args
-                if shell == "bash":
-                    self.program = "sh"
-                else:
-                    self.program = shell
-            if self.program in {"cmd.exe", "cmd"}:
-                # If cmd.exe shell is not given the /C flag, it will just open cmd.exe in the Execution Log
-                if "/C" not in cmd:
-                    cmd = ["/C"] + cmd
-            # The final command line args list (self.args) consists of three (3) parts:
-            # 1. The first part is the cmd list
-            # 2. The second part is the Tool Specification cmd line args
-            # 3. The third part is the Tool cmd line args
+                self.program = shell
+                cmd.append(command)
+            # The final command line args list (self.args) consists of:
+            # 1. Shell/direct-execution arguments
+            # 2. Tool Specification command-line arguments
+            # 3. Tool command-line arguments
             self.args = cmd + self.tool_specification.cmdline_args + args
         else:  # Run main program file
             main_program_file = os.path.join(self.basedir, self.tool_specification.main_prgm)
@@ -405,7 +408,7 @@ class ExecutableToolInstance(ToolInstance):
                     self.program = main_program_file
                 self.append_cmdline_args(args)
             else:
-                raise RuntimeError(f"main program file {main_program_file} does not exist.")
+                raise RuntimeError(f"main program file {main_program_file} doesn't exist.")
         self.exec_mngr = ProcessExecutionManager(self._logger, self.program, self.args, workdir=self.basedir)
 
     def execute(self):

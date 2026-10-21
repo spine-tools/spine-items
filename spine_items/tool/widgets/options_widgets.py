@@ -21,13 +21,14 @@ from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import QPointF, Qt, QVariantAnimation, Slot
 from PySide6.QtGui import QBrush, QIcon, QLinearGradient, QPalette
 from PySide6.QtWidgets import QFileDialog, QWidget, QApplication
-from spine_items.tool.utils import get_julia_path_and_project
+from spine_items.tool.utils import get_julia_path_and_project, ShellOptions
 from spine_items.utils import (
     escape_backward_slashes,
     default_python_execution_settings,
     default_julia_execution_settings,
     default_executable_execution_settings,
 )
+from spine_items.commands import UpdateText
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spinetoolbox.helpers import (
     CharIconEngine,
@@ -36,6 +37,7 @@ from spinetoolbox.helpers import (
     file_is_valid,
     select_file_path,
     select_dir,
+    SealCommand,
 )
 from spinetoolbox.spine_engine_worker import SpineEngineWorker
 from spine_engine.utils.helpers import resolve_current_python_interpreter, resolve_default_julia_executable
@@ -46,19 +48,21 @@ if TYPE_CHECKING:
     from spine_items.tool.tool import Tool
 
 
+COMMAND_ID_UPDATE_COMMAND = UpdateText.generate_unique_id()
+
+
 class ToolExecutionMethod(Enum):
     DEFAULT = "default"
     DIRECT = "direct"
     JUPYTER = "jupyter"
 
 
-class ShellOptions(Enum):
-    """The values here are what's stored into the json file."""
-
-    DIRECT = ""
-    CMD = "cmd.exe"
-    POWERSHELL = "powershell.exe"
-    BASH = "bash"
+SHELL_DISPLAY_NAMES = {
+    ShellOptions.DIRECT: "Direct execution",
+    ShellOptions.CMD: "Command Prompt",
+    ShellOptions.POWERSHELL: "PowerShell",
+    ShellOptions.BASH: "Bash",
+}
 
 
 class OptionsWidget(QWidget):
@@ -874,11 +878,7 @@ class ExecutableOptionsWidget(OptionsWidget):
 
     def _init_shell_combobox(self):
         for shell in ShellOptions:
-            if shell == ShellOptions.DIRECT:
-                self.ui.comboBox_shell.addItem("No shell", shell)
-            else:
-                self.ui.comboBox_shell.addItem(shell.value, shell)
-        # Disable shell selections that are not compatible with the os running toolbox
+            self.ui.comboBox_shell.addItem(SHELL_DISPLAY_NAMES[shell], shell)
         supported_shells = (
             {ShellOptions.DIRECT, ShellOptions.CMD, ShellOptions.POWERSHELL}
             if sys.platform == "win32"
@@ -887,22 +887,31 @@ class ExecutableOptionsWidget(OptionsWidget):
         model = self.ui.comboBox_shell.model()
         for row in range(model.rowCount()):
             shell = self.ui.comboBox_shell.itemData(row)
+            # Disable shells that are not compatible on the current platform
             if shell not in supported_shells:
                 item = model.item(row)
                 item.setEnabled(False)
-                name = "No shell" if shell == ShellOptions.DIRECT else shell.value
-                item.setToolTip(f"<p>{name} is not available for platform {sys.platform}</p>")
+                item.setToolTip(f"<p>{SHELL_DISPLAY_NAMES[shell]} is not available for platform {sys.platform}</p>")
 
     def connect_signals(self):
-        self.ui.lineEdit_command.textEdited.connect(self._update_command)
-        # self.ui.lineEdit_command.editingFinished.connect(self._specification_editor._finish_updating_command)
+        self.ui.lineEdit_command.textChanged.connect(self.update_executable_tool_command)
+        self.ui.lineEdit_command.editingFinished.connect(self.seal_executable_tool_command)
         self.ui.comboBox_shell.activated.connect(self._update_shell)
 
+    @staticmethod
+    def check_options(options: dict) -> dict:
+        """Returns the default options if given an empty dict is given.
+        Adds the default 'shell' key if it's missing."""
+        if len(options.keys()) == 0:
+            return default_executable_execution_settings()
+        if "shell" not in options.keys():
+            options["shell"] = ""
+        return options
+
     def do_update_options_widget(self, options: dict):
-        print(f"[{self.tool.name}] restoring options:{options}")
+        options = self.check_options(options)
         self._block_signals(True)
-        if not options:
-            options = default_executable_execution_settings()
+        print(f"[{self.tool.name}] options:{options}")
         self._set_combobox_shell_index(options["shell"])
         self.ui.lineEdit_command.setText(options["cmd"])
         self._block_signals(False)
@@ -922,21 +931,33 @@ class ExecutableOptionsWidget(OptionsWidget):
         return self.ui.comboBox_shell.currentData().value
 
     @Slot(str)
-    def _update_command(self, cmd):
-        """Updates command."""
-        self.tool.update_options({"cmd": cmd})
+    def update_executable_tool_command(self, cmd: str):
+        if cmd == self.tool._options.get("cmd") or (not cmd and self.tool._options.get("cmd") is None):
+            return
+        command_text = f"change executable tool command of {self.tool.name}"
+        self.tool._toolbox.undo_stack.push(
+            UpdateText(
+                self.tool.name,
+                cmd,
+                self.tool._options["cmd"] if self.tool._options.get("cmd") else "",
+                command_text,
+                COMMAND_ID_UPDATE_COMMAND,
+                self.tool.do_set_executable_tool_command.__name__,
+                self._project,
+            )
+        )
+
+    @Slot()
+    def seal_executable_tool_command(self) -> None:
+        """Seals update command for tools using an Executable Tool Specification."""
+        self.tool._toolbox.undo_stack.push(SealCommand(COMMAND_ID_UPDATE_COMMAND))
 
     @Slot(int)
     def _update_shell(self, _row):
         """Updates shell."""
         self.tool.update_options({"shell": self.get_shell()})
 
-    # @Slot()
-    # def _finish_updating_command(self):
-    #     """Seals latest undo stack command."""
-    #     self._undo_stack.push(SealCommand(CommandId.COMMAND_UPDATE.value))
-
-    def set_command_and_shell_edit_disabled_state(self, enabled):
+    def set_widget_disabled_state(self, enabled):
         """Sets the enabled state for the Command line edit and the Shell combobox.
         # TODO: Use this when tool spec does have or does not have a main file. (In do_update_options_widget())
         """

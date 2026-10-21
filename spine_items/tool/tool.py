@@ -484,6 +484,11 @@ class Tool(DBWriterItemBase):
             _ = self.make_options_widget()
             self._check_notifications()
 
+    def do_set_executable_tool_command(self, cmd):
+        self._options["cmd"] = cmd
+        if self._active:
+            _ = self.make_options_widget()
+
     @Slot(bool)
     def _set_kill_completed_processes(self, kill_completed_processes):
         """Pushes a UpdateKillCompletedProcesses to the undo stack

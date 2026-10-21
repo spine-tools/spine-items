@@ -534,7 +534,7 @@ class ExecutableItem(DBWriterExecutableItemBase):
                 self._tool_instance.prepare(expanded_args)
             except RuntimeError as error:
                 if str(error):
-                    self._logger.msg_error.emit(f"Failed to prepare Tool instance: {error}")
+                    self._logger.msg_error.emit(f"Cannot execute Tool: {error}")
                 return ItemExecutionFinishState.FAILURE
             return_code = self._tool_instance.execute()
         self._handle_output_files(return_code, self._filter_id, forward_resources, execution_dir)
