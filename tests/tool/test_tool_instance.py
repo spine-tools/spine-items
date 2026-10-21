@@ -18,10 +18,11 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest import mock
 from spine_items.tool.tool_specifications import ExecutableTool, GAMSTool, JuliaTool, PythonTool
-from spine_items.utils import (
+from spine_items.tool.utils import (
     default_python_execution_settings,
     default_julia_execution_settings,
     default_executable_execution_settings,
+    ShellOptions,
 )
 from tests.mock_helpers import MockQSettings
 
@@ -454,10 +455,10 @@ class FakeTool:
                 options["kernel_spec_name"] = "some_julia_kernel"
         elif tooltype == "executable":
             options = default_executable_execution_settings()
-            if shell == "cmd.exe":
-                options["shell"] = "cmd.exe"
-            elif shell == "bash":
-                options["shell"] = "bash"
+            if shell == ShellOptions.CMD.value:
+                options["shell"] = ShellOptions.CMD.value  # "cmd.exe"
+            elif shell == ShellOptions.BASH.value:
+                options["shell"] = ShellOptions.BASH.value  # "bash"
             if cmd:
                 options["cmd"] = cmd
         else:

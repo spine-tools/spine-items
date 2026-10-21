@@ -21,13 +21,14 @@ from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import QPointF, Qt, QVariantAnimation, Slot
 from PySide6.QtGui import QBrush, QIcon, QLinearGradient, QPalette
 from PySide6.QtWidgets import QFileDialog, QWidget, QApplication
-from spine_items.tool.utils import get_julia_path_and_project, ShellOptions
-from spine_items.utils import (
-    escape_backward_slashes,
+from spine_items.tool.utils import (
+    get_julia_path_and_project,
+    ShellOptions,
     default_python_execution_settings,
     default_julia_execution_settings,
-    default_executable_execution_settings,
+    check_options,
 )
+from spine_items.utils import escape_backward_slashes
 from spine_items.commands import UpdateText
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spinetoolbox.helpers import (
@@ -898,18 +899,8 @@ class ExecutableOptionsWidget(OptionsWidget):
         self.ui.lineEdit_command.editingFinished.connect(self.seal_executable_tool_command)
         self.ui.comboBox_shell.activated.connect(self._update_shell)
 
-    @staticmethod
-    def check_options(options: dict) -> dict:
-        """Returns the default options if given an empty dict is given.
-        Adds the default 'shell' key if it's missing."""
-        if len(options.keys()) == 0:
-            return default_executable_execution_settings()
-        if "shell" not in options.keys():
-            options["shell"] = ""
-        return options
-
     def do_update_options_widget(self, options: dict):
-        options = self.check_options(options)
+        options = check_options("executable", options, self.tool.logger)
         self._block_signals(True)
         print(f"[{self.tool.name}] options:{options}")
         self._set_combobox_shell_index(options["shell"])
