@@ -116,6 +116,7 @@ class Tool(DBWriterItemBase):
         self._available_resources = []
         self._req_file_paths = set()
         self._input_files_not_found = None
+        self.models.path_entry_removed.connect(self._on_path_entry_removed)
 
     @property
     def group_id(self):
@@ -488,6 +489,24 @@ class Tool(DBWriterItemBase):
         self._options["cmd"] = cmd
         if self._active:
             _ = self.make_options_widget()
+
+    @Slot(str, str)
+    def _on_path_entry_removed(self, removed_item_type, p):
+        """Sets the default option selected when a Python interpreter, a Julia executable, or
+        a Julia project is removed (in Settings->Tools) from the model."""
+        if self.specification() is None:
+            return
+        mapping = {
+            "python_interpreter": ("python", "executable"),
+            "julia_executable": ("julia", "executable"),
+            "julia_project": ("julia", "project"),
+        }
+        tooltype, option_name = mapping[removed_item_type]
+        if self.specification().tooltype != tooltype:
+            return
+        current = self.options.get(option_name)
+        if current and same_path(current, p):
+            self.update_options({option_name: ""})
 
     @Slot(bool)
     def _set_kill_completed_processes(self, kill_completed_processes):

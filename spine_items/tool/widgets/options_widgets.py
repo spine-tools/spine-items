@@ -208,9 +208,10 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
             self._logger.msg_error.emit(f"Adding Python {new_python} failed")
             ind = self.models.python_interpreters_model.index(0, 0)
         self.ui.comboBox_executable.setCurrentIndex(ind.row())
+        self._update_executable()
 
     @Slot(int)
-    def _update_executable(self, _row):
+    def _update_executable(self, _row=0):
         self.tool.update_options({"executable": self.get_executable()})
 
     @Slot(int)
@@ -375,6 +376,7 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
             self._logger.msg_error.emit(f"Adding Julia executable {fpath} failed")
             ind = self.models.julia_executables_model.index(0, 0)
         self.ui.comboBox_executable.setCurrentIndex(ind.row())
+        self._update_executable()
 
     @Slot(bool)
     def _add_julia_project(self, _=False):
@@ -389,14 +391,15 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
             self._logger.msg_error.emit(f"Adding Julia Project {dpath} failed")
             ind = self.models.julia_projects_model.index(0, 0)
         self.ui.comboBox_julia_project.setCurrentIndex(ind.row())
+        self._update_project()
 
     @Slot(int)
-    def _update_executable(self, _row):
+    def _update_executable(self, _row=0):
         """Updates Julia executable."""
         self.tool.update_options({"executable": self.get_executable()})
 
     @Slot(int)
-    def _update_project(self, _row):
+    def _update_project(self, _row=0):
         """Updates Julia project."""
         self.tool.update_options({"project": self.get_project()})
 
@@ -456,7 +459,6 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
             else:
                 self.ui.label_execution_method.setText("Julia executable & environment")
                 executable = options["executable"]
-                # TODO: Check what happens if executable is empty
                 if executable == "":
                     executable = resolve_default_julia_executable()
                 self.ui.label_executable_or_kernel.setText(executable)
