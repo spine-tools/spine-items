@@ -317,8 +317,8 @@ class TestToolInstance(unittest.TestCase):
             instance.prepare(["-a"])
             self.assertEqual(2, mock_manager.call_count)
             self.assertEqual("sh", instance.program)
-            self.assertEqual(2, len(instance.args))
-            self.assertEqual(["ls", "-a"], instance.args)
+            self.assertEqual(3, len(instance.args))
+            self.assertEqual(["-c", "ls", "-a"], instance.args)
             # Run command without shell
             instance = self._make_executable_tool_instance(cmd="cat")
             instance.prepare(["file.txt"])

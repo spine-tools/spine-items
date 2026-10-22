@@ -173,6 +173,7 @@ class FakeTool:
     def __init__(self, models):
         self.name = "testTool"
         self.group_id = None
+        self.logger = mock.MagicMock()
         self._models = models
         self._options = {}
         self.project = mock.MagicMock()
