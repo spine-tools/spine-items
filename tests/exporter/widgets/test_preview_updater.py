@@ -23,6 +23,7 @@ from spine_items.exporter.widgets.preview_updater import PreviewUpdater, WriteTa
 from spinedb_api import DatabaseMapping
 from spinedb_api.export_mapping.export_mapping import AlternativeMapping
 from spinedb_api.export_mapping.group_functions import NoGroup
+from spinedb_api.helpers import sqlite_url_string
 from tests.mock_helpers import parent_widget
 
 
@@ -75,7 +76,7 @@ class TestWriteTaskLoop(unittest.TestCase):
 
     def test_quitting_takes_precedence_over_writing(self):
         with TemporaryDirectory() as temp_dir:
-            url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db.sqlite")
+            url = sqlite_url_string(pathlib.Path(temp_dir) / "db.sqlite")
             with DatabaseMapping(url, create=True) as db_map:
                 db_map.add_alternative_item(name="alt1")
                 db_map.add_alternative_item(name="alt2")
@@ -94,7 +95,7 @@ class TestWriteTaskLoop(unittest.TestCase):
         process = Process(target=write_task_loop, args=(receiver, sender))
         process.start()
         with TemporaryDirectory() as temp_dir:
-            url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db.sqlite")
+            url = sqlite_url_string(pathlib.Path(temp_dir) / "db.sqlite")
             with DatabaseMapping(url, create=True) as db_map:
                 db_map.add_alternative_item(name="alt1")
                 db_map.add_alternative_item(name="alt2")
@@ -113,7 +114,7 @@ class TestWriteTaskLoop(unittest.TestCase):
         process = Process(target=write_task_loop, args=(receiver, sender))
         process.start()
         with TemporaryDirectory() as temp_dir:
-            url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db1.sqlite")
+            url = sqlite_url_string(pathlib.Path(temp_dir) / "db1.sqlite")
             with DatabaseMapping(url, create=True) as db_map:
                 db_map.add_alternative_item(name="alt1")
                 db_map.add_alternative_item(name="alt2")
@@ -122,7 +123,7 @@ class TestWriteTaskLoop(unittest.TestCase):
             sender.put(WriteTableTask(url, "my mapping", 2.3, AlternativeMapping(0), True, 1, 3, NoGroup.NAME))
             tables = receiver.get()
             self.assertEqual(tables, ((url, "my mapping"), "my mapping", {None: [["Base"], ["alt1"], ["alt2"]]}, 2.3))
-            url = "sqlite:///" + str(pathlib.Path(temp_dir) / "db2.sqlite")
+            url = sqlite_url_string(pathlib.Path(temp_dir) / "db2.sqlite")
             with DatabaseMapping(url, create=True) as db_map:
                 db_map.add_alternative_item(name="alt3")
                 db_map.add_alternative_item(name="alt4")
@@ -148,7 +149,7 @@ class TestWriteTaskLoop(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             urls = []
             for name in ("db1.sqlite", "db2.sqlite"):
-                url = "sqlite:///" + str(pathlib.Path(temp_dir) / name)
+                url = sqlite_url_string(pathlib.Path(temp_dir) / name)
                 with DatabaseMapping(url, create=True) as db_map:
                     db_map.add_alternative_item(name="alt1")
                     db_map.commit_session("Add test data.")

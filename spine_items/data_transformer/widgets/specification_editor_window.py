@@ -14,6 +14,7 @@
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QFileDialog, QHeaderView
+from spinedb_api.helpers import sqlite_url_string
 from spinetoolbox.helpers import disconnect
 from spinetoolbox.project_item.specification_editor_window import (
     ChangeSpecPropertyCommand,
@@ -151,7 +152,7 @@ class SpecificationEditorWindow(SpecificationEditorWindowBase):
         path = self._browse_database()
         if not path:
             return
-        url = "sqlite:///" + path
+        url = sqlite_url_string(path)
         self._ui.database_url_combo_box.addItem(url)
         self._urls[url] = url
 

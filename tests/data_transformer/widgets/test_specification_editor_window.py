@@ -12,12 +12,14 @@
 
 """Unit tests for the ``specification_editor_window`` module."""
 
-import pytest
+import pathlib
+import sys
 from unittest import mock
 from PySide6.QtWidgets import QApplication
+import pytest
 from spine_items.data_transformer.data_transformer_specification import DataTransformerSpecification
-from spine_items.data_transformer.widgets.specification_editor_window import SpecificationEditorWindow
 from spine_items.data_transformer.settings import EntityClassRenamingSettings
+from spine_items.data_transformer.widgets.specification_editor_window import SpecificationEditorWindow
 from tests.mock_helpers import create_mock_toolbox
 
 
@@ -74,6 +76,7 @@ class TestSpecificationEditorWindow:
 
     def test_load_url_from_filesystem(self, mock_toolbox):
         dt_spec = DataTransformerSpecification("dt_spec")
+        path = "C:\\fake\\path\\db.sqlite" if sys.platform == "win32" else "/fake/path/db.sqlite"
         with mock.patch("spinetoolbox.project_item.specification_editor_window.restore_ui") as mock_restore_ui:
             editor = SpecificationEditorWindow(mock_toolbox, dt_spec)
             mock_restore_ui.assert_called_once()
@@ -85,14 +88,14 @@ class TestSpecificationEditorWindow:
                 "spine_items.data_transformer.widgets.value_transformation.ValueTransformation.load_data"
             ) as mock_load_data,
         ):
-            mock_fd_gofn.return_value = ["/fake/path/db.sqlite"]
+            mock_fd_gofn.return_value = [path]
             mock_load_data.return_value = True
             editor._load_url_from_filesystem(True)
             mock_fd_gofn.assert_called_once()
             editor._change_filter_widget("Transform values")
             editor._load_data(True)
             mock_load_data.assert_called_once()
-            assert editor._ui.database_url_combo_box.currentText() == "sqlite:////fake/path/db.sqlite"
-        # Clear undo stack so tear_down does not open a confirm prompt
+            assert editor._ui.database_url_combo_box.currentText() == f"sqlite:///{pathlib.Path(path).as_posix()}"
+        # Clear undo stack so tear_down does not open a confirmation prompt
         editor._undo_stack.clear()
         editor.close()

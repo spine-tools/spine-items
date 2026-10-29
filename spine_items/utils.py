@@ -14,6 +14,7 @@
 
 from collections.abc import Iterable
 import os.path
+import pathlib
 from typing import TypedDict
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL, make_url
@@ -97,7 +98,7 @@ def _convert_url(url: UrlDict) -> URL:
         if dialect == "sqlite":
             database = url.get("database", "")
             if database:
-                url["database"] = os.path.abspath(database)
+                url["database"] = pathlib.Path(database).absolute().as_posix()
             return URL.create("sqlite", **url)  # pylint: disable=unexpected-keyword-arg
         db_api = spinedb_api.SUPPORTED_DIALECTS.get(dialect)
         if db_api is None:

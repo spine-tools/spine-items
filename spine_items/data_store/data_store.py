@@ -15,6 +15,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import os
+import pathlib
 from shutil import copyfile
 from typing import TYPE_CHECKING
 from PySide6.QtCore import Slot
@@ -127,7 +128,7 @@ class DataStore(ProjectItem):
         if url is not None:
             if url.get("dialect") == "sqlite" and (database := url.get("database")):
                 # Convert relative database path back to absolute
-                url["database"] = os.path.abspath(os.path.join(self._project.project_dir, database))
+                url["database"] = pathlib.Path(self._project.project_dir, database).absolute().as_posix()
             for key, value in url.items():
                 if value is not None:
                     base_url[key] = value
@@ -353,8 +354,7 @@ class DataStore(ProjectItem):
         sa_url = convert_to_sqlalchemy_url(self._url, self.name, self._logger)
         if sa_url is None:
             return
-        sa_url = sa_url.set(password=None)
-        QApplication.clipboard().setText(str(sa_url))
+        QApplication.clipboard().setText(sa_url.render_as_string(hide_password=True))
         self._logger.msg.emit(f"Database url <b>{sa_url}</b> copied to clipboard")
 
     @Slot(bool)
@@ -502,9 +502,9 @@ class DataStore(ProjectItem):
         if duplicate_files:
             db_copy_destination = os.path.join(self.data_dir, os.path.basename(linked_db_path))
             copyfile(linked_db_path, db_copy_destination)
-            self._url["database"] = db_copy_destination
+            self._url["database"] = pathlib.Path(db_copy_destination).as_posix()
         else:
-            self._url["database"] = linked_db_path
+            self._url["database"] = pathlib.Path(linked_db_path).as_posix()
 
     @staticmethod
     def from_dict(name, item_dict, toolbox, project):
