@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'export_list_item.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.2
+## Created by: Qt User Interface Compiler version 6.11.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -57,12 +57,12 @@ class Ui_Form(object):
         self.out_label_label.setObjectName(u"out_label_label")
         self.out_label_label.setTextFormat(Qt.PlainText)
 
-        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.out_label_label)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.out_label_label)
 
         self.out_label_edit = PropertyQLineEdit(self.frame)
         self.out_label_edit.setObjectName(u"out_label_edit")
 
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.out_label_edit)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.out_label_edit)
 
 
         self.verticalLayout.addLayout(self.formLayout)
@@ -88,7 +88,7 @@ class Ui_Form(object):
 
         self.horizontalLayout.addWidget(self.out_url_clear_button)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
