@@ -442,7 +442,9 @@ class ExecutableItem(DBWriterExecutableItemBase):
         elif self._tool_specification.tooltype.lower() == "gams":
             gams_path = resolve_gams_executable(settings.value("appSettings/gamsPath", defaultValue=""))
             if not gams_path:
-                self._logger.msg_error.emit("Gams not found in PATH. Please set a path to Gams in Settings->Tools.")
+                self._logger.msg_error.emit(
+                    "Gams not found in PATH. Please set a path to Gams in File->Settings->Tools."
+                )
                 return False
         return True
 

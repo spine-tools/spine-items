@@ -172,7 +172,14 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QComboBox" name="comboBox_executable"/>
+          <widget class="QComboBox" name="comboBox_executable">
+           <property name="contextMenuPolicy">
+            <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QComboBox[invalid=&quot;true&quot;] {color: red;}</string>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QToolButton" name="toolButton_browse_julia">
@@ -196,7 +203,14 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QComboBox" name="comboBox_julia_project"/>
+          <widget class="QComboBox" name="comboBox_julia_project">
+           <property name="contextMenuPolicy">
+            <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QComboBox[invalid=&quot;true&quot;] {color: red;}</string>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QToolButton" name="toolButton_browse_julia_project">
@@ -234,6 +248,9 @@
            <width>16777215</width>
            <height>24</height>
           </size>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
          </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a Julia kernel for &lt;span style=&quot; font-weight:700;&quot;&gt;Jupyter Console&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

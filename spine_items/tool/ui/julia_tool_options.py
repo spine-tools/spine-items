@@ -14,7 +14,7 @@
 ################################################################################
 ## Form generated from reading UI file 'julia_tool_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.11.1
+## Created by: Qt User Interface Compiler version 6.12.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -137,6 +137,8 @@ class Ui_Form(object):
         self.horizontalLayout_2.setContentsMargins(0, -1, -1, -1)
         self.comboBox_executable = QComboBox(self.page_1)
         self.comboBox_executable.setObjectName(u"comboBox_executable")
+        self.comboBox_executable.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.comboBox_executable.setStyleSheet(u"QComboBox[invalid=\"true\"] {color: red;}")
 
         self.horizontalLayout_2.addWidget(self.comboBox_executable)
 
@@ -157,6 +159,8 @@ class Ui_Form(object):
         self.horizontalLayout_4.setContentsMargins(0, -1, -1, -1)
         self.comboBox_julia_project = QComboBox(self.page_1)
         self.comboBox_julia_project.setObjectName(u"comboBox_julia_project")
+        self.comboBox_julia_project.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.comboBox_julia_project.setStyleSheet(u"QComboBox[invalid=\"true\"] {color: red;}")
 
         self.horizontalLayout_4.addWidget(self.comboBox_julia_project)
 
@@ -185,6 +189,7 @@ class Ui_Form(object):
         self.comboBox_kernel_specs.setSizePolicy(sizePolicy)
         self.comboBox_kernel_specs.setMinimumSize(QSize(100, 24))
         self.comboBox_kernel_specs.setMaximumSize(QSize(16777215, 24))
+        self.comboBox_kernel_specs.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.verticalLayout_3.addWidget(self.comboBox_kernel_specs)
 
