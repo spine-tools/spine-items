@@ -34,6 +34,7 @@ from spine_engine.utils.helpers import (
 
 class ShellOptions(Enum):
     """Contains the Shell Options for Executable Tool types. The values here are stored into the json file."""
+
     DIRECT = ""
     CMD = "cmd.exe"
     POWERSHELL = "powershell.exe"

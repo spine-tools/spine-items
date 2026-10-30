@@ -120,25 +120,6 @@ class SharedToolOptionsWidget(OptionsWidget):
     def connect_signals(self):
         """Connects signals."""
 
-    def validate_executable(self, p, tool_spec_type):
-        """Check that given Python or Julia path is a file, it exists, and the
-        file name starts with either 'python' or 'julia'.
-
-        Args:
-            p (str): Abs. path to check
-            tool_spec_type (str): 'python' or 'julia'
-
-        Raises:
-            NameError: If the python path in the line edit is not valid
-        """
-        if not file_is_valid(
-            self,
-            p,
-            f"Invalid {tool_spec_type.capitalize()} Interpreter",
-            extra_check=tool_spec_type,
-        ):
-            raise NameError
-
     @staticmethod
     def _set_execution_method_combobox(combo, execution_method):
         """Sets given combobox selection according to given execution method."""
@@ -180,8 +161,12 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
 
         super().__init__(Ui_Form, models)
         self._saved_python_kernel = None
-        self.ui.comboBox_executable.setView(ComboListView(self.ui.comboBox_executable, self._show_python_interpreters_context_menu))
-        self.ui.comboBox_kernel_specs.setView(ComboListView(self.ui.comboBox_kernel_specs, self._show_python_kernel_context_menu))
+        self.ui.comboBox_executable.setView(
+            ComboListView(self.ui.comboBox_executable, self._show_python_interpreters_context_menu)
+        )
+        self.ui.comboBox_kernel_specs.setView(
+            ComboListView(self.ui.comboBox_kernel_specs, self._show_python_kernel_context_menu)
+        )
         self.populate_execution_method_comboboxes()
         self.ui.comboBox_executable.setModel(self._models.python_interpreters_model)
         self.ui.comboBox_kernel_specs.setModel(self._models.python_kernel_model)

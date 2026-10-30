@@ -75,14 +75,14 @@ class TestOptionsWidget(unittest.TestCase):
         deats = {"kernel_name": "julia-kernel"}
         models._add_julia_kernel("julia-kernel", "/kernel_dir", False, QIcon(), deats)
         ow._block_signals(False)
-        with mock.patch("spine_items.tool.widgets.options_widgets.select_file_path") as mock_select_fpath:
+        with mock.patch("spinetoolbox.helpers.select_file_path") as mock_select_fpath:
             mock_select_fpath.return_value = "new/julia"
-            ow._add_julia_executable()
+            ow._on_add_julia_executable_clicked()
             mock_select_fpath.assert_called()
         assert ow.get_executable() == "new/julia"
-        with mock.patch("spine_items.tool.widgets.options_widgets.select_dir") as mock_select_dir:
+        with mock.patch("spinetoolbox.helpers.select_dir") as mock_select_dir:
             mock_select_dir.return_value = "julia/project"
-            ow._add_julia_project()
+            ow._on_add_julia_project_clicked()
             mock_select_dir.assert_called()
         assert ow.get_project() == "julia/project"
         options = {
@@ -133,9 +133,9 @@ class TestOptionsWidget(unittest.TestCase):
         deats = {"kernel_name": "python-kernel"}
         models._add_python_kernel("python-kernel", "/kernel_dir", False, QIcon(), deats)
         ow._block_signals(False)
-        with mock.patch("spine_items.tool.widgets.options_widgets.select_file_path") as mock_select_fpath:
+        with mock.patch("spinetoolbox.helpers.select_file_path") as mock_select_fpath:
             mock_select_fpath.return_value = "new/python"
-            ow._add_python_interpreter()
+            ow._on_add_python_interpreter_clicked()
             mock_select_fpath.assert_called()
         assert ow.get_executable() == "new/python"
         options = {"kernel_spec_name": "python-kernel", "env": "", "use_jupyter_console": True, "executable": ""}
