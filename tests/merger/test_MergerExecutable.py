@@ -20,6 +20,7 @@ from spine_engine.project_item.project_item_resource import database_resource
 from spine_engine.spine_engine import SpineEngine, SpineEngineState
 from spine_items.merger.executable_item import ExecutableItem
 from spinedb_api import DatabaseMapping, create_new_spine_database, import_functions
+from spinedb_api.helpers import sqlite_url_string
 from spinedb_api.spine_db_server import db_server_manager
 
 
@@ -50,7 +51,7 @@ class TestMergerExecutable:
     def test_execute_merge_two_dbs(self, tmp_path):
         """Creates two db's with some data and merges them to a third db."""
         db1_path = Path(str(tmp_path), "db1.sqlite")
-        db1_url = "sqlite:///" + str(db1_path)
+        db1_url = sqlite_url_string(db1_path)
         # Add some data to db1
         with DatabaseMapping(db1_url, create=True) as db1_map:
             import_functions.import_entity_classes(db1_map, [("a",)])
@@ -58,7 +59,7 @@ class TestMergerExecutable:
             db1_map.commit_session("Add an object class 'a' and an object for unit tests.")
         db1_map.close()
         db2_path = Path(str(tmp_path), "db2.sqlite")
-        db2_url = "sqlite:///" + str(db2_path)
+        db2_url = sqlite_url_string(db2_path)
         # Add some data to db2
         with DatabaseMapping(db2_url, create=True) as db2_map:
             import_functions.import_entity_classes(db2_map, [("b",)])
@@ -67,7 +68,7 @@ class TestMergerExecutable:
         db2_map.close()
         # Make an empty output db
         db3_path = Path(str(tmp_path), "db3.sqlite")
-        db3_url = "sqlite:///" + str(db3_path)
+        db3_url = sqlite_url_string(db3_path)
         engine = create_new_spine_database(db3_url)
         engine.dispose()
         logger = mock.MagicMock()
@@ -95,14 +96,14 @@ class TestMergerExecutable:
 
     def test_write_order(self, tmp_path):
         db1_path = Path(str(tmp_path), "db1.sqlite")
-        db1_url = "sqlite:///" + str(db1_path)
+        db1_url = sqlite_url_string(db1_path)
         # Add some data to db1
         with DatabaseMapping(db1_url, create=True) as db1_map:
             import_functions.import_data(db1_map, entity_classes=[("fish",)])
             db1_map.commit_session("Add test data.")
         db1_map.close()
         db2_path = Path(str(tmp_path), "db2.sqlite")
-        db2_url = "sqlite:///" + str(db2_path)
+        db2_url = sqlite_url_string(db2_path)
         # Add some data to db2
         with DatabaseMapping(db2_url, create=True) as db2_map:
             import_functions.import_data(db2_map, entity_classes=[("cat",)])
@@ -110,7 +111,7 @@ class TestMergerExecutable:
         db2_map.close()
         # Make an empty output db
         db3_path = Path(str(tmp_path), "db3.sqlite")
-        db3_url = "sqlite:///" + str(db3_path)
+        db3_url = sqlite_url_string(db3_path)
         # Make two mergers
         logger = mock.MagicMock()
         logger.__reduce__ = lambda _: (mock.MagicMock, ())

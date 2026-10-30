@@ -25,6 +25,7 @@ from spine_items.exporter.item_info import ItemInfo
 from spine_items.exporter.specification import OutputFormat, Specification
 from spine_items.utils import UrlDict, database_label
 from spinedb_api import create_new_spine_database
+from spinedb_api.helpers import sqlite_url_string
 from spinetoolbox.project_item.logging_connection import LoggingConnection
 from tests.mock_helpers import (
     mock_finish_project_item_construction,
@@ -155,7 +156,7 @@ class TestExporter:
     ):
         toolbox = spine_toolbox_with_project
         project = toolbox.project()
-        url = "sqlite:///" + str(tmp_path / "db.sqlite")
+        url = sqlite_url_string(tmp_path / "db.sqlite")
         engine = create_new_spine_database(url)
         engine.dispose()
         url_dict: UrlDict = {"dialect": "sqlite", "database": str(tmp_path / "db.sqlite")}

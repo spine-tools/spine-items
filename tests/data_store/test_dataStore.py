@@ -13,6 +13,7 @@
 """Unit tests for DataStore class."""
 
 import os
+import pathlib
 import sys
 from unittest import mock
 from PySide6.QtWidgets import QApplication
@@ -23,6 +24,7 @@ from spine_items.data_store.data_store_factory import DataStoreFactory
 from spine_items.data_store.item_info import ItemInfo
 from spine_items.utils import UrlDict, convert_to_sqlalchemy_url, database_label
 from spinedb_api import create_new_spine_database
+from spinedb_api.helpers import sqlite_url_string
 from spinetoolbox.helpers import signal_waiter
 from tests.mock_helpers import (
     mock_finish_project_item_construction,
@@ -70,7 +72,7 @@ def ds_properties_ui(properties_widget):
 def create_temp_db(ds):
     """Let's create a real db to more easily test complicated stuff (such as opening a tree view)."""
     temp_db_path = os.path.join(ds.data_dir, "temp_db.sqlite")
-    sqlite_url = "sqlite:///" + temp_db_path
+    sqlite_url = sqlite_url_string(temp_db_path)
     engine = create_new_spine_database(sqlite_url)
     engine.dispose()
     return temp_db_path
@@ -123,7 +125,7 @@ class TestDataStoreWithToolbox:
     def test_sqlite_url_deserialization(self, ds, project, spine_toolbox_with_project):
         url: UrlDict = {
             "dialect": "sqlite",
-            "database": create_temp_db(ds),
+            "database": pathlib.Path(create_temp_db(ds)).as_posix(),
         }
         assert ds.update_url(**url)
         serialized = ds.item_dict()
@@ -170,13 +172,13 @@ class TestDataStoreWithMockToolbox:
         """
         temp_path = create_temp_db(ds)
         # Connect to an existing .sqlite db
-        url = {"dialect": "sqlite", "database": temp_path}
+        url = {"dialect": "sqlite", "database": pathlib.Path(temp_path).as_posix()}
         ds._url = ds.parse_url(url)
         ds.activate()  # This loads the url into properties UI widgets
         # DS should now have "sqlite" selected in the combobox
         url = ds_properties_ui.url_selector_widget.url_dict()
         assert url["dialect"] == "sqlite"
-        assert url["database"] == temp_path
+        assert url["database"] == pathlib.Path(temp_path).as_posix()
         assert os.path.exists(url["database"])
         # Click New Spine db button. Creates the sqlite file.
         with (
@@ -224,7 +226,7 @@ class TestDataStoreWithMockToolbox:
             mock.patch.object(project, "notify_resource_changes_to_successors") as mock_successor_notifier,
             mock.patch.object(project, "notify_resource_changes_to_predecessors") as mock_predecessor_notifier,
         ):
-            engine = create_new_spine_database("sqlite:///" + database_file_path)
+            engine = create_new_spine_database(sqlite_url_string(database_file_path))
             engine.dispose()
             file_dialog.getSaveFileName.return_value = (database_file_path,)
             mock_successor_notifier.side_effect = lambda item: check_database_exists(
@@ -278,7 +280,7 @@ class TestDataStoreWithMockToolbox:
             ds_properties_ui.toolButton_copy_url.click()
         # noinspection PyArgumentList
         clipboard_text = clipboard.text()
-        expected_url = "sqlite:///" + os.path.join(ds.data_dir, "temp_db.sqlite")
+        expected_url = sqlite_url_string(os.path.join(ds.data_dir, "temp_db.sqlite"))
         if sys.platform == "win32":
             assert expected_url.casefold() == clipboard_text.strip().casefold()
         else:
@@ -351,7 +353,7 @@ class TestDataStoreWithMockToolbox:
 
     def test_do_update_url_uses_filterable_resources_when_replacing_them(self, ds, project):
         database_1 = os.path.normcase(os.path.join(project.project_dir, "db1.sqlite"))
-        engine = create_new_spine_database("sqlite:///" + database_1)
+        engine = create_new_spine_database(sqlite_url_string(database_1))
         engine.dispose()
         with (
             mock.patch.object(project, "notify_resource_changes_to_predecessors"),
@@ -365,16 +367,20 @@ class TestDataStoreWithMockToolbox:
             while not ds.is_url_validated():
                 QApplication.processEvents()
             database_2 = os.path.normcase(os.path.join(project.project_dir, "db2.sqlite"))
-            engine2 = create_new_spine_database("sqlite:///" + database_2)
+            engine2 = create_new_spine_database(sqlite_url_string(database_2))
             engine2.dispose()
             ds.do_update_url(dialect="sqlite", database=database_2)
             while not ds.is_url_validated():
                 QApplication.processEvents()
             expected_old_resources = [
-                database_resource(ds.name, "sqlite:///" + database_1, label=database_label(ds.name), filterable=True)
+                database_resource(
+                    ds.name, sqlite_url_string(database_1), label=database_label(ds.name), filterable=True
+                )
             ]
             expected_new_resources = [
-                database_resource(ds.name, "sqlite:///" + database_2, label=database_label(ds.name), filterable=True)
+                database_resource(
+                    ds.name, sqlite_url_string(database_2), label=database_label(ds.name), filterable=True
+                )
             ]
             project.notify_resource_replacement_to_predecessors.assert_called_once_with(
                 ds, expected_old_resources, expected_new_resources

@@ -29,6 +29,7 @@ from spine_items.data_connection.utils import FilePattern
 from spine_items.utils import UrlDict, convert_url_to_safe_string
 from spine_items.widgets import UrlSelectorDialog
 from spinedb_api import create_new_spine_database
+from spinedb_api.helpers import sqlite_url_string
 from spinetoolbox.helpers import signal_waiter
 
 FILE_REF_ROOT_ROW = 0
@@ -994,7 +995,7 @@ class TestDataConnection:
     ):
         toolbox = spine_toolbox_with_project
         db_path = Path(tmp_path, "db.sqlite")
-        engine = create_new_spine_database("sqlite:///" + str(db_path))
+        engine = create_new_spine_database(sqlite_url_string(db_path))
         engine.dispose()
         with (
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
@@ -1032,7 +1033,7 @@ class TestDataConnection:
 
     def test_sqlite_db_reference_is_marked_missing_when_db_file_is_renamed(self, data_connection, tmp_path):
         db_path = Path(tmp_path, "db.sqlite")
-        engine = create_new_spine_database("sqlite:///" + str(db_path))
+        engine = create_new_spine_database(sqlite_url_string(db_path))
         engine.dispose()
         with (
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,
@@ -1070,7 +1071,7 @@ class TestDataConnection:
 
     def test_refreshing_missing_sqlite_reference_resurrects_it(self, data_connection, tmp_path):
         db_path = Path(tmp_path, "db.sqlite")
-        engine = create_new_spine_database("sqlite:///" + str(db_path))
+        engine = create_new_spine_database(sqlite_url_string(db_path))
         engine.dispose()
         with (
             mock.patch("spine_items.data_connection.data_connection.UrlSelectorDialog.exec") as url_selector_exec,

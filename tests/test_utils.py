@@ -12,6 +12,7 @@
 
 """Unit tests for the ``utils`` module."""
 
+import pathlib
 import sys
 import unittest
 from unittest import mock
@@ -22,6 +23,7 @@ from spine_items.utils import (
     split_url_credentials,
     unsplit_url_credentials,
 )
+from spinedb_api.helpers import sqlite_url_string
 
 
 class TestDatabaseLabel(unittest.TestCase):
@@ -31,19 +33,19 @@ class TestDatabaseLabel(unittest.TestCase):
 
 class TestConvertToSqlAlchemyUrl(unittest.TestCase):
     def test_sqlite_url_conversion_succeeds(self):
-        database_path = r"h:\files\database.sqlite" if sys.platform == "win32" else "/home/data/database.sqlite"
+        database_path = r"H:\files\database.sqlite" if sys.platform == "win32" else "/home/data/database.sqlite"
         url = {
             "dialect": "sqlite",
-            "database": database_path,
+            "database": pathlib.Path(database_path).as_posix(),
         }
         sa_url = convert_to_sqlalchemy_url(url)
-        self.assertEqual(sa_url.database, database_path)
+        self.assertEqual(sa_url.database, pathlib.Path(database_path).as_posix())
         self.assertIsNone(sa_url.username)
         self.assertIsNone(sa_url.password)
         self.assertIsNone(sa_url.port)
         self.assertIsNone(sa_url.host)
         self.assertEqual(sa_url.drivername, r"sqlite")
-        self.assertEqual(str(sa_url), r"sqlite:///" + database_path)
+        self.assertEqual(sa_url.render_as_string(), sqlite_url_string(database_path))
 
     def test_remote_url_conversion_succeeds(self):
         url = {
@@ -187,7 +189,7 @@ class TestConvertUrlToSafeString(unittest.TestCase):
             "dialect": "sqlite",
             "database": database_path,
         }
-        self.assertEqual(convert_url_to_safe_string(url), r"sqlite:///" + database_path)
+        self.assertEqual(convert_url_to_safe_string(url), sqlite_url_string(database_path))
 
 
 class TestSplitUrlCredentials(unittest.TestCase):

@@ -17,6 +17,7 @@ import unittest
 from spine_engine.project_item.project_item_resource import url_resource
 from spine_items.exporter.output_channel import OutputChannel
 from spine_items.exporter.utils import output_database_resources
+from spinedb_api.helpers import sqlite_url_string
 
 
 class TestOutputDatabaseResources(unittest.TestCase):
@@ -29,7 +30,7 @@ class TestOutputDatabaseResources(unittest.TestCase):
             ),
         ]
         resources = output_database_resources(item_name, channels)
-        expected_url = "sqlite:///" + os.path.normcase(os.path.abspath("/path/to/db.sqlite"))
+        expected_url = sqlite_url_string(os.path.normcase(os.path.abspath("/path/to/db.sqlite")))
         self.assertEqual(resources, [url_resource(item_name, expected_url, "out database")])
 
 
