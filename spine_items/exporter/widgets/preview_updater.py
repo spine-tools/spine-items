@@ -21,6 +21,7 @@ from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer, Slot
 from PySide6.QtWidgets import QFileDialog
 from spinedb_api import DatabaseMapping, SpineDBAPIError, SpineDBVersionError
 from spinedb_api.export_mapping.export_mapping import ExportMapping
+from spinedb_api.helpers import sqlite_url_string
 from spinedb_api.spine_io.exporters.writer import write
 from ..mvcmodels.full_url_list_model import FullUrlListModel
 from ..mvcmodels.mappings_table_model import MappingsTableModel
@@ -478,7 +479,7 @@ class PreviewUpdater:
         path = self._browse_database()
         if not path:
             return
-        url = "sqlite:///" + path
+        url = sqlite_url_string(path)
         self._url_model.append(url)
         self._ui.database_url_combo_box.setCurrentText(url)
 

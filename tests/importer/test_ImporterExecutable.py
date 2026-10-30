@@ -19,6 +19,7 @@ from spine_engine.project_item.project_item_resource import database_resource, f
 from spine_items.importer.executable_item import ExecutableItem
 from spine_items.importer.importer_specification import ImporterSpecification
 from spinedb_api import DatabaseMapping, create_new_spine_database
+from spinedb_api.helpers import sqlite_url_string
 from spinedb_api.spine_db_server import db_server_manager
 
 
@@ -84,7 +85,7 @@ class TestImporterExecutable:
         self._write_simple_data(data_file)
         mapping = self._simple_input_data_mapping()
         database_path = Path(str(tmp_path), "database.sqlite")
-        database_url = "sqlite:///" + str(database_path)
+        database_url = sqlite_url_string(database_path)
         engine = create_new_spine_database(database_url)
         engine.dispose()
         gams_path = ""
@@ -112,7 +113,7 @@ class TestImporterExecutable:
         data_file = Path(str(tmp_path), "data.dat")
         self._write_simple_data(data_file)
         database_path = Path(str(tmp_path), "database.sqlite")
-        database_url = "sqlite:///" + str(database_path)
+        database_url = sqlite_url_string(database_path)
         engine = create_new_spine_database(database_url)
         engine.dispose()
         gams_path = ""

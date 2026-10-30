@@ -18,11 +18,12 @@ from PySide6.QtWidgets import QApplication
 from sqlalchemy.engine.url import make_url
 from spine_items.database_validation import DatabaseConnectionValidator
 from spinedb_api import create_new_spine_database
+from spinedb_api.helpers import sqlite_url_string
 
 
 class TestDatabaseConnectionValidator:
     def test_successful_validation_of_sqlite_database(self, application, tmp_path):
-        url = "sqlite:///" + str(Path(tmp_path, "db.sqlite"))
+        url = sqlite_url_string(Path(tmp_path, "db.sqlite"))
         engine = create_new_spine_database(url)
         engine.dispose()
         listener = _Listener()
@@ -38,7 +39,7 @@ class TestDatabaseConnectionValidator:
         assert listener.is_success
 
     def test_successful_validation_of_sqlite_database_with_str_url(self, application, tmp_path):
-        url = "sqlite:///" + str(Path(tmp_path, "db.sqlite"))
+        url = sqlite_url_string(Path(tmp_path, "db.sqlite"))
         engine = create_new_spine_database(url)
         engine.dispose()
         listener = _Listener()
@@ -54,7 +55,7 @@ class TestDatabaseConnectionValidator:
         assert listener.is_success
 
     def test_validation_failure_due_to_missing_sqlite_file(self, application, tmp_path):
-        url = "sqlite:///" + str(Path(tmp_path, "db.sqlite"))
+        url = sqlite_url_string(Path(tmp_path, "db.sqlite"))
         listener = _Listener()
         validator = DatabaseConnectionValidator()
         try:

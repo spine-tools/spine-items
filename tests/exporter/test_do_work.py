@@ -24,6 +24,7 @@ from spinedb_api import DatabaseMapping, import_object_classes, import_objects
 from spinedb_api.export_mapping import entity_export
 from spinedb_api.export_mapping.export_mapping import FixedValueMapping
 from spinedb_api.export_mapping.group_functions import NoGroup
+from spinedb_api.helpers import sqlite_url_string
 from spinedb_api.mapping import Position
 
 
@@ -35,7 +36,7 @@ class TestWithCsvWriter(unittest.TestCase):
     def setUpClass(cls):
         cls._temp_dir = TemporaryDirectory()
         db_file = os.path.join(cls._temp_dir.name, "test_db.sqlite")
-        cls._url = "sqlite:///" + db_file
+        cls._url = sqlite_url_string(db_file)
         with DatabaseMapping(cls._url, create=True) as db_map:
             import_object_classes(db_map, ("oc1", "oc2"))
             import_objects(db_map, (("oc1", "o11"), ("oc1", "o12"), ("oc2", "o21"), ("oc2", "o22"), ("oc2", "o23")))

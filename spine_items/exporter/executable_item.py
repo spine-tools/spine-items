@@ -216,11 +216,11 @@ class ExecutableItem(ExecutableItemBase):
             EXPORTER_EXECUTION_MANIFEST_FILE_PREFIX + (f"-{self.hash_filter_id()}" if self._filter_id else "")
         ) + ".json"
 
-    def _resolve_gams_system_directory(self):
+    def _resolve_gams_system_directory(self) -> str | None:
         """Returns GAMS system path from Toolbox settings or None if GAMS default is to be used.
 
         Returns:
-            str: GAMS system path
+            GAMS system path or None
         """
         path = self._gams_path
         if not path:
