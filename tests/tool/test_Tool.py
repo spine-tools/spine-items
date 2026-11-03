@@ -19,7 +19,7 @@ from unittest import mock
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QApplication, QMenu
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.project_item.project_item_resource import ProjectItemResource, file_resource
+from spine_engine.project_item.project_item_resource import file_resource
 from spine_items.tool.item_info import ItemInfo
 from spine_items.tool.tool import Tool
 from spine_items.tool.tool_factory import ToolFactory

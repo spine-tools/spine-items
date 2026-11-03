@@ -44,18 +44,21 @@ class UpdateToolExecuteInWorkCommand(SpineToolboxCommand):
 class UpdateToolOptionsCommand(SpineToolboxCommand):
     """Command to update Tool options."""
 
-    def __init__(self, tool_name, changed_options, current_options, project):
+    def __init__(self, tool_name, changed_options, current_options, project, remove_keys):
         """
         Args:
             tool_name (str): Tool's name
             changed_options (dict): The options that change
             current_options (dict): Current options
             project (SpineToolboxProject): project
+            remove_keys (list): Keys to remove
         """
         super().__init__()
         self._tool_name = tool_name
         self._old_options = copy.deepcopy(current_options)
         self._new_options = copy.deepcopy(current_options)
+        for key in remove_keys:
+            self._new_options.pop(key, None)
         self._new_options.update(changed_options)
         self._project = project
         self.setText(f"change options of {tool_name}")
