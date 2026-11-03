@@ -650,14 +650,14 @@ class Tool(DBWriterItemBase):
                         f"main program file <b>{full_path}</b> doesn't exist."
                     )
             if self.specification().tooltype == "python":
-                if self.options.get("kernel_spec_name") is not None:
+                if self.options.get("use_jupyter_console") and self.options.get("kernel_spec_name") is not None:
                     kernel_index = self.models.find_python_kernel_index(self.options["kernel_spec_name"])
                     if not kernel_index.isValid():
                         self.add_notification(
                             f"Python kernel {self.options['kernel_spec_name']} does not "
                             f"exist. Install the kernel or select another one in Tool Properties."
                         )
-                if self.options.get("executable") is not None:
+                if not self.options.get("use_jupyter_console") and self.options.get("executable") is not None:
                     exec_index = self.models.find_python_interpreter_index(self.options["executable"])
                     if not exec_index.isValid():
                         self.add_notification(
@@ -665,30 +665,27 @@ class Tool(DBWriterItemBase):
                             f"exist. Please install it or select another one in Tool Properties."
                         )
             elif self.specification().tooltype == "julia":
-                if self.options.get("kernel_spec_name") is not None:
+                if self.options.get("use_jupyter_console") and self.options.get("kernel_spec_name") is not None:
                     kernel_index = self.models.find_julia_kernel_index(self.options["kernel_spec_name"])
                     if not kernel_index.isValid():
                         self.add_notification(
                             f"Julia kernel {self.options['kernel_spec_name']} does not "
                             f"exist. Please check execution settings in Tool Properties."
                         )
-                if self.options.get("executable") is not None:
-                    # TODO: Maybe just check if the 'executable' path exists
+                if not self.options.get("use_jupyter_console") and self.options.get("executable") is not None:
                     exec_index = self.models.find_julia_executable_index(self.options["executable"])
                     if not exec_index.isValid():
                         self.add_notification(
                             f"Julia executable {self.options['executable']} does not "
                             f"exist. Please install it or select another one in Tool Properties."
                         )
-                if self.options.get("project") is not None and self.options.get("project") != "":
+                if not self.options.get("use_jupyter_console") and self.options.get("project") is not None and self.options.get("project") != "":
                     exec_index = self.models.find_julia_project_index(self.options["project"])
                     if not exec_index.isValid():
                         self.add_notification(
                             f"Julia project {self.options['project']} does not "
                             f"exist. Make the project or select another one in Tool Properties."
                         )
-            # TODO: What to do when local options (execution settings) are missing because this is a shared project?
-
         if self._input_files_not_found:
             self.add_notification(
                 f"File(s) {', '.join(self._input_files_not_found)} needed to execute this Tool are not provided"

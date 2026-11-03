@@ -899,6 +899,11 @@ class ExecutableOptionsWidget(OptionsWidget):
         self.connect_signals()
 
     def _init_shell_combobox(self):
+        availability = {
+            ShellOptions.CMD: "Windows",
+            ShellOptions.POWERSHELL: "Windows",
+            ShellOptions.BASH: "Linux and macOS",
+        }
         for shell in ShellOptions:
             self.ui.comboBox_shell.addItem(SHELL_DISPLAY_NAMES[shell], shell)
         supported_shells = (
@@ -913,7 +918,7 @@ class ExecutableOptionsWidget(OptionsWidget):
             if shell not in supported_shells:
                 item = model.item(row)
                 item.setEnabled(False)
-                item.setToolTip(f"<p>{SHELL_DISPLAY_NAMES[shell]} is not available for platform {sys.platform}</p>")
+                item.setToolTip(f"<p>{SHELL_DISPLAY_NAMES[shell]} is only available on {availability[shell]}</p>")
 
     def connect_signals(self):
         self.ui.lineEdit_command.textChanged.connect(self.update_executable_tool_command)
