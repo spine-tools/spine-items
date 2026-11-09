@@ -89,7 +89,7 @@ class Tool(DBWriterItemBase):
         """
         super().__init__(name, description, x, y, project)
         self._toolbox = toolbox
-        self._models = self._toolbox.exec_compound_models
+        self._models = self._toolbox.execution_models
         self.execute_in_work = execute_in_work
         if cmd_line_args is None:
             cmd_line_args = []

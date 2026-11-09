@@ -24,7 +24,7 @@ from spine_items.tool.widgets.options_widgets import (
     ExecutableOptionsWidget,
     ToolExecutionMethod,
 )
-from spinetoolbox.kernel_models import ExecutableCompoundModels
+from spinetoolbox.kernel_models import ExecutionModels
 
 
 class TestOptionsWidget(unittest.TestCase):
@@ -43,7 +43,7 @@ class TestOptionsWidget(unittest.TestCase):
         )
 
     def test_julia_options_widget(self):
-        models = ExecutableCompoundModels(mock.MagicMock())
+        models = ExecutionModels(mock.MagicMock())
         # Test without using Julia in PATH
         with mock.patch("spinetoolbox.kernel_models.resolve_default_julia_executable") as mock_default_julia:
             mock_default_julia.return_value = ""
@@ -116,7 +116,7 @@ class TestOptionsWidget(unittest.TestCase):
         assert ow.ui.label_environment.text() == "/someProject"
 
     def test_python_options_widget(self):
-        models = ExecutableCompoundModels(mock.MagicMock())
+        models = ExecutionModels(mock.MagicMock())
         models.load_python_system_interpreters([])
         ow = PythonOptionsWidget(models)
         tool = FakeTool(models)
@@ -145,7 +145,7 @@ class TestOptionsWidget(unittest.TestCase):
         assert ow.get_kernel_name() == "python-kernel"
 
     def test_executable_options_widget(self):
-        models = ExecutableCompoundModels(mock.MagicMock())
+        models = ExecutionModels(mock.MagicMock())
         models.load_python_system_interpreters([])
         ow = ExecutableOptionsWidget(models)
         tool = FakeTool(models)
