@@ -24,7 +24,7 @@ from spine_items.tool.widgets.options_widgets import (
     ExecutableOptionsWidget,
     ToolExecutionMethod,
 )
-from spinetoolbox.kernel_models import ExecutionModels
+from spinetoolbox.execution_models import ExecutionModels
 
 
 class TestOptionsWidget(unittest.TestCase):
@@ -45,7 +45,7 @@ class TestOptionsWidget(unittest.TestCase):
     def test_julia_options_widget(self):
         models = ExecutionModels(mock.MagicMock())
         # Test without using Julia in PATH
-        with mock.patch("spinetoolbox.kernel_models.resolve_default_julia_executable") as mock_default_julia:
+        with mock.patch("spinetoolbox.execution_models.resolve_default_julia_executable") as mock_default_julia:
             mock_default_julia.return_value = ""
             models.load_julia_executables([])
             mock_default_julia.assert_called()
