@@ -31,18 +31,19 @@ from spine_items.tool.utils import (
 from spine_items.utils import escape_backward_slashes
 from spine_items.commands import UpdateText
 from spinetoolbox.widgets.custom_qwidgets import ComboListView
-from spinetoolbox.widgets.custom_menus import PythonContextMenu
+from spinetoolbox.widgets.custom_menus import PythonContextMenu, JuliaContextMenu
+from spinetoolbox.widgets.notification import Notification
 from spinetoolbox.execution_managers import QProcessExecutionManager
 from spinetoolbox.helpers import (
     CharIconEngine,
     get_open_file_name_in_last_dir,
     make_settings_dict_for_engine,
-    file_is_valid,
     SealCommand,
     set_combobox_item_invalid_property,
     get_current_item,
     get_current_item_data,
     restore_saved_python_kernel,
+    restore_saved_julia_kernel,
     select_and_add_python_interpreter,
     select_and_add_julia_executable,
     select_and_add_julia_project,
@@ -78,7 +79,7 @@ class OptionsWidget(QWidget):
         super().__init__()
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self._models = models  # Models containing saved Pythons and Julias
+        self._models = models  # Execution models
         self._tool = None
 
     @property
@@ -103,7 +104,7 @@ class OptionsWidget(QWidget):
         return self.tool.logger
 
     @property
-    def models(self):
+    def exec_models(self):
         return self._models
 
 
@@ -168,8 +169,8 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
             ComboListView(self.ui.comboBox_kernel_specs, self._show_python_kernel_context_menu)
         )
         self.populate_execution_method_comboboxes()
-        self.ui.comboBox_executable.setModel(self._models.python_interpreters_model)
-        self.ui.comboBox_kernel_specs.setModel(self._models.python_kernel_model)
+        self.ui.comboBox_executable.setModel(self.exec_models.python_interpreters_model)
+        self.ui.comboBox_kernel_specs.setModel(self.exec_models.python_kernel_model)
         self.connect_signals()
 
     def populate_execution_method_comboboxes(self):
@@ -191,42 +192,42 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
     @Slot(QPoint)
     def _show_python_interpreters_context_menu(self, pos, index=None):
         if not index:
-            data = get_current_item_data(self.ui.comboBox_executable, self._models.python_interpreters_model)
+            data = get_current_item_data(self.ui.comboBox_executable, self.exec_models.python_interpreters_model)
         else:
-            item = self._models.python_interpreters_model.itemFromIndex(index)
+            item = self.exec_models.python_interpreters_model.itemFromIndex(index)
             data = item.data()
         global_pos = self.ui.comboBox_executable.mapToGlobal(pos)
         path = data["exe"]
-        menu = PythonContextMenu(self.ui.comboBox_executable, self, self._models, path, False, 0)
+        menu = PythonContextMenu(self.ui.comboBox_executable, self, self.exec_models, path, False, 0)
         menu.popup(global_pos)
 
     @Slot(QPoint)
     def _show_python_kernel_context_menu(self, pos, index=None):
         if not index:
-            item = get_current_item(self.ui.comboBox_kernel_specs, self._models.python_kernel_model)
+            item = get_current_item(self.ui.comboBox_kernel_specs, self.exec_models.python_kernel_model)
         else:
-            item = self._models.python_kernel_model.itemFromIndex(index)
+            item = self.exec_models.python_kernel_model.itemFromIndex(index)
         global_pos = self.ui.comboBox_kernel_specs.mapToGlobal(pos)
         path = item.toolTip()
         is_conda = False if not item.data() else item.data()["is_conda"]
-        menu = PythonContextMenu(self.ui.comboBox_kernel_specs, self, self._models, path, is_conda, 1)
+        menu = PythonContextMenu(self.ui.comboBox_kernel_specs, self, self.exec_models, path, is_conda, 1)
         menu.popup(global_pos)
 
     def reload_python_kernels(self):
         conda = self.tool.specification().qsettings.value("appSettings/condaPath", defaultValue="")
         self._saved_python_kernel = self.get_kernel_name()
-        self._models.start_fetching_python_kernels(finalize_slot=self._on_python_kernels_reloaded, conda=conda)
+        self.exec_models.start_fetching_python_kernels(finalize_slot=self._on_python_kernels_reloaded, conda=conda)
 
     @Slot()
     def _on_python_kernels_reloaded(self):
-        restore_saved_python_kernel(self, self._models, self.ui.comboBox_kernel_specs, self._saved_python_kernel)
+        restore_saved_python_kernel(self, self.exec_models, self.ui.comboBox_kernel_specs, self._saved_python_kernel)
         self._saved_python_kernel = None
 
     @Slot(bool)
     def _on_add_python_interpreter_clicked(self, _=False):
         self._block_signals(True)
         try:
-            select_and_add_python_interpreter(self.ui.comboBox_executable, self.models, self._project.toolbox())
+            select_and_add_python_interpreter(self.ui.comboBox_executable, self.exec_models, self._project.toolbox())
         finally:
             self._block_signals(False)
         self._update_executable(self.ui.comboBox_executable.currentIndex())
@@ -294,16 +295,16 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
         # Update Jupyter kernel & Python interpreter pages
         if options["use_jupyter_console"]:
             self._set_python_execution_method_ui(ToolExecutionMethod.JUPYTER)
-            kernel_index = self.models.find_python_kernel_index(options["kernel_spec_name"])
+            kernel_index = self.exec_models.find_python_kernel_index(options["kernel_spec_name"])
             if not kernel_index.isValid():
-                kernel_index = self.models.python_kernel_model.index(0, 0)
+                kernel_index = self.exec_models.python_kernel_model.index(0, 0)
             self.ui.comboBox_kernel_specs.setCurrentIndex(kernel_index.row())
         else:
             # Python interpreter page
             self._set_python_execution_method_ui(ToolExecutionMethod.DIRECT)
-            exec_index = self._models.find_python_interpreter_index(options["executable"])
+            exec_index = self.exec_models.find_python_interpreter_index(options["executable"])
             if not exec_index.isValid():
-                exec_index = self.models.python_interpreters_model.index(0, 0)
+                exec_index = self.exec_models.python_interpreters_model.index(0, 0)
             self.ui.comboBox_executable.setCurrentIndex(exec_index.row())
         self._block_signals(False)
 
@@ -333,14 +334,14 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
 
     def get_kernel_name(self) -> str:
         """Returns the selected Python kernel name in the combobox."""
-        data = self.get_current_kernel_item_data(self.models.python_kernel_model)
+        data = self.get_current_kernel_item_data(self.exec_models.python_kernel_model)
         if not data:
             return ""
         return data["kernel_name"]
 
     def is_conda(self) -> str:
         """Returns 'conda' if currently selected kernel item is a conda kernel. Returns an empty string otherwise."""
-        data = self.get_current_kernel_item_data(self.models.python_kernel_model)
+        data = self.get_current_kernel_item_data(self.exec_models.python_kernel_model)
         if not data:
             return ""
         return "conda" if data["is_conda"] else ""
@@ -351,6 +352,7 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         from ..ui.julia_tool_options import Ui_Form  # pylint: disable=import-outside-toplevel
 
         super().__init__(Ui_Form, models)
+        self._saved_julia_kernel = None
         self._last_sysimage_paths = {}
         self._sysimage_paths = {}
         self._sysimage_workers = {}
@@ -362,10 +364,19 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self.ui.toolButton_abort_sysimage.clicked.connect(self._abort_sysimage)
         self.ui.toolButton_abort_sysimage.setVisible(False)
         self.ui.lineEdit_sysimage.editingFinished.connect(self._handle_sysimage_editing_finished)
+        self.ui.comboBox_executable.setView(
+            ComboListView(self.ui.comboBox_executable, self._show_julia_executables_context_menu)
+        )
+        self.ui.comboBox_julia_project.setView(
+            ComboListView(self.ui.comboBox_julia_project, self._show_julia_projects_context_menu)
+        )
+        self.ui.comboBox_kernel_specs.setView(
+            ComboListView(self.ui.comboBox_kernel_specs, self._show_julia_kernel_context_menu)
+        )
         self.populate_execution_method_combobox()
-        self.ui.comboBox_executable.setModel(self.models.julia_executables_model)
-        self.ui.comboBox_julia_project.setModel(self.models.julia_projects_model)
-        self.ui.comboBox_kernel_specs.setModel(self.models.julia_kernel_model)
+        self.ui.comboBox_executable.setModel(self.exec_models.julia_executables_model)
+        self.ui.comboBox_julia_project.setModel(self.exec_models.julia_projects_model)
+        self.ui.comboBox_kernel_specs.setModel(self.exec_models.julia_kernel_model)
         self.connect_signals()
 
     def populate_execution_method_combobox(self):
@@ -380,16 +391,83 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self.ui.toolButton_browse_julia.clicked.connect(self._on_add_julia_executable_clicked)
         self.ui.toolButton_browse_julia_project.clicked.connect(self._on_add_julia_project_clicked)
         self.ui.comboBox_executable.activated.connect(self._update_executable)
+        self.ui.comboBox_executable.customContextMenuRequested.connect(self._show_julia_executables_context_menu)
         self.ui.comboBox_julia_project.activated.connect(self._update_project)
+        self.ui.comboBox_julia_project.customContextMenuRequested.connect(self._show_julia_projects_context_menu)
         self.ui.comboBox_kernel_specs.activated.connect(self._update_julia_kernel)
+        self.ui.comboBox_kernel_specs.customContextMenuRequested.connect(self._show_julia_kernel_context_menu)
         self.ui.comboBox_julia_execution_method.activated.connect(self.activate_execution_method)
+
+    @Slot(QPoint)
+    def _show_julia_executables_context_menu(self, pos, index=None):
+        if not index:
+            data = get_current_item_data(self.ui.comboBox_executable, self.exec_models.julia_executables_model)
+        else:
+            item = self.exec_models.julia_executables_model.itemFromIndex(index)
+            data = item.data()
+        global_pos = self.ui.comboBox_executable.mapToGlobal(pos)
+        path = data["exe"]
+        menu = JuliaContextMenu(self.ui.comboBox_executable, self, self.exec_models, path, False, 0, "")
+        menu.popup(global_pos)
+
+    @Slot(QPoint)
+    def _show_julia_projects_context_menu(self, pos, index=None):
+        if not index:
+            data = get_current_item_data(self.ui.comboBox_julia_project, self.exec_models.julia_projects_model)
+        else:
+            item = self.exec_models.julia_projects_model.itemFromIndex(index)
+            data = item.data()
+        global_pos = self.ui.comboBox_julia_project.mapToGlobal(pos)
+        path = data["path"]
+        current_julia_dir = self._solve_current_julia_dir()
+        if not current_julia_dir:
+            return
+        menu = JuliaContextMenu(self.ui.comboBox_julia_project, self, self.exec_models, path, False, 1, current_julia_dir)
+        menu.popup(global_pos)
+
+    def _solve_current_julia_dir(self):
+        data = get_current_item_data(self.ui.comboBox_executable, self.exec_models.julia_executables_model)
+        if not data:
+            Notification(self, "Select a valid Julia executable").show()
+            return None
+        selected_julia = data["exe"]
+        if not selected_julia:
+            path, _ = os.path.split(resolve_default_julia_executable())
+        else:
+            path, _ = os.path.split(selected_julia)
+        if not os.path.exists(path):
+            Notification(self, f"Invalid Julia selected. Path {path} doesn't exist").show()
+            return None
+        return path
+
+    @Slot(QPoint)
+    def _show_julia_kernel_context_menu(self, pos, index=None):
+        if not index:
+            item = get_current_item(self.ui.comboBox_kernel_specs, self.exec_models.julia_kernel_model)
+        else:
+            item = self.exec_models.julia_kernel_model.itemFromIndex(index)
+        global_pos = self.ui.comboBox_kernel_specs.mapToGlobal(pos)
+        path = item.toolTip()
+        is_conda = False if not item.data() else item.data()["is_conda"]
+        menu = JuliaContextMenu(self.ui.comboBox_kernel_specs, self, self.exec_models, path, is_conda, 2, "")
+        menu.popup(global_pos)
+
+    def reload_julia_kernels(self):
+        conda = self.tool.specification().qsettings.value("appSettings/condaPath", defaultValue="")
+        self._saved_julia_kernel = self.get_kernel_name()
+        self.exec_models.start_fetching_julia_kernels(finalize_slot=self._on_julia_kernels_reloaded, conda=conda)
+
+    @Slot()
+    def _on_julia_kernels_reloaded(self):
+        restore_saved_julia_kernel(self, self.exec_models, self.ui.comboBox_kernel_specs, self._saved_julia_kernel)
+        self._saved_julia_kernel = None
 
     @Slot(bool)
     def _on_add_julia_executable_clicked(self, _=False):
         """Calls static method that shows a file browser for selecting a Julia path."""
         self._block_signals(True)
         try:
-            select_and_add_julia_executable(self.ui.comboBox_executable, self.models, self._project.toolbox())
+            select_and_add_julia_executable(self.ui.comboBox_executable, self.exec_models, self._project.toolbox())
         finally:
             self._block_signals(False)
         self._update_executable(self.ui.comboBox_executable.currentIndex())
@@ -399,7 +477,7 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         """Calls static method that shows a folder browser for adding a Julia project."""
         self._block_signals(True)
         try:
-            select_and_add_julia_project(self.ui.comboBox_julia_project, self.models, self._project.toolbox())
+            select_and_add_julia_project(self.ui.comboBox_julia_project, self.exec_models, self._project.toolbox())
         finally:
             self._block_signals(False)
         self._update_project(self.ui.comboBox_julia_project.currentIndex())
@@ -484,19 +562,19 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         # Update Jupyter kernel & Julia executable/environment pages
         if options["use_jupyter_console"]:
             self._set_julia_execution_method_ui(ToolExecutionMethod.JUPYTER)
-            kernel_index = self.models.find_julia_kernel_index(options["kernel_spec_name"])
+            kernel_index = self.exec_models.find_julia_kernel_index(options["kernel_spec_name"])
             if not kernel_index.isValid():
-                kernel_index = self.models.julia_kernel_model.index(0, 0)
+                kernel_index = self.exec_models.julia_kernel_model.index(0, 0)
             self.ui.comboBox_kernel_specs.setCurrentIndex(kernel_index.row())
         else:
             self._set_julia_execution_method_ui(ToolExecutionMethod.DIRECT)
-            exec_index = self._models.find_julia_executable_index(options["executable"])
+            exec_index = self.exec_models.find_julia_executable_index(options["executable"])
             if not exec_index.isValid():
-                exec_index = self.models.julia_executables_model.index(0, 0)
+                exec_index = self.exec_models.julia_executables_model.index(0, 0)
             self.ui.comboBox_executable.setCurrentIndex(exec_index.row())
-            env_index = self._models.find_julia_project_index(options["project"])
+            env_index = self.exec_models.find_julia_project_index(options["project"])
             if not env_index.isValid():
-                env_index = self.models.julia_projects_model.index(0, 0)
+                env_index = self.exec_models.julia_projects_model.index(0, 0)
             self.ui.comboBox_julia_project.setCurrentIndex(env_index.row())
         self._block_signals(False)
 
@@ -541,14 +619,14 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
 
     def get_kernel_name(self) -> str:
         """Returns the selected Julia kernel name in the combobox."""
-        data = self.get_current_kernel_item_data(self.models.julia_kernel_model)
+        data = self.get_current_kernel_item_data(self.exec_models.julia_kernel_model)
         if not data:
             return ""
         return data["kernel_name"]
 
     def is_conda(self):
         """Returns 'conda' if currently selected kernel item is a conda kernel. Returns an empty string otherwise."""
-        data = self.get_current_kernel_item_data(self.models.julia_kernel_model)
+        data = self.get_current_kernel_item_data(self.exec_models.julia_kernel_model)
         if not data:
             return ""
         return "conda" if data["is_conda"] else ""
