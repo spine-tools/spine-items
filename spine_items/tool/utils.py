@@ -26,7 +26,7 @@ from spine_engine.project_item.project_item_resource import ProjectItemResource
 from spine_engine.utils.helpers import (
     AppSettings,
     custom_find_kernel_specs,
-    resolve_julia_executable,
+    resolve_default_julia_executable,
     resolve_julia_project,
     resolve_current_python_interpreter,
 )
@@ -76,15 +76,15 @@ def get_julia_path_and_project(exec_settings: dict, settings: AppSettings) -> li
         if project:
             retval.append(f"--project={project}")
         return retval
-    julia = exec_settings["executable"]
-    if not julia:
-        julia = resolve_julia_executable(settings)
-    project = exec_settings["project"]
-    if not project:
-        project = resolve_julia_project(settings)
-    retval = [julia]
-    if project:
-        retval.append(f"--project={project}")
+    julia = exec_settings.get("executable")
+    if julia is None:
+        raise RuntimeError("'executable' key missing from Julia execution settings")
+    if julia == "":
+        julia = resolve_default_julia_executable()
+    project = exec_settings.get("project")
+    if project is None:
+        raise RuntimeError("'project' key missing from Julia execution settings")
+    retval = [julia, f"--project={project}"]
     return retval
 
 

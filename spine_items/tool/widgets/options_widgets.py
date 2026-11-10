@@ -276,7 +276,6 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
     def do_update_options_widget(self, options: dict):
         """Updates the options widgets according to given options."""
         self._block_signals(True)
-        print(f"[{self.tool.name}] options:{options.items()}")
         # Update Default page
         if self.is_default_options(options):
             options = default_python_execution_settings(self.tool.specification().qsettings)
@@ -536,7 +535,6 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         self.last_sysimage_path = options.get("julia_sysimage")
         self.ui.lineEdit_sysimage.setText(self.last_sysimage_path)
         self._block_signals(True)
-        print(f"[{self.tool.name}] options:{options.items()}")
         # Update Default page
         if self.is_default_options(options):
             options = default_julia_execution_settings(self.tool.specification().qsettings)
