@@ -136,15 +136,15 @@ class TestGetJuliaPathAndProject(unittest.TestCase):
         # Use Jupyter Console: False
         exec_settings = {
             "use_jupyter_console": False,
-            "executable": "",
+            "executable": "path/to/julia",
             "env": "",
             "kernel_spec_name": "",
             "project": "",
         }
-        app_settings = AppSettings({"appSettings/juliaPath": "path/to/julia"})
-        julia_args = get_julia_path_and_project(exec_settings, app_settings)
-        self.assertTrue(len(julia_args) == 1)
-        self.assertTrue(julia_args[0] == "path/to/julia")
+        with mock.patch("spine_items.tool.utils.resolve_default_julia_executable") as mock_resolve_julia:
+            julia_args = get_julia_path_and_project(exec_settings)
+        self.assertEqual(len(julia_args), 1)
+        self.assertEqual(julia_args[0], "path/to/julia")
         # Use Jupyter Console: False
         exec_settings = {
             "use_jupyter_console": False,
@@ -153,9 +153,9 @@ class TestGetJuliaPathAndProject(unittest.TestCase):
             "kernel_spec_name": "",
             "project": "/path/to/myjuliaproject",
         }
-        julia_args = get_julia_path_and_project(exec_settings, app_settings)
-        self.assertTrue(julia_args[0] == "/path/to/julia")
-        self.assertTrue(julia_args[1] == "--project=/path/to/myjuliaproject")
+        julia_args = get_julia_path_and_project(exec_settings)
+        self.assertEqual(julia_args[0], "/path/to/julia")
+        self.assertEqual(julia_args[1], "--project=/path/to/myjuliaproject")
         # Use Jupyter Console: True
         exec_settings = {
             "use_jupyter_console": True,
@@ -164,7 +164,7 @@ class TestGetJuliaPathAndProject(unittest.TestCase):
             "kernel_spec_name": "unknown_kernel",
             "project": "",
         }
-        julia_args = get_julia_path_and_project(exec_settings, app_settings)
+        julia_args = get_julia_path_and_project(exec_settings)
         self.assertIsNone(julia_args)
         # Use Jupyter Console: True
         exec_settings = {
@@ -177,11 +177,11 @@ class TestGetJuliaPathAndProject(unittest.TestCase):
         with mock.patch("spine_items.tool.utils.custom_find_kernel_specs") as mock_find_kernel_specs:
             # Return a dict containing a path to a dummy kernel resource dir when find_kernel_specs is called
             mock_find_kernel_specs.return_value = {"test_kernel": Path(__file__).parent / "dummy_julia_kernel"}
-            julia_args = get_julia_path_and_project(exec_settings, app_settings)
+            julia_args = get_julia_path_and_project(exec_settings)
             mock_find_kernel_specs.assert_called_once()
-            self.assertEqual(2, len(julia_args))
-            self.assertTrue(julia_args[0] == "/path/to/somejulia")
-            self.assertTrue(julia_args[1] == "--project=/path/to/someotherjuliaproject")
+            self.assertEqual(len(julia_args), 2)
+            self.assertEqual(julia_args[0], "/path/to/somejulia")
+            self.assertEqual(julia_args[1], "--project=/path/to/someotherjuliaproject")
 
 
 class TestMakeDirIfNecessary:

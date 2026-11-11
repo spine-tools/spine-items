@@ -47,12 +47,11 @@ class OptionsDict(TypedDict):
     julia_sysimage: NotRequired[str]
 
 
-def get_julia_path_and_project(exec_settings: dict, settings: AppSettings) -> list[str] | None:
-    """Returns path to Julia and --project=path/to/project in a list based on Tool specs execution settings.
+def get_julia_path_and_project(exec_settings: dict) -> list[str] | None:
+    """Returns path to Julia and --project=path/to/project in a list based on given execution settings.
 
     Args:
         exec_settings: Execution settings.
-        settings: Application settings.
 
     Returns:
         E.g. ["path/to/julia", "--project=path/to/project/"] or None if kernel does not exist.
@@ -84,7 +83,10 @@ def get_julia_path_and_project(exec_settings: dict, settings: AppSettings) -> li
     project = exec_settings.get("project")
     if project is None:
         raise RuntimeError("'project' key missing from Julia execution settings")
-    retval = [julia, f"--project={project}"]
+    if project == "":
+        retval = [julia]
+    else:
+        retval = [julia, f"--project={project}"]
     return retval
 
 

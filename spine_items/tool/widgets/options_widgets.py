@@ -920,7 +920,7 @@ finally
     cp(joinpath(project_dir, "Project.backup"), joinpath(project_dir, "Project.toml"); force=true);
     cp(joinpath(project_dir, "Manifest.backup"), joinpath(project_dir, "Manifest.toml"); force=true);
 end"""
-        julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings, self.settings)
+        julia, *args = get_julia_path_and_project(current_tool.specification().execution_settings)
         args += ["-e", code]
         self.sysimage_worker = QProcessExecutionManager(self._logger, julia, args, silent=False)
         self.sysimage_worker.execution_finished.connect(lambda ret: self._handle_sysimage_process_finished(ret, tool))

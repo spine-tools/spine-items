@@ -131,7 +131,7 @@ class TestToolInstance(unittest.TestCase):
         with (
             mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
             mock.patch("os.path.isfile") as mock_isfile,
-            mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
+            mock.patch("spine_items.tool.utils.resolve_default_julia_executable") as mock_resolve_julia,
         ):
             mock_isfile.return_value = True  # Make isfile() accept fake julia_sysimage path
             mock_manager.return_value = True
@@ -149,7 +149,7 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(False)
         with (
             mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
-            mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
+            mock.patch("spine_items.tool.utils.resolve_default_julia_executable") as mock_resolve_julia,
         ):
             mock_manager.return_value = True
             mock_resolve_julia.return_value = "path/to/julia"
@@ -166,7 +166,7 @@ class TestToolInstance(unittest.TestCase):
         instance = self._make_julia_tool_instance(False, ["arg3"])
         with (
             mock.patch("spine_items.tool.tool_instance.JuliaPersistentExecutionManager") as mock_manager,
-            mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
+            mock.patch("spine_items.tool.utils.resolve_default_julia_executable") as mock_resolve_julia,
         ):
             mock_manager.return_value = True
             mock_resolve_julia.return_value = "path/to/julia"
@@ -185,7 +185,7 @@ class TestToolInstance(unittest.TestCase):
         instance._settings = FakeQSettings()
         with (
             mock.patch("spine_items.tool.tool_instance.ProcessExecutionManager") as mock_pem,
-            mock.patch("spine_items.tool.utils.resolve_julia_executable") as mock_resolve_julia,
+            mock.patch("spine_items.tool.utils.resolve_default_julia_executable") as mock_resolve_julia,
         ):
             mock_resolve_julia.return_value = "path/to/julia"
             instance.prepare([])

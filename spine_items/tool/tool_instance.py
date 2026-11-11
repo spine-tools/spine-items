@@ -205,7 +205,7 @@ class JuliaToolInstance(ToolInstance):
             "executable": options["executable"],
             "project": options["project"],
         }
-        julia_args = get_julia_path_and_project(exec_settings, self._settings)
+        julia_args = get_julia_path_and_project(exec_settings)
         if not julia_args:
             k_name = exec_settings["kernel_spec_name"]
             raise RuntimeError(f"Invalid kernel '{k_name}'. Missing resource dir or corrupted kernel.json.")
