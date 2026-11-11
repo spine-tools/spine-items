@@ -194,14 +194,15 @@ class SourceDataTableModel(MinimalTableModel):
 
     @Slot()
     def handle_mapping_data_changed(self):
-        self.update_colors()
+        if self.rowCount() != 0:
+            self.update_colors()
+        self.headerDataChanged.emit(Qt.Orientation.Horizontal, 0, self.columnCount() - 1)
         self.mapping_data_changed.emit()
 
     def update_colors(self):
         top_left = self.index(0, 0)
         bottom_right = self.index(self.rowCount() - 1, self.columnCount() - 1)
         self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
-        self.headerDataChanged.emit(Qt.Orientation.Horizontal, 0, self.columnCount() - 1)
 
     def data_error(self, error, index, role=Qt.ItemDataRole.DisplayRole, orientation=Qt.Orientation.Horizontal):
         if role == Qt.ItemDataRole.ToolTipRole:
