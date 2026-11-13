@@ -305,6 +305,8 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
             if not exec_index.isValid():
                 exec_index = self.exec_models.python_interpreters_model.index(0, 0)
             self.ui.comboBox_executable.setCurrentIndex(exec_index.row())
+            interpreter_item = self.exec_models.python_interpreters_model.itemFromIndex(exec_index)
+            set_combobox_item_invalid_property(self.ui.comboBox_executable, interpreter_item)
         self._block_signals(False)
 
     def _block_signals(self, block: bool):
@@ -570,10 +572,15 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
             if not exec_index.isValid():
                 exec_index = self.exec_models.julia_executables_model.index(0, 0)
             self.ui.comboBox_executable.setCurrentIndex(exec_index.row())
+            executable_item = self.exec_models.julia_executables_model.itemFromIndex(exec_index)
+            set_combobox_item_invalid_property(self.ui.comboBox_executable, executable_item)
             env_index = self.exec_models.find_julia_project_index(options["project"])
             if not env_index.isValid():
                 env_index = self.exec_models.julia_projects_model.index(0, 0)
             self.ui.comboBox_julia_project.setCurrentIndex(env_index.row())
+            env_item = self.exec_models.julia_projects_model.itemFromIndex(env_index)
+            set_combobox_item_invalid_property(self.ui.comboBox_julia_project, env_item)
+
         self._block_signals(False)
 
     def _block_signals(self, block):
