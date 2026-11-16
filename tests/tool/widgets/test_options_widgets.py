@@ -12,7 +12,7 @@
 
 """Unit tests for the options_widgets.py module."""
 
-import logging
+import os
 import sys
 import unittest
 from unittest import mock
@@ -35,12 +35,6 @@ class TestOptionsWidget(unittest.TestCase):
             cls.app = QApplication().processEvents()
         except RuntimeError:
             pass
-        logging.basicConfig(
-            stream=sys.stderr,
-            level=logging.WARNING,
-            format="%(asctime)s %(levelname)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
 
     def test_julia_options_widget(self):
         models = ExecutionModels(mock.MagicMock())
@@ -112,8 +106,10 @@ class TestOptionsWidget(unittest.TestCase):
             ow.do_update_options_widget(options)
             mock_julia_defaults.assert_called()
         assert ow.ui.comboBox_julia_execution_method.currentData() == ToolExecutionMethod.DEFAULT
-        assert ow.ui.label_executable_or_kernel.text() == "default/julia"
-        assert ow.ui.label_environment.text() == "/someProject"
+        exec_label_txt = ow.ui.label_executable_or_kernel.text().replace(os.sep, "/")
+        assert exec_label_txt == "default/julia"
+        env_label_txt = ow.ui.label_environment.text().replace(os.sep, "/") 
+        assert env_label_txt == "/someProject"
 
     def test_python_options_widget(self):
         models = ExecutionModels(mock.MagicMock())
