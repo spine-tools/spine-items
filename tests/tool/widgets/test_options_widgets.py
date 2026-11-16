@@ -108,7 +108,7 @@ class TestOptionsWidget(unittest.TestCase):
         assert ow.ui.comboBox_julia_execution_method.currentData() == ToolExecutionMethod.DEFAULT
         exec_label_txt = ow.ui.label_executable_or_kernel.text().replace(os.sep, "/")
         assert exec_label_txt == "default/julia"
-        env_label_txt = ow.ui.label_environment.text().replace(os.sep, "/") 
+        env_label_txt = ow.ui.label_environment.text().replace(os.sep, "/")
         assert env_label_txt == "/someProject"
 
     def test_python_options_widget(self):

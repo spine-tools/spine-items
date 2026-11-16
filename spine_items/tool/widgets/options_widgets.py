@@ -424,7 +424,9 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
         current_julia_dir = self._solve_current_julia_dir()
         if not current_julia_dir:
             return
-        menu = JuliaContextMenu(self.ui.comboBox_julia_project, self, self.exec_models, path, False, 1, current_julia_dir)
+        menu = JuliaContextMenu(
+            self.ui.comboBox_julia_project, self, self.exec_models, path, False, 1, current_julia_dir
+        )
         menu.popup(global_pos)
 
     def _solve_current_julia_dir(self):

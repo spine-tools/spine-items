@@ -660,7 +660,9 @@ class Tool(DBWriterItemBase):
                         )
                 if not self.options.get("use_jupyter_console") and self.options.get("executable") is not None:
                     exec_index = self.models.find_python_interpreter_index(self.options["executable"])
-                    if self.options["executable"] != "" and (not exec_index.isValid() or not Path(self.options["executable"]).is_file()):
+                    if self.options["executable"] != "" and (
+                        not exec_index.isValid() or not Path(self.options["executable"]).is_file()
+                    ):
                         self.add_notification(
                             f"Python interpreter {self.options['executable']} does not "
                             f"exist. Please install it or select another one in Tool Properties."
@@ -675,12 +677,18 @@ class Tool(DBWriterItemBase):
                         )
                 if not self.options.get("use_jupyter_console") and self.options.get("executable") is not None:
                     exec_index = self.models.find_julia_executable_index(self.options["executable"])
-                    if self.options["executable"] != "" and (not exec_index.isValid() or not Path(self.options["executable"]).is_file()):
+                    if self.options["executable"] != "" and (
+                        not exec_index.isValid() or not Path(self.options["executable"]).is_file()
+                    ):
                         self.add_notification(
                             f"Julia executable {self.options['executable']} does not "
                             f"exist. Please install it or select another one in Tool Properties."
                         )
-                if not self.options.get("use_jupyter_console") and self.options.get("project") is not None and self.options.get("project") != "":
+                if (
+                    not self.options.get("use_jupyter_console")
+                    and self.options.get("project") is not None
+                    and self.options.get("project") != ""
+                ):
                     exec_index = self.models.find_julia_project_index(self.options["project"])
                     if not exec_index.isValid():
                         self.add_notification(
