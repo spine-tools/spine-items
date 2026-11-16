@@ -288,6 +288,7 @@ class PythonOptionsWidget(SharedToolOptionsWidget):
                 executable = options["executable"]
                 if executable == "":
                     executable = resolve_current_python_interpreter()
+                executable = executable.replace("/", os.sep)
                 self.ui.label_interpreter_or_kernel.setText(executable)
             self._block_signals(False)
             return
@@ -550,12 +551,15 @@ class JuliaOptionsWidget(SharedToolOptionsWidget):
                 executable = options["executable"]
                 if executable == "":
                     executable = resolve_default_julia_executable()
+                executable = executable.replace("/", os.sep)
                 self.ui.label_executable_or_kernel.setText(executable)
                 project = options["project"]
                 if not project:
                     project = "Default Julia environment (@v1.x)"
                 elif project == "@.":
                     project = "Current project environment (@.)"
+                else:
+                    project = project.replace("/", os.sep)
                 self.ui.label_environment.setText(project)
             self._block_signals(False)
             return
@@ -1011,7 +1015,6 @@ class ExecutableOptionsWidget(OptionsWidget):
     def do_update_options_widget(self, options: dict):
         options = check_options("executable", options, self.tool.logger)
         self._block_signals(True)
-        print(f"[{self.tool.name}] options:{options}")
         self._set_combobox_shell_index(options["shell"])
         self.ui.lineEdit_command.setText(options["cmd"])
         self._block_signals(False)

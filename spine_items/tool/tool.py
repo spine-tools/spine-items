@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 import os
+from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 from PySide6.QtCore import QItemSelection, Slot
 from PySide6.QtGui import QAction
@@ -659,7 +660,7 @@ class Tool(DBWriterItemBase):
                         )
                 if not self.options.get("use_jupyter_console") and self.options.get("executable") is not None:
                     exec_index = self.models.find_python_interpreter_index(self.options["executable"])
-                    if not exec_index.isValid():
+                    if self.options["executable"] != "" and (not exec_index.isValid() or not Path(self.options["executable"]).is_file()):
                         self.add_notification(
                             f"Python interpreter {self.options['executable']} does not "
                             f"exist. Please install it or select another one in Tool Properties."
@@ -674,7 +675,7 @@ class Tool(DBWriterItemBase):
                         )
                 if not self.options.get("use_jupyter_console") and self.options.get("executable") is not None:
                     exec_index = self.models.find_julia_executable_index(self.options["executable"])
-                    if not exec_index.isValid():
+                    if self.options["executable"] != "" and (not exec_index.isValid() or not Path(self.options["executable"]).is_file()):
                         self.add_notification(
                             f"Julia executable {self.options['executable']} does not "
                             f"exist. Please install it or select another one in Tool Properties."
