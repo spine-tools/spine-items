@@ -14,10 +14,10 @@
 
 import os
 import sys
-import unittest
+import pytest
 from unittest import mock
-from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QStandardItem, QIcon
+from PySide6.QtCore import QPoint
 from spine_items.tool.widgets.options_widgets import (
     JuliaOptionsWidget,
     PythonOptionsWidget,
@@ -27,16 +27,8 @@ from spine_items.tool.widgets.options_widgets import (
 from spinetoolbox.execution_models import ExecutionModels
 
 
-class TestOptionsWidget(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        """Overridden method. Runs once before all tests in this class."""
-        try:
-            cls.app = QApplication().processEvents()
-        except RuntimeError:
-            pass
-
-    def test_julia_options_widget(self):
+class TestOptionsWidget:
+    def test_julia_options_widget(self, application):
         models = ExecutionModels(mock.MagicMock())
         # Test without using Julia in PATH
         with mock.patch("spinetoolbox.execution_models.resolve_default_julia_executable") as mock_default_julia:
@@ -111,7 +103,7 @@ class TestOptionsWidget(unittest.TestCase):
         env_label_txt = ow.ui.label_environment.text().replace(os.sep, "/")
         assert env_label_txt == "/someProject"
 
-    def test_python_options_widget(self):
+    def test_python_options_widget(self, application):
         models = ExecutionModels(mock.MagicMock())
         models.load_python_system_interpreters([])
         ow = PythonOptionsWidget(models)
@@ -140,7 +132,67 @@ class TestOptionsWidget(unittest.TestCase):
         assert ow.ui.comboBox_python_execution_method.currentData() == ToolExecutionMethod.JUPYTER
         assert ow.get_kernel_name() == "python-kernel"
 
-    def test_executable_options_widget(self):
+    def test_python_options_widget_context_menus(self, application):
+        models = ExecutionModels(mock.MagicMock())
+        models.load_python_system_interpreters([])
+        models._add_python_kernel("python_kernel", "/kernel/resource/dir", False, QIcon(), {})
+        ow = PythonOptionsWidget(models)
+        tool = FakeTool(models)
+        ow.tool = tool
+        with mock.patch("spine_items.tool.widgets.options_widgets.PythonContextMenu") as mock_interp_menu:
+            ow.ui.comboBox_executable.setCurrentIndex(0)
+            ow._show_python_interpreters_context_menu(QPoint(0, 0))
+            mock_interp_menu.assert_called_once()
+            mock_interp_menu.assert_any_call(mock.ANY, mock.ANY, mock.ANY, "", mock.ANY, mock.ANY)
+        with mock.patch("spine_items.tool.widgets.options_widgets.PythonContextMenu") as mock_kernel_menu:
+            ow.ui.comboBox_kernel_specs.setCurrentIndex(0)
+            ow._show_python_kernel_context_menu(QPoint(0, 0))
+            mock_kernel_menu.assert_called_once()
+            mock_kernel_menu.assert_any_call(
+                mock.ANY, mock.ANY, mock.ANY, "/kernel/resource/dir", mock.ANY, mock.ANY
+            )
+
+    def test_julia_options_widget_context_menus(self, application):
+        models = ExecutionModels(mock.MagicMock())
+        # Add Julia to executables
+        with mock.patch("spinetoolbox.execution_models.resolve_default_julia_executable") as mock_resolve_default_julia:
+            # Mock resolve_default_julia_executable so the Julia from Path is not added to the model
+            mock_resolve_default_julia.return_value = None
+            models.load_julia_executables(["/some/julia"])
+            mock_resolve_default_julia.assert_called_once()
+        # Add Julia kernel
+        models._add_julia_kernel("julia_kernel", "/kernel/resource/dir", False, QIcon(), {})
+        models.load_julia_projects(["/julia/project"])
+        ow = JuliaOptionsWidget(models)
+        tool = FakeTool(models)
+        ow.tool = tool
+        with mock.patch("spine_items.tool.widgets.options_widgets.JuliaContextMenu") as mock_exec_menu:
+            ow.ui.comboBox_executable.setCurrentIndex(0)
+            ow._show_julia_executables_context_menu(QPoint(0, 0))
+            mock_exec_menu.assert_called_once()
+            mock_exec_menu.assert_any_call(
+                mock.ANY, mock.ANY, mock.ANY, "/some/julia", False, 0, ""
+            )
+        with mock.patch("spine_items.tool.widgets.options_widgets.JuliaContextMenu") as mock_kernel_menu:
+            ow.ui.comboBox_kernel_specs.setCurrentIndex(0)
+            ow._show_julia_kernel_context_menu(QPoint(0, 0))
+            mock_kernel_menu.assert_called_once()
+            mock_kernel_menu.assert_any_call(
+                mock.ANY, mock.ANY, mock.ANY, "/kernel/resource/dir", False, 2, ""
+            )
+        with (mock.patch("spine_items.tool.widgets.options_widgets.JuliaContextMenu") as mock_projects_menu,
+              mock.patch("os.path.exists") as mock_path_exists):
+            mock_path_exists.return_value = True
+            ow.ui.comboBox_executable.setCurrentIndex(0)
+            ow.ui.comboBox_julia_project.setCurrentIndex(2)
+            ow._show_julia_projects_context_menu(QPoint(0, 0))
+            mock_projects_menu.assert_called_once()
+            mock_path_exists.assert_called_once()
+            mock_projects_menu.assert_any_call(
+                mock.ANY, mock.ANY, mock.ANY, "/julia/project", False, 1, "/some"
+            )
+
+    def test_executable_options_widget(self, application):
         models = ExecutionModels(mock.MagicMock())
         models.load_python_system_interpreters([])
         ow = ExecutableOptionsWidget(models)
