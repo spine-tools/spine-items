@@ -12,8 +12,8 @@ classifiers = [
 ]
 requires-python = ">=3.11"  # Remember to bump Black's target-version below when modifying this.
 dependencies = [
-    "spinedb_api>=0.36.7",
-    "spine_engine>=0.26.8",
+    "spinedb_api>=0.36.8",
+    "spine_engine>=0.26.9",
     # "spinetoolbox >=0.10.7",
 ]
 
