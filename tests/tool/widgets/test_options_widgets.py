@@ -18,6 +18,8 @@ import pytest
 from unittest import mock
 from PySide6.QtGui import QStandardItem, QIcon
 from PySide6.QtCore import QPoint
+from spine_items.tool.tool_factory import ToolFactory
+from spine_items.tool.tool_specifications import ToolSpecification
 from spine_items.tool.widgets.options_widgets import (
     JuliaOptionsWidget,
     PythonOptionsWidget,
@@ -28,7 +30,7 @@ from spinetoolbox.execution_models import ExecutionModels
 
 
 class TestOptionsWidget:
-    def test_julia_options_widget(self, application):
+    def test_julia_options_widget(self, application, spine_toolbox_with_project):
         models = ExecutionModels(mock.MagicMock())
         # Test without using Julia in PATH
         with mock.patch("spinetoolbox.execution_models.resolve_default_julia_executable") as mock_default_julia:
@@ -37,10 +39,37 @@ class TestOptionsWidget:
             mock_default_julia.assert_called()
         models.load_julia_projects([])
         ow = JuliaOptionsWidget(models)
-        tool = FakeTool(models)
+        tool = self._make_tool(spine_toolbox_with_project, "julia")
         ow.tool = tool
         ow._set_ui_at_work()
         ow._set_ui_at_rest()
+        # Check stackedWidget default page
+        tool._options = {}
+        with mock.patch("spine_items.tool.widgets.options_widgets.default_julia_execution_settings") as mock_default_julia_settings:
+            mock_default_julia_settings.return_value = {
+                "kernel_spec_name": "",
+                "env": "",
+                "use_jupyter_console": False,
+                "executable": "julia",
+                "project": "julia-project",
+            }
+            ow.do_update_options_widget({})
+            assert mock_default_julia_settings.call_count == 1
+            assert ow.ui.label_execution_method.text() == "Julia executable & environment"
+            assert ow.ui.label_executable_or_kernel.text() == "julia"
+            assert ow.ui.label_environment.text() == "julia-project"
+            mock_default_julia_settings.return_value = {
+                "kernel_spec_name": "default-kernel",
+                "env": "",
+                "use_jupyter_console": True,
+                "executable": "",
+                "project": "",
+            }
+            ow.do_update_options_widget({})
+            assert mock_default_julia_settings.call_count == 2
+            assert ow.ui.label_execution_method.text() == "Jupyter kernel"
+            assert ow.ui.label_executable_or_kernel.text() == "default-kernel"
+            assert ow.ui.label_environment.text() == ""
         options = {
             "julia_sysimage": "/some/path",
             "kernel_spec_name": "",
@@ -103,12 +132,35 @@ class TestOptionsWidget:
         env_label_txt = ow.ui.label_environment.text().replace(os.sep, "/")
         assert env_label_txt == "/someProject"
 
-    def test_python_options_widget(self, application):
+    def test_python_options_widget(self, application, spine_toolbox_with_project):
         models = ExecutionModels(mock.MagicMock())
         models.load_python_system_interpreters([])
         ow = PythonOptionsWidget(models)
-        tool = FakeTool(models)
+        tool = self._make_tool(spine_toolbox_with_project, "python")
         ow.tool = tool
+        # Check stackedWidget default page
+        tool._options = {}
+        with mock.patch("spine_items.tool.widgets.options_widgets.default_python_execution_settings") as mock_default_python_settings:
+            mock_default_python_settings.return_value = {
+                "kernel_spec_name": "",
+                "env": "",
+                "use_jupyter_console": False,
+                "executable": "python"
+            }
+            ow.do_update_options_widget({})
+            assert mock_default_python_settings.call_count == 1
+            assert ow.ui.label_execution_method.text() == "Python interpreter"
+            assert ow.ui.label_interpreter_or_kernel.text() == "python"
+            mock_default_python_settings.return_value = {
+                "kernel_spec_name": "default-kernel",
+                "env": "",
+                "use_jupyter_console": True,
+                "executable": ""
+            }
+            ow.do_update_options_widget({})
+            assert mock_default_python_settings.call_count == 2
+            assert ow.ui.label_execution_method.text() == "Jupyter kernel"
+            assert ow.ui.label_interpreter_or_kernel.text() == "default-kernel"
         options = {"kernel_spec_name": "", "env": "", "use_jupyter_console": False, "executable": ""}
         tool._options = options
         ow.do_update_options_widget(options)
@@ -132,12 +184,12 @@ class TestOptionsWidget:
         assert ow.ui.comboBox_python_execution_method.currentData() == ToolExecutionMethod.JUPYTER
         assert ow.get_kernel_name() == "python-kernel"
 
-    def test_python_options_widget_context_menus(self, application):
+    def test_python_options_widget_context_menus(self, application, spine_toolbox_with_project):
         models = ExecutionModels(mock.MagicMock())
         models.load_python_system_interpreters([])
         models._add_python_kernel("python_kernel", "/kernel/resource/dir", False, QIcon(), {})
         ow = PythonOptionsWidget(models)
-        tool = FakeTool(models)
+        tool = self._make_tool(spine_toolbox_with_project, "python")
         ow.tool = tool
         with mock.patch("spine_items.tool.widgets.options_widgets.PythonContextMenu") as mock_interp_menu:
             ow.ui.comboBox_executable.setCurrentIndex(0)
@@ -152,7 +204,7 @@ class TestOptionsWidget:
                 mock.ANY, mock.ANY, mock.ANY, "/kernel/resource/dir", mock.ANY, mock.ANY
             )
 
-    def test_julia_options_widget_context_menus(self, application):
+    def test_julia_options_widget_context_menus(self, application, spine_toolbox_with_project):
         models = ExecutionModels(mock.MagicMock())
         # Add Julia to executables
         with mock.patch("spinetoolbox.execution_models.resolve_default_julia_executable") as mock_resolve_default_julia:
@@ -164,7 +216,7 @@ class TestOptionsWidget:
         models._add_julia_kernel("julia_kernel", "/kernel/resource/dir", False, QIcon(), {})
         models.load_julia_projects(["/julia/project"])
         ow = JuliaOptionsWidget(models)
-        tool = FakeTool(models)
+        tool = self._make_tool(spine_toolbox_with_project, "julia")
         ow.tool = tool
         with mock.patch("spine_items.tool.widgets.options_widgets.JuliaContextMenu") as mock_exec_menu:
             ow.ui.comboBox_executable.setCurrentIndex(0)
@@ -192,11 +244,46 @@ class TestOptionsWidget:
                 mock.ANY, mock.ANY, mock.ANY, "/julia/project", False, 1, "/some"
             )
 
-    def test_executable_options_widget(self, application):
+    def test_activate_execution_method(self, application, spine_toolbox_with_project):
+        # Test PythonOptionsWidget
+        models = ExecutionModels(mock.MagicMock())
+        models.load_python_system_interpreters([])
+        ow = PythonOptionsWidget(models)
+        tool = self._make_tool(spine_toolbox_with_project, "python")
+        ow.tool = tool
+        ow.ui.comboBox_python_execution_method.setCurrentIndex(0)
+        ow.activate_execution_method(0)
+        ow.ui.comboBox_python_execution_method.setCurrentIndex(1)
+        ow.activate_execution_method(1)
+        assert ow.tool._options["use_jupyter_console"] == False
+        ow.ui.comboBox_python_execution_method.setCurrentIndex(2)
+        ow.activate_execution_method(2)
+        assert ow.tool._options["use_jupyter_console"] == True
+        # Test JuliaOptionsWidget
+        models = ExecutionModels(mock.MagicMock())
+        # Test without using Julia in PATH
+        with mock.patch("spinetoolbox.execution_models.resolve_default_julia_executable") as mock_default_julia:
+            mock_default_julia.return_value = ""
+            models.load_julia_executables([])
+            mock_default_julia.assert_called()
+        models.load_julia_projects([])
+        ow = JuliaOptionsWidget(models)
+        tool = self._make_tool(spine_toolbox_with_project, "julia")
+        ow.tool = tool
+        ow.ui.comboBox_julia_execution_method.setCurrentIndex(0)
+        ow.activate_execution_method(0)
+        ow.ui.comboBox_julia_execution_method.setCurrentIndex(1)
+        ow.activate_execution_method(1)
+        assert ow.tool._options["use_jupyter_console"] == False
+        ow.ui.comboBox_julia_execution_method.setCurrentIndex(2)
+        ow.activate_execution_method(2)
+        assert ow.tool._options["use_jupyter_console"] == True
+
+    def test_executable_options_widget(self, application, spine_toolbox_with_project):
         models = ExecutionModels(mock.MagicMock())
         models.load_python_system_interpreters([])
         ow = ExecutableOptionsWidget(models)
-        tool = FakeTool(models)
+        tool = self._make_tool(spine_toolbox_with_project, "executable")
         ow.tool = tool
         options = {"cmd": "", "shell": ""}
         tool._options = options
@@ -215,25 +302,20 @@ class TestOptionsWidget:
             ow.do_update_options_widget(options)
             assert ow.get_shell() == "bash"
             assert ow.ui.lineEdit_command.text() == "ls"
+        ow.update_executable_tool_command("command string")
+        ow._update_shell(0)
+        ow.set_widget_disabled_state(True)
+        ow.set_widget_disabled_state(False)
 
-
-class FakeTool:
-    def __init__(self, models):
-        self.name = "testTool"
-        self.group_id = None
-        self.logger = mock.MagicMock()
-        self._models = models
-        self._options = {}
-        self.project = mock.MagicMock()
-        self._specification = mock.MagicMock()
-        self._specification.qsettings = mock.MagicMock()
-
-    @property
-    def models(self):
-        return self._models
-
-    def update_options(self, changed_option):
-        self._options.update(changed_option)
-
-    def specification(self):
-        return self._specification
+    def _make_tool(self, spine_toolbox_with_project, tool_type):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0}
+        factory = ToolFactory()
+        tool = factory.make_item("T", item_dict, spine_toolbox_with_project, spine_toolbox_with_project.project())
+        tool.project.get_item = lambda name: tool
+        tool_spec = ToolSpecification("spec", tool_type, "", list(), None, None)
+        with (mock.patch("spine_items.tool.tool.Tool._check_notifications") as mock_check_notifications,
+              mock.patch("spine_items.tool.tool.Tool.update_specification_icon") as mock_update_spec_icon):
+            tool.set_specification(tool_spec)
+            mock_check_notifications.assert_called_once()
+            mock_update_spec_icon.assert_called_once()
+        return tool
