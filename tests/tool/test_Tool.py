@@ -18,8 +18,9 @@ import unittest
 from unittest import mock
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QApplication, QMenu
+from PySide6.QtCore import QItemSelectionModel
 from spine_engine.config import TOOL_OUTPUT_DIR
-from spine_engine.project_item.project_item_resource import ProjectItemResource, file_resource
+from spine_engine.project_item.project_item_resource import file_resource, ProjectItemResource, CmdLineArg
 from spine_items.tool.item_info import ItemInfo
 from spine_items.tool.tool import Tool
 from spine_items.tool.tool_factory import ToolFactory
@@ -217,6 +218,69 @@ class TestTool(unittest.TestCase):
             "input2.csv": [expected_urls["url5"]],
         }
         self.assertEqual(expected, result)
+
+    def test_update_group_id(self):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        tool._active = True
+        tool._update_group_id("abc")
+        assert tool._group_id == "abc"
+
+    def test_browse_root_directory(self):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        with mock.patch("spine_items.tool.tool.select_directory_with_dialog") as mock_dialog:
+            tool._browse_root_directory()
+            mock_dialog.assert_called_once()
+
+    def test_update_root_directory(self):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        tool._active = True
+        tool._update_root_directory("/root/directory")
+        assert tool._root_directory == "/root/directory"
+
+    def test_browse_result_directory(self):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        with mock.patch("spine_items.tool.tool.select_directory_with_dialog") as mock_dialog:
+            tool._browse_result_directory()
+            mock_dialog.assert_called_once()
+
+    def test_update_result_directory(self):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        tool._active = True
+        tool._update_result_directory("/new/result/dir")
+        assert tool._output_dir == "/new/result/dir"
+
+    def test_add_remove_cmd_line_args(self):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        tool._active = True
+        tool.update_cmd_line_args([CmdLineArg("A"), CmdLineArg("B"), CmdLineArg("C")])
+        assert {a.arg for a in tool.cmd_line_args} == {"A", "B", "C"}
+        tree = tool._properties_ui.treeView_cmdline_args
+        tree.setModel(tool._cmdline_args_model)
+        parent = tree.model().index(1, 0)  # Tool arguments
+        child = tree.model().index(0, 0, parent)
+        tree.selectionModel().select(child, QItemSelectionModel.SelectionFlag.ClearAndSelect)
+        tool._remove_arg()
+        assert {a.arg for a in tool.cmd_line_args} == {"B", "C"}
+
+    def test_upstream_resources_updated(self):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        url = "file_path"
+        resource = ProjectItemResource("item_a", "file", "label", url)
+        tool.upstream_resources_updated([resource])
+
+    def test_downstream_resources_updated(self):
+        item_dict = {"type": "Tool", "description": "", "x": 0, "y": 0, "specification": "simple_exec"}
+        tool = self._add_tool(item_dict)
+        url = "file_path"
+        resource = ProjectItemResource("item_a", "file", "label", url)
+        tool.downstream_resources_updated([resource])
 
     def _add_tool(self, item_dict=None):
         if item_dict is None:

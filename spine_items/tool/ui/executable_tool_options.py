@@ -12,9 +12,9 @@
 ######################################################################################################################
 
 ################################################################################
-## Form generated from reading UI file 'executable_cmd_exec_options.ui'
+## Form generated from reading UI file 'executable_tool_options.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.12.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -35,8 +35,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(506, 69)
+        Form.resize(506, 76)
         self.verticalLayout = QVBoxLayout(Form)
+        self.verticalLayout.setSpacing(4)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.line_3 = QFrame(Form)
@@ -49,30 +50,13 @@ class Ui_Form(object):
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setSpacing(6)
+        self.horizontalLayout_2.setSpacing(4)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.horizontalLayout_2.setContentsMargins(6, -1, 6, -1)
-        self.label_2 = QLabel(Form)
-        self.label_2.setObjectName(u"label_2")
-
-        self.horizontalLayout_2.addWidget(self.label_2)
-
-        self.lineEdit_command = QLineEdit(Form)
-        self.lineEdit_command.setObjectName(u"lineEdit_command")
-        self.lineEdit_command.setClearButtonEnabled(True)
-
-        self.horizontalLayout_2.addWidget(self.lineEdit_command)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
-
-        self.horizontalLayout_3 = QHBoxLayout()
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.horizontalLayout_3.setContentsMargins(6, -1, 6, -1)
+        self.horizontalLayout_2.setContentsMargins(0, -1, 0, -1)
         self.label = QLabel(Form)
         self.label.setObjectName(u"label")
 
-        self.horizontalLayout_3.addWidget(self.label)
+        self.horizontalLayout_2.addWidget(self.label)
 
         self.comboBox_shell = QComboBox(Form)
         self.comboBox_shell.setObjectName(u"comboBox_shell")
@@ -84,7 +68,25 @@ class Ui_Form(object):
         self.comboBox_shell.setMinimumSize(QSize(100, 24))
         self.comboBox_shell.setMaximumSize(QSize(16777215, 24))
 
-        self.horizontalLayout_3.addWidget(self.comboBox_shell)
+        self.horizontalLayout_2.addWidget(self.comboBox_shell)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setSpacing(4)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(0, -1, 0, -1)
+        self.label_2 = QLabel(Form)
+        self.label_2.setObjectName(u"label_2")
+
+        self.horizontalLayout_3.addWidget(self.label_2)
+
+        self.lineEdit_command = QLineEdit(Form)
+        self.lineEdit_command.setObjectName(u"lineEdit_command")
+        self.lineEdit_command.setClearButtonEnabled(True)
+
+        self.horizontalLayout_3.addWidget(self.lineEdit_command)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
@@ -92,6 +94,14 @@ class Ui_Form(object):
 
         self.verticalLayout.addLayout(self.verticalLayout_2)
 
+        self.line = QFrame(Form)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.Shape.HLine)
+        self.line.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.verticalLayout.addWidget(self.line)
+
+        QWidget.setTabOrder(self.comboBox_shell, self.lineEdit_command)
 
         self.retranslateUi(Form)
 
@@ -99,9 +109,15 @@ class Ui_Form(object):
     # setupUi
 
     def retranslateUi(self, Form):
-        self.label_2.setText(QCoreApplication.translate("Form", u"Command:", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Shell", None))
+#if QT_CONFIG(tooltip)
+        self.comboBox_shell.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select how the command is executed. Use Direct execution to run a program directly, or choose a shell such as Command Prompt, PowerShell, or Bash to execute shell commands and scripts.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_2.setText(QCoreApplication.translate("Form", u"Command", None))
+#if QT_CONFIG(tooltip)
+        self.lineEdit_command.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Enter the command to run. Direct execution can launch any executable program. When a shell is selected, the command is executed by that shell and may use shell-specific syntax.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.lineEdit_command.setPlaceholderText(QCoreApplication.translate("Form", u"Type command here...", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Shell:", None))
         pass
     # retranslateUi
 
