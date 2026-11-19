@@ -12,13 +12,18 @@
 
 """Contains Tool specification classes."""
 
-from collections import OrderedDict
+from __future__ import annotations
 import copy
 import os.path
+from typing import TYPE_CHECKING
 from spine_engine.project_item.project_item_specification import ProjectItemSpecification
 from spine_engine.utils.command_line_arguments import split_cmdline_args
 from .item_info import ItemInfo
 from .tool_instance import ExecutableToolInstance, GAMSToolInstance, JuliaToolInstance, PythonToolInstance
+
+if TYPE_CHECKING:
+    from PySide6.QtCore import QSettings
+    from spine_engine.utils.helpers import AppSettings
 
 # Tool types
 TOOL_TYPES = ["Julia", "Python", "GAMS", "Executable"]
@@ -131,7 +136,7 @@ class ToolSpecification(ProjectItemSpecification):
         self.return_codes = {}
 
     @property
-    def qsettings(self):
+    def qsettings(self) -> QSettings | AppSettings:
         return self._settings
 
     def _includes_main_path_relative(self):
@@ -565,7 +570,6 @@ class ExecutableTool(ToolSpecification):
         except IndexError:
             self.main_prgm = None
         if definition_file_path and not path:
-            # TODO: Check if self.default_execution_dir is still necessary
             # Set the default execution dir in source execution mode when running a command (no program files)
             # This part is processed when Tool Specs are loaded at app startup or when Spine Engine loads them
             # Note: When a Tool Spec is saved in Tool Spec Editor, definition_file_path == None

@@ -15,7 +15,7 @@
 from __future__ import annotations
 import os
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from PySide6.QtCore import QItemSelection, Slot
 from PySide6.QtGui import QAction
 from spine_engine.config import TOOL_OUTPUT_DIR
@@ -586,7 +586,7 @@ class Tool(DBWriterItemBase):
         if not res:
             self._logger.msg_error.emit(f"Failed to open directory: {output_dir}")
 
-    def specification(self) -> Optional[ToolSpecification]:
+    def specification(self) -> ToolSpecification | None:
         """Returns Tool specification."""
         return self._specification
 

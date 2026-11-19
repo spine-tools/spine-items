@@ -283,7 +283,7 @@ def default_python_execution_settings(qsettings):
     """Returns default Python Tool execution settings."""
     d = dict()
     is_conda = qsettings.value("appSettings/pythonCondaKernel", defaultValue="0")
-    use_jupyter_console = False if qsettings.value("appSettings/usePythonKernel", defaultValue="0") == "0" else True
+    use_jupyter_console = qsettings.value("appSettings/usePythonKernel", defaultValue="0") != "0"
     d["kernel_spec_name"] = qsettings.value("appSettings/pythonKernel", defaultValue="")
     d["env"] = "" if is_conda == "0" else "conda"
     d["use_jupyter_console"] = use_jupyter_console
@@ -295,7 +295,7 @@ def default_julia_execution_settings(qsettings):
     """Returns default Julia Tool execution settings."""
     d = dict()
     is_conda = qsettings.value("appSettings/juliaCondaKernel", defaultValue="0")
-    use_jupyter_console = False if qsettings.value("appSettings/useJuliaKernel", defaultValue="0") == "0" else True
+    use_jupyter_console = qsettings.value("appSettings/useJuliaKernel", defaultValue="0") != "0"
     d["kernel_spec_name"] = qsettings.value("appSettings/juliaKernel", defaultValue="")
     d["env"] = "" if is_conda == "0" else "conda"
     d["use_jupyter_console"] = use_jupyter_console
